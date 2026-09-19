@@ -184,3 +184,26 @@ README are where the disclosure lives.
   from inside `composer check` is a loop; the Traceability row says so and
   points here.
 - Decided by Maurice: M0.3c as proposed.
+
+## 2026-09-19 — M0.4a: CI workflow, written and rehearsed, not yet run
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the CI workflow; running it waits for a remote, which waits for
+  Maurice's explicit go.
+- Produced: `.github/workflows/ci.yml` — `composer validate --strict`,
+  `composer install` (no lockfile: newest versions inside the constraints,
+  as a consumer gets), `composer check`, on PHP 8.3 / 8.4 / 8.5 with
+  `fail-fast: false`; an `all-green` job that succeeds only when the matrix
+  result is `success`. No `continue-on-error`, no non-blocking job, no
+  vendor cache. `docs/milestones.md` M0.4 marked written, not run.
+- Measured: `ruby -ryaml` parses the file. `rm -rf vendor` + `composer
+  install --no-interaction --prefer-dist --no-progress` without a lockfile
+  installed 75 packages and resolved to the same pint 1.32.1 / phpstan 2.2.14
+  / deptrac 4.7.2 / pest 5.2.1 as earlier today; `composer check` exit 0
+  afterwards. Not measured: the workflow itself, on any PHP version other
+  than this machine's 8.5.8 — that is what the first run on GitHub is for.
+- Reasoned: `if: always()` on `all-green` so that a cancelled or skipped
+  matrix leg is read as not-success instead of leaving the job unrun.
+- Decided by Maurice: M0.4a as proposed; M0.4b (repository on GitHub,
+  private; push; read the first run per job) is a separate decision, not yet
+  taken.
