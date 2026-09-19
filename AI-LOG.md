@@ -242,3 +242,35 @@ README are where the disclosure lives.
   decides on the repository's GitHub home.
 - Reasoned: nothing.
 - Decided by Maurice: M0.6 as proposed. M0 is done; SPEC-001 is next.
+
+## 2026-09-19 — Step 02: the signed JPEG fixture, measured
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: produce the signed JPEG fixture SPEC-001 needs, explain the JPEG
+  structure in plain Dutch (twice — the first explanation assumed too much),
+  and measure rather than recite.
+- Produced: `tests/Fixtures/fixture-signed.jpg`,
+  `tests/Fixtures/fixture-unsigned.jpg` (copied from the sister library),
+  `tests/Fixtures/fixture-signed.manifest.json` (key paths replaced by
+  placeholders), `notes/step-02-jpeg-fixture.md`, `NOTES.md` row 02,
+  `docs/milestones.md` "M1, step by step".
+- Measured: `c2patool 0.27.22 fixture-unsigned.jpg -m manifest.json -o
+  fixture-signed.jpg` with the c2pa-rs ES256 test chain (key read from the
+  sister repository's gitignored `certs/`, never copied); verdicts `Valid`
+  without and `Trusted` with `c2pa-trust.settings.json`; `No claim found` on
+  the unsigned file. A throw-away probe walked every JPEG segment: two APP11
+  pieces at offsets 20 and 64,032, CI `JP`, En 529, Z 1 and 2, LBox 94,740,
+  TBox `jumb` repeated in both; reassembled (header once + data) = 94,740
+  bytes = LBox, SHA-256 `f47af93e…46a3`. Two variants: COM moved between the
+  pieces → c2patool extracts and validates the signature, then
+  `assertion.dataHash.mismatch`; pieces swapped → `Error: invalid embedded
+  file box`. C2PA 2.4 §A.3.1 fetched from spec.c2pa.org and quoted in full.
+  The IPTC term for the fixture was changed from `digitalCapture` (a false
+  claim about an ffmpeg test pattern) to `algorithmicMedia`, a term the
+  sister library uses (SPEC-026).
+- Reasoned: the per-segment header layout is known from the measurement,
+  not from ISO/IEC 18477-3 or ISO 19566-5 D.2 (paywalled, not read); that
+  c2patool reads pieces in file order (from the swapped variant's error)
+  and therefore SPEC-001 must not sort by Z.
+- Decided by Maurice: step 02 as proposed; the simpler explanation is the
+  one that counts.

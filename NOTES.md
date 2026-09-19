@@ -10,3 +10,4 @@ conclusion from reading). The plan these steps follow is
 | Step | Date | What | Note |
 |---|---|---|---|
 | 01 | 2026-09-19 | M0: the skeleton — package, tool chain, SPEC-000, CI, documents | [`notes/step-01-m0-skeleton.md`](notes/step-01-m0-skeleton.md) |
+| 02 | 2026-09-19 | The signed JPEG fixture; what a JPEG is; APP11 pieces measured; how c2patool treats gaps and swaps | [`notes/step-02-jpeg-fixture.md`](notes/step-02-jpeg-fixture.md) |
