@@ -90,3 +90,22 @@ README are where the disclosure lives.
 - Reasoned: the Deptrac layers and arrows follow the milestone table of the
   brief; every future arrow is a spec decision.
 - Decided by Maurice: M0.2 as proposed.
+
+## 2026-09-19 — M0.3a: spec template and SPEC-000 (draft)
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: after choosing option B (a spec for the traceability tool itself so
+  `composer check` can be green with a tested checker), write the template
+  and SPEC-000 as a draft.
+- Produced: `specs/TEMPLATE.md` (the sister project's template with three
+  changes: no pointer to a file outside the repository, a new References
+  section separating the specification/oracle from what is reasoned, and the
+  fail-closed sentence in Behavior), `specs/SPEC-000-spec-traceability.md`
+  (status `draft`, AC1–AC10, AC7 the malformed-input path),
+  `tests/Unit/.gitkeep` and `tests/Integration/.gitkeep` (the two directories
+  from M0.2 that Git could not record while empty).
+- Measured: nothing to run yet. Reasoned: the ten criteria; AC4 as an error
+  rather than the sister project's warning.
+- Decided by Maurice: option B (SPEC-000) over accepting a red `composer
+  check` until SPEC-001; M0.3a as proposed. Approval of SPEC-000 itself is
+  pending his reading.
