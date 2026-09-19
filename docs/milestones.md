@@ -15,7 +15,7 @@ when" has not been measured is not done.
 
 | M | What | Done when |
 |---|---|---|
-| M0 | Repository skeleton: package, tool chain, spec template, traceability check, CI, notes, ADRs | `composer check` green on an empty `src/` |
+| M0 | Repository skeleton: package, tool chain, spec template, traceability check, CI, notes, ADRs | `composer check` green on an empty `src/` — **done 2026-09-19**, CI run pending a remote |
 | M1 | **Container → manifest store bytes.** JPEG APP11 (multi-segment, Box Instance Numbers), PNG `caBX`, WebP RIFF `C2PA`. Byte-exact extraction, nothing parsed. | SHA-256 of the extracted store equals what `c2patool --detailed` / a hexdump gives, for every fixture |
 | M2 | **JUMBF + CBOR → manifest store as data.** Boxes, superboxes, description boxes, content-type UUIDs; a CBOR decoder for the subset C2PA uses; claim v1 and v2; assertions; `claim_generator_info`. | the sister library's `ManifestStoreParser::fromJson()` accepts the output and every accessor equals its `/v1/read` |
 | M3 | **COSE_Sign1.** Protected header, `x5chain`, Sig_structure, verify ES256/ES384/PS256/Ed25519. No trust yet. | `claimSignature.validated` equals c2patool on all fixtures; one altered byte in the claim → `claimSignature.mismatch` |
@@ -48,7 +48,7 @@ Each step is one commit, explained before it is built, with its own
 | M0.3c | `bin/spec-check.php`; first step of `composer check`; SPEC-000 → `implemented` with Traceability | done, 11 passed, AC10 measured by hand |
 | M0.4 | CI: `.github/workflows/ci.yml`, `composer check` on PHP 8.3 / 8.4 / 8.5 | written and rehearsed locally; not yet run — needs a remote, which needs the maintainer's go |
 | M0.5 | `README.md` (with the "How this is built" disclosure), `NOTES.md` + `notes/step-01-*.md`, ADR-0001 (dependencies), ADR-0002 (name, namespace, licence) | done |
-| M0.6 | Measurement: `composer check` green on an empty `src/`; M0 closed | — |
+| M0.6 | Measurement: `composer check` green on an empty `src/`; M0 closed | done — exit 0, `src/` holds only `.gitkeep`. Open: the CI run itself (M0.4b) |
 
 Why M0.3 exists at all: Pest exits 1 on an empty suite (measured in M0.2),
 which is the wanted behaviour — a suite that runs nothing must not be green.

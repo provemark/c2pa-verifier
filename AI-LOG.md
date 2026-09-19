@@ -225,3 +225,20 @@ README are where the disclosure lives.
   exit 0. Reasoned: the README makes no "only …" claim — that waits until
   the verifier exists.
 - Decided by Maurice: M0.5 as proposed, in one commit.
+
+## 2026-09-19 — M0.6: M0 closed by measurement
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the measurement that closes M0, as a step of its own.
+- Produced: `docs/milestones.md` (M0.6 done, M0 done, the CI run named as
+  the one open end); this entry.
+- Measured: `ls -la src/` and `git ls-files src/` → only `.gitkeep`, 0
+  bytes. `composer check` → spec-check `OK: 1 spec(s), 1 test file(s)`,
+  Pint passed, PHPStan `[OK] No errors`, Deptrac 0 violations / 0 uncovered,
+  Pest 11 passed (29 assertions), exit 0. `git log --format=%B | grep -ci
+  "claude\|anthropic"` over the whole history → 0. `git status --short` →
+  empty before this commit. Not measured: the CI workflow on any PHP version
+  but 8.5.8, because there is no remote; M0.4b stays open until Maurice
+  decides on the repository's GitHub home.
+- Reasoned: nothing.
+- Decided by Maurice: M0.6 as proposed. M0 is done; SPEC-001 is next.
