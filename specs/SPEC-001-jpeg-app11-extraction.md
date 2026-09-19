@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-19                      |
 | Supersedes | —                                                 |
@@ -220,16 +220,16 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
-| AC11                 | —                           | —                    |
-| AC12                 | —                           | —                    |
-| AC13                 | —                           | —                    |
+| AC1 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC1: extracts the store from the fixture, byte-exact / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract(); src/Container/ManifestStoreBytes.php |
+| AC2 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC2: a JPEG without APP11 yields null, not an error / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$pieces === 0`) |
+| AC3 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC3: pieces out of order are an error naming the expected and found sequence numbers / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$fields['z'] !== $pieceNumber`); src/Container/ContainerException.php |
+| AC4 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC4: a gap between the pieces still yields the same store / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract(), skip() |
+| AC5 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC5: a file truncated inside a piece is an error naming the segment offset / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: readExactly(), skip() |
+| AC6 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC6: a missing piece is an error naming LBox and the bytes collected / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (`strlen($collected) !== $lBox`) |
+| AC7 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC7: an LBox that differs between pieces is an error naming both values / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$fields['lbox'] !== $lBox`) |
+| AC8 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC8: an APP11 segment without JP is skipped / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (`str_starts_with($header, 'JP')`) |
+| AC9 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC9: an LBox above the limit is an error before any piece data is read; AC9: more pieces than the limit is an error at the piece that exceeds it / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$maxLBox`, `$maxPieces` checks before the data read) |
+| AC10 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC10: a stream that does not start with FF D8 is an error / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (SOI check) |
+| AC11 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC11: two different box instance numbers are an error naming both / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$fields['en'] !== $instanceNumber`) |
+| AC12 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC12: the default limits are 2048 pieces and 64 MiB / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: DEFAULT_MAX_PIECES, DEFAULT_MAX_LBOX, __construct() |
+| AC13 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC13: pieces after SOS are not scanned; the result is null / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (loop ends at SOS) |

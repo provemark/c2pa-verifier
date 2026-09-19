@@ -35,7 +35,7 @@ function spec001Extract(string $name, ?JpegManifestStoreExtractor $extractor = n
 /** The store's bytes, or '' when there is none — so a null result fails the hash check, not the type check. */
 function spec001Bytes(string $name): string
 {
-    return spec001Extract($name)?->bytes ?? '';
+    return spec001Extract($name)->bytes ?? '';
 }
 
 it('AC1: extracts the store from the fixture, byte-exact', function (): void {
@@ -111,7 +111,7 @@ it('AC12: the default limits are 2048 pieces and 64 MiB', function (): void {
 
     expect($extractor->maxPieces)->toBe(2048)
         ->and($extractor->maxLBox)->toBe(64 * 1024 * 1024)
-        ->and(hash('sha256', $extractor->extract(spec001Stream('fixture-signed.jpg'))?->bytes ?? ''))->toBe(SPEC001_STORE_SHA256);
+        ->and(hash('sha256', $extractor->extract(spec001Stream('fixture-signed.jpg'))->bytes ?? ''))->toBe(SPEC001_STORE_SHA256);
 })->group('SPEC-001');
 
 it('AC13: pieces after SOS are not scanned; the result is null', function (): void {

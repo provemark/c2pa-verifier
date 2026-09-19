@@ -80,7 +80,7 @@ if (array_keys($c) !== $normal) {
 
 // In an APP11 segment: marker(2) length(2) CI(2) En(2) Z(4) LBox(4) TBox(4) data.
 $enOffset = 6;
-$lboxOffset = 10;
+$lboxOffset = 12;
 
 $variants = [
     // AC3

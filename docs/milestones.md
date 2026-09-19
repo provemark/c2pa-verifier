@@ -68,6 +68,6 @@ with the signing command and tool version recorded.
 | Step | What | Status |
 |---|---|---|
 | 02 | Signed JPEG fixture (c2patool 0.27.22, test certs), the segment layout measured, c2patool's behaviour on gaps and swapped pieces measured — `notes/step-02-jpeg-fixture.md` | done |
-| SPEC-001 | JPEG APP11 → manifest store bytes: draft → approval → red tests → implementation | approved 2026-09-19; 14 tests seen red; implementation next |
+| SPEC-001 | JPEG APP11 → manifest store bytes: draft → approval → red tests → implementation | implemented 2026-09-19: 14 tests red → green, `composer check` exit 0; AC7 kept stricter than c2patool (step 03) |
 | SPEC-002 | PNG `caBX` → bytes | — |
 | SPEC-003 | WebP RIFF `C2PA` → bytes | — |

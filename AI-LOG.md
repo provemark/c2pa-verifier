@@ -399,3 +399,29 @@ README are where the disclosure lives.
   as the sister library, is the smallest surprise; B (`^4.0 || ^5.0`) would
   run two different test runners in one matrix.
 - Decided by Maurice: A.
+
+## 2026-09-19 — Step 03: the JPEG extractor (SPEC-001 implemented)
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord" on step 03b; then "explain why c2patool's `Valid` is a
+  divergence in the safe direction, and is it a bug in c2patool?"; then
+  "behouden voor nu" for AC7.
+- Produced: `src/Container/ManifestStoreBytes.php`, `ContainerException.php`,
+  `JpegManifestStoreExtractor.php` (`.gitkeep` removed); SPEC-001 →
+  `implemented` with Traceability; `notes/step-03-jpeg-extractor.md`,
+  `NOTES.md` row, `docs/milestones.md` M1 row; `bin/make-jpeg-variants.php`
+  `$lboxOffset` 10 → 12 and a regenerated `tests/Fixtures/jpeg/lbox-differs.jpg`
+  with its README row and hash corrected; two PHPStan-driven edits in the
+  test file (`?->bytes ?? ''` → `->bytes ?? ''`, semantics unchanged).
+- Measured: `vendor/bin/pest` before → 14 failed, 11 passed; first run
+  after → 13 passed, 1 failed (AC7, `LBox 1914008084`); `xxd -s 64032`
+  showed the variant's LBox written two bytes early; after the fix only
+  `lbox-differs.jpg` changed (script output) and `c2patool 0.27.22` on it →
+  `Valid`, `claimSignature.validated`, `assertion.dataHash.match`;
+  `curl` of c2pa-rs `main` `jpeg_io.rs`, `read_c2pa`: continuation pieces
+  append `raw_vec[16..]` without reading LBox/TBox, CI unused, `z > count`
+  accepted. Final `composer check` → exit 0, 25 passed (58 assertions).
+- Reasoned: the divergence is in the safe direction (error where the oracle
+  says Valid, never the reverse); LBox < 8 and pre-SOS RST/TEM markers
+  rejected without a fixture, fail closed.
+- Decided by Maurice: keep AC7 as approved ("behouden voor nu"); an
+  amendment, not a code change, would reverse it.

@@ -6,13 +6,20 @@ nothing else. Regenerate with `php bin/make-jpeg-variants.php`; the script
 prints each file's SHA-256, and these are the values committed on
 2026-09-19. Measured with c2patool 0.27.22 the same day.
 
+Corrected 2026-09-19 (step 03): the first `lbox-differs.jpg` was written
+with the LBox field at payload offset 10 instead of 12, so it changed the
+last two bytes of Z and the first two of LBox (piece 2 read Z = 1, LBox =
+0x72157214) — c2patool's `invalid embedded file box` on that file was the
+result of the broken Z, not of the differing LBox. The script and the file
+were fixed and the file re-measured; only its row and hash changed.
+
 | file | what is wrong | c2patool 0.27.22 | SPEC-001 |
 |---|---|---|---|
 | `swapped-pieces.jpg` | piece 2 before piece 1 | `Error: invalid embedded file box` | AC3 error |
 | `gap-between-pieces.jpg` | COM segment between the pieces | extracts; `claimSignature.validated`, then `assertion.dataHash.mismatch` | AC4 extracts |
 | `truncated-in-piece-2.jpg` | file ends 1,000 bytes into piece 2 | `Error: asset could not be parsed: Could not parse input JPEG` | AC5 error |
 | `missing-piece-2.jpg` | piece 2 removed, LBox still 94,740 | `Error: invalid embedded file box` | AC6 error |
-| `lbox-differs.jpg` | piece 2's LBox 94,740 → 94,741 | `Error: invalid embedded file box` | AC7 error |
+| `lbox-differs.jpg` | piece 2's LBox 94,740 → 94,741 | extracts; **`Valid`** — c2pa-rs ignores LBox and TBox in continuation pieces (`jpeg_io.rs`, `read_c2pa`: `buffer.append(raw_vec[16..])`), so it validates the same 94,740 bytes as the untouched fixture. SPEC-001 keeps AC7 as an error (decided 2026-09-19, see `notes/step-03-jpeg-extractor.md`): stricter than the oracle, never more lenient | AC7 error |
 | `app11-not-jp.jpg` | an APP11 with `XX` instead of `JP` before piece 1 | extracts; then `assertion.dataHash.mismatch` | AC8 extracts |
 | `not-a-jpeg.bin` | plain text, no `FF D8` | `Error: Unsupported file type` | AC10 error |
 | `two-instance-numbers.jpg` | piece 2's En 529 → 530 | `Error: invalid embedded file box` | AC11 error |
@@ -25,7 +32,7 @@ SHA-256 (as printed by the script):
 571f2dee89b48b3dfd3049877b2098872ed79e7d700a246322b421d6e2fa13c6  gap-between-pieces.jpg
 f3b912060d880cde5e912384c249c05ecb9e63923ac4c29aa5e1168dfbcb9727  truncated-in-piece-2.jpg
 289a7b6ab7c98cf4e954402bef697ada3cd215ed4fce11b76a2facbefacda3f2  missing-piece-2.jpg
-d5e2254cce324298820e06c408a5b1cddc9a2bbbf223607b97d6fda76ecce814  lbox-differs.jpg
+13f3eb1436e72eb077a88baa01f5397feb1ca1565694c5507ca57dac6fdc2add  lbox-differs.jpg
 97c53f9c596c7e25e19b73f9d9bb8f6d0b826b0538068ce331a9123e5c0203fe  app11-not-jp.jpg
 cee0c928aca558f017ea158b420f88e8731786c495c97370c7c10d2d2334592d  not-a-jpeg.bin
 ea08c3c3d66a468f4671d03de4dee4303fb20465443ab29f72417d7d593f2dd7  two-instance-numbers.jpg
