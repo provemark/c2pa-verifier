@@ -1,0 +1,64 @@
+# Milestones
+
+What this project builds, in which order, and what "done" means for each
+step. This page is the plan; `NOTES.md` (from M0.5) is the record of what
+actually happened, step by step. When the two disagree, the record wins and
+this page is corrected.
+
+Every milestone ends with a measurement against an external oracle —
+`c2patool` (pinned version written into the note of the step that measured
+it), the official `c2pa-org/public-testfiles`, and where applicable the
+service reader of `provemark/content-credentials`. A milestone whose "done
+when" has not been measured is not done.
+
+## The milestones
+
+| M | What | Done when |
+|---|---|---|
+| M0 | Repository skeleton: package, tool chain, spec template, traceability check, CI, notes, ADRs | `composer check` green on an empty `src/` |
+| M1 | **Container → manifest store bytes.** JPEG APP11 (multi-segment, Box Instance Numbers), PNG `caBX`, WebP RIFF `C2PA`. Byte-exact extraction, nothing parsed. | SHA-256 of the extracted store equals what `c2patool --detailed` / a hexdump gives, for every fixture |
+| M2 | **JUMBF + CBOR → manifest store as data.** Boxes, superboxes, description boxes, content-type UUIDs; a CBOR decoder for the subset C2PA uses; claim v1 and v2; assertions; `claim_generator_info`. | the sister library's `ManifestStoreParser::fromJson()` accepts the output and every accessor equals its `/v1/read` |
+| M3 | **COSE_Sign1.** Protected header, `x5chain`, Sig_structure, verify ES256/ES384/PS256/Ed25519. No trust yet. | `claimSignature.validated` equals c2patool on all fixtures; one altered byte in the claim → `claimSignature.mismatch` |
+| M4 | **Hash binding.** `c2pa.hash.data` v1/v2: exclusions, `pad`, streaming hash. Hashed-URI checks on assertions. | one changed pixel byte → `assertion.dataHash.mismatch`; untouched file `Valid` |
+| M5 | **Chain and trust.** Chain from `x5chain`, anchor from `trust_anchors`, EKU from `trust_config`, `allowed_list`. `Trusted` vs `Valid`. | verdicts equal `c2patool --settings` with and without the trust file; test cert without trust file → `signingCredential.untrusted` |
+| M6 | **RFC 3161.** `sigTst` / `sigTst2` (ASN.1), TSA signature, signing time against certificate validity. | `hasTimestamp` and `timeStamp.*` codes equal c2patool on a timestamped fixture |
+| M7 | **Ingredients and manifest chains.** `parentOf`, `componentOf`, manifest labels; an ingredient never masks a failure in the active manifest. | `c2pa-org/public-testfiles` with ingredients yield the same status list |
+| M8 | **ISOBMFF** (MP4/MOV/AVIF): `c2pa.hash.bmff.v2`, Merkle trees, exclusions. Least documented; last. | sister-library fixtures + c2patool |
+| later | GIF, TIFF, SVG, WAV, MP3, FLAC, AVI | one spec per format |
+
+Fixed across all of them: read and verify only, never sign; pure PHP `^8.3`,
+no `ext-*` beyond `openssl`, `mbstring` and opt-in `sodium`; no `exec`, no
+network during verification; c2patool's `validation_state` and the C2PA 2.4
+§15 status codes verbatim, no vocabulary of our own; trust settings in the
+same JSON shape c2patool reads; **fail closed** — every unknown box,
+algorithm, claim version or assertion is an error with a status code, never
+a silent `Valid`.
+
+## M0, step by step
+
+Each step is one commit, explained before it is built, with its own
+`AI-LOG.md` entry.
+
+| Step | What | Status |
+|---|---|---|
+| M0.1 | `composer.json` (`provemark/c2pa-verifier`, MIT, `php ^8.3`, no packages in `require`), `LICENSE`, `src/`, `tests/Fixtures/README.md` | done, `53caa8d` |
+| M0.2 | Pint, PHPStan level max, Deptrac (one layer per milestone), Pest; `composer check` as the single definition of green | done, `b351e86` |
+| M0.3a | `specs/TEMPLATE.md`; SPEC-000 (the traceability checker) as draft, then approved | done, `60ec881`, `eff055e` |
+| M0.3b | Red tests for SPEC-000, `->group('SPEC-000')`, fixture trees under `tests/Fixtures/spec-check/` | — |
+| M0.3c | `bin/spec-check.php`; first step of `composer check`; SPEC-000 → `implemented` with Traceability | — |
+| M0.4 | CI: `.github/workflows/ci.yml`, `composer check` on PHP 8.3 / 8.4 / 8.5 | — |
+| M0.5 | `README.md` (with the "How this is built" disclosure), `NOTES.md` + `notes/step-01-*.md`, ADR-0001 (dependencies), ADR-0002 (name, namespace, licence) | — |
+| M0.6 | Measurement: `composer check` green on an empty `src/`; M0 closed | — |
+
+Why M0.3 exists at all: Pest exits 1 on an empty suite (measured in M0.2),
+which is the wanted behaviour — a suite that runs nothing must not be green.
+So M0 needs one real test, every test needs a spec, and the first thing worth
+specifying is the tool that enforces exactly that.
+
+## After M0
+
+M1 opens with SPEC-001 (JPEG APP11 → manifest store bytes) as a draft. It
+is first because it is measurable with a hash and no cryptography, and
+because JPEG is the hardest of the three containers; PNG (SPEC-002) and WebP
+(SPEC-003) follow. A signed JPEG fixture is produced when SPEC-001 starts,
+with the signing command and tool version recorded.

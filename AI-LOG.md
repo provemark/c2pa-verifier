@@ -119,3 +119,16 @@ README are where the disclosure lives.
 - Measured: none. Reasoned: none.
 - Decided by Maurice: SPEC-000 approved as written, including AC4 as an
   error, exact status matching, and the `superseded` question left open.
+
+## 2026-09-19 — `docs/milestones.md`
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "where are all the M-steps?" — they were in the local brief and in
+  the conversation, nowhere in the repository.
+- Produced: `docs/milestones.md`: the M0–M8 table with "done when" per
+  milestone, the fixed design rules, M0 broken into M0.1–M0.6 with status
+  and commit per step, and what opens M1. To be updated in the same commit
+  as each step it tracks.
+- Measured: none. Reasoned: the split between this page (the plan) and
+  `NOTES.md` (the record, from M0.5).
+- Decided by Maurice: the plan goes into the repository before M0.3b.
