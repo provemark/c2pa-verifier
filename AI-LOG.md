@@ -348,3 +348,36 @@ README are where the disclosure lives.
 - Reasoned: no stub classes in `src/` this time — `src/` stays empty until
   the implementation; the red is "class not found" per test.
 - Decided by Maurice: step 03a as proposed.
+
+## 2026-09-19 — M0.4b: the remote, and the first CI run read per job
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: create the remote now ("ja, maak de remote"), then save everything
+  because the next session opens in another IDE.
+- Produced: GitHub repository `provemark/c2pa-verifier`, **private**, as
+  `origin`; `main` pushed (18 commits); `docs/milestones.md` M0.4 row; this
+  entry. No branch protection, no tags, no Packagist, no change to the
+  sister repository.
+- Measured, before the push: 0 attribution lines in the whole history; 0
+  tracked `*.key`; 0 tracked files with a local path; the only tracked
+  mention of the local brief is its own `.gitignore` line; maintainer is
+  `admin` of the org; the name was free. After: `gh repo view --json
+  visibility` → `PRIVATE`. First run `35435586024` on `d7e83d0`: all four
+  jobs `failure`. Read per job, not by the aggregate: **8.4 and 8.5 fail at
+  PHPStan** with `Class …Container\ContainerException not found` — the
+  expected red of the fourteen SPEC-001 tests written before their
+  implementation; **8.3 fails earlier, at `composer install`**: `pestphp/pest
+  [v5.2.0, …, v5.2.1] require php ^8.4 -> your php version (8.3.33) does not
+  satisfy that requirement`, so `composer check` never ran there. Locally:
+  `composer show pestphp/pest` → `php ^8.4`; `phpunit/phpunit` → `>=8.4.1`;
+  the sister library pins `pestphp/pest ^4.0`, and Pest 4.7.8 requires
+  `php ^8.3.0` (Packagist). The dev machine runs 8.5.8, which is why this
+  never showed locally — CI's first measurement did exactly what M0.4 is
+  for.
+- Reasoned: three ways out — A: `pestphp/pest ^4.0` (as the sister
+  library; one runner on all three versions; recommended), B: `^4.0 ||
+  ^5.0` (two runners in one matrix), C: `php ^8.4` (breaks the brief's
+  promise; cheap hosting is where 8.3 lingers). Not applied: awaiting the
+  maintainer's choice.
+- Decided by Maurice: create the remote, private, under `provemark`. The
+  Pest constraint: not yet decided.
