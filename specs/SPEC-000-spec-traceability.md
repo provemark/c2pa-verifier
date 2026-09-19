@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-19                      |
 | Supersedes | —                                                 |
@@ -175,13 +175,13 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
+| AC1 | tests/Unit/SpecCheckTest.php :: AC1: reports every spec with its status and no findings on a clean tree / SPEC-000 | bin/spec-check.php :: specCheck(), specCheckStatus(), SpecCheckResult::render() |
+| AC2 | tests/Unit/SpecCheckTest.php :: AC2: a group that names no existing spec is a finding / SPEC-000 | bin/spec-check.php :: specCheck() (group without spec) |
+| AC3 | tests/Unit/SpecCheckTest.php :: AC3: a test file without any spec group is a finding / SPEC-000 | bin/spec-check.php :: specCheckGroups(), specCheck() |
+| AC4 | tests/Unit/SpecCheckTest.php :: AC4: a draft spec whose group is already carried by a test is a finding / SPEC-000 | bin/spec-check.php :: specCheck() (draft) |
+| AC5 | tests/Unit/SpecCheckTest.php :: AC5: an implemented spec without a test carrying its group is a finding / SPEC-000 | bin/spec-check.php :: specCheck() (implemented) |
+| AC6 | tests/Unit/SpecCheckTest.php :: AC6: an implemented spec with an unfilled Traceability row is a finding naming the criterion / SPEC-000 | bin/spec-check.php :: specCheckUnfilledTraceability() |
+| AC7 | tests/Unit/SpecCheckTest.php :: AC7: a spec without a recognisable status is a finding and is not treated as any status / SPEC-000 | bin/spec-check.php :: specCheckStatus() |
+| AC8 | tests/Unit/SpecCheckTest.php :: AC8: a clean tree exits 0 and says OK with the counts; AC8: a tree with several problems reports one line per finding and exits 1; AC8: this repository itself is clean, with the fixture trees skipped / SPEC-000 | bin/spec-check.php :: SpecCheckResult::exitCode(), render(); specCheckTestFiles() skips tests/Fixtures/ |
+| AC9 | tests/Unit/SpecCheckTest.php :: AC9: a multi-argument group call counts for every spec it names / SPEC-000 | bin/spec-check.php :: specCheckGroups() |
+| AC10 | measured by hand, not a Pest test (a test calling `composer check` from inside `composer check` is a loop): on a copy with SPEC-000 set to `draft`, `composer check` stopped at spec-check with exit 1 and Pint never ran — AI-LOG.md 2026-09-19, M0.3c | composer.json :: scripts.check (spec-check first) |

@@ -159,3 +159,28 @@ README are where the disclosure lives.
   `tests/Fixtures/` is read from the Scope's "`*Test.php` under `tests/`" and
   is asserted by the last test.
 - Decided by Maurice: M0.3b as proposed, with those two readings.
+
+## 2026-09-19 — M0.3c: `bin/spec-check.php`, SPEC-000 implemented
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the implementation that turns the eleven SPEC-000 tests green, the
+  script as the first step of `composer check`, and the spec's bookkeeping.
+- Produced: `bin/spec-check.php` (`SpecCheckResult`, `specCheck()` and five
+  helpers; no options, no warnings; CLI part guarded so `require_once` is
+  side-effect free); `bin` added to PHPStan's paths (Pint already covered
+  it); composer script `spec-check` and `check` = spec-check → lint →
+  analyse → deptrac → test; SPEC-000 Status `implemented`, Traceability
+  filled for AC1–AC10; `docs/milestones.md` M0.3c done.
+- Measured: `vendor/bin/pest` → 11 passed (29 assertions), first run after
+  writing the script. `composer check` → spec-check `OK: 1 spec(s), 1 test
+  file(s)`, Pint passed, PHPStan `[OK] No errors` (now including `bin/`),
+  Deptrac 0 violations / 0 uncovered, Pest 11 passed; exit 0. AC10 by hand:
+  a copy of the repository in the scratchpad with SPEC-000's Status edited
+  back to `draft` — `composer check` there printed `SPEC-000: status draft
+  but tests/Unit/SpecCheckTest.php carries its group — tests precede
+  approval`, `FAIL: 1 finding(s)`, exit 1, and Pint's output line appeared 0
+  times, so the chain stopped at the first step. Copy deleted afterwards.
+- Reasoned: AC10 has no Pest test because a test running `composer check`
+  from inside `composer check` is a loop; the Traceability row says so and
+  points here.
+- Decided by Maurice: M0.3c as proposed.
