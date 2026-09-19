@@ -25,7 +25,7 @@
     "require-dev": {
         "deptrac/deptrac": "^4.7",
         "laravel/pint": "^1.32",
-        "pestphp/pest": "^5.2",
+        "pestphp/pest": "^4.0",
         "phpstan/phpstan": "^2.2"
     },
     "suggest": {

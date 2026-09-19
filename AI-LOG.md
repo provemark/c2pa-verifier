@@ -381,3 +381,21 @@ README are where the disclosure lives.
   maintainer's choice.
 - Decided by Maurice: create the remote, private, under `provemark`. The
   Pest constraint: not yet decided.
+
+## 2026-09-19 — Pest constraint: `^4.0`, so the PHP 8.3 leg can install
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "resume session", then "A" — option A of the open Pest question.
+- Produced: `composer.json` `require-dev` `pestphp/pest` `^5.2` → `^4.0`;
+  `docs/milestones.md` M0.4 row; this entry. `composer.lock` is gitignored,
+  so CI resolves per PHP version.
+- Measured: `composer update pestphp/pest --with-all-dependencies` →
+  Pest v5.2.1 → v4.7.8, PHPUnit 13.3.4 → 12.5.33; `composer show
+  pestphp/pest` → requires `php ^8.3.0`. `vendor/bin/pest` → **14 failed,
+  11 passed** (36 assertions) — the SPEC-001 tests still red, SPEC-000
+  still green, nothing else moved. `composer check` still stops at PHPStan
+  on the missing SPEC-001 classes, as intended until step 03b. CI result
+  of this commit: read after the push, per job.
+- Reasoned: one Pest major on all three PHP versions, and the same major
+  as the sister library, is the smallest surprise; B (`^4.0 || ^5.0`) would
+  run two different test runners in one matrix.
+- Decided by Maurice: A.
