@@ -320,3 +320,31 @@ README are where the disclosure lives.
 - Measured: `php bin/spec-check.php` → OK. Reasoned: none.
 - Decided by Maurice: SPEC-001 approved as written, thirteen criteria, the
   default limits 2048 pieces / 64 MiB.
+
+## 2026-09-19 — Step 03a: SPEC-001 tests, seen red
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the failing tests for SPEC-001 and the fixture variants they need.
+- Produced: `bin/make-jpeg-variants.php` (splits `fixture-signed.jpg` into
+  named segments and recomposes nine variants; prints SHA-256 per file);
+  `tests/Fixtures/jpeg/` — the nine variants and a `README.md` with what is
+  wrong in each, c2patool's verdict, and the hashes;
+  `tests/Unit/Container/JpegManifestStoreExtractorTest.php` (fourteen
+  tests, `->group('SPEC-001')`: one per AC1–AC13, two for AC9; the error
+  messages are fixed here, in the test, and the implementation must produce
+  them); `docs/milestones.md` row.
+- Measured: c2patool 0.27.22 on the nine committed variants: swapped,
+  missing-piece-2, lbox-differs, two-instance-numbers → `Error: invalid
+  embedded file box`; truncated-in-piece-2 → `Error: asset could not be
+  parsed: Could not parse input JPEG`; not-a-jpeg.bin → `Error: Unsupported
+  file type`; gap-between-pieces and app11-not-jp → extracts,
+  `claimSignature.validated`, `assertion.dataHash.mismatch`; pieces-after-sos
+  → `Error: No claim found`. `vendor/bin/pest` → `14 failed, 11 passed`,
+  every failure `Class "Provemark\C2paVerifier\Container\
+  JpegManifestStoreExtractor" not found`. `pint --test` passed after
+  formatting the script. PHPStan: 31 errors, all in the new test file, all
+  consequences of the missing classes. `php bin/spec-check.php` → `OK: 2
+  spec(s), 2 test file(s)`.
+- Reasoned: no stub classes in `src/` this time — `src/` stays empty until
+  the implementation; the red is "class not found" per test.
+- Decided by Maurice: step 03a as proposed.
