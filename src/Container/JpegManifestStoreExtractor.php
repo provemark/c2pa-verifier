@@ -20,10 +20,6 @@ final readonly class JpegManifestStoreExtractor
 
     public const DEFAULT_MAX_LBOX = 64 * 1024 * 1024;
 
-    private const MARKER_SOI = 0xD8;
-
-    private const MARKER_EOI = 0xD9;
-
     private const MARKER_SOS = 0xDA;
 
     private const MARKER_APP11 = 0xEB;
@@ -65,7 +61,9 @@ final readonly class JpegManifestStoreExtractor
             if ($marker === self::MARKER_SOS) {
                 break;
             }
-            if ($marker === self::MARKER_SOI || $marker === self::MARKER_EOI || $marker < 0xC0) {
+            if (! self::hasLengthField($marker)) {
+                // Reading a length where there is none would skip an arbitrary
+                // number of bytes and could land the scan past the store (AC15).
                 throw new ContainerException(sprintf(
                     'unexpected marker FF %02X at offset %d before SOS',
                     $marker,
@@ -179,6 +177,21 @@ final readonly class JpegManifestStoreExtractor
         }
 
         return new ManifestStoreBytes($collected);
+    }
+
+    /**
+     * Whether a marker code is followed by a two-byte length field
+     * (ITU-T T.81, Table B.1). TEM (01) and RST0–7 (D0–D7) stand alone, as
+     * do SOI (D8) and EOI (D9); 02–BF are reserved. Everything else — SOFn,
+     * DHT, DAC, SOS, DQT, DNL, DRI, DHP, EXP, APPn, JPGn, COM — has one.
+     */
+    private static function hasLengthField(int $marker): bool
+    {
+        if ($marker < 0xC0) {
+            return false;
+        }
+
+        return $marker < 0xD0 || $marker > 0xD9;
     }
 
     /**

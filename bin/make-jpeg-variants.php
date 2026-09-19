@@ -101,6 +101,10 @@ $variants = [
     'two-instance-numbers.jpg' => jpegJoin(['APP11#2' => jpegPut($p2, $enOffset, 2, 530)] + $c, $normal),
     // AC13: both pieces after the scan, before EOI
     'pieces-after-sos.jpg' => jpegJoin($c, ['SOI', 'APP0', 'COM', 'DQT', 'DHT', 'SOF0', 'SCAN', 'APP11#1', 'APP11#2', 'EOI']),
+    // AC14 (amendment 1): cut 12 bytes in, inside APP0 (offset 2, length 16), before any piece
+    'truncated-in-app0.jpg' => substr($source, 0, 12),
+    // AC15 (amendment 1): a bare RST0 marker (no length field) between APP0 and piece 1
+    'rst-before-sos.jpg' => jpegJoin(['RST0' => "\xFF\xD0"] + $c, ['SOI', 'APP0', 'RST0', 'APP11#1', 'APP11#2', 'COM', 'DQT', 'DHT', 'SOF0', 'SCAN', 'EOI']),
 ];
 
 $dir = $root.'/tests/Fixtures/jpeg';

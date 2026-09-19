@@ -102,6 +102,49 @@ divergence is recorded in `tests/Fixtures/jpeg/README.md` next to the file.
 - `readExactly()` rejects a negative length with a `LogicException`; PHPStan
   could not prove `fread` never received one.
 
+## Amendment 1: two fixtures for what was guarded by reasoning only
+
+The maintainer walked through the code and asked for a fixture for the
+end-of-file probe in `skip()`, and for an explanation of the `< 0xC0`
+marker boundary. Explaining the boundary against ITU-T T.81 Table B.1
+showed it was wrong: it catches TEM (`01`) and the reserved codes
+(`02`–`BF`) but not RST0–7 (`D0`–`D7`), which also carry no length field.
+Two variants were built and measured before the amendment was written:
+
+```
+c2patool tests/Fixtures/jpeg/truncated-in-app0.jpg
+→ Error: asset could not be parsed: Could not parse input JPEG
+c2patool tests/Fixtures/jpeg/rst-before-sos.jpg
+→ Error: No claim found
+```
+
+The second is c2patool doing what this spec forbids: after `FF D0` it
+reads the next two bytes (`FF EB`, the marker of piece 1) as a length of
+65,515, skips piece 1, finds piece 2 without a first piece and reports
+"no claim" — an error, but one that hides the cause. Our extractor did the
+same and failed further on with `expected a marker at offset 65537, found
+A7`. With `hasLengthField()` (the table, not a number) it now says
+`unexpected marker FF D0 at offset 20 before SOS`. Stricter than the
+oracle, in the safe direction, and it names the byte to look at.
+
+**A claim in the walkthrough was wrong, and the mutation test found it.**
+The explanation said that without the probe a file truncated before the
+first piece would yield `null`. Removing the probe and running AC14 showed
+the test still green: the loop can only reach `return null` through the
+`break` at SOS, and a truncated file never gets there — the next
+`readMarker` hits end of file and throws. What the probe actually buys is
+the *offset in the message*: the truncated segment (2) instead of the
+position after it (20). The first version of AC14 could not tell those
+apart either (`'offset 2'` matches `'offset 20'` as a substring); it now
+asserts the whole message, and with the probe removed it is red:
+
+```
+mutant: unexpected end of file while reading marker of the segment at offset 20: wanted 1 bytes, got 0
+```
+
+AC15 was red before the change (the misleading offset 65537) and green
+after. Final: `composer check` exit 0, 27 passed (62 assertions).
+
 ## Reasoned, not measured
 
 - The default limits (2,048 pieces, 64 MiB) are the spec's sketch; no
@@ -109,7 +152,5 @@ divergence is recorded in `tests/Fixtures/jpeg/README.md` next to the file.
 - LBox below 8 (0 = "to end of file", 1 = 64-bit XLBox in ISO BMFF) is
   rejected: neither can be reassembled from fixed-size pieces, and no C2PA
   writer is known to produce them. Untested by a fixture; fail closed.
-- Markers below `FFC0`, a second SOI, or EOI before SOS are errors, as are
-  fill bytes followed by anything but a marker. Baseline JPEG does not
-  place RST or TEM markers before SOS; if a real file ever does, it is a
-  fixture and a spec amendment, not a silent skip.
+- Fill bytes (`FF FF …`) followed by anything but a marker are an error.
+  (The marker rule itself moved from reasoned to measured in amendment 1.)

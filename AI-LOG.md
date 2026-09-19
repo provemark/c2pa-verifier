@@ -425,3 +425,30 @@ README are where the disclosure lives.
   rejected without a fixture, fail closed.
 - Decided by Maurice: keep AC7 as approved ("behouden voor nu"); an
   amendment, not a code change, would reverse it.
+
+## 2026-09-19 — SPEC-001 amendment 1: AC14 and AC15
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "explain JpegManifestStoreExtractor to me, simply and at length";
+  then "yes, add that fixture, and I do not understand the 0xC0 boundary,
+  explain it"; then "ja akkoord" on the amendment as proposed.
+- Produced: SPEC-001 Scope rule, AC14, AC15, References line, Amendments
+  section, two Traceability rows; `bin/make-jpeg-variants.php` two variants;
+  `tests/Fixtures/jpeg/{truncated-in-app0,rst-before-sos}.jpg` and their
+  README rows and hashes; two tests; `hasLengthField()` replacing the
+  `< 0xC0` check (SOI/EOI constants removed); `notes/step-03` "Amendment 1"
+  section; `NOTES.md`, `docs/milestones.md`; this entry.
+- Measured: the two variants built in the scratchpad and run through
+  `c2patool 0.27.22` before the amendment (`Could not parse input JPEG`;
+  `No claim found`) and through the then-current extractor (`offset 2`;
+  `expected a marker at offset 65537, found A7`); the committed files are
+  `cmp`-identical to the measured ones. `spec-check` red on the two empty
+  Traceability rows (2 findings) until filled. AC15 red, then green. AC14
+  green at once; mutation (probe removed) stayed green under the substring
+  assertion, then red under the exact-message assertion — mutant message
+  `… at offset 20: wanted 1 bytes, got 0`. Final `composer check` exit 0,
+  27 passed (62 assertions).
+- Reasoned: T.81 Table B.1 for which markers carry a length field (TEM,
+  RST0–7, SOI, EOI do not; 02–BF reserved). Corrected in the note: the
+  probe does not prevent a `null` (unreachable without SOS); it names the
+  right segment.
+- Decided by Maurice: add the fixture; approve amendment 1 as proposed.

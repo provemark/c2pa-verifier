@@ -117,3 +117,16 @@ it('AC12: the default limits are 2048 pieces and 64 MiB', function (): void {
 it('AC13: pieces after SOS are not scanned; the result is null', function (): void {
     expect(spec001Extract('jpeg/pieces-after-sos.jpg'))->toBeNull();
 })->group('SPEC-001');
+
+it('AC14: a file truncated before the first piece is an error naming the segment offset, not null', function (): void {
+    // An exception instance makes Pest compare the whole message: 'offset 2'
+    // as a substring would also match 'offset 20', the position after the
+    // segment, which is where the scan fails without the probe in skip().
+    expect(fn () => spec001Extract('jpeg/truncated-in-app0.jpg'))
+        ->toThrow(new ContainerException('unexpected end of file inside the segment at offset 2'));
+})->group('SPEC-001');
+
+it('AC15: a marker without a length field before SOS is an error naming the marker and its offset', function (): void {
+    expect(fn () => spec001Extract('jpeg/rst-before-sos.jpg'))
+        ->toThrow(ContainerException::class, 'FF D0 at offset 20');
+})->group('SPEC-001');

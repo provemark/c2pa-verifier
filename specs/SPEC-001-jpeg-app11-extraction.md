@@ -43,6 +43,11 @@ it, whether it is a C2PA store at all: M2.
   partial result.
 - Hard limits on the number of pieces and on LBox, checked before memory is
   spent.
+- Markers that carry no length field (TEM `FF01`, RST0–7 `FFD0`–`FFD7`, a
+  second SOI, EOI) and reserved marker codes (`FF02`–`FFBF`) before SOS are
+  errors naming the marker and its offset (AC15, amendment 1). Reading a
+  length where there is none would skip an arbitrary number of bytes and
+  could land the scan past the store.
 - The result as an immutable value object holding the bytes.
 
 **Out of scope** (each needs its own spec before it may be built)
@@ -150,6 +155,25 @@ assumption: this project fails closed.
   - When the extractor runs
   - Then it returns `null` and throws nothing
 
+- **AC14 — a file truncated before the first piece is an error, not "no
+  store"** *(amendment 1; oracle: `c2patool` → `Error: asset could not be
+  parsed: Could not parse input JPEG`)*
+  - Given the fixture cut off 12 bytes in, inside the APP0 segment, before
+    any APP11
+  - When the extractor runs
+  - Then it throws `ContainerException` naming the segment offset (2), and
+    does not return `null`
+
+- **AC15 — a marker without a length field before SOS is an error naming
+  the marker** *(amendment 1; oracle: `c2patool` → `Error: No claim found`
+  — it reads the two bytes after `FF D0` as a length, skips the first piece
+  and finds no store; this verifier is stricter and names the cause)*
+  - Given the fixture with a bare `FF D0` (RST0) inserted between APP0 and
+    the first piece
+  - When the extractor runs
+  - Then it throws `ContainerException` naming `FF D0` and offset 20, and
+    returns no bytes
+
 ## References
 
 - Specification: C2PA 2.4 §A.3.1 "Embedding manifests into JPEG" (quoted in
@@ -161,6 +185,9 @@ assumption: this project fails closed.
   behaviour on five variants, measured in step 02 (`c2patool <variant>.jpg`):
   swapped, non-contiguous, two En values, pieces after SOS, an APP11
   without `JP`.
+- Amendment 1: ITU-T T.81 Table B.1 (marker code assignments) for which
+  markers carry a length field; `c2patool 0.27.22` on the two new variants,
+  measured 2026-09-19 (`notes/step-03-jpeg-extractor.md`).
 - Reasoned: the 16-byte header layout (from the measurement, consistent
   across both pieces and with LBox, not from the ISO text); the default
   limits (no measurement says what the largest real store is — the sister
@@ -213,6 +240,17 @@ checks and limits pass. It never calls `file_get_contents`.
   reason (an enum) next to the message. Deferred to the `Verifier` spec that
   first needs to map it.
 
+## Amendments
+
+1. **2026-09-19, approved by Maurice van Loon** — AC14 and AC15 added, the
+   marker rule added to Scope. Cause: a walk through the implementation
+   showed two behaviours guarded by reasoning only. The end-of-file probe in
+   the skip of an unneeded segment (without it a file truncated before the
+   first piece would yield `null`, "no store") had no fixture; and the
+   check for markers without a length field used a numeric boundary
+   (`< 0xC0`) that missed RST0–7, so a bare `FF D0` before SOS produced a
+   misleading error at a far offset instead of naming the marker.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -233,3 +271,5 @@ least one test; every source file maps back to this spec.
 | AC11 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC11: two different box instance numbers are an error naming both / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$fields['en'] !== $instanceNumber`) |
 | AC12 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC12: the default limits are 2048 pieces and 64 MiB / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: DEFAULT_MAX_PIECES, DEFAULT_MAX_LBOX, __construct() |
 | AC13 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC13: pieces after SOS are not scanned; the result is null / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (loop ends at SOS) |
+| AC14 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC14: a file truncated before the first piece is an error naming the segment offset, not null / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: skip() (end-of-file probe) |
+| AC15 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC15: a marker without a length field before SOS is an error naming the marker and its offset / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: hasLengthField(), extract() |

@@ -11,4 +11,4 @@ conclusion from reading). The plan these steps follow is
 |---|---|---|---|
 | 01 | 2026-09-19 | M0: the skeleton — package, tool chain, SPEC-000, CI, documents | [`notes/step-01-m0-skeleton.md`](notes/step-01-m0-skeleton.md) |
 | 02 | 2026-09-19 | The signed JPEG fixture; what a JPEG is; APP11 pieces measured; how c2patool treats gaps and swaps | [`notes/step-02-jpeg-fixture.md`](notes/step-02-jpeg-fixture.md) |
-| 03 | 2026-09-19 | The first code: the JPEG extractor; a wrong fixture found and fixed; c2patool ignores LBox in continuation pieces, AC7 kept stricter | [`notes/step-03-jpeg-extractor.md`](notes/step-03-jpeg-extractor.md) |
+| 03 | 2026-09-19 | The first code: the JPEG extractor; a wrong fixture found and fixed; c2patool ignores LBox in continuation pieces, AC7 kept stricter; amendment 1: two fixtures for the marker table and the end-of-file probe, a wrong claim caught by a mutation test | [`notes/step-03-jpeg-extractor.md`](notes/step-03-jpeg-extractor.md) |
