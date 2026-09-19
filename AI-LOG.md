@@ -310,3 +310,13 @@ README are where the disclosure lives.
 - Reasoned: nothing new; all three matched the draft, so the amendment is
   provenance (reasoned → measured), not behaviour.
 - Decided by Maurice: measure first, then read.
+
+## 2026-09-19 — SPEC-001 approved
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: set SPEC-001 to `approved`.
+- Produced: the Status and Approved rows of
+  `specs/SPEC-001-jpeg-app11-extraction.md`; `docs/milestones.md` row.
+- Measured: `php bin/spec-check.php` → OK. Reasoned: none.
+- Decided by Maurice: SPEC-001 approved as written, thirteen criteria, the
+  default limits 2048 pieces / 64 MiB.
