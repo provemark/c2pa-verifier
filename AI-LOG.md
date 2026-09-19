@@ -207,3 +207,21 @@ README are where the disclosure lives.
 - Decided by Maurice: M0.4a as proposed; M0.4b (repository on GitHub,
   private; push; read the first run per job) is a separate decision, not yet
   taken.
+
+## 2026-09-19 — M0.5: README, NOTES, ADR-0001, ADR-0002
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the documents that record today's decisions for an outside reader.
+- Produced: `README.md` (what it is and is not, status "M0: nothing verifies
+  anything yet", design rules, how to work on it, relation to the sister
+  library, the "How this is built" disclosure as decided, licence);
+  `docs/adr/ADR-0001-dependencies.md` and
+  `docs/adr/ADR-0002-name-namespace-licence.md` (Nygard shape: context,
+  decision, alternatives rejected, consequences; "Decided: Maurice van
+  Loon"); `NOTES.md` (index) and `notes/step-01-m0-skeleton.md` (the story
+  of M0 including what went differently); `docs/milestones.md` M0.5 done.
+- Measured: `grep -ril "claude.md" README.md NOTES.md notes docs specs` →
+  nothing (no reference to a file outside the repository); `composer check`
+  exit 0. Reasoned: the README makes no "only …" claim — that waits until
+  the verifier exists.
+- Decided by Maurice: M0.5 as proposed, in one commit.

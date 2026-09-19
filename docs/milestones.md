@@ -47,7 +47,7 @@ Each step is one commit, explained before it is built, with its own
 | M0.3b | Red tests for SPEC-000, `->group('SPEC-000')`, fixture trees under `tests/Fixtures/spec-check/` | done, seen red (11 failed) |
 | M0.3c | `bin/spec-check.php`; first step of `composer check`; SPEC-000 → `implemented` with Traceability | done, 11 passed, AC10 measured by hand |
 | M0.4 | CI: `.github/workflows/ci.yml`, `composer check` on PHP 8.3 / 8.4 / 8.5 | written and rehearsed locally; not yet run — needs a remote, which needs the maintainer's go |
-| M0.5 | `README.md` (with the "How this is built" disclosure), `NOTES.md` + `notes/step-01-*.md`, ADR-0001 (dependencies), ADR-0002 (name, namespace, licence) | — |
+| M0.5 | `README.md` (with the "How this is built" disclosure), `NOTES.md` + `notes/step-01-*.md`, ADR-0001 (dependencies), ADR-0002 (name, namespace, licence) | done |
 | M0.6 | Measurement: `composer check` green on an empty `src/`; M0 closed | — |
 
 Why M0.3 exists at all: Pest exits 1 on an empty suite (measured in M0.2),
