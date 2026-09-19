@@ -452,3 +452,16 @@ README are where the disclosure lives.
   probe does not prevent a `null` (unreachable without SOS); it names the
   right segment.
 - Decided by Maurice: add the fixture; approve amendment 1 as proposed.
+
+## 2026-09-19 — First green CI run
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja, push maar en lees de CI-run".
+- Produced: pushed `56e6dd4` and `bbb7299` to `origin/main`; three
+  `docs/milestones.md` rows that still said the CI run was pending; this
+  entry.
+- Measured: 0 attribution lines in the history before the push. Run
+  `35444321627` on `bbb7299`: conclusion `success`; per job, `composer
+  check (PHP 8.3)`, `(PHP 8.4)`, `(PHP 8.5)` each `success` with `Tests:
+  27 passed` in the log; `all green` `success`. The first green run of the
+  project, and the first in which the 8.3 leg installed at all.
+- Decided by Maurice: push.
