@@ -52,9 +52,10 @@ it, whether it is a C2PA store at all: M2.
 - Mapping extraction errors onto `c2patool`'s verdict. `c2patool` reports
   these as a top-level error, not as a C2PA 2.4 §15 status code; how the
   `Verifier` layer presents them is that layer's spec.
-- APP11 segments after SOS. The scan stops at SOS; see Open questions.
+- APP11 segments after SOS. The scan stops at SOS, as `c2patool` does
+  (AC13).
 - Segments without the `JP` identifier (other users of APP11): skipped as
-  any unknown APPn segment is skipped, never read.
+  any unknown APPn segment is skipped, never read (AC8).
 
 ## Behavior
 
@@ -109,7 +110,9 @@ assumption: this project fails closed.
   - When the extractor runs
   - Then it throws `ContainerException` naming both values
 
-- **AC8 — an APP11 segment without `JP` is skipped**
+- **AC8 — an APP11 segment without `JP` is skipped** *(oracle: `c2patool`
+  extracts and validates the signature, then `assertion.dataHash.mismatch`
+  for the moved bytes — M4)*
   - Given the fixture with an extra APP11 segment inserted before the first
     piece, whose payload starts with `XX` instead of `JP`
   - When the extractor runs
@@ -128,7 +131,8 @@ assumption: this project fails closed.
   - When the extractor runs
   - Then it throws `ContainerException` before reading further
 
-- **AC11 — two different box instance numbers are an error**
+- **AC11 — two different box instance numbers are an error** *(oracle:
+  `c2patool` → `Error: invalid embedded file box`)*
   - Given the fixture with piece 2's En changed from 529 to 530
   - When the extractor runs
   - Then it throws `ContainerException` naming both instance numbers
@@ -139,6 +143,13 @@ assumption: this project fails closed.
   - Then it succeeds, and its limits are readable as the values in the API
     sketch
 
+- **AC13 — pieces after SOS are not scanned** *(oracle: `c2patool` →
+  `Error: No claim found`)*
+  - Given the fixture with both APP11 pieces moved to after the entropy-coded
+    data, before EOI
+  - When the extractor runs
+  - Then it returns `null` and throws nothing
+
 ## References
 
 - Specification: C2PA 2.4 §A.3.1 "Embedding manifests into JPEG" (quoted in
@@ -147,14 +158,13 @@ assumption: this project fails closed.
   read (paywalled).
 - Oracle: `c2patool 0.27.22`; `tests/Fixtures/fixture-signed.jpg`; the
   reassembled store's SHA-256 measured with a probe in step 02; c2patool's
-  behaviour on the swapped and non-contiguous variants, measured in step 02
-  (`c2patool <variant>.jpg`).
+  behaviour on five variants, measured in step 02 (`c2patool <variant>.jpg`):
+  swapped, non-contiguous, two En values, pieces after SOS, an APP11
+  without `JP`.
 - Reasoned: the 16-byte header layout (from the measurement, consistent
-  across both pieces and with LBox); stopping the scan at SOS; skipping
-  APP11 segments without `JP`; the default limits (no measurement says what
-  the largest real store is — the sister library saw 2.5 MB from an
-  auto-thumbnail); that two En values are an error (c2patool's behaviour
-  unmeasured — see Open questions).
+  across both pieces and with LBox, not from the ISO text); the default
+  limits (no measurement says what the largest real store is — the sister
+  library saw 2.5 MB from an auto-thumbnail).
 
 ## API sketch
 
@@ -196,11 +206,9 @@ checks and limits pass. It never calls `file_get_contents`.
 
 ## Open questions
 
-- Non-blocker, to be measured before the tests are written: what
-  `c2patool` does with two APP11 groups with different En values in one
-  file, and with an APP11 piece placed after SOS. This spec says "error" and
-  "not scanned" respectively; if c2patool is more lenient, the spec is
-  amended before approval, not after.
+- Resolved before approval: `c2patool`'s behaviour with two En values
+  (error) and with pieces after SOS (no claim found) was measured on
+  2026-09-19; AC11 and AC13 carry the result.
 - Non-blocker: whether `ContainerException` should carry a machine-readable
   reason (an enum) next to the message. Deferred to the `Verifier` spec that
   first needs to map it.
@@ -224,3 +232,4 @@ least one test; every source file maps back to this spec.
 | AC10                 | —                           | —                    |
 | AC11                 | —                           | —                    |
 | AC12                 | —                           | —                    |
+| AC13                 | —                           | —                    |

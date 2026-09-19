@@ -139,3 +139,19 @@ else, and given to c2patool 0.27.22:
 - Bounds: a maximum number of pieces and a maximum LBox, both errors when
   exceeded, before any memory is spent.
 - Oracle: SHA-256 `f47af93e…46a3` on `fixture-signed.jpg`.
+
+## Addendum, same day: three more variants for SPEC-001's open questions
+
+Built the same way (whole segments moved or one field changed, nothing
+else), given to c2patool 0.27.22:
+
+| variant | c2patool | consequence for SPEC-001 |
+|---|---|---|
+| piece 2's En changed 529 → 530 (two box instance numbers) | `Error: invalid embedded file box` | AC11: error, as drafted |
+| both pieces moved to after the entropy-coded data, before EOI | `Error: No claim found` | AC13: the scan stops at SOS; the outcome is "no store", not an error |
+| an extra APP11 with `XX` instead of `JP` inserted before piece 1 | extracts, `claimSignature.validated`, then `assertion.dataHash.mismatch` (bytes moved — M4) | AC8: skipped, as drafted |
+
+So every criterion of SPEC-001 that describes c2patool's behaviour now has
+a measurement behind it; what remains reasoned is the header layout's
+provenance (measured on the fixture, not read from ISO) and the default
+limits.

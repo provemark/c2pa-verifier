@@ -291,3 +291,22 @@ README are where the disclosure lives.
   reasoned in the spec's References, the last two with a measurement
   promised before approval.
 - Decided by Maurice: none yet; the draft is his to read.
+
+## 2026-09-19 — SPEC-001 open questions measured before approval
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: measure the two open questions of the SPEC-001 draft before
+  Maurice reads it for approval.
+- Produced: SPEC-001 draft amended — AC8 and AC11 now carry their oracle,
+  new AC13 (pieces after SOS → `null`), References list five measured
+  variants, the open question marked resolved; addendum in
+  `notes/step-02-jpeg-fixture.md`.
+- Measured, c2patool 0.27.22 on three variants of the fixture built by
+  moving whole segments or changing one field: piece 2's En 529 → 530 →
+  `Error: invalid embedded file box`; both pieces after the scan data →
+  `Error: No claim found`; an APP11 with `XX` instead of `JP` before piece
+  1 → extracts, `claimSignature.validated`, `assertion.dataHash.mismatch`.
+  `php bin/spec-check.php` → `OK: 2 spec(s), 1 test file(s)`.
+- Reasoned: nothing new; all three matched the draft, so the amendment is
+  provenance (reasoned → measured), not behaviour.
+- Decided by Maurice: measure first, then read.
