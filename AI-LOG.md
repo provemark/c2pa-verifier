@@ -109,3 +109,13 @@ README are where the disclosure lives.
 - Decided by Maurice: option B (SPEC-000) over accepting a red `composer
   check` until SPEC-001; M0.3a as proposed. Approval of SPEC-000 itself is
   pending his reading.
+
+## 2026-09-19 — SPEC-000 approved
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: set SPEC-000 to `approved`.
+- Produced: the Status and Approved rows of
+  `specs/SPEC-000-spec-traceability.md`; nothing else changed.
+- Measured: none. Reasoned: none.
+- Decided by Maurice: SPEC-000 approved as written, including AC4 as an
+  error, exact status matching, and the `superseded` question left open.
