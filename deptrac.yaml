@@ -1,0 +1,86 @@
+# Architecture boundaries, one layer per milestone of the brief. A layer that
+# does not exist yet costs nothing here and makes the first file in it land
+# under a rule instead of before one. Adding an arrow is a decision that
+# belongs in the spec of the code that needs it.
+deptrac:
+  paths:
+    - ./src
+  layers:
+    - name: Container      # M1: JPEG / PNG / WebP -> manifest store bytes
+      collectors:
+        - type: directory
+          value: src/Container/.*
+    - name: Jumbf          # M2: ISO 19566-5 boxes
+      collectors:
+        - type: directory
+          value: src/Jumbf/.*
+    - name: Cbor           # M2: RFC 8949 decoder (subset)
+      collectors:
+        - type: directory
+          value: src/Cbor/.*
+    - name: Manifest       # M2: claim, assertions, manifest store
+      collectors:
+        - type: directory
+          value: src/Manifest/.*
+    - name: Cose           # M3: COSE_Sign1
+      collectors:
+        - type: directory
+          value: src/Cose/.*
+    - name: Hash           # M4: hash binding
+      collectors:
+        - type: directory
+          value: src/Hash/.*
+    - name: Trust          # M5: chain and trust list
+      collectors:
+        - type: directory
+          value: src/Trust/.*
+    - name: Timestamp      # M6: RFC 3161
+      collectors:
+        - type: directory
+          value: src/Timestamp/.*
+    - name: Report         # the verdict: validation state and status codes
+      collectors:
+        - type: directory
+          value: src/Report/.*
+    - name: Verifier       # orchestration; the public entry point
+      collectors:
+        - type: directory
+          value: src/Verifier/.*
+  ruleset:
+    # Leaves: parsers depend on nothing internal.
+    Container: ~
+    Jumbf: ~
+    Cbor: ~
+    Report: ~
+    # The manifest model is built from boxes and CBOR.
+    Manifest:
+      - Jumbf
+      - Cbor
+      - Report
+    # The four checks each see the manifest, never each other.
+    Cose:
+      - Manifest
+      - Cbor
+      - Report
+    Hash:
+      - Manifest
+      - Cbor
+      - Report
+    Trust:
+      - Manifest
+      - Report
+    Timestamp:
+      - Manifest
+      - Cbor
+      - Report
+    # Orchestration may use everything.
+    Verifier:
+      - Container
+      - Jumbf
+      - Cbor
+      - Manifest
+      - Cose
+      - Hash
+      - Trust
+      - Timestamp
+      - Report

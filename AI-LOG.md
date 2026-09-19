@@ -62,3 +62,31 @@ README are where the disclosure lives.
   5. SPEC-001 = JPEG APP11 → manifest store bytes, then PNG (002) and WebP
      (003); M0 first. A signed JPEG fixture will be produced when SPEC-001
      starts, with the command recorded.
+
+## 2026-09-19 — M0.2: Pint, PHPStan, Deptrac, Pest and `composer check`
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: add the tool chain and the single definition of green, before any code.
+- Produced: `require-dev` with `laravel/pint ^1.32` (1.32.1), `phpstan/phpstan
+  ^2.2` (2.2.14), `deptrac/deptrac ^4.7` (4.7.2), `pestphp/pest ^5.2` (5.2.1,
+  on PHPUnit 13.3.4); `config.allow-plugins` for `pestphp/pest-plugin` only;
+  `pint.json` (preset laravel + `declare_strict_types`), `phpstan.neon` (level
+  max, `src` and `tests`, no ignores), `deptrac.yaml` (one layer per milestone,
+  parsers are leaves, the four checks never see each other, `Verifier` sees
+  all), `phpunit.xml` (fails on warning/deprecation/notice/empty suite),
+  `tests/Pest.php`, `tests/Unit/`, `tests/Integration/`; composer scripts
+  `format`, `lint` (`pint --test`), `analyse` (`--memory-limit=512M`),
+  `deptrac`, `test`, `check` = lint → analyse → deptrac → test.
+- Measured: `composer require --dev` first failed — Composer blocks the Pest
+  plugin until `allow-plugins` names it (fixed, measured again). `composer
+  bump` wrote `>=`; replaced by `^` by hand, `composer validate --strict` ok.
+  `php -m` lists `mbstring`, `openssl`, `sodium` as loaded (Composer's
+  platform table had suggested mbstring came from a polyfill; it does not).
+  `composer check`: Pint passed, PHPStan `[OK] No errors`, Deptrac 0
+  violations / 0 uncovered, **Pest `No tests found` → exit 1**, so `check` is
+  red on an empty test suite. That is the wanted fail-closed behaviour (a
+  suite that runs nothing must not report green); how M0 reaches green is a
+  decision for Maurice, recorded in the next entry.
+- Reasoned: the Deptrac layers and arrows follow the milestone table of the
+  brief; every future arrow is a spec decision.
+- Decided by Maurice: M0.2 as proposed.
