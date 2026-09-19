@@ -1,0 +1,36 @@
+{
+    "name": "provemark/c2pa-verifier",
+    "description": "Verifier for C2PA Content Credentials in pure PHP: reads the manifest store out of a file and checks signature, hash binding, certificate chain and timestamp, with c2patool's verdict semantics. Read and verify only; no signing.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["c2pa", "content-credentials", "provenance", "verifier", "jumbf", "cbor", "cose"],
+    "authors": [
+        {
+            "name": "Maurice van Loon"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "ext-openssl": "*",
+        "ext-mbstring": "*"
+    },
+    "require-dev": {},
+    "suggest": {
+        "ext-sodium": "Ed25519 signature verification (opt-in; not available on every host)"
+    },
+    "autoload": {
+        "psr-4": {
+            "Provemark\\C2paVerifier\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Provemark\\C2paVerifier\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    }
+}
