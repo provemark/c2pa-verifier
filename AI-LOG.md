@@ -465,3 +465,30 @@ README are where the disclosure lives.
   27 passed` in the log; `all green` `success`. The first green run of the
   project, and the first in which the 8.3 leg installed at all.
 - Decided by Maurice: push.
+
+## 2026-09-19 — Step 04: the signed PNG fixture and its measurement
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "wat houdt spec2 in?", then "ja, leg stap 04 uit", then "akkoord".
+- Produced: `tests/Fixtures/fixture-unsigned.png` (the sister library's
+  `fixture.png`), `fixture-signed.png`, `fixture-signed-png.manifest.json`
+  (placeholders for key and certificate paths); `bin/make-png-variants.php`
+  and ten files under `tests/Fixtures/png/` with their README;
+  `notes/step-04-png-fixture.md`; `NOTES.md` row; `docs/milestones.md` M1
+  rows; this entry. No `src/` change, no spec yet.
+- Measured: `c2patool 0.27.22 fixture-unsigned.png -m <manifest> -o
+  fixture-signed.png` (the manifest with real paths lived in the session
+  scratch directory and was deleted); `c2patool` on the signed file →
+  `Valid`, with `--settings` → `Trusted`, on the unsigned → `No claim
+  found`; the chunk walk with a PHP probe (all four CRCs recomputed and
+  equal); `caBX` at offset 33, 46,025 bytes, LBox 46,025, store SHA-256
+  `1a018eb8…57df`; the ten variants through c2patool (table in the
+  README) — notably `crc-wrong.png` → `Valid` and `lbox-differs.png` →
+  `Valid`, the changed bytes confirmed with `xxd`; `curl` of c2pa-rs
+  `main` `png_io.rs`: the CRC is read and discarded, `caBX` counted (> 1 →
+  error), position not checked, LBox not compared. `git ls-files | grep -i
+  key` → nothing. `fread($f, 0)` → `ValueError` in PHP 8.5.
+- Reasoned: the PNG chunk frame and the type-letter flags from ISO/IEC
+  15948; the proposals for SPEC-002 at the end of the note (stricter than
+  the oracle on CRC and LBox; extract regardless of position; empty or
+  too-short `caBX` an error).
+- Decided by Maurice: proceed with step 04 as explained.
