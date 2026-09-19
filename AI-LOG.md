@@ -492,3 +492,19 @@ README are where the disclosure lives.
   the oracle on CRC and LBox; extract regardless of position; empty or
   too-short `caBX` an error).
 - Decided by Maurice: proceed with step 04 as explained.
+
+## 2026-09-19 — SPEC-002 (draft): PNG `caBX` → manifest store bytes
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "schrijf SPEC-002 als draft".
+- Produced: `specs/SPEC-002-png-cabx-extraction.md`, status `draft`, 14
+  acceptance criteria, each tied to a step-04 variant and its measured
+  c2patool result; `docs/milestones.md` row; this entry. No code, no tests.
+- Measured: nothing new; every oracle line cites step 04. `bin/spec-check.php`
+  → `spec SPEC-002 draft`, `OK: 3 spec(s), 2 test file(s)`; `composer check`
+  exit 0.
+- Reasoned: AC6 and AC7 stricter than c2patool (CRC, LBox vs chunk length),
+  written next to the criterion; AC8/AC9 extract regardless of position, as
+  c2patool, so M4 can give the precise verdict; AC11 treats an empty `caBX`
+  as malformed, not absent; AC14 (truncated before `IEND`) has no fixture
+  yet — listed as an open question, a blocker for `implemented` only.
+- Decided by Maurice: none yet; the draft awaits his approval.
