@@ -274,3 +274,20 @@ README are where the disclosure lives.
   and therefore SPEC-001 must not sort by Z.
 - Decided by Maurice: step 02 as proposed; the simpler explanation is the
   one that counts.
+
+## 2026-09-19 — SPEC-001 written (draft)
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: SPEC-001, JPEG APP11 → manifest store bytes, as a draft.
+- Produced: `specs/SPEC-001-jpeg-app11-extraction.md` (AC1–AC12: the
+  fixture's hash as the happy path, no-APP11 as an outcome, swapped pieces
+  an error and a gap tolerated — both as c2patool does —, truncation,
+  missing piece, differing LBox/TBox, non-`JP` APP11 skipped, limits, not a
+  JPEG, two En values, default limits); `docs/milestones.md` row updated.
+- Measured: `php bin/spec-check.php` → `spec SPEC-001 draft`, `OK: 2
+  spec(s), 1 test file(s)`. Everything the criteria rest on was measured in
+  step 02. Reasoned: the default limits (2048 pieces, 64 MiB), stopping at
+  SOS, skipping non-`JP` APP11, two En values as an error — all marked as
+  reasoned in the spec's References, the last two with a measurement
+  promised before approval.
+- Decided by Maurice: none yet; the draft is his to read.
