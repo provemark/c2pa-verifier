@@ -1,0 +1,26 @@
+# --- Secrets: NEVER commit. This project verifies only; no private key has any
+# business here, test key or otherwise. Public test certificates are fine. ---
+.env
+.env.*
+!.env.example
+*.key
+
+# --- PHP / Composer ---
+/vendor/
+composer.lock
+.phpunit.cache/
+.phpunit.result.cache
+.phpstan.cache/
+.deptrac.cache
+.php-cs-fixer.cache
+
+# --- Build artifacts and local tools (c2patool binary is downloaded, never committed) ---
+out/
+tools/
+
+# --- Editors / OS ---
+.idea/
+.DS_Store
+
+# Local project instructions (not published)
+CLAUDE.md
