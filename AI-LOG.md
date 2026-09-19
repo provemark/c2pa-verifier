@@ -132,3 +132,30 @@ README are where the disclosure lives.
 - Measured: none. Reasoned: the split between this page (the plan) and
   `NOTES.md` (the record, from M0.5).
 - Decided by Maurice: the plan goes into the repository before M0.3b.
+
+## 2026-09-19 — M0.3b: SPEC-000 tests, seen red
+
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the failing tests for SPEC-000 before any implementation.
+- Produced: `tests/Unit/SpecCheckTest.php` (eleven tests, all
+  `->group('SPEC-000')`: one per AC1–AC9, two for AC8, plus "this repository
+  itself is clean"); nine fixture trees under `tests/Fixtures/spec-check/`
+  (`clean`, `unknown-group`, `no-group`, `draft-with-tests`,
+  `implemented-no-test`, `implemented-empty-traceability`, `bad-status`,
+  `multi-group`, `dirty`), each a minimal `specs/` + `tests/Unit/` pair;
+  `bin/spec-check.php` as an empty file (a `declare` and a comment) so the
+  tests fail per test instead of at `require_once`.
+- Measured: `vendor/bin/pest` → `11 failed (0 assertions)`, every one `Call
+  to undefined function specCheck()`. `vendor/bin/pest --list-tests | grep -c
+  Fixtures` → 0: the fixture "tests" are not collected. `pint --test` passed.
+  `phpstan` → 40 errors, all `Function specCheck not found` and its type
+  consequences in the test file; none in the fixtures.
+- Reasoned: the tests expect a result object (`findings`, `specs`, `render()`,
+  `exitCode()`) rather than the `list<string>` of the spec's API sketch,
+  because AC1 and AC8 also fix the output text and the counts. The sketch is
+  non-binding; no amendment. AC10 (`composer check` runs the script first) is
+  not a Pest test — it would call `composer check` from inside `composer
+  check` — and will be measured by hand in M0.3c. The checker skipping
+  `tests/Fixtures/` is read from the Scope's "`*Test.php` under `tests/`" and
+  is asserted by the last test.
+- Decided by Maurice: M0.3b as proposed, with those two readings.

@@ -44,7 +44,7 @@ Each step is one commit, explained before it is built, with its own
 | M0.1 | `composer.json` (`provemark/c2pa-verifier`, MIT, `php ^8.3`, no packages in `require`), `LICENSE`, `src/`, `tests/Fixtures/README.md` | done, `53caa8d` |
 | M0.2 | Pint, PHPStan level max, Deptrac (one layer per milestone), Pest; `composer check` as the single definition of green | done, `b351e86` |
 | M0.3a | `specs/TEMPLATE.md`; SPEC-000 (the traceability checker) as draft, then approved | done, `60ec881`, `eff055e` |
-| M0.3b | Red tests for SPEC-000, `->group('SPEC-000')`, fixture trees under `tests/Fixtures/spec-check/` | — |
+| M0.3b | Red tests for SPEC-000, `->group('SPEC-000')`, fixture trees under `tests/Fixtures/spec-check/` | done, seen red (11 failed) |
 | M0.3c | `bin/spec-check.php`; first step of `composer check`; SPEC-000 → `implemented` with Traceability | — |
 | M0.4 | CI: `.github/workflows/ci.yml`, `composer check` on PHP 8.3 / 8.4 / 8.5 | — |
 | M0.5 | `README.md` (with the "How this is built" disclosure), `NOTES.md` + `notes/step-01-*.md`, ADR-0001 (dependencies), ADR-0002 (name, namespace, licence) | — |
