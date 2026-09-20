@@ -665,3 +665,21 @@ README are where the disclosure lives.
   the found form type shown as text when it is printable ASCII, as SPEC-003
   AC4 asks it to be named.
 - Decided by Maurice: SPEC-003 approved as drafted.
+
+## 2026-09-20 — Step 07: the WebP extractor (SPEC-003 implemented); M1 complete
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja ga verder" on step 07b.
+- Produced: `src/Container/WebpManifestStoreExtractor.php`; SPEC-003 →
+  `implemented` with Traceability; `tests/Fixtures/webp/README.md` SPEC-003
+  column; `notes/step-07-webp-extractor.md`; `NOTES.md` row;
+  `docs/milestones.md` (SPEC-003 row, M1 marked done); this entry.
+- Measured: first run 20 passed, 1 failed — AC16, `ftell` at the file end
+  because the size comparison threw before the stream was put back after
+  the file-end seek; repositioned first, then `composer check` exit 0,
+  **63 passed (139 assertions)**, spec-check `OK: 4 spec(s), 4 test
+  file(s)`, PHPStan `No errors`, Deptrac 0 violations.
+- Reasoned: the size check before the walk, so the loop's end is the file's
+  end and the overrun check (AC6) is the only remaining truncation shape;
+  the found form type shown as text only when all four bytes are printable
+  ASCII; the shared stream reader named as the next step before M2.
+- Decided by Maurice: build step 07b.

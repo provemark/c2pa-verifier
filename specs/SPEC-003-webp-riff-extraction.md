@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-20                      |
 | Supersedes | —                                                 |
@@ -279,19 +279,19 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
-| AC11                 | —                           | —                    |
-| AC12                 | —                           | —                    |
-| AC13                 | —                           | —                    |
-| AC14                 | —                           | —                    |
-| AC15                 | —                           | —                    |
-| AC16                 | —                           | —                    |
+| AC1 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC1: extracts the store from the fixture, byte-exact, without the pad byte / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract(), readPad() |
+| AC2 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC2: a WebP without C2PA yields null, not an error / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (`$store === null`) |
+| AC3 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC3: a stream that does not start with RIFF is an error / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (RIFF check), hex() |
+| AC4 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC4: a RIFF file whose form type is not WEBP is an error naming both / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (form type check), printable() |
+| AC5 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC5: a header size +1 is an error naming the header size and the file length; AC5: a header size that excludes the C2PA chunk is an error, not "no store"; AC5: a file truncated inside the C2PA chunk is an error naming the header size and the file length; AC5: a file truncated between chunks is an error naming the header size and the file length / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (size check), fileEnd() |
+| AC6 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC6: a chunk that overruns the file is an error naming the chunk offset and its declared length / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (overrun check) |
+| AC7 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC7: two C2PA chunks are an error naming both offsets / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (`$storeOffset !== null`) |
+| AC8 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC8: a C2PA before the image data still yields the same store / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract(), skip() |
+| AC9 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC9: an LBox that differs from the chunk length is an error naming both values / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (LBox check) |
+| AC10 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC10: a chunk length that is off by one is an error naming LBox and the chunk length / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (LBox check) |
+| AC11 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC11: a C2PA of 4 bytes is an error naming the length and the 8-byte minimum; AC11: an empty C2PA is an error, not "no store" / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (`BOX_HEADER_LENGTH` check) |
+| AC12 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC12: a missing pad byte is an error naming the offset where it was expected; AC12: a pad byte that is not zero is an error naming the offset and the byte / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: readPad() |
+| AC13 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC13: an odd-length chunk before C2PA is skipped correctly, pad included / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: skip(), readPad() |
+| AC14 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC14: a chunk length above the limit is an error before the data is read / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (`$maxChunkLength` check before the LBox read) |
+| AC15 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC15: the default limit is 64 MiB / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: DEFAULT_MAX_CHUNK_LENGTH, __construct() |
+| AC16 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC16: the header size is checked against the file before any chunk header is read / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (size check before the loop, stream repositioned first) |

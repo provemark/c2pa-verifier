@@ -16,7 +16,7 @@ when" has not been measured is not done.
 | M | What | Done when |
 |---|---|---|
 | M0 | Repository skeleton: package, tool chain, spec template, traceability check, CI, notes, ADRs | `composer check` green on an empty `src/` — **done 2026-09-19**; first green CI run (all three PHP versions) on `bbb7299`, run `35444321627`, the same day |
-| M1 | **Container → manifest store bytes.** JPEG APP11 (multi-segment, Box Instance Numbers), PNG `caBX`, WebP RIFF `C2PA`. Byte-exact extraction, nothing parsed. | SHA-256 of the extracted store equals what `c2patool --detailed` / a hexdump gives, for every fixture |
+| M1 | **Container → manifest store bytes.** JPEG APP11 (multi-segment, Box Instance Numbers), PNG `caBX`, WebP RIFF `C2PA`. Byte-exact extraction, nothing parsed. | SHA-256 of the extracted store equals what `c2patool --detailed` / a hexdump gives, for every fixture — **done 2026-09-20** (steps 02–07; the hashes in `notes/step-02`, `-04`, `-06`) |
 | M2 | **JUMBF + CBOR → manifest store as data.** Boxes, superboxes, description boxes, content-type UUIDs; a CBOR decoder for the subset C2PA uses; claim v1 and v2; assertions; `claim_generator_info`. | the sister library's `ManifestStoreParser::fromJson()` accepts the output and every accessor equals its `/v1/read` |
 | M3 | **COSE_Sign1.** Protected header, `x5chain`, Sig_structure, verify ES256/ES384/PS256/Ed25519. No trust yet. | `claimSignature.validated` equals c2patool on all fixtures; one altered byte in the claim → `claimSignature.mismatch` |
 | M4 | **Hash binding.** `c2pa.hash.data` v1/v2: exclusions, `pad`, streaming hash. Hashed-URI checks on assertions. | one changed pixel byte → `assertion.dataHash.mismatch`; untouched file `Valid` |
@@ -72,4 +72,4 @@ with the signing command and tool version recorded.
 | 04 | Signed PNG fixture (c2patool 0.27.22, test certs), the chunk layout measured, ten variants through c2patool, c2pa-rs `png_io.rs` read — `notes/step-04-png-fixture.md` | done |
 | SPEC-002 | PNG `caBX` → bytes: draft → approval → red tests → implementation | implemented 2026-09-20: 15 tests red → green, `composer check` exit 0; AC6/AC7/AC11 stricter than c2patool (step 05) |
 | 06 | Signed WebP fixture (c2patool 0.27.22, test certs), the RIFF layout and pad byte measured, fifteen variants through c2patool, c2pa-rs `riff_io.rs` read — `notes/step-06-webp-fixture.md` | done |
-| SPEC-003 | WebP RIFF `C2PA` → bytes: draft → approval → red tests → implementation | approved 2026-09-20; 21 tests seen red; implementation next |
+| SPEC-003 | WebP RIFF `C2PA` → bytes: draft → approval → red tests → implementation | implemented 2026-09-20: 21 tests red → green, `composer check` exit 0, 63 tests in all; AC4/5/7/9/10/11/12 stricter than c2patool (step 07). **M1 complete** |
