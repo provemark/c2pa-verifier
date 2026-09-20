@@ -26,6 +26,7 @@ were fixed and the file re-measured; only its row and hash changed.
 | `pieces-after-sos.jpg` | both pieces after the scan data | `Error: No claim found` | AC13 null |
 | `truncated-in-app0.jpg` | file ends 12 bytes in, inside APP0, before any piece (amendment 1) | `Error: asset could not be parsed: Could not parse input JPEG` | AC14 error |
 | `rst-before-sos.jpg` | a bare `FF D0` (RST0, no length field) between APP0 and piece 1 (amendment 1) | `Error: No claim found` — it reads `FF EB` as a length of 65,515 and skips piece 1 | AC15 error |
+| `truncated-between-segments.jpg` | file ends at offset 20, exactly after APP0, before piece 1 (amendment 2) | `Error: asset could not be parsed: Could not parse input JPEG` | AC16 error |
 
 SHA-256 (as printed by the script):
 
@@ -41,4 +42,5 @@ ea08c3c3d66a468f4671d03de4dee4303fb20465443ab29f72417d7d593f2dd7  two-instance-n
 0aa264e285b9b62d9b40c54887d54511a41af4eb5cf5f77b7fa91fedb157f6ef  pieces-after-sos.jpg
 3c4bae649b6c0fade21c149e6ee9773e734d620fda91248a44c58b11c71f3ba9  truncated-in-app0.jpg
 2aa45e858f674575e5c4f60cb8a9d9733fcec1170d52f62665b7b8085edf7e78  rst-before-sos.jpg
+e855eb138f324c6d1166b27f5e8f878777e3252dee3e9a325a808d5a9a97cc27  truncated-between-segments.jpg
 ```

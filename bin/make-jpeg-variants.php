@@ -105,6 +105,8 @@ $variants = [
     'truncated-in-app0.jpg' => substr($source, 0, 12),
     // AC15 (amendment 1): a bare RST0 marker (no length field) between APP0 and piece 1
     'rst-before-sos.jpg' => jpegJoin(['RST0' => "\xFF\xD0"] + $c, ['SOI', 'APP0', 'RST0', 'APP11#1', 'APP11#2', 'COM', 'DQT', 'DHT', 'SOF0', 'SCAN', 'EOI']),
+    // AC16 (amendment 2): cut exactly after APP0, where the next marker should start — not inside any segment
+    'truncated-between-segments.jpg' => substr($source, 0, strlen($c['SOI'].$c['APP0'])),
 ];
 
 $dir = $root.'/tests/Fixtures/jpeg';
