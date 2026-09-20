@@ -764,3 +764,15 @@ README are where the disclosure lives.
   proposal at the end of the note; toggle bits 2 and 3 from the text.
 - Decided by Maurice: proceed with step 09. Pending: whether to add
   `adobe-20220124-C.jpg` (CC BY-SA 4.0) as a fixture.
+
+## 2026-09-20 — First public test file added; push
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja, voeg de fixture toe, push maar en lees de CI-run".
+- Produced: `tests/Fixtures/public-testfiles/adobe-20220124-C.jpg` (from
+  `c2pa-org/public-testfiles` at commit `22beccc07570`, unchanged) with a
+  README carrying the CC BY-SA 4.0 attribution and the measured facts; a
+  paragraph in `tests/Fixtures/README.md`; this entry.
+- Measured: the committed file is `cmp`-identical to the copy measured in
+  step 09; SHA-256 `75a8da33…`; `composer check` exit 0 (no test uses it
+  yet — that is SPEC-007's job).
+- Decided by Maurice: add the fixture; push.
