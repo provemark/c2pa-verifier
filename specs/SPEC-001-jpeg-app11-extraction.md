@@ -174,6 +174,16 @@ assumption: this project fails closed.
   - Then it throws `ContainerException` naming `FF D0` and offset 20, and
     returns no bytes
 
+- **AC16 — a file that ends exactly on a segment boundary is an error
+  naming the offset where a marker was expected** *(amendment 2; oracle:
+  `c2patool` → `Error: asset could not be parsed: Could not parse input
+  JPEG`)*
+  - Given the fixture cut off at offset 20, exactly after APP0 and before
+    the first piece
+  - When the extractor runs
+  - Then it throws `ContainerException` naming a marker expected at offset
+    20 — not "inside the segment at offset 2", which is whole
+
 ## References
 
 - Specification: C2PA 2.4 §A.3.1 "Embedding manifests into JPEG" (quoted in
@@ -251,6 +261,13 @@ checks and limits pass. It never calls `file_get_contents`.
    (`< 0xC0`) that missed RST0–7, so a bare `FF D0` before SOS produced a
    misleading error at a far offset instead of naming the marker.
 
+2. **2026-09-20, approved by Maurice van Loon with SPEC-004** — AC16 added; AC14's message
+   gains the two numbers the shared `skip` reports (the segment's end and
+   the file's end). Cause: the end-of-file probe in `skip()` (amendment 1)
+   reported "inside the segment" for a segment that is complete when the
+   file ends exactly after it. SPEC-002 and SPEC-003 already decide this
+   by the file's end; SPEC-004 gives all three the same reader.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -273,3 +290,4 @@ least one test; every source file maps back to this spec.
 | AC13 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC13: pieces after SOS are not scanned; the result is null / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (loop ends at SOS) |
 | AC14 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC14: a file truncated before the first piece is an error naming the segment offset, not null / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: skip() (end-of-file probe) |
 | AC15 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC15: a marker without a length field before SOS is an error naming the marker and its offset / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: hasLengthField(), extract() |
+| AC16                 | —                           | —                    |
