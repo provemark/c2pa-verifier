@@ -643,3 +643,25 @@ README are where the disclosure lives.
   its own step after this spec.
 - Decided by Maurice: RIFF size ≠ file length → error; pad byte missing or
   non-zero → error. The draft awaits his approval.
+
+## 2026-09-20 — SPEC-003 approved; its tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "goedgekeurd, maak alle tests".
+- Produced: SPEC-003 → `approved` (own commit `2e77205`);
+  `tests/Unit/Container/WebpManifestStoreExtractorTest.php`, 21 tests for
+  16 criteria (AC5 has four, AC11 and AC12 two each); `docs/milestones.md`
+  row; this entry. No `src/` change.
+- Measured: the numbers the messages name, walked with a probe — the
+  second `C2PA` of `two-c2pa.webp` at 100,956; header sizes 100,949 / 304 /
+  100,948 / 100,948 against file lengths 100,956 / 100,956 / 1,320 / 312.
+  `vendor/bin/pest --group=SPEC-003` → **21 failed**, every one on
+  `Class "Provemark\C2paVerifier\Container\WebpManifestStoreExtractor" not
+  found`; `spec-check` `OK: 4 spec(s), 4 test file(s)`; PHPStan only
+  `class.notFound` and its consequences.
+- Reasoned: message phrases for the criteria (`RIFF size 100949 in the
+  header, 100948 bytes in the file` — the file length minus the 8-byte
+  header, the number RIFF's size field promises; `chunk at offset 312
+  declares 101635 bytes`; `pad byte at offset 100955 is FF, not 00`);
+  the found form type shown as text when it is printable ASCII, as SPEC-003
+  AC4 asks it to be named.
+- Decided by Maurice: SPEC-003 approved as drafted.
