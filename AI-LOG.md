@@ -508,3 +508,29 @@ README are where the disclosure lives.
   as malformed, not absent; AC14 (truncated before `IEND`) has no fixture
   yet — listed as an open question, a blocker for `implemented` only.
 - Decided by Maurice: none yet; the draft awaits his approval.
+
+## 2026-09-20 — SPEC-002 approved; the maintainer's first test (AC1), seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "Is test 1 in PngManifestStoreExtractorTest goed?" — the
+  maintainer had written `tests/Unit/Container/PngManifestStoreExtractorTest.php`
+  (constants, three helpers, the AC1 test) himself; then "goedgekeurd, en
+  pas jij de vijf punten aan".
+- Produced: SPEC-002 → `approved` (own commit `4825d4d`); five edits to the
+  maintainer's file: the missing `use` for `PngManifestStoreExtractor`,
+  `?ManifestStoreBytes` as the helper's return type (AC2 needs `null`),
+  `/** @return resource */` on `spec002Stream()`, "byte extract" →
+  "byte-exact" in the test name, Pint's blank lines; plus the header comment
+  and the helper docblock in SPEC-001's style. The assertions and the
+  structure are his, unchanged. `docs/milestones.md` row; this entry.
+- Measured, before the edits: spec-check `SPEC-002: status draft but …
+  carries its group — tests precede approval` (SPEC-000 AC4 firing as
+  designed); Pint fail (two fixers); PHPStan 6 findings; Pest `Class
+  "PngManifestStoreExtractor" not found` — red for the wrong reason (the
+  global namespace). After: spec-check `OK: 3 spec(s), 3 test file(s)`,
+  Pint passed, PHPStan 4 findings all `class.notFound` on the namespaced
+  extractor, Pest `1 failed` on `Provemark\C2paVerifier\Container\
+  PngManifestStoreExtractor not found` — red for the right reason.
+- Reasoned: the review itself (the five points and what not to change).
+- Decided by Maurice: SPEC-002 approved as drafted, all fourteen criteria
+  and the three open questions as proposed; the five fixes applied by
+  Claude.
