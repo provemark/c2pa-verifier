@@ -621,3 +621,25 @@ README are where the disclosure lives.
   on two `C2PA`, on a non-`WEBP` form type, on LBox ≠ length; extract
   regardless of position; the RIFF-size and pad-byte questions left open).
 - Decided by Maurice: proceed with step 06 as explained.
+
+## 2026-09-20 — SPEC-003 (draft): WebP RIFF `C2PA` → manifest store bytes
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "beide fout, schrijf SPEC-003 als draft" — the RIFF-size and
+  pad-byte questions from step 06 both decided as errors.
+- Produced: `specs/SPEC-003-webp-riff-extraction.md`, status `draft`, 16
+  criteria; one more variant, `chunk-overruns-file.webp` (`C2PA` length
+  +1,000 with a correct header size — the only truncation shape AC5's
+  header check does not catch), in `bin/make-webp-variants.php` and the
+  README; `docs/milestones.md` row; this entry. No code, no tests.
+- Measured: the new variant through `c2patool 0.27.22` → `RIFF chunk
+  declared size exceeds file size`; regenerating changed no other file;
+  `pad-missing.webp` header size 100,947 = file − 8 (so AC12, not AC5,
+  fires on it); `spec-check` `OK: 4 spec(s), 3 test file(s)`; `composer
+  check` exit 0.
+- Reasoned: the header-size check first (AC5, AC16) so that every
+  truncated or padded file is one error naming both numbers; AC4 (form
+  type), AC7 (two chunks), AC9/AC10 (LBox) stricter than the oracle, each
+  with the oracle's behaviour next to it; the shared stream reader left to
+  its own step after this spec.
+- Decided by Maurice: RIFF size ≠ file length → error; pad byte missing or
+  non-zero → error. The draft awaits his approval.

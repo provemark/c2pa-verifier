@@ -26,6 +26,7 @@ spec is approved.
 | `pad-missing.webp` | the odd-length `C2PA` without its pad byte; RIFF size one less | extracts; `claimSignature.validated`, then `assertion.dataHash.mismatch` → `Invalid` | — |
 | `pad-nonzero.webp` | the pad byte `FF` instead of `00` | extracts; `claimSignature.validated`, then `assertion.dataHash.mismatch` → `Invalid` | — |
 | `odd-chunk-before.webp` | an unknown 3-byte chunk `XXXX` (+ pad) before `C2PA` | extracts; `claimSignature.validated`, then `assertion.dataHash.mismatch` → `Invalid` — the pad is handled, the moved bytes are not | — |
+| `chunk-overruns-file.webp` | `C2PA` length +1,000; RIFF size correct for the file, so only the chunk overruns | `Error: asset could not be parsed: RIFF chunk declared size exceeds file size` | — |
 
 SHA-256 (as printed by the script):
 
@@ -45,4 +46,5 @@ abd3f49a40a15c20c17079c82182a6de1d3c86faa502e936a37094c01eb125f5  c2pa-too-short
 a4a103e4823484eb55cf2d6ca72a95cffc302153d9c1fd3e82de23a8f24c0049  pad-missing.webp
 262e677de9f2b8fb136de10f8ea2803ff63f8d596b30c7755f923bad4b050a8b  pad-nonzero.webp
 155d6b74045bff641640238d0035c165e26d9e0d5556fc61e3451af49a1bfafe  odd-chunk-before.webp
+b4080c3161f244bfa92ccda219e2a225ef802e84d09ed44fbe413e096bf98f52  chunk-overruns-file.webp
 ```

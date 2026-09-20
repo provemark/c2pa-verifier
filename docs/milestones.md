@@ -72,4 +72,4 @@ with the signing command and tool version recorded.
 | 04 | Signed PNG fixture (c2patool 0.27.22, test certs), the chunk layout measured, ten variants through c2patool, c2pa-rs `png_io.rs` read — `notes/step-04-png-fixture.md` | done |
 | SPEC-002 | PNG `caBX` → bytes: draft → approval → red tests → implementation | implemented 2026-09-20: 15 tests red → green, `composer check` exit 0; AC6/AC7/AC11 stricter than c2patool (step 05) |
 | 06 | Signed WebP fixture (c2patool 0.27.22, test certs), the RIFF layout and pad byte measured, fifteen variants through c2patool, c2pa-rs `riff_io.rs` read — `notes/step-06-webp-fixture.md` | done |
-| SPEC-003 | WebP RIFF `C2PA` → bytes: draft → approval → red tests → implementation | draft next |
+| SPEC-003 | WebP RIFF `C2PA` → bytes: draft → approval → red tests → implementation | draft 2026-09-20, awaiting approval |

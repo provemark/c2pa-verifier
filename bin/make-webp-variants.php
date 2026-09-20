@@ -137,6 +137,8 @@ $variants = [
     'pad-nonzero.webp' => riffJoin(['C2PA' => substr($c2pa, 0, -1)."\xFF"] + $c, $normal),
     // an unknown odd-length chunk (3 bytes + pad) before C2PA: a reader that forgets the pad reads C2PA one byte off
     'odd-chunk-before.webp' => riffJoin(['XXXX' => riffChunk('XXXX', 'abc')] + $c, ['VP8L', 'XXXX', 'C2PA']),
+    // the C2PA length field +1,000 with the RIFF size correct for the file: the chunk overruns the file, the header does not
+    'chunk-overruns-file.webp' => riffJoin(['C2PA' => riffPut($c2pa, 4, 4, $c2paLength + 1000)] + $c, $normal),
 ];
 
 $dir = $root.'/tests/Fixtures/webp';
