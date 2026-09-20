@@ -561,3 +561,26 @@ README are where the disclosure lives.
   tightened once the wording exists.
 - Decided by Maurice: keep AC3's hex message; keep AC4's substring match;
   Claude writes AC6–AC14.
+
+## 2026-09-20 — Step 05: the PNG extractor (SPEC-002 implemented)
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "Schrijf PngManifestStoreExtractor af" — the maintainer had
+  created `src/Container/PngManifestStoreExtractor.php` with the namespace
+  and an empty class.
+- Produced: the body of that class (`final readonly`, `maxChunkLength`,
+  `extract()`, `readExactly()`, `skip()`, `tell()`, `hex()`); SPEC-002 →
+  `implemented` with Traceability, the AC14 open question resolved;
+  `tests/Fixtures/png/README.md` SPEC-002 column; `notes/step-05-png-extractor.md`;
+  `NOTES.md` row; `docs/milestones.md` row; this entry.
+- Measured: first run 14 passed, 1 failed — AC14: `unexpected end of file
+  inside the chunk at offset 8` where `offset 33` was expected, because the
+  probe copied from the JPEG extractor cannot tell "ends inside the chunk"
+  from "ends exactly after it". After replacing the probe with an
+  end-of-file look-up: `composer check` exit 0, **42 passed (93
+  assertions)**, spec-check `OK: 3 spec(s), 3 test file(s)`, PHPStan `No
+  errors`, Deptrac 0 violations.
+- Reasoned: LBox before CRC (AC10 names the cause), limit before the LBox
+  read (AC12); the JPEG probe's same imprecision left alone (no criterion,
+  not this step) and flagged for the shared stream reader when WebP comes.
+- Decided by Maurice: build step 05b ("Schrijf … af" after the step was
+  proposed).

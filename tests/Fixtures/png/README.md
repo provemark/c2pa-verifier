@@ -5,22 +5,22 @@ Every file here is derived from `../fixture-signed.png` by
 nothing else. Regenerate with `php bin/make-png-variants.php`; the script
 prints each file's SHA-256, and these are the values committed on
 2026-09-19 (`truncated-between-chunks.png` on 2026-09-20). Measured with c2patool 0.27.22 the same day
-(`notes/step-04-png-fixture.md`). The SPEC-002 column is filled when the
-spec is approved.
+(`notes/step-04-png-fixture.md`). The SPEC-002 column names the criterion each file
+exercises.
 
 | file | what is wrong | c2patool 0.27.22 | SPEC-002 |
 |---|---|---|---|
-| `not-a-png.bin` | plain text, no signature | `Error: Unsupported file type` | — |
-| `truncated-in-cabx.png` | file ends 1,000 bytes into the `caBX` data | `Error: asset could not be parsed: PNG out of range` | — |
-| `cabx-after-idat.png` | `caBX` moved after `IDAT` | extracts; `claimSignature.validated`, then `assertion.dataHash.mismatch` → `Invalid` | — |
-| `cabx-before-ihdr.png` | `caBX` before `IHDR` (the PNG spec requires `IHDR` first) | extracts; `claimSignature.validated`, then `assertion.dataHash.mismatch` → `Invalid` | — |
-| `two-cabx.png` | the same `caBX` chunk twice | `Error: more than one manifest store detected` | — |
-| `crc-wrong.png` | one bit flipped in the CRC of `caBX`, data untouched | extracts; **`Valid`** — the CRC is read and discarded | — |
-| `length-differs.png` | chunk length field +1, data and CRC untouched | `Error: asset could not be parsed: PNG out of range` (the chunk walk goes off by one and runs off the file) | — |
-| `lbox-differs.png` | LBox inside the box +1 (46,026), chunk length 46,025, CRC recomputed | extracts; **`Valid`** — LBox is not compared to the chunk length, and the JUMBF parser tolerates the excess | — |
-| `cabx-too-short.png` | a `caBX` of 4 bytes, shorter than a box header | `Error: unexpected end of file` | — |
-| `cabx-empty.png` | a `caBX` of length 0 | `Error: No claim found` | — |
-| `truncated-between-chunks.png` | file ends after `IHDR`'s CRC, where the next chunk header should start (added 2026-09-20 for AC14) | `Error: asset could not be parsed: PNG out of range` | — |
+| `not-a-png.bin` | plain text, no signature | `Error: Unsupported file type` | AC3 error |
+| `truncated-in-cabx.png` | file ends 1,000 bytes into the `caBX` data | `Error: asset could not be parsed: PNG out of range` | AC4 error |
+| `cabx-after-idat.png` | `caBX` moved after `IDAT` | extracts; `claimSignature.validated`, then `assertion.dataHash.mismatch` → `Invalid` | AC8 extracts |
+| `cabx-before-ihdr.png` | `caBX` before `IHDR` (the PNG spec requires `IHDR` first) | extracts; `claimSignature.validated`, then `assertion.dataHash.mismatch` → `Invalid` | AC9 extracts |
+| `two-cabx.png` | the same `caBX` chunk twice | `Error: more than one manifest store detected` | AC5 error |
+| `crc-wrong.png` | one bit flipped in the CRC of `caBX`, data untouched | extracts; **`Valid`** — the CRC is read and discarded | AC6 error (stricter than the oracle) |
+| `length-differs.png` | chunk length field +1, data and CRC untouched | `Error: asset could not be parsed: PNG out of range` (the chunk walk goes off by one and runs off the file) | AC10 error |
+| `lbox-differs.png` | LBox inside the box +1 (46,026), chunk length 46,025, CRC recomputed | extracts; **`Valid`** — LBox is not compared to the chunk length, and the JUMBF parser tolerates the excess | AC7 error (stricter than the oracle) |
+| `cabx-too-short.png` | a `caBX` of 4 bytes, shorter than a box header | `Error: unexpected end of file` | AC11 error |
+| `cabx-empty.png` | a `caBX` of length 0 | `Error: No claim found` | AC11 error (stricter than the oracle) |
+| `truncated-between-chunks.png` | file ends after `IHDR`'s CRC, where the next chunk header should start (added 2026-09-20 for AC14) | `Error: asset could not be parsed: PNG out of range` | AC14 error |
 
 SHA-256 (as printed by the script):
 

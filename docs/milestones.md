@@ -70,5 +70,5 @@ with the signing command and tool version recorded.
 | 02 | Signed JPEG fixture (c2patool 0.27.22, test certs), the segment layout measured, c2patool's behaviour on gaps and swapped pieces measured — `notes/step-02-jpeg-fixture.md` | done |
 | SPEC-001 | JPEG APP11 → manifest store bytes: draft → approval → red tests → implementation | implemented 2026-09-19: 14 tests red → green, `composer check` exit 0; AC7 kept stricter than c2patool; amendment 1 the same day (AC14, AC15: truncation before the first piece, markers without a length field) — step 03 |
 | 04 | Signed PNG fixture (c2patool 0.27.22, test certs), the chunk layout measured, ten variants through c2patool, c2pa-rs `png_io.rs` read — `notes/step-04-png-fixture.md` | done |
-| SPEC-002 | PNG `caBX` → bytes: draft → approval → red tests → implementation | approved 2026-09-20; 15 tests seen red (AC1 by the maintainer), AC14 fixture added; implementation next |
+| SPEC-002 | PNG `caBX` → bytes: draft → approval → red tests → implementation | implemented 2026-09-20: 15 tests red → green, `composer check` exit 0; AC6/AC7/AC11 stricter than c2patool (step 05) |
 | SPEC-003 | WebP RIFF `C2PA` → bytes | — |

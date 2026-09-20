@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-20                      |
 | Supersedes | —                                                 |
@@ -238,10 +238,9 @@ calls `file_get_contents`. `fread` with a length of 0 throws in PHP 8, and
 
 ## Open questions
 
-- **AC14 has no fixture.** Proposal: add `truncated-between-chunks.png`
-  (the fixture cut after `IHDR`'s CRC, before `caBX`) to
-  `bin/make-png-variants.php` when the tests are written, measured against
-  c2patool first. Blocker for `implemented`, not for approval.
+- Resolved 2026-09-20: `truncated-between-chunks.png` added to
+  `bin/make-png-variants.php` and measured (`c2patool` → `PNG out of
+  range`) before the AC14 test was written.
 - **Chunk types that are not four ASCII letters.** Fail closed says error;
   c2patool accepts anything UTF-8. No fixture, no criterion yet. Proposal:
   leave it out of this spec, note it, and revisit if a real file ever
@@ -257,17 +256,17 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
-| AC11                 | —                           | —                    |
-| AC12                 | —                           | —                    |
-| AC13                 | —                           | —                    |
-| AC14                 | —                           | —                    |
+| AC1 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC1: extracts the store from the fixture, byte-exact / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() |
+| AC2 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC2: a PNG without caBX yields null, not an error / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (`$store === null`) |
+| AC3 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC3: a stream that does not start with the PNG signature is an error / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (signature check), hex() |
+| AC4 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC4: a file truncated inside the caBX chunk is an error naming the chunk offset / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: readExactly() |
+| AC5 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC5: two caBX chunks are an error naming both offsets / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (`$storeOffset !== null`) |
+| AC6 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC6: a CRC that does not match is an error naming the stored and the computed CRC / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (`crc32()` comparison) |
+| AC7 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC7: an LBox that differs from the chunk length is an error naming both values / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (LBox check) |
+| AC8 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC8: a caBX after IDAT still yields the same store / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract(), skip() |
+| AC9 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC9: a caBX before IHDR still yields the same store / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract(), skip() |
+| AC10 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC10: a chunk length field that is off by one is an error naming LBox and the chunk length / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (LBox check, before the CRC) |
+| AC11 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC11: a caBX of 4 bytes is an error naming the length and the 8-byte minimum; AC11: an empty caBX is an error, not "no store" / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (`BOX_HEADER_LENGTH` check) |
+| AC12 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC12: a chunk length above the limit is an error before the data is read / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (`$maxChunkLength` check before the LBox read) |
+| AC13 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC13: the default limit is 64 MiB / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: DEFAULT_MAX_CHUNK_LENGTH, __construct() |
+| AC14 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC14: a file that ends before IEND is an error naming the offset where a chunk header was expected, not null / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (chunk header read), skip() (end-of-file lookup) |
