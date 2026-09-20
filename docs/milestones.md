@@ -55,6 +55,12 @@ which is the wanted behaviour — a suite that runs nothing must not be green.
 So M0 needs one real test, every test needs a spec, and the first thing worth
 specifying is the tool that enforces exactly that.
 
+## Between M1 and M2
+
+| Step | What | Status |
+|---|---|---|
+| SPEC-004 | One `StreamReader` for the Container layer; SPEC-001 amendment 2 (AC16: a JPEG ending exactly on a segment boundary) | implemented 2026-09-20: 8 tests red → green, 71 in all (step 08) |
+
 ## After M0
 
 M1 opens with SPEC-001 (JPEG APP11 → manifest store bytes) as a draft. It

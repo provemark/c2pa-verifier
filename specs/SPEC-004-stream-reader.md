@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-20                      |
 | Supersedes | —                                                 |
@@ -153,8 +153,14 @@ logic; only the four helpers move. The JPEG `readMarker`, `readUint16`,
 ## Open questions
 
 - Whether `hex()` belongs on the reader or in a `Bytes` helper of its own.
-  Proposal: on the reader for now; it formats what the reader read.
-  Non-blocker.
+  Kept on the reader; it formats what the reader read. Non-blocker.
+- Added while implementing: `readUpTo(int $length)`, a read that may return
+  fewer bytes, for the three places where a caller wants to see a short
+  read and name the fault itself (the WebP header, the PNG chunk header,
+  the WebP pad byte). Without it those three kept a direct `fread`, and the
+  reader would not have been the one seam it is meant to be. Covered by
+  the existing criteria those callers serve (SPEC-002 AC14, SPEC-003 AC3
+  and AC12).
 
 ## Traceability
 
@@ -163,8 +169,8 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
+| AC1 | tests/Unit/Container/StreamReaderTest.php :: AC1: no extractor carries a private readExactly, skip or tell any more; and the whole suite (SPEC-001/002/003 groups unchanged) / SPEC-004 | src/Container/{Jpeg,Png,Webp}ManifestStoreExtractor.php :: extract() (`new StreamReader(`) |
+| AC2 | tests/Unit/Container/StreamReaderTest.php :: AC2: readExactly returns exactly the bytes asked for, or fails naming what, where and how much; AC2: readExactly of zero bytes returns an empty string and does not touch the stream / SPEC-004 | src/Container/StreamReader.php :: readExactly() |
+| AC3 | tests/Unit/Container/StreamReaderTest.php :: AC3: skip to exactly the end of the file is not an error; the next read is; AC3: skip past the end of the file is an error naming the segment, its end and the file end / SPEC-004 | src/Container/StreamReader.php :: skip() |
+| AC4 | tests/Unit/Container/StreamReaderTest.php :: AC4: end returns the file length and leaves the position alone / SPEC-004 | src/Container/StreamReader.php :: end(), tell() |
+| AC5 | tests/Unit/Container/StreamReaderTest.php :: AC5: hex never shows bytes raw / SPEC-004 | src/Container/StreamReader.php :: hex() |

@@ -694,3 +694,27 @@ README are where the disclosure lives.
   `composer check (PHP 8.3)`, `(PHP 8.4)`, `(PHP 8.5)` each `success` with
   `Tests: 63 passed`; `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-20 — Step 08: one stream reader (SPEC-004 implemented; SPEC-001 amendment 2)
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "maak de gedeelde stream-reader" — answered first with the spec,
+  as the rules require; then "goedgekeurd, maak alle tests".
+- Produced: `specs/SPEC-004-stream-reader.md` (draft → approved →
+  implemented, own commits); SPEC-001 amendment 2 (AC16, AC14's message);
+  `truncated-between-segments.jpg` in `bin/make-jpeg-variants.php` and the
+  README; `tests/Unit/Container/StreamReaderTest.php` (7 tests) and the
+  AC16 test; `src/Container/StreamReader.php`; the three extractors moved
+  onto it, their private helpers removed; Traceability in SPEC-001/002/004;
+  `notes/step-08-stream-reader.md`; `NOTES.md`; `docs/milestones.md`; this
+  entry.
+- Measured: the new JPEG variant through `c2patool 0.27.22` → `Could not
+  parse input JPEG`, and through the old extractor → `inside the segment at
+  offset 2` (the imprecision); regenerating changed no other file. Red: 7 +
+  2 (commit `302cfd0`). After the class alone: 6 green, AC1 red on the
+  copies. After the move: `grep fread|fseek|ftell` over the three
+  extractors → nothing; `composer check` exit 0, **71 passed (164
+  assertions)**, spec-check `OK: 5 spec(s), 5 test file(s)`.
+- Reasoned: `readUpTo()` added beyond the API sketch (three callers need a
+  short read; recorded in SPEC-004 Open questions and the note); `end()`'s
+  two seeks per skip left unmeasured.
+- Decided by Maurice: SPEC-004 and amendment 2 approved as proposed.

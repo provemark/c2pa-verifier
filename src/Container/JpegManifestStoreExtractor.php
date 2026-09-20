@@ -11,7 +11,7 @@ namespace Provemark\C2paVerifier\Container;
  * whose payload starts with `JP`, checks the 16-byte piece header (CI, En,
  * Z, LBox, TBox — measured in notes/step-02-jpeg-fixture.md) and reassembles
  * the box: LBox and TBox once, then the data of every piece in order.
- * Segment bodies that are not needed are skipped with fseek; piece data is
+ * Segment bodies that are not needed are skipped unread; piece data is
  * read only after the header checks and the limits pass.
  */
 final readonly class JpegManifestStoreExtractor
@@ -40,7 +40,8 @@ final readonly class JpegManifestStoreExtractor
      */
     public function extract($stream): ?ManifestStoreBytes
     {
-        $soi = $this->readExactly($stream, 2, 0, 'SOI');
+        $reader = new StreamReader($stream, 'segment');
+        $soi = $reader->readExactly(2, 0, 'SOI');
         if ($soi !== "\xFF\xD8") {
             throw new ContainerException(sprintf(
                 'not a JPEG: expected FF D8 at offset 0, found %s',
@@ -55,8 +56,8 @@ final readonly class JpegManifestStoreExtractor
         $collected = '';
 
         while (true) {
-            $offset = $this->tell($stream);
-            $marker = $this->readMarker($stream, $offset);
+            $offset = $reader->tell();
+            $marker = $this->readMarker($reader, $offset);
 
             if ($marker === self::MARKER_SOS) {
                 break;
@@ -72,22 +73,22 @@ final readonly class JpegManifestStoreExtractor
             }
 
             // The length field counts itself; a segment body is length − 2.
-            $length = $this->readUint16($stream, $offset, 'segment length');
+            $length = $this->readUint16($reader, $offset, 'segment length');
             if ($length < 2) {
                 throw new ContainerException(sprintf('segment length %d at offset %d is shorter than its own field', $length, $offset));
             }
             $bodyLength = $length - 2;
 
             if ($marker !== self::MARKER_APP11 || $bodyLength < self::PIECE_HEADER_LENGTH) {
-                $this->skip($stream, $bodyLength, $offset);
+                $reader->skip($bodyLength, $offset);
 
                 continue;
             }
 
-            $header = $this->readExactly($stream, self::PIECE_HEADER_LENGTH, $offset, 'APP11 header');
+            $header = $reader->readExactly(self::PIECE_HEADER_LENGTH, $offset, 'APP11 header');
             if (! str_starts_with($header, 'JP')) {
                 // Another user of APP11 (AC8): skipped like any unknown APPn segment.
-                $this->skip($stream, $bodyLength - self::PIECE_HEADER_LENGTH, $offset);
+                $reader->skip($bodyLength - self::PIECE_HEADER_LENGTH, $offset);
 
                 continue;
             }
@@ -160,7 +161,7 @@ final readonly class JpegManifestStoreExtractor
                 ));
             }
 
-            $collected .= $this->readExactly($stream, $dataLength, $offset, sprintf('piece %d data', $pieceNumber));
+            $collected .= $reader->readExactly($dataLength, $offset, sprintf('piece %d data', $pieceNumber));
             $pieces++;
         }
 
@@ -197,92 +198,25 @@ final readonly class JpegManifestStoreExtractor
     /**
      * Reads the marker at the current position: one or more fill bytes
      * FF, then the marker code. Returns the code.
-     *
-     * @param  resource  $stream
      */
-    private function readMarker($stream, int $offset): int
+    private function readMarker(StreamReader $reader, int $offset): int
     {
-        $byte = $this->readExactly($stream, 1, $offset, 'marker');
+        $byte = $reader->readExactly(1, $offset, 'marker');
         if ($byte !== "\xFF") {
             throw new ContainerException(sprintf('expected a marker at offset %d, found %02X', $offset, ord($byte)));
         }
         do {
-            $byte = $this->readExactly($stream, 1, $offset, 'marker');
+            $byte = $reader->readExactly(1, $offset, 'marker');
         } while ($byte === "\xFF");
 
         return ord($byte);
     }
 
-    /** @param resource $stream */
-    private function readUint16($stream, int $offset, string $what): int
+    private function readUint16(StreamReader $reader, int $offset, string $what): int
     {
         /** @var array{1: int} $value */
-        $value = unpack('n', $this->readExactly($stream, 2, $offset, $what));
+        $value = unpack('n', $reader->readExactly(2, $offset, $what));
 
         return $value[1];
-    }
-
-    /**
-     * Reads exactly $length bytes or throws; fewer bytes means the file ends
-     * inside the segment that starts at $offset (AC5).
-     *
-     * @param  resource  $stream
-     */
-    private function readExactly($stream, int $length, int $offset, string $what): string
-    {
-        if ($length === 0) {
-            return '';
-        }
-        if ($length < 0) {
-            throw new \LogicException(sprintf('negative read length %d', $length));
-        }
-        $bytes = fread($stream, $length);
-        if ($bytes === false || strlen($bytes) !== $length) {
-            throw new ContainerException(sprintf(
-                'unexpected end of file while reading %s of the segment at offset %d: wanted %d bytes, got %d',
-                $what,
-                $offset,
-                $length,
-                $bytes === false ? 0 : strlen($bytes),
-            ));
-        }
-
-        return $bytes;
-    }
-
-    /**
-     * Skips a segment body without reading it; the seek must land inside
-     * the file, otherwise the file ends inside this segment (AC5).
-     *
-     * @param  resource  $stream
-     */
-    private function skip($stream, int $length, int $offset): void
-    {
-        if ($length === 0) {
-            return;
-        }
-        $target = $this->tell($stream) + $length;
-        if (fseek($stream, $length, SEEK_CUR) !== 0 || $this->tell($stream) !== $target) {
-            throw new ContainerException(sprintf('cannot skip %d bytes of the segment at offset %d', $length, $offset));
-        }
-        // fseek past the end succeeds on plain files; probe one byte so a
-        // truncated file is an error here and not a false "no APP11".
-        if (fread($stream, 1) === '') {
-            throw new ContainerException(sprintf('unexpected end of file inside the segment at offset %d', $offset));
-        }
-        if (fseek($stream, -1, SEEK_CUR) !== 0) {
-            throw new ContainerException(sprintf('cannot reposition after the segment at offset %d', $offset));
-        }
-    }
-
-    /** @param resource $stream */
-    private function tell($stream): int
-    {
-        $position = ftell($stream);
-        if ($position === false) {
-            throw new ContainerException('the stream is not seekable');
-        }
-
-        return $position;
     }
 }
