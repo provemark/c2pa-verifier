@@ -584,3 +584,14 @@ README are where the disclosure lives.
   not this step) and flagged for the shared stream reader when WebP comes.
 - Decided by Maurice: build step 05b ("Schrijf … af" after the step was
   proposed).
+
+## 2026-09-20 — CI green on SPEC-002
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja, push maar en lees de CI-run".
+- Produced: pushed `21e2d1e`…`293cc10` (six commits) to `origin/main`; this
+  entry.
+- Measured: before the push, 0 attribution lines in the history and no
+  tracked file matching `key`. Run `35492160497` on `293cc10`: conclusion
+  `success`; `composer check (PHP 8.3)`, `(PHP 8.4)`, `(PHP 8.5)` each
+  `success` with `Tests: 42 passed`; `all green` `success`.
+- Decided by Maurice: push.
