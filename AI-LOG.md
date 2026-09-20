@@ -595,3 +595,29 @@ README are where the disclosure lives.
   `success`; `composer check (PHP 8.3)`, `(PHP 8.4)`, `(PHP 8.5)` each
   `success` with `Tests: 42 passed`; `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-20 — Step 06: the signed WebP fixture and its measurement
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "wat is stap 6?", then "akkoord".
+- Produced: `tests/Fixtures/fixture-unsigned.webp` (the sister library's
+  `fixture.webp`), `fixture-signed.webp`, `fixture-signed-webp.manifest.json`
+  (placeholders); `bin/make-webp-variants.php` and fifteen files under
+  `tests/Fixtures/webp/` with their README; `notes/step-06-webp-fixture.md`;
+  `NOTES.md` row; `docs/milestones.md` M1 rows; this entry. No `src/`
+  change, no spec yet.
+- Measured: a probe signing in the scratch directory first (to confirm
+  c2patool 0.27.22 signs WebP at all; deleted), then the fixture with the
+  recorded command (the manifest with real paths in the scratch directory,
+  deleted); `Valid` / `Trusted` / `No claim found`; the RIFF walk with a PHP
+  probe: header size equal to file − 8, `VP8L` at 12, `C2PA` at 312 with
+  length 100,635 (odd, pad byte present, walk ends exactly at the file
+  length), LBox 100,635, store SHA-256 `5062cb0a…3999`; fifteen variants
+  through c2patool (table in the README); `curl` of c2pa-rs `main`
+  `riff_io.rs`: `read_c2pa` returns on the first `C2PA`, never checks the
+  form type, walks within the header's size. `git ls-files | grep -i key`
+  → nothing.
+- Reasoned: the RIFF frame and pad rule from the RIFF/WebP container
+  specifications; the proposals for SPEC-003 at the end of the note (error
+  on two `C2PA`, on a non-`WEBP` form type, on LBox ≠ length; extract
+  regardless of position; the RIFF-size and pad-byte questions left open).
+- Decided by Maurice: proceed with step 06 as explained.

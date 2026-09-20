@@ -1,0 +1,10 @@
+{
+  "claim_generator_info": [{ "name": "c2pa-verifier fixtures", "version": "0.0.0" }],
+  "title": "fixture-signed.webp",
+  "alg": "es256",
+  "private_key": "<path to es256_private.key — never in this repository>",
+  "sign_cert": "<path to es256_certs.pem>",
+  "assertions": [
+    { "label": "c2pa.actions", "data": { "actions": [ { "action": "c2pa.created", "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/algorithmicMedia" } ] } }
+  ]
+}
