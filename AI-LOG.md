@@ -776,3 +776,13 @@ README are where the disclosure lives.
   step 09; SHA-256 `75a8da33…`; `composer check` exit 0 (no test uses it
   yet — that is SPEC-007's job).
 - Decided by Maurice: add the fixture; push.
+
+## 2026-09-20 — CI green after step 09 and the public fixture
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (same request) read the CI run.
+- Produced: pushed `6af34b1` and `abf9a62` to `origin/main`; this entry.
+- Measured: before the push, 0 attribution lines and no tracked file
+  matching `key`. Run `35496464128` on `abf9a62`: conclusion `success`;
+  PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 71 passed`; `all green`
+  `success`.
+- Decided by Maurice: push.
