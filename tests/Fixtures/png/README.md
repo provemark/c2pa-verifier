@@ -4,7 +4,7 @@ Every file here is derived from `../fixture-signed.png` by
 `bin/make-png-variants.php` — whole chunks moved, or one field changed,
 nothing else. Regenerate with `php bin/make-png-variants.php`; the script
 prints each file's SHA-256, and these are the values committed on
-2026-09-19. Measured with c2patool 0.27.22 the same day
+2026-09-19 (`truncated-between-chunks.png` on 2026-09-20). Measured with c2patool 0.27.22 the same day
 (`notes/step-04-png-fixture.md`). The SPEC-002 column is filled when the
 spec is approved.
 
@@ -20,6 +20,7 @@ spec is approved.
 | `lbox-differs.png` | LBox inside the box +1 (46,026), chunk length 46,025, CRC recomputed | extracts; **`Valid`** — LBox is not compared to the chunk length, and the JUMBF parser tolerates the excess | — |
 | `cabx-too-short.png` | a `caBX` of 4 bytes, shorter than a box header | `Error: unexpected end of file` | — |
 | `cabx-empty.png` | a `caBX` of length 0 | `Error: No claim found` | — |
+| `truncated-between-chunks.png` | file ends after `IHDR`'s CRC, where the next chunk header should start (added 2026-09-20 for AC14) | `Error: asset could not be parsed: PNG out of range` | — |
 
 SHA-256 (as printed by the script):
 
@@ -34,4 +35,5 @@ df094eb23075e98daf2aa7188ffb544447f9a4dd286056dd17cadb9cf7c9bf71  length-differs
 8563d85c61f38fff5bfd647bc0128a37d54049bea1aed6eb5ec0069ebb8685be  lbox-differs.png
 d125f4c3588145b1a49635636dbbab487caef9e04745c3d04a50da934a61bf1c  cabx-too-short.png
 3977732b5a86a8372af440f231c4ed833a45bc08c2bb82cf0f0ec2492560467f  cabx-empty.png
+93b67b5cd10ea8c1cce9d92fb05698d33b4cc6f5f1e5d3ec26f22fb94d049d32  truncated-between-chunks.png
 ```

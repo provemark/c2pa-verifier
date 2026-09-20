@@ -534,3 +534,30 @@ README are where the disclosure lives.
 - Decided by Maurice: SPEC-002 approved as drafted, all fourteen criteria
   and the three open questions as proposed; the five fixes applied by
   Claude.
+
+## 2026-09-20 — The SPEC-002 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "kan je test 2 schrijven?", "en test 3", "Waarom de exception
+  message hex code?", "laat het zo, en test 4", "laat het zo, en test 5",
+  "maak alle tests" — one test at a time with an explanation, then the rest.
+- Produced: AC2–AC14 in `tests/Unit/Container/PngManifestStoreExtractorTest.php`
+  (15 tests in all; AC11 has two), the `ContainerException` import;
+  `truncated-between-chunks.png` in `bin/make-png-variants.php` and
+  `tests/Fixtures/png/` with its README row and hash; `docs/milestones.md`
+  row; this entry. No `src/` change.
+- Measured: the new variant is 33 bytes ending on `IHDR`'s last CRC byte
+  (`xxd`), `c2patool 0.27.22` → `PNG out of range`; regenerating changed no
+  other file. The two `caBX` offsets in `two-cabx.png` walked with a probe:
+  33 and 46,070. `vendor/bin/pest --group=SPEC-002` → **15 failed**, every
+  one on `Class "Provemark\C2paVerifier\Container\PngManifestStoreExtractor"
+  not found`; `spec-check` `OK: 3 spec(s), 3 test file(s)`; PHPStan only
+  `class.notFound` and its consequences.
+- Reasoned: exact phrases for the messages the criteria name (`stored CRC
+  83278C6A, computed 83278C6B`, `LBox 46026 differs from the chunk length
+  46025`, `length 4 is shorter than the 8-byte box header`, `length 46025
+  exceeds the limit of 1000`, `offsets 33 and 46070`); AC3's expected
+  signature in hex because the bytes are not printable and found bytes are
+  untrusted; substring matches on offsets kept as in SPEC-001, to be
+  tightened once the wording exists.
+- Decided by Maurice: keep AC3's hex message; keep AC4's substring match;
+  Claude writes AC6–AC14.

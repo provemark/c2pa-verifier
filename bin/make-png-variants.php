@@ -106,6 +106,8 @@ $variants = [
     'cabx-too-short.png' => pngJoin(['caBX' => pngChunk('caBX', "\0\0\0\4")] + $c, $normal),
     // an empty caBX chunk (length 0)
     'cabx-empty.png' => pngJoin(['caBX' => pngChunk('caBX', '')] + $c, $normal),
+    // cut between two chunks: after IHDR's CRC, where the next chunk header should start
+    'truncated-between-chunks.png' => substr($source, 0, $cabxOffset),
 ];
 
 $dir = $root.'/tests/Fixtures/png';
