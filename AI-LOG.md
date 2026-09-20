@@ -729,3 +729,38 @@ README are where the disclosure lives.
   `composer check (PHP 8.3)`, `(PHP 8.4)`, `(PHP 8.5)` each `success` with
   `Tests: 71 passed`; `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-20 — Step 09: the manifest store from the inside (M2 measurement)
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "leg de meetstap voor M2 uit", then "akkoord voor stap 09" (with
+  two side questions answered in between: why ISO/IEC 19566-5 is
+  paywalled — CHF 135, measured on iso.org — and what each standard in
+  that table is).
+- Produced: `notes/step-09-manifest-store-inside.md`; `NOTES.md` row;
+  `docs/milestones.md` M2 table (step 09 done, SPEC-005/006/007 planned);
+  this entry. No `src/` change, no spec, no fixture yet. Two throw-away
+  probes and `spomky-labs/cbor-php` 3.4.2 lived in the session scratch
+  directory only.
+- Measured: the three stores extracted with our own extractors (hashes
+  equal to steps 02/04/06); the JUMBF tree of each (8 `jumb`, 8 `jumd`, 4
+  `cbor`, `bfdb`+`bidb`, depth 4, every walk ending on its LBox; toggles
+  3 and 19; the private box is `c2sh`, 16 bytes); the CBOR of all 12
+  blobs walked over the raw encoding and cross-checked with cbor-php —
+  major types 0/2/3/4/5/6/7, additional info ≤ 25, tag 18 once, zero
+  indefinite lengths, floats, negatives; the COSE_Sign1 with a `null`
+  (detached) payload, protected header keys 1 (−7) and 33 (2 certs,
+  651 + 622 bytes), 10,932 bytes of `pad`, 64-byte signature; the leaf
+  certificate parsed with `openssl_x509_parse`; `c2patool --detailed` on
+  the PNG compared field for field (claim: our 7 keys + derived
+  `claim_version`; hash.data exclusion `start 33, length 46037` = the
+  `caBX` chunk with frame); `c2pa-org/public-testfiles` listed via the
+  GitHub API (2.2 image dirs empty; legacy 1.4: 26 JPEGs, legend read;
+  licence CC BY-SA 4.0; commit `22beccc0`); `adobe-20220124-C.jpg` fetched
+  to scratch, extracted by our SPEC-001 code (51,118 bytes), c2patool
+  `Valid`, claim v1, `timeStamp.validated`; its tree and CBOR measured
+  (a `json` box, x5chain and sigTst in the *unprotected* header, 3 certs,
+  512-byte RSA signature, depth 7, still no indefinite/float/negative).
+- Reasoned: the proposed shape of M2 (three specs) and the fixture
+  proposal at the end of the note; toggle bits 2 and 3 from the text.
+- Decided by Maurice: proceed with step 09. Pending: whether to add
+  `adobe-20220124-C.jpg` (CC BY-SA 4.0) as a fixture.
