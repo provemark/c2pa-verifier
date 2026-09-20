@@ -683,3 +683,14 @@ README are where the disclosure lives.
   the found form type shown as text only when all four bytes are printable
   ASCII; the shared stream reader named as the next step before M2.
 - Decided by Maurice: build step 07b.
+
+## 2026-09-20 — CI green on M1
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja, push maar en lees de CI-run".
+- Produced: pushed `98e4abf`…`6b81862` (five commits) to `origin/main`;
+  this entry.
+- Measured: before the push, 0 attribution lines and no tracked file
+  matching `key`. Run `35493241785` on `6b81862`: conclusion `success`;
+  `composer check (PHP 8.3)`, `(PHP 8.4)`, `(PHP 8.5)` each `success` with
+  `Tests: 63 passed`; `all green` `success`.
+- Decided by Maurice: push.
