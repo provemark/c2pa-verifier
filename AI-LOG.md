@@ -718,3 +718,14 @@ README are where the disclosure lives.
   short read; recorded in SPEC-004 Open questions and the note); `end()`'s
   two seeks per skip left unmeasured.
 - Decided by Maurice: SPEC-004 and amendment 2 approved as proposed.
+
+## 2026-09-20 — CI green on SPEC-004
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja, push maar en lees de CI-run".
+- Produced: pushed `346ac73`, `302cfd0`, `69d5a55` to `origin/main`; this
+  entry.
+- Measured: before the push, 0 attribution lines and no tracked file
+  matching `key`. Run `35493634964` on `69d5a55`: conclusion `success`;
+  `composer check (PHP 8.3)`, `(PHP 8.4)`, `(PHP 8.5)` each `success` with
+  `Tests: 71 passed`; `all green` `success`.
+- Decided by Maurice: push.
