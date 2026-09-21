@@ -2179,3 +2179,31 @@ README are where the disclosure lives.
   committed; the product never signs, no key enters the repository.
   (He first answered too quickly, asked for the question to be put
   again, and confirmed the same answer.)
+
+## 2026-09-21 — Step 33: the certificate profile measured
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met stap 33" (after confirming, on a second,
+  explicit question, that tooling may re-sign with throw-away keys).
+- Produced: `bin/make-profile-variants.php`, `tests/Fixtures/profile/`
+  (12 × `.bin`/`.png`/`.leaf.pem`, `throw-away-root.pem`,
+  `throw-away-root.settings.json`, README), `tests/Fixtures/c2patool/profile/`
+  (12 JSONs, README), `notes/step-33-profile-measured.md`, `NOTES.md`,
+  `docs/milestones.md`, this entry. No `src/` change, no spec. No
+  private key written under the repository (`grep -l PRIVATE
+  tests/Fixtures/profile/*` → 0; the run's key directory deleted, `ls`
+  → 0).
+- Measured: the verifier's own `SignatureVerifier` on the twelve
+  re-signed stores — ten `verifies`, `rsa-1024` and `curve-secp256k1`
+  refused at the key check (SPEC-009); `c2patool 0.27.22` with the
+  throw-away root as anchor: `good`, `eku-c2pa`, `no-digital-signature`
+  → `Trusted`; `expired` → `signingCredential.expired`; the eight
+  others → `signingCredential.invalid`; `signingCredential.trusted`
+  logged as a success on all twelve. c2pa-rs `certificate_profile.rs`
+  lines 380–520: KU good on digitalSignature or nonRepudiation or
+  keyCertSign; AKI required on the leaf; unknown critical extensions
+  refused; no EKU accepted only on a CA. `composer check` → all green,
+  193 passed. / Reasoned: the pad-sizing so that only the signature
+  box changes; the KU question left to Maurice.
+- Decided by Maurice: tooling may sign with throw-away keys (recorded
+  in the script's header and the README). Open for him: KU as c2pa-rs
+  (nonRepudiation alone accepted) or `digitalSignature` required.
