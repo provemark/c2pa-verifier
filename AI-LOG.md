@@ -1688,3 +1688,12 @@ README are where the disclosure lives.
   mismatch; (2) `assertion.undeclared` also for `UnknownBox` children of
   the assertion store; (3) a non-empty `redacted_assertions` →
   `general.error` until M7.
+
+## 2026-09-21 — SPEC-011 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: `specs/SPEC-011-hashed-uri-check.md` status `approved`, the
+  M4 row in `docs/milestones.md`, this entry.
+- Measured: `php bin/spec-check.php` → OK. / Reasoned: nothing.
+- Decided by Maurice: SPEC-011 approved as drafted, including SPEC-007
+  amendment 2 and the Deptrac arrow `Hash` → `Jumbf`.
