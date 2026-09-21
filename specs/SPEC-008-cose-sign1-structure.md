@@ -152,7 +152,9 @@ fixtures (SPEC-007); the numbers are step 16's.
     decodes (SPEC-006) back to the four items
 
 - **AC7 — not a tagged COSE_Sign1 is an error** *(required: error /
-  malformed input)*
+  malformed input; oracle: `c2patool` errors on all three, with the
+  message `could not generate a trusted time stamp` — its COSE parse
+  failure surfaces through the timestamp path)*
   - Given the PNG signature with its tag `d2` (18) → `d3` (19); and
     separately with the tag byte removed (`84 …`); and with the array
     head `84` → `83` (three items)
@@ -160,7 +162,10 @@ fixtures (SPEC-007); the numbers are step 16's.
   - Then each throws `CoseException` naming what was expected and found
     (tag 18 / a tag / four items)
 
-- **AC8 — a present payload is an error**
+- **AC8 — a present payload is an error** *(stricter than the oracle:
+  `c2patool` → **`Valid`**, `claimSignature.validated` — it ignores the
+  payload field; C2PA 2.4 §13.2.3 forbids an empty byte string as
+  "detached")*
   - Given the PNG signature with the payload `f6` (nil) → `40` (an empty
     byte string)
   - When parsed
@@ -168,6 +173,9 @@ fixtures (SPEC-007); the numbers are step 16's.
     (`nil`), citing that an empty byte string does not count
 
 - **AC9 — the protected header must be a map with an integer alg**
+  *(oracle: `c2patool` errors on all three — `could not generate a trusted
+  time stamp` for the array and the missing alg, `could not find signing
+  certificate chain` for the string label)*
   - Given the PNG signature with, separately: the protected map head `a2`
     → `82` (an array); the key `01` → `02` (no alg); the protected bytes
     replaced by the CBOR map `{"alg": -7}` (the string label)
@@ -175,7 +183,10 @@ fixtures (SPEC-007); the numbers are step 16's.
   - Then each throws `CoseException` naming the fault (not a map; alg
     missing; alg under the string label `"alg"`)
 
-- **AC10 — a missing or malformed chain is an error**
+- **AC10 — a missing or malformed chain is an error** *(oracle:
+  `c2patool` → `could not find signing certificate chain in COSE
+  signature` for the missing and the empty chain, `COSE error parsing
+  certificate` for the broken leaf)*
   - Given the PNG signature with, separately: the label `18 21` (33) →
     `18 22` (34) so no chain is present; the chain's first certificate
     with one byte of its DER flipped (`30 82` → `31 82`); the chain
@@ -187,7 +198,10 @@ fixtures (SPEC-007); the numbers are step 16's.
     either bucket; the leaf is not an X.509 certificate; the chain is
     empty)
 
-- **AC11 — 33 wins over the string label**
+- **AC11 — 33 wins over the string label** *(oracle: not observable —
+  any change to the protected header breaks the signature, so `c2patool`
+  reports `claimSignature.mismatch` whichever chain it picked; the rule is
+  §14.5's)*
   - Given a signature whose protected header carries `x5chain` under both
     33 and `"x5chain"`, with different chains (built synthetically from
     the PNG's header: the 33 chain as is, the string-labelled chain the
@@ -215,8 +229,9 @@ fixtures (SPEC-007); the numbers are step 16's.
 - Oracle: the four fixtures' structures decoded in step 16 with SPEC-006/
   007; the `Sig_structure` vectors measured there (lengths, first bytes,
   SHA-256) and verified against the real signatures with `ext-openssl`;
-  c2patool 0.27.22 on the variants of AC7–AC10, to be measured before
-  approval (Open questions).
+  c2patool 0.27.22 on the eleven variants of AC7–AC11, measured
+  2026-09-21 (step 17; `bin/make-cose-variants.php`,
+  `tests/Fixtures/cose/README.md`).
 - Reasoned: the limits (16 certificates, 16 KiB each, 64 KiB protected);
   accepting an unprotected chain (the step-16 argument); that `pad` and
   unknown headers are harmless to keep.
@@ -263,13 +278,10 @@ final readonly class CoseSign1
 
 ## Open questions
 
-- **The variants of AC7–AC12 and their c2patool measurement** are built
-  in a step before approval (`bin/make-cose-variants.php` extended: the
-  same-length edits, plus two synthetic protected headers for AC10's
-  empty chain and AC11's double label — those cannot be re-signed, so
-  c2patool's verdict on them is `claimSignature.mismatch` by construction;
-  the interesting c2patool answers are the tag, the payload, the missing
-  alg and the missing chain). Blocker for approval.
+- Resolved before approval (step 17, 2026-09-21): the eleven variants of
+  AC7–AC11 are built by `bin/make-cose-variants.php` and measured; AC12's
+  limit cases are synthetic in the test (a chain limit of 2 on the Adobe
+  signature, a declared 20,000-byte certificate).
 - **Whether `fromBytes()` should take a `CoseSign1` decoded by the caller
   instead of bytes** — the `Manifest` layer has already decoded the
   signature box once (SPEC-007 checks it is one `cbor` box) but discards

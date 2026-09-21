@@ -1245,3 +1245,28 @@ README are where the disclosure lives.
   one is accepted (with the step-16 reasoning); the supported-algorithm
   list belongs to SPEC-009. The draft awaits the variant measurement and
   his approval.
+
+## 2026-09-21 — Step 17: the SPEC-008 variants measured
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja doe die stap".
+- Produced: `bin/make-cose-variants.php` extended (a splice helper, a
+  shortest-form byte-string head, three whole-header replacements);
+  eleven new `.bin` + `.png` under `tests/Fixtures/cose/`, the README
+  rewritten with all fourteen rows; SPEC-008 draft updated (oracle notes
+  on AC7–AC11, References, the blocking open question resolved);
+  `notes/step-17-cose-variants.md`; `NOTES.md`; `docs/milestones.md`; this
+  entry.
+- Measured: every variant parsed as a JUMBF tree; each checked at the
+  CBOR level for the fault intended (one rebuilt: `a2` → `82` gave
+  trailing bytes, `a2` → `84` gives a clean list); c2patool on the eleven
+  carriers — `payload-present` **`Valid`**, five structural faults `could
+  not generate a trusted time stamp`, three chain faults `could not find
+  signing certificate chain`, the broken leaf `COSE error parsing
+  certificate`, `double-label` `claimSignature.mismatch`; PHPStan one
+  finding on the script, fixed, outputs byte-identical; `composer check`
+  exit 0.
+- Reasoned: c2pa-rs's timestamp-labelled message is its COSE parse
+  failure surfacing early; AC11 rests on §14.5, not on an observable
+  oracle.
+- Decided by Maurice: do the measurement step. SPEC-008 now awaits his
+  approval.
