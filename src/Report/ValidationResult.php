@@ -31,17 +31,29 @@ final readonly class ValidationResult
      */
     public static function fromStatuses(array $statuses, array $checksPerformed): self
     {
-        // Valid needs at least one success and no failure: an empty report, or
-        // one of informational statuses alone, is not a clean one (SPEC-010
-        // AC10, SPEC-012 AC10).
+        // The three states, as c2patool's JSON shows them (SPEC-014, measured in
+        // steps 14 and 30): Trusted = a signingCredential.trusted success and no
+        // failure; Valid = at least one success and no failure other than
+        // signingCredential.untrusted; Invalid otherwise — an empty report and
+        // one of informational statuses alone included (SPEC-010/012 AC10).
         $succeeded = false;
+        $trusted = false;
         $failed = false;
         foreach ($statuses as $status) {
             $succeeded = $succeeded || $status->code->isSuccess();
-            $failed = $failed || $status->code->isFailure();
+            $trusted = $trusted || $status->code === StatusCode::SigningCredentialTrusted;
+            $failed = $failed || ($status->code->isFailure() && $status->code !== StatusCode::SigningCredentialUntrusted);
+        }
+        $untrusted = false;
+        foreach ($statuses as $status) {
+            $untrusted = $untrusted || $status->code === StatusCode::SigningCredentialUntrusted;
         }
 
-        return new self($statuses, $succeeded && ! $failed ? ValidationState::Valid : ValidationState::Invalid, $checksPerformed);
+        return new self($statuses, match (true) {
+            ! $succeeded || $failed => ValidationState::Invalid,
+            $trusted && ! $untrusted => ValidationState::Trusted,
+            default => ValidationState::Valid,
+        }, $checksPerformed);
     }
 
     /** @return array<string, mixed> */
@@ -58,8 +70,9 @@ final readonly class ValidationResult
             }
         }
 
-        return [
-            'validation_status' => $failure,   // failures only, as c2patool 0.27.22 (SPEC-010 amendment 2, measured in step 26)
+        // validation_status holds failures only and is absent when there are
+        // none, as c2patool 0.27.22 (SPEC-010 amendment 2, SPEC-013 amendment 3)
+        return ($failure === [] ? [] : ['validation_status' => $failure]) + [
             'validation_results' => ['activeManifest' => ['success' => $success, 'informational' => $informational, 'failure' => $failure]],
             'validation_state' => $this->state->value,
             'checks_performed' => $this->checksPerformed,

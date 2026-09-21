@@ -274,7 +274,10 @@ it('AC8: the report\'s shape, and the sister parser reads it', function (): void
 
     foreach ([$valid, $tampered] as $report) {
         $array = $report->toArray();
-        expect(array_keys($array))->toBe(['active_manifest', 'manifests', 'validation_results', 'validation_state', 'validation_status', 'format', 'has_manifest', 'checks_performed']);
+        // validation_status is present only when there is a failure (SPEC-013 amendment 3, measured in step 30)
+        expect(array_keys($array))->toBe($report === $valid
+            ? ['active_manifest', 'manifests', 'validation_results', 'validation_state', 'format', 'has_manifest', 'checks_performed']
+            : ['active_manifest', 'manifests', 'validation_results', 'validation_state', 'validation_status', 'format', 'has_manifest', 'checks_performed']);
         assert(is_array($array['manifests']) && is_array($oracle['manifests']) && is_string($array['active_manifest']));
         expect(array_keys($array['manifests']))->toBe(array_keys($oracle['manifests']));
         $ours = $array['manifests'][$array['active_manifest']];

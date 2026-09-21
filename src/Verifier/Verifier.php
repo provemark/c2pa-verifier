@@ -22,11 +22,14 @@ use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationResult;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Support\Bytes;
+use Provemark\C2paVerifier\Trust\ChainCheck;
+use Provemark\C2paVerifier\Trust\TrustSettings;
 
 /**
  * One call from file to verdict (SPEC-013), in the order C2PA 2.4 §15.3
  * prescribes: the format from the magic bytes, the store from the
  * container, the manifest from the boxes, then the claim signature, the
+ * trust of its certificate when settings were given (SPEC-014), the
  * hashed URIs, and the data hash — the last only when the claim's hashed
  * URI for c2pa.hash.data matched (SPEC-011 decision 1): a hash read from
  * an assertion the claim does not vouch for proves nothing. Every fault a
@@ -47,12 +50,14 @@ final readonly class Verifier
         private ClaimSignatureCheck $signature = new ClaimSignatureCheck,
         private HashedUriCheck $hashedUris = new HashedUriCheck,
         private DataHashCheck $dataHash = new DataHashCheck,
+        private ChainCheck $trust = new ChainCheck,
     ) {}
 
     /**
      * @param  resource  $stream  the asset, readable and seekable
+     * @param  TrustSettings|null  $settings  with settings the trust check runs (SPEC-014); without, the report says so in checks_performed
      */
-    public function verify($stream): VerificationReport
+    public function verify($stream, ?TrustSettings $settings = null): VerificationReport
     {
         // 1. the format
         $format = $this->formats->detect($stream);
@@ -93,7 +98,7 @@ final readonly class Verifier
             ], []));
         }
 
-        return new VerificationReport($format, true, $manifestStore, $this->check($manifestStore, $stream, $store));
+        return new VerificationReport($format, true, $manifestStore, $this->check($manifestStore, $stream, $store, $settings));
     }
 
     /**
@@ -102,11 +107,16 @@ final readonly class Verifier
      *
      * @param  resource  $stream
      */
-    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store): ValidationResult
+    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings): ValidationResult
     {
         $manifest = $manifestStore->active;
         $statuses = $this->signature->check($manifest);
         $checks = ['signature'];
+
+        if ($settings !== null && $settings->verifyTrust) {
+            $statuses = [...$statuses, ...$this->trust->check($manifest, $settings)];
+            $checks[] = 'trust';
+        }
 
         $hashedUris = $this->hashedUris->check($manifest);
         $statuses = [...$statuses, ...$hashedUris];

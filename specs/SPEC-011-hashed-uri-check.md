@@ -329,6 +329,7 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report` (already), plus `Jumbf`
 ## Amendments
 
 1. **2026-09-21, with SPEC-012's implementation** — `StatusCode` grew by SPEC-012's six codes; AC9's test now asserts that this spec's fifteen are present and leaves the exact twenty-one and the informational kind to SPEC-012 AC10. No criterion changed.
+2. **2026-09-21, with SPEC-014's implementation** — `StatusCode` grew by `signingCredential.trusted` (a success) and `.untrusted`; AC9's test skips them. No criterion changed.
 
 ## Traceability
 

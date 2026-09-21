@@ -11,6 +11,7 @@ namespace Provemark\C2paVerifier\Report;
  */
 enum ValidationState: string
 {
+    case Trusted = 'Trusted';
     case Valid = 'Valid';
     case Invalid = 'Invalid';
 }

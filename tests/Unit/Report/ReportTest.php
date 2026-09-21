@@ -296,8 +296,7 @@ it('AC9: the array shape is c2patool\'s, plus the checks performed', function ()
     $explanation = $success[0]['explanation'];
 
     expect($explanation)->not->toBe('')
-        ->and($valid)->toBe([
-            'validation_status' => [],
+        ->and($valid)->toBe([   // no validation_status key: none when there is no failure (SPEC-013 amendment 3, measured in step 30)
             'validation_results' => ['activeManifest' => [
                 'success' => [['code' => 'claimSignature.validated', 'url' => SPEC010_PNG_SIGNATURE_URL, 'explanation' => $explanation]],
                 'informational' => [],
@@ -337,8 +336,8 @@ it('AC10: every code is verbatim, and success and failure are told apart', funct
         expect($values)->toContain($value);
     }
     foreach (StatusCode::cases() as $code) {
-        if (str_starts_with($code->value, 'assertion.') && ! in_array($code->value, ['assertion.json.invalid', 'assertion.missing'], true)) {
-            continue;   // SPEC-011's and SPEC-012's, with their own successes and the informational
+        if ((str_starts_with($code->value, 'assertion.') && ! in_array($code->value, ['assertion.json.invalid', 'assertion.missing'], true)) || in_array($code->value, ['signingCredential.trusted', 'signingCredential.untrusted'], true)) {
+            continue;   // SPEC-011's, SPEC-012's and SPEC-014's, with their own successes and the informational
         }
         expect($code->isSuccess())->toBe($code === StatusCode::ClaimSignatureValidated, $code->value)
             ->and($code->isFailure())->toBe($code !== StatusCode::ClaimSignatureValidated, $code->value);

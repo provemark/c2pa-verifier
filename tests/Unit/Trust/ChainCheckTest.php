@@ -64,7 +64,9 @@ function spec014Oracle(string $name): array
 function spec014OracleFailures(array $oracle): array
 {
     $codes = [];
-    foreach ($oracle['validation_status'] ?? [] as $status) {
+    $list = $oracle['validation_status'] ?? [];
+    assert(is_array($list));
+    foreach ($list as $status) {
         assert(is_array($status) && is_string($status['code']));
         $codes[] = $status['code'];
     }
@@ -246,7 +248,10 @@ it('AC7: the settings are whole or absent', function (): void {
     assert($key !== false);
     $privatePem = '';
     openssl_pkey_export($key, $privatePem);
-    preg_match('/-----BEGIN[^\n]*-----\n(.*?)\n-----END/s', $privatePem, $m);
+    assert(is_string($privatePem));
+    if (preg_match('/-----BEGIN[^\n]*-----\n(.*?)\n-----END/s', $privatePem, $m) !== 1) {
+        throw new RuntimeException('no PEM body in the exported key');
+    }
     $keyBody = $m[1];
 
     $cases = [

@@ -36,7 +36,7 @@ final readonly class VerificationReport
             'manifests' => $store['manifests'],
             'validation_results' => $result['validation_results'],
             'validation_state' => $result['validation_state'],
-            'validation_status' => $result['validation_status'],
+        ] + (array_key_exists('validation_status', $result) ? ['validation_status' => $result['validation_status']] : []) + [
             'format' => $this->format,
             'has_manifest' => $this->hasManifest,
             'checks_performed' => $result['checks_performed'],

@@ -401,6 +401,7 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
    earlier. The clause now proves the same fact from the match itself
    (313 of 100,956 bytes hashed, the store's range ending at 100,955)
    and asserts SPEC-003's refusal. No outcome changed.
+4. **2026-09-21, with SPEC-014's implementation** — `StatusCode` grew by the two trust codes; AC10's test now asserts this spec's twenty-one are present and skips the two (SPEC-014 AC10 asserts the twenty-three). AC4's test expects `validation_status` absent rather than `[]` (SPEC-013 amendment 3). No criterion changed in outcome.
 
 ## Traceability
 

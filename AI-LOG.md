@@ -2131,3 +2131,31 @@ README are where the disclosure lives.
   passes; `bin/spec-check.php` → `OK: 15 spec(s), 15 test file(s)`. /
   Reasoned: nothing new.
 - Decided by Maurice: step 31b as explained.
+
+## 2026-09-21 — Step 32: SPEC-014 implemented, the chain check; the first Trusted
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met stap 32".
+- Produced: `src/Trust/{TrustSettings,Certificate,TrustException,ChainCheck}.php`;
+  `src/Report/StatusCode.php` (+2), `ValidationState.php` (`Trusted`),
+  `ValidationResult.php` (the three-state rule; `validation_status`
+  omitted when empty); `src/Verifier/Verifier.php` (`verify($stream,
+  ?TrustSettings)`, `trust` in `checks_performed`),
+  `VerificationReport.php` (the key omitted); `deptrac.yaml` (`Trust` →
+  `Cose`, `Support`); six older tests adjusted for the two intended
+  changes (SPEC-010 amendment 3, SPEC-011 amendment 2, SPEC-012
+  amendment 4, SPEC-013 amendment 3, recorded in each); SPEC-014 →
+  `implemented` with Traceability; `notes/step-32-chain-check.md`,
+  `NOTES.md`, `docs/milestones.md`, this entry.
+- Measured: first run `8 passed, 1 failed, 1 warning` — the failure a
+  depth wording (now: links walked to the anchor), the warning OpenSSL's
+  on a truncated certificate through an `@` PHPUnit ignores (now a
+  scoped error handler); then `6 failed` older tests on the enum's new
+  success and the omitted key, adjusted. After: `composer check` → Pint
+  passed, PHPStan `[OK] No errors`, Deptrac `Violations 0`, Pest
+  `193 passed (1829 assertions)`; `bin/spec-check.php` → `OK: 15
+  spec(s), 15 test file(s)`. AC8: `openssl_x509_checkpurpose` agrees
+  with `ChainCheck` on all four fixtures under both anchor sets. AC10:
+  the 22-file corpus with the full settings — four `Trusted`, the rest
+  unchanged. / Reasoned: "depth" as links walked; the private-key block
+  refused by its BEGIN line so the message never sees the body.
+- Decided by Maurice: step 32 as explained.

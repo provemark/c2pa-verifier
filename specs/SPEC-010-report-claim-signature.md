@@ -349,6 +349,7 @@ already); `Cose` may see `Manifest` (the arrow exists, unused until now).
    the only success *among them*; the exact set of fifteen and the second
    success are SPEC-011 AC9's. No criterion changed.
 2. **2026-09-21, with SPEC-012's implementation, measured in step 26** — c2patool 0.27.22's `validation_status` holds failures only (an informational appears under `activeManifest.informational` alone); `ValidationResult::toArray()` now does the same, and the Scope's description of `validation_status` reads accordingly. With it, `Valid` requires at least one success *and* no failure, so that a report of informational statuses alone is `Invalid` like an empty one (SPEC-012 AC10). AC10's test skips the later specs' codes. No criterion of this spec changed in outcome: every test of it still passes.
+3. **2026-09-21, with SPEC-014's implementation** — `validation_status` is omitted from `toArray()` when empty (c2patool omits it; measured in step 30); AC9's test expects the key absent on the valid PNG. `ValidationState` gained `Trusted` and `fromStatuses()` the three-state rule (SPEC-014): `Trusted` = a `signingCredential.trusted` success and no failure; `Valid` = a success and no failure other than `signingCredential.untrusted`; `Invalid` otherwise — the nuance this spec's References recorded for M5. AC10's test skips the two trust codes. No outcome of this spec changed.
 
 ## Traceability
 

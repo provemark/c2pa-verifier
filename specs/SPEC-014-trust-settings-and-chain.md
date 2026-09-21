@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-21                      |
 | Supersedes | —                                                 |
@@ -357,13 +357,13 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
+| AC1 | tests/Unit/Trust/ChainCheckTest.php :: AC1: the four fixtures with the full settings: Trusted, and the words are c2patool's / SPEC-014 | src/Trust/ChainCheck.php :: check() (the walk); src/Verifier/Verifier.php :: verify(), check() (`trust`); src/Report/ValidationResult.php :: fromStatuses(), toArray() |
+| AC2 | tests/Unit/Trust/ChainCheckTest.php :: AC2: the wrong root: untrusted, and the state is Valid, not Invalid / SPEC-014 | src/Trust/ChainCheck.php :: check() (chain exhausted); src/Report/ValidationResult.php :: fromStatuses() (the Valid-with-untrusted rule) |
+| AC3 | tests/Unit/Trust/ChainCheckTest.php :: AC3: the allowed list: trusted without a chain / SPEC-014 | src/Trust/ChainCheck.php :: check() (the allowed list, hash_equals on sha256) |
+| AC4 | tests/Unit/Trust/ChainCheckTest.php :: AC4: the walk needs the intermediate the chain carries, and an intermediate may be the anchor / SPEC-014 | src/Trust/ChainCheck.php :: check() (next === null; signedBy an anchor) |
+| AC5 | tests/Unit/Trust/ChainCheckTest.php :: AC5: no trust by name / SPEC-014 | src/Trust/Certificate.php :: signedBy(), sameAs(), $subject/$issuer; src/Trust/ChainCheck.php :: anchorWithSubject() |
+| AC6 | tests/Unit/Trust/ChainCheckTest.php :: AC6: verify_trust off: no credential code at all / SPEC-014 | src/Trust/ChainCheck.php :: check() (verifyTrust); src/Verifier/Verifier.php :: check() |
+| AC7 | tests/Unit/Trust/ChainCheckTest.php :: AC7: the settings are whole or absent / SPEC-014 | src/Trust/TrustSettings.php :: fromJson(), fromArray(), certificatesFromPem(), ekusFromConfig(), section(), text(); src/Trust/TrustException.php; src/Trust/Certificate.php :: __construct() |
+| AC8 | tests/Unit/Trust/ChainCheckTest.php :: AC8: the second oracle: OpenSSL agrees with the walk / SPEC-014 | src/Trust/ChainCheck.php :: check() |
+| AC9 | tests/Unit/Trust/ChainCheckTest.php :: AC9: the three states are told apart by the rule, on paper and on files / SPEC-014 | src/Report/ValidationResult.php :: fromStatuses(); src/Report/ValidationState.php :: Trusted |
+| AC10 | tests/Unit/Trust/ChainCheckTest.php :: AC10: the codes are verbatim, and the drift alarm grows / SPEC-014 | src/Report/StatusCode.php :: SigningCredentialTrusted, SigningCredentialUntrusted, isSuccess(); tests/Pest.php :: SPEC013_CORPUS |

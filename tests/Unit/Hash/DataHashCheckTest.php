@@ -214,8 +214,8 @@ it('AC4: additional exclusions are honoured and reported', function (): void {
     expect($result->state)->toBe(ValidationState::Valid);
     $array = $result->toArray();
     $oracle = spec012C2patool('exclusion-extra', true);
-    // c2patool lists an informational under activeManifest.informational only, never under validation_status (measured, step 26)
-    expect($array['validation_status'])->toBe([])
+    // c2patool lists an informational under activeManifest.informational only, never under validation_status — and omits the key when it would be empty (measured, steps 26 and 30; SPEC-013 amendment 3)
+    expect($array)->not->toHaveKey('validation_status')
         ->and(spec012OraclePairs($oracle, 'validation_status', 'assertion.dataHash'))->toBe([]);
     // our toArray() has c2patool's shape, so the same reader serves both sides
     expect(spec012OraclePairs($array, 'informational', 'assertion.dataHash'))->toBe(spec012OraclePairs($oracle, 'informational', 'assertion.dataHash'))
@@ -332,9 +332,9 @@ it('AC9: streamed, not slurped', function (): void {
 })->group('SPEC-012');
 
 it('AC10: the codes are verbatim, and informational is a third kind', function (): void {
+    // SPEC-012's twenty-one; SPEC-014 added the two of the signing credential's trust (its AC10 asserts the twenty-three)
     $values = array_map(static fn (StatusCode $c): string => $c->value, StatusCode::cases());
-    sort($values);
-    expect($values)->toBe([
+    foreach ([
         'algorithm.unsupported',
         'assertion.dataHash.additionalExclusionsPresent', 'assertion.dataHash.malformed', 'assertion.dataHash.match', 'assertion.dataHash.mismatch',
         'assertion.hashedURI.match', 'assertion.hashedURI.mismatch',
@@ -342,9 +342,14 @@ it('AC10: the codes are verbatim, and informational is a third kind', function (
         'claim.cbor.invalid', 'claim.hardBindings.missing', 'claim.malformed', 'claim.missing', 'claim.multiple',
         'claimSignature.mismatch', 'claimSignature.missing', 'claimSignature.validated',
         'general.error', 'signingCredential.invalid',
-    ]);
+    ] as $value) {
+        expect($values)->toContain($value);
+    }
     $successes = [StatusCode::ClaimSignatureValidated, StatusCode::AssertionHashedUriMatch, StatusCode::AssertionDataHashMatch];
     foreach (StatusCode::cases() as $code) {
+        if (in_array($code, [StatusCode::SigningCredentialTrusted, StatusCode::SigningCredentialUntrusted], true)) {
+            continue;   // SPEC-014's
+        }
         $informational = $code === StatusCode::AssertionDataHashAdditionalExclusionsPresent;
         expect($code->isInformational())->toBe($informational, $code->value)
             ->and($code->isSuccess())->toBe(in_array($code, $successes, true), $code->value)

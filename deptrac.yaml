@@ -80,6 +80,8 @@ deptrac:
     Trust:
       - Manifest
       - Report
+      - Cose           # SPEC-014: the x5chain from CoseSign1
+      - Support
     Timestamp:
       - Manifest
       - Cbor

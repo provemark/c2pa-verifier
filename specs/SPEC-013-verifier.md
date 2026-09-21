@@ -375,6 +375,7 @@ final class ManifestException extends \RuntimeException
    Scope said "may already see everything"; the ruleset predated
    `Support` (SPEC-004 amendment 1) and did not list it. No criterion
    changed.
+3. **2026-09-21, defined in SPEC-014 and approved with it** — `Verifier::verify($stream, ?TrustSettings $settings = null)`: with settings whose `verify_trust` is true, `ChainCheck` runs after the signature check and `checks_performed` gains `trust`; without, the report is what it was. `VerificationReport::toArray()` omits `validation_status` when there is no failure, as c2patool 0.27.22 does (measured in step 30: every `Trusted` JSON lacks the key); AC8's test asserts both key lists. No criterion changed in outcome.
 
 ## Traceability
 
