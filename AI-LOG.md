@@ -917,3 +917,26 @@ README are where the disclosure lives.
   PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 90 passed`; `all green`
   `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — SPEC-006 (draft): CBOR, the measured subset
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "leg SPEC-006 uit", then "akkoord, beide zoals je adviseert,
+  schrijf SPEC-006 als draft".
+- Produced: `specs/SPEC-006-cbor-decoder.md`, status `draft`, 15
+  criteria; `docs/milestones.md` row; this entry. No code, no tests, no
+  fixtures.
+- Measured: C2PA 2.4's text searched for its CBOR requirements — the claim
+  (§10.3) and every standard assertion "shall comply with the Core
+  Deterministic Encoding Requirements of CBOR (RFC 8949, clause 4.2.1)";
+  RFC 8949 fetched from the RFC Editor (185,226 bytes) and Appendix A
+  (the example table) and Appendix F (well-formedness errors) read; the
+  vectors in AC4–AC10 are copied from them, not from memory. `spec-check`
+  `OK: 7 spec(s), 6 test file(s)`; `composer check` exit 0.
+- Reasoned: the subset from step 09's inventory; integers beyond PHP's int
+  an error rather than a float; UTF-8 checked on text strings (RFC §3.1);
+  deterministic encoding not enforced on input (a writer's obligation;
+  the signature covers the bytes as they are) — left as an open question
+  to measure against c2patool.
+- Decided by Maurice: `CborBytes` as a separate type for byte strings; all
+  tags passed through as `CborTag`. The draft awaits the measurement step
+  and his approval.
