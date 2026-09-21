@@ -67,7 +67,7 @@ specifying is the tool that enforces exactly that.
 |---|---|---|
 | 09 | The store from the inside: JUMBF tree, CBOR inventory, COSE shape, `c2patool --detailed`, one foreign writer — `notes/step-09-manifest-store-inside.md` | done 2026-09-20 |
 | 10 | Twenty-three malformed stores (`bin/make-jumbf-variants.php`, `tests/Fixtures/jumbf/`) through c2patool — `notes/step-10-jumbf-variants.md` | done 2026-09-21 |
-| SPEC-005 | JUMBF: box frame, superbox, description box, content boxes, the C2PA UUIDs | approved 2026-09-21; red tests next |
+| SPEC-005 | JUMBF: box frame, superbox, description box, content boxes, the C2PA UUIDs | approved 2026-09-21; 19 tests seen red; implementation next |
 | SPEC-006 | CBOR: the measured subset, definite lengths only, fail closed on the rest | — |
 | SPEC-007 | Claim v1 and v2, assertion store, `claim_generator_info` | — |
 

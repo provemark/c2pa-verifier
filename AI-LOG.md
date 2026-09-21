@@ -859,3 +859,27 @@ README are where the disclosure lives.
   `success`. The 46 new fixture files and the variants script pass PHPStan
   and Pint on all three versions.
 - Decided by Maurice: push.
+
+## 2026-09-21 — The SPEC-005 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "maak alle tests".
+- Produced: `tests/Unit/Jumbf/JumbfParserTest.php`, 19 tests for 17
+  criteria (AC3 and AC16 have two each), with helpers that take the
+  stores through the M1 extractors, read the step-10 variants, count a
+  tree (superboxes, description boxes, content boxes by type, unknown
+  boxes, nesting depth with the root at 1) and list labels;
+  `docs/milestones.md` row; this entry. No `src/` change.
+- Measured: `vendor/bin/pest --group=SPEC-005` → **19 failed**, every one
+  on `Class "Provemark\C2paVerifier\Jumbf\JumbfParser" not found`;
+  `spec-check` `OK: 6 spec(s), 6 test file(s)`; PHPStan findings all
+  downstream of the missing classes.
+- Reasoned: the message phrases the criteria will be held to (`offset
+  33026: LBox 0`, `offset 32831 ends at 33036, past its parent, which
+  ends at 33026`, `label 63 32 70 61 2F … contains a character that is
+  not permitted` — the label as hex, never raw; `compressed manifests
+  (c2cm) are not supported`; `depth 17 exceeds the limit of 16`; `box 11
+  exceeds the limit of 10 boxes`); depth counted as superbox nesting with
+  the root at 1, so the step-09 tree is depth 4 and the synthetic store
+  depth 17; `ContentBox::$offset` is the box's offset, its data starts 8
+  bytes on.
+- Decided by Maurice: Claude writes all the tests.
