@@ -28,6 +28,20 @@ jobs:
 
       - run: composer validate --strict
 
+      # Composer's download cache, keyed on composer.json and the PHP version:
+      # a package is fetched from Packagist once per version, not once per
+      # job. Without it every run counted as three downloads of every
+      # dependency on Packagist's statistics — measured 2026-09-21, when the
+      # sister library's counter started moving on our CI alone. The cache
+      # holds archives only; `composer install` below still resolves fresh.
+      - id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-php${{ matrix.php }}-${{ hashFiles('composer.json') }}
+          restore-keys: composer-${{ runner.os }}-php${{ matrix.php }}-
+
       # composer.lock is not committed (this is a library), so this installs
       # the newest versions inside the constraints — what a consumer gets.
       - run: composer install --no-interaction --prefer-dist --no-progress

@@ -1479,3 +1479,23 @@ README are where the disclosure lives.
   8.3 / 8.4 / 8.5 each `success` with `Tests: 143 passed`; `all green`
   `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — Composer download cache on CI
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ik zie nu veel installs van content_credentials op packagist,
+  komt dit door ons?" — yes: every CI job installed it fresh (no cache in
+  `ci.yml`), 12 runs × 3 jobs today alone; then "ja, voeg de cache toe,
+  push maar en lees de CI-run".
+- Produced: `.github/workflows/ci.yml` — Composer's `cache-files-dir`
+  cached with `actions/cache@v4`, keyed on OS, PHP version and the hash
+  of `composer.json`, with a restore-key prefix per version; the comment
+  records why. This entry. Infrastructure, no spec: nothing about the
+  verifier's behaviour changes.
+- Measured: `grep cache .github/workflows/ci.yml` → nothing before; 12
+  runs on 2026-09-21 (`gh run list`), 7 on 2026-09-20 since the
+  dependency was added — about 60 Packagist downloads from this CI. The
+  first run after the change is a miss (it fills the cache); the second
+  should hit: next entries.
+- Reasoned: the cache holds archives only; resolution still runs fresh
+  because `composer.lock` is not committed.
+- Decided by Maurice: add the cache.
