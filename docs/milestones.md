@@ -97,6 +97,7 @@ specifying is the tool that enforces exactly that.
 | 26a | The store's range measured against the exclusion (exact on all four fixtures; two ranges for the gap JPEG); the twelve SPEC-012 variants made (`bin/make-data-hash-variants.php`) and measured through c2patool; AC8's url amended to the manifest's (amendment 1) — `notes/step-26-data-hash-variants.md` | done 2026-09-21 |
 | 26b | The ten SPEC-012 tests (`tests/Unit/Hash/DataHashCheckTest.php`), seen red: eight on the missing `Hash\DataHashCheck`, AC1 on the missing `$ranges`, AC10 on the enum still holding fifteen codes; amendment 2 (`validation_status` holds failures only, measured) | done 2026-09-21 |
 | SPEC-013 | The Verifier: format from the magic bytes, extractor, parse, then signature → hashed URIs → data hash (skipped after a hashed-URI mismatch on `c2pa.hash.data`, SPEC-011 decision 1); `VerificationReport` in c2patool's shape plus `format`/`has_manifest`/`checks_performed`; the sister parser reads it; the drift alarm over every recorded c2patool JSON; SPEC-007 amendment 3 (`ManifestException::$url`) | approved 2026-09-21 |
+| 28 | The ten SPEC-013 tests (`tests/Unit/Verifier/VerifierTest.php`), seen red on the missing `Verifier`; AC10's subset list corrected by the recorded JSON (amendment 1) | done 2026-09-21 |
 
 ## After M0
 

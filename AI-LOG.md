@@ -1942,3 +1942,27 @@ README are where the disclosure lives.
   broken signature (the oracle's behaviour), the data-hash skip after a
   hashed-URI mismatch, "no manifest" as `Invalid` without statuses,
   SPEC-007 amendment 3, AC10's normalisation table.
+
+## 2026-09-21 — Step 28: the SPEC-013 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met stap 28" (after a side question on why
+  the project verifies but never signs — answered in conversation, no
+  file changed).
+- Produced: `tests/Unit/Verifier/VerifierTest.php` — ten tests, one per
+  criterion, `->group('SPEC-013')`; the corpus of 22 recorded c2patool
+  JSONs mapped to their carriers; AC10's normalisation as the spec
+  states it, printing file / ours / theirs on failure; SPEC-013
+  amendment 1 (AC10's subset list); `docs/milestones.md`, this entry.
+  No `src/` change.
+- Measured: `vendor/bin/pest --group=SPEC-013` → `10 failed (0
+  assertions)`, all `Class "Provemark\C2paVerifier\Verifier\Verifier"
+  not found`; Pint passes; PHPStan reports only the unknown classes;
+  `bin/spec-check.php` → `OK: 14 spec(s), 14 test file(s)`. With `jq`
+  while writing AC10: on `hashed-uri-changed` and
+  `hashed-uris-two-changed` c2patool's `assertion.dataHash.match` is a
+  success, not a failure, so their failure sets equal ours although the
+  data hash is skipped — the spec's list said otherwise; corrected as
+  amendment 1. / Reasoned: the mapping of `algorithm.unsupported` to
+  the mismatch of its box by url and `checksPerformed`.
+- Decided by Maurice: step 28 as explained. Amendment 1 for his
+  confirmation.

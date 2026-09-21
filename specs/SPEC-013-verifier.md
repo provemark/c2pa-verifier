@@ -262,10 +262,13 @@ a short one) are made in the tests.
     **equal** for every file where `checksPerformed` is complete and no
     status was dropped. The subset-only files are named in the test and
     are exactly the two decided divergences: the data hash skipped after
-    a hashed-URI mismatch (decision 1: the AC4 four, `hashed-uri-changed`,
-    `hashed-uris-two-changed`, `hashed-uri-truncated`, `hash-as-text`,
-    `exclusions-too-many`, `claim-alg-sha1`) and a parse fault that
-    stops this verifier where c2patool goes on (`json-broken`). The
+    a hashed-URI mismatch where c2patool's data hash *failed*
+    (decision 1: `exclusions-overlap`, `hashed-uri-truncated`,
+    `hash-as-text`, `exclusions-too-many`, `claim-alg-sha1` — on
+    `hashed-uri-changed` and `hashed-uris-two-changed` c2patool's data
+    hash matched, so the failure sets are equal although the check was
+    skipped) and a parse fault that stops this verifier where c2patool
+    goes on (`json-broken`). The
     test prints file, ours and theirs side by side on failure, so that a
     future c2patool version's drift is legible
 
@@ -357,6 +360,16 @@ final class ManifestException extends \RuntimeException
 - Non-blocker: AC10's list of "not yet emitted" codes will shrink with
   M5 and M6; each of those specs amends this criterion when it starts
   emitting one.
+
+## Amendments
+
+1. **2026-09-21, step 28, while writing the tests** — AC10's list of
+   subset-only files named `hashed-uri-changed` and
+   `hashed-uris-two-changed`; the recorded JSON shows c2patool's data
+   hash *matched* on both (a match is not a failure), so their failure
+   sets are equal to ours although the data hash was skipped. The list
+   now holds the five files where c2patool's data hash failed, plus
+   `json-broken`. Nothing else changed.
 
 ## Traceability
 
