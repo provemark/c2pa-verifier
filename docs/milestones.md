@@ -70,7 +70,7 @@ specifying is the tool that enforces exactly that.
 | SPEC-005 | JUMBF: box frame, superbox, description box, content boxes, the C2PA UUIDs | implemented 2026-09-21: 19 tests red → green, 90 in all; `Support` layer added (SPEC-004 amendment 1) — step 11 |
 | 12 | Sixteen CBOR values recorded (`tests/Fixtures/cbor/*.json`); four claim-level faults through c2patool (`bin/make-cbor-vectors.php`) — `notes/step-12-cbor-vectors.md` | done 2026-09-21 |
 | SPEC-006 | CBOR: the measured subset, definite lengths only, fail closed on the rest | implemented 2026-09-21: 16 tests red → green, 106 in all — step 13 |
-| SPEC-007 | Claim v1 and v2, assertion store, `claim_generator_info` | — |
+| SPEC-007 | Claim v1 and v2, assertion store, `claim_generator_info`, the JSON view for the sister library | draft 2026-09-21; variants + c2patool JSON before approval |
 
 ## After M0
 

@@ -1048,3 +1048,30 @@ README are where the disclosure lives.
   Run `35574264542` on `5251e72`: conclusion `success`; PHP 8.3 / 8.4 /
   8.5 each `success` with `Tests: 106 passed`; `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — SPEC-007 (draft): the claim and the manifest
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "leg SPEC-007 uit", then "akkoord, beide zoals je adviseert,
+  schrijf SPEC-007 als draft".
+- Produced: `specs/SPEC-007-claim-and-manifest.md`, status `draft`, 14
+  criteria; `docs/milestones.md` row; this entry. No code, no tests, no
+  new fixtures, no composer change yet.
+- Measured: C2PA 2.4 §10.2.1 (the `claim-map` and `claim-map-v2` CDDL),
+  §10.2.2, §10.2.3 read from the downloaded text; the sister library's
+  `ManifestStoreParser` (which JSON keys it reads: `active_manifest`,
+  `manifests`, `claim_generator_info`, `signature_info`, `assertions[].label/data`,
+  `validation_status`) and `ManifestReport` (actions matched by the label
+  prefix `c2pa.actions`); Packagist lists `provemark/content-credentials`
+  v0.15.1; `c2patool 0.27.22` default JSON for the PNG and the Adobe
+  file: manifest keys, `claim_generator_info` always a list, `assertions`
+  without `c2pa.hash.data` and without the thumbnail (a separate
+  `thumbnail` field), the v1 `c2pa.actions` label rendered as
+  `c2pa.actions.v2`, `claim_generator` string and `format` for v1.
+  `spec-check` `OK: 8 spec(s), 7 test file(s)`; `composer check` exit 0.
+- Reasoned: `claim_version` from the box label; v1 `claim_generator_info`
+  optional against the 2.4 CDDL (the only deliberate leniency, with the
+  measured reason); URI resolution rules from the two measured forms;
+  labels kept as stored in the JSON view (the sister parser matches the
+  prefix, so accessors agree either way).
+- Decided by Maurice: v1 without `claim_generator_info` is accepted; the
+  sister library becomes a dev dependency for the equivalence test.
