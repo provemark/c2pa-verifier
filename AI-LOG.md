@@ -976,3 +976,20 @@ README are where the disclosure lives.
   matching `key`; `spec-check` `OK: 7 spec(s), 6 test file(s)`. The CI
   run: see the next entry.
 - Decided by Maurice: SPEC-006 approved as drafted after step 12.
+
+## 2026-09-21 — CI green after SPEC-006's approval; the key check sharpened
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (same request) read the CI run.
+- Produced: this entry.
+- Measured: run `35573418733` on `b8e44adf`: conclusion `success`; PHP
+  8.3 / 8.4 / 8.5 each `success` with `Tests: 90 passed`; `all green`
+  `success`. The pre-push `git ls-files | grep -ci key` returned 2 for the
+  first time — `tests/Fixtures/cbor/claim-duplicate-key.{cbor,png}`, a
+  file *name*, not key material; `grep -iE "\.key$"` returns nothing.
+  From now on the pre-push check is `git ls-files | grep -iE '\.key$'`
+  (private keys) — `*.pem` are public certificates and allowed under
+  `tests/Fixtures/README.md`.
+- Reasoned: a substring check on "key" was too coarse once fixture names
+  started describing faults; the file-extension check is what
+  `.gitignore`'s `*.key` line protects.
+- Decided by Maurice: push.
