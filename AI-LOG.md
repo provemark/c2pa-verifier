@@ -1625,3 +1625,15 @@ README are where the disclosure lives.
 - Reasoned: `checks_performed` in every array; an empty report is
   `Invalid`; the structural COSE faults left at `general.error`.
 - Decided by Maurice: build step 22b.
+
+## 2026-09-21 — CI green on M3
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja, push maar en lees de CI-run" (after "wat zou de zusterrepo
+  hier al mee kunnen?" — answered in conversation: a third reader that
+  reads without judging, `validationState()` withheld until M4/M5; not
+  before the repository is public).
+- Produced: pushed `2b74ab9` and `476e326` to `origin/main`; this entry.
+- Measured: before the push, 0 attribution lines and no tracked `*.key`.
+  Run `35584423141` on `476e326`: conclusion `success`; PHP 8.3 / 8.4 /
+  8.5 each `success` with `Tests: 153 passed`; `all green` `success`.
+- Decided by Maurice: push.
