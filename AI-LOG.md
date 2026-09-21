@@ -2207,3 +2207,23 @@ README are where the disclosure lives.
 - Decided by Maurice: tooling may sign with throw-away keys (recorded
   in the script's header and the README). Open for him: KU as c2pa-rs
   (nonRepudiation alone accepted) or `digitalSignature` required.
+
+## 2026-09-21 — SPEC-015 draft: the certificate profile
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "optie a, en schrijf SPEC-015 als draft".
+- Produced: `specs/SPEC-015-certificate-profile.md` (draft, ten
+  criteria), the row in `docs/milestones.md`, this entry; the `v1`
+  variant corrected in `tests/Fixtures/profile/README.md` and
+  `notes/step-33-profile-measured.md`. No `src/` change.
+- Measured: `openssl_x509_parse()` / `openssl_pkey_get_details()` on all
+  twelve leaves and the EC test leaf — OpenSSL 3.6's names (`E-mail
+  Protection`, `Any Extended Key Usage`, a dotted OID for the C2PA
+  EKU, `Digital Signature, Non Repudiation`, `CA:TRUE`, `version` 2 for
+  v3, `serialNumberHex`); the intended `v1` variant is v3 with SKI/AKI
+  (OpenSSL adds them) and no KU/EKU. `php bin/spec-check.php` → `OK: 16
+  spec(s), 15 test file(s)`. / Reasoned: the rules for v1, the
+  algorithm list and AKI on hand-built data; the EKU name → OID table;
+  unknown critical extensions as the one named gap until M6; two
+  measurements deferred to the tests-first step (profile check without
+  settings / with verify_trust off; expired + wrong anchor).
+- Decided by Maurice: KU as c2pa-rs keeps it (option a).

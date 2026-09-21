@@ -42,7 +42,7 @@ already enforces at the signature, before any profile check.
 | `eku-mixed` (timeStamping + emailProtection) | `Invalid` | `.invalid` |
 | `eku-c2pa` (1.3.6.1.4.1.62558.2.1) | `Trusted` | — on the built-in list |
 | `no-eku` | `Invalid` | `.invalid` |
-| `v1` | `Invalid` | `.invalid` |
+| `v1` — not v1 after all: OpenSSL 3 adds SKI/AKI, so v3 with no KU and no EKU | `Invalid` | `.invalid` (KU absent; EKU absent on an end-entity) |
 | `rsa-1024` | `Invalid` | `.invalid` |
 | `curve-secp256k1` | `Invalid` | `.invalid` |
 
@@ -74,6 +74,15 @@ measurement made visible:
   built-in file and `trust_config` add more); the timeStamping/OCSP
   combinations refused; **no EKU is accepted only on a CA**, which a
   leaf cannot be — so `no-eku` is `.invalid`.
+
+## One variant corrected by `openssl_x509_parse`
+
+`v1` was meant to be an X.509 v1 certificate (no extensions). Parsing
+every leaf afterwards showed `version` 2 (= v3) and SKI/AKI on it:
+OpenSSL 3's `x509 -req -CA` adds those two whatever `-extfile` says. The
+file is kept, honestly renamed in the table as the no-KU-no-EKU variant
+(which is why c2pa-rs refused it), and the version rule goes to the spec
+on hand-built parse data.
 
 ## Open for the spec
 

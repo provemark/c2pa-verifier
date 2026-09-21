@@ -26,7 +26,7 @@ here are the ones measured, with the SHA-256s below.
 | `eku-mixed` | EKU timeStamping + emailProtection | `Invalid`; `signingCredential.invalid` (an invalid set) |
 | `eku-c2pa` | EKU 1.3.6.1.4.1.62558.2.1 (C2PA Signing) only | `Trusted` — on the built-in list |
 | `no-eku` | no EKU extension | `Invalid`; `signingCredential.invalid` |
-| `v1` | no extensions at all (an X.509 v1 certificate) | `Invalid`; `signingCredential.invalid` |
+| `v1` | *intended* as an X.509 v1 certificate without extensions; OpenSSL 3's `x509 -req -CA` adds SKI/AKI regardless, so it is v3 with **no KeyUsage and no ExtendedKeyUsage** — and stands as that variant | `Invalid`; `signingCredential.invalid` (KU absent, EKU absent on an end-entity) |
 | `rsa-1024` | RSA 1024, PS256 | `Invalid`; `signingCredential.invalid` — this verifier's `SignatureVerifier` already refuses the key (SPEC-009) |
 | `curve-secp256k1` | EC secp256k1, ES256 | `Invalid`; `signingCredential.invalid` — likewise refused at SPEC-009 |
 
