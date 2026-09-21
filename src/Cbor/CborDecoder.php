@@ -11,7 +11,8 @@ use Provemark\C2paVerifier\Support\Bytes;
  * (SPEC-006). Major types 0–7 with definite lengths; integers within PHP's
  * int; byte strings as CborBytes, text as string (valid UTF-8), arrays as
  * lists, maps as arrays with int|string keys, tags as CborTag, and of major
- * type 7 false, true, null and floats (amendment 2). Indefinite lengths, other simple
+ * type 7 false, true, null and floats (amendment 2); indefinite lengths
+ * (amendment 3), bounded like the definite ones. Other simple
  * values, reserved additional information, duplicate keys, truncation and
  * trailing bytes are errors naming the offset. Limits are checked before
  * anything is allocated. Decodes only; nothing here encodes.
@@ -61,9 +62,14 @@ final readonly class CborDecoder
             throw new CborException(sprintf('additional information %d at offset %d is reserved', $additional, $head));
         }
         if ($additional === 31) {
-            throw new CborException($majorType === 7
-                ? sprintf('break at offset %d outside an indefinite-length item', $head)
-                : sprintf('indefinite length at offset %d is not supported', $head));
+            return match ($majorType) {
+                2 => new CborBytes($this->chunks($bytes, $offset, $head, 2, 'byte string')),
+                3 => $this->text($this->chunks($bytes, $offset, $head, 3, 'text string'), $head),
+                4 => $this->array($bytes, $offset, $head, null, $depth),
+                5 => $this->map($bytes, $offset, $head, null, $depth),
+                7 => throw new CborException(sprintf('break at offset %d outside an indefinite-length item', $head)),
+                default => throw new CborException(sprintf('major type %d at offset %d cannot have an indefinite length', $majorType, $head)),
+            };
         }
         if ($majorType === 7) {
             return $this->simple($bytes, $offset, $head, $additional);
@@ -79,12 +85,7 @@ final readonly class CborDecoder
             case 2:
                 return new CborBytes($this->string($bytes, $offset, $head, $argument, 'byte string'));
             case 3:
-                $text = $this->string($bytes, $offset, $head, $argument, 'text string');
-                if (! mb_check_encoding($text, 'UTF-8')) {
-                    throw new CborException(sprintf('text string at offset %d is not valid UTF-8: %s', $head, Bytes::hex(substr($text, 0, 32))));
-                }
-
-                return $text;
+                return $this->text($this->string($bytes, $offset, $head, $argument, 'text string'), $head);
             case 4:
                 return $this->array($bytes, $offset, $head, $argument, $depth);
             case 5:
@@ -208,26 +209,90 @@ final readonly class CborDecoder
         return $string;
     }
 
-    /** @return list<mixed> */
-    private function array(string $bytes, int &$offset, int $head, int $count, int $depth): array
+    private function text(string $text, int $head): string
     {
-        $this->countable('array', $head, $count);
+        if (! mb_check_encoding($text, 'UTF-8')) {
+            throw new CborException(sprintf('text string at offset %d is not valid UTF-8: %s', $head, Bytes::hex(substr($text, 0, 32))));
+        }
+
+        return $text;
+    }
+
+    /**
+     * The chunks of an indefinite-length string (RFC 8949 §3.2.3): definite
+     * strings of the same major type until a break; a chunk of another type
+     * or an indefinite chunk is an error. The total is bounded by the input.
+     */
+    private function chunks(string $bytes, int &$offset, int $head, int $majorType, string $what): string
+    {
+        $joined = '';
+        while (true) {
+            $chunkHead = $offset;
+            $initial = ord($this->take($bytes, $offset, 1, sprintf('the next chunk of the indefinite-length %s at offset %d', $what, $head)));
+            if ($initial === 0xFF) {
+                return $joined;
+            }
+            if ($initial >> 5 !== $majorType) {
+                throw new CborException(sprintf('chunk at offset %d of the indefinite-length %s at offset %d is of major type %d', $chunkHead, $what, $head, $initial >> 5));
+            }
+            $additional = $initial & 0x1F;
+            if ($additional === 31) {
+                throw new CborException(sprintf('chunk at offset %d of the indefinite-length %s at offset %d is itself indefinite (RFC 8949 §3.2.3)', $chunkHead, $what, $head));
+            }
+            if ($additional >= 28) {
+                throw new CborException(sprintf('additional information %d at offset %d is reserved', $additional, $chunkHead));
+            }
+            $joined .= $this->string($bytes, $offset, $chunkHead, $this->argument($bytes, $offset, $chunkHead, $additional), $what.' chunk');
+        }
+    }
+
+    /** Is the next byte a break? Consumed when it is. */
+    private function atBreak(string $bytes, int &$offset, int $head, string $what): bool
+    {
+        if ($offset >= strlen($bytes)) {
+            throw new CborException(sprintf('unexpected end of input at offset %d: the indefinite-length %s at offset %d has no break', $offset, $what, $head));
+        }
+        if ($bytes[$offset] === "\xff") {
+            $offset++;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  int|null  $count  null: indefinite, items until a break, counted against the same limit
+     * @return list<mixed>
+     */
+    private function array(string $bytes, int &$offset, int $head, ?int $count, int $depth): array
+    {
+        $this->countable('array', $head, $count ?? 0);
         $this->enter($depth, $head);
         $items = [];
-        for ($i = 0; $i < $count; $i++) {
+        for ($i = 0; $count === null ? ! $this->atBreak($bytes, $offset, $head, 'array') : $i < $count; $i++) {
+            if ($count === null) {
+                $this->countable('array', $head, $i + 1);
+            }
             $items[] = $this->item($bytes, $offset, $depth + 1);
         }
 
         return $items;
     }
 
-    /** @return array<int|string, mixed> */
-    private function map(string $bytes, int &$offset, int $head, int $count, int $depth): array
+    /**
+     * @param  int|null  $count  null: indefinite, pairs until a break, counted against the same limit
+     * @return array<int|string, mixed>
+     */
+    private function map(string $bytes, int &$offset, int $head, ?int $count, int $depth): array
     {
-        $this->countable('map', $head, $count);
+        $this->countable('map', $head, $count ?? 0);
         $this->enter($depth, $head);
         $map = [];
-        for ($i = 0; $i < $count; $i++) {
+        for ($i = 0; $count === null ? ! $this->atBreak($bytes, $offset, $head, 'map') : $i < $count; $i++) {
+            if ($count === null) {
+                $this->countable('map', $head, $i + 1);
+            }
             $keyOffset = $offset;
             $key = $this->item($bytes, $offset, $depth + 1);
             if (! is_int($key) && ! is_string($key)) {

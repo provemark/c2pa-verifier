@@ -43,7 +43,7 @@ final readonly class Claim
             ? ['instanceID', 'claim_generator_info', 'signature', 'created_assertions']
             : ['claim_generator', 'signature', 'assertions', 'dc:format', 'instanceID'];
         foreach ($required as $field) {
-            if (! array_key_exists($field, $map)) {
+            if (($map[$field] ?? null) === null) {   // absent or null: a required field that is null is not there (amendment 4)
                 throw new ManifestException(sprintf('claim (version %d) is missing the required field %s', $version, $field), StatusCode::ClaimMalformed);
             }
         }
@@ -58,7 +58,8 @@ final readonly class Claim
         $optionalText = static fn (string $field): ?string => array_key_exists($field, $map) ? $text($field, $map[$field]) : null;
 
         $info = null;
-        if (array_key_exists('claim_generator_info', $map)) {
+        // a null claim_generator_info is one that is not there (c2pa-rs writes it so in some v1 claims; SPEC-007 amendment 4)
+        if (($map['claim_generator_info'] ?? null) !== null) {
             $info = self::generatorInfo($map['claim_generator_info'], $version);
         }
 

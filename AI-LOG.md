@@ -2433,3 +2433,41 @@ README are where the disclosure lives.
   assertions on 8.3, 2206 on 8.4/8.5) — the 26 official files and both
   drift alarms hold on the CI runner; `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — Step 39: the c2pa-rs fixtures as a third corpus; indefinite lengths, a null field, a CAWG assertion
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "is nu alles wel goed met die fixtures? kan je er meer vinden?"
+  → "optie a, en neem de 33 c2pa-rs-bestanden op als derde corpus".
+- Produced: `tests/Fixtures/c2pa-rs/` (33 files + the two c2pa-rs
+  licences + README), `tests/Fixtures/c2patool/c2pa-rs/` (17 JSONs +
+  README); SPEC-006 amendment 3 (AC6 rewritten, red → green;
+  `CborDecoder::chunks()`, `atBreak()`, indefinite `array()`/`map()`);
+  SPEC-007 amendment 4 (`Claim::fromMap()`: null is absent, a null
+  required field is missing; ManifestStoreTest "AC5 (amendment 4)");
+  SPEC-013 AC12 + amendment 7 (`Verifier`: `cawg.identity` →
+  `general.error`; `SPEC013_RS_*` in `tests/Pest.php`); SPEC-010
+  amendment 4 and SPEC-013 amendment 6 (the CBOR-fault example is
+  `claim-duplicate-key`); `notes/step-39-c2pa-rs-corpus.md`, `NOTES.md`,
+  `docs/milestones.md`, this entry.
+- Measured: c2pa-rs at `58eac79`, `sdk/tests/fixtures/` — 249 files,
+  33 images, licence Apache-2.0 OR MIT; the Encypher conformance suite
+  holds rubric vectors, no image corpus. All 33 through the front door
+  next to c2patool with the full settings: first 5 of 33 states equal;
+  the nine `claim.cbor.invalid` were indefinite lengths; `ocsp.jpg`'s
+  first claim has `claim_generator_info: null`; `C_with_CAWG_data.jpg`
+  has c2patool's `signingCredential.trusted` under success and
+  `.untrusted` under failure — the CAWG identity's credential — and
+  `cawg.identity.well-formed`; `cloud.jpg` is `Valid` at c2patool
+  because it fetched the manifest from the network. After the three
+  changes: 8 of 17 equal, 9 stricter by name, 0 more lenient. AC6 red
+  (`indefinite length at offset 0 is not supported`), AC5-amendment-4
+  red (`not a non-empty list of maps`), AC12 red (`Trusted` vs
+  `Invalid` on the CAWG file), then `composer check` → `206 passed
+  (2253 assertions)`, Pint/PHPStan/Deptrac green; `bin/spec-check.php`
+  → OK. / Reasoned: bounds cover the resource concern of indefinite
+  lengths; a null field is an absent one; the CAWG refusal by the same
+  principle as the ingredient one.
+- Decided by Maurice: indefinite lengths accepted (option a); the 33
+  files as a corpus. For his confirmation: the CAWG refusal (SPEC-013
+  amendment 7), SPEC-007 amendment 4, SPEC-010 amendment 4, SPEC-013
+  amendment 6.

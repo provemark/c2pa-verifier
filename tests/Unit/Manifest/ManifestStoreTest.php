@@ -151,6 +151,20 @@ it('AC4: URIs resolve to boxes, relative and absolute', function (): void {
         ->and(bin2hex(substr($manifest->signatureBytes(), 0, 2)))->toBe('d284');
 })->group('SPEC-007');
 
+it('AC5 (amendment 4): a v1 claim whose claim_generator_info is null is a claim without one', function (): void {
+    // c2pa-rs's ocsp.jpg: its first (ingredient) manifest carries claim_generator_info: null in a v1 claim; c2patool reads it
+    $stream = fopen(dirname(__DIR__, 2).'/Fixtures/c2pa-rs/ocsp.jpg', 'rb');
+    assert($stream !== false);
+    $store = (new JpegManifestStoreExtractor)->extract($stream);
+    assert($store !== null);
+    $manifestStore = ManifestStore::fromTree((new JumbfParser)->parse($store->bytes));
+    expect($manifestStore->manifests)->toHaveCount(2);
+    $first = array_values($manifestStore->manifests)[0];
+    expect($first->claim->version)->toBe(1)
+        ->and($first->claim->claimGeneratorInfo)->toBeNull()
+        ->and($first->claim->claimGenerator)->toContain('Adobe_Firefly');
+})->group('SPEC-007');
+
 it('AC5: the Adobe store gives a v1 claim without claim_generator_info', function (): void {
     $store = spec007Store('public-testfiles/adobe-20220124-C.jpg');
     $claim = $store->active->claim;

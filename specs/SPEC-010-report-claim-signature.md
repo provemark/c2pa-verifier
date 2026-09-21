@@ -185,9 +185,9 @@ is in `tests/Fixtures/c2patool/*.json`, per variant in
     `claim.malformed`; `second-claim` → `claim.multiple`; `no-manifest` →
     `claim.missing`; `uri-not-found`, `uri-wrong-place` and
     `jumbf/unknown-uuid` → `assertion.missing`; `json-broken` →
-    `assertion.json.invalid`; and `cbor/claim-indefinite-array`,
-    `cbor/claim-duplicate-key` (a claim whose CBOR SPEC-006 refuses) →
-    `claim.cbor.invalid`
+    `assertion.json.invalid`; and `cbor/claim-duplicate-key` (a claim
+    whose CBOR SPEC-006 refuses; `claim-indefinite-array` decodes since
+    SPEC-006 amendment 3) → `claim.cbor.invalid`
 
 - **AC7 — `assertion.json.invalid` agrees with c2patool** *(the open item
   since step 14; oracle measured in step 21: c2patool's url for this code
@@ -350,6 +350,7 @@ already); `Cose` may see `Manifest` (the arrow exists, unused until now).
    success are SPEC-011 AC9's. No criterion changed.
 2. **2026-09-21, with SPEC-012's implementation, measured in step 26** — c2patool 0.27.22's `validation_status` holds failures only (an informational appears under `activeManifest.informational` alone); `ValidationResult::toArray()` now does the same, and the Scope's description of `validation_status` reads accordingly. With it, `Valid` requires at least one success *and* no failure, so that a report of informational statuses alone is `Invalid` like an empty one (SPEC-012 AC10). AC10's test skips the later specs' codes. No criterion of this spec changed in outcome: every test of it still passes.
 3. **2026-09-21, with SPEC-014's implementation** — `validation_status` is omitted from `toArray()` when empty (c2patool omits it; measured in step 30); AC9's test expects the key absent on the valid PNG. `ValidationState` gained `Trusted` and `fromStatuses()` the three-state rule (SPEC-014): `Trusted` = a `signingCredential.trusted` success and no failure; `Valid` = a success and no failure other than `signingCredential.untrusted`; `Invalid` otherwise — the nuance this spec's References recorded for M5. AC10's test skips the two trust codes. No outcome of this spec changed.
+4. **2026-09-21, step 39, with SPEC-006 amendment 3** — `claim-indefinite-array` decodes now (indefinite lengths accepted), so AC6's test keeps `claim-duplicate-key` as the one claim whose CBOR SPEC-006 refuses; the criterion's list of `claim.cbor.invalid` examples shrinks by that name. No outcome changed.
 
 ## Traceability
 

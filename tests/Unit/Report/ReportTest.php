@@ -222,8 +222,9 @@ it('AC6: the Manifest layer\'s faults carry their codes', function (): void {
         }
     }
 
-    // A claim whose CBOR SPEC-006 refuses: the claim box's data replaced by the step-12 variant.
-    foreach (['claim-indefinite-array', 'claim-duplicate-key'] as $name) {
+    // A claim whose CBOR SPEC-006 refuses: the claim box's data replaced by the step-12 variant
+    // (claim-indefinite-array left this list with SPEC-006 amendment 3: indefinite lengths decode).
+    foreach (['claim-duplicate-key'] as $name) {
         $store = spec010Store('fixture-signed.png');
         $cbor = (string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/cbor/{$name}.cbor");
         // The claim's cbor box (offset 33073, LBox 599) and its data (33081, 591): splice, adjusting root, manifest, claim, cbor LBoxes.

@@ -61,3 +61,19 @@ const SPEC013_PUBLIC_MULTI = [
     'adobe-20220124-CICA', 'adobe-20220124-CICACACA', 'adobe-20220124-CIE-sig-CA', 'adobe-20220124-E-clm-CAICAI', 'adobe-20220124-E-uri-CIE-sig-CA',
 ];
 const SPEC013_PUBLIC_NO_TIMESTAMP = ['truepic-20230212-camera', 'truepic-20230212-landscape', 'truepic-20230212-library'];
+
+/*
+ * The c2pa-rs fixtures (sdk/tests/fixtures at 58eac79, step 39) with a c2patool
+ * JSON — SPEC-013 AC12's third drift alarm. Named exceptions, each removed by
+ * the milestone that closes it: MULTI (M7), NO_TIMESTAMP (M6), REMOTE (a manifest
+ * c2patool fetched over the network — never here), CAWG (an identity assertion
+ * this verifier does not validate; a later spec).
+ */
+const SPEC013_RS_CORPUS = [
+    'C', 'CA', 'CACA', 'CACAE-uri-CA', 'CA_ct', 'CIE-sig-CA', 'C_with_CAWG_data', 'E-sig-CA', 'XCA',
+    'adobe-20220124-E-clm-CAICAI', 'boxhash', 'cloud', 'legacy_ingredient_hash', 'ocsp', 'ocsp_with_assertion', 'update_manifest', 'exp-test1',
+];
+const SPEC013_RS_MULTI = ['CACA', 'CACAE-uri-CA', 'CIE-sig-CA', 'legacy_ingredient_hash', 'update_manifest', 'ocsp', 'ocsp_with_assertion'];
+const SPEC013_RS_NO_TIMESTAMP = ['ocsp', 'ocsp_with_assertion'];
+const SPEC013_RS_REMOTE = ['cloud'];
+const SPEC013_RS_CAWG = ['C_with_CAWG_data'];

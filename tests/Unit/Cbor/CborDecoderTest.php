@@ -204,21 +204,28 @@ it('AC5: integers beyond PHP\'s range are an error', function (): void {
         ->toThrow(CborException::class, 'integer at offset 0 does not fit a 64-bit signed integer');
 })->group('SPEC-006');
 
-it('AC6: indefinite lengths are an error naming the offset', function (): void {
-    $rows = [
-        '5f42010243030405ff' => 0, '7f657374726561646d696e67ff' => 0, '9fff' => 0, '9f018202039f0405ffff' => 0,
-        '83018202039f0405ff' => 5, 'bf61610161629f0203ffff' => 0, 'bf6346756ef563416d7421ff' => 0,
-    ];
-    foreach ($rows as $hex => $offset) {
-        $hex = (string) $hex;
-        expect(fn () => spec006Decode($hex))
-            ->toThrow(CborException::class, "indefinite length at offset {$offset} is not supported");
+it('AC6: indefinite lengths decode, bounded like everything else', function (): void {
+    expect(spec006Decode('5f42010243030405ff'))->toBeInstanceOf(CborBytes::class);
+    $bytes = spec006Decode('5f42010243030405ff');
+    assert($bytes instanceof CborBytes);
+    expect($bytes->bytes)->toBe("\x01\x02\x03\x04\x05")
+        ->and(spec006Decode('7f657374726561646d696e67ff'))->toBe('streaming')
+        ->and(spec006Decode('9fff'))->toBe([])
+        ->and(spec006Decode('9f018202039f0405ffff'))->toBe([1, [2, 3], [4, 5]])
+        ->and(spec006Decode('83018202039f0405ff'))->toBe([1, [2, 3], [4, 5]])
+        ->and(spec006Decode('bf61610161629f0203ffff'))->toBe(['a' => 1, 'b' => [2, 3]])
+        ->and(spec006Decode('bf6346756ef563416d7421ff'))->toBe(['Fun' => true, 'Amt' => -2]);
+
+    foreach (['5f00ff' => 'offset 1', '5f5f4100ffff' => 'offset 1', '9f01' => 'offset 0', 'ff' => 'offset 0'] as $hex => $where) {
+        expect(fn () => spec006Decode($hex))->toThrow(CborException::class, $where);
     }
+    $tooMany = '9f'.str_repeat('00', CborDecoder::DEFAULT_MAX_ITEMS + 1).'ff';
+    expect(fn () => spec006Decode($tooMany))->toThrow(CborException::class, 'above the limit of '.CborDecoder::DEFAULT_MAX_ITEMS);
 
     $claim = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/cbor/claim-indefinite-array.cbor');
-    $offset = (int) strpos($claim, "\x72created_assertions") + 19;
-    expect(fn () => (new CborDecoder)->decode($claim))
-        ->toThrow(CborException::class, "indefinite length at offset {$offset} is not supported");
+    $decoded = (new CborDecoder)->decode($claim);
+    assert(is_array($decoded));
+    expect($decoded['created_assertions'])->toBeArray()->toHaveCount(1);
 })->group('SPEC-006');
 
 it('AC7: floats decode to PHP floats, all three widths', function (): void {

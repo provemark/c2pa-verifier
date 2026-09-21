@@ -108,11 +108,19 @@ final readonly class Verifier
         $result = $this->check($manifestStore, $stream, $store, $settings);
         // until M7 validates ingredient manifests, a store with more than one is refused: the
         // fault may sit in a manifest this verifier has not looked at (SPEC-013 amendment 5)
+        $refusals = [];
         if (count($manifestStore->manifests) > 1) {
-            $result = ValidationResult::fromStatuses([
-                ...$result->statuses,
-                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('the store holds %d manifests; ingredient manifests are not validated before M7, and a fault in one of them would not be seen — refused until then', count($manifestStore->manifests))),
-            ], $result->checksPerformed);
+            $refusals[] = new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('the store holds %d manifests; ingredient manifests are not validated before M7, and a fault in one of them would not be seen — refused until then', count($manifestStore->manifests)));
+        }
+        // a CAWG identity assertion carries a credential of its own that c2pa-rs validates; this verifier
+        // does not yet, and will not call Trusted what it has not looked at (SPEC-013 amendment 7)
+        foreach (array_keys($manifestStore->active->assertions) as $label) {
+            if ($label === 'cawg.identity' || str_starts_with($label, 'cawg.identity.')) {
+                $refusals[] = new ValidationStatus(StatusCode::GeneralError, sprintf('self#jumbf=/c2pa/%s/c2pa.assertions/%s', $manifestStore->active->label, $label), sprintf('the assertion %s carries an identity credential of its own that this verifier does not validate yet; refused rather than trusted unseen', $label));
+            }
+        }
+        if ($refusals !== []) {
+            $result = ValidationResult::fromStatuses([...$result->statuses, ...$refusals], $result->checksPerformed);
         }
 
         return new VerificationReport($format, true, $manifestStore, $result, $this->signatureInfo($manifestStore));

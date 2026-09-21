@@ -250,7 +250,7 @@ it('AC7: the parsers\' faults become statuses with their codes and urls', functi
     $cases = [
         'jpeg/truncated-in-piece-2.jpg' => ['general.error', 'self#jumbf=/c2pa'],
         'jumbf/lbox-zero.png' => ['general.error', 'self#jumbf=/c2pa'],
-        'cbor/claim-indefinite-array.png' => ['claim.cbor.invalid', SPEC013_PNG.'/c2pa.claim.v2'],
+        'cbor/claim-duplicate-key.png' => ['claim.cbor.invalid', SPEC013_PNG.'/c2pa.claim.v2'],   // claim-indefinite-array decodes since SPEC-006 amendment 3
         'claim/second-claim.png' => ['claim.multiple', SPEC013_PNG.'/c2pa.claim.v2'],
         'claim/claim-no-signature.png' => ['claim.malformed', SPEC013_PNG.'/c2pa.claim.v2'],
         'claim/no-manifest.png' => ['claim.missing', 'self#jumbf=/c2pa'],
@@ -425,4 +425,37 @@ it('AC11: a store with more than one manifest is refused until M7', function ():
     foreach (['adobe-20220124-A', 'adobe-20220124-I'] as $name) {
         expect($verify($name)->hasManifest)->toBeFalse($name);
     }
+})->group('SPEC-013');
+
+it('AC12: the oracle\'s own fixtures are a third drift alarm, and a CAWG identity assertion is refused until it is validated', function (): void {
+    $full = TrustSettings::fromJson((string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/trust/full.settings.json'));
+    $verify = static function (string $name) use ($full): VerificationReport {
+        $path = glob(dirname(__DIR__, 2)."/Fixtures/c2pa-rs/{$name}.*")[0] ?? throw new RuntimeException("no file for {$name}");
+
+        return (new Verifier)->verify(spec013Stream('c2pa-rs/'.basename($path)), $full);
+    };
+    foreach (SPEC013_RS_CORPUS as $name) {
+        /** @var array<string, mixed> $oracle */
+        $oracle = json_decode((string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/c2patool/c2pa-rs/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
+        $report = $verify($name);
+        $expected = $oracle['validation_state'];
+        $stricter = array_merge(SPEC013_RS_MULTI, SPEC013_RS_NO_TIMESTAMP, SPEC013_RS_REMOTE, SPEC013_RS_CAWG);
+        if (in_array($name, $stricter, true)) {
+            $expected = 'Invalid';
+        }
+        expect($report->result->state->value)->toBe($expected, $name);
+        if (in_array($name, SPEC013_RS_REMOTE, true)) {
+            expect($report->hasManifest)->toBeFalse($name);
+        }
+        $expired = in_array('signingCredential.expired', spec013Failures($report), true);
+        expect($expired)->toBe(in_array($name, SPEC013_RS_NO_TIMESTAMP, true) || $name === 'exp-test1', $name);   // exp-test1 is expired at c2patool too
+    }
+    // the CAWG file: the manifest is fine, the identity assertion is not looked at — so not Trusted
+    $cawg = $verify('C_with_CAWG_data');
+    $errors = array_values(array_filter($cawg->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::GeneralError));
+    expect($cawg->store?->active->assertions)->toHaveKey('cawg.identity')
+        ->and($errors)->toHaveCount(1)
+        ->and($errors[0]->url)->toEndWith('/c2pa.assertions/cawg.identity')
+        ->and($errors[0]->explanation)->toContain('cawg.identity')
+        ->and(in_array('signingCredential.trusted', array_map(static fn (ValidationStatus $s): string => $s->code->value, $cawg->result->statuses), true))->toBeTrue();
 })->group('SPEC-013');

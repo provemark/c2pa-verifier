@@ -203,8 +203,8 @@ a short one) are made in the tests.
 - **AC7 — the parsers' faults become statuses with their codes and urls**
   - Given `jpeg/truncated-in-piece-2.jpg` (a `ContainerException`),
     `jumbf/lbox-zero.png` (a `JumbfException`),
-    `cbor/claim-indefinite-array.png` (a `ManifestException` carrying
-    `claim.cbor.invalid`), `claim/second-claim.png` (`claim.multiple`),
+    `cbor/claim-duplicate-key.png` (a `ManifestException` carrying
+    `claim.cbor.invalid`; amendment 6), `claim/second-claim.png` (`claim.multiple`),
     `claim/claim-no-signature.png` (`claim.malformed`),
     `claim/no-manifest.png` (`claim.missing`) and `claim/json-broken.png`
     (`assertion.json.invalid`)
@@ -263,6 +263,25 @@ a short one) are made in the tests.
     `signingCredential.expired` where c2patool says `Valid`) makes it
     stricter — each exception named in the test, to be removed by the
     milestone that closes it
+
+- **AC12 — the oracle's own fixtures are a third drift alarm, and a CAWG identity assertion is refused until it is validated** *(amendments 5 and 7, step 39)*
+  - Given the 17 c2pa-rs fixtures with a c2patool JSON
+    (`tests/Fixtures/c2pa-rs/`, `tests/Fixtures/c2patool/c2pa-rs/`),
+    verified with `trust/full.settings.json`
+  - When verified
+  - Then `state` equals c2patool's on every file except where this
+    verifier is stricter on purpose, each named in the test: more than
+    one manifest (`CACA`, `CACAE-uri-CA`, `CIE-sig-CA`,
+    `legacy_ingredient_hash`, `update_manifest`, `ocsp`,
+    `ocsp_with_assertion` — M7), validity judged at now (`ocsp`,
+    `ocsp_with_assertion`: `signingCredential.expired` — M6), a remote
+    manifest c2patool fetched over the network (`cloud`: `hasManifest`
+    false here, by design, forever), and a `cawg.identity` assertion
+    (`C_with_CAWG_data`: c2patool validates the identity's own credential
+    and finds it untrusted, so `Valid`; this verifier does not validate
+    it and, rather than say `Trusted` on a credential it has not looked
+    at, adds a `general.error` naming the assertion and is `Invalid` — a
+    later spec on CAWG identity assertions removes the name)
 
 - **AC10 — the drift alarm: every recorded c2patool JSON, state and failures**
   - Given every file under `tests/Fixtures/c2patool/` with a JSON (the
@@ -401,6 +420,8 @@ final class ManifestException extends \RuntimeException
 3. **2026-09-21, defined in SPEC-014 and approved with it** — `Verifier::verify($stream, ?TrustSettings $settings = null)`: with settings whose `verify_trust` is true, `ChainCheck` runs after the signature check and `checks_performed` gains `trust`; without, the report is what it was. `VerificationReport::toArray()` omits `validation_status` when there is no failure, as c2patool 0.27.22 does (measured in step 30: every `Trusted` JSON lacks the key); AC8's test asserts both key lists. No criterion changed in outcome.
 4. **2026-09-21, step 35, with SPEC-014/015** — `checksPerformed` is now `['signature', 'certificate', 'trust', 'hashedUris', 'dataHash']` on a file verified without settings (the certificate profile always, the trust check with no anchors), and every such file carries `signingCredential.untrusted` — so AC1–AC4, AC8 and AC9's expectations gained that code and `validation_status` is always present without settings; AC10's not-yet-emitted list lost `signingCredential.untrusted`. Steps 6–7 of the Scope read with those two checks inserted after step 4. No verdict changed: `untrusted` alone keeps `Valid` (SPEC-014).
 5. **2026-09-21, step 38b, decided by Maurice van Loon after step 36** — until M7 validates ingredient manifests, a store holding more than one manifest is `Invalid` with a `general.error` on `self#jumbf=/c2pa` (AC11). The official test file `E-uri-CIE-sig-CA.jpg` is tampered only in an ingredient manifest and was `Trusted` here, `Invalid` at c2patool — the one direction the brief calls the risk that counts; eight correctly-`Trusted` multi-manifest files become `Invalid` for the interim, named in the test so that M7 must bring them back. The Scope's "today only the active manifest is checked" now fails closed instead of silently.
+6. **2026-09-21, step 39, with SPEC-006 amendment 3** — AC7's CBOR-fault example is `cbor/claim-duplicate-key.png` instead of `claim-indefinite-array.png`, which decodes now. No outcome changed.
+7. **2026-09-21, step 39, with the c2pa-rs corpus** — a manifest whose assertion store holds a `cawg.identity` assertion is `Invalid` with a `general.error` on the assertion's URI until a spec validates CAWG identity assertions: c2pa-rs's `C_with_CAWG_data.jpg` carries one whose own X.509 credential c2patool checks and finds untrusted (`Valid`, not `Trusted`); this verifier saw only an assertion whose hashed URI matched and said `Trusted` — more lenient than the oracle on a credential it never examined, the same shape as the ingredient case of amendment 5 and treated the same way. AC12 added, with the third drift alarm. For Maurice's confirmation.
 
 ## Traceability
 
@@ -420,3 +441,4 @@ least one test; every source file maps back to this spec.
 | AC9 | tests/Unit/Verifier/VerifierTest.php :: AC9: end to end, the file is streamed / SPEC-013 | src/Verifier/Verifier.php :: verify() (the stream handed through, never read whole) |
 | AC10 | tests/Unit/Verifier/VerifierTest.php :: AC10: the drift alarm: every recorded c2patool JSON, state and failures / SPEC-013 | src/Verifier/Verifier.php :: verify(), check() |
 | AC11 | tests/Unit/Verifier/VerifierTest.php :: AC11: a store with more than one manifest is refused until M7 / SPEC-013 | src/Verifier/Verifier.php :: verify() (the manifest count) |
+| AC12 | tests/Unit/Verifier/VerifierTest.php :: AC12: the oracle's own fixtures are a third drift alarm, and a CAWG identity assertion is refused until it is validated / SPEC-013 | src/Verifier/Verifier.php :: verify() (`cawg.identity`); tests/Pest.php :: SPEC013_RS_* |

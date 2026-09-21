@@ -58,9 +58,10 @@ box payloads. Nothing here knows what a claim is (SPEC-007).
   needs it (tag 18, COSE_Sign1, in M3) decides what it means.
 - Errors, each with the byte offset: additional information 28–30
   (reserved), 31 (indefinite length — RFC 8949 §3.2.3, forbidden by
-  §4.2.1), the `break` code `0xff` anywhere, ~~floats (major type 7 with
-  additional information 25, 26, 27)~~ (decoded since amendment 2),
-  simple values other than 20–22
+  §4.2.1) — ~~an error~~ decoded since amendment 3, bounded, the `break`
+  code `0xff` outside an indefinite item still an error; ~~floats (major
+  type 7 with additional information 25, 26, 27)~~ (decoded since
+  amendment 2); simple values other than 20–22
   (including `undefined`, 23, and the two-byte form with a value below
   32, §3.3), truncation, trailing bytes.
 - Limits, checked before memory is spent: nesting depth (default 32;
@@ -156,21 +157,31 @@ questions). RFC 8949 Appendix A and Appendix F are quoted by their hex.
   - Then each throws `CborException` naming the offset (0) and that the
     integer does not fit a 64-bit signed integer
 
-- **AC6 — indefinite lengths are an error naming the offset** *(stricter
-  than the oracle: c2pa-rs parses `claim-indefinite-array` and fails only
-  on the signature; RFC 8949 §4.2.1, which C2PA requires of claims,
-  forbids them)*
-  - Given the Appendix A rows `5f42010243030405ff`,
-    `7f657374726561646d696e67ff`, `9fff`, `9f018202039f0405ffff`,
-    `83018202039f0405ff`, `bf61610161629f0203ffff`,
-    `bf6346756ef563416d7421ff`
+- **AC6 — indefinite lengths decode, bounded like everything else** *(amendment 3,
+  2026-09-21: the original criterion refused them as RFC 8949 §4.2.1 does
+  for deterministic encoding; nine of c2pa-rs's own test files carry
+  them in the claim — see Amendments)*
+  - Given the Appendix A rows `5f42010243030405ff` (a byte string in two
+    chunks), `7f657374726561646d696e67ff` (`"streaming"`), `9fff` (`[]`),
+    `9f018202039f0405ffff` and `83018202039f0405ff` (both
+    `[1, [2, 3], [4, 5]]`), `bf61610161629f0203ffff` (`{"a": 1, "b": [2, 3]}`),
+    `bf6346756ef563416d7421ff` (`{"Fun": true, "Amt": -2}`)
   - When each is decoded
-  - Then each throws `CborException` naming the offset of the byte whose
-    additional information is 31 (0, 0, 0, 0, 5, 0, 0) and that indefinite
-    lengths are not supported
+  - Then each is the value named — the string chunks concatenated, the
+    containers as their definite-length twins would be
+  - And given `5f00ff` (a chunk of another major type),
+    `5f5f4100ffff` (an indefinite chunk inside an indefinite string,
+    §3.2.3 forbids it), `9f01` (no break before the end of input),
+    `ff` (a break outside any indefinite item), and an indefinite array
+    of `maxItems + 1` integers
+  - When each is decoded
+  - Then each throws `CborException` naming the offset and the fault;
+    the last names the limit — an indefinite container counts its items
+    against the same bound as a definite one
   - And given `tests/Fixtures/cbor/claim-indefinite-array.cbor` (the PNG
     claim with `created_assertions` as `9f … ff`)
-  - Then it throws `CborException` naming the offset of the `9f`
+  - Then it decodes to the same map as the fixture's claim, `created_assertions`
+    a one-element list
 
 - **AC7 — floats decode to PHP floats, all three widths** *(amendment 2,
   2026-09-21: the original criterion refused floats; four of the C2PA's
@@ -348,6 +359,7 @@ messages.
 ## Amendments
 
 1. **2026-09-21, step 37 …**
+2. **2026-09-21, step 39, decided by Maurice van Loon ("optie a")** — indefinite lengths decode. The original AC6 refused RFC 8949 §3.2.3's indefinite-length strings, arrays and maps because §4.2.1's deterministic encoding, which C2PA asks of a claim, forbids them. c2pa-rs's own test fixtures (`C.jpg`, `CA.jpg`, `CA_ct.jpg`, `CIE-sig-CA.jpg`, `E-sig-CA.jpg`, `XCA.jpg`, `no_alg.jpg`, `ocsp_with_assertion.jpg`, and `C_with_CAWG_data.jpg` with a 2.x `urn:c2pa:` label) carry them in the claim and c2patool reads every one: the oracle tolerates what the letter forbids, and files exist. The resource concern behind the refusal — an unterminated stream — is met by the bounds every container already has (`maxItems`, `maxDepth`) and by the end of input; decoding touches no hash. AC6 rewritten; the Scope's exclusion struck; the `claim-indefinite-array` variant of step 14 now decodes, so SPEC-010 AC6 and SPEC-013 AC7 lose it as a CBOR-fault example (their amendments).
 
 ## Traceability
 
