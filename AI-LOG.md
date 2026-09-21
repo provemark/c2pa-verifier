@@ -1499,3 +1499,14 @@ README are where the disclosure lives.
 - Reasoned: the cache holds archives only; resolution still runs fresh
   because `composer.lock` is not committed.
 - Decided by Maurice: add the cache.
+
+## 2026-09-21 — CI with the cache: the filling run
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (same request) read the CI run.
+- Produced: this entry.
+- Measured: run `35581674251` on `c9e4cf23`: conclusion `success`, PHP
+  8.3 / 8.4 / 8.5 each `143 passed`; per job `Cache not found for input
+  keys: composer-Linux-php8.x-8a61b732…` then `Cache saved with key …` —
+  the expected miss that fills the cache. The next run must restore it;
+  that is the measurement of whether the Packagist downloads stop.
+- Decided by Maurice: add the cache; push.
