@@ -1039,3 +1039,12 @@ README are where the disclosure lives.
   truncation reading wins; the `"1"`/`1` key-collision refusal; integers
   beyond 2⁶³−1 detected through `unpack('J')` reading back negative.
 - Decided by Maurice: build step 13b.
+
+## 2026-09-21 — CI green on SPEC-006
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja, push maar en lees de CI-run".
+- Produced: pushed `c9eec06` and `5251e72` to `origin/main`; this entry.
+- Measured: before the push, 0 attribution lines and no tracked `*.key`.
+  Run `35574264542` on `5251e72`: conclusion `success`; PHP 8.3 / 8.4 /
+  8.5 each `success` with `Tests: 106 passed`; `all green` `success`.
+- Decided by Maurice: push.
