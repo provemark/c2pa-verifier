@@ -54,3 +54,36 @@ f050e287388221f5a8fc7e1755f78e33093b61da5c37bfa5f52578a4b6f73f41  pad-nonzero.bi
 b1f646605f0e81544661aac1b0ffaf20b562bb5663eda8af986d8310ad12e998  hashed-uri-changed.bin
 963718e5de040adcb6dabd8bebadc8df3417198a0b0330622385f7c757fcd993  assertion-undeclared.bin
 ```
+
+## Added 2026-09-21 (step 24, for SPEC-011)
+
+Eight store-level variants from `bin/make-hashed-uri-variants.php`, the
+same PNG store, measured with c2patool 0.27.22 the same day
+(`notes/step-24-hashed-uri-variants.md`). Every one changes the claim
+and/or the store's length, so `claimSignature.mismatch` and, where the
+length changed, `assertion.dataHash.mismatch` come along; the column
+shows what matters to SPEC-011.
+
+| file | what is wrong | c2patool 0.27.22 | spec |
+|---|---|---|---|
+| `hashed-uris-two-changed` | one bit of the claim's `hash` for `c2pa.hash.data` and for `c2pa.thumbnail.claim` | `assertion.hashedURI.mismatch` on both, `match` on `c2pa.actions.v2` | SPEC-011 AC3 |
+| `hashed-uri-truncated` | the `hash` for `c2pa.hash.data` cut from 32 to 31 bytes | `assertion.hashedURI.mismatch` on `c2pa.hash.data` — a report, not an error | SPEC-011 AC4 |
+| `assertion-duplicate-label` | a second `c2pa.actions.v2` box, byte for byte the first, appended to the assertion store | `Error: assertion missing: url = c2pa.actions.v2` — no report | SPEC-011 AC5 (`assertion.undeclared`) |
+| `assertion-undeclared-unknown-uuid` | the same copy with UUID `deadbeef-0011-0010-8000-00aa00389b71` and label `c2pa.extraz.v2x` | `Error: assertion missing: url = c2pa.extraz.v2x` — no report | SPEC-011 AC6 (`assertion.undeclared`) |
+| `uri-alg-sha384` | the `c2pa.hash.data` entry given `alg: sha384` and a 48-byte SHA-384 hash; the claim's `alg` still `sha256` | three `assertion.hashedURI.match` | SPEC-011 AC7 |
+| `claim-alg-sha1` | the claim's `alg` → `sha1` | three `assertion.hashedURI.mismatch` — §15.4.2/§13.1 say `algorithm.unsupported` | SPEC-011 AC7 |
+| `claim-alg-missing` | the claim's `alg` pair removed | `Error: unknown algorithm` — no report | SPEC-011 AC7 (`algorithm.unsupported`) |
+| `claim-redacted` | `redacted_assertions: ["self#jumbf=c2pa.assertions/c2pa.actions.v2"]` added to the claim | `assertion.action.redacted` (actions may not be redacted, §6.7); redacting the thumbnail instead gives no status at all although the box is still there | SPEC-011 AC8 (`general.error` until M7) |
+
+SHA-256 of the stores (as printed by the script):
+
+```
+1d0f3e64f71701712f92132173dbf368cc2b8242f92bbe63dc92295149460b92  hashed-uris-two-changed.bin
+ae3b97e5c6524547cb4a7073c2d9a7d7195b7bfb83c6b442b98cfffa44554f04  hashed-uri-truncated.bin
+48a94e997e4247c559bd5716b7adddd9e56567047f36fa1cb4e567abc3fdd4a6  assertion-duplicate-label.bin
+a845421bc2cdc368d40b10c65b3e5d48731deacf26a3408daed7f197d2b05b7e  assertion-undeclared-unknown-uuid.bin
+235964f17c47a23d829bd9d7685d38cd24ac8904137a379fbd23c38fd3c177d7  uri-alg-sha384.bin
+aa1117a22c2b8cded2aa20b86ec289b899d72257643616a8c838cfbd5586228d  claim-alg-sha1.bin
+5427a3829343fb9927f7c6c7a2c612e6ed1951ba6532abad8de183666dc12c5d  claim-alg-missing.bin
+778d9d6a0d399229e83aa568f01533409ce776441a53b45a17c26658d22206bd  claim-redacted.bin
+```

@@ -20,3 +20,18 @@ Added 2026-09-21 (step 23, for SPEC-011/012):
 |---|---|---|
 | `pixel-changed.json` | `../../binding/pixel-changed.png` | `Invalid`; `assertion.dataHash.mismatch` with url `self#jumbf=/c2pa/urn:c2pa:488bf983-…/c2pa.assertions/c2pa.hash.data` and explanation `asset hash error, name: jumbf manifest, error: hash verification( Hashes do not match )`; under `success` three `assertion.hashedURI.match` (hash.data, thumbnail.claim, actions.v2), each with the assertion's absolute URI; `signingCredential.untrusted` |
 | `exclusions-overlap.json` | `../../binding/exclusions-overlap.png` | `Invalid`; the only recorded `informational` entry so far: `assertion.dataHash.additionalExclusionsPresent`, explanation `extra data hash exclusions found` |
+
+Added 2026-09-21 (step 24, for SPEC-011), all `../../binding/<name>.png`:
+
+| file | what c2patool says |
+|---|---|
+| `hashed-uri-changed.json` | `Invalid`; `assertion.hashedURI.mismatch` with url `…/c2pa.assertions/c2pa.hash.data`, explanation `hash does not match assertion data: self#jumbf=c2pa.assertions/c2pa.hash.data`; two `hashedURI.match`; `claimSignature.mismatch`, `signingCredential.untrusted`; `dataHash.match` |
+| `hashed-uris-two-changed.json` | `Invalid`; `assertion.hashedURI.mismatch` for `c2pa.hash.data` **and** `c2pa.thumbnail.claim`, one `match` |
+| `hashed-uri-truncated.json` | `Invalid`; `assertion.hashedURI.mismatch` for `c2pa.hash.data`; `dataHash.mismatch` (the store is one byte shorter, the exclusion no longer fits) |
+| `uri-alg-sha384.json` | `Invalid` (signature, data hash); three `assertion.hashedURI.match` — the entry-level `alg` honoured |
+| `claim-alg-sha1.json` | `Invalid`; three `assertion.hashedURI.mismatch`, no `algorithm.unsupported` |
+| `claim-redacted.json` | `Invalid`; `assertion.action.redacted` with url `…/c2pa.assertions/c2pa.actions.v2`, explanation `redaction of action assertions disallowed`; three `hashedURI.match` |
+
+No JSON for `assertion-duplicate-label`, `assertion-undeclared-unknown-uuid`
+(`Error: assertion missing: url = …`) and `claim-alg-missing` (`Error:
+unknown algorithm`): c2patool exits 1 without a report.

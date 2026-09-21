@@ -91,6 +91,7 @@ specifying is the tool that enforces exactly that.
 |---|---|---|
 | 23 | Hashed URIs and the streaming data hash reproduced for the four fixtures with a probe; thirteen binding variants through c2patool (`bin/make-binding-variants.php`, `tests/Fixtures/binding/`) — `notes/step-23-binding-measured.md` | done 2026-09-21 |
 | SPEC-011 | The hashed-URI check: every entry of the claim hashed against its box, `assertion.hashedURI.match`/`.mismatch`, `assertion.undeclared` for boxes no entry names (unknown boxes too), `algorithm.unsupported` per §15.4.2/§13.1, redactions refused until M7; SPEC-007 amendment 2 (`assertionStore` public), Deptrac `Hash` → `Jumbf` | approved 2026-09-21 |
+| 24a | The eight SPEC-011 variants made (`bin/make-hashed-uri-variants.php`, helpers shared in `bin/variant-helpers.php`) and measured through c2patool; no criterion contradicted, three divergences recorded — `notes/step-24-hashed-uri-variants.md` | done 2026-09-21 |
 
 ## After M0
 

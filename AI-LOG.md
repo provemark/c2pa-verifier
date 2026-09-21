@@ -1697,3 +1697,32 @@ README are where the disclosure lives.
 - Measured: `php bin/spec-check.php` → OK. / Reasoned: nothing.
 - Decided by Maurice: SPEC-011 approved as drafted, including SPEC-007
   amendment 2 and the Deptrac arrow `Hash` → `Jumbf`.
+
+## 2026-09-21 — Step 24a: the SPEC-011 variants made and measured
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 24a" — the eight variants SPEC-011 AC3–AC8
+  name, built and run through c2patool before any test.
+- Produced: `bin/variant-helpers.php` (the step-23 helpers, shared),
+  `bin/make-binding-variants.php` (requires them; output unchanged),
+  `bin/make-hashed-uri-variants.php`, 16 files under
+  `tests/Fixtures/binding/` (+ README rows), 6 JSONs under
+  `tests/Fixtures/c2patool/variants/` (+ README rows),
+  `notes/step-24-hashed-uri-variants.md`, `NOTES.md`,
+  `docs/milestones.md`, this entry. No `src/` change, no test.
+- Measured: the step-23 script re-run after the helper move — identical
+  SHA-256 lines, no fixture changed. A throw-away probe on M2's classes:
+  every variant parses as the spec assumes. `c2patool 0.27.22` on the
+  nine PNGs (`tools/c2patool <png>` in the sister repository): see the
+  note's table — `hashed-uris-two-changed` reports both mismatches,
+  `uri-alg-sha384` three matches, `hashed-uri-truncated` a mismatch (a
+  report); `assertion-duplicate-label`, `assertion-undeclared-unknown-uuid`
+  and `claim-alg-missing` exit 1 with no report; `claim-alg-sha1` three
+  `.mismatch`; `claim-redacted` `assertion.action.redacted`. Two extra
+  redaction variants (not committed): redacting the thumbnail gives no
+  status at all; redacting an actions box in another manifest gives
+  `assertion.action.redacted`. / Reasoned: no criterion contradicted;
+  three divergences kept (undeclared/duplicate/missing-alg as codes, a
+  bad claim-level alg as `algorithm.unsupported`); AC8's `general.error`
+  confirmed as the fail-closed choice because c2patool does not notice a
+  "redacted" box that is still present.
+- Decided by Maurice: step 24a as explained.
