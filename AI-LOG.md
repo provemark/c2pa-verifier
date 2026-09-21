@@ -1510,3 +1510,15 @@ README are where the disclosure lives.
   the expected miss that fills the cache. The next run must restore it;
   that is the measurement of whether the Packagist downloads stop.
 - Decided by Maurice: add the cache; push.
+
+## 2026-09-21 — CI with the cache: the first hit
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (same request) read the CI run.
+- Produced: this entry.
+- Measured: run 35581790139 on f55bfc15 (the push of the previous log entry):
+  conclusion `success`, 143 passed on each PHP; `Cache restored from
+  key: composer-Linux-php8.x-8a61b732…` in all three jobs; the string
+  `Downloading` appears in none of them — the sister library and every
+  other package came from the restored archive cache. From this run on,
+  our CI no longer counts as downloads on Packagist.
+- Decided by Maurice: push.
