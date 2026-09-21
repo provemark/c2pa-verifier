@@ -849,3 +849,13 @@ README are where the disclosure lives.
   run: see the next entry.
 - Decided by Maurice: SPEC-005 approved as drafted after step 10, with the
   two non-blocking open questions left open.
+
+## 2026-09-21 — CI green after SPEC-005's approval
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (same request) read the CI run.
+- Produced: this entry.
+- Measured: run `35571033890` on `900217ef`: conclusion `success`; PHP
+  8.3 / 8.4 / 8.5 each `success` with `Tests: 71 passed`; `all green`
+  `success`. The 46 new fixture files and the variants script pass PHPStan
+  and Pint on all three versions.
+- Decided by Maurice: push.
