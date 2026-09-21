@@ -993,3 +993,31 @@ README are where the disclosure lives.
   started describing faults; the file-extension check is what
   `.gitignore`'s `*.key` line protects.
 - Decided by Maurice: push.
+
+## 2026-09-21 — The SPEC-006 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "maak alle tests".
+- Produced: `tests/Unit/Cbor/CborDecoderTest.php`, 16 tests for 15
+  criteria, with helpers that cut each recorded box out of the store at
+  its recorded offset (checking the recorded SHA-256), render the
+  decoder's output in the recorded JSON form (`$bytes`, `$map`, `$tag`),
+  and hold the RFC 8949 Appendix A/F vectors as hex; `docs/milestones.md`
+  row; this entry. No `src/` change.
+- Measured: `vendor/bin/pest --group=SPEC-006` → **16 failed**, every one
+  on `Class "Provemark\C2paVerifier\Cbor\CborDecoder"` (or `CborBytes`)
+  `not found`; `spec-check` `OK: 7 spec(s), 7 test file(s)`; PHPStan
+  findings all downstream of the missing classes. The recorded files hold
+  no empty map, so the render helper's "an empty PHP array is a list" is
+  safe for AC2.
+- Reasoned: the message phrases the criteria will be held to (`integer at
+  offset 0 does not fit a 64-bit signed integer`, `indefinite length at
+  offset N is not supported`, `float at offset N is not supported`,
+  `simple value 23 (undefined) at offset 0`, `additional information 28
+  at offset 0 is reserved`, `break at offset 2`, `unexpected end of input
+  at offset N`, `1 byte(s) remain after the value, which ended at offset
+  1`, `text string at offset 0 is not valid UTF-8: C3 28`, `duplicate map
+  key "a" at offset 5`, `depth 33 exceeds the limit of 32`, `array at
+  offset 0 declares 25 items, above the limit of 10`, `byte string at
+  offset 0 needs 4294967296 bytes, 0 available`); the AC4 rows compared
+  with `toEqual` so `CborBytes`/`CborTag` compare by value.
+- Decided by Maurice: Claude writes all the tests.
