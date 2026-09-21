@@ -1338,3 +1338,12 @@ README are where the disclosure lives.
 - Reasoned: the unreachable large-length branches of the encoder; the
   error-queue drain on principle.
 - Decided by Maurice: build step 18b.
+
+## 2026-09-21 — CI green on SPEC-008
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja, push maar en lees de CI-run".
+- Produced: pushed `edad933` and `47e48e5` to `origin/main`; this entry.
+- Measured: before the push, 0 attribution lines and no tracked `*.key`.
+  Run `35579159736` on `47e48e5`: conclusion `success`; PHP 8.3 / 8.4 /
+  8.5 each `success` with `Tests: 132 passed`; `all green` `success`.
+- Decided by Maurice: push.
