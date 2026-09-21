@@ -85,6 +85,12 @@ specifying is the tool that enforces exactly that.
 | SPEC-009 | Signature verification per algorithm, key-fits-algorithm | implemented 2026-09-21: 11 tests red → green, 143 in all — step 20 |
 | SPEC-010 | `Report`: the §15 codes for the claim signature and the Manifest layer's faults, verbatim; a partial report that names its checks | implemented 2026-09-21: 10 tests red → green, 153 in all; SPEC-007/008/009 amended (status codes on exceptions) — step 22. **M3 complete** |
 
+## M4, step by step
+
+| Step | What | Status |
+|---|---|---|
+| 23 | Hashed URIs and the streaming data hash reproduced for the four fixtures with a probe; thirteen binding variants through c2patool (`bin/make-binding-variants.php`, `tests/Fixtures/binding/`) — `notes/step-23-binding-measured.md` | done 2026-09-21 |
+
 ## After M0
 
 M1 opens with SPEC-001 (JPEG APP11 → manifest store bytes) as a draft. It

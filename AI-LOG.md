@@ -1637,3 +1637,26 @@ README are where the disclosure lives.
   Run `35584423141` on `476e326`: conclusion `success`; PHP 8.3 / 8.4 /
   8.5 each `success` with `Tests: 153 passed`; `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — Step 23: the hash binding measured before M4
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "leg de meetstap voor M4 uit", then "ja akkoord".
+- Produced: `bin/make-binding-variants.php`, `tests/Fixtures/binding/`
+  (5 file-level variants, 8 store-level `.bin` + `.png`, README with
+  every c2patool verdict), `tests/Fixtures/c2patool/variants/{pixel-changed,
+  exclusions-overlap}.json` and its README, `notes/step-23-binding-measured.md`,
+  `NOTES.md`, `docs/milestones.md` (M4 table), this entry. No `src/`
+  change, no spec.
+- Measured: a throw-away probe (not committed) on M2's classes — every
+  hashed URI matches and the streaming SHA-256 minus the exclusions
+  matches `c2pa.hash.data` for all four fixtures; the exclusion holds the
+  store plus 32/12/8/12 bytes of framing. `c2patool 0.27.22` on the
+  thirteen variants: file-level edits → `assertion.dataHash.mismatch`
+  only; assertion edits → `assertion.hashedURI.mismatch` and the data
+  hash still evaluated (`pad` outside the hash); `hash-missing` and
+  `assertion-undeclared` → a hard error, no JSON; a first `start 34`
+  shift matched because the swapped bytes were both `00` — variant
+  corrected to `start 32`. / Reasoned: §15.4, §15.10.1.2, §15.10.3,
+  §15.12.1, §13.1 read from the 2.4 text; the codes for SPEC-011/012
+  listed in the note.
+- Decided by Maurice: the measurement step as explained.

@@ -13,3 +13,10 @@ urls* with the oracle:
 The bare-label url is c2patool's inconsistency; this verifier's url for
 `assertion.json.invalid` is the absolute JUMBF URI, the form every other
 status uses. SPEC-010 AC7 therefore compares the code, not the url.
+
+Added 2026-09-21 (step 23, for SPEC-011/012):
+
+| file | variant | what c2patool says |
+|---|---|---|
+| `pixel-changed.json` | `../../binding/pixel-changed.png` | `Invalid`; `assertion.dataHash.mismatch` with url `self#jumbf=/c2pa/urn:c2pa:488bf983-…/c2pa.assertions/c2pa.hash.data` and explanation `asset hash error, name: jumbf manifest, error: hash verification( Hashes do not match )`; under `success` three `assertion.hashedURI.match` (hash.data, thumbnail.claim, actions.v2), each with the assertion's absolute URI; `signingCredential.untrusted` |
+| `exclusions-overlap.json` | `../../binding/exclusions-overlap.png` | `Invalid`; the only recorded `informational` entry so far: `assertion.dataHash.additionalExclusionsPresent`, explanation `extra data hash exclusions found` |
