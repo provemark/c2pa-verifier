@@ -2091,3 +2091,25 @@ README are where the disclosure lives.
   absent, allowed list first, the walk ending at a certificate equal to
   or signed by an anchor, the three-state rule, `validation_status`
   omitted when empty, `Verifier::verify($stream, ?TrustSettings)`.
+
+## 2026-09-21 — Step 31a: the SPEC-014 variants made and measured
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 31a".
+- Produced: `bin/make-trust-variants.php`, `tests/Fixtures/binding/x5chain-leaf-only.{bin,png}`
+  (+ README rows), `tests/Fixtures/trust/{intermediate-anchor,allowed-plus-wrong-root}.settings.json`
+  (+ README), four JSONs under `tests/Fixtures/c2patool/trusted/` (+
+  README rows), `notes/step-31-trust-variants.md`, `NOTES.md`,
+  `docs/milestones.md`, this entry. No `src/` change, no test.
+- Measured: the COSE_Sign1 layout in the PNG store (protected 1,288
+  bytes with two certificates 654 + 625, pad 10,932); the variant keeps
+  the store at 46,025 bytes (asserted by the script); a parse probe:
+  one certificate, pad 11,557, `claimSignature.mismatch`, three
+  `hashedURI.match`. `c2patool 0.27.22`: leaf-only + full settings →
+  `Invalid`, `signingCredential.untrusted` + `claimSignature.mismatch`
+  only; PNG + intermediate-anchor → `Trusted` ("System trust anchors");
+  PNG + allowed-plus-wrong-root → `Trusted` ("EndEntity trust
+  anchors"); pixel-changed + full → `Invalid` with `trusted` success
+  and `dataHash.mismatch` failure. `composer check` → all green, 183
+  passed (the script under Pint/PHPStan). / Reasoned: growing the pad
+  instead of shrinking the store, so that one thing changes.
+- Decided by Maurice: step 31a as explained.

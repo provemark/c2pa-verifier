@@ -132,3 +132,16 @@ f680656d80323b6423e3df7c0bff0722278a23d36c133d92fe2fe66a61047327  alg-sha384.bin
 328dbb4c3cc6b5b7c0120816487030901636a92741422f7cc8dad2b2f9d5c8cb  hard-binding-bmff.bin
 2fa508250976bd2f9f033d9e9ff995ad4c769773b2061aa28702bb0f72c20f0d  hard-bindings-two.bin
 ```
+
+## Added 2026-09-21 (step 31, for SPEC-014)
+
+One store-level variant from `bin/make-trust-variants.php`, measured with
+c2patool 0.27.22 (`notes/step-31-trust-variants.md`):
+
+| file | what is wrong | c2patool 0.27.22 | spec |
+|---|---|---|---|
+| `x5chain-leaf-only` | the intermediate removed from the protected header's `x5chain` (625 bytes) and the unprotected `pad` grown by exactly 625, so the store keeps its length, every box its LBox, the exclusion and the hashed URIs their values — only the signature breaks (the Sig_structure covers the protected header) and the chain no longer reaches an anchor | with the full settings and without: `Invalid`; `signingCredential.untrusted` + `claimSignature.mismatch`, nothing else | SPEC-014 AC4 |
+
+```
+fd4f6c7ef15644d1bb48e404e6ff0a040259f7b289f742158b53ced602834ef4  x5chain-leaf-only.bin
+```
