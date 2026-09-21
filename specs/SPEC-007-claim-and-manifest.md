@@ -202,12 +202,14 @@ step 09's and step 12's.
     `stds.schema-org.CreativeWork` and `c2pa.actions` (label as stored)
 
 - **AC8 — a claim label that is neither v1 nor v2 is an error** *(required:
-  error / malformed input)*
+  error / malformed input; oracle: `c2patool` → `claim version is too new,
+  not supported`)*
   - Given the PNG store with the claim label `c2pa.claim.v2` → `c2pa.claim.v3`
   - When parsed
   - Then it throws `ManifestException` naming the label and offset 33,034
 
-- **AC9 — a claim missing a required field is an error**
+- **AC9 — a claim missing a required field is an error** *(oracle:
+  `c2patool` → `claim could not be converted from CBOR` for all four)*
   - Given the PNG claim with, separately, `signature`, `created_assertions`,
     `instanceID` and `claim_generator_info` removed (the map's count
     lowered, the pair cut, every enclosing LBox adjusted)
@@ -216,6 +218,8 @@ step 09's and step 12's.
     version
 
 - **AC10 — a URI that resolves to nothing, to the wrong place, or to an unknown box is an error**
+  *(oracle: `c2patool` → `assertion missing: url = c2pa.hash.data` for the
+  first two, `could not create valid JUMBF for claim` for the third)*
   - Given the PNG claim with its hash-data `url` changed to
     `self#jumbf=c2pa.assertions/c2pa.hash.datb`; separately to
     `self#jumbf=c2pa.claim.v2`; and `tests/Fixtures/jumbf/unknown-uuid.bin`
@@ -225,14 +229,21 @@ step 09's and step 12's.
     found; not in the assertion store; an unknown box) — the third with
     the box's UUID `ffffffff-…`
 
-- **AC11 — a hashed URI without a byte-string hash is an error**
+- **AC11 — a hashed URI without a byte-string hash is an error** *(oracle:
+  a missing `hash` → `claim could not be converted from CBOR`; a `hash`
+  re-typed as text is **read** by c2pa-rs and fails only as
+  `assertion.hashedURI.mismatch` — stricter here, safe direction)*
   - Given the PNG claim with the hash-data entry's `hash` replaced by the
     text `"abc"` (same map, the byte string re-typed); and with the `hash`
     pair removed
   - When parsed
   - Then each throws `ManifestException` naming `hash` and the URI
 
-- **AC12 — structural faults in the manifest are errors**
+- **AC12 — structural faults in the manifest are errors** *(oracle:
+  `"c2pa" multiple claim boxes found in manifest`; `more than one claim
+  description box was found for c2pa.claim.v2`; the mislabelled assertion
+  store → `Invalid`, `claim.multiple` (stricter here: an error, not a
+  verdict); no manifest → `C2PA provenance not found in XMP`)*
   - Given the PNG store with, separately: a second `c2pa.claim.v2`
     superbox appended to the manifest; the claim superbox holding two
     `cbor` boxes; the assertion store superbox's label changed to
@@ -242,14 +253,19 @@ step 09's and step 12's.
   - Then each throws `ManifestException` naming the fault and the
     manifest label (or, for the last, that the store holds no manifest)
 
-- **AC13 — invalid JSON in a json box is an error**
+- **AC13 — invalid JSON in a json box is an error** *(oracle: `c2patool`
+  reports it as a **status code**, `assertion.json.invalid`, with
+  `assertion.required.missing`, and the verdict `Invalid` — not a parse
+  error. Here the parse layer errs; the Verifier layer's spec maps that
+  error to `assertion.json.invalid`, so the verdicts agree)*
   - Given the Adobe store with one byte of the `stds.schema-org.CreativeWork`
     JSON changed to break it (a `{` → `[`)
   - When parsed
   - Then it throws `ManifestException` naming the assertion label and the
     JSON error, never printing the bytes raw
 
-- **AC14 — a claim_generator_info without a name is an error**
+- **AC14 — a claim_generator_info without a name is an error** *(oracle:
+  `c2patool` → `claim could not be converted from CBOR`)*
   - Given the PNG claim with the key `name` in `claim_generator_info`
     renamed to `nome`
   - When parsed
@@ -268,8 +284,9 @@ step 09's and step 12's.
   view (step 09); the sister library `provemark/content-credentials`
   v0.15.1, `ManifestStoreParser::fromJson()` and the accessors of
   `tests/Integration/ReaderEquivalenceTest.php :: spec019Accessors()`
-  there; the variants of AC8–AC14 through c2patool, to be measured before
-  approval (Open questions); `tests/Fixtures/jumbf/unknown-uuid.bin`
+  there; the fifteen variants of AC8–AC14 through c2patool, measured
+  2026-09-21 (step 14; `bin/make-claim-variants.php`,
+  `tests/Fixtures/claim/README.md`); `tests/Fixtures/jumbf/unknown-uuid.bin`
   (step 10: `could not create valid JUMBF for claim`).
 - Reasoned: the leniency on v1 `claim_generator_info`; keeping labels as
   stored in the JSON view; "one content box of a kind per assertion".
@@ -347,12 +364,9 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
 
 ## Open questions
 
-- **The variants of AC8–AC14 and their c2patool measurement**, plus the
-  recorded c2patool JSON for the four fixtures (`tests/Fixtures/c2patool/`),
-  are built in a measurement step before approval, with a
-  `bin/make-claim-variants.php` that edits the claim CBOR (pairs cut or
-  re-typed, every enclosing LBox adjusted, as `make-cbor-vectors.php`
-  does). Blocker for approval.
+- Resolved before approval (step 14, 2026-09-21): the fifteen variants
+  are built by `bin/make-claim-variants.php` and measured; c2patool's JSON
+  for the four fixtures is recorded under `tests/Fixtures/c2patool/`.
 - **Adding `provemark/content-credentials` as `require-dev`** (v0.15.1;
   decided in principle by the maintainer 2026-09-21): done in the
   tests-first step; the composer constraint and the measured install go

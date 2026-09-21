@@ -1075,3 +1075,25 @@ README are where the disclosure lives.
   prefix, so accessors agree either way).
 - Decided by Maurice: v1 without `claim_generator_info` is accepted; the
   sister library becomes a dev dependency for the equivalence test.
+
+## 2026-09-21 — Step 14: c2patool's JSON recorded; the SPEC-007 variants measured
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja doe die stap".
+- Produced: `tests/Fixtures/c2patool/{jpg,png,webp,adobe-20220124-C}.json`;
+  `bin/make-claim-variants.php` (with a definite-length CBOR walker to cut
+  map pairs); fifteen `.bin` and `.png` under `tests/Fixtures/claim/` with
+  a README; SPEC-007 draft updated (oracle notes on AC8–AC14, References,
+  the blocking open question resolved); `notes/step-14-claim-variants.md`;
+  `NOTES.md`; `docs/milestones.md`; this entry.
+- Measured: `c2patool 0.27.22` default JSON on the four fixtures (all
+  `Valid`); every variant parsed with the SPEC-005 parser (all fifteen
+  trees intact); c2patool on the fifteen carriers — 11 errors, 3
+  `Invalid` (`assertion-store-label` → `claim.multiple`; `hash-as-text` →
+  `hashedURI.mismatch`; `json-broken` → `assertion.json.invalid` +
+  `assertion.required.missing`), 0 `Valid`. PHPStan on the script: 3
+  findings fixed; hashes unchanged; `composer check` exit 0.
+- Reasoned: SPEC-007 stricter than c2pa-rs on a mistyped `hash` and a
+  mislabelled assertion store; broken JSON is a status code for c2patool
+  and an error for this parse layer — the Verifier layer must map it.
+- Decided by Maurice: do the measurement step. SPEC-007 now awaits his
+  approval.
