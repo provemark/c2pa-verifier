@@ -1279,3 +1279,20 @@ README are where the disclosure lives.
 - Measured: before the push, 0 attribution lines and no tracked `*.key`;
   `spec-check` `OK: 9 spec(s), 8 test file(s)`. The CI run: next entry.
 - Decided by Maurice: SPEC-008 approved as drafted after step 17.
+
+## 2026-09-21 — CI green after SPEC-008's approval
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (same request) read the CI run; and, in passing, "is c2pa-rs
+  then not entirely correct?" — answered in conversation, summarised
+  here because it bears on how the oracle is used: the divergences
+  measured so far (steps 03, 05, 07, 10, 12, 14, 17) are all cases where
+  c2pa-rs *reads on* past a fault the text forbids and lets the crypto or
+  the hash binding catch it, or fails with a message from the wrong code
+  path; none is a wrong `Valid` on a file whose bytes were tampered with.
+  The oracle is trusted for verdicts, not for messages or for structural
+  strictness.
+- Produced: this entry.
+- Measured: run `35578144778` on `7c64fc1f`: conclusion `success`; PHP
+  8.3 / 8.4 / 8.5 each `success` with `Tests: 120 passed`; `all green`
+  `success`.
+- Decided by Maurice: push.
