@@ -1670,3 +1670,21 @@ README are where the disclosure lives.
   8.5 each `success` with `Tests: 153 passed`, Composer cache restored
   on all three (no downloads); `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — SPEC-011 draft: the hashed-URI check
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "Kan je verder gaan met het project nu?" — the three SPEC-011
+  choices from the previous session recapped; "akkoord op alle drie".
+- Produced: `specs/SPEC-011-hashed-uri-check.md` (draft, ten criteria),
+  the M4 row in `docs/milestones.md`, this entry. No `src/` change.
+- Measured: nothing new — the spec rests on step 23's measurements
+  (`notes/step-23-binding-measured.md`, `tests/Fixtures/binding/README.md`)
+  and the step-14 JSON of the four fixtures; `php bin/spec-check.php`
+  → `OK: 12 spec(s), 11 test file(s)`. / Reasoned: §8.4.2.3, §13.1,
+  §15.4.2, §15.10.3 as read in step 23; the eight new variants AC3–AC8
+  need are listed as an open question for the tests-first step, to be
+  measured through c2patool before any test is written.
+- Decided by Maurice: (1) report every entry and continue after a
+  mismatch; (2) `assertion.undeclared` also for `UnknownBox` children of
+  the assertion store; (3) a non-empty `redacted_assertions` →
+  `general.error` until M7.
