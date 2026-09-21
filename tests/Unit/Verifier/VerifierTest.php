@@ -18,31 +18,7 @@ use Provemark\ContentCredentials\Core\Reading\ManifestStoreParser;
 
 const SPEC013_PNG = 'self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0';
 
-/** Every recorded c2patool JSON and the file it was recorded on. */
-const SPEC013_CORPUS = [
-    'jpg' => 'fixture-signed.jpg',
-    'png' => 'fixture-signed.png',
-    'webp' => 'fixture-signed.webp',
-    'adobe-20220124-C' => 'public-testfiles/adobe-20220124-C.jpg',
-    'variants/claim-title-changed' => 'cose/claim-title-changed.png',
-    'variants/signature-changed' => 'cose/signature-changed.png',
-    'variants/json-broken' => 'claim/json-broken.png',
-    'variants/pixel-changed' => 'binding/pixel-changed.png',
-    'variants/exclusions-overlap' => 'binding/exclusions-overlap.png',
-    'variants/hashed-uri-changed' => 'binding/hashed-uri-changed.png',
-    'variants/hashed-uris-two-changed' => 'binding/hashed-uris-two-changed.png',
-    'variants/hashed-uri-truncated' => 'binding/hashed-uri-truncated.png',
-    'variants/uri-alg-sha384' => 'binding/uri-alg-sha384.png',
-    'variants/claim-alg-sha1' => 'binding/claim-alg-sha1.png',
-    'variants/claim-redacted' => 'binding/claim-redacted.png',
-    'variants/exclusion-extra' => 'binding/exclusion-extra.png',
-    'variants/exclusions-unsorted' => 'binding/exclusions-unsorted.png',
-    'variants/hash-as-text' => 'binding/hash-as-text.png',
-    'variants/exclusions-too-many' => 'binding/exclusions-too-many.png',
-    'variants/alg-missing' => 'binding/alg-missing.png',
-    'variants/alg-sha384' => 'binding/alg-sha384.png',
-    'variants/hard-bindings-two' => 'binding/hard-bindings-two.png',
-];
+// SPEC013_CORPUS — the 22 recorded c2patool JSONs and their carriers — lives in tests/Pest.php, shared with SPEC-014.
 
 /** The files where this verifier reports a strict subset of c2patool's failures, by decision (SPEC-013 AC10). */
 const SPEC013_SUBSET_ONLY = [

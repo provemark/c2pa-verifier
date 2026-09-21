@@ -2113,3 +2113,21 @@ README are where the disclosure lives.
   passed (the script under Pint/PHPStan). / Reasoned: growing the pad
   instead of shrinking the store, so that one thing changes.
 - Decided by Maurice: step 31a as explained.
+
+## 2026-09-21 — Step 31b: the SPEC-014 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 31b".
+- Produced: `tests/Unit/Trust/ChainCheckTest.php` — ten tests, one per
+  criterion, `->group('SPEC-014')`, own helpers (`spec014*`); AC7 makes
+  a throw-away EC key in the test to prove the message does not echo
+  key material; AC8 writes the anchors and intermediates to temporary
+  files for `openssl_x509_checkpurpose`; `SPEC013_CORPUS` moved from
+  `VerifierTest.php` to `tests/Pest.php` (shared by SPEC-013 and
+  SPEC-014 AC10); `docs/milestones.md`, this entry. No `src/` change.
+- Measured: `vendor/bin/pest --group=SPEC-014` → `10 failed (1
+  assertion)`: eight `Class "Provemark\C2paVerifier\Trust\TrustSettings"
+  not found`, AC9 an undefined enum case, AC10 `actual size 21 matches
+  expected size 23`; SPEC-013 still `10 passed` after the move; Pint
+  passes; `bin/spec-check.php` → `OK: 15 spec(s), 15 test file(s)`. /
+  Reasoned: nothing new.
+- Decided by Maurice: step 31b as explained.

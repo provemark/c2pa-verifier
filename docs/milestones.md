@@ -107,6 +107,7 @@ specifying is the tool that enforces exactly that.
 | ADR-0003 | X.509 chain and profile written here on `ext-openssl` (no `phpseclib`, no temp files, no `checkpurpose` except as a second oracle); allowed list first; the EKU list as c2pa-rs keeps it (Maurice: option a); RFC 3161 open until M6 | accepted 2026-09-21 |
 | SPEC-014 | Trust: `TrustSettings` (the shared format, contents not paths, whole or absent), `Certificate` on `openssl_x509_parse`/`_verify`, `ChainCheck` (allowed list first, then the walk to an anchor — DER-equal or signed by one, no trust by name), `Trusted` as a state with the measured rule (`untrusted` alone keeps `Valid`), `validation_status` omitted when empty, `Verifier::verify($stream, ?TrustSettings)` (SPEC-013 amendment 3); the second oracle `openssl_x509_checkpurpose` | approved 2026-09-21 |
 | 31a | `x5chain-leaf-only` (protected header shortened, pad grown, store length kept) and two settings variants made (`bin/make-trust-variants.php`) and measured through c2patool — `notes/step-31-trust-variants.md` | done 2026-09-21 |
+| 31b | The ten SPEC-014 tests (`tests/Unit/Trust/ChainCheckTest.php`), seen red: eight on the missing `Trust\TrustSettings`, AC9 on the missing enum case, AC10 on the enum holding twenty-one codes; `SPEC013_CORPUS` moved to `tests/Pest.php`, shared | done 2026-09-21 |
 
 ## After M0
 
