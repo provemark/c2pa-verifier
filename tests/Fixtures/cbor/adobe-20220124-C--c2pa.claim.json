@@ -1,0 +1,96 @@
+{
+    "fixture": "public-testfiles/adobe-20220124-C.jpg",
+    "box": "c2pa.claim",
+    "data_offset": 32433,
+    "length": 581,
+    "sha256": "0d7ca9167c703892fda58ea1cabb1f82b7dbe9f2453e4b44cf95ac24ee80db63",
+    "value": {
+        "$map": [
+            [
+                "dc:title",
+                "C.jpg"
+            ],
+            [
+                "dc:format",
+                "image/jpeg"
+            ],
+            [
+                "instanceID",
+                "xmp:iid:f7ba134b-8dec-4334-911d-a30409e32d8e"
+            ],
+            [
+                "claim_generator",
+                "make_test_images/0.16.1 c2pa-rs/0.16.1"
+            ],
+            [
+                "signature",
+                "self#jumbf=c2pa.signature"
+            ],
+            [
+                "assertions",
+                [
+                    {
+                        "$map": [
+                            [
+                                "url",
+                                "self#jumbf=c2pa.assertions/c2pa.thumbnail.claim.jpeg"
+                            ],
+                            [
+                                "hash",
+                                {
+                                    "$bytes": "6393342df333ae34b1218b0857b350873667ef0100b9dceed63b65f3729fe381"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "$map": [
+                            [
+                                "url",
+                                "self#jumbf=c2pa.assertions/stds.schema-org.CreativeWork"
+                            ],
+                            [
+                                "hash",
+                                {
+                                    "$bytes": "bb75c4f721a9ed45d6201d9876c8d2f377d7ec3b5cae3c95b1939771289439a3"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "$map": [
+                            [
+                                "url",
+                                "self#jumbf=c2pa.assertions/c2pa.actions"
+                            ],
+                            [
+                                "hash",
+                                {
+                                    "$bytes": "e36974992b78b9ed21224e58499dd0f1cc1ca2d369856b12730bc3caafaac8ff"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "$map": [
+                            [
+                                "url",
+                                "self#jumbf=c2pa.assertions/c2pa.hash.data"
+                            ],
+                            [
+                                "hash",
+                                {
+                                    "$bytes": "b293014f8868184dc4cc0524a8220a2e793a6cc8e0472d6dff588248c6f7695b"
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            ],
+            [
+                "alg",
+                "sha256"
+            ]
+        ]
+    }
+}

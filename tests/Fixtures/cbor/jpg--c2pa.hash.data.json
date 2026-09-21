@@ -1,0 +1,48 @@
+{
+    "fixture": "fixture-signed.jpg",
+    "box": "c2pa.hash.data",
+    "data_offset": 81626,
+    "length": 115,
+    "sha256": "65f697d4d6f3c85d5a8bbdadf38b351bb62ed3bd73b7ca3554269b9af5e9aa96",
+    "value": {
+        "$map": [
+            [
+                "exclusions",
+                [
+                    {
+                        "$map": [
+                            [
+                                "start",
+                                20
+                            ],
+                            [
+                                "length",
+                                94772
+                            ]
+                        ]
+                    }
+                ]
+            ],
+            [
+                "name",
+                "jumbf manifest"
+            ],
+            [
+                "alg",
+                "sha256"
+            ],
+            [
+                "hash",
+                {
+                    "$bytes": "7753f456cc7269c6982e95218534a07f629eea727cc82ac75cedd41d2d95c679"
+                }
+            ],
+            [
+                "pad",
+                {
+                    "$bytes": "00000000000000"
+                }
+            ]
+        ]
+    }
+}

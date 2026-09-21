@@ -1,0 +1,48 @@
+{
+    "fixture": "public-testfiles/adobe-20220124-C.jpg",
+    "box": "c2pa.hash.data",
+    "data_offset": 32266,
+    "length": 115,
+    "sha256": "a24c4bd10a2bebf5a0fa23515cc0e08e360dade1c7990b6a3de37db3b6578650",
+    "value": {
+        "$map": [
+            [
+                "exclusions",
+                [
+                    {
+                        "$map": [
+                            [
+                                "start",
+                                20
+                            ],
+                            [
+                                "length",
+                                51130
+                            ]
+                        ]
+                    }
+                ]
+            ],
+            [
+                "name",
+                "jumbf manifest"
+            ],
+            [
+                "alg",
+                "sha256"
+            ],
+            [
+                "hash",
+                {
+                    "$bytes": "5b9361f6f790e98c2b95db7d89cc378c7bfd3326eae4e4dbe3c6b9b40c55e689"
+                }
+            ],
+            [
+                "pad",
+                {
+                    "$bytes": "000000000000000000"
+                }
+            ]
+        ]
+    }
+}

@@ -1,0 +1,43 @@
+{
+    "fixture": "public-testfiles/adobe-20220124-C.jpg",
+    "box": "c2pa.actions",
+    "data_offset": 32132,
+    "length": 78,
+    "sha256": "fbf9c49e435129cbb123ab5ab91c83f7d2d5f9e41e878845e76f61e99d3575bd",
+    "value": {
+        "$map": [
+            [
+                "actions",
+                [
+                    {
+                        "$map": [
+                            [
+                                "action",
+                                "c2pa.created"
+                            ]
+                        ]
+                    },
+                    {
+                        "$map": [
+                            [
+                                "action",
+                                "c2pa.drawing"
+                            ],
+                            [
+                                "parameters",
+                                {
+                                    "$map": [
+                                        [
+                                            "name",
+                                            "gradient"
+                                        ]
+                                    ]
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            ]
+        ]
+    }
+}

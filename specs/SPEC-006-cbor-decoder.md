@@ -155,7 +155,10 @@ questions). RFC 8949 Appendix A and Appendix F are quoted by their hex.
   - Then each throws `CborException` naming the offset (0) and that the
     integer does not fit a 64-bit signed integer
 
-- **AC6 — indefinite lengths are an error naming the offset**
+- **AC6 — indefinite lengths are an error naming the offset** *(stricter
+  than the oracle: c2pa-rs parses `claim-indefinite-array` and fails only
+  on the signature; RFC 8949 §4.2.1, which C2PA requires of claims,
+  forbids them)*
   - Given the Appendix A rows `5f42010243030405ff`,
     `7f657374726561646d696e67ff`, `9fff`, `9f018202039f0405ffff`,
     `83018202039f0405ff`, `bf61610161629f0203ffff`,
@@ -164,8 +167,13 @@ questions). RFC 8949 Appendix A and Appendix F are quoted by their hex.
   - Then each throws `CborException` naming the offset of the byte whose
     additional information is 31 (0, 0, 0, 0, 5, 0, 0) and that indefinite
     lengths are not supported
+  - And given `tests/Fixtures/cbor/claim-indefinite-array.cbor` (the PNG
+    claim with `created_assertions` as `9f … ff`)
+  - Then it throws `CborException` naming the offset of the `9f`
 
-- **AC7 — floats are an error naming the offset**
+- **AC7 — floats are an error naming the offset** *(oracle: c2pa-rs →
+  `claim could not be converted from CBOR` on `claim-float`, a type error
+  on the field, not a float check)*
   - Given `f90000`, `f93c00`, `fb3ff199999999999a`, `fa47c35000`,
     `f97c00` (Infinity), `f97e00` (NaN), and `c1fb41d452d9ec200000`
     (tag 1 over a float)
@@ -211,13 +219,17 @@ questions). RFC 8949 Appendix A and Appendix F are quoted by their hex.
   - Then it throws `CborException` naming the offset and showing the bytes
     as hex, never raw
 
-- **AC13 — map keys are int or string, and unique**
+- **AC13 — map keys are int or string, and unique** *(stricter than the
+  oracle on duplicates: c2pa-rs reads `claim-duplicate-key` and fails on
+  the missing `alg`, not on the second `dc:title`; RFC 8949 §5.6)*
   - Given `a1400a` (a byte-string key), `a1800a` (an array key),
     `a201020103` (the key 1 twice), `a26161016161 02` (the key `"a"`
     twice)
   - When each is decoded
   - Then each throws `CborException` naming the offset of the offending
     key and the fault
+  - And given `tests/Fixtures/cbor/claim-duplicate-key.cbor`
+  - Then it throws `CborException` naming `dc:title` as the duplicate
 
 - **AC14 — limits are enforced before memory is spent**
   - Given 33 nested arrays (`81` × 33 then `00`) with the default depth
@@ -249,8 +261,10 @@ questions). RFC 8949 Appendix A and Appendix F are quoted by their hex.
   (major types 0/2/3/4/5/6/7, additional information ≤ 25, one tag, no
   indefinite lengths, floats or negatives); `c2patool 0.27.22 --detailed`
   for the claim's and assertions' values (AC1, AC3); RFC 8949 Appendix A
-  and F for AC4–AC10; c2patool on a few claim-level variants re-embedded
-  in the PNG, to be measured in the tests-first step (Open questions).
+  and F for AC4–AC10; `c2patool 0.27.22` on the four claim-level variants of
+  `bin/make-cbor-vectors.php`, measured 2026-09-21 (step 12): indefinite
+  lengths and duplicate keys are tolerated by c2pa-rs, a float fails as
+  a type error, a non-shortest integer parses.
 - Reasoned: the default limits; that no writer emits floats or
   indefinite lengths in a C2PA store (two writers measured, the format
   forbids it for claims and standard assertions, custom assertions are
@@ -308,17 +322,15 @@ messages.
 
 ## Open questions
 
-- **The recorded expected values** for AC2 (`tests/Fixtures/cbor/*.json`)
-  do not exist yet. They are produced in a measurement step before
-  approval — from cbor-php in the scratch directory, once, and committed
-  as data, so the tests never depend on that library — together with a
-  small `bin/make-cbor-vectors.php` that writes the Appendix A/F vectors
-  as files and re-embeds three claim-level variants in the PNG (a float,
-  an indefinite-length array, a duplicate key inside the claim) for a
-  c2patool measurement. Blocker for approval.
-- **Deterministic encoding on input**: not enforced (Scope). Measure
-  whether c2patool refuses a claim with a non-shortest integer; if it
-  does, an amendment can follow. Non-blocker.
+- Resolved before approval (step 12, 2026-09-21): the sixteen recorded
+  values are in `tests/Fixtures/cbor/*.json`; `bin/make-cbor-vectors.php`
+  builds four claim-level variants and their PNG carriers, all measured
+  (`tests/Fixtures/cbor/README.md`). The Appendix A/F vectors are short
+  and live in the test file as hex.
+- Resolved by measurement (step 12): c2pa-rs does **not** enforce
+  deterministic encoding on input — `hashdata-nonshortest-int` parses
+  and fails only on the assertion's hash. Not enforcing it here is
+  consistent with the oracle.
 - **`CborTag` for tags 2/3 (bignums)**: passed through; whether a later
   layer should refuse them is that layer's question. Non-blocker.
 

@@ -940,3 +940,29 @@ README are where the disclosure lives.
 - Decided by Maurice: `CborBytes` as a separate type for byte strings; all
   tags passed through as `CborTag`. The draft awaits the measurement step
   and his approval.
+
+## 2026-09-21 — Step 12: the CBOR values recorded, four faults measured
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja, doe de meetstap".
+- Produced: `tests/Fixtures/cbor/` — sixteen `<store>--<label>.json` files
+  with the decoded values, `bin/make-cbor-vectors.php`, four `.cbor` and
+  four `.png` variants, a README with the measurements; SPEC-006 draft
+  updated (AC6/AC7/AC13 oracle notes and the two `.cbor` cases, the two
+  open questions resolved, References); `notes/step-12-cbor-vectors.md`;
+  `NOTES.md`; `docs/milestones.md`; this entry.
+- Measured: the sixteen boxes located with the SPEC-005 parser and decoded
+  with cbor-php 3.4.2 in the scratch directory (two API mismatches in the
+  throw-away script fixed on the way: `MapObject` iterates `MapItem`s); the
+  four variants inspected by bytes (`9f a2 63 75 … ff 73 67`) and through
+  cbor-php (three decode, the duplicate key refused); `c2patool 0.27.22`
+  on the four PNG carriers: indefinite array → `Invalid`
+  `claimSignature.mismatch`; float → `Error: claim could not be converted
+  from CBOR`; duplicate key → `Error: unknown algorithm`; non-shortest int
+  → `Invalid` `assertion.hashedURI.mismatch`. `composer check` exit 0.
+- Reasoned: c2pa-rs reads indefinite lengths, duplicate keys and
+  non-shortest integers (the failures are all downstream, in the crypto);
+  SPEC-006 stays stricter on the first two (the format requires it) and
+  not on the third (consistent with the oracle); the float measurement
+  proves only a type error and is recorded as such.
+- Decided by Maurice: do the measurement step. SPEC-006 now awaits his
+  approval.

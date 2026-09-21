@@ -1,0 +1,98 @@
+{
+    "fixture": "fixture-signed.jpg",
+    "box": "c2pa.claim.v2",
+    "data_offset": 81796,
+    "length": 591,
+    "sha256": "bccc37342fab35d9abe179ab87b4535aa5aeffdb0adcbf4ef7c4bcdcaf2b98f1",
+    "value": {
+        "$map": [
+            [
+                "instanceID",
+                "xmp:iid:19965f8c-5f99-4057-ba74-c189b4b35b2c"
+            ],
+            [
+                "claim_generator_info",
+                {
+                    "$map": [
+                        [
+                            "name",
+                            "c2pa-verifier fixtures"
+                        ],
+                        [
+                            "version",
+                            "0.0.0"
+                        ],
+                        [
+                            "org.contentauth.c2pa_rs",
+                            "0.90.22"
+                        ]
+                    ]
+                }
+            ],
+            [
+                "signature",
+                "self#jumbf=/c2pa/urn:c2pa:4e936c4e-e4e0-42f5-ad23-22121bd90948/c2pa.signature"
+            ],
+            [
+                "created_assertions",
+                [
+                    {
+                        "$map": [
+                            [
+                                "url",
+                                "self#jumbf=c2pa.assertions/c2pa.hash.data"
+                            ],
+                            [
+                                "hash",
+                                {
+                                    "$bytes": "3088ca19263d3448ec4f627c433bde84d8b0054e102ec1eb4b211b5aea3c45b3"
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            ],
+            [
+                "gathered_assertions",
+                [
+                    {
+                        "$map": [
+                            [
+                                "url",
+                                "self#jumbf=c2pa.assertions/c2pa.thumbnail.claim"
+                            ],
+                            [
+                                "hash",
+                                {
+                                    "$bytes": "3b889d254cbc0756b3ce31d70e8a04b3c1e7a018f6a4349727ac312950b269db"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "$map": [
+                            [
+                                "url",
+                                "self#jumbf=c2pa.assertions/c2pa.actions.v2"
+                            ],
+                            [
+                                "hash",
+                                {
+                                    "$bytes": "1a3f0bf5dbf9e2150b12d87ea06665cc3105cdf0b136f8ee7b1e1de868eb970a"
+                                }
+                            ]
+                        ]
+                    }
+                ]
+            ],
+            [
+                "dc:title",
+                "fixture-signed.jpg"
+            ],
+            [
+                "alg",
+                "sha256"
+            ]
+        ]
+    }
+}

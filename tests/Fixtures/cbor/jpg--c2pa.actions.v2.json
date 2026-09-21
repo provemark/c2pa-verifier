@@ -1,0 +1,28 @@
+{
+    "fixture": "fixture-signed.jpg",
+    "box": "c2pa.actions.v2",
+    "data_offset": 81432,
+    "length": 114,
+    "sha256": "fb44a96fa44c22522697b4c2d25beb98f629811cc5d64eba8bb91fb84b4de82f",
+    "value": {
+        "$map": [
+            [
+                "actions",
+                [
+                    {
+                        "$map": [
+                            [
+                                "action",
+                                "c2pa.created"
+                            ],
+                            [
+                                "digitalSourceType",
+                                "http://cv.iptc.org/newscodes/digitalsourcetype/algorithmicMedia"
+                            ]
+                        ]
+                    }
+                ]
+            ]
+        ]
+    }
+}
