@@ -190,12 +190,18 @@ is in `tests/Fixtures/c2patool/*.json`, per variant in
     `claim.cbor.invalid`
 
 - **AC7 — `assertion.json.invalid` agrees with c2patool** *(the open item
-  since step 14)*
+  since step 14; oracle measured in step 21: c2patool's url for this code
+  is the bare label `stds.schema-org.CreativeWork`, while its
+  `assertion.hashedURI.mismatch` on the same box carries the absolute
+  URI — an inconsistency of its own, so the code is compared, not the
+  url)*
   - Given the `json-broken` variant
   - When its `ManifestException` is mapped to a status with the assertion's
-    url (`self#jumbf=/c2pa/<label>/c2pa.assertions/stds.schema-org.CreativeWork`)
-  - Then the code equals the `assertion.json.invalid` entry in c2patool's
-    recorded `validation_status` for that variant, url included
+    absolute url (`self#jumbf=/c2pa/<label>/c2pa.assertions/stds.schema-org.CreativeWork`)
+  - Then the code equals the `assertion.json.invalid` entry's code in
+    c2patool's recorded `validation_status` for that variant, and the url
+    is the absolute one — the form c2patool itself uses for every other
+    status on that box
 
 - **AC8 — the leaf layers' faults become `general.error`**
   - Given `tests/Fixtures/jpeg/truncated-in-piece-2.jpg`,
@@ -240,9 +246,9 @@ is in `tests/Fixtures/c2patool/*.json`, per variant in
 - Oracle: `c2patool 0.27.22`'s JSON — `validation_status` (failures and
   informational), `validation_results.activeManifest.{success,
   informational, failure}`, each entry `{code, url, explanation}`,
-  `validation_state` — recorded for the four fixtures in step 14 and, for
-  the variants named in AC2 and AC7, in a measurement step before
-  approval (Open questions); the sister library's
+  `validation_state` — recorded for the four fixtures in step 14 and for
+  the variants of AC2 and AC7 in step 21
+  (`tests/Fixtures/c2patool/variants/`); the sister library's
   `ManifestStoreParser::validationCodes()` reading `validation_status`.
 - Reasoned: the mapping table (which exception becomes which code) —
   §15.6 and §15.7 decide most rows; `general.error` for the rest, by the
@@ -316,11 +322,10 @@ already); `Cose` may see `Manifest` (the arrow exists, unused until now).
 
 ## Open questions
 
-- **c2patool's JSON for the variants of AC2 and AC7** (`claim-title-changed`,
-  `signature-changed`, `json-broken`) is recorded under
-  `tests/Fixtures/c2patool/variants/` in a measurement step before
-  approval — three `c2patool <variant>.png` runs, saved as they come.
-  Blocker for approval (AC2 and AC7 compare urls, not only codes).
+- Resolved before approval (step 21, 2026-09-21): c2patool's JSON for
+  `claim-title-changed`, `signature-changed` and `json-broken` is under
+  `tests/Fixtures/c2patool/variants/`; AC2's urls match exactly, AC7's
+  does not (c2patool's bare label) and the criterion says so.
 - **Where `general.error`'s url for a store-level fault should point**:
   `self#jumbf=/c2pa` (the store) is proposed; c2patool reports such
   faults as a top-level error with no url at all. Non-blocker.
