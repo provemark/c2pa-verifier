@@ -210,6 +210,7 @@ it('AC6: the JSON view is accepted by the sister library and agrees with c2patoo
 
 it('AC7: the JSON view has c2patool\'s shape', function (): void {
     $png = spec007Store('fixture-signed.png')->toArray();
+    assert(is_array($png['manifests']));
     $manifest = $png['manifests'][SPEC007_PNG_LABEL] ?? null;
 
     expect($png['active_manifest'])->toBe(SPEC007_PNG_LABEL)
@@ -227,6 +228,7 @@ it('AC7: the JSON view has c2patool\'s shape', function (): void {
         ]]);
 
     $adobe = spec007Store('public-testfiles/adobe-20220124-C.jpg')->toArray();
+    assert(is_array($adobe['manifests']));
     $manifest = $adobe['manifests'][SPEC007_ADOBE_LABEL] ?? null;
     assert(is_array($manifest) && is_array($manifest['assertions']));
     expect(array_keys($manifest))->toBe(['claim_generator', 'title', 'format', 'instance_id', 'thumbnail', 'assertions', 'label', 'claim_version'])

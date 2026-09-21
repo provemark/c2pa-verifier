@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-21                      |
 | Supersedes | —                                                 |
@@ -367,10 +367,9 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
 - Resolved before approval (step 14, 2026-09-21): the fifteen variants
   are built by `bin/make-claim-variants.php` and measured; c2patool's JSON
   for the four fixtures is recorded under `tests/Fixtures/c2patool/`.
-- **Adding `provemark/content-credentials` as `require-dev`** (v0.15.1;
-  decided in principle by the maintainer 2026-09-21): done in the
-  tests-first step; the composer constraint and the measured install go
-  into that step's note. Non-blocker for approval.
+- Resolved (tests-first step, 2026-09-21): `provemark/content-credentials`
+  `^0.15` in `require-dev` (v0.15.1 locked; four PSR/discovery packages
+  with it); `src/` does not use it.
 - **Whether `toArray()` should list the hard-binding assertion.** c2patool
   leaves it out of `assertions`; the sister parser never reads it. Kept
   out for equality with the oracle; M4 reads it from the `Manifest`, not
@@ -383,17 +382,17 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
-| AC11                 | —                           | —                    |
-| AC12                 | —                           | —                    |
-| AC13                 | —                           | —                    |
-| AC14                 | —                           | —                    |
+| AC1 | tests/Unit/Manifest/ManifestStoreTest.php :: AC1: the PNG store has one manifest, active, with a v2 claim / SPEC-007 | src/Manifest/ManifestStore.php :: fromTree(); src/Manifest/Manifest.php :: fromBox(); src/Manifest/Claim.php :: fromMap(), generatorInfo(), hashedUris() |
+| AC2 | tests/Unit/Manifest/ManifestStoreTest.php :: AC2: the JPEG and WebP stores give the same claim shape / SPEC-007 | src/Manifest/ManifestStore.php :: fromTree() |
+| AC3 | tests/Unit/Manifest/ManifestStoreTest.php :: AC3: assertions are decoded by content type / SPEC-007 | src/Manifest/Manifest.php :: assertionData(), mediaType(); src/Manifest/Assertion.php, EmbeddedFile.php |
+| AC4 | tests/Unit/Manifest/ManifestStoreTest.php :: AC4: URIs resolve to boxes, relative and absolute / SPEC-007 | src/Manifest/Manifest.php :: resolve(), signatureBytes(), claimBytes() |
+| AC5 | tests/Unit/Manifest/ManifestStoreTest.php :: AC5: the Adobe store gives a v1 claim without claim_generator_info / SPEC-007 | src/Manifest/Claim.php :: fromMap() (v1 required fields; claim_generator_info optional) |
+| AC6 | tests/Unit/Manifest/ManifestStoreTest.php :: AC6: the JSON view is accepted by the sister library and agrees with c2patool / SPEC-007 | src/Manifest/ManifestStore.php :: toJson(), toArray(), manifestArray(), plain() |
+| AC7 | tests/Unit/Manifest/ManifestStoreTest.php :: AC7: the JSON view has c2patool's shape / SPEC-007 | src/Manifest/ManifestStore.php :: manifestArray() |
+| AC8 | tests/Unit/Manifest/ManifestStoreTest.php :: AC8: a claim label that is neither v1 nor v2 is an error / SPEC-007 | src/Manifest/Manifest.php :: fromBox() (the version match) |
+| AC9 | tests/Unit/Manifest/ManifestStoreTest.php :: AC9: a claim missing a required field is an error naming the field and the version / SPEC-007 | src/Manifest/Claim.php :: fromMap() |
+| AC10 | tests/Unit/Manifest/ManifestStoreTest.php :: AC10: a URI that resolves to nothing, to the wrong place, or to an unknown box is an error / SPEC-007 | src/Manifest/Manifest.php :: resolve(), checkReferences() |
+| AC11 | tests/Unit/Manifest/ManifestStoreTest.php :: AC11: a hashed URI without a byte-string hash is an error / SPEC-007 | src/Manifest/Claim.php :: hashedUris(); src/Manifest/HashedUri.php |
+| AC12 | tests/Unit/Manifest/ManifestStoreTest.php :: AC12: structural faults in the manifest are errors / SPEC-007 | src/Manifest/Manifest.php :: fromBox(), theOne(), singleCbor(); src/Manifest/ManifestStore.php :: fromTree() |
+| AC13 | tests/Unit/Manifest/ManifestStoreTest.php :: AC13: invalid JSON in a json box is an error naming the assertion, never the bytes / SPEC-007 | src/Manifest/Manifest.php :: assertionData() (json) |
+| AC14 | tests/Unit/Manifest/ManifestStoreTest.php :: AC14: a claim_generator_info without a name is an error / SPEC-007 | src/Manifest/Claim.php :: generatorInfo() |

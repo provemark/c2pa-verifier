@@ -17,7 +17,7 @@ when" has not been measured is not done.
 |---|---|---|
 | M0 | Repository skeleton: package, tool chain, spec template, traceability check, CI, notes, ADRs | `composer check` green on an empty `src/` — **done 2026-09-19**; first green CI run (all three PHP versions) on `bbb7299`, run `35444321627`, the same day |
 | M1 | **Container → manifest store bytes.** JPEG APP11 (multi-segment, Box Instance Numbers), PNG `caBX`, WebP RIFF `C2PA`. Byte-exact extraction, nothing parsed. | SHA-256 of the extracted store equals what `c2patool --detailed` / a hexdump gives, for every fixture — **done 2026-09-20** (steps 02–07; the hashes in `notes/step-02`, `-04`, `-06`) |
-| M2 | **JUMBF + CBOR → manifest store as data.** Boxes, superboxes, description boxes, content-type UUIDs; a CBOR decoder for the subset C2PA uses; claim v1 and v2; assertions; `claim_generator_info`. | the sister library's `ManifestStoreParser::fromJson()` accepts the output and every accessor equals its `/v1/read` |
+| M2 | **JUMBF + CBOR → manifest store as data.** Boxes, superboxes, description boxes, content-type UUIDs; a CBOR decoder for the subset C2PA uses; claim v1 and v2; assertions; `claim_generator_info`. | the sister library's `ManifestStoreParser::fromJson()` accepts the output and every accessor equals its `/v1/read` — **done 2026-09-21** (steps 09–15; SPEC-007 AC6: the five content accessors equal c2patool's JSON through the sister parser; the crypto accessors join in M3–M6) |
 | M3 | **COSE_Sign1.** Protected header, `x5chain`, Sig_structure, verify ES256/ES384/PS256/Ed25519. No trust yet. | `claimSignature.validated` equals c2patool on all fixtures; one altered byte in the claim → `claimSignature.mismatch` |
 | M4 | **Hash binding.** `c2pa.hash.data` v1/v2: exclusions, `pad`, streaming hash. Hashed-URI checks on assertions. | one changed pixel byte → `assertion.dataHash.mismatch`; untouched file `Valid` |
 | M5 | **Chain and trust.** Chain from `x5chain`, anchor from `trust_anchors`, EKU from `trust_config`, `allowed_list`. `Trusted` vs `Valid`. | verdicts equal `c2patool --settings` with and without the trust file; test cert without trust file → `signingCredential.untrusted` |
@@ -71,7 +71,7 @@ specifying is the tool that enforces exactly that.
 | 12 | Sixteen CBOR values recorded (`tests/Fixtures/cbor/*.json`); four claim-level faults through c2patool (`bin/make-cbor-vectors.php`) — `notes/step-12-cbor-vectors.md` | done 2026-09-21 |
 | SPEC-006 | CBOR: the measured subset, definite lengths only, fail closed on the rest | implemented 2026-09-21: 16 tests red → green, 106 in all — step 13 |
 | 14 | c2patool's JSON recorded (`tests/Fixtures/c2patool/`); fifteen claim variants through c2patool (`bin/make-claim-variants.php`) — `notes/step-14-claim-variants.md` | done 2026-09-21 |
-| SPEC-007 | Claim v1 and v2, assertion store, `claim_generator_info`, the JSON view for the sister library | approved 2026-09-21; 14 tests seen red; `provemark/content-credentials` ^0.15 as require-dev; implementation next |
+| SPEC-007 | Claim v1 and v2, assertion store, `claim_generator_info`, the JSON view for the sister library | implemented 2026-09-21: 14 tests red → green, 120 in all; AC6 (the sister library's `fromJson()`) green — step 15. **M2 complete** |
 
 ## After M0
 

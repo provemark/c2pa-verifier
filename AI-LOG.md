@@ -1143,3 +1143,23 @@ README are where the disclosure lives.
   the sister's `spec019Accessors()` restricted to what M2 knows.
 - Decided by Maurice: Claude writes all the tests; the dev dependency
   (decided earlier today).
+
+## 2026-09-21 — Step 15: the Manifest layer (SPEC-007 implemented); M2 complete
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, bouw de Manifest-laag".
+- Produced: `src/Manifest/{ManifestStore,Manifest,Claim,Assertion,HashedUri,
+  EmbeddedFile,ManifestException}.php`; SPEC-007 → `implemented` with
+  Traceability, the require-dev open question resolved; two `assert`s in
+  the test file; `notes/step-15-manifest-layer.md`; `NOTES.md`;
+  `docs/milestones.md` (SPEC-007 row, M2 marked done); this entry.
+- Measured: first run **14 passed**, AC6 included — our JSON and
+  c2patool's through the sister library's `fromJson()` give equal
+  `hasManifest`/`isAiGenerated`/`digitalSourceTypes`/`softwareAgents`/
+  `declaredSpecVersion` for all four fixtures; PHPStan 3 + 1 findings
+  resolved (an always-false guard removed, two test offsets narrowed, a
+  narrowing branch restructured); `composer check` exit 0, **120 passed
+  (632 assertions)**, Deptrac 0 violations.
+- Reasoned: cross-manifest URIs refused until M7; a tag inside assertion
+  data rendered as its content in the JSON view; a non-thumbnail embedded
+  file rendered with base64 bytes.
+- Decided by Maurice: build step 15b.
