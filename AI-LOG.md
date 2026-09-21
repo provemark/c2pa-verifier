@@ -1163,3 +1163,15 @@ README are where the disclosure lives.
   data rendered as its content in the JSON view; a non-thumbnail embedded
   file rendered with base64 bytes.
 - Decided by Maurice: build step 15b.
+
+## 2026-09-21 — CI green on M2
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja, push maar en lees de CI-run".
+- Produced: pushed `a0ead45` and `11b6b6d` to `origin/main`; this entry.
+- Measured: before the push, 0 attribution lines and no tracked `*.key`.
+  Run `35576013965` on `11b6b6d`: conclusion `success`; PHP 8.3 / 8.4 /
+  8.5 each `success` with `Tests: 120 passed`, each installing
+  `provemark/content-credentials (v0.15.1)` from Packagist; `all green`
+  `success`. The AC6 equivalence test runs on CI without Docker or a
+  network call during the test itself.
+- Decided by Maurice: push.
