@@ -1892,3 +1892,16 @@ README are where the disclosure lives.
 - Decided by Maurice: step 27 as explained. Amendment 3 and SPEC-010
   amendment 2's second half (`Valid` needs a success) for his
   confirmation.
+
+## 2026-09-21 — CI green on M4
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar" (and, in the same breath, "en dan b" — the Verifier
+  layer next; its explanation was given, SPEC-013 awaits "akkoord").
+- Produced: pushed `4c9a7c9..8397646` (six commits) to `origin/main`;
+  this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`,
+  `gh repo view --json visibility` → `PRIVATE`. Run `35624439126` on
+  `8397646`: conclusion `success`; PHP 8.3 / 8.4 / 8.5 each `success`
+  with `Tests: 173 passed` (1340 assertions on 8.3, 1342 on 8.4/8.5 —
+  the Ed25519 pair, as before); `all green` `success`.
+- Decided by Maurice: push; the Verifier layer before M5.
