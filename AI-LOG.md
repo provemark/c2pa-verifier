@@ -2284,3 +2284,34 @@ README are where the disclosure lives.
   the trust check runs with no anchors and says `untrusted`;
   `verify_trust: false` alone says nothing.
 - Decided by Maurice: step 34b as explained.
+
+## 2026-09-21 — Step 35: SPEC-015 implemented, the certificate profile; M5 complete
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met stap 35".
+- Produced: `src/Trust/CertificateProfileCheck.php`;
+  `src/Trust/Certificate.php` (the profile fields, `fromDer()`,
+  `fromParsed()`, `hexToDecimal()`, RSA-PSS by SPKI OID);
+  `src/Report/StatusCode.php` (+`signingCredential.expired`);
+  `src/Verifier/Verifier.php` (profile always; trust without settings
+  → no anchors; `signatureInfo()`); `src/Verifier/VerificationReport.php`
+  (`$signatureInfo` under the active manifest); callers moved to
+  `Certificate::fromDer()`; ten older tests adjusted (SPEC-013 amendment
+  4, SPEC-014 amendment 1, SPEC-015 amendment 2 — recorded in each);
+  SPEC-015 → `implemented` with Traceability;
+  `notes/step-35-certificate-profile.md`, `NOTES.md`,
+  `docs/milestones.md` (M5 done), this entry.
+- Measured: first run `5 failed, 5 passed` — an RSASSA-PSS key is type
+  −1 to `openssl_pkey_get_details()` (fixed by the SPKI OID
+  `1.2.840.113549.1.1.10`, measured on the Adobe leaf); c2patool's
+  `signature_info` has `time` on the Adobe file (M6's, excluded from
+  AC7); then the SPEC-013/014 consequences (`certificate`/`trust` in
+  `checksPerformed`, `untrusted` without settings). After: `composer
+  check` → Pint passed, PHPStan `[OK] No errors`, Deptrac `Violations
+  0`, Pest `203 passed (2071 assertions)`; `bin/spec-check.php` → `OK:
+  16 spec(s), 16 test file(s)`. AC9 (M5's "done when") and AC10 (22 +
+  12 files) equal to c2patool's state and credential codes. /
+  Reasoned: one `.invalid` per fault; the byte search for the PSS OID
+  as "not ASN.1 parsing".
+- Decided by Maurice: step 35 as explained. For his confirmation:
+  SPEC-014 amendment 1 (no settings → `untrusted`), SPEC-015 amendment
+  2, SPEC-013 amendment 4.

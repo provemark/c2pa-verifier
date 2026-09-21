@@ -376,6 +376,7 @@ final class ManifestException extends \RuntimeException
    `Support` (SPEC-004 amendment 1) and did not list it. No criterion
    changed.
 3. **2026-09-21, defined in SPEC-014 and approved with it** — `Verifier::verify($stream, ?TrustSettings $settings = null)`: with settings whose `verify_trust` is true, `ChainCheck` runs after the signature check and `checks_performed` gains `trust`; without, the report is what it was. `VerificationReport::toArray()` omits `validation_status` when there is no failure, as c2patool 0.27.22 does (measured in step 30: every `Trusted` JSON lacks the key); AC8's test asserts both key lists. No criterion changed in outcome.
+4. **2026-09-21, step 35, with SPEC-014/015** — `checksPerformed` is now `['signature', 'certificate', 'trust', 'hashedUris', 'dataHash']` on a file verified without settings (the certificate profile always, the trust check with no anchors), and every such file carries `signingCredential.untrusted` — so AC1–AC4, AC8 and AC9's expectations gained that code and `validation_status` is always present without settings; AC10's not-yet-emitted list lost `signingCredential.untrusted`. Steps 6–7 of the Scope read with those two checks inserted after step 4. No verdict changed: `untrusted` alone keeps `Valid` (SPEC-014).
 
 ## Traceability
 

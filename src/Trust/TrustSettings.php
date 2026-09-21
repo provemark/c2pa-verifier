@@ -97,7 +97,7 @@ final readonly class TrustSettings
                 throw new TrustException(sprintf('%s: block %d is not valid base64', $what, $i + 1));
             }
             try {
-                $certificates[] = new Certificate($der);
+                $certificates[] = Certificate::fromDer($der);
             } catch (TrustException $e) {
                 throw new TrustException(sprintf('%s: block %d: %s', $what, $i + 1, $e->getMessage()), 0, $e);
             }

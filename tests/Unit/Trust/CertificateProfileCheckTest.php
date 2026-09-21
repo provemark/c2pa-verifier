@@ -145,7 +145,7 @@ function spec015Leaf(string $variant): Certificate
 /**
  * The good leaf's real parse data, altered — the seam for the rules no re-signed file can show.
  *
- * @param  callable(array<string, mixed>, array<string, mixed>): array{0: array<string, mixed>, 1: array<string, mixed>}  $alter
+ * @param  callable(array<string, mixed>, array<string, mixed>): array{0: array<mixed, mixed>, 1: array<mixed, mixed>}  $alter
  */
 function spec015HandBuilt(callable $alter): Certificate
 {
@@ -158,9 +158,17 @@ function spec015HandBuilt(callable $alter): Certificate
     assert(is_array($key));
     /** @var array<string, mixed> $parsed */
     /** @var array<string, mixed> $key */
-    [$parsed, $key] = $alter($parsed, $key);
+    [$alteredParsed, $alteredKey] = $alter($parsed, $key);
+    $typed = static function (array $a): array {
+        $t = [];
+        foreach ($a as $k => $v) {
+            $t[(string) $k] = $v;
+        }
 
-    return Certificate::fromParsed($leaf->der, $parsed, $key);
+        return $t;
+    };
+
+    return Certificate::fromParsed($leaf->der, $typed($alteredParsed), $typed($alteredKey));
 }
 
 /** @return array<string, mixed> */
@@ -325,8 +333,9 @@ it('AC7: signature_info is c2patool\'s', function (): void {
         $oracle = spec015Oracle($name);
         assert(is_array($oracle['manifests']) && is_string($oracle['active_manifest']));
         $theirs = $oracle['manifests'][$oracle['active_manifest']];
-        assert(is_array($theirs));
-        expect(spec015SignatureInfo($report))->toBe($theirs['signature_info'], $name);
+        assert(is_array($theirs) && is_array($theirs['signature_info']));
+        // c2patool adds `time` from the timestamp (the Adobe file has one): M6's field, not compared yet (amendment 2)
+        expect(spec015SignatureInfo($report))->toBe(array_intersect_key($theirs['signature_info'], array_flip(['alg', 'issuer', 'common_name', 'cert_serial_number'])), $name);
     }
     $png = spec015Verify('fixture-signed.png', null);
     expect(spec015SignatureInfo($png))->toBe(['alg' => 'Es256', 'issuer' => 'C2PA Test Signing Cert', 'common_name' => 'C2PA Signer', 'cert_serial_number' => '640229841392226413189608867977836244731148734950']);
@@ -347,10 +356,11 @@ it('AC7: signature_info is c2patool\'s', function (): void {
 
 it('AC8: the profile is checked always; the two checks are independent', function (): void {
     $cases = [
+        // the trust check runs without settings too (no anchors → untrusted, SPEC-014 amendment 1); only verify_trust false keeps it out
         'expired-wrong-anchor' => ['profile/expired.png', spec015Trust('ec-root-only'), ['signingCredential.expired', 'signingCredential.untrusted'], true],
-        'expired-no-settings' => ['profile/expired.png', null, ['signingCredential.expired', 'signingCredential.untrusted'], false],
+        'expired-no-settings' => ['profile/expired.png', null, ['signingCredential.expired', 'signingCredential.untrusted'], true],
         'expired-verify-off' => ['profile/expired.png', spec015Trust('verify-off'), ['signingCredential.expired'], false],
-        'no-eku-no-settings' => ['profile/no-eku.png', null, ['signingCredential.invalid', 'signingCredential.untrusted'], false],
+        'no-eku-no-settings' => ['profile/no-eku.png', null, ['signingCredential.invalid', 'signingCredential.untrusted'], true],
     ];
     foreach ($cases as $name => [$file, $settings, $expected, $trustRan]) {
         $report = spec015Verify($file, $settings);
@@ -396,8 +406,10 @@ it('AC10: the codes are verbatim, and the drift alarm grows', function (): void 
         $theirs = array_map(static fn (string $c): string => $c === 'signingCredential.untrusted' ? 'signingCredential.trusted' : $c, spec015OracleCredential($oracle));
         sort($theirs);
         $expectedState = $oracle['validation_state'] === 'Valid' ? 'Trusted' : $oracle['validation_state'];
-        expect($report->result->state->value)->toBe($expectedState, $name)
-            ->and(spec015Codes($report, 'signingCredential'))->toBe($theirs, $name);
+        expect($report->result->state->value)->toBe($expectedState, $name);
+        if ($report->result->checksPerformed !== []) {   // a parse fault stops this verifier before any check (SPEC-013 AC10's subset rule)
+            expect(spec015Codes($report, 'signingCredential'))->toBe($theirs, $name);
+        }
     }
     $throwAway = spec015ThrowAway();
     foreach (['good', 'no-digital-signature', 'expired', 'ca-as-leaf', 'eku-outside-list', 'eku-any', 'eku-mixed', 'eku-c2pa', 'no-eku', 'v1', 'rsa-1024', 'curve-secp256k1'] as $variant) {

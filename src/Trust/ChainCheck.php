@@ -31,7 +31,7 @@ final readonly class ChainCheck
 
         try {
             $cose = CoseSign1::fromBytes($manifest->signatureBytes());
-            $chain = array_map(static fn ($c): Certificate => new Certificate($c->bytes), $cose->chain);
+            $chain = array_map(static fn ($c): Certificate => Certificate::fromDer($c->bytes), $cose->chain);
         } catch (CoseException $e) {
             return [new ValidationStatus($e->status, $url, $e->getMessage())];
         } catch (TrustException $e) {

@@ -12,6 +12,8 @@ use Provemark\C2paVerifier\Container\ManifestStoreBytes;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
 use Provemark\C2paVerifier\Cose\ClaimSignatureCheck;
+use Provemark\C2paVerifier\Cose\CoseException;
+use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Hash\DataHashCheck;
 use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfException;
@@ -22,15 +24,19 @@ use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationResult;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Support\Bytes;
+use Provemark\C2paVerifier\Trust\Certificate;
+use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\ChainCheck;
+use Provemark\C2paVerifier\Trust\TrustException;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 
 /**
  * One call from file to verdict (SPEC-013), in the order C2PA 2.4 §15.3
  * prescribes: the format from the magic bytes, the store from the
- * container, the manifest from the boxes, then the claim signature, the
- * trust of its certificate when settings were given (SPEC-014), the
- * hashed URIs, and the data hash — the last only when the claim's hashed
+ * container, the manifest from the boxes, then the claim signature, its
+ * certificate's profile (SPEC-015), the trust of its chain (SPEC-014 —
+ * untrusted without settings, as c2patool), the hashed URIs, and the data
+ * hash — the last only when the claim's hashed
  * URI for c2pa.hash.data matched (SPEC-011 decision 1): a hash read from
  * an assertion the claim does not vouch for proves nothing. Every fault a
  * layer throws becomes a status with its code; nothing escapes, nothing
@@ -51,6 +57,7 @@ final readonly class Verifier
         private HashedUriCheck $hashedUris = new HashedUriCheck,
         private DataHashCheck $dataHash = new DataHashCheck,
         private ChainCheck $trust = new ChainCheck,
+        private CertificateProfileCheck $certificate = new CertificateProfileCheck,
     ) {}
 
     /**
@@ -98,7 +105,35 @@ final readonly class Verifier
             ], []));
         }
 
-        return new VerificationReport($format, true, $manifestStore, $this->check($manifestStore, $stream, $store, $settings));
+        return new VerificationReport($format, true, $manifestStore, $this->check($manifestStore, $stream, $store, $settings), $this->signatureInfo($manifestStore));
+    }
+
+    /**
+     * The active manifest's signer as c2patool prints it: the COSE alg's
+     * name, the leaf's O as "issuer", its CN, its serial in decimal
+     * (SPEC-015). Null when the chain cannot be read — the checks say why.
+     *
+     * @return array{alg: string, issuer: ?string, common_name: string, cert_serial_number: string}|null
+     */
+    private function signatureInfo(ManifestStore $manifestStore): ?array
+    {
+        try {
+            $cose = CoseSign1::fromBytes($manifestStore->active->signatureBytes());
+            if ($cose->chain === []) {
+                return null;
+            }
+            $leaf = Certificate::fromDer($cose->chain[0]->bytes);
+        } catch (CoseException|TrustException) {
+            return null;
+        }
+        $alg = match ($cose->alg) {
+            -7 => 'Es256', -35 => 'Es384', -36 => 'Es512',
+            -37 => 'Ps256', -38 => 'Ps384', -39 => 'Ps512',
+            -8 => 'Ed25519',
+            default => sprintf('alg %d', $cose->alg),
+        };
+
+        return ['alg' => $alg, 'issuer' => $leaf->organization, 'common_name' => $leaf->subjectCn(), 'cert_serial_number' => $leaf->serialDecimal];
     }
 
     /**
@@ -113,8 +148,15 @@ final readonly class Verifier
         $statuses = $this->signature->check($manifest);
         $checks = ['signature'];
 
-        if ($settings !== null && $settings->verifyTrust) {
-            $statuses = [...$statuses, ...$this->trust->check($manifest, $settings)];
+        // the certificate's profile, always: it is the signature's, not the operator's (SPEC-015)
+        $statuses = [...$statuses, ...$this->certificate->check($manifest, $settings)];
+        $checks[] = 'certificate';
+
+        // trust: without settings there are no anchors and the answer is untrusted, as c2patool's;
+        // only verify_trust false keeps quiet (SPEC-014 amendment 1)
+        $trustSettings = $settings ?? new TrustSettings([], []);
+        if ($trustSettings->verifyTrust) {
+            $statuses = [...$statuses, ...$this->trust->check($manifest, $trustSettings)];
             $checks[] = 'trust';
         }
 

@@ -30,7 +30,8 @@ const SPEC013_SUBSET_ONLY = [
 ];
 
 /** Codes this verifier does not emit yet: M5, and the assertion-content rules of later specs. */
-const SPEC013_NOT_YET = ['signingCredential.untrusted', 'assertion.required.missing', 'assertion.action.redacted'];
+// signingCredential.untrusted left this list with SPEC-014/015: without settings this verifier says it too (SPEC-014 amendment 1)
+const SPEC013_NOT_YET = ['assertion.required.missing', 'assertion.action.redacted'];
 
 /** @return resource */
 function spec013Stream(string $relative)
@@ -144,8 +145,9 @@ it('AC1: the four fixtures, front door: Valid, three checks, and the report is c
         expect($report->format)->toBe($format, $name)
             ->and($report->hasManifest)->toBeTrue($name)
             ->and($report->result->state)->toBe(ValidationState::Valid, $name)
-            ->and($report->result->checksPerformed)->toBe(['signature', 'hashedUris', 'dataHash'], $name)
-            ->and(spec013Codes($report))->toBe(['claimSignature.validated', ...array_fill(0, $entries, 'assertion.hashedURI.match'), 'assertion.dataHash.match'], $name);
+            // certificate and trust joined the list with SPEC-015/014: without settings the leaf is checked and found untrusted, as c2patool
+            ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $name)
+            ->and(spec013Codes($report))->toBe(['claimSignature.validated', 'signingCredential.untrusted', ...array_fill(0, $entries, 'assertion.hashedURI.match'), 'assertion.dataHash.match'], $name);
 
         $oracle = spec013C2patool($name);
         expect($oracle['validation_state'])->toBe('Valid', $name);
@@ -155,7 +157,7 @@ it('AC1: the four fixtures, front door: Valid, three checks, and the report is c
 
         $sister = ManifestStoreParser::fromJson($report->toJson());
         expect($sister->validationState()?->value)->toBe('Valid', $name)
-            ->and($sister->validationStatusCodes())->toBe([], $name)
+            ->and($sister->validationStatusCodes())->toBe(['signingCredential.untrusted'], $name)
             ->and($sister->isSignatureValid())->toBeTrue($name)
             ->and($sister->activeManifestLabel())->toBe($report->store?->active->label, $name);
     }
@@ -165,34 +167,34 @@ it('AC2: one changed pixel byte, front door: Invalid with assertion.dataHash.mis
     foreach (['binding/pixel-changed.png', 'binding/pixel-changed.jpg'] as $variant) {
         $report = spec013Verify($variant);
         expect($report->result->state)->toBe(ValidationState::Invalid, $variant)
-            ->and($report->result->checksPerformed)->toBe(['signature', 'hashedUris', 'dataHash'], $variant)
-            ->and(spec013Failures($report))->toBe(['assertion.dataHash.mismatch'], $variant)
-            ->and(ManifestStoreParser::fromJson($report->toJson())->validationStatusCodes())->toBe(['assertion.dataHash.mismatch'], $variant);
+            ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $variant)
+            ->and(spec013Failures($report))->toBe(['assertion.dataHash.mismatch', 'signingCredential.untrusted'], $variant)
+            ->and(ManifestStoreParser::fromJson($report->toJson())->validationStatusCodes())->toBe(['signingCredential.untrusted', 'assertion.dataHash.mismatch'], $variant);
     }
     $report = spec013Verify('binding/pixel-changed.png');
     $oracle = spec013C2patool('variants/pixel-changed');
     $mismatch = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::AssertionDataHashMismatch));
     expect($mismatch[0]->url)->toBe(spec013OracleUrl($oracle, 'assertion.dataHash.mismatch'))
-        ->and(array_values(array_diff(spec013OracleFailures($oracle), SPEC013_NOT_YET)))->toBe(['assertion.dataHash.mismatch']);
+        ->and(array_values(array_diff(spec013OracleFailures($oracle), SPEC013_NOT_YET)))->toBe(['assertion.dataHash.mismatch', 'signingCredential.untrusted']);
 })->group('SPEC-013');
 
 it('AC3: a broken signature does not stop the verifier', function (): void {
     foreach (['claim-title-changed', 'signature-changed'] as $variant) {
         $report = spec013Verify("cose/{$variant}.png");
         expect($report->result->state)->toBe(ValidationState::Invalid, $variant)
-            ->and($report->result->checksPerformed)->toBe(['signature', 'hashedUris', 'dataHash'], $variant)
-            ->and(spec013Failures($report))->toBe(['claimSignature.mismatch'], $variant)
+            ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $variant)
+            ->and(spec013Failures($report))->toBe(['claimSignature.mismatch', 'signingCredential.untrusted'], $variant)
             ->and(spec013Codes($report))->toContain('assertion.dataHash.match')
-            ->and(array_values(array_diff(spec013OracleFailures(spec013C2patool("variants/{$variant}")), SPEC013_NOT_YET)))->toBe(['claimSignature.mismatch'], $variant);
+            ->and(array_values(array_diff(spec013OracleFailures(spec013C2patool("variants/{$variant}")), SPEC013_NOT_YET)))->toBe(['claimSignature.mismatch', 'signingCredential.untrusted'], $variant);
     }
 })->group('SPEC-013');
 
 it('AC4: the data hash is skipped when the claim does not vouch for it', function (): void {
     foreach (['pad-nonzero', 'exclusions-overlap', 'exclusion-past-end', 'alg-sha1'] as $variant) {
         $report = spec013Verify("binding/{$variant}.png");
-        expect($report->result->checksPerformed)->toBe(['signature', 'hashedUris'], $variant)
+        expect($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris'], $variant)
             ->and(array_filter(spec013Codes($report), static fn (string $c): bool => str_starts_with($c, 'assertion.dataHash')))->toBe([], $variant)
-            ->and(spec013Failures($report))->toBe(['assertion.hashedURI.mismatch'], $variant)
+            ->and(spec013Failures($report))->toBe(['assertion.hashedURI.mismatch', 'signingCredential.untrusted'], $variant)
             ->and($report->result->state)->toBe(ValidationState::Invalid, $variant);
         $mismatch = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::AssertionHashedUriMismatch));
         expect($mismatch)->toHaveCount(1, $variant)
@@ -200,7 +202,7 @@ it('AC4: the data hash is skipped when the claim does not vouch for it', functio
     }
     // c2patool evaluates the data hash anyway: a strict superset of our failures, the same verdict
     $theirs = array_values(array_diff(spec013OracleFailures(spec013C2patool('variants/exclusions-overlap')), SPEC013_NOT_YET));
-    expect($theirs)->toBe(['assertion.dataHash.mismatch', 'assertion.hashedURI.mismatch'])
+    expect($theirs)->toBe(['assertion.dataHash.mismatch', 'assertion.hashedURI.mismatch', 'signingCredential.untrusted'])
         ->and(spec013C2patool('variants/exclusions-overlap')['validation_state'])->toBe('Invalid');
 })->group('SPEC-013');
 
@@ -274,10 +276,8 @@ it('AC8: the report\'s shape, and the sister parser reads it', function (): void
 
     foreach ([$valid, $tampered] as $report) {
         $array = $report->toArray();
-        // validation_status is present only when there is a failure (SPEC-013 amendment 3, measured in step 30)
-        expect(array_keys($array))->toBe($report === $valid
-            ? ['active_manifest', 'manifests', 'validation_results', 'validation_state', 'format', 'has_manifest', 'checks_performed']
-            : ['active_manifest', 'manifests', 'validation_results', 'validation_state', 'validation_status', 'format', 'has_manifest', 'checks_performed']);
+        // validation_status is present only when there is a failure (SPEC-013 amendment 3); without settings there is always one — untrusted (SPEC-014 amendment 1)
+        expect(array_keys($array))->toBe(['active_manifest', 'manifests', 'validation_results', 'validation_state', 'validation_status', 'format', 'has_manifest', 'checks_performed']);
         assert(is_array($array['manifests']) && is_array($oracle['manifests']) && is_string($array['active_manifest']));
         expect(array_keys($array['manifests']))->toBe(array_keys($oracle['manifests']));
         $ours = $array['manifests'][$array['active_manifest']];
@@ -321,8 +321,8 @@ it('AC9: end to end, the file is streamed', function (): void {
     unlink($tmp);
 
     expect($report->result->state)->toBe(ValidationState::Invalid)
-        ->and(spec013Failures($report))->toBe(['assertion.dataHash.mismatch'])
-        ->and($report->result->checksPerformed)->toBe(['signature', 'hashedUris', 'dataHash'])
+        ->and(spec013Failures($report))->toBe(['assertion.dataHash.mismatch', 'signingCredential.untrusted'])
+        ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash'])
         ->and($grown)->toBeLessThan(4 * 1024 * 1024, sprintf('peak memory grew by %d bytes', $grown));
 })->group('SPEC-013');
 
@@ -360,7 +360,7 @@ it('AC10: the drift alarm: every recorded c2patool JSON, state and failures', fu
         $side = sprintf("%s\n  ours:   %s\n  theirs: %s", $name, implode(', ', $ours), implode(', ', $theirs));
         expect(array_diff($ours, $theirs))->toBe([], "not a subset — {$side}");
 
-        $complete = $report->result->checksPerformed === ['signature', 'hashedUris', 'dataHash']
+        $complete = $report->result->checksPerformed === ['signature', 'certificate', 'trust', 'hashedUris', 'dataHash']
             && ! in_array(StatusCode::GeneralError, array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $report->result->statuses), true)
             && ! in_array(StatusCode::AssertionUndeclared, array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $report->result->statuses), true);
         if ($ours !== $theirs) {

@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-21                      |
 | Supersedes | —                                                 |
@@ -346,6 +346,19 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
    `no-eku-no-settings.json`). The Verifier bullet, the `check()`
    signature (settings optional), `checksPerformed` (`certificate`) and
    AC8 changed accordingly.
+2. **2026-09-21, step 35, at implementation** — (a) AC7 compares the
+   four fields `alg`, `issuer`, `common_name`, `cert_serial_number`;
+   c2patool's block also carries `time` when the manifest has a
+   timestamp (the Adobe file: `2023-01-24T14:48:56+00:00`), which is
+   M6's field. (b) AC8's `trust` entry: with SPEC-014 amendment 1 the
+   trust check runs without settings too (no anchors → `untrusted`), so
+   `trust` is in `checksPerformed` for (a), (b) and the `no-eku` case,
+   and absent only for `verify_trust: false`. (c) An RSASSA-PSS key
+   reports type −1 to `openssl_pkey_get_details()`; `Certificate`
+   recognises it as RSA by the SPKI algorithm OID (1.2.840.113549.1.1.10)
+   in the public key's DER — a byte search, not ASN.1 parsing; without
+   it the Adobe fixture's leaf was `.invalid` ("key of type other"). No
+   criterion's outcome changed.
 
 ## Traceability
 
@@ -354,13 +367,13 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
+| AC1 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC1: the control: good and eku-c2pa pass the profile, and the four fixtures with the full settings stay Trusted / SPEC-015 | src/Trust/CertificateProfileCheck.php :: check(), checkLeaf(); src/Trust/Certificate.php :: $extendedKeyUsage (ekuOids); src/Verifier/Verifier.php :: check() (`certificate`) |
+| AC2 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC2: one departure, one signingCredential.invalid, the state Invalid, as c2patool / SPEC-015 | src/Trust/CertificateProfileCheck.php :: checkLeaf(), keyFaults(), ekuFaults() |
+| AC3 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC3: expired: its own code, and the time used is named / SPEC-015 | src/Trust/CertificateProfileCheck.php :: checkLeaf() (rule 3, $at); src/Report/StatusCode.php :: SigningCredentialExpired |
+| AC4 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC4: KeyUsage as c2pa-rs keeps it / SPEC-015 | src/Trust/CertificateProfileCheck.php :: checkLeaf() (rule 6); src/Trust/Certificate.php :: $keyUsage, fromParsed() |
+| AC5 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC5: the EKU list is the built-in six plus trust_config, never fewer / SPEC-015 | src/Trust/CertificateProfileCheck.php :: BUILT_IN_EKUS, ekuFaults() |
+| AC6 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC6: the rules the variants cannot show, on hand-built parse data / SPEC-015 | src/Trust/Certificate.php :: fromParsed(), $version, $signatureAlgorithm, $curve, $hasAuthorityKeyIdentifier; src/Trust/CertificateProfileCheck.php :: checkLeaf() (rules 2, 4, 5, 7, 8) |
+| AC7 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC7: signature_info is c2patool's / SPEC-015 | src/Verifier/Verifier.php :: signatureInfo(); src/Verifier/VerificationReport.php :: $signatureInfo, toArray(); src/Trust/Certificate.php :: $organization, $serialDecimal, hexToDecimal() |
+| AC8 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC8: the profile is checked always; the two checks are independent / SPEC-015 | src/Verifier/Verifier.php :: check() (certificate always; trust without settings → no anchors) |
+| AC9 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC9: M5's "done when": with and without the trust file, the verdicts are c2patool's / SPEC-015 | src/Verifier/Verifier.php :: check(); src/Trust/ChainCheck.php; src/Trust/CertificateProfileCheck.php |
+| AC10 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC10: the codes are verbatim, and the drift alarm grows / SPEC-015 | src/Report/StatusCode.php :: SigningCredentialExpired; tests/Pest.php :: SPEC013_CORPUS |

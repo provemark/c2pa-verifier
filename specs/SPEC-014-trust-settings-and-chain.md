@@ -350,6 +350,10 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
   certificates, the comparison moves to the DER of the Name; measured
   then.
 
+## Amendments
+
+1. **2026-09-21, step 35, found by SPEC-015 AC9** — without settings the trust check runs with no anchors and no allowed list and says `signingCredential.untrusted` ("no trust anchors configured"), as c2patool does on every file without a trust file (`png.json` of step 14, `good-no-settings.json` of step 34a); only `verify_trust: false` keeps it silent. AC6's "the same call with no settings at all gives the same report" was wrong against the oracle and now reads: no settings → `untrusted` and `trust` in `checksPerformed`; `verify-off` → nothing. `checksPerformed` also carries SPEC-015's `certificate` before `trust` (AC1). The exact enum count in AC10's test is left to SPEC-015 AC10.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

@@ -8,7 +8,7 @@ namespace Provemark\C2paVerifier\Report;
  * The status codes of C2PA 2.4 §15.2.2 this verifier can emit, verbatim
  * (SPEC-010; SPEC-011 adds the three assertion.hashedURI / undeclared
  * codes, SPEC-012 the six of the data hash, SPEC-014 the two of the
- * signing credential's trust). No word of our own: a case enters here only
+ * signing credential's trust, SPEC-015 signingCredential.expired). No word of our own: a case enters here only
  * through the spec that emits it. Success, informational and failure are
  * the table's three kinds: the successes are claimSignature.validated,
  * assertion.hashedURI.match, assertion.dataHash.match and
@@ -39,6 +39,7 @@ enum StatusCode: string
     case AssertionMultipleHardBindings = 'assertion.multipleHardBindings';
     case SigningCredentialTrusted = 'signingCredential.trusted';
     case SigningCredentialUntrusted = 'signingCredential.untrusted';
+    case SigningCredentialExpired = 'signingCredential.expired';
     case GeneralError = 'general.error';
 
     public function isSuccess(): bool

@@ -129,7 +129,7 @@ it('AC1: the four fixtures with the full settings: Trusted, and the words are c2
     foreach (['jpg' => 'fixture-signed.jpg', 'png' => 'fixture-signed.png', 'webp' => 'fixture-signed.webp', 'adobe-20220124-C' => 'public-testfiles/adobe-20220124-C.jpg'] as $name => $fixture) {
         $report = spec014Verify($fixture, $full);
         $credential = spec014Credential($report);
-        expect($report->result->checksPerformed)->toBe(['signature', 'trust', 'hashedUris', 'dataHash'], $name)
+        expect($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $name)
             ->and($credential)->toHaveCount(1, $name)
             ->and($credential[0]->code)->toBe(StatusCode::SigningCredentialTrusted, $name)
             ->and($credential[0]->url)->toBe("self#jumbf=/c2pa/{$report->store?->active->label}/c2pa.signature", $name)
@@ -230,12 +230,17 @@ it('AC5: no trust by name', function (): void {
 it('AC6: verify_trust off: no credential code at all', function (): void {
     $off = spec014Verify('fixture-signed.png', spec014Settings('verify-off'));
     expect(spec014Credential($off))->toBe([])
-        ->and($off->result->checksPerformed)->toBe(['signature', 'hashedUris', 'dataHash'])
+        ->and($off->result->checksPerformed)->toBe(['signature', 'certificate', 'hashedUris', 'dataHash'])
         ->and($off->result->state)->toBe(ValidationState::Valid)
         ->and(spec014Oracle('png-verify-off')['validation_state'])->toBe('Valid');
 
+    // no settings is not verify_trust off: with no anchors the leaf is untrusted, as c2patool says (SPEC-014 amendment 1)
     $none = spec014Verify('fixture-signed.png', null);
-    expect($off->toArray())->toBe($none->toArray());
+    expect(spec014Credential($none))->toHaveCount(1)
+        ->and(spec014Credential($none)[0]->code)->toBe(StatusCode::SigningCredentialUntrusted)
+        ->and(spec014Credential($none)[0]->explanation)->toContain('no trust anchors')
+        ->and($none->result->checksPerformed)->toContain('trust')
+        ->and($none->result->state)->toBe(ValidationState::Valid);
 })->group('SPEC-014');
 
 it('AC7: the settings are whole or absent', function (): void {
@@ -290,7 +295,7 @@ it('AC8: the second oracle: OpenSSL agrees with the walk', function (): void {
             $chain = $report->store?->active;
             assert($chain !== null);
             $cose = CoseSign1::fromBytes($chain->signatureBytes());
-            $certs = array_map(static fn ($c): Certificate => new Certificate($c->bytes), $cose->chain);
+            $certs = array_map(static fn ($c): Certificate => Certificate::fromDer($c->bytes), $cose->chain);
             $leafPem = spec014Pem($certs[0]);
             file_put_contents($untrusted, implode('', array_map(static fn (Certificate $c): string => spec014Pem($c), array_slice($certs, 1))));
 
@@ -331,7 +336,7 @@ it('AC9: the three states are told apart by the rule, on paper and on files', fu
 
 it('AC10: the codes are verbatim, and the drift alarm grows', function (): void {
     $values = array_map(static fn (StatusCode $c): string => $c->value, StatusCode::cases());
-    expect($values)->toHaveCount(23)
+    expect($values)->toContain('signingCredential.trusted')   // the exact count is SPEC-015 AC10's since it added signingCredential.expired
         ->and($values)->toContain('signingCredential.trusted')
         ->and($values)->toContain('signingCredential.untrusted')
         ->and(StatusCode::SigningCredentialTrusted->isSuccess())->toBeTrue()
