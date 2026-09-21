@@ -71,7 +71,7 @@ specifying is the tool that enforces exactly that.
 | 12 | Sixteen CBOR values recorded (`tests/Fixtures/cbor/*.json`); four claim-level faults through c2patool (`bin/make-cbor-vectors.php`) — `notes/step-12-cbor-vectors.md` | done 2026-09-21 |
 | SPEC-006 | CBOR: the measured subset, definite lengths only, fail closed on the rest | implemented 2026-09-21: 16 tests red → green, 106 in all — step 13 |
 | 14 | c2patool's JSON recorded (`tests/Fixtures/c2patool/`); fifteen claim variants through c2patool (`bin/make-claim-variants.php`) — `notes/step-14-claim-variants.md` | done 2026-09-21 |
-| SPEC-007 | Claim v1 and v2, assertion store, `claim_generator_info`, the JSON view for the sister library | approved 2026-09-21; red tests next |
+| SPEC-007 | Claim v1 and v2, assertion store, `claim_generator_info`, the JSON view for the sister library | approved 2026-09-21; 14 tests seen red; `provemark/content-credentials` ^0.15 as require-dev; implementation next |
 
 ## After M0
 

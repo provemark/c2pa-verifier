@@ -26,7 +26,8 @@
         "deptrac/deptrac": "^4.7",
         "laravel/pint": "^1.32",
         "pestphp/pest": "^4.0",
-        "phpstan/phpstan": "^2.2"
+        "phpstan/phpstan": "^2.2",
+        "provemark/content-credentials": "^0.15"
     },
     "suggest": {
         "ext-sodium": "Ed25519 signature verification (opt-in; not available on every host)"

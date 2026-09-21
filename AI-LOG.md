@@ -1115,3 +1115,31 @@ README are where the disclosure lives.
   8.3 / 8.4 / 8.5 each `success` with `Tests: 106 passed`; `all green`
   `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — The SPEC-007 tests, seen red; the sister library as a dev dependency
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "maak alle tests".
+- Produced: `composer require --dev provemark/content-credentials:^0.15`
+  (v0.15.1 locked, plus `php-http/discovery` 1.20.0 and three PSR
+  interface packages it pulls in; `composer.lock` is gitignored, so only
+  `composer.json` changed); `tests/Unit/Manifest/ManifestStoreTest.php`,
+  14 tests for 14 criteria; `docs/milestones.md` row; this entry. No
+  `src/` change.
+- Measured: the install (above); the sister parser reads the recorded
+  c2patool JSON of the PNG — `hasManifest` true, `isAiGenerated` false,
+  `digitalSourceTypes` `[…/algorithmicMedia]`, `declaredSpecVersion` null
+  — so AC6's oracle side works before our side exists;
+  `vendor/bin/pest --group=SPEC-007` → **14 failed**, every one on
+  `Class "Provemark\C2paVerifier\Manifest\ManifestStore" not found`;
+  `spec-check` `OK: 8 spec(s), 8 test file(s)`; PHPStan findings all
+  downstream of the missing classes; `composer check` red on those, as
+  intended.
+- Reasoned: the message phrases (`claim (version 2) is missing the
+  required field signature`, `… does not resolve to a box`, `… is not in
+  the assertion store`, `… resolves to an unknown box (UUID ffffffff-…)`,
+  `hashed URI …: hash is text, not a byte string`, `manifest …: 2 claim
+  boxes, expected one`, `the store holds no manifest`, `assertion
+  stds.schema-org.CreativeWork: invalid JSON`); the AC6 accessor list from
+  the sister's `spec019Accessors()` restricted to what M2 knows.
+- Decided by Maurice: Claude writes all the tests; the dev dependency
+  (decided earlier today).
