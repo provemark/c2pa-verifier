@@ -1393,3 +1393,12 @@ README are where the disclosure lives.
   to CI.
 - Decided by Maurice: do the measurement step. SPEC-009 now awaits his
   approval.
+
+## 2026-09-21 — SPEC-009 approved; push
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "goedgekeurd, push maar en lees de CI-run".
+- Produced: SPEC-009 → `approved`; `docs/milestones.md` row; this entry;
+  pushed `f5a8d3a`, `ab26a17` and this commit to `origin/main`.
+- Measured: before the push, 0 attribution lines and no tracked `*.key`;
+  `spec-check` `OK: 10 spec(s), 9 test file(s)`. The CI run: next entry.
+- Decided by Maurice: SPEC-009 approved as drafted after step 19.
