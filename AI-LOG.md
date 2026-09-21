@@ -1995,3 +1995,15 @@ README are where the disclosure lives.
   raise it upstream is Maurice's call.
 - Decided by Maurice: step 29 as explained. Amendment 2 for his
   confirmation.
+
+## 2026-09-21 — CI green on SPEC-013
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `465743a..abadd04` (six commits) to `origin/main`;
+  this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`,
+  `gh repo view --json visibility` → `PRIVATE`. Run `35634988650` on
+  `abadd04`: conclusion `success`; PHP 8.3 / 8.4 / 8.5 each `success`
+  with `Tests: 183 passed` (1640 assertions on 8.3, 1642 on 8.4/8.5);
+  `all green` `success`.
+- Decided by Maurice: push; then the M5 measurement step.
