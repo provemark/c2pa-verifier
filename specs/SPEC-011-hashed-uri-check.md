@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-21                      |
 | Supersedes | —                                                 |
@@ -333,13 +333,13 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
+| AC1 | tests/Unit/Hash/HashedUriCheckTest.php :: AC1: the four fixtures: every entry matches, and the urls are c2patool's / SPEC-011 | src/Hash/HashedUriCheck.php :: check(), entry(); src/Report/ValidationResult.php :: fromStatuses() |
+| AC2 | tests/Unit/Hash/HashedUriCheckTest.php :: AC2: the assertion changed, the claim not: assertion.hashedURI.mismatch on that entry alone / SPEC-011 | src/Hash/HashedUriCheck.php :: entry() (hash_equals) |
+| AC3 | tests/Unit/Hash/HashedUriCheckTest.php :: AC3: the claim's hash changed: mismatch, and the check goes on / SPEC-011 | src/Hash/HashedUriCheck.php :: check() (every entry, in claim order) |
+| AC4 | tests/Unit/Hash/HashedUriCheckTest.php :: AC4: a digest of the wrong length is a mismatch, not an error / SPEC-011 | src/Hash/HashedUriCheck.php :: entry() (ALGORITHMS digest lengths) |
+| AC5 | tests/Unit/Hash/HashedUriCheckTest.php :: AC5: a box the claim does not name: assertion.undeclared / SPEC-011 | src/Hash/HashedUriCheck.php :: check() (Superbox not in $resolved, identity); src/Manifest/Manifest.php :: $assertionStore (amendment 2) |
+| AC6 | tests/Unit/Hash/HashedUriCheckTest.php :: AC6: an unknown box in the store is undeclared too / SPEC-011 | src/Hash/HashedUriCheck.php :: check() (UnknownBox); deptrac.yaml (Hash → Jumbf) |
+| AC7 | tests/Unit/Hash/HashedUriCheckTest.php :: AC7: the algorithm: the entry's, else the claim's, else unsupported / SPEC-011 | src/Hash/HashedUriCheck.php :: entry() ($entry->alg ?? $claim->alg, ALGORITHMS) |
+| AC8 | tests/Unit/Hash/HashedUriCheckTest.php :: AC8: redactions are refused until M7 / SPEC-011 | src/Hash/HashedUriCheck.php :: check() (redacted_assertions → GeneralError) |
+| AC9 | tests/Unit/Hash/HashedUriCheckTest.php :: AC9: the codes are verbatim, and success is told apart / SPEC-011 | src/Report/StatusCode.php :: AssertionHashedUriMatch, AssertionHashedUriMismatch, AssertionUndeclared, isSuccess() |
+| AC10 | tests/Unit/Hash/HashedUriCheckTest.php :: AC10: a ManifestException inside the check becomes its status, never escapes / SPEC-011 | src/Hash/HashedUriCheck.php :: checkEntry(), entry() (catch ManifestException → $e->status) |

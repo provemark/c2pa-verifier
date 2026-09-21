@@ -75,6 +75,7 @@ deptrac:
       - Manifest
       - Cbor
       - Report
+      - Jumbf          # SPEC-011: Superbox::payload(), UnknownBox
     Trust:
       - Manifest
       - Report

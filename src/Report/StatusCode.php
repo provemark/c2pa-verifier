@@ -6,9 +6,11 @@ namespace Provemark\C2paVerifier\Report;
 
 /**
  * The status codes of C2PA 2.4 §15.2.2 this verifier can emit, verbatim
- * (SPEC-010). No word of our own: a case enters here only through the spec
+ * (SPEC-010; SPEC-011 adds the three assertion.hashedURI / undeclared
+ * codes). No word of our own: a case enters here only through the spec
  * that emits it. Success, informational and failure are the table's three
- * kinds; of the codes below only claimSignature.validated is a success.
+ * kinds; of the codes below claimSignature.validated and
+ * assertion.hashedURI.match are the successes.
  */
 enum StatusCode: string
 {
@@ -23,11 +25,14 @@ enum StatusCode: string
     case ClaimMalformed = 'claim.malformed';
     case AssertionJsonInvalid = 'assertion.json.invalid';
     case AssertionMissing = 'assertion.missing';
+    case AssertionHashedUriMatch = 'assertion.hashedURI.match';
+    case AssertionHashedUriMismatch = 'assertion.hashedURI.mismatch';
+    case AssertionUndeclared = 'assertion.undeclared';
     case GeneralError = 'general.error';
 
     public function isSuccess(): bool
     {
-        return $this === self::ClaimSignatureValidated;
+        return $this === self::ClaimSignatureValidated || $this === self::AssertionHashedUriMatch;
     }
 
     public function isInformational(): bool

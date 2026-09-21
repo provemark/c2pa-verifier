@@ -384,6 +384,10 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
    `assertion.missing`, `assertion.json.invalid`; `general.error` where
    §15 has no word. No criterion of this spec changed; the exception
    messages are as they were.
+2. **2026-09-21, defined in SPEC-011 and approved with it** —
+   `Manifest::$assertionStore` is public (`readonly` as the rest), so
+   that a check can walk the store's children, `Superbox` and
+   `UnknownBox` alike. No criterion of this spec changed.
 
 ## Traceability
 

@@ -25,14 +25,14 @@ final readonly class Manifest
     private const URI_PREFIX = 'self#jumbf=';
 
     /**
-     * @param  array<string, Assertion>  $assertions  by label, in store order
+     * @param  array<string, Assertion>  $assertions  by label, in store order; $assertionStore is the superbox itself, unknown boxes included (SPEC-007 amendment 2, for SPEC-011)
      */
     private function __construct(
         public string $label,
         public Claim $claim,
         public array $assertions,
         public Superbox $box,
-        private Superbox $assertionStore,
+        public Superbox $assertionStore,
         private Superbox $claimBox,
         private Superbox $signatureBox,
     ) {}

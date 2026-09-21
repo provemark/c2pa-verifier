@@ -339,6 +339,16 @@ already); `Cose` may see `Manifest` (the arrow exists, unused until now).
   treat it as untrusted text (it already is hex-only for file bytes).
   Non-blocker.
 
+## Amendments
+
+1. **2026-09-21, with SPEC-011's implementation** — `StatusCode` grew by
+   `assertion.hashedURI.match`, `assertion.hashedURI.mismatch` and
+   `assertion.undeclared`, as the Scope foresaw ("new codes enter through
+   the spec that emits them"). AC10's test now asserts that the twelve
+   codes of this spec are present and that `claimSignature.validated` is
+   the only success *among them*; the exact set of fifteen and the second
+   success are SPEC-011 AC9's. No criterion changed.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

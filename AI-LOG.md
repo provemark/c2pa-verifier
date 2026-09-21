@@ -1745,3 +1745,24 @@ README are where the disclosure lives.
   twelve values and will go red when SPEC-011 adds three; it is updated
   in the implementation commit, where the enum changes.
 - Decided by Maurice: step 24b as explained.
+
+## 2026-09-21 — Step 25: SPEC-011 implemented, the hashed-URI check
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met stap 25".
+- Produced: `src/Hash/HashedUriCheck.php` (`check()`, `checkEntry()`,
+  private `entry()`); `src/Report/StatusCode.php` (+3 cases,
+  `isSuccess()` for two); `src/Manifest/Manifest.php` (`$assertionStore`
+  public — SPEC-007 amendment 2, recorded there); `deptrac.yaml` (`Hash`
+  → `Jumbf`); `tests/Unit/Report/ReportTest.php` AC10 (the twelve
+  present, the exact fifteen left to SPEC-011 AC9 — SPEC-010 amendment
+  1, recorded there); SPEC-011 → `implemented` with Traceability;
+  `notes/step-25-hashed-uri-check.md`, `NOTES.md`, `docs/milestones.md`,
+  this entry.
+- Measured: `composer check` → Pint passed, PHPStan `[OK] No errors`,
+  Deptrac `Violations 0, Allowed 147`, Pest `163 passed (1101
+  assertions)` — the ten SPEC-011 tests green on the first run after
+  being red in step 24b; `bin/spec-check.php` → `OK: 12 spec(s), 12 test
+  file(s)`. / Reasoned: identity rather than label for "undeclared";
+  `hash_equals` as habit; the digests in the explanation as the added
+  value over c2patool's line.
+- Decided by Maurice: step 25 as explained.
