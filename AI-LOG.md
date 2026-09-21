@@ -1296,3 +1296,26 @@ README are where the disclosure lives.
   8.3 / 8.4 / 8.5 each `success` with `Tests: 120 passed`; `all green`
   `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — The SPEC-008 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "maak alle tests".
+- Produced: `tests/Unit/Cose/CoseSign1Test.php`, 12 tests for 12 criteria,
+  with helpers that reach a fixture's or a variant's active manifest
+  through SPEC-005/007, read a certificate's CN with `openssl_x509_parse`,
+  and build synthetic COSE_Sign1 bytes for the limit case;
+  `docs/milestones.md` row; this entry. No `src/` change.
+- Measured: `vendor/bin/pest --group=SPEC-008` → **12 failed**, every one
+  on `Class "Provemark\C2paVerifier\Cose\CoseSign1" not found`;
+  `spec-check` `OK: 9 spec(s), 9 test file(s)`.
+- Reasoned: the message phrases (`expected tag 18 (COSE_Sign1_Tagged),
+  found tag 19` / `found an untagged array`; `expected four items, found
+  3`; `the payload must be detached (nil); an empty byte string does not
+  count`; `the protected header is not a map`; `the protected header has
+  no alg (label 1)`; `alg under the string label "alg" is not allowed`;
+  `no x5chain in either header bucket`; `the leaf certificate is not an
+  X.509 certificate`; `x5chain is empty`; `chain of 3 certificates
+  exceeds the limit of 2`; `certificate of 20000 bytes exceeds the limit
+  of 16384`); AC6 checks the encoder both by its bytes and by decoding
+  the result with SPEC-006.
+- Decided by Maurice: Claude writes all the tests.
