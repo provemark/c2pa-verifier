@@ -83,7 +83,7 @@ specifying is the tool that enforces exactly that.
 | SPEC-008 | COSE_Sign1: structure, headers, `x5chain`, the `Sig_structure` | implemented 2026-09-21: 12 tests red → green, 132 in all — step 18 |
 | 19 | Fourteen signature vectors (`bin/make-signature-vectors.php`, `tests/Fixtures/signatures/`), the P-521 DER bug and the PSS-parameter refusal found — `notes/step-19-signature-vectors.md` | done 2026-09-21 |
 | SPEC-009 | Signature verification per algorithm, key-fits-algorithm | implemented 2026-09-21: 11 tests red → green, 143 in all — step 20 |
-| SPEC-010 | `Report`: `claimSignature.validated` / `.mismatch`, `assertion.json.invalid` | — |
+| SPEC-010 | `Report`: the §15 codes for the claim signature and the Manifest layer's faults, verbatim; a partial report that names its checks | draft 2026-09-21; c2patool JSON for three variants before approval |
 
 ## After M0
 

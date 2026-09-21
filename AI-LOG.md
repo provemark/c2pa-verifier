@@ -1522,3 +1522,27 @@ README are where the disclosure lives.
   other package came from the restored archive cache. From this run on,
   our CI no longer counts as downloads on Packagist.
 - Decided by Maurice: push.
+
+## 2026-09-21 — SPEC-010 (draft): the report, status codes verbatim
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "leg SPEC-010 uit", then "akkoord, alle drie zoals je adviseert,
+  schrijf SPEC-010 als draft".
+- Produced: `specs/SPEC-010-report-claim-signature.md`, status `draft`,
+  10 criteria, with SPEC-007 amendment 1 and SPEC-008/009 amendment 1
+  (status codes on the exceptions) defined inside it; `docs/milestones.md`
+  row; this entry. No code, no tests.
+- Measured: C2PA 2.4 §15.2.2's table rows for the twelve codes (meaning
+  and box) and §15.6/§15.7's procedure read from the downloaded text;
+  c2patool's recorded PNG JSON: `validation_status` holds failures and
+  informational only, successes sit under
+  `validation_results.activeManifest.success`, each `{code, url,
+  explanation}`, url `self#jumbf=/c2pa/<label>/c2pa.signature`; and the
+  PNG carries the failure `signingCredential.untrusted` with state
+  `Valid` — kept for M5; the sister parser reads `validation_status[].code`.
+  `spec-check` `OK: 11 spec(s), 10 test file(s)`; `composer check` exit 0.
+- Reasoned: the exception-to-code table; `general.error` only where §15
+  has no word; an empty report is `Invalid`; `checks_performed` as the
+  one key c2patool lacks, so a partial report cannot pass for a verdict.
+- Decided by Maurice: key-does-not-fit → `signingCredential.invalid`;
+  structural COSE faults → `general.error` with the message; `Valid`
+  stays internal until the Verifier layer's spec, with the checks named.
