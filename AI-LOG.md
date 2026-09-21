@@ -838,3 +838,14 @@ README are where the disclosure lives.
   messages read as "read past the fault" without opening `jumbf_io.rs`.
 - Decided by Maurice: do the measurement step. SPEC-005 now awaits his
   approval.
+
+## 2026-09-21 — SPEC-005 approved; push
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "goedgekeurd, push maar en lees de CI-run".
+- Produced: SPEC-005 → `approved`; `docs/milestones.md` row; this entry;
+  pushed `7cc1a1c`, `a8a7efb` and this commit to `origin/main`.
+- Measured: before the push, 0 attribution lines and no tracked file
+  matching `key`; `spec-check` `OK: 6 spec(s), 5 test file(s)`. The CI
+  run: see the next entry.
+- Decided by Maurice: SPEC-005 approved as drafted after step 10, with the
+  two non-blocking open questions left open.
