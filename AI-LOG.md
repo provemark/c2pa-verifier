@@ -1726,3 +1726,22 @@ README are where the disclosure lives.
   confirmed as the fail-closed choice because c2patool does not notice a
   "redacted" box that is still present.
 - Decided by Maurice: step 24a as explained.
+
+## 2026-09-21 — Step 24b: the SPEC-011 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 24b".
+- Produced: `tests/Unit/Hash/HashedUriCheckTest.php` — ten tests, one per
+  criterion, `->group('SPEC-011')`, own helpers (`spec011*`), the c2patool
+  JSONs of steps 14/23/24 as oracle for code and url; AC10 uses a
+  `checkEntry(Manifest, HashedUri)` seam, the counterpart of SPEC-010's
+  `checkBytes()`; `docs/milestones.md`, this entry. No `src/` change.
+- Measured: `vendor/bin/pest --group=SPEC-011` → `10 failed (8
+  assertions)`: nine `Class "Provemark\C2paVerifier\Hash\HashedUriCheck"
+  not found`, AC9 `Failed asserting that two arrays are identical` (the
+  enum has twelve cases, not fifteen). `composer check`: Pint passes,
+  PHPStan reports only consequences of the missing class and the three
+  missing enum cases; `bin/spec-check.php` → `OK: 12 spec(s), 12 test
+  file(s)`. / Reasoned: SPEC-010's AC10 test asserts the enum's exact
+  twelve values and will go red when SPEC-011 adds three; it is updated
+  in the implementation commit, where the enum changes.
+- Decided by Maurice: step 24b as explained.
