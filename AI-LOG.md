@@ -1270,3 +1270,12 @@ README are where the disclosure lives.
   oracle.
 - Decided by Maurice: do the measurement step. SPEC-008 now awaits his
   approval.
+
+## 2026-09-21 — SPEC-008 approved; push
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "goedgekeurd, push maar en lees de CI-run".
+- Produced: SPEC-008 → `approved`; `docs/milestones.md` row; this entry;
+  pushed `63439f8`, `550d490` and this commit to `origin/main`.
+- Measured: before the push, 0 attribution lines and no tracked `*.key`;
+  `spec-check` `OK: 9 spec(s), 8 test file(s)`. The CI run: next entry.
+- Decided by Maurice: SPEC-008 approved as drafted after step 17.
