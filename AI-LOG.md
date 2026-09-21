@@ -1411,3 +1411,24 @@ README are where the disclosure lives.
   8.3 / 8.4 / 8.5 each `success` with `Tests: 132 passed`; `all green`
   `success`. The vector script passes PHPStan and Pint on all three.
 - Decided by Maurice: push.
+
+## 2026-09-21 — The SPEC-009 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "maak alle tests".
+- Produced: `tests/Unit/Cose/SignatureVerifierTest.php`, 11 tests for 11
+  criteria, with helpers that load a vector's JSON into a `CoseSign1`
+  through SPEC-008 (`d2 84 <protected> a0 f6 <signature>`), flip a claim
+  byte, and reach the fixtures and `cose/` variants through SPEC-005/007;
+  `docs/milestones.md` row; this entry. No `src/` change.
+- Measured: `vendor/bin/pest --group=SPEC-009` → **11 failed**, on
+  `Class "Provemark\C2paVerifier\Cose\SignatureVerifier"` (9) and
+  `EcdsaSignature` (1) `not found` — the vectors themselves parse through
+  `CoseSign1::fromBytes()` before the missing class is reached;
+  `spec-check` `OK: 10 spec(s), 10 test file(s)`.
+- Reasoned: the message phrases (`key does not fit ES256 (alg -7): EC key
+  on secp256k1 … §13.2.1`, `alg -65535 is not supported`, `EdDSA cannot
+  be verified: neither ext-sodium nor OpenSSL Ed25519 …`); AC8 tests the
+  OpenSSL-only Ed25519 path as `true` — CI on PHP 8.3/8.4 is the
+  measurement of whether that holds there; AC10 tests `EcdsaSignature::toDer`
+  directly, including the P-521 long form.
+- Decided by Maurice: Claude writes all the tests.

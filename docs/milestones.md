@@ -82,7 +82,7 @@ specifying is the tool that enforces exactly that.
 | 17 | Eleven structural COSE variants through c2patool (`bin/make-cose-variants.php`) — `notes/step-17-cose-variants.md` | done 2026-09-21 |
 | SPEC-008 | COSE_Sign1: structure, headers, `x5chain`, the `Sig_structure` | implemented 2026-09-21: 12 tests red → green, 132 in all — step 18 |
 | 19 | Fourteen signature vectors (`bin/make-signature-vectors.php`, `tests/Fixtures/signatures/`), the P-521 DER bug and the PSS-parameter refusal found — `notes/step-19-signature-vectors.md` | done 2026-09-21 |
-| SPEC-009 | Signature verification per algorithm, key-fits-algorithm | approved 2026-09-21; red tests next |
+| SPEC-009 | Signature verification per algorithm, key-fits-algorithm | approved 2026-09-21; 11 tests seen red; implementation next |
 | SPEC-010 | `Report`: `claimSignature.validated` / `.mismatch`, `assertion.json.invalid` | — |
 
 ## After M0
