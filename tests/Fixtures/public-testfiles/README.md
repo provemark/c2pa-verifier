@@ -25,3 +25,23 @@ SHA-256 of the file as committed:
 More of the set (`CA`, `CAI` with ingredients; `E-sig-`, `E-dat-`, `E-uri-`,
 `E-clm-` error classes) is added when M3, M4 and M7 need it, each with its
 measured c2patool result here.
+
+## Added 2026-09-21 (step 36): the whole legacy JPEG set
+
+The other 25 JPEGs of `legacy/1.4/image/jpeg/` at the same commit, copied
+unchanged (the repository's own `README.md` there gives each file's
+expected verdict; the naming: **C** created, **A** action, **I**
+ingredient, **E-sig** / **E-dat** / **E-uri** / **E-clm** a deliberate
+fault in the signature / hard binding / an assertion's hashed URI / a
+referenced claim, **X** a hash mismatch; `A` and `I` carry no manifest).
+Together 20 MB, of which the three Truepic camera files are 10 MB.
+c2patool 0.27.22's JSON for every one, with the full test trust
+settings, is under `../c2patool/public-testfiles/`.
+
+What they added on first contact (`notes/step-36-public-testfiles.md`):
+four camera files carry CBOR floats (`stds.exif`, Truepic odometry)
+that SPEC-006 refused; nine files hold more than one manifest, and one
+of them (`E-uri-CIE-sig-CA`) is tampered only in an *ingredient*
+manifest — which this verifier does not validate until M7, so a store
+with more than one manifest is `Invalid` until then (SPEC-013 amendment
+5, Maurice's decision).

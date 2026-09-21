@@ -111,6 +111,12 @@ specifying is the tool that enforces exactly that.
 | 34a | The deferred measurements: the profile is checked without settings and with `verify_trust` off, and independently of the chain (`expired` + wrong anchor → both codes) — SPEC-015 amendment 1 (`certificate` always, after the signature) | done 2026-09-21 |
 | 34b | The ten SPEC-015 tests (`tests/Unit/Trust/CertificateProfileCheckTest.php`), seen red on the missing `CertificateProfileCheck`, `Certificate::fromParsed()`, `signingCredential.expired`, `signature_info` and the `certificate` check; AC9 also exposes that without settings this verifier says nothing where c2patool says `untrusted` — to be settled in step 35 as SPEC-014 amendment 1 | done 2026-09-21 |
 | SPEC-015 | (the row above) | implemented 2026-09-21: 10 tests red → green, 203 in all; amendments 1–2; SPEC-014 amendment 1, SPEC-013 amendment 4 — step 35. **M5 complete** |
+
+## Between M5 and M6: the official test files
+
+| Step | What | Status |
+|---|---|---|
+| 36 | The 26 JPEGs of `c2pa-org/public-testfiles` (`legacy/1.4/image/jpeg/`) as fixtures with c2patool's JSON; 20 of 26 states equal on first contact; two findings — floats (SPEC-006) and ingredient manifests (SPEC-013, fail closed until M7) — `notes/step-36-public-testfiles.md` | done 2026-09-21 |
 | 31a | `x5chain-leaf-only` (protected header shortened, pad grown, store length kept) and two settings variants made (`bin/make-trust-variants.php`) and measured through c2patool — `notes/step-31-trust-variants.md` | done 2026-09-21 |
 | 31b | The ten SPEC-014 tests (`tests/Unit/Trust/ChainCheckTest.php`), seen red: eight on the missing `Trust\TrustSettings`, AC9 on the missing enum case, AC10 on the enum holding twenty-one codes; `SPEC013_CORPUS` moved to `tests/Pest.php`, shared | done 2026-09-21 |
 

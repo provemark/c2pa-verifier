@@ -2329,3 +2329,27 @@ README are where the disclosure lives.
   hierarchy's certificates and the OpenSSL-name EKU table hold on the
   CI runner's OpenSSL too; `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — Step 36: the official test files
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "wat er nu staat, kan dat goed getest worden met andere
+  fixtures die online te vinden zijn" — then "akkoord, en optie 1: fail
+  closed tot M7".
+- Produced: 25 JPEGs added to `tests/Fixtures/public-testfiles/`
+  (README extended), 24 JSONs under `tests/Fixtures/c2patool/public-testfiles/`
+  (README), `notes/step-36-public-testfiles.md`, `NOTES.md`,
+  `docs/milestones.md`, this entry. No `src/` change, no test.
+- Measured: `c2pa-org/public-testfiles` at `22beccc07570` — `2.2/` is
+  placeholders, `legacy/1.4/image/jpeg/` holds 26 files (licence
+  CC-BY-SA-4.0 per the GitHub API); all 26 through `Verifier::verify()`
+  with `trust/full.settings.json` and through `c2patool 0.27.22` with
+  the same settings: 20 of 26 states equal; the six differences: two
+  files without a manifest (designed), four camera files refused at
+  parse (`invalid CBOR: float … is not supported` in `stds.exif` and
+  `com.truepic.custom.odometry`), one `Trusted` on `E-uri-CIE-sig-CA`
+  whose fault is in an ingredient manifest. Manifest counts per file
+  from the JSON (1–6). / Reasoned: floats decode without touching any
+  hash (SPEC-006 amendment next); the multi-manifest rule as the
+  fail-closed interim.
+- Decided by Maurice: the 26 files as fixtures; a store with more than
+  one manifest is `Invalid` until M7 (option 1).
