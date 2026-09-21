@@ -104,6 +104,7 @@ specifying is the tool that enforces exactly that.
 | Step | What | Status |
 |---|---|---|
 | 30 | Trust measured: the certificates, the fixtures' chains, c2patool under nine settings (`tests/Fixtures/trust/`, `tests/Fixtures/c2patool/trusted/`), c2pa-rs's trust and profile checks read from source, `ext-openssl`'s reach — `notes/step-30-trust-measured.md` | done 2026-09-21 |
+| ADR-0003 | X.509 chain and profile written here on `ext-openssl` (no `phpseclib`, no temp files, no `checkpurpose` except as a second oracle); allowed list first; the EKU list as c2pa-rs keeps it (Maurice: option a); RFC 3161 open until M6 | draft 2026-09-21 |
 
 ## After M0
 

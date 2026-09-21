@@ -2039,3 +2039,17 @@ README are where the disclosure lives.
 - Decided by Maurice: the measurement step as explained. Open for him:
   the EKU list — mirror c2pa-rs (additive) or `trust_config` as the
   list when present.
+
+## 2026-09-21 — ADR-0003 draft: X.509 on ext-openssl
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "optie a, en schrijf ADR-0003 als draft".
+- Produced: `docs/adr/ADR-0003-x509-on-ext-openssl.md` (draft), the row
+  in `docs/milestones.md`, this entry. No `src/` change.
+- Measured: nothing new — the ADR rests on step 30. / Reasoned: the
+  decision (own chain walk on `openssl_x509_verify`, allowed list first,
+  the §14.5 profile from `openssl_x509_parse`, `checkpurpose` only as a
+  second oracle in tests, `phpseclib` not for M5, RFC 3161 open until
+  M6); the two-spec split (SPEC-014 chain and settings, SPEC-015
+  profile); the consequences for `ValidationState`, `signature_info`
+  and `validation_status`.
+- Decided by Maurice: the EKU list as c2pa-rs keeps it (option a).
