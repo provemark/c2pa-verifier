@@ -1402,3 +1402,12 @@ README are where the disclosure lives.
 - Measured: before the push, 0 attribution lines and no tracked `*.key`;
   `spec-check` `OK: 10 spec(s), 9 test file(s)`. The CI run: next entry.
 - Decided by Maurice: SPEC-009 approved as drafted after step 19.
+
+## 2026-09-21 — CI green after SPEC-009's approval
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (same request) read the CI run.
+- Produced: this entry.
+- Measured: run `35580128105` on `ebb50671`: conclusion `success`; PHP
+  8.3 / 8.4 / 8.5 each `success` with `Tests: 132 passed`; `all green`
+  `success`. The vector script passes PHPStan and Pint on all three.
+- Decided by Maurice: push.
