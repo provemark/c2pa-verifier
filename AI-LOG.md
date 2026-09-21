@@ -2258,3 +2258,29 @@ README are where the disclosure lives.
   entry in `checks_performed`.
 - Decided by Maurice: step 34a as explained. Amendment 1 made under the
   spec's Open question, for his confirmation.
+
+## 2026-09-21 — Step 34b: the SPEC-015 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 34b".
+- Produced: `tests/Unit/Trust/CertificateProfileCheckTest.php` — ten
+  tests, one per criterion, `->group('SPEC-015')`; AC4/AC6 use a
+  `Certificate::fromParsed()` seam fed with the good leaf's real
+  `openssl_x509_parse()` data, altered; AC7 compares `signature_info`
+  with the oracle's block and lets the sister parser's `signer()` read
+  it; AC10 re-runs the 22-file corpus with the full settings and the
+  12 profile variants; `docs/milestones.md`, this entry. No `src/`
+  change.
+- Measured: `vendor/bin/pest --group=SPEC-015` → `10 failed (15
+  assertions)`: `Class … CertificateProfileCheck not found`, `Undefined
+  constant StatusCode::SigningCredentialExpired`, `actual size 23
+  matches expected size 24`, `checksPerformed` without `certificate`,
+  no `signature_info`, no `.invalid`; `bin/spec-check.php` → `OK: 16
+  spec(s), 16 test file(s)`. AC9 fails on one more thing: without
+  settings this verifier emits no credential code, c2patool emits
+  `signingCredential.untrusted` (no anchors → untrusted; `png.json` of
+  step 14, `good-no-settings.json` of step 34a) — SPEC-014 AC6's
+  "no settings equals verify-off" contradicts the oracle. / Reasoned:
+  to be settled in step 35 as SPEC-014 amendment 1: without settings
+  the trust check runs with no anchors and says `untrusted`;
+  `verify_trust: false` alone says nothing.
+- Decided by Maurice: step 34b as explained.
