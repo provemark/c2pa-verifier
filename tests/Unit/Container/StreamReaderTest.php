@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\StreamReader;
+use Provemark\C2paVerifier\Support\Bytes;
 
 /*
  * SPEC-004: one stream reader for the Container layer. AC2–AC5 exercise
@@ -83,6 +84,6 @@ it('AC4: end returns the file length and leaves the position alone', function ()
 })->group('SPEC-004');
 
 it('AC5: hex never shows bytes raw', function (): void {
-    expect(StreamReader::hex("\x1B[31m"))->toBe('1B 5B 33 31 6D')
-        ->and(StreamReader::hex(''))->toBe('(nothing)');
+    expect(Bytes::hex("\x1B[31m"))->toBe('1B 5B 33 31 6D')
+        ->and(Bytes::hex(''))->toBe('(nothing)');
 })->group('SPEC-004');

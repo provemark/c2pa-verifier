@@ -883,3 +883,27 @@ README are where the disclosure lives.
   depth 17; `ContentBox::$offset` is the box's offset, its data starts 8
   bytes on.
 - Decided by Maurice: Claude writes all the tests.
+
+## 2026-09-21 — Step 11: the JUMBF parser (SPEC-005 implemented); SPEC-004 amendment 1
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, bouw de parser" (including the `Support` layer as
+  proposed).
+- Produced: `src/Support/Bytes.php` and the `Support` layer in
+  `deptrac.yaml`; `StreamReader::hex()` and the WebP `printable()` moved
+  there, the JPEG extractor's inline hex routed through it, the SPEC-004
+  AC5 test renamed to `Bytes::hex()`, SPEC-004 amendment 1 recorded;
+  `src/Jumbf/{JumbfParser,JumbfWalk,Superbox,DescriptionBox,ContentBox,
+  UnknownBox,JumbfException}.php`; SPEC-005 → `implemented` with
+  Traceability, its hex open question resolved;
+  `notes/step-11-jumbf-parser.md`; `NOTES.md`; `docs/milestones.md`; this
+  entry.
+- Measured: first run of the parser 18 passed, 1 failed (AC10: the root
+  bounded by the store gave the overrun message); after reading the root
+  header unbounded, 19 green; PHPStan one finding (unused `$maxDepth` in
+  `JumbfWalk`), removed; Deptrac 0 violations with the new layer; `composer
+  check` exit 0, **90 passed (287 assertions)**.
+- Reasoned: `JumbfWalk` as a small mutable helper so `JumbfParser` stays
+  `readonly`; one shared store string per tree instead of a copy per node;
+  unknown content-box types kept as `UnknownBox` (SPEC-005's third open
+  question, "keep").
+- Decided by Maurice: build step 11b with the `Support` layer.

@@ -46,17 +46,26 @@ deptrac:
       collectors:
         - type: directory
           value: src/Verifier/.*
+    - name: Support        # SPEC-004 amendment 1: formatting bytes for messages; a leaf every layer may use
+      collectors:
+        - type: directory
+          value: src/Support/.*
   ruleset:
-    # Leaves: parsers depend on nothing internal.
-    Container: ~
-    Jumbf: ~
-    Cbor: ~
+    # Leaves: parsers depend on nothing internal but Support.
+    Support: ~
+    Container:
+      - Support
+    Jumbf:
+      - Support
+    Cbor:
+      - Support
     Report: ~
     # The manifest model is built from boxes and CBOR.
     Manifest:
       - Jumbf
       - Cbor
       - Report
+      - Support
     # The four checks each see the manifest, never each other.
     Cose:
       - Manifest

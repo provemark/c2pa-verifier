@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Container;
 
+use Provemark\C2paVerifier\Support\Bytes;
+
 /**
  * PNG `caBX` → manifest store bytes (SPEC-002; C2PA 2.4 §A.3).
  *
@@ -45,8 +47,8 @@ final readonly class PngManifestStoreExtractor
         if ($signature !== self::SIGNATURE) {
             throw new ContainerException(sprintf(
                 'not a PNG: expected %s at offset 0, found %s',
-                StreamReader::hex(self::SIGNATURE),
-                StreamReader::hex($signature),
+                Bytes::hex(self::SIGNATURE),
+                Bytes::hex($signature),
             ));
         }
 

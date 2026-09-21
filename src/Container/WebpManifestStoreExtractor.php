@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Container;
 
+use Provemark\C2paVerifier\Support\Bytes;
+
 /**
  * WebP RIFF `C2PA` → manifest store bytes (SPEC-003; C2PA 2.4 §A.3).
  *
@@ -49,7 +51,7 @@ final readonly class WebpManifestStoreExtractor
         if (strlen($header) < 4 || substr($header, 0, 4) !== self::RIFF) {
             throw new ContainerException(sprintf(
                 'not a RIFF file: expected RIFF at offset 0, found %s',
-                StreamReader::hex(substr($header, 0, 4)),
+                Bytes::hex(substr($header, 0, 4)),
             ));
         }
         if (strlen($header) !== self::HEADER_LENGTH) {
@@ -59,7 +61,7 @@ final readonly class WebpManifestStoreExtractor
         if ($form !== self::FORM_WEBP) {
             throw new ContainerException(sprintf(
                 'not a WebP: expected form type WEBP at offset 8, found %s',
-                self::printable($form),
+                Bytes::printable($form),
             ));
         }
 
@@ -90,7 +92,7 @@ final readonly class WebpManifestStoreExtractor
             if ($offset + 8 + $chunk['length'] > $end) {
                 throw new ContainerException(sprintf(
                     '%s chunk at offset %d declares %d bytes, past the end of the file at %d',
-                    self::printable($chunk['type']),
+                    Bytes::printable($chunk['type']),
                     $offset,
                     $chunk['length'],
                     $end,
@@ -162,13 +164,7 @@ final readonly class WebpManifestStoreExtractor
             throw new ContainerException(sprintf('pad byte expected at offset %d, but the file ends there', $offset));
         }
         if ($pad !== "\0") {
-            throw new ContainerException(sprintf('pad byte at offset %d is %s, not 00', $offset, StreamReader::hex($pad)));
+            throw new ContainerException(sprintf('pad byte at offset %d is %s, not 00', $offset, Bytes::hex($pad)));
         }
-    }
-
-    /** A four-byte type as text when every byte is printable ASCII, otherwise as hex. */
-    private static function printable(string $bytes): string
-    {
-        return preg_match('/\A[\x20-\x7E]{4}\z/', $bytes) === 1 ? $bytes : StreamReader::hex($bytes);
     }
 }

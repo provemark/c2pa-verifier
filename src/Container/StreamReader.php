@@ -122,10 +122,4 @@ final readonly class StreamReader
 
         return $end;
     }
-
-    /** Bytes as upper-case hex pairs — never raw: file contents are untrusted terminal output. */
-    public static function hex(string $bytes): string
-    {
-        return $bytes === '' ? '(nothing)' : trim(strtoupper(chunk_split(bin2hex($bytes), 2, ' ')));
-    }
 }

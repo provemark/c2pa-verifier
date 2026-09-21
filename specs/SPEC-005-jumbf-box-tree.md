@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-21                      |
 | Supersedes | —                                                 |
@@ -386,10 +386,10 @@ here, since `Jumbf` is a leaf layer and may not depend on `Container`
 
 ## Open questions
 
-- **Where the hex formatter lives.** `StreamReader::hex()` is in the
-  `Container` layer; `Jumbf` may not depend on it. Proposal: a tiny
-  `Bytes` helper in a layer both may use, added by amendment to SPEC-004
-  when this spec is implemented. Non-blocker for approval.
+- Resolved at implementation (SPEC-004 amendment 1, 2026-09-21):
+  `src/Support/Bytes.php` with `hex()` and `printable()`, in a `Support`
+  layer that `Container`, `Jumbf`, `Cbor` and `Manifest` may use;
+  `StreamReader::hex()` and the WebP extractor's `printable()` moved there.
 - Resolved before approval (step 10, 2026-09-21): the 23 variants are
   built by `bin/make-jumbf-variants.php` and measured; the oracle column
   of `tests/Fixtures/jumbf/README.md` is filled.
@@ -406,20 +406,20 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
-| AC11                 | —                           | —                    |
-| AC12                 | —                           | —                    |
-| AC13                 | —                           | —                    |
-| AC14                 | —                           | —                    |
-| AC15                 | —                           | —                    |
-| AC16                 | —                           | —                    |
-| AC17                 | —                           | —                    |
+| AC1 | tests/Unit/Jumbf/JumbfParserTest.php :: AC1: the PNG store parses to the measured tree / SPEC-005 | src/Jumbf/JumbfParser.php :: parse(), superbox(), child(); src/Jumbf/Superbox.php, DescriptionBox.php, ContentBox.php |
+| AC2 | tests/Unit/Jumbf/JumbfParserTest.php :: AC2: the JPEG and WebP stores have the same shape as the PNG store / SPEC-005 | src/Jumbf/JumbfParser.php :: parse() |
+| AC3 | tests/Unit/Jumbf/JumbfParserTest.php :: AC3: description boxes carry their fields; AC3: a 32-byte salt parses / SPEC-005 | src/Jumbf/JumbfParser.php :: description(); src/Jumbf/DescriptionBox.php :: requestable() |
+| AC4 | tests/Unit/Jumbf/JumbfParserTest.php :: AC4: a label path finds a box, and a missing label is null / SPEC-005 | src/Jumbf/Superbox.php :: child() |
+| AC5 | tests/Unit/Jumbf/JumbfParserTest.php :: AC5: payload() is exactly what the claim hashes / SPEC-005 | src/Jumbf/Superbox.php :: payload() |
+| AC6 | tests/Unit/Jumbf/JumbfParserTest.php :: AC6: a foreign v1 store parses, json box included / SPEC-005 | src/Jumbf/JumbfParser.php :: child() (`CONTENT_TYPES`) |
+| AC7 | tests/Unit/Jumbf/JumbfParserTest.php :: AC7: an unknown type UUID is kept as an UnknownBox, not walked, not an error / SPEC-005 | src/Jumbf/JumbfParser.php :: child() (`KNOWN_SUPERBOXES`); src/Jumbf/UnknownBox.php |
+| AC8 | tests/Unit/Jumbf/JumbfParserTest.php :: AC8: LBox 0, 1 or below 8 is an error naming the offset and the LBox / SPEC-005 | src/Jumbf/JumbfWalk.php :: header() |
+| AC9 | tests/Unit/Jumbf/JumbfParserTest.php :: AC9: a box that overruns its parent is an error naming both ends / SPEC-005 | src/Jumbf/JumbfWalk.php :: header() |
+| AC10 | tests/Unit/Jumbf/JumbfParserTest.php :: AC10: children that do not end on their parent's LBox are an error / SPEC-005 | src/Jumbf/JumbfParser.php :: superbox() (the walk), parse() (root read unbounded) |
+| AC11 | tests/Unit/Jumbf/JumbfParserTest.php :: AC11: a superbox whose first child is not a description box is an error / SPEC-005 | src/Jumbf/JumbfParser.php :: superbox(), child() |
+| AC12 | tests/Unit/Jumbf/JumbfParserTest.php :: AC12: description-box faults are errors naming the box and the fault / SPEC-005 | src/Jumbf/JumbfParser.php :: description() (`LABEL_FORBIDDEN`, salt checks); src/Support/Bytes.php :: hex() |
+| AC13 | tests/Unit/Jumbf/JumbfParserTest.php :: AC13: compressed and update manifests are errors, not skips / SPEC-005 | src/Jumbf/JumbfParser.php :: refuseUnreadable(), child() (`brob`) |
+| AC14 | tests/Unit/Jumbf/JumbfParserTest.php :: AC14: bfdb without bidb is an error naming the bfdb box / SPEC-005 | src/Jumbf/JumbfParser.php :: requireBidbAfterBfdb() |
+| AC15 | tests/Unit/Jumbf/JumbfParserTest.php :: AC15: the root must be a c2pa superbox labelled c2pa / SPEC-005 | src/Jumbf/JumbfParser.php :: parse() |
+| AC16 | tests/Unit/Jumbf/JumbfParserTest.php :: AC16: the depth limit is enforced at the level that exceeds it; AC16: the box limit is enforced at the box that exceeds it / SPEC-005 | src/Jumbf/JumbfParser.php :: superbox() (depth); src/Jumbf/JumbfWalk.php :: header() (count) |
+| AC17 | tests/Unit/Jumbf/JumbfParserTest.php :: AC17: the default limits are 16 and 4096, and sufficient for the four stores / SPEC-005 | src/Jumbf/JumbfParser.php :: DEFAULT_MAX_DEPTH, DEFAULT_MAX_BOXES, __construct() |

@@ -162,6 +162,16 @@ logic; only the four helpers move. The JPEG `readMarker`, `readUint16`,
   the existing criteria those callers serve (SPEC-002 AC14, SPEC-003 AC3
   and AC12).
 
+## Amendments
+
+1. **2026-09-21, approved by Maurice van Loon with SPEC-005 step 11b** —
+   `hex()` moved from `StreamReader` to `Support\Bytes::hex()`, with the
+   WebP extractor's `printable()` next to it, in a new `Support` layer
+   (`deptrac.yaml`) that the parsers may use. Cause: SPEC-005's parser
+   needs the same formatter and `Jumbf` is a leaf layer that may not see
+   `Container`. AC5 is unchanged in substance; its test now names
+   `Bytes::hex()`.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -173,4 +183,4 @@ least one test; every source file maps back to this spec.
 | AC2 | tests/Unit/Container/StreamReaderTest.php :: AC2: readExactly returns exactly the bytes asked for, or fails naming what, where and how much; AC2: readExactly of zero bytes returns an empty string and does not touch the stream / SPEC-004 | src/Container/StreamReader.php :: readExactly() |
 | AC3 | tests/Unit/Container/StreamReaderTest.php :: AC3: skip to exactly the end of the file is not an error; the next read is; AC3: skip past the end of the file is an error naming the segment, its end and the file end / SPEC-004 | src/Container/StreamReader.php :: skip() |
 | AC4 | tests/Unit/Container/StreamReaderTest.php :: AC4: end returns the file length and leaves the position alone / SPEC-004 | src/Container/StreamReader.php :: end(), tell() |
-| AC5 | tests/Unit/Container/StreamReaderTest.php :: AC5: hex never shows bytes raw / SPEC-004 | src/Container/StreamReader.php :: hex() |
+| AC5 | tests/Unit/Container/StreamReaderTest.php :: AC5: hex never shows bytes raw / SPEC-004 | src/Support/Bytes.php :: hex() (amendment 1) |

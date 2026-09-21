@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Container;
 
+use Provemark\C2paVerifier\Support\Bytes;
+
 /**
  * JPEG APP11 → manifest store bytes (SPEC-001; C2PA 2.4 §A.3.1).
  *
@@ -45,7 +47,7 @@ final readonly class JpegManifestStoreExtractor
         if ($soi !== "\xFF\xD8") {
             throw new ContainerException(sprintf(
                 'not a JPEG: expected FF D8 at offset 0, found %s',
-                strtoupper(chunk_split(bin2hex($soi), 2, ' ')),
+                Bytes::hex($soi),
             ));
         }
 
@@ -146,7 +148,7 @@ final readonly class JpegManifestStoreExtractor
                     throw new ContainerException(sprintf('LBox %d in piece %d differs from %d', $fields['lbox'], $pieceNumber, $lBox));
                 }
                 if ($pieceTBox !== $tBox) {
-                    throw new ContainerException(sprintf('TBox %s in piece %d differs from %s', bin2hex($pieceTBox), $pieceNumber, bin2hex($tBox)));
+                    throw new ContainerException(sprintf('TBox %s in piece %d differs from %s', Bytes::hex($pieceTBox), $pieceNumber, Bytes::hex($tBox)));
                 }
             }
 
