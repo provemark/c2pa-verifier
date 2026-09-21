@@ -2063,3 +2063,20 @@ README are where the disclosure lives.
 - Decided by Maurice: ADR-0003 as drafted — X.509 written here on
   `ext-openssl`, allowed list first, the EKU list as c2pa-rs keeps it,
   `checkpurpose` as a second oracle only, RFC 3161 open until M6.
+
+## 2026-09-21 — SPEC-014 draft: trust settings, allowed list, chain walk
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, schrijf SPEC-014 als draft".
+- Produced: `specs/SPEC-014-trust-settings-and-chain.md` (draft, ten
+  criteria), the row in `docs/milestones.md`, this entry. No `src/`
+  change.
+- Measured: the PNG fixture's COSE headers through `CoseSign1` —
+  protected labels `[1, 33]`, unprotected `["pad"]`: `x5chain` is
+  protected, so AC4's leaf-only variant breaks the signature as well,
+  and the criterion says so. Everything else rests on step 30. `php
+  bin/spec-check.php` → `OK: 15 spec(s), 14 test file(s)`. / Reasoned:
+  the walk's termination rule (DER-equal to an anchor or signed by one)
+  as the reading of c2pa-rs's `PARTIAL_CHAIN`; the three-state rule
+  from the measured JSON (`untrusted` alone keeps `Valid`); settings
+  whole or absent; the second oracle in the tests.
+- Decided by Maurice: none yet — the draft awaits his reading.
