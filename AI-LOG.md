@@ -1546,3 +1546,21 @@ README are where the disclosure lives.
 - Decided by Maurice: key-does-not-fit → `signingCredential.invalid`;
   structural COSE faults → `general.error` with the message; `Valid`
   stays internal until the Verifier layer's spec, with the checks named.
+
+## 2026-09-21 — Step 21: c2patool's JSON for three variants (SPEC-010's oracle)
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja doe die stap".
+- Produced: `tests/Fixtures/c2patool/variants/{claim-title-changed,
+  signature-changed,json-broken}.json` with a README; SPEC-010 draft
+  updated (AC7 compares the code, not the url, with the reason; the
+  blocking open question resolved; References);
+  `notes/step-21-report-oracle.md`; `NOTES.md`; `docs/milestones.md`; this
+  entry.
+- Measured: three `c2patool 0.27.22` runs saved unchanged; the mismatch
+  urls equal the absolute signature URI; the `assertion.json.invalid` url
+  is the bare label `stds.schema-org.CreativeWork` while the
+  `hashedURI.mismatch` on the same box has the absolute URI.
+- Reasoned: c2patool's bare label read as an inconsistency; SPEC-010
+  keeps the absolute form.
+- Decided by Maurice: do the measurement step. SPEC-010 now awaits his
+  approval.

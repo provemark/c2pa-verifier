@@ -1,0 +1,101 @@
+{
+  "active_manifest": "contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc",
+  "manifests": {},
+  "validation_status": [
+    {
+      "code": "assertion.json.invalid",
+      "url": "stds.schema-org.CreativeWork",
+      "explanation": "invalid assertion json"
+    },
+    {
+      "code": "signingCredential.untrusted",
+      "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.signature",
+      "explanation": "signing certificate untrusted"
+    },
+    {
+      "code": "assertion.hashedURI.mismatch",
+      "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.assertions/stds.schema-org.CreativeWork",
+      "explanation": "hash does not match assertion data: self#jumbf=c2pa.assertions/stds.schema-org.CreativeWork"
+    },
+    {
+      "code": "assertion.dataHash.mismatch",
+      "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.assertions/c2pa.hash.data",
+      "explanation": "asset hash error, name: jumbf manifest, error: hash verification( Hashes do not match )"
+    },
+    {
+      "code": "assertion.required.missing",
+      "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc",
+      "explanation": "Failed to load manifest"
+    }
+  ],
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "timeStamp.validated",
+          "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.signature",
+          "explanation": "timestamp message digest matched: DigiCert Timestamp 2022 - 2"
+        },
+        {
+          "code": "timeStamp.trusted",
+          "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.signature",
+          "explanation": "timestamp cert trusted: DigiCert Timestamp 2022 - 2"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.assertions/c2pa.thumbnail.claim.jpeg",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim.jpeg"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.assertions/c2pa.actions",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.assertions/c2pa.hash.data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+        }
+      ],
+      "informational": [],
+      "failure": [
+        {
+          "code": "assertion.json.invalid",
+          "url": "stds.schema-org.CreativeWork",
+          "explanation": "invalid assertion json"
+        },
+        {
+          "code": "signingCredential.untrusted",
+          "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.signature",
+          "explanation": "signing certificate untrusted"
+        },
+        {
+          "code": "assertion.hashedURI.mismatch",
+          "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.assertions/stds.schema-org.CreativeWork",
+          "explanation": "hash does not match assertion data: self#jumbf=c2pa.assertions/stds.schema-org.CreativeWork"
+        },
+        {
+          "code": "assertion.dataHash.mismatch",
+          "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc/c2pa.assertions/c2pa.hash.data",
+          "explanation": "asset hash error, name: jumbf manifest, error: hash verification( Hashes do not match )"
+        },
+        {
+          "code": "assertion.required.missing",
+          "url": "self#jumbf=/c2pa/contentauth:urn:uuid:4d971750-1db4-4492-a87c-5c3e7ed33efc",
+          "explanation": "Failed to load manifest"
+        }
+      ]
+    }
+  },
+  "validation_state": "Invalid"
+}
