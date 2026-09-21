@@ -2007,3 +2007,35 @@ README are where the disclosure lives.
   with `Tests: 183 passed` (1640 assertions on 8.3, 1642 on 8.4/8.5);
   `all green` `success`.
 - Decided by Maurice: push; then the M5 measurement step.
+
+## 2026-09-21 — Step 30: trust measured before M5
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met de meetstap voor M5".
+- Produced: `tests/Fixtures/trust/` (4 public PEM/cfg files from the
+  sister repository, 8 settings variants, README),
+  `tests/Fixtures/c2patool/trusted/` (9 JSONs, README),
+  `notes/step-30-trust-measured.md`, `NOTES.md`, `docs/milestones.md`
+  (M5 table), this entry. No `src/` change, no spec. No private key
+  copied (`git ls-files | grep '\.key$'` → 0; `grep -l 'PRIVATE KEY'
+  tests/Fixtures/trust/*` → 0).
+- Measured: `openssl x509` on all 7 certificates (two hierarchies, EC
+  and RSA-PSS, identical names); the four fixtures' x5chains through
+  `CoseSign1` + `openssl_x509_parse` (EC fixtures: leaf + intermediate,
+  no root; Adobe: leaf + intermediate + RSA-PSS root); `c2patool
+  0.27.22 --settings` under nine variants on the PNG and Adobe fixtures
+  (table in the note: `Trusted` with anchors or allowed list;
+  `anchors-wrong-eku` still `Trusted`; `verify-off` no credential code;
+  `validation_status` key absent when there are no failures);
+  c2pa-rs `main` `58eac79`: `certificate_trust_policy.rs:186–232`
+  (allowed list first, by SHA-256), `certificate_trust/openssl.rs:22–80`
+  (X509_STRICT | PARTIAL_CHAIN, time = timestamp else now),
+  `certificate_profile.rs` (the §14.5 checks), `valid_eku_oids.cfg` and
+  `has_allowed_eku()` (EKUs additive); PHP 8.4 / OpenSSL 3.6.3:
+  `openssl_x509_verify` per link 1/1/−1 as expected,
+  `openssl_x509_checkpurpose` true only with the intermediate file and
+  the right root. / Reasoned: the ADR direction (own chain walk on
+  `openssl_x509_verify`, no phpseclib for M5, no temp files); the EKU
+  question left to Maurice.
+- Decided by Maurice: the measurement step as explained. Open for him:
+  the EKU list — mirror c2pa-rs (additive) or `trust_config` as the
+  list when present.

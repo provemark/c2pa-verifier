@@ -99,6 +99,12 @@ specifying is the tool that enforces exactly that.
 | SPEC-013 | The Verifier: format from the magic bytes, extractor, parse, then signature → hashed URIs → data hash (skipped after a hashed-URI mismatch on `c2pa.hash.data`, SPEC-011 decision 1); `VerificationReport` in c2patool's shape plus `format`/`has_manifest`/`checks_performed`; the sister parser reads it; the drift alarm over every recorded c2patool JSON; SPEC-007 amendment 3 (`ManifestException::$url`) | implemented 2026-09-21: 10 tests red → green, 183 in all; amendments 1–2; SPEC-007 amendment 3; Deptrac `Verifier` → `Support` — step 29 |
 | 28 | The ten SPEC-013 tests (`tests/Unit/Verifier/VerifierTest.php`), seen red on the missing `Verifier`; AC10's subset list corrected by the recorded JSON (amendment 1) | done 2026-09-21 |
 
+## M5, step by step
+
+| Step | What | Status |
+|---|---|---|
+| 30 | Trust measured: the certificates, the fixtures' chains, c2patool under nine settings (`tests/Fixtures/trust/`, `tests/Fixtures/c2patool/trusted/`), c2pa-rs's trust and profile checks read from source, `ext-openssl`'s reach — `notes/step-30-trust-measured.md` | done 2026-09-21 |
+
 ## After M0
 
 M1 opens with SPEC-001 (JPEG APP11 → manifest store bytes) as a draft. It
