@@ -1215,3 +1215,12 @@ README are where the disclosure lives.
   attribution lines and no tracked `*.key`. The CI run: next entry.
 - Decided by Maurice: ADR-0001 amended — COSE_Sign1 verification written
   here on `ext-openssl`, `cose-lib` as reference reading only.
+
+## 2026-09-21 — CI green after step 16 and the ADR amendment
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (same request) read the CI run.
+- Produced: this entry.
+- Measured: run `35577079598` on `8e3bac96`: conclusion `success`; PHP
+  8.3 / 8.4 / 8.5 each `success` with `Tests: 120 passed`; `all green`
+  `success`.
+- Decided by Maurice: push.
