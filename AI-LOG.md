@@ -1836,3 +1836,29 @@ README are where the disclosure lives.
 - Decided by Maurice: step 26a as explained. Amendment 1 made under the
   spec's first Open question ("amends the criterion before the tests"),
   for his confirmation.
+
+## 2026-09-21 — Step 26b: the SPEC-012 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 26b".
+- Produced: `tests/Unit/Hash/DataHashCheckTest.php` — ten tests, one per
+  criterion, `->group('SPEC-012')`, own helpers (`spec012*`); AC1 asserts
+  the four fixtures' `$ranges` and flips the WebP pad byte in a temp
+  copy; AC9 writes a 48 MiB temp file in 1 MiB chunks and bounds the
+  peak-memory growth; SPEC-012 amendment 2 (AC4: `validation_status`
+  holds failures only); `docs/milestones.md`, this entry. No `src/`
+  change.
+- Measured: `vendor/bin/pest --group=SPEC-012` → `10 failed (3
+  assertions)`: eight `Class "Provemark\C2paVerifier\Hash\DataHashCheck"
+  not found`, AC1 `Failed asserting that null is identical to Array`
+  (`$ranges` does not exist), AC10 `Failed asserting that two arrays are
+  identical` (fifteen cases, not twenty-one); `bin/spec-check.php` →
+  `OK: 13 spec(s), 13 test file(s)`. With `jq` on the recorded JSON:
+  `validation_status` of `exclusion-extra.json` is
+  `[signingCredential.untrusted, claimSignature.mismatch]` — the
+  informational is under `activeManifest.informational` only, which
+  contradicts SPEC-010's description of the shape. / Reasoned: the
+  shape must be c2patool's because the sister library's
+  `validationCodes()` reads `validation_status`; `toArray()` changes in
+  the implementation commit as SPEC-010 amendment 2.
+- Decided by Maurice: step 26b as explained. Amendment 2 for his
+  confirmation.

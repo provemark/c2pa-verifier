@@ -193,9 +193,10 @@ recorded in the READMEs (Open questions).
     `assertion.dataHash.additionalExclusionsPresent`, both with the
     assertion's url; `isInformational()` is true for the second, false
     for every other code; `ValidationResult` is `Valid` and `toArray()`
-    lists the informational under `validation_status` and under
-    `…activeManifest.informational`, as c2patool's
-    `exclusions-overlap.json` does
+    lists the informational under `…activeManifest.informational` only —
+    `validation_status` holds failures alone, as c2patool's
+    `exclusion-extra.json` shows (amendment 2); the informational and
+    success pairs equal the oracle's
 
 - **AC5 — overlapping exclusions: `assertion.dataHash.malformed`** *(required: error / malformed input)*
   - Given `binding/exclusions-overlap.png` (the second range inside the
@@ -378,6 +379,18 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
    and the missing case, a hard error there, follows by analogy. The
    count is of boxes in the store, not of labels. AC8 and Scope item 1
    changed accordingly; nothing else.
+2. **2026-09-21, step 26b, before the tests** — c2patool's
+   `validation_status` holds *failures only*: on `exclusion-extra.json`
+   and `exclusions-overlap.json` the informational
+   `additionalExclusionsPresent` appears under
+   `activeManifest.informational` and nowhere else. SPEC-010 described
+   `validation_status` as "failures and informational" and `toArray()`
+   was built that way, untested for want of an informational code. AC4
+   now asserts the measured shape; `ValidationResult::toArray()` changes
+   with this spec's implementation (SPEC-010 amendment 2, recorded
+   there). The sister library's `validationCodes()` reads
+   `validation_status`, so the shape matters: it must show what
+   c2patool would show.
 
 ## Traceability
 
