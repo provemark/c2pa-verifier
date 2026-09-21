@@ -105,7 +105,17 @@ final readonly class Verifier
             ], []));
         }
 
-        return new VerificationReport($format, true, $manifestStore, $this->check($manifestStore, $stream, $store, $settings), $this->signatureInfo($manifestStore));
+        $result = $this->check($manifestStore, $stream, $store, $settings);
+        // until M7 validates ingredient manifests, a store with more than one is refused: the
+        // fault may sit in a manifest this verifier has not looked at (SPEC-013 amendment 5)
+        if (count($manifestStore->manifests) > 1) {
+            $result = ValidationResult::fromStatuses([
+                ...$result->statuses,
+                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('the store holds %d manifests; ingredient manifests are not validated before M7, and a fault in one of them would not be seen — refused until then', count($manifestStore->manifests))),
+            ], $result->checksPerformed);
+        }
+
+        return new VerificationReport($format, true, $manifestStore, $result, $this->signatureInfo($manifestStore));
     }
 
     /**

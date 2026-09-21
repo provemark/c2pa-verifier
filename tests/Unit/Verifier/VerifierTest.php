@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationState;
 use Provemark\C2paVerifier\Report\ValidationStatus;
+use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\VerificationReport;
 use Provemark\C2paVerifier\Verifier\Verifier;
 use Provemark\ContentCredentials\Core\Reading\ManifestStoreParser;
@@ -375,4 +376,53 @@ it('AC10: the drift alarm: every recorded c2patool JSON, state and failures', fu
     $expected = SPEC013_SUBSET_ONLY;
     sort($expected);
     expect($subsetOnly)->toBe($expected);
+})->group('SPEC-013');
+
+it('AC11: a store with more than one manifest is refused until M7', function (): void {
+    $full = TrustSettings::fromJson((string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/trust/full.settings.json'));
+    $verify = static function (string $name) use ($full): VerificationReport {
+        $path = glob(dirname(__DIR__, 2)."/Fixtures/public-testfiles/{$name}.*")[0] ?? throw new RuntimeException("no file for {$name}");
+
+        return (new Verifier)->verify(spec013Stream('public-testfiles/'.basename($path)), $full);
+    };
+    $c2patool = static function (string $name): array {
+        /** @var array<string, mixed> */
+        return json_decode((string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/c2patool/public-testfiles/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
+    };
+
+    foreach (SPEC013_PUBLIC_MULTI as $name) {
+        $report = $verify($name);
+        $errors = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::GeneralError));
+        $count = $report->store === null ? 0 : count($report->store->manifests);
+        expect($count)->toBeGreaterThan(1, $name)
+            ->and($errors)->toHaveCount(1, $name)
+            ->and($errors[0]->url)->toBe('self#jumbf=/c2pa', $name)
+            ->and($errors[0]->explanation)->toContain((string) $count)
+            ->and($errors[0]->explanation)->toContain('M7')
+            ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $name)
+            ->and($report->result->state)->toBe(ValidationState::Invalid, $name);
+    }
+    $single = $verify('adobe-20220124-C');
+    expect(array_filter($single->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::GeneralError))->toBe([])
+        ->and($single->result->state)->toBe(ValidationState::Trusted);
+    // the file that made the rule: tampered only in its ingredient manifest
+    expect($verify('adobe-20220124-E-uri-CIE-sig-CA')->result->state)->toBe(ValidationState::Invalid)
+        ->and($c2patool('adobe-20220124-E-uri-CIE-sig-CA')['validation_state'])->toBe('Invalid');
+
+    // the second drift alarm: the official corpus, c2patool's state unless stricter on purpose
+    foreach (SPEC013_PUBLIC_CORPUS as $name) {
+        $report = $verify($name);
+        $oracle = $c2patool($name);
+        $expected = $oracle['validation_state'];
+        if (in_array($name, SPEC013_PUBLIC_MULTI, true) || in_array($name, SPEC013_PUBLIC_NO_TIMESTAMP, true)) {
+            $expected = 'Invalid';
+        }
+        expect($report->result->state->value)->toBe($expected, $name);
+        if (in_array($name, SPEC013_PUBLIC_NO_TIMESTAMP, true)) {
+            expect(in_array('signingCredential.expired', spec013Failures($report), true))->toBeTrue($name);   // M6 removes this
+        }
+    }
+    foreach (['adobe-20220124-A', 'adobe-20220124-I'] as $name) {
+        expect($verify($name)->hasManifest)->toBeFalse($name);
+    }
 })->group('SPEC-013');

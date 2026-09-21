@@ -241,6 +241,29 @@ a short one) are made in the tests.
     failure, `checksPerformed` all three, and the peak grew by less than
     4 MiB
 
+- **AC11 — a store with more than one manifest is refused until M7** *(amendment 5, decided by Maurice van Loon 2026-09-21 after step 36: fail closed)*
+  - Given the official test files (`tests/Fixtures/public-testfiles/`,
+    step 36) verified with `trust/full.settings.json`: the nine with two
+    or more manifests (`CACA`, `CACAICAICICA`, `CAIAIIICAICIICAIICICA`,
+    `CAICA`, `CAICAI`, `CICA`, `CICACACA`, `CIE-sig-CA`, `E-clm-CAICAI`,
+    `E-uri-CIE-sig-CA`), and `C` with one
+  - When verified
+  - Then every multi-manifest file carries one `general.error` on
+    `self#jumbf=/c2pa` whose explanation gives the manifest count and
+    says that ingredient manifests are not validated before M7, the
+    checks on the active manifest still run (`checksPerformed`
+    complete), and `state` is `Invalid` — including the eight c2patool
+    calls `Trusted` and `E-uri-CIE-sig-CA`, which is tampered only in
+    its ingredient manifest and was `Trusted` here before this rule;
+    `C` has no such status
+  - And the whole official corpus (24 files with a c2patool JSON, and
+    `A`/`I` without) is a second drift alarm: `state` equals c2patool's
+    except where this rule (`Invalid` for the eight) or the missing
+    timestamp (M6: the three `truepic-*` files `Invalid` with
+    `signingCredential.expired` where c2patool says `Valid`) makes it
+    stricter — each exception named in the test, to be removed by the
+    milestone that closes it
+
 - **AC10 — the drift alarm: every recorded c2patool JSON, state and failures**
   - Given every file under `tests/Fixtures/c2patool/` with a JSON (the
     four fixtures and the eighteen variants), each with its carrier
@@ -377,6 +400,7 @@ final class ManifestException extends \RuntimeException
    changed.
 3. **2026-09-21, defined in SPEC-014 and approved with it** — `Verifier::verify($stream, ?TrustSettings $settings = null)`: with settings whose `verify_trust` is true, `ChainCheck` runs after the signature check and `checks_performed` gains `trust`; without, the report is what it was. `VerificationReport::toArray()` omits `validation_status` when there is no failure, as c2patool 0.27.22 does (measured in step 30: every `Trusted` JSON lacks the key); AC8's test asserts both key lists. No criterion changed in outcome.
 4. **2026-09-21, step 35, with SPEC-014/015** — `checksPerformed` is now `['signature', 'certificate', 'trust', 'hashedUris', 'dataHash']` on a file verified without settings (the certificate profile always, the trust check with no anchors), and every such file carries `signingCredential.untrusted` — so AC1–AC4, AC8 and AC9's expectations gained that code and `validation_status` is always present without settings; AC10's not-yet-emitted list lost `signingCredential.untrusted`. Steps 6–7 of the Scope read with those two checks inserted after step 4. No verdict changed: `untrusted` alone keeps `Valid` (SPEC-014).
+5. **2026-09-21, step 38b, decided by Maurice van Loon after step 36** — until M7 validates ingredient manifests, a store holding more than one manifest is `Invalid` with a `general.error` on `self#jumbf=/c2pa` (AC11). The official test file `E-uri-CIE-sig-CA.jpg` is tampered only in an ingredient manifest and was `Trusted` here, `Invalid` at c2patool — the one direction the brief calls the risk that counts; eight correctly-`Trusted` multi-manifest files become `Invalid` for the interim, named in the test so that M7 must bring them back. The Scope's "today only the active manifest is checked" now fails closed instead of silently.
 
 ## Traceability
 
@@ -395,3 +419,4 @@ least one test; every source file maps back to this spec.
 | AC8 | tests/Unit/Verifier/VerifierTest.php :: AC8: the report's shape, and the sister parser reads it / SPEC-013 | src/Verifier/VerificationReport.php :: toArray(), toJson() |
 | AC9 | tests/Unit/Verifier/VerifierTest.php :: AC9: end to end, the file is streamed / SPEC-013 | src/Verifier/Verifier.php :: verify() (the stream handed through, never read whole) |
 | AC10 | tests/Unit/Verifier/VerifierTest.php :: AC10: the drift alarm: every recorded c2patool JSON, state and failures / SPEC-013 | src/Verifier/Verifier.php :: verify(), check() |
+| AC11 | tests/Unit/Verifier/VerifierTest.php :: AC11: a store with more than one manifest is refused until M7 / SPEC-013 | src/Verifier/Verifier.php :: verify() (the manifest count) |

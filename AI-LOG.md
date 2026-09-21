@@ -2401,3 +2401,22 @@ README are where the disclosure lives.
   exclusion wider than the store is the signer's own choice inside the
   signed claim.
 - Decided by Maurice: covers instead of equals.
+
+## 2026-09-21 — Step 38b: more than one manifest is refused until M7; the official corpus as a drift alarm
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (continuing "optie 1: fail closed tot M7" from step 36).
+- Produced: `specs/SPEC-013-verifier.md` (AC11, amendment 5,
+  Traceability), `tests/Pest.php` (`SPEC013_PUBLIC_CORPUS`, `_MULTI`,
+  `_NO_TIMESTAMP`), `tests/Unit/Verifier/VerifierTest.php` (AC11),
+  `src/Verifier/Verifier.php` (the manifest count → `general.error`),
+  `notes/step-38-cover-and-multi-manifest.md`, `NOTES.md`,
+  `docs/milestones.md`, this entry.
+- Measured: AC11 red (`cannot open …` on the first attempt was the
+  test's path, then the rule itself: no `general.error`), then
+  `composer check` → `204 passed (2206 assertions)`. The corpus: 13 of
+  24 states equal, 11 stricter on purpose and named (eight multi-
+  manifest → M7, three Truepic → M6), zero where this verifier is
+  more lenient than c2patool. One more variadic `toContain()` stumble
+  in the test, fixed with `in_array`. / Reasoned: the error is added
+  after the active manifest's checks so the reader still gets them.
+- Decided by Maurice: fail closed until M7 (step 36).

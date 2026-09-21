@@ -39,3 +39,25 @@ const SPEC013_CORPUS = [
     'variants/alg-sha384' => 'binding/alg-sha384.png',
     'variants/hard-bindings-two' => 'binding/hard-bindings-two.png',
 ];
+
+/*
+ * The official test files (c2pa-org/public-testfiles, legacy/1.4/image/jpeg,
+ * step 36) with a c2patool JSON — SPEC-013 AC11's second drift alarm. The
+ * expectation is c2patool's state, except where this verifier is stricter on
+ * purpose, named here so that the milestone closing the gap must remove the
+ * name: MULTI (more than one manifest → Invalid until M7, SPEC-013 amendment 5)
+ * and NO_TIMESTAMP (validity judged at now until M6: the Truepic leaves lived
+ * one day).
+ */
+const SPEC013_PUBLIC_CORPUS = [
+    'adobe-20220124-C', 'adobe-20220124-CA', 'adobe-20220124-CACA', 'adobe-20220124-CACAICAICICA', 'adobe-20220124-CAI',
+    'adobe-20220124-CAIAIIICAICIICAIICICA', 'adobe-20220124-CAICA', 'adobe-20220124-CAICAI', 'adobe-20220124-CI', 'adobe-20220124-CICA',
+    'adobe-20220124-CICACACA', 'adobe-20220124-CIE-sig-CA', 'adobe-20220124-CII', 'adobe-20220124-E-clm-CAICAI', 'adobe-20220124-E-dat-CA',
+    'adobe-20220124-E-sig-CA', 'adobe-20220124-E-uri-CA', 'adobe-20220124-E-uri-CIE-sig-CA', 'adobe-20220124-XCA', 'adobe-20220124-XCI',
+    'nikon-20221019-building', 'truepic-20230212-camera', 'truepic-20230212-landscape', 'truepic-20230212-library',
+];
+const SPEC013_PUBLIC_MULTI = [
+    'adobe-20220124-CACA', 'adobe-20220124-CACAICAICICA', 'adobe-20220124-CAIAIIICAICIICAIICICA', 'adobe-20220124-CAICA', 'adobe-20220124-CAICAI',
+    'adobe-20220124-CICA', 'adobe-20220124-CICACACA', 'adobe-20220124-CIE-sig-CA', 'adobe-20220124-E-clm-CAICAI', 'adobe-20220124-E-uri-CIE-sig-CA',
+];
+const SPEC013_PUBLIC_NO_TIMESTAMP = ['truepic-20230212-camera', 'truepic-20230212-landscape', 'truepic-20230212-library'];
