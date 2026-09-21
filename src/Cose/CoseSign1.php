@@ -8,6 +8,7 @@ use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cbor\CborDecoder;
 use Provemark\C2paVerifier\Cbor\CborException;
 use Provemark\C2paVerifier\Cbor\CborTag;
+use Provemark\C2paVerifier\Report\StatusCode;
 
 /**
  * A claim signature as a structure (SPEC-008; RFC 8152 §4.2, C2PA 2.4
@@ -170,7 +171,7 @@ final readonly class CoseSign1
                 }
             }
         }
-        throw new CoseException('no x5chain in either header bucket (label 33 or "x5chain")');
+        throw new CoseException('no x5chain in either header bucket (label 33 or "x5chain")', StatusCode::SigningCredentialInvalid);
     }
 
     /**
@@ -182,29 +183,29 @@ final readonly class CoseSign1
     private static function chain(mixed $value, int $maxChain, int $maxCertificateBytes): array
     {
         if (! is_array($value) || ! array_is_list($value)) {
-            throw new CoseException(sprintf('x5chain is not an array but %s', self::kind($value)));
+            throw new CoseException(sprintf('x5chain is not an array but %s', self::kind($value)), StatusCode::SigningCredentialInvalid);
         }
         if ($value === []) {
-            throw new CoseException('x5chain is empty');
+            throw new CoseException('x5chain is empty', StatusCode::SigningCredentialInvalid);
         }
         if (count($value) > $maxChain) {
-            throw new CoseException(sprintf('chain of %d certificates exceeds the limit of %d', count($value), $maxChain));
+            throw new CoseException(sprintf('chain of %d certificates exceeds the limit of %d', count($value), $maxChain), StatusCode::SigningCredentialInvalid);
         }
         $chain = [];
         foreach ($value as $i => $certificate) {
             if (! $certificate instanceof CborBytes) {
-                throw new CoseException(sprintf('x5chain[%d] is not a byte string but %s', $i, self::kind($certificate)));
+                throw new CoseException(sprintf('x5chain[%d] is not a byte string but %s', $i, self::kind($certificate)), StatusCode::SigningCredentialInvalid);
             }
             if ($certificate->bytes === '') {
-                throw new CoseException(sprintf('x5chain[%d] is empty', $i));
+                throw new CoseException(sprintf('x5chain[%d] is empty', $i), StatusCode::SigningCredentialInvalid);
             }
             if (strlen($certificate->bytes) > $maxCertificateBytes) {
-                throw new CoseException(sprintf('certificate of %d bytes exceeds the limit of %d', strlen($certificate->bytes), $maxCertificateBytes));
+                throw new CoseException(sprintf('certificate of %d bytes exceeds the limit of %d', strlen($certificate->bytes), $maxCertificateBytes), StatusCode::SigningCredentialInvalid);
             }
             $chain[] = $certificate;
         }
         if (! self::isX509($chain[0]->bytes)) {
-            throw new CoseException('the leaf certificate is not an X.509 certificate');
+            throw new CoseException('the leaf certificate is not an X.509 certificate', StatusCode::SigningCredentialInvalid);
         }
 
         return $chain;
@@ -231,7 +232,7 @@ final readonly class CoseSign1
         try {
             return (new CborDecoder)->decode($bytes);
         } catch (CborException $e) {
-            throw new CoseException(sprintf('%s is not valid CBOR: %s', $what, $e->getMessage()), 0, $e);
+            throw new CoseException(sprintf('%s is not valid CBOR: %s', $what, $e->getMessage()), StatusCode::GeneralError, $e);
         }
     }
 

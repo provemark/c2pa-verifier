@@ -11,6 +11,7 @@ use Provemark\C2paVerifier\Jumbf\ContentBox;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Jumbf\Superbox;
 use Provemark\C2paVerifier\Jumbf\UnknownBox;
+use Provemark\C2paVerifier\Report\StatusCode;
 
 /**
  * One C2PA manifest (SPEC-007): its claim, its assertions decoded by
@@ -39,13 +40,16 @@ final readonly class Manifest
     public static function fromBox(Superbox $box): self
     {
         $label = $box->description->label;
-        $assertionStore = self::theOne($box, JumbfParser::UUID_ASSERTION_STORE, 'c2pa.assertions', 'assertion store', $label);
+        $assertionStore = self::theOne($box, JumbfParser::UUID_ASSERTION_STORE, 'c2pa.assertions', 'assertion store', $label, StatusCode::ClaimMalformed);
         $claims = array_values(array_filter($box->superboxes(), static fn (Superbox $child): bool => $child->description->uuid === JumbfParser::UUID_CLAIM));
         if (count($claims) !== 1) {
-            throw new ManifestException(sprintf('manifest %s: %d claim boxes, expected one', $label, count($claims)));
+            throw new ManifestException(
+                sprintf('manifest %s: %d claim boxes, expected one', $label, count($claims)),
+                count($claims) === 0 ? StatusCode::ClaimMissing : StatusCode::ClaimMultiple,
+            );
         }
         $claimBox = $claims[0];
-        $signatureBox = self::theOne($box, JumbfParser::UUID_CLAIM_SIGNATURE, 'c2pa.signature', 'signature box', $label);
+        $signatureBox = self::theOne($box, JumbfParser::UUID_CLAIM_SIGNATURE, 'c2pa.signature', 'signature box', $label, StatusCode::ClaimSignatureMissing);
 
         $version = match ($claimBox->description->label) {
             'c2pa.claim' => 1,
@@ -54,13 +58,13 @@ final readonly class Manifest
                 'claim label %s at offset %d is neither c2pa.claim nor c2pa.claim.v2',
                 $claimBox->description->label,
                 $claimBox->description->offset,
-            )),
+            ), StatusCode::ClaimMalformed),
         };
-        $claimData = self::singleCbor($claimBox, 'claim box', $label);
-        self::singleCbor($signatureBox, 'signature box', $label);
-        $claimMap = self::decodeCbor($claimData, sprintf('manifest %s: the claim', $label));
+        $claimData = self::singleCbor($claimBox, 'claim box', $label, StatusCode::ClaimMalformed);
+        self::singleCbor($signatureBox, 'signature box', $label, StatusCode::ClaimSignatureMissing);
+        $claimMap = self::decodeCbor($claimData, sprintf('manifest %s: the claim', $label), StatusCode::ClaimCborInvalid);
         if (! is_array($claimMap) || array_is_list($claimMap)) {
-            throw new ManifestException(sprintf('manifest %s: the claim is not a CBOR map', $label));
+            throw new ManifestException(sprintf('manifest %s: the claim is not a CBOR map', $label), StatusCode::ClaimCborInvalid);
         }
         $claim = Claim::fromMap($version, $claimMap);
 
@@ -96,14 +100,14 @@ final readonly class Manifest
     public function resolve(string $uri): Superbox
     {
         if (! str_starts_with($uri, self::URI_PREFIX)) {
-            throw new ManifestException(sprintf('URI %s does not start with %s', $uri, self::URI_PREFIX));
+            throw new ManifestException(sprintf('URI %s does not start with %s', $uri, self::URI_PREFIX), StatusCode::AssertionMissing);
         }
         $path = substr($uri, strlen(self::URI_PREFIX));
         if (str_starts_with($path, '/c2pa/')) {
             $segments = explode('/', substr($path, strlen('/c2pa/')));
             $first = array_shift($segments);
             if ($first !== $this->label) {
-                throw new ManifestException(sprintf('URI %s refers to another manifest (%s); cross-manifest references are not supported yet', $uri, (string) $first));
+                throw new ManifestException(sprintf('URI %s refers to another manifest (%s); cross-manifest references are not supported yet', $uri, (string) $first), StatusCode::AssertionMissing);
             }
         } else {
             $segments = explode('/', $path);
@@ -115,10 +119,10 @@ final readonly class Manifest
             if ($next === null) {
                 foreach ($box->children as $child) {
                     if ($child instanceof UnknownBox && $child->label === $segment) {
-                        throw new ManifestException(sprintf('URI %s resolves to an unknown box (UUID %s)', $uri, (string) $child->uuid));
+                        throw new ManifestException(sprintf('URI %s resolves to an unknown box (UUID %s)', $uri, (string) $child->uuid), StatusCode::AssertionMissing);
                     }
                 }
-                throw new ManifestException(sprintf('URI %s does not resolve to a box (no %s)', $uri, $segment));
+                throw new ManifestException(sprintf('URI %s does not resolve to a box (no %s)', $uri, $segment), StatusCode::AssertionMissing);
             }
             $box = $next;
         }
@@ -129,36 +133,41 @@ final readonly class Manifest
     /** Every reference in the claim must land where the spec says (SPEC-007 AC4, AC10). */
     private function checkReferences(): void
     {
-        if ($this->resolve($this->claim->signatureUri) !== $this->signatureBox) {
-            throw new ManifestException(sprintf('manifest %s: signature URI %s does not name the signature box', $this->label, $this->claim->signatureUri));
+        try {
+            $signatureTarget = $this->resolve($this->claim->signatureUri);
+        } catch (ManifestException $e) {
+            throw new ManifestException($e->getMessage(), StatusCode::ClaimSignatureMissing, $e);
+        }
+        if ($signatureTarget !== $this->signatureBox) {
+            throw new ManifestException(sprintf('manifest %s: signature URI %s does not name the signature box', $this->label, $this->claim->signatureUri), StatusCode::ClaimSignatureMissing);
         }
         foreach ([...$this->claim->createdAssertions, ...$this->claim->gatheredAssertions] as $reference) {
             $target = $this->resolve($reference->url);
             if (! in_array($target, $this->assertionStore->superboxes(), true)) {
-                throw new ManifestException(sprintf('URI %s is not in the assertion store', $reference->url));
+                throw new ManifestException(sprintf('URI %s is not in the assertion store', $reference->url), StatusCode::AssertionMissing);
             }
         }
     }
 
     /** The one child superbox with this UUID and label. */
-    private static function theOne(Superbox $box, string $uuid, string $label, string $what, string $manifestLabel): Superbox
+    private static function theOne(Superbox $box, string $uuid, string $label, string $what, string $manifestLabel, StatusCode $status): Superbox
     {
         $matches = array_values(array_filter(
             $box->superboxes(),
             static fn (Superbox $child): bool => $child->description->uuid === $uuid && $child->description->label === $label,
         ));
         if (count($matches) === 0) {
-            throw new ManifestException(sprintf('manifest %s: no %s (%s)', $manifestLabel, $what, $label));
+            throw new ManifestException(sprintf('manifest %s: no %s (%s)', $manifestLabel, $what, $label), $status);
         }
         if (count($matches) > 1) {
-            throw new ManifestException(sprintf('manifest %s: %d %ses (%s), expected one', $manifestLabel, count($matches), $what, $label));
+            throw new ManifestException(sprintf('manifest %s: %d %ses (%s), expected one', $manifestLabel, count($matches), $what, $label), $status);
         }
 
         return $matches[0];
     }
 
     /** The data of a superbox that must hold exactly one cbor content box (C2PA 2.4 §11.1.4.4). */
-    private static function singleCbor(Superbox $box, string $what, string $manifestLabel): string
+    private static function singleCbor(Superbox $box, string $what, string $manifestLabel, StatusCode $status): string
     {
         $content = $box->contentBoxes();
         if (count($content) !== 1 || $content[0]->type !== 'cbor') {
@@ -167,18 +176,18 @@ final readonly class Manifest
                 $manifestLabel,
                 $what,
                 count($content),
-            ));
+            ), $status);
         }
 
         return $content[0]->data;
     }
 
-    private static function decodeCbor(string $data, string $what): mixed
+    private static function decodeCbor(string $data, string $what, StatusCode $status = StatusCode::GeneralError): mixed
     {
         try {
             return (new CborDecoder)->decode($data);
         } catch (CborException $e) {
-            throw new ManifestException(sprintf('%s: invalid CBOR: %s', $what, $e->getMessage()), 0, $e);
+            throw new ManifestException(sprintf('%s: invalid CBOR: %s', $what, $e->getMessage()), $status, $e);
         }
     }
 
@@ -198,7 +207,7 @@ final readonly class Manifest
             try {
                 return json_decode(self::only($byType['json'], $label), true, 64, JSON_THROW_ON_ERROR);
             } catch (\JsonException $e) {
-                throw new ManifestException(sprintf('assertion %s: invalid JSON: %s', $label, $e->getMessage()), 0, $e);
+                throw new ManifestException(sprintf('assertion %s: invalid JSON: %s', $label, $e->getMessage()), StatusCode::AssertionJsonInvalid, $e);
             }
         }
         if ($kinds === ['bfdb', 'bidb']) {

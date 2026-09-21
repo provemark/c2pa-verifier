@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Cose;
 
+use Provemark\C2paVerifier\Report\StatusCode;
+
 /**
  * Does the claim signature verify under the leaf's public key? (SPEC-009;
  * C2PA 2.4 §13.2.1, §13.2.6.) Three outcomes: true; false — a mismatch, a
@@ -54,7 +56,7 @@ final readonly class SignatureVerifier
     {
         $alg = $cose->alg;
         if (! isset(self::NAMES[$alg])) {
-            throw new CoseException(sprintf('alg %d is not supported (C2PA 2.4 §13.2.1 allows ES256/384/512, PS256/384/512, EdDSA)', $alg));
+            throw new CoseException(sprintf('alg %d is not supported (C2PA 2.4 §13.2.1 allows ES256/384/512, PS256/384/512, EdDSA)', $alg), StatusCode::AlgorithmUnsupported);
         }
         $key = PublicKey::fromCertificateDer($cose->chain[0]->bytes);
         $this->requireFit($alg, $key);
@@ -85,7 +87,7 @@ final readonly class SignatureVerifier
             self::PS256, self::PS384, self::PS512 => sprintf('an RSA key of %d to %d bits', self::RSA_MIN_BITS, self::RSA_MAX_BITS),
             default => 'an Ed25519 key',
         };
-        throw new CoseException(sprintf('key does not fit %s (alg %d): %s; C2PA 2.4 §13.2.1 requires %s', $name, $alg, $key->describe(), $requires));
+        throw new CoseException(sprintf('key does not fit %s (alg %d): %s; C2PA 2.4 §13.2.1 requires %s', $name, $alg, $key->describe(), $requires), StatusCode::SigningCredentialInvalid);
     }
 
     private function ecdsa(string $message, string $signature, PublicKey $key, string $hash): bool
@@ -132,7 +134,7 @@ final readonly class SignatureVerifier
                 return false;
             }
         }
-        throw new CoseException('EdDSA cannot be verified: neither ext-sodium nor OpenSSL Ed25519 support is available on this PHP');
+        throw new CoseException('EdDSA cannot be verified: neither ext-sodium nor OpenSSL Ed25519 support is available on this PHP', StatusCode::AlgorithmUnsupported);
     }
 
     /** 1 is the only true; 0 a mismatch; −1 an OpenSSL refusal — false, never true. */

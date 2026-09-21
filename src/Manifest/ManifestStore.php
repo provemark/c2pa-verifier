@@ -8,6 +8,7 @@ use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cbor\CborTag;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Jumbf\Superbox;
+use Provemark\C2paVerifier\Report\StatusCode;
 
 /**
  * The manifest store as meaning (SPEC-007): its manifests by label, the
@@ -35,7 +36,7 @@ final readonly class ManifestStore
             }
         }
         if ($manifests === []) {
-            throw new ManifestException('the store holds no manifest');
+            throw new ManifestException('the store holds no manifest', StatusCode::ClaimMissing);
         }
 
         return new self($manifests, $manifests[array_key_last($manifests)]);

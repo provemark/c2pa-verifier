@@ -289,6 +289,13 @@ final readonly class CoseSign1
   deprecated `"x5chain"` stays visible there whether it was the chain
   used (AC4) or a duplicate (AC11).
 
+## Amendments
+
+1. **2026-09-21, defined in SPEC-010 and approved with it** —
+   `CoseException` carries a `StatusCode` (C2PA 2.4 §15): the chain faults
+   of AC10 are `signingCredential.invalid`; the structural faults of
+   AC7–AC9 stay `general.error`. No criterion changed.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

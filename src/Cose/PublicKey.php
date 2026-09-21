@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Cose;
 
+use Provemark\C2paVerifier\Report\StatusCode;
+
 /**
  * The public key of a DER certificate, classified by the algorithm
  * identifier of its SubjectPublicKeyInfo — not by PHP's key-type constants,
@@ -42,15 +44,15 @@ final readonly class PublicKey
         $pem = "-----BEGIN CERTIFICATE-----\n".chunk_split(base64_encode($der), 64, "\n")."-----END CERTIFICATE-----\n";
         $key = OpenSsl::quiet(static fn () => openssl_pkey_get_public($pem));
         if ($key === false) {
-            throw new CoseException('the leaf certificate\'s public key cannot be read');
+            throw new CoseException('the leaf certificate\'s public key cannot be read', StatusCode::SigningCredentialInvalid);
         }
         $details = OpenSsl::quiet(static fn () => openssl_pkey_get_details($key));
         if ($details === false || ! is_string($details['key']) || ! is_int($details['bits'])) {
-            throw new CoseException('the leaf certificate\'s public key has no readable details');
+            throw new CoseException('the leaf certificate\'s public key has no readable details', StatusCode::SigningCredentialInvalid);
         }
         $spki = base64_decode((string) preg_replace('/-----[^-]+-----|\s/', '', $details['key']), true);
         if ($spki === false) {
-            throw new CoseException('the leaf certificate\'s public key is not DER');
+            throw new CoseException('the leaf certificate\'s public key is not DER', StatusCode::SigningCredentialInvalid);
         }
         // The algorithm identifier sits at the start of the SPKI, inside its first 32 bytes.
         $head = substr($spki, 0, 32);
@@ -67,12 +69,12 @@ final readonly class PublicKey
             $ec = $details['ec'] ?? null;
             $curve = is_array($ec) ? ($ec['curve_name'] ?? null) : null;
             if (! is_string($curve)) {
-                throw new CoseException('the leaf certificate\'s EC key names no curve');
+                throw new CoseException('the leaf certificate\'s EC key names no curve', StatusCode::SigningCredentialInvalid);
             }
 
             return new self(self::KIND_EC, $curve, $details['bits'], $key, $spki);
         }
-        throw new CoseException('the leaf certificate\'s public key is of no kind this verifier knows (not EC, RSA, RSA-PSS or Ed25519)');
+        throw new CoseException('the leaf certificate\'s public key is of no kind this verifier knows (not EC, RSA, RSA-PSS or Ed25519)', StatusCode::SigningCredentialInvalid);
     }
 
     /**
@@ -84,7 +86,7 @@ final readonly class PublicKey
     {
         $raw = substr($this->spki, -32);
         if (strlen($raw) !== 32) {
-            throw new CoseException(sprintf('the Ed25519 SubjectPublicKeyInfo is %d bytes, expected 44', strlen($this->spki)));
+            throw new CoseException(sprintf('the Ed25519 SubjectPublicKeyInfo is %d bytes, expected 44', strlen($this->spki)), StatusCode::SigningCredentialInvalid);
         }
 
         return $raw;

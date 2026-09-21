@@ -375,6 +375,16 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
   out for equality with the oracle; M4 reads it from the `Manifest`, not
   from the JSON. Non-blocker.
 
+## Amendments
+
+1. **2026-09-21, defined in SPEC-010 and approved with it** —
+   `ManifestException` carries a `StatusCode` (C2PA 2.4 §15), set at
+   every throw site: `claim.missing`, `claim.multiple`,
+   `claim.cbor.invalid`, `claim.malformed`, `claimSignature.missing`,
+   `assertion.missing`, `assertion.json.invalid`; `general.error` where
+   §15 has no word. No criterion of this spec changed; the exception
+   messages are as they were.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

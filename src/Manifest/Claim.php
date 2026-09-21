@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Provemark\C2paVerifier\Manifest;
 
 use Provemark\C2paVerifier\Cbor\CborBytes;
+use Provemark\C2paVerifier\Report\StatusCode;
 
 /**
  * The claim, version 1 (`c2pa.claim`) or 2 (`c2pa.claim.v2`), typed from
@@ -43,13 +44,13 @@ final readonly class Claim
             : ['claim_generator', 'signature', 'assertions', 'dc:format', 'instanceID'];
         foreach ($required as $field) {
             if (! array_key_exists($field, $map)) {
-                throw new ManifestException(sprintf('claim (version %d) is missing the required field %s', $version, $field));
+                throw new ManifestException(sprintf('claim (version %d) is missing the required field %s', $version, $field), StatusCode::ClaimMalformed);
             }
         }
 
         $text = static function (string $field, mixed $value) use ($version): string {
             if (! is_string($value)) {
-                throw new ManifestException(sprintf('claim (version %d): %s is not text', $version, $field));
+                throw new ManifestException(sprintf('claim (version %d): %s is not text', $version, $field), StatusCode::ClaimMalformed);
             }
 
             return $value;
@@ -97,15 +98,15 @@ final readonly class Claim
         $expected = $version === 2 ? 'a map' : 'a non-empty list of maps';
         $entries = $version === 2 ? [$value] : $value;
         if (! is_array($entries) || ! array_is_list($entries) || $entries === []) {
-            throw new ManifestException(sprintf('claim (version %d): claim_generator_info is not %s', $version, $expected));
+            throw new ManifestException(sprintf('claim (version %d): claim_generator_info is not %s', $version, $expected), StatusCode::ClaimMalformed);
         }
         $list = [];
         foreach ($entries as $entry) {
             if (! is_array($entry)) {
-                throw new ManifestException(sprintf('claim (version %d): claim_generator_info entry is not a map', $version));
+                throw new ManifestException(sprintf('claim (version %d): claim_generator_info entry is not a map', $version), StatusCode::ClaimMalformed);
             }
             if (! isset($entry['name']) || ! is_string($entry['name'])) {
-                throw new ManifestException('claim_generator_info is missing the required field name');
+                throw new ManifestException('claim_generator_info is missing the required field name', StatusCode::ClaimMalformed);
             }
             $map = [];
             foreach ($entry as $key => $item) {
@@ -121,22 +122,22 @@ final readonly class Claim
     private static function hashedUris(mixed $value, string $field): array
     {
         if (! is_array($value) || ! array_is_list($value) || $value === []) {
-            throw new ManifestException(sprintf('claim: %s is not a non-empty list', $field));
+            throw new ManifestException(sprintf('claim: %s is not a non-empty list', $field), StatusCode::ClaimMalformed);
         }
         $uris = [];
         foreach ($value as $i => $entry) {
             if (! is_array($entry) || ! isset($entry['url']) || ! is_string($entry['url'])) {
-                throw new ManifestException(sprintf('claim: %s[%d] is not a hashed URI with a url', $field, $i));
+                throw new ManifestException(sprintf('claim: %s[%d] is not a hashed URI with a url', $field, $i), StatusCode::ClaimMalformed);
             }
             if (! array_key_exists('hash', $entry)) {
-                throw new ManifestException(sprintf('hashed URI %s: hash is missing', $entry['url']));
+                throw new ManifestException(sprintf('hashed URI %s: hash is missing', $entry['url']), StatusCode::ClaimMalformed);
             }
             if (! $entry['hash'] instanceof CborBytes) {
-                throw new ManifestException(sprintf('hashed URI %s: hash is %s, not a byte string', $entry['url'], is_string($entry['hash']) ? 'text' : gettype($entry['hash'])));
+                throw new ManifestException(sprintf('hashed URI %s: hash is %s, not a byte string', $entry['url'], is_string($entry['hash']) ? 'text' : gettype($entry['hash'])), StatusCode::ClaimMalformed);
             }
             $alg = $entry['alg'] ?? null;
             if ($alg !== null && ! is_string($alg)) {
-                throw new ManifestException(sprintf('hashed URI %s: alg is not text', $entry['url']));
+                throw new ManifestException(sprintf('hashed URI %s: alg is not text', $entry['url']), StatusCode::ClaimMalformed);
             }
             $uris[] = new HashedUri($entry['url'], $entry['hash'], $alg);
         }

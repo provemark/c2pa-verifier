@@ -291,6 +291,12 @@ holds a private key or signs.
    No criterion changed; the measurement filled in what the criterion
    left to measurement.
 
+2. **2026-09-21, defined in SPEC-010 and approved with it** — the
+   `CoseException`s of this spec carry a `StatusCode`: an unsupported
+   `alg` and EdDSA without an extension → `algorithm.unsupported`; a key
+   that does not fit, or cannot be read → `signingCredential.invalid`. No
+   criterion changed.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

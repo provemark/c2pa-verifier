@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-21                      |
 | Supersedes | —                                                 |
@@ -326,6 +326,10 @@ already); `Cose` may see `Manifest` (the arrow exists, unused until now).
   `claim-title-changed`, `signature-changed` and `json-broken` is under
   `tests/Fixtures/c2patool/variants/`; AC2's urls match exactly, AC7's
   does not (c2patool's bare label) and the criterion says so.
+- Added at implementation: `ClaimSignatureCheck::checkBytes($signature,
+  $claim, $url)` beside `check(Manifest)`, for signatures that come
+  without a manifest (the step-19 vectors); `StatusCode::isInformational()`
+  (false for every code so far; M6's `timeStamp.*` will be the first).
 - **Where `general.error`'s url for a store-level fault should point**:
   `self#jumbf=/c2pa` (the store) is proposed; c2patool reports such
   faults as a top-level error with no url at all. Non-blocker.
@@ -342,13 +346,13 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
+| AC1 | tests/Unit/Report/ReportTest.php :: AC1: the four fixtures: claimSignature.validated, and the words are c2patool's / SPEC-010 | src/Cose/ClaimSignatureCheck.php :: check(), checkBytes(); src/Report/ValidationResult.php :: fromStatuses() |
+| AC2 | tests/Unit/Report/ReportTest.php :: AC2: one altered byte: claimSignature.mismatch, as c2patool / SPEC-010 | src/Cose/ClaimSignatureCheck.php :: checkBytes() |
+| AC3 | tests/Unit/Report/ReportTest.php :: AC3: cannot verify: the codes §15.7 names / SPEC-010 | src/Cose/ClaimSignatureCheck.php :: checkBytes(); src/Cose/SignatureVerifier.php (StatusCode on its throws); src/Cose/PublicKey.php |
+| AC4 | tests/Unit/Report/ReportTest.php :: AC4: structural COSE faults: general.error with the message / SPEC-010 | src/Cose/ClaimSignatureCheck.php :: checkBytes(); src/Cose/CoseException.php (default general.error); src/Cose/CoseSign1.php |
+| AC5 | tests/Unit/Report/ReportTest.php :: AC5: chain faults: signingCredential.invalid / SPEC-010 | src/Cose/CoseSign1.php :: findChain(), chain() (StatusCode::SigningCredentialInvalid) |
+| AC6 | tests/Unit/Report/ReportTest.php :: AC6: the Manifest layer's faults carry their codes / SPEC-010 | src/Manifest/ManifestException.php :: $status; src/Manifest/Manifest.php, ManifestStore.php, Claim.php (StatusCode at every throw) |
+| AC7 | tests/Unit/Report/ReportTest.php :: AC7: assertion.json.invalid agrees with c2patool (code; c2patool's url is a bare label) / SPEC-010 | src/Manifest/Manifest.php :: assertionData() (StatusCode::AssertionJsonInvalid) |
+| AC8 | tests/Unit/Report/ReportTest.php :: AC8: the leaf layers' faults become general.error / SPEC-010 | src/Report/ValidationStatus.php; src/Report/StatusCode.php :: GeneralError |
+| AC9 | tests/Unit/Report/ReportTest.php :: AC9: the array shape is c2patool's, plus the checks performed / SPEC-010 | src/Report/ValidationResult.php :: toArray(); src/Report/ValidationStatus.php :: toArray() |
+| AC10 | tests/Unit/Report/ReportTest.php :: AC10: every code is verbatim, and success and failure are told apart / SPEC-010 | src/Report/StatusCode.php :: cases, isSuccess(), isFailure(); src/Report/ValidationResult.php :: fromStatuses() |

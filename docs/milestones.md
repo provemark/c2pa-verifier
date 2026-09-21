@@ -18,7 +18,7 @@ when" has not been measured is not done.
 | M0 | Repository skeleton: package, tool chain, spec template, traceability check, CI, notes, ADRs | `composer check` green on an empty `src/` — **done 2026-09-19**; first green CI run (all three PHP versions) on `bbb7299`, run `35444321627`, the same day |
 | M1 | **Container → manifest store bytes.** JPEG APP11 (multi-segment, Box Instance Numbers), PNG `caBX`, WebP RIFF `C2PA`. Byte-exact extraction, nothing parsed. | SHA-256 of the extracted store equals what `c2patool --detailed` / a hexdump gives, for every fixture — **done 2026-09-20** (steps 02–07; the hashes in `notes/step-02`, `-04`, `-06`) |
 | M2 | **JUMBF + CBOR → manifest store as data.** Boxes, superboxes, description boxes, content-type UUIDs; a CBOR decoder for the subset C2PA uses; claim v1 and v2; assertions; `claim_generator_info`. | the sister library's `ManifestStoreParser::fromJson()` accepts the output and every accessor equals its `/v1/read` — **done 2026-09-21** (steps 09–15; SPEC-007 AC6: the five content accessors equal c2patool's JSON through the sister parser; the crypto accessors join in M3–M6) |
-| M3 | **COSE_Sign1.** Protected header, `x5chain`, Sig_structure, verify ES256/ES384/PS256/Ed25519. No trust yet. | `claimSignature.validated` equals c2patool on all fixtures; one altered byte in the claim → `claimSignature.mismatch` |
+| M3 | **COSE_Sign1.** Protected header, `x5chain`, Sig_structure, verify ES256/ES384/PS256/Ed25519. No trust yet. | `claimSignature.validated` equals c2patool on all fixtures; one altered byte in the claim → `claimSignature.mismatch` — **done 2026-09-21** (steps 16–22; SPEC-010 AC1/AC2 compare code and url with c2patool's JSON; ES256/384/512, PS256/384/512 and Ed25519 on `ext-openssl` + opt-in `sodium`, ADR-0001 amended) |
 | M4 | **Hash binding.** `c2pa.hash.data` v1/v2: exclusions, `pad`, streaming hash. Hashed-URI checks on assertions. | one changed pixel byte → `assertion.dataHash.mismatch`; untouched file `Valid` |
 | M5 | **Chain and trust.** Chain from `x5chain`, anchor from `trust_anchors`, EKU from `trust_config`, `allowed_list`. `Trusted` vs `Valid`. | verdicts equal `c2patool --settings` with and without the trust file; test cert without trust file → `signingCredential.untrusted` |
 | M6 | **RFC 3161.** `sigTst` / `sigTst2` (ASN.1), TSA signature, signing time against certificate validity. | `hasTimestamp` and `timeStamp.*` codes equal c2patool on a timestamped fixture |
@@ -83,7 +83,7 @@ specifying is the tool that enforces exactly that.
 | SPEC-008 | COSE_Sign1: structure, headers, `x5chain`, the `Sig_structure` | implemented 2026-09-21: 12 tests red → green, 132 in all — step 18 |
 | 19 | Fourteen signature vectors (`bin/make-signature-vectors.php`, `tests/Fixtures/signatures/`), the P-521 DER bug and the PSS-parameter refusal found — `notes/step-19-signature-vectors.md` | done 2026-09-21 |
 | SPEC-009 | Signature verification per algorithm, key-fits-algorithm | implemented 2026-09-21: 11 tests red → green, 143 in all — step 20 |
-| SPEC-010 | `Report`: the §15 codes for the claim signature and the Manifest layer's faults, verbatim; a partial report that names its checks | approved 2026-09-21; 10 tests seen red; implementation next |
+| SPEC-010 | `Report`: the §15 codes for the claim signature and the Manifest layer's faults, verbatim; a partial report that names its checks | implemented 2026-09-21: 10 tests red → green, 153 in all; SPEC-007/008/009 amended (status codes on exceptions) — step 22. **M3 complete** |
 
 ## After M0
 

@@ -1603,3 +1603,25 @@ README are where the disclosure lives.
   the success entry (ours, not c2patool's); AC10 pins the twelve strings
   sorted, and "an empty report is Invalid".
 - Decided by Maurice: Claude writes all the tests.
+
+## 2026-09-21 — Step 22: the Report layer (SPEC-010 implemented); M3 complete
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, bouw de Report-laag".
+- Produced: `src/Report/{StatusCode,ValidationState,ValidationStatus,
+  ValidationResult}.php`; `src/Cose/ClaimSignatureCheck.php`;
+  `ManifestException` and `CoseException` with a `StatusCode`, set at
+  every throw site in `ManifestStore`, `Manifest`, `Claim`, `CoseSign1`,
+  `PublicKey`, `SignatureVerifier`; SPEC-010 → `implemented` with
+  Traceability; amendment sections in SPEC-007, SPEC-008 and SPEC-009;
+  four test-file fixes (three `toContain()` message arguments, one sort
+  order) and type narrowing; `notes/step-22-report-layer.md`;
+  `NOTES.md`; `docs/milestones.md` (M3 marked done); this entry.
+- Measured: first run 6 passed, 4 failed (all test-side: Pest's
+  variadic `toContain`, `mismatch` < `missing`); PHPStan 21 + 1 findings
+  resolved; `composer check` exit 0, **153 passed (938 assertions)**,
+  Deptrac 0 violations. AC1/AC2: our code and url equal c2patool's
+  recorded JSON for the four fixtures and the two one-byte variants;
+  AC9: the sister parser reads our `toArray()`.
+- Reasoned: `checks_performed` in every array; an empty report is
+  `Invalid`; the structural COSE faults left at `general.error`.
+- Decided by Maurice: build step 22b.

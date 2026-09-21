@@ -62,7 +62,11 @@ function spec010Variant(string $path): Manifest
     return ManifestStore::fromTree((new JumbfParser)->parse((string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/{$path}.bin")))->active;
 }
 
-/** A vector of step 19 as a Manifest-less check input: the CoseSign1 and the claim bytes. */
+/**
+ * A vector of step 19 as a Manifest-less check input: the CoseSign1 bytes and the claim bytes.
+ *
+ * @return array{cose: string, claim: string}
+ */
 function spec010Vector(string $name): array
 {
     /** @var array{claim_hex: string, protected_hex: string, signature_hex: string} $v */
@@ -87,8 +91,31 @@ function spec010C2patool(string $name, bool $variant = false): array
 function spec010Pairs(mixed $statuses): array
 {
     assert(is_array($statuses));
+    $pairs = [];
+    foreach ($statuses as $status) {
+        assert(is_array($status) && is_string($status['code']) && is_string($status['url']));
+        $pairs[] = ['code' => $status['code'], 'url' => $status['url']];
+    }
 
-    return array_values(array_map(static fn (array $s): array => ['code' => $s['code'], 'url' => $s['url']], $statuses));
+    return $pairs;
+}
+
+/**
+ * The activeManifest block of a recorded c2patool JSON (or of our toArray()).
+ *
+ * @param  array<string, mixed>  $oracle
+ * @return array<string, mixed>
+ */
+function spec010ActiveManifest(array $oracle): array
+{
+    $results = $oracle['validation_results'];
+    assert(is_array($results) && is_array($results['activeManifest']));
+    $active = [];
+    foreach ($results['activeManifest'] as $kind => $statuses) {
+        $active[(string) $kind] = $statuses;
+    }
+
+    return $active;
 }
 
 it('AC1: the four fixtures: claimSignature.validated, and the words are c2patool\'s', function (): void {
@@ -101,8 +128,7 @@ it('AC1: the four fixtures: claimSignature.validated, and the words are c2patool
             ->and($statuses[0]->url)->toBe("self#jumbf=/c2pa/{$manifest->label}/c2pa.signature", $name);
 
         $oracle = spec010C2patool($name);
-        assert(is_array($oracle['validation_results']) && is_array($oracle['validation_results']['activeManifest']));
-        $validated = array_values(array_filter(spec010Pairs($oracle['validation_results']['activeManifest']['success']), static fn (array $p): bool => $p['code'] === 'claimSignature.validated'));
+        $validated = array_values(array_filter(spec010Pairs(spec010ActiveManifest($oracle)['success']), static fn (array $p): bool => $p['code'] === 'claimSignature.validated'));
         expect($validated)->toBe([['code' => $statuses[0]->code->value, 'url' => $statuses[0]->url]], $name);
 
         $result = ValidationResult::fromStatuses($statuses, ['signature']);
@@ -121,7 +147,7 @@ it('AC2: one altered byte: claimSignature.mismatch, as c2patool', function (): v
             ->and(ValidationResult::fromStatuses($statuses, ['signature'])->state)->toBe(ValidationState::Invalid, $name);
 
         $oracle = spec010C2patool($name, true);
-        expect(spec010Pairs($oracle['validation_status']))->toContain(['code' => 'claimSignature.mismatch', 'url' => SPEC010_PNG_SIGNATURE_URL], $name);
+        expect(spec010Pairs($oracle['validation_status']))->toContain(['code' => 'claimSignature.mismatch', 'url' => SPEC010_PNG_SIGNATURE_URL]);
     }
 })->group('SPEC-010');
 
@@ -154,7 +180,7 @@ it('AC4: structural COSE faults: general.error with the message', function (): v
 
         expect($statuses)->toHaveCount(1, $name)
             ->and($statuses[0]->code)->toBe(StatusCode::GeneralError, $name)
-            ->and($statuses[0]->explanation)->toContain($message, $name)
+            ->and($statuses[0]->explanation)->toContain($message)
             ->and(ValidationResult::fromStatuses($statuses, ['signature'])->state)->toBe(ValidationState::Invalid, $name);
     }
 })->group('SPEC-010');
@@ -164,7 +190,7 @@ it('AC5: chain faults: signingCredential.invalid', function (): void {
         $statuses = (new ClaimSignatureCheck)->check(spec010Variant("cose/{$name}"));
 
         expect($statuses[0]->code)->toBe(StatusCode::SigningCredentialInvalid, $name)
-            ->and($statuses[0]->explanation)->toContain($message, $name);
+            ->and($statuses[0]->explanation)->toContain($message);
     }
 })->group('SPEC-010');
 
@@ -265,24 +291,27 @@ it('AC8: the leaf layers\' faults become general.error', function (): void {
 it('AC9: the array shape is c2patool\'s, plus the checks performed', function (): void {
     $png = spec010Manifest('fixture-signed.png');
     $valid = ValidationResult::fromStatuses((new ClaimSignatureCheck)->check($png), ['signature'])->toArray();
+    $success = spec010ActiveManifest($valid)['success'];
+    assert(is_array($success) && is_array($success[0]) && is_string($success[0]['explanation']));
+    $explanation = $success[0]['explanation'];
 
-    expect($valid)->toBe([
-        'validation_status' => [],
-        'validation_results' => ['activeManifest' => [
-            'success' => [['code' => 'claimSignature.validated', 'url' => SPEC010_PNG_SIGNATURE_URL, 'explanation' => $valid['validation_results']['activeManifest']['success'][0]['explanation']]],
-            'informational' => [],
-            'failure' => [],
-        ]],
-        'validation_state' => 'Valid',
-        'checks_performed' => ['signature'],
-    ]);
-    assert(is_array($valid['validation_results']['activeManifest']['success'][0]));
-    expect($valid['validation_results']['activeManifest']['success'][0]['explanation'])->toBeString()->not->toBe('');
+    expect($explanation)->not->toBe('')
+        ->and($valid)->toBe([
+            'validation_status' => [],
+            'validation_results' => ['activeManifest' => [
+                'success' => [['code' => 'claimSignature.validated', 'url' => SPEC010_PNG_SIGNATURE_URL, 'explanation' => $explanation]],
+                'informational' => [],
+                'failure' => [],
+            ]],
+            'validation_state' => 'Valid',
+            'checks_performed' => ['signature'],
+        ]);
 
     $mismatch = ValidationResult::fromStatuses((new ClaimSignatureCheck)->check(spec010Variant('cose/claim-title-changed')), ['signature'])->toArray();
-    assert(is_array($mismatch['validation_status']) && is_array($mismatch['validation_results']['activeManifest']));
+    $failure = spec010ActiveManifest($mismatch)['failure'];
+    assert(is_array($mismatch['validation_status']) && is_array($failure));
     expect(array_column($mismatch['validation_status'], 'code'))->toBe(['claimSignature.mismatch'])
-        ->and(array_column($mismatch['validation_results']['activeManifest']['failure'], 'code'))->toBe(['claimSignature.mismatch'])
+        ->and(array_column($failure, 'code'))->toBe(['claimSignature.mismatch'])
         ->and($mismatch['validation_state'])->toBe('Invalid');
 
     // The sister library reads what c2patool would have written.
@@ -301,7 +330,7 @@ it('AC10: every code is verbatim, and success and failure are told apart', funct
     expect($values)->toBe([
         'algorithm.unsupported', 'assertion.json.invalid', 'assertion.missing',
         'claim.cbor.invalid', 'claim.malformed', 'claim.missing', 'claim.multiple',
-        'claimSignature.missing', 'claimSignature.mismatch', 'claimSignature.validated',
+        'claimSignature.mismatch', 'claimSignature.missing', 'claimSignature.validated',
         'general.error', 'signingCredential.invalid',
     ]);
     foreach (StatusCode::cases() as $code) {
