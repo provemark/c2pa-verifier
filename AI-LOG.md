@@ -1224,3 +1224,24 @@ README are where the disclosure lives.
   8.3 / 8.4 / 8.5 each `success` with `Tests: 120 passed`; `all green`
   `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — SPEC-008 (draft): COSE_Sign1, the structure and the headers
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "leg SPEC-008 uit", then "akkoord, beide zoals je adviseert,
+  schrijf SPEC-008 als draft".
+- Produced: `specs/SPEC-008-cose-sign1-structure.md`, status `draft`, 12
+  criteria; `docs/milestones.md` row; this entry. No code, no tests, no
+  new fixtures.
+- Measured: C2PA 2.4 §14.5 and the `sigTst`/`pad` clauses read; the
+  `Sig_structure` of all four fixtures built with the step-16 encoder and
+  hashed (PNG 1,895 B `065a22da…`, JPEG 1,895 B `c80e74eb…`, WebP 1,896 B
+  `f47dba5f…`, Adobe 602 B `1a33b3e7…`); the Adobe protected header is 4
+  bytes `a1 01 38 24`, its `sigTst` token 5,951 bytes, its `pad` 6,457;
+  `spec-check` `OK: 9 spec(s), 8 test file(s)`; `composer check` exit 0.
+- Reasoned: the header lookup order and "33 wins"; the detached-payload
+  rule including the empty byte string; the limits; the single-function
+  encoder with shortest-form lengths as the one CBOR the verifier writes.
+- Decided by Maurice: a missing `x5chain` is an error and an unprotected
+  one is accepted (with the step-16 reasoning); the supported-algorithm
+  list belongs to SPEC-009. The draft awaits the variant measurement and
+  his approval.

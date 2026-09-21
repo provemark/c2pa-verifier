@@ -79,7 +79,7 @@ specifying is the tool that enforces exactly that.
 |---|---|---|
 | 16 | The four signatures verified with `ext-openssl`, PSS measured with both key kinds, three broken variants through c2patool, `cose-lib` measured — `notes/step-16-cose-signature.md` | done 2026-09-21 |
 | ADR-0001 | Amendment 1: COSE verification written here on `ext-openssl` | decided 2026-09-21 |
-| SPEC-008 | COSE_Sign1: structure, headers, `x5chain`, the `Sig_structure` | — |
+| SPEC-008 | COSE_Sign1: structure, headers, `x5chain`, the `Sig_structure` | draft 2026-09-21; variants + c2patool before approval |
 | SPEC-009 | Signature verification per algorithm, key-fits-algorithm | — |
 | SPEC-010 | `Report`: `claimSignature.validated` / `.mismatch`, `assertion.json.invalid` | — |
 
