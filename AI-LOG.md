@@ -811,3 +811,30 @@ README are where the disclosure lives.
 - Decided by Maurice: unknown boxes kept as `UnknownBox`; compressed and
   update manifests an error now, own spec later. The draft awaits the
   variant measurement and his approval.
+
+## 2026-09-21 — Step 10: the SPEC-005 variants, measured
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "doe de meetstap voor de varianten".
+- Produced: `bin/make-jumbf-variants.php`; 23 `.bin` stores and 23 `.png`
+  carriers under `tests/Fixtures/jumbf/` with a README carrying the
+  c2patool column; SPEC-005 draft updated (AC3 32-byte salt, oracle notes
+  on AC7/10/12/15, the 20-byte salt as a grown box, References, the
+  blocking open question resolved); `notes/step-10-jumbf-variants.md`;
+  `NOTES.md`; `docs/milestones.md`; this entry.
+- Measured: the script checks the extracted store's length and hash before
+  editing; the grown variants and `unknown-uuid` read back with the
+  step-09 probe (20- and 32-byte salts, every superbox ending on its
+  LBox; `depth-17` 17 levels after correcting 18); `c2patool 0.27.22` on
+  all 23 `.png` files — 14 errors, 4 `Invalid` (label `/`, label U+0001:
+  `claim.multiple`; salt-20, salt-32: `hashedURI.mismatch` +
+  `dataHash.mismatch`), 3 **`Valid`** (`root-label`, `root-lbox-plus-one`,
+  `toggles-bit5`), 1 error on `unknown-uuid` (`could not create valid
+  JUMBF for claim`). PHPStan on the script: 7 findings (`hex2bin` →
+  `string|false`), fixed; Pint 3 fixers, fixed; hashes unchanged after the
+  fixes; `composer check` exit 0.
+- Reasoned: the `unknown-uuid` error is the claim's (SPEC-007), not the
+  box's (SPEC-005 keeps it as `UnknownBox`); the three `Valid`s are
+  divergences in the safe direction; c2patool's `unexpected end of file`
+  messages read as "read past the fault" without opening `jumbf_io.rs`.
+- Decided by Maurice: do the measurement step. SPEC-005 now awaits his
+  approval.

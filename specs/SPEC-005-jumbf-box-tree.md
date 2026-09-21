@@ -142,6 +142,11 @@ steps 02/04/06). Every offset below is measured in step 09.
   - Then the first's description has toggles 19, `requestable()` true, a
     16-byte salt `e15885c19cc788b35f6233d5312997b9`, no id, no signature;
     the second's has toggles 3, `requestable()` true, salt `null`
+  - And given `tests/Fixtures/jumbf/salt-32.bin` (the same store with that
+    salt grown to 32 bytes, every enclosing LBox adjusted; §8.4.2.3 allows
+    16 or 32)
+  - Then it parses, and the salt is the 32 bytes
+    `e15885c1…97b9` followed by sixteen `ab` bytes
 
 - **AC4 — a label path finds a box, and a missing label is `null`**
   - Given the PNG store
@@ -175,7 +180,10 @@ steps 02/04/06). Every offset below is measured in step 09.
     `.v2`); no unknown boxes
 
 - **AC7 — an unknown type UUID is kept, not walked, not an error**
-  *(C2PA 2.4 §11.1.2: "shall skip over (and ignore) its contents")*
+  *(C2PA 2.4 §11.1.2: "shall skip over (and ignore) its contents". Oracle:
+  `c2patool` → `Error: could not create valid JUMBF for claim` — not for
+  the unknown box itself but because the claim references it; that error
+  belongs to SPEC-007, where the reference is resolved)*
   - Given the PNG store with the thumbnail assertion's type UUID replaced
     by `ffffffff-ffff-ffff-ffff-ffffffffffff`
   - When the parser runs
@@ -200,6 +208,8 @@ steps 02/04/06). Every offset below is measured in step 09.
     where it would end (33,036) and where its parent ends (33,026)
 
 - **AC10 — children that do not end on their parent's LBox are an error**
+  *(stricter than the oracle: `c2patool` → `Valid`; it does not check the
+  root's LBox against its children)*
   - Given the PNG store with the root's LBox 46,025 → 46,026 (the bytes
     unchanged)
   - When the parser runs
@@ -213,12 +223,17 @@ steps 02/04/06). Every offset below is measured in step 09.
   - Then it throws `JumbfException` naming the superbox's offset (33,026)
     and the type found, shown as text when printable
 
-- **AC12 — description-box faults are errors**
+- **AC12 — description-box faults are errors** *(oracle, per variant in
+  `tests/Fixtures/jumbf/README.md`: bit 5 → `c2patool` **`Valid`**, the bit
+  is ignored; the 20-byte salt → `Invalid` only because the salt bytes
+  changed, its length is not checked; `/` and U+0001 in the label →
+  `Invalid`, `claim.multiple`; the rest → errors. Stricter than the oracle
+  on the first three, in the safe direction)*
   - Given the PNG store with, separately: the claim's toggles 3 → 35 (bit
     5 set); toggles 3 → 1 (Label Present cleared); the label's NUL
     terminator overwritten so no NUL remains inside the box; a `/` in the
-    label; a U+0001 in the label; the hash.data salt box's LBox 24 → 28
-    (a 20-byte salt); its TBox `c2sh` → `c2sx`
+    label; a U+0001 in the label; the hash.data salt grown to 20 bytes
+    (every enclosing LBox adjusted); the salt box's TBox `c2sh` → `c2sx`
   - When the parser runs
   - Then, in each case, it throws `JumbfException` naming the description
     box's offset and the fault, with any label bytes shown as hex, never
@@ -236,7 +251,9 @@ steps 02/04/06). Every offset below is measured in step 09.
   - When the parser runs
   - Then it throws `JumbfException` naming the `bfdb` box's offset (244)
 
-- **AC15 — the root must be a `c2pa` superbox**
+- **AC15 — the root must be a `c2pa` superbox** *(oracle: a `cbor` root
+  and a `c2ma` root are errors for `c2patool` too; the label `c2pb` is
+  **`Valid`** for it — stricter here, safe direction)*
   - Given bytes whose first box is a `cbor` content box; and separately the
     PNG store with the root's UUID `c2pa` → `c2ma`; and with the root's
     label `c2pa` → `c2pb`
@@ -276,10 +293,12 @@ steps 02/04/06). Every offset below is measured in step 09.
   labels, salts); the three assertion hashes in the claim of the PNG
   fixture (AC5), printed by `c2patool 0.27.22 --detailed` and reproduced
   by hashing the measured byte ranges; c2patool's behaviour on the
-  malformed variants of AC7–AC15 — to be measured before approval by
-  re-embedding each variant store in the PNG (CRC recomputed) and running
-  `c2patool`, recorded in `tests/Fixtures/jumbf/README.md`; where c2pa-rs
-  is more lenient, the divergence is written next to the criterion.
+  23 variants of AC3 and AC7–AC16, measured 2026-09-21 by re-embedding
+  each variant store in the PNG (CRC recomputed) and running `c2patool`
+  (`bin/make-jumbf-variants.php`, `tests/Fixtures/jumbf/README.md`,
+  `notes/step-10-jumbf-variants.md`); where c2pa-rs is more lenient —
+  the root label, the root LBox, an unknown toggle bit, the salt length
+  — the divergence is written next to the criterion.
 - Reasoned: toggle bits 2 and 3 (id, signature) from the C2PA text, not
   seen in any store; the default limits; that a padding box (ISO
   19566-5 A.4) never occurs in a C2PA store from a known writer.
@@ -371,12 +390,9 @@ here, since `Jumbf` is a leaf layer and may not depend on `Container`
   `Container` layer; `Jumbf` may not depend on it. Proposal: a tiny
   `Bytes` helper in a layer both may use, added by amendment to SPEC-004
   when this spec is implemented. Non-blocker for approval.
-- **The malformed variants and their c2patool measurement** (AC7–AC15)
-  are built and measured before approval, in a step like 02/04/06, with
-  `bin/make-jumbf-variants.php` producing store files under
-  `tests/Fixtures/jumbf/` and PNGs with the variant re-embedded for
-  c2patool. Blocker for approval: the oracle column of that README must
-  exist first.
+- Resolved before approval (step 10, 2026-09-21): the 23 variants are
+  built by `bin/make-jumbf-variants.php` and measured; the oracle column
+  of `tests/Fixtures/jumbf/README.md` is filled.
 - **Whether `UnknownBox` should also wrap unknown *content* box types
   inside a known superbox** (a `zzzz` box next to a `cbor` in a claim).
   Proposal: yes for assertion superboxes (§11.1.4.3 allows any JUMBF
