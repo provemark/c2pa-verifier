@@ -1766,3 +1766,16 @@ README are where the disclosure lives.
   `hash_equals` as habit; the digests in the explanation as the added
   value over c2patool's line.
 - Decided by Maurice: step 25 as explained.
+
+## 2026-09-21 — CI green on SPEC-011
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `d5ba2aa..ffb9a31` (five commits) to `origin/main`;
+  this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`,
+  `gh repo view --json visibility` → `PRIVATE`. Run `35621588330` on
+  `ffb9a31`: conclusion `success`; PHP 8.3 / 8.4 / 8.5 each `success`
+  with `Tests: 163 passed` (1099 assertions on 8.3 — the two Ed25519
+  assertions SPEC-009 amendment 1 skips there — 1101 on 8.4 and 8.5),
+  Composer cache restored on all three; `all green` `success`.
+- Decided by Maurice: push.
