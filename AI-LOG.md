@@ -1432,3 +1432,22 @@ README are where the disclosure lives.
   measurement of whether that holds there; AC10 tests `EcdsaSignature::toDer`
   directly, including the P-521 long form.
 - Decided by Maurice: Claude writes all the tests.
+
+## 2026-09-21 — Step 20: SignatureVerifier (SPEC-009 implemented)
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, bouw SignatureVerifier" (after "kan een hacker wat met
+  die c2pa-rs bug?", answered in conversation: no forgery — the signature
+  covers the claim box's bytes whatever the payload field holds; the rule
+  guards against ambiguity between verifiers, not against forgery).
+- Produced: `src/Cose/{SignatureVerifier,EcdsaSignature,PublicKey,RsaPss,
+  OpenSsl}.php`; SPEC-009 → `implemented` with Traceability, the open
+  question resolved and the two added classes recorded; one test-file
+  fix (a DER length miscounted in AC10); `notes/step-20-signature-verifier.md`;
+  `NOTES.md`; `docs/milestones.md`; this entry.
+- Measured: first run 10 passed, 1 failed (the test's arithmetic: 38, not
+  37); PHPStan two findings fixed; `composer check` exit 0, **143 passed
+  (802 assertions)**, Deptrac 0 violations; AC8's OpenSSL-only Ed25519
+  path `true` on PHP 8.5.8 / OpenSSL 3.6.3.
+- Reasoned: key classification by SPKI OID; the RSA upper bound without a
+  vector; `OpenSsl::quiet()` on principle for every `openssl_*` call.
+- Decided by Maurice: build step 20b.

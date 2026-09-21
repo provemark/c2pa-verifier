@@ -197,7 +197,7 @@ it('AC10: the R||S to DER conversion is exact', function (): void {
     $zeros = str_repeat("\0", 31);
     $one = str_repeat("\0", 32);
     expect(bin2hex(EcdsaSignature::toDer($zeros."\x05".$zeros."\x07", 32) ?? ''))->toBe('3006'.'020105'.'020107')
-        ->and(bin2hex(substr(EcdsaSignature::toDer("\x80".$zeros.$zeros."\x07", 32) ?? '', 0, 5)))->toBe('3025022100')
+        ->and(bin2hex(substr(EcdsaSignature::toDer("\x80".$zeros.$zeros."\x07", 32) ?? '', 0, 5)))->toBe('3026022100')
         ->and(bin2hex(EcdsaSignature::toDer($one.$one, 32) ?? ''))->toBe('3006'.'020100'.'020100');
 
     $p521 = spec009Vector('es512-p521');

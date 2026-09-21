@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-21                      |
 | Supersedes | —                                                 |
@@ -271,10 +271,14 @@ holds a private key or signs.
   (keys deleted), each self-verified by OpenSSL and re-verified in PHP;
   the P-521 long-form DER length and the PSS-parameter refusal were found
   there and are in the criteria.
-- **Whether `verify()` should return a small result object** (`valid`,
-  `alg`, `keyKind`) instead of `bool`, for SPEC-010's report. Proposal:
-  `bool` here, the report assembles from `CoseSign1` and the result.
-  Non-blocker.
+- Resolved at implementation: `bool`; SPEC-010 assembles its report from
+  `CoseSign1` (alg, chain) and the result.
+- Added at implementation: `src/Cose/OpenSsl.php`, a scoped error handler
+  plus a drain of OpenSSL's error queue around every `openssl_*` call, so
+  a failure is an answer and never a warning or a stale error on a later
+  call; and `PublicKey`, which classifies the leaf's key by the SPKI
+  algorithm OID rather than by PHP's key-type constants (which do not name
+  RSA-PSS, nor Ed25519 before PHP 8.4).
 
 ## Traceability
 
@@ -283,14 +287,14 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
-| AC11                 | —                           | —                    |
+| AC1 | tests/Unit/Cose/SignatureVerifierTest.php :: AC1: the four fixtures verify / SPEC-009 | src/Cose/SignatureVerifier.php :: verify(), ecdsa(), rsaPss(); src/Cose/PublicKey.php :: fromCertificateDer() |
+| AC2 | tests/Unit/Cose/SignatureVerifierTest.php :: AC2: one changed byte of the claim is a mismatch / SPEC-009 | src/Cose/SignatureVerifier.php :: ecdsa(), opensslVerify() |
+| AC3 | tests/Unit/Cose/SignatureVerifierTest.php :: AC3: one changed bit of the signature is a mismatch / SPEC-009 | src/Cose/SignatureVerifier.php :: ecdsa(), opensslVerify() |
+| AC4 | tests/Unit/Cose/SignatureVerifierTest.php :: AC4: a claim from another manifest is a mismatch / SPEC-009 | src/Cose/SignatureVerifier.php :: verify() |
+| AC5 | tests/Unit/Cose/SignatureVerifierTest.php :: AC5: a key that does not fit the algorithm cannot be verified / SPEC-009 | src/Cose/SignatureVerifier.php :: requireFit(); src/Cose/PublicKey.php :: describe() |
+| AC6 | tests/Unit/Cose/SignatureVerifierTest.php :: AC6: ES384 and ES512 verify, and their curves cross / SPEC-009 | src/Cose/SignatureVerifier.php :: ecdsa() (`CURVES`); src/Cose/EcdsaSignature.php :: toDer() |
+| AC7 | tests/Unit/Cose/SignatureVerifierTest.php :: AC7: PS256 under an ordinary RSA key verifies through EMSA-PSS, and PKCS#1 v1.5 does not pass / SPEC-009 | src/Cose/SignatureVerifier.php :: rsaPss(); src/Cose/RsaPss.php :: verify(), emsaPssVerify(), mgf1() |
+| AC8 | tests/Unit/Cose/SignatureVerifierTest.php :: AC8: EdDSA verifies, through sodium or OpenSSL / SPEC-009 | src/Cose/SignatureVerifier.php :: ed25519(); src/Cose/PublicKey.php :: rawEd25519() |
+| AC9 | tests/Unit/Cose/SignatureVerifierTest.php :: AC9: an unsupported algorithm cannot be verified / SPEC-009 | src/Cose/SignatureVerifier.php :: verify() (`NAMES`) |
+| AC10 | tests/Unit/Cose/SignatureVerifierTest.php :: AC10: the R||S to DER conversion is exact / SPEC-009 | src/Cose/EcdsaSignature.php :: toDer(), integer(), length() |
+| AC11 | tests/Unit/Cose/SignatureVerifierTest.php :: AC11: the leaf key is read from chain[0], so a reversed chain is a mismatch, not an error / SPEC-009 | src/Cose/SignatureVerifier.php :: verify() (`chain[0]`) |
