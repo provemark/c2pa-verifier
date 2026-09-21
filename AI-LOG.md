@@ -1931,3 +1931,14 @@ README are where the disclosure lives.
   table from the divergences SPEC-011/012 recorded.
 - Decided by Maurice: the Verifier layer before M5; the draft awaits his
   reading.
+
+## 2026-09-21 — SPEC-013 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: `specs/SPEC-013-verifier.md` status `approved`, the row in
+  `docs/milestones.md`, this entry.
+- Measured: `php bin/spec-check.php` → OK. / Reasoned: nothing.
+- Decided by Maurice: SPEC-013 approved as drafted — continuing after a
+  broken signature (the oracle's behaviour), the data-hash skip after a
+  hashed-URI mismatch, "no manifest" as `Invalid` without statuses,
+  SPEC-007 amendment 3, AC10's normalisation table.
