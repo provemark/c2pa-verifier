@@ -1347,3 +1347,24 @@ README are where the disclosure lives.
   Run `35579159736` on `47e48e5`: conclusion `success`; PHP 8.3 / 8.4 /
   8.5 each `success` with `Tests: 132 passed`; `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — SPEC-009 (draft): verifying the claim signature
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "scrijf spec009".
+- Produced: `specs/SPEC-009-signature-verification.md`, status `draft`, 11
+  criteria; `docs/milestones.md` row; this entry. No code, no tests, no
+  fixtures.
+- Measured: the COSE identifiers confirmed in cose-lib's source (ES256 −7,
+  ES384 −35, ES512 −36, PS256 −37, PS384 −38, PS512 −39, EdDSA −8);
+  OpenSSL's curve names `prime256v1`/`secp384r1`/`secp521r1`;
+  `OPENSSL_ALGO_SHA384`/`SHA512` present; on PHP 8.5 `ext-openssl`
+  signs and verifies Ed25519 with digest `0` (an in-memory throw-away
+  key), and `sodium_crypto_sign_verify_detached` verifies the same
+  signature with the last 32 bytes of the 44-byte SPKI; `spec-check`
+  `OK: 10 spec(s), 9 test file(s)`; `composer check` exit 0.
+- Reasoned: `true`/`false`/`CoseException` as the three outcomes; the
+  two PSS paths by key type (step 16); EdDSA via sodium first, OpenSSL
+  second, else an error; the key-fits-algorithm table from §13.2.1; the
+  list of synthetic vectors the measurement step must produce.
+- Decided by Maurice: none yet; the draft awaits the vector step and his
+  approval.
