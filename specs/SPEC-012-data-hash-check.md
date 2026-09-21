@@ -83,15 +83,16 @@ compare, not assume.
      kept); a range that ends past the file's end →
      `assertion.dataHash.mismatch` (§15.12.1) naming the range and the
      file length.
-  5. **The store's exclusion**: the store's `ranges` merged must be one
-     contiguous range (a gap between JPEG pieces is not: `.mismatch`
-     naming the pieces — nothing but the store and padding may be
-     excluded, and a foreign segment is neither); exactly one exclusion
-     must equal that range, start and length — else
-     `assertion.dataHash.mismatch` naming the store's range and the
-     nearest exclusion. Every *other* exclusion is honoured (it is
-     signed intent, covered by the claim's hashed URI) and reported once
-     as the informational `assertion.dataHash.additionalExclusionsPresent`.
+  5. **The store's exclusion** (amendment 5): every range of the store
+     (`ManifestStoreBytes::$ranges`) must lie inside an exclusion —
+     start at or after the exclusion's start, end at or before its end
+     — else `assertion.dataHash.mismatch` naming the uncovered piece and
+     the nearest exclusion. An exclusion may cover more than the store
+     (Truepic excludes the whole file head): it is signed intent, inside
+     the claim's hashed URI, and hides bytes only from the signer's own
+     binding. Every exclusion that covers no piece of the store is
+     honoured and reported once as the informational
+     `assertion.dataHash.additionalExclusionsPresent`.
   6. **The hash, streamed**: `hash_init($alg)`, the file read through
      `StreamReader` from offset 0 in chunks of `chunkSize` (default
      64 KiB), each exclusion skipped with `skip()`, bytes after the last
@@ -173,18 +174,24 @@ recorded in the READMEs (Open questions).
     and url equal the `assertion.dataHash.mismatch` entry in c2patool's
     recorded `validation_status`
 
-- **AC3 — the exclusion must hold the store, exactly** *(§15.12.1; stricter than c2patool's literal reading)*
+- **AC3 — an exclusion must cover the store** *(§15.12.1; amendment 5: "cover", not "equal")*
   - Given `binding/bytes-inserted-before-store.png` (the store moved 16
     bytes, the exclusion not), `binding/exclusion-shifted.png` (`start`
     33 → 32), `binding/exclusion-past-end.png` (`length` → 65,535) and
     `jpeg/gap-between-pieces.jpg` (a COM segment between the two APP11
-    pieces: `ranges` has two entries)
+    pieces: `ranges` has two entries, the second ending past the
+    exclusion), and `public-testfiles/truepic-20230212-camera.jpg`
+    (the exclusion `[0, 206316]` covers the store at `[13617, 192699]`
+    and everything before it)
   - When checked
-  - Then each gives `assertion.dataHash.mismatch` whose explanation names
-    the store's range and the exclusion (or, for the gap, the two
-    pieces), the file is not hashed for the first three (the explanation
-    carries no digest), and `Invalid`; c2patool's recorded verdict for
-    each is `assertion.dataHash.mismatch` too (steps 02 and 23)
+  - Then the first four give `assertion.dataHash.mismatch` whose
+    explanation names the store's range (or pieces) and the exclusion
+    that leaves part of it uncovered, the file is not hashed for the
+    first three (the explanation carries no digest), and `Invalid`;
+    c2patool's recorded verdict for each is `assertion.dataHash.mismatch`
+    too (steps 02 and 23); the Truepic file is hashed with its exclusion
+    as written and gives `assertion.dataHash.match`, as c2patool's
+    recorded JSON
 
 - **AC4 — additional exclusions are honoured and reported** *(informational)*
   - Given the new `binding/exclusion-extra.png` (a second range over 64
@@ -402,6 +409,7 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
    (313 of 100,956 bytes hashed, the store's range ending at 100,955)
    and asserts SPEC-003's refusal. No outcome changed.
 4. **2026-09-21, with SPEC-014's implementation** — `StatusCode` grew by the two trust codes; AC10's test now asserts this spec's twenty-one are present and skips the two (SPEC-014 AC10 asserts the twenty-three). AC4's test expects `validation_status` absent rather than `[]` (SPEC-013 amendment 3). No criterion changed in outcome.
+5. **2026-09-21, step 38, decided by Maurice van Loon after step 37** — the store's exclusion must *cover* the store, not equal it. `truepic-20230212-*.jpg` (the C2PA's own test files) exclude `[0, 206316]` for a store at `[13617, 192699]`: the file head as well; c2patool takes the range as written and the data hash matches. The exclusion sits inside the signed claim's hashed URI: a writer that excludes more than the store hides bytes from its own binding, which the signer chose and vouched for; what a verifier must require is that the store lies inside the excluded region. Scope item 5 and AC3 changed; every step-23 variant still fails (part of the store uncovered). No other criterion changed.
 
 ## Traceability
 
@@ -412,7 +420,7 @@ least one test; every source file maps back to this spec.
 |----------------------|-----------------------------|----------------------|
 | AC1 | tests/Unit/Hash/DataHashCheckTest.php :: AC1: the four fixtures: assertion.dataHash.match, and the words are c2patool's / SPEC-012 | src/Hash/DataHashCheck.php :: check(), hashExcept(); src/Container/ManifestStoreBytes.php :: $ranges; src/Container/{Jpeg,Png,Webp}ManifestStoreExtractor.php :: extract() (the ranges) |
 | AC2 | tests/Unit/Hash/DataHashCheckTest.php :: AC2: one changed pixel byte: assertion.dataHash.mismatch, as c2patool / SPEC-012 | src/Hash/DataHashCheck.php :: check() (hash_equals), hashExcept() |
-| AC3 | tests/Unit/Hash/DataHashCheckTest.php :: AC3: the exclusion must hold the store, exactly / SPEC-012 | src/Hash/DataHashCheck.php :: check() (count($store->ranges), $range === $storeRange, past-end); src/Container/ManifestStoreBytes.php :: __construct() (merging) |
+| AC3 | tests/Unit/Hash/DataHashCheckTest.php :: AC3: an exclusion must cover the store / SPEC-012 | src/Hash/DataHashCheck.php :: check() (every store piece inside an exclusion; past-end); src/Container/ManifestStoreBytes.php :: __construct() (merging) |
 | AC4 | tests/Unit/Hash/DataHashCheckTest.php :: AC4: additional exclusions are honoured and reported / SPEC-012 | src/Hash/DataHashCheck.php :: check() ($others); src/Report/StatusCode.php :: isInformational(); src/Report/ValidationResult.php :: fromStatuses(), toArray() (SPEC-010 amendment 2) |
 | AC5 | tests/Unit/Hash/DataHashCheckTest.php :: AC5: overlapping exclusions: assertion.dataHash.malformed / SPEC-012 | src/Hash/DataHashCheck.php :: check() (usort, overlap) |
 | AC6 | tests/Unit/Hash/DataHashCheckTest.php :: AC6: shape faults: malformed, and a missing hash is a mismatch / SPEC-012 | src/Hash/DataHashCheck.php :: check() (shape, $maxExclusions) |

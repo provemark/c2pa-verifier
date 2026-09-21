@@ -179,7 +179,7 @@ it('AC2: one changed pixel byte: assertion.dataHash.mismatch, as c2patool', func
     expect(spec012Pairs(...$statuses))->toBe(spec012OraclePairs(spec012C2patool('pixel-changed', true), 'validation_status', 'assertion.dataHash'));
 })->group('SPEC-012');
 
-it('AC3: the exclusion must hold the store, exactly', function (): void {
+it('AC3: an exclusion must cover the store', function (): void {
     foreach (['binding/bytes-inserted-before-store.png', 'binding/exclusion-shifted.png', 'binding/exclusion-past-end.png'] as $variant) {
         $statuses = spec012Check($variant);
         expect(spec012Codes($statuses))->toBe(['assertion.dataHash.mismatch'], $variant)
@@ -196,8 +196,14 @@ it('AC3: the exclusion must hold the store, exactly', function (): void {
     expect($store->ranges)->toBe([['start' => 20, 'length' => 64012], ['start' => 64050, 'length' => 30760]]);
     $statuses = (new DataHashCheck)->check($manifest, $stream, $store);
     expect(spec012Codes($statuses))->toBe(['assertion.dataHash.mismatch'])
-        ->and($statuses[0]->explanation)->toContain('64012')->toContain('64050')
+        ->and($statuses[0]->explanation)->toContain('64050')
         ->and($statuses[0]->explanation)->not->toMatch(SPEC012_HEX64);
+
+    // amendment 5: Truepic excludes the whole file head with the store; the store is covered, the hash matches (c2patool: match)
+    $statuses = spec012Check('public-testfiles/truepic-20230212-camera.jpg');
+    expect(spec012Codes($statuses))->toBe(['assertion.dataHash.match']);
+    $oracle = spec012C2patool('public-testfiles/truepic-20230212-camera');
+    expect(spec012OraclePairs($oracle, 'success', 'assertion.dataHash'))->toHaveCount(1);
 })->group('SPEC-012');
 
 it('AC4: additional exclusions are honoured and reported', function (): void {

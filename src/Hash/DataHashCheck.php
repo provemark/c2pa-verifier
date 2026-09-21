@@ -16,9 +16,9 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
 /**
  * The data-hash check as a list of statuses (SPEC-012; C2PA 2.4 §15.12.1,
  * §18.5): exactly one c2pa.hash.data, its shape read fail-closed, its
- * exclusions sorted and checked, the one that holds the manifest store
- * required to equal the store's own file range (what the container layer
- * measured, ManifestStoreBytes::$ranges), then the asset hashed in chunks
+ * exclusions sorted and checked, every piece of the manifest store (what
+ * the container layer measured, ManifestStoreBytes::$ranges) required to
+ * lie inside an exclusion, then the asset hashed in chunks
  * with the exclusions skipped — never the whole file in memory — and
  * compared. The first check that reads the asset rather than the store.
  */
@@ -144,29 +144,34 @@ final readonly class DataHashCheck
             $previous = $range;
         }
 
-        // ---- the exclusion that holds the store must be the store (§15.12.1) ----
-        if (count($store->ranges) !== 1) {
-            return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('the manifest store is not one contiguous range in the file (%s); the exclusion may hold only the store and its padding', implode(', ', array_map(static fn (array $r): string => sprintf('[%d, %d]', $r['start'], $r['length']), $store->ranges))))];
-        }
-        $storeRange = $store->ranges[0];
-        $others = [];
-        $found = false;
-        foreach ($exclusions as $range) {
-            if (! $found && $range === $storeRange) {
-                $found = true;
-            } else {
-                $others[] = $range;
-            }
-        }
-        if (! $found) {
-            $nearest = null;
-            foreach ($exclusions as $range) {
-                if ($nearest === null || abs($range['start'] - $storeRange['start']) < abs($nearest['start'] - $storeRange['start'])) {
-                    $nearest = $range;
+        // ---- every piece of the store must lie inside an exclusion (§15.12.1; SPEC-012 amendment 5: cover, not equal) ----
+        $covering = [];
+        foreach ($store->ranges as $piece) {
+            $pieceEnd = $piece['start'] + $piece['length'];
+            $covered = null;
+            foreach ($exclusions as $i => $range) {
+                if ($range['start'] <= $piece['start'] && $pieceEnd <= $range['start'] + $range['length']) {
+                    $covered = $i;
+                    break;
                 }
             }
+            if ($covered === null) {
+                $nearest = null;
+                foreach ($exclusions as $range) {
+                    if ($nearest === null || abs($range['start'] - $piece['start']) < abs($nearest['start'] - $piece['start'])) {
+                        $nearest = $range;
+                    }
+                }
 
-            return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('no exclusion holds exactly the manifest store, which occupies [%d, %d] of the file (start, length); %s', $storeRange['start'], $storeRange['length'], $nearest === null ? 'the assertion has no exclusions' : sprintf('the nearest exclusion is [%d, %d]', $nearest['start'], $nearest['length'])))];
+                return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('no exclusion covers the manifest store%s at [%d, %d] of the file (start, length; ends at %d); %s', count($store->ranges) > 1 ? sprintf('\'s piece %s', implode(', ', array_map(static fn (array $r): string => sprintf('[%d, %d]', $r['start'], $r['length']), $store->ranges))) : '', $piece['start'], $piece['length'], $pieceEnd, $nearest === null ? 'the assertion has no exclusions' : sprintf('the nearest exclusion is [%d, %d], ending at %d', $nearest['start'], $nearest['length'], $nearest['start'] + $nearest['length'])))];
+            }
+            $covering[$covered] = true;
+        }
+        $others = [];
+        foreach ($exclusions as $i => $range) {
+            if (! isset($covering[$i])) {
+                $others[] = $range;
+            }
         }
 
         // ---- the hash, streamed ----

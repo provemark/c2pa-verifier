@@ -2382,3 +2382,22 @@ README are where the disclosure lives.
   5 for Maurice's decision; the validity time is M6's.
 - Decided by Maurice: floats decode (step 36's discussion). Open for
   him: the exclusion rule (equals → covers).
+
+## 2026-09-21 — Step 38a: the store's exclusion must cover the store (SPEC-012 amendment 5)
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, covers in plaats van equals".
+- Produced: `specs/SPEC-012-data-hash-check.md` (Scope item 5, AC3,
+  amendment 5, Traceability), `tests/Unit/Hash/DataHashCheckTest.php`
+  (AC3 renamed; the Truepic file as the covering case),
+  `src/Hash/DataHashCheck.php` (every store piece inside an exclusion;
+  the covering exclusion is the store's, the rest additional),
+  `docs/milestones.md`, this entry.
+- Measured: AC3 red on `truepic-20230212-camera.jpg` (`Failed asserting
+  that two arrays are identical`: mismatch where match is required);
+  after the change `composer check` → `203 passed (2103 assertions)`,
+  the step-23 variants still `.mismatch` (part of the store uncovered),
+  the Truepic file `assertion.dataHash.match` with one success entry
+  in c2patool's JSON. / Reasoned: the invariant is containment; an
+  exclusion wider than the store is the signer's own choice inside the
+  signed claim.
+- Decided by Maurice: covers instead of equals.
