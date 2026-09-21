@@ -55,7 +55,7 @@ and without the trust file; the test certificate without a trust file →
   `hasSubjectKeyIdentifier`, `organization` (subject O), `serialDecimal`
   (from `serialNumberHex`, a base-16 → base-10 conversion on strings —
   no `gmp`, no `bcmath`).
-- `Trust\CertificateProfileCheck::check(Manifest $manifest, TrustSettings $settings, ?int $at = null): list<ValidationStatus>`,
+- `Trust\CertificateProfileCheck::check(Manifest $manifest, ?TrustSettings $settings = null, ?int $at = null): list<ValidationStatus>`,
   url the signature box's, on the **leaf** of the x5chain; `$at` the
   epoch to judge validity at — `null` = now (M6 will pass the
   timestamp). One `signingCredential.invalid` status **per fault found**,
@@ -99,11 +99,15 @@ and without the trust file; the test certificate without a trust file →
   8. **AuthorityKeyIdentifier** present → else `.invalid` (c2pa-rs's
      `aki_good`; reasoned — every variant carries one, OpenSSL 3 adds
      it; a hand-built parse array proves the rule in the test).
-- `Verifier`: `CertificateProfileCheck` runs right after `ChainCheck`,
-  under the same condition (settings given, `verify_trust` true) and the
-  same `trust` entry in `checksPerformed` — the two together are "the
-  signer is trusted" (c2patool: `verify_trust` also switches the profile
-  check, measured in the tests-first step, Open questions).
+- `Verifier`: `CertificateProfileCheck` runs **always**, right after
+  `ClaimSignatureCheck` and before `ChainCheck`, with or without settings
+  and whatever `verify_trust` says — measured in step 34a: c2patool
+  reports `signingCredential.expired` / `.invalid` on `expired.png` and
+  `no-eku.png` with no settings at all and with `verify_trust: false`
+  (amendment 1). The profile is a property of the signature's
+  certificate, not of the operator's trust. `checksPerformed` gains
+  `certificate`. With settings, the EKU list is the built-in six plus
+  `trust_config`; without, the built-in six.
 - **`signature_info`** in `VerificationReport::toArray()`, per manifest,
   as c2patool prints it: `{alg: "Es256"|"Es384"|"Es512"|"Ps256"|"Ps384"|"Ps512"|"Ed25519", issuer: <leaf O>, common_name: <leaf CN>, cert_serial_number: <decimal>}` —
   read from the active manifest's leaf whether or not a trust check ran
@@ -215,14 +219,19 @@ are still to be taken before the tests (Open questions).
     `7024E6247605F1D65F1B477551D4FAFCB5ED91E6`; and the sister parser's
     `signer()` returns a `SignerInfo` with those values
 
-- **AC8 — the two checks are independent, and so is the report**
-  - Given `profile/expired.png` with settings whose anchor is the *EC
-    test root* (not the throw-away one)
+- **AC8 — the profile is checked always; the two checks are independent**
+  - Given `profile/expired.png` verified (a) with settings whose anchor
+    is the *EC test root* (not the throw-away one), (b) with no settings,
+    (c) with `trust/verify-off.settings.json`; and `profile/no-eku.png`
+    with no settings
   - When verified
-  - Then both `signingCredential.untrusted` (the chain reaches no
-    anchor) and `signingCredential.expired` are present; `state`
-    `Invalid`; c2patool's verdict on that combination is measured in the
-    tests-first step and recorded next to this criterion
+  - Then (a) and (b) give both `signingCredential.untrusted` and
+    `signingCredential.expired`, (c) gives `.expired` alone, `no-eku`
+    without settings gives `.invalid` and `.untrusted`; every state
+    `Invalid`; `checksPerformed` holds `certificate` in all four and
+    `trust` only in (a); and c2patool's recorded codes are the same
+    (`profile/expired-wrong-anchor.json`, `expired-no-settings.json`,
+    `expired-verify-off.json`, `no-eku-no-settings.json` — step 34a)
 
 - **AC9 — M5's "done when": with and without the trust file, the verdicts are c2patool's**
   - Given the four fixtures, verified without settings, with
@@ -301,7 +310,7 @@ final readonly class CertificateProfileCheck
     public const BUILT_IN_EKUS = ['1.3.6.1.5.5.7.3.4', '1.3.6.1.5.5.7.3.36', '1.3.6.1.5.5.7.3.8', '1.3.6.1.5.5.7.3.9', '1.3.6.1.4.1.311.76.59.1.9', '1.3.6.1.4.1.62558.2.1'];
 
     /** @return list<ValidationStatus>  $at: epoch to judge validity at; null = now */
-    public function check(Manifest $manifest, TrustSettings $settings, ?int $at = null): array;
+    public function check(Manifest $manifest, ?TrustSettings $settings = null, ?int $at = null): array;
 }
 
 // namespace Provemark\C2paVerifier\Report;
@@ -313,11 +322,9 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
 
 ## Open questions
 
-- Non-blocker, measured before the tests: (1) does c2patool run the
-  profile check without settings, and with `verify_trust: false`? —
-  `expired.png` under no settings and under `verify-off`; the Verifier
-  condition follows the answer. (2) AC8's combination (`expired.png`
-  with the EC test root as anchor) through c2patool.
+- Measured in step 34a (amendment 1): c2patool runs the profile check
+  without settings and with `verify_trust: false`; `expired.png` with
+  the EC test root as anchor gives `.expired` and `.untrusted` together.
 - Non-blocker: the `v1` variant of step 33 is *not* v1 — OpenSSL 3's
   `x509 -req -CA` adds SKI/AKI and so v3 — it stands as the "no KU, no
   EKU" variant (which is why c2patool refused it) and is documented as
@@ -327,6 +334,18 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
   checked against the eight names measured, and an unknown name that is
   not a dotted OID is `.invalid` with the name in the message — fail
   closed, and visible.
+
+## Amendments
+
+1. **2026-09-21, step 34a, before the tests (per the Open question)** —
+   the profile check runs always, after the signature check, whatever
+   the settings: c2patool 0.27.22 reports `signingCredential.expired` on
+   `expired.png` and `.invalid` on `no-eku.png` with no settings and
+   with `verify_trust: false` (`tests/Fixtures/c2patool/profile/
+   expired-no-settings.json`, `expired-verify-off.json`,
+   `no-eku-no-settings.json`). The Verifier bullet, the `check()`
+   signature (settings optional), `checksPerformed` (`certificate`) and
+   AC8 changed accordingly.
 
 ## Traceability
 

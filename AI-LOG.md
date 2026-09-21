@@ -2238,3 +2238,23 @@ README are where the disclosure lives.
   rules, KU as c2pa-rs (option a), one `.invalid` per fault,
   `signature_info` per manifest, unknown critical extensions as the
   named gap until M6.
+
+## 2026-09-21 — Step 34a: the profile check measured without settings
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 34a".
+- Produced: five JSONs under `tests/Fixtures/c2patool/profile/` (+
+  README rows), SPEC-015 amendment 1 (the Verifier bullet, the
+  `check()` signature, `checksPerformed` `certificate`, AC8), the
+  addendum in `notes/step-33-profile-measured.md`, `docs/milestones.md`,
+  this entry. No `src/` change, no test.
+- Measured: `c2patool 0.27.22` — `expired.png` with no settings →
+  `signingCredential.expired` + `.untrusted`; with `verify_trust: false`
+  → `.expired` alone; with the EC test root as anchor → `.expired` +
+  `.untrusted`; `no-eku.png` with no settings → `.invalid` +
+  `.untrusted`; `good.png` with no settings → `Valid`, `.untrusted`,
+  `signature_info` identical to the settings run. / Reasoned: the
+  profile belongs to the signature's certificate, not to the operator's
+  trust — the check runs always, after the signature check, with its own
+  entry in `checks_performed`.
+- Decided by Maurice: step 34a as explained. Amendment 1 made under the
+  spec's Open question, for his confirmation.

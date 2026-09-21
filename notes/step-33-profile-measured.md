@@ -103,3 +103,23 @@ on hand-built parse data.
 the settings, a README with the SHA-256s (re-running the script makes a
 new hierarchy; the committed set is the measured one).
 `tests/Fixtures/c2patool/profile/` — twelve JSONs.
+
+## Addendum, step 34a — the profile check does not depend on the settings
+
+Five more runs before the tests, on the questions the draft left open:
+
+| run | c2patool |
+|---|---|
+| `expired.png`, no settings | `Invalid`; `signingCredential.expired` **and** `.untrusted` |
+| `expired.png`, `verify_trust: false` | `Invalid`; `.expired` alone |
+| `expired.png`, the EC test root as anchor | `Invalid`; `.expired` and `.untrusted` together |
+| `no-eku.png`, no settings | `Invalid`; `.invalid` and `.untrusted` |
+| `good.png`, no settings | `Valid`; `.untrusted`; `signature_info` identical to the settings run |
+
+So the profile is checked **always** — it belongs to the signature's
+certificate, not to the operator's trust — and independently of the
+chain walk: `expired` + wrong anchor yields both codes. SPEC-015
+amendment 1 moves `CertificateProfileCheck` to right after the
+signature check, unconditionally, with its own `checksPerformed` entry
+`certificate`. And `signature_info` is printed without settings, as the
+spec assumed.
