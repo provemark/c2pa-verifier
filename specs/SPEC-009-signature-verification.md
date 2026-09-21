@@ -280,6 +280,17 @@ holds a private key or signs.
   algorithm OID rather than by PHP's key-type constants (which do not name
   RSA-PSS, nor Ed25519 before PHP 8.4).
 
+## Amendments
+
+1. **2026-09-21, measured on CI** — AC8's "on one without it where
+   `openssl_verify(…, 0)` supports Ed25519" now has its boundary: PHP 8.4
+   and 8.5 do; PHP 8.3 does not (`openssl_verify` with digest 0 fails
+   there and the verifier throws the named `CoseException`). The test
+   encodes exactly that: `true` on 8.4+, the exception on 8.3, anything
+   else a failure. `composer.json`'s `suggest` for `ext-sodium` says so.
+   No criterion changed; the measurement filled in what the criterion
+   left to measurement.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

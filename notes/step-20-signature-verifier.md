@@ -48,7 +48,13 @@ Five files in `src/Cose/`, nothing outside `ext-openssl` and, opt-in,
   10 test file(s)`, Pint passed, PHPStan `No errors`, Deptrac 0
   violations, Pest **143 passed (802 assertions)**.
 - On this machine (PHP 8.5.8, OpenSSL 3.6.3) AC8's OpenSSL-only Ed25519
-  path returns `true`; PHP 8.3 and 8.4 are CI's measurement.
+  path returns `true`. **CI measured the boundary**: run `35581104498`
+  passed on PHP 8.4 and 8.5 and failed on 8.3 with exactly the verifier's
+  own exception — `openssl_verify(…, 0)` cannot verify Ed25519 there —
+  while the sodium path passed on all three. The test now demands `true`
+  on 8.4+ and that exception on 8.3; `composer.json` suggests
+  `ext-sodium` as required for EdDSA on 8.3. A verifier on a PHP 8.3
+  host without sodium says "cannot verify", never `false`.
 
 ## What M3 now proves
 

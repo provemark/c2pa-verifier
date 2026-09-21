@@ -167,9 +167,21 @@ it('AC8: EdDSA verifies, through sodium or OpenSSL', function (): void {
 
     expect((new SignatureVerifier)->verify($v['cose'], $v['claim']))->toBeTrue('default')
         ->and((new SignatureVerifier)->verify($v['cose'], spec009Flip($v['claim'])))->toBeFalse('default, flipped')
-        ->and((new SignatureVerifier(useSodium: true, useOpensslEd25519: false))->verify($v['cose'], $v['claim']))->toBeTrue('sodium only')
-        ->and((new SignatureVerifier(useSodium: false, useOpensslEd25519: true))->verify($v['cose'], $v['claim']))->toBeTrue('openssl only')
-        ->and((new SignatureVerifier(useSodium: false, useOpensslEd25519: true))->verify($v['cose'], spec009Flip($v['claim'])))->toBeFalse('openssl only, flipped');
+        ->and((new SignatureVerifier(useSodium: true, useOpensslEd25519: false))->verify($v['cose'], $v['claim']))->toBeTrue('sodium only');
+
+    // The OpenSSL-only path: measured on CI, PHP 8.4 and 8.5 verify Ed25519
+    // with openssl_verify(..., 0); PHP 8.3 does not, and must say so — the
+    // exception, not a silent false. Either other outcome is a failure.
+    $opensslOnly = new SignatureVerifier(useSodium: false, useOpensslEd25519: true);
+    try {
+        $result = $opensslOnly->verify($v['cose'], $v['claim']);
+        expect(PHP_VERSION_ID)->toBeGreaterThanOrEqual(80400, 'openssl_verify(0) verified Ed25519 on a PHP where it was measured not to');
+        expect($result)->toBeTrue('openssl only')
+            ->and($opensslOnly->verify($v['cose'], spec009Flip($v['claim'])))->toBeFalse('openssl only, flipped');
+    } catch (CoseException $e) {
+        expect(PHP_VERSION_ID)->toBeLessThan(80400, 'openssl_verify(0) failed on a PHP where it was measured to work: '.$e->getMessage());
+        expect($e->getMessage())->toContain('EdDSA cannot be verified: neither ext-sodium nor OpenSSL Ed25519');
+    }
 
     expect(fn () => (new SignatureVerifier(useSodium: false, useOpensslEd25519: false))->verify($v['cose'], $v['claim']))
         ->toThrow(CoseException::class, 'EdDSA cannot be verified: neither ext-sodium nor OpenSSL Ed25519');

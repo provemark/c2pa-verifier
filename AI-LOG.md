@@ -1451,3 +1451,22 @@ README are where the disclosure lives.
 - Reasoned: key classification by SPKI OID; the RSA upper bound without a
   vector; `OpenSsl::quiet()` on principle for every `openssl_*` call.
 - Decided by Maurice: build step 20b.
+
+## 2026-09-21 — CI on SPEC-009: PHP 8.3 cannot verify Ed25519 through ext-openssl
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja, push maar en lees de CI-run".
+- Produced: pushed `2d32724` and `1faba25`; after the run, AC8's test
+  rewritten to encode the measured boundary, SPEC-009 amendment 1 (a
+  measurement, no criterion changed), `composer.json` `suggest` for
+  `ext-sodium` reworded, `notes/step-20` updated; this entry; pushed
+  again.
+- Measured: run `35581104498` on `1faba25`: PHP 8.4 and 8.5 `success`,
+  **PHP 8.3 `failure`** — `142 passed, 1 failed`: AC8's OpenSSL-only path
+  threw `EdDSA cannot be verified: neither ext-sodium nor OpenSSL Ed25519
+  support is available on this PHP`; the sodium path passed on 8.3. Locally
+  after the change: `composer check` exit 0, 143 passed. The next run is
+  in the next entry.
+- Reasoned: the verifier behaved as specified (a named exception, never a
+  silent `false`); the test had asserted the 8.4+ behaviour everywhere.
+  The boundary is now a tested fact, not a comment.
+- Decided by Maurice: push.
