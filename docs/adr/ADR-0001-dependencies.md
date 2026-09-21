@@ -2,7 +2,7 @@
 
 | Field    | Value                          |
 |----------|--------------------------------|
-| Status   | accepted                       |
+| Status   | accepted, amended 2026-09-21    |
 | Date     | 2026-09-19                     |
 | Decided  | Maurice van Loon               |
 
@@ -46,10 +46,13 @@ Per layer:
   is high, the surface is small, and the fail-closed rule (unknown tag →
   error) is easier to guarantee in code that accepts only what it
   understands than in a library that accepts everything.
-- **COSE_Sign1: `web-auth/cose-lib` first.** Added only when milestone M3's
-  spec introduces it, as that spec's decision. It may be replaced by own code
-  later, but only when that code is demonstrably equal on the same test
-  vectors — never before.
+- **COSE_Sign1: written here, on `ext-openssl`** (amendment 1, 2026-09-21;
+  the original decision, "`web-auth/cose-lib` first", is kept below for
+  the record). The `Sig_structure`, the R‖S → DER conversion and the two
+  PSS paths are measured against four real signatures and three broken
+  ones before any spec names them (`notes/step-16-cose-signature.md`);
+  `cose-lib`'s ECDSA and PSS code is reference reading, never copied
+  without saying so.
 - **ASN.1 / X.509 / RFC 3161: open until M5.** Probably `phpseclib`, but
   deciding now would be an unmeasured claim.
 
@@ -80,3 +83,47 @@ without a spec and an ADR.
   `substr`. If M2 ends without a single `mb_*` call, a spec removes it.
 - The own CBOR decoder must be measured against `cbor-php` on the same
   inputs before it is trusted — a second implementation is the oracle.
+
+## Amendments
+
+### Amendment 1 — 2026-09-21: COSE_Sign1 written here, not `cose-lib`
+
+Decided by Maurice van Loon after step 16 (`notes/step-16-cose-signature.md`),
+which was the falsification attempt the original decision asked for.
+
+**Original decision:** COSE_Sign1 verification through `web-auth/cose-lib`
+first, replaced by own code only when demonstrably equal on the same
+vectors. Reason: COSE detail mistakes — the `Sig_structure`, R‖S → DER —
+produce a wrong `Valid` and pass every happy-path test; the library had
+been exercised on millions of logins.
+
+**What was measured (2026-09-21, cose-lib 4.8.2 in a scratch directory):**
+
+- For ES256 the library's `verify()` is the same `openssl_verify` call as
+  a hand-built verifier, after the same R‖S → DER conversion.
+- For PS256 the library cannot load the one PS256 certificate we have
+  (`adobe-20220124-C.jpg`, an `rsassaPss`-typed key): "Unable to read the
+  certificate". `ext-openssl` verifies that signature.
+- It brings `spomky-labs/pki-framework` and `brick/math`: three packages,
+  2.5 MB, to hosts that want none.
+- The details the original decision feared were measured by hand: the
+  `Sig_structure` (1,895 bytes for the PNG) verifies all four fixtures;
+  one flipped claim byte, one flipped signature bit, a cross-fixture claim
+  and a wrong `alg` all fail; a plain-RSA PSS signature made by OpenSSL
+  verifies through a forty-line EMSA-PSS-VERIFY and not through
+  `openssl_verify`, and a PKCS#1 v1.5 signature the reverse.
+
+**Amended decision:** COSE_Sign1 verification is written here on
+`ext-openssl` (and `ext-sodium`, opt-in, for Ed25519). Every algorithm
+path gets a positive vector, a flipped-byte vector and a key-does-not-fit
+vector in its spec before it is built. `cose-lib` (MIT) is reference
+reading for the ECDSA and PSS code; any borrowed idea is named in the
+spec. The rule "no new runtime dependency without a spec and an ADR"
+stands; `require` still holds no packages.
+
+**Two consequences of the original decision, closed by the same
+measurement:** the own CBOR decoder was measured against `cbor-php` on the
+sixteen real blobs (steps 12–13) and reproduces them; and `ext-mbstring`
+now has call sites — `mb_check_encoding` in the JUMBF label check and the
+CBOR text-string check — so it stays.
+

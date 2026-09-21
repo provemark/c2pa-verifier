@@ -1201,3 +1201,17 @@ README are where the disclosure lives.
   as c2patool does; three M3 specs; the ADR-0001 amendment proposal.
 - Decided by Maurice: do the measurement step. Pending: the ADR-0001
   amendment (COSE written here on `ext-openssl`).
+
+## 2026-09-21 — ADR-0001 amendment 1; push
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, amendeer ADR-0001, push maar en lees de CI-run".
+- Produced: `docs/adr/ADR-0001-dependencies.md` — status "accepted,
+  amended 2026-09-21", the COSE line of the Decision replaced, an
+  Amendments section with the original decision, the measurements of step
+  16 and the amended decision; two consequences of the original closed
+  (CBOR measured against cbor-php; `ext-mbstring` now has call sites);
+  `docs/milestones.md` row; this entry; pushed `0ba7887` and this commit.
+- Measured: `grep -rn "mb_" src` → 2 call sites; before the push, 0
+  attribution lines and no tracked `*.key`. The CI run: next entry.
+- Decided by Maurice: ADR-0001 amended — COSE_Sign1 verification written
+  here on `ext-openssl`, `cose-lib` as reference reading only.
