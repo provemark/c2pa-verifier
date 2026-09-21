@@ -786,3 +786,28 @@ README are where the disclosure lives.
   PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 71 passed`; `all green`
   `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — SPEC-005 (draft): JUMBF, the manifest store as a tree of boxes
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "wat is het volgende dat gedaan moet worden?", "leg SPEC-005 uit",
+  then "akkoord, beide zoals je adviseert, schrijf SPEC-005 als draft".
+- Produced: `specs/SPEC-005-jumbf-box-tree.md`, status `draft`, 17
+  criteria; `docs/milestones.md` row; this entry. No code, no tests, no
+  fixtures.
+- Measured: C2PA 2.4 downloaded as HTML (1,065,169 bytes) into the scratch
+  directory and read as text — §11.1.2–§11.1.4.4 and §8.4.2.3 quoted in
+  the explanation and cited in the spec (the fetch tool could not hold the
+  page). Before writing AC5: SHA-256 over each assertion superbox's
+  payload (contents without the 8-byte header) of the PNG store,
+  base64 → exactly the three `hash` values in the claim's
+  `created_assertions` / `gathered_assertions` as `c2patool --detailed`
+  prints them (`Cxd9Xp…`, `ECufvn…`, `O1ACO/…`). The Adobe store's UUIDs
+  listed: the same C2PA UUIDs plus `json` (`6a736f6e…`). `spec-check` →
+  `OK: 6 spec(s), 5 test file(s)`; `composer check` exit 0.
+- Reasoned: `UnknownBox` for unknown type UUIDs (the spec's "shall skip"
+  kept as a tree node so M4 can still hash it); errors for `brob`,
+  `c2cm`, `c2um`; the default limits (16, 4,096); the hex-formatter
+  placement left open (Jumbf is a leaf layer).
+- Decided by Maurice: unknown boxes kept as `UnknownBox`; compressed and
+  update manifests an error now, own spec later. The draft awaits the
+  variant measurement and his approval.

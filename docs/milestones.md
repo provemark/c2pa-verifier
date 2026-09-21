@@ -66,7 +66,7 @@ specifying is the tool that enforces exactly that.
 | Step | What | Status |
 |---|---|---|
 | 09 | The store from the inside: JUMBF tree, CBOR inventory, COSE shape, `c2patool --detailed`, one foreign writer — `notes/step-09-manifest-store-inside.md` | done 2026-09-20 |
-| SPEC-005 | JUMBF: box frame, superbox, description box, content boxes, the C2PA UUIDs | — |
+| SPEC-005 | JUMBF: box frame, superbox, description box, content boxes, the C2PA UUIDs | draft 2026-09-21; variants + c2patool measurement before approval |
 | SPEC-006 | CBOR: the measured subset, definite lengths only, fail closed on the rest | — |
 | SPEC-007 | Claim v1 and v2, assertion store, `claim_generator_info` | — |
 
