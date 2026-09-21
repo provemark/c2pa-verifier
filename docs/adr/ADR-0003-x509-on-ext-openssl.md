@@ -2,9 +2,9 @@
 
 | Field    | Value                          |
 |----------|--------------------------------|
-| Status   | draft                          |
+| Status   | accepted                       |
 | Date     | 2026-09-21                     |
-| Decided  | —                              |
+| Decided  | Maurice van Loon               |
 
 ## Context
 

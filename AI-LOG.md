@@ -2053,3 +2053,13 @@ README are where the disclosure lives.
   profile); the consequences for `ValidationState`, `signature_info`
   and `validation_status`.
 - Decided by Maurice: the EKU list as c2pa-rs keeps it (option a).
+
+## 2026-09-21 — ADR-0003 accepted
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op accepted".
+- Produced: `docs/adr/ADR-0003-x509-on-ext-openssl.md` status `accepted`,
+  the row in `docs/milestones.md`, this entry.
+- Measured: nothing. / Reasoned: nothing.
+- Decided by Maurice: ADR-0003 as drafted — X.509 written here on
+  `ext-openssl`, allowed list first, the EKU list as c2pa-rs keeps it,
+  `checkpurpose` as a second oracle only, RFC 3161 open until M6.
