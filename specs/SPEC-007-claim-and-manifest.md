@@ -388,6 +388,15 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
    `Manifest::$assertionStore` is public (`readonly` as the rest), so
    that a check can walk the store's children, `Superbox` and
    `UnknownBox` alike. No criterion of this spec changed.
+3. **2026-09-21, defined in SPEC-013 and approved with it** —
+   `ManifestException` carries an optional `url`, the absolute JUMBF URI
+   of the box being read when the fault was found: the claim box for
+   the claim's faults (label, CBOR, shape, `Claim::fromMap()`), the
+   signature box for the signature's, `…/c2pa.assertions/<name>` for an
+   assertion's data faults, the manifest for a missing assertion store or
+   claim box. `Manifest::fromBox()` wraps each section with `at($url,
+   …)`; `ManifestException::at()` adds the url only where none was set.
+   No criterion of this spec changed; every message is as it was.
 
 ## Traceability
 

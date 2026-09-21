@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-21                      |
 | Supersedes | —                                                 |
@@ -370,6 +370,11 @@ final class ManifestException extends \RuntimeException
    sets are equal to ours although the data hash was skipped. The list
    now holds the five files where c2patool's data hash failed, plus
    `json-broken`. Nothing else changed.
+2. **2026-09-21, step 29, at implementation** — Deptrac: `Verifier` may
+   see `Support` (`Bytes::hex()` for the unknown-format message). The
+   Scope said "may already see everything"; the ruleset predated
+   `Support` (SPEC-004 amendment 1) and did not list it. No criterion
+   changed.
 
 ## Traceability
 
@@ -378,13 +383,13 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
+| AC1 | tests/Unit/Verifier/VerifierTest.php :: AC1: the four fixtures, front door: Valid, three checks, and the report is c2patool's / SPEC-013 | src/Verifier/Verifier.php :: verify(), check(); src/Verifier/VerificationReport.php :: toJson() |
+| AC2 | tests/Unit/Verifier/VerifierTest.php :: AC2: one changed pixel byte, front door: Invalid with assertion.dataHash.mismatch / SPEC-013 | src/Verifier/Verifier.php :: check() |
+| AC3 | tests/Unit/Verifier/VerifierTest.php :: AC3: a broken signature does not stop the verifier / SPEC-013 | src/Verifier/Verifier.php :: check() (no early return after the signature) |
+| AC4 | tests/Unit/Verifier/VerifierTest.php :: AC4: the data hash is skipped when the claim does not vouch for it / SPEC-013 | src/Verifier/Verifier.php :: check() ($vouched) |
+| AC5 | tests/Unit/Verifier/VerifierTest.php :: AC5: no manifest: not valid, not an error / SPEC-013 | src/Verifier/Verifier.php :: verify() (step 2, null store); src/Verifier/VerificationReport.php :: toArray() |
+| AC6 | tests/Unit/Verifier/VerifierTest.php :: AC6: an unknown format is an error, and nothing is read past the magic bytes / SPEC-013 | src/Container/FormatDetector.php :: detect(), head(); src/Verifier/Verifier.php :: verify() (step 1) |
+| AC7 | tests/Unit/Verifier/VerifierTest.php :: AC7: the parsers' faults become statuses with their codes and urls / SPEC-013 | src/Verifier/Verifier.php :: verify() (steps 2–3, the catch clauses); src/Manifest/ManifestException.php :: $url, at(); src/Manifest/Manifest.php :: fromBox(), at(), theOne() (SPEC-007 amendment 3) |
+| AC8 | tests/Unit/Verifier/VerifierTest.php :: AC8: the report's shape, and the sister parser reads it / SPEC-013 | src/Verifier/VerificationReport.php :: toArray(), toJson() |
+| AC9 | tests/Unit/Verifier/VerifierTest.php :: AC9: end to end, the file is streamed / SPEC-013 | src/Verifier/Verifier.php :: verify() (the stream handed through, never read whole) |
+| AC10 | tests/Unit/Verifier/VerifierTest.php :: AC10: the drift alarm: every recorded c2patool JSON, state and failures / SPEC-013 | src/Verifier/Verifier.php :: verify(), check() |

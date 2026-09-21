@@ -1966,3 +1966,32 @@ README are where the disclosure lives.
   the mismatch of its box by url and `checksPerformed`.
 - Decided by Maurice: step 28 as explained. Amendment 1 for his
   confirmation.
+
+## 2026-09-21 — Step 29: SPEC-013 implemented, the Verifier
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met stap 29" (after "maar is c2patool nu fout
+  of c2pa-rs?" — answered from c2pa-rs's source, sparse-cloned into the
+  scratchpad, not committed; the findings are in the step note).
+- Produced: `src/Container/FormatDetector.php`, `src/Verifier/Verifier.php`,
+  `src/Verifier/VerificationReport.php`; `src/Manifest/ManifestException.php`
+  (`$url`, `at()`) and `src/Manifest/Manifest.php` (`at()` wrapping,
+  `theOne()` url — SPEC-007 amendment 3, recorded there); `deptrac.yaml`
+  (`Verifier` → `Support`, SPEC-013 amendment 2); SPEC-013 →
+  `implemented` with Traceability; `notes/step-29-verifier.md`,
+  `NOTES.md`, `docs/milestones.md`, this entry.
+- Measured: after SPEC-007 amendment 3 alone, SPEC-007 and SPEC-010
+  still `14 passed` / `10 passed`. First run of the Verifier:
+  `10 passed (300 assertions)`; `composer check` → Pint passed, PHPStan
+  `[OK] No errors`, Deptrac `Violations 1` (the missing `Support`
+  arrow) then `0`, Pest `183 passed (1642 assertions)`;
+  `bin/spec-check.php` → `OK: 14 spec(s), 14 test file(s)`. In c2pa-rs
+  `main` (`58eac79`, 2026-09-21): `sdk/src/store.rs:2117–2139`
+  (`verify_claim` then `verify_hash_binding`), `sdk/src/claim.rs:3684–3696`
+  (`.failure(log, err)?`) and `sdk/src/status_tracker/mod.rs:95–96`
+  (`ContinueWhenPossible => Ok`) — the data hash after a hashed-URI
+  mismatch is by design; `sdk/src/claim.rs:3725–3745` — `ASSERTION_UNDECLARED`
+  logged, then an unconditional `return Err(AssertionMissing)`. /
+  Reasoned: the second is a defect-shaped inconsistency; whether to
+  raise it upstream is Maurice's call.
+- Decided by Maurice: step 29 as explained. Amendment 2 for his
+  confirmation.

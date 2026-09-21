@@ -95,3 +95,4 @@ deptrac:
       - Trust
       - Timestamp
       - Report
+      - Support        # SPEC-013: Bytes::hex() for the unknown-format message (the leaf every layer may use)
