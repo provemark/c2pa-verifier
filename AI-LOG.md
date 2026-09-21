@@ -2315,3 +2315,17 @@ README are where the disclosure lives.
 - Decided by Maurice: step 35 as explained. For his confirmation:
   SPEC-014 amendment 1 (no settings → `untrusted`), SPEC-015 amendment
   2, SPEC-013 amendment 4.
+
+## 2026-09-21 — CI green on M5
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `a0518c1..1fba881` (nine commits) to `origin/main`;
+  this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`,
+  no `PRIVATE KEY` under `tests/Fixtures/trust/` or `tests/Fixtures/profile/`,
+  visibility `PRIVATE`. Run `35649014938` on `1fba881`: conclusion
+  `success`; PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 203
+  passed` (2069 assertions on 8.3, 2071 on 8.4/8.5) — the throw-away
+  hierarchy's certificates and the OpenSSL-name EKU table hold on the
+  CI runner's OpenSSL too; `all green` `success`.
+- Decided by Maurice: push.
