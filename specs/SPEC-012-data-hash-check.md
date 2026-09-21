@@ -55,10 +55,12 @@ compare, not assume.
   Nothing else in those specs changes; their bytes are as they were.
 - `Hash\DataHashCheck::check(Manifest $manifest, $stream, ManifestStoreBytes $store): list<ValidationStatus>`:
   1. **Exactly one hard binding** (§15.10.1.2). The assertions labelled
-     `c2pa.hash.data` are counted: none → `claim.hardBindings.missing`
-     on the claim box's URI, and nothing is hashed; more than one →
-     `assertion.multipleHardBindings` on the claim's URI, and nothing is
-     hashed. Any other hard-binding label (`c2pa.hash.bmff*`,
+     `c2pa.hash.data` are counted — boxes in the assertion store, not
+     labels, so that two boxes under one label count as two: none →
+     `claim.hardBindings.missing` on the manifest's URI
+     (`self#jumbf=/c2pa/<label>`, amendment 1), and nothing is hashed;
+     more than one → `assertion.multipleHardBindings` on the manifest's
+     URI, and nothing is hashed. Any other hard-binding label (`c2pa.hash.bmff*`,
      `c2pa.hash.boxes*`, `c2pa.hash.collection.data*`) → `general.error`
      naming the label and the spec that will handle it (M8); it does not
      count as the one.
@@ -238,10 +240,12 @@ recorded in the READMEs (Open questions).
     `binding/hard-bindings-two.png` (the box duplicated under the same
     label with a second claim entry)
   - When checked
-  - Then the first gives `claim.hardBindings.missing` with the claim
-    box's url; the second `general.error` naming `c2pa.hash.bmff.v2` and
-    M8; the third `assertion.multipleHardBindings` with the claim box's
-    url; nothing hashed; all `Invalid`
+  - Then the first gives `claim.hardBindings.missing` with the
+    manifest's url `self#jumbf=/c2pa/<label>`; the second `general.error`
+    naming `c2pa.hash.bmff.v2` and M8; the third
+    `assertion.multipleHardBindings` with the manifest's url, equal to
+    the code and url of that entry in c2patool's recorded
+    `validation_status` (step 26); nothing hashed; all `Invalid`
 
 - **AC9 — streamed, not slurped**
   - Given a temporary file: `fixture-signed.png` with 48 MiB of bytes
@@ -362,6 +366,18 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
 - Non-blocker: the PNG and WebP extractors return `null` when no store
   is found; `ranges` is then irrelevant. The JPEG extractor's `null` the
   same.
+
+## Amendments
+
+1. **2026-09-21, step 26a, before the tests (per the first Open
+   question)** — the url of `claim.hardBindings.missing` and
+   `assertion.multipleHardBindings` is the *manifest's* URI
+   (`self#jumbf=/c2pa/<label>`), not the claim box's: c2patool 0.27.22
+   records `assertion.multipleHardBindings` with exactly that url on
+   `hard-bindings-two` (`explanation: claim has multiple data bindings`),
+   and the missing case, a hard error there, follows by analogy. The
+   count is of boxes in the store, not of labels. AC8 and Scope item 1
+   changed accordingly; nothing else.
 
 ## Traceability
 

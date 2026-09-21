@@ -94,6 +94,7 @@ specifying is the tool that enforces exactly that.
 | 24a | The eight SPEC-011 variants made (`bin/make-hashed-uri-variants.php`, helpers shared in `bin/variant-helpers.php`) and measured through c2patool; no criterion contradicted, three divergences recorded — `notes/step-24-hashed-uri-variants.md` | done 2026-09-21 |
 | 24b | The ten SPEC-011 tests (`tests/Unit/Hash/HashedUriCheckTest.php`), seen red: nine on the missing `Hash\HashedUriCheck`, AC9 on the enum still holding twelve codes | done 2026-09-21 |
 | SPEC-012 | The data-hash check: exactly one `c2pa.hash.data`, shape checked, the store's exclusion equal to the store's file range (from `ManifestStoreBytes::$ranges`, SPEC-001/002/003 amendment), the asset hashed in 64 KiB chunks with the exclusions skipped, six codes incl. the first informational; Deptrac `Hash` → `Container` | approved 2026-09-21 |
+| 26a | The store's range measured against the exclusion (exact on all four fixtures; two ranges for the gap JPEG); the twelve SPEC-012 variants made (`bin/make-data-hash-variants.php`) and measured through c2patool; AC8's url amended to the manifest's (amendment 1) — `notes/step-26-data-hash-variants.md` | done 2026-09-21 |
 
 ## After M0
 

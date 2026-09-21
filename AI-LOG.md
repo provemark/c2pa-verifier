@@ -1808,3 +1808,31 @@ README are where the disclosure lives.
   SPEC-001/002/003 amendment, the first informational code, the Deptrac
   arrow `Hash` → `Container`, and the hashed-URI ordering deferred to the
   Verifier layer.
+
+## 2026-09-21 — Step 26a: the store's range and the SPEC-012 variants measured
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 26a".
+- Produced: `bin/make-data-hash-variants.php`, 24 files under
+  `tests/Fixtures/binding/` (+ README rows), 7 JSONs under
+  `tests/Fixtures/c2patool/variants/` (+ README rows), SPEC-012
+  amendment 1 (AC8 and Scope item 1: the manifest's url; boxes counted,
+  not labels), `notes/step-26-data-hash-variants.md`, `NOTES.md`,
+  `docs/milestones.md`, this entry. No `src/` change, no test.
+- Measured: a throw-away range probe on the four fixtures and the gap
+  JPEG — merged piece ranges equal the assertion's exclusion exactly on
+  all four, two ranges on the gap file. A parse probe on the twelve
+  variants caught three script faults (exclusion not shrunk with the
+  store, the sha384 hash written 16 bytes too far, the claim's LBoxes
+  not shifted by a longer label) before c2patool ran. `c2patool 0.27.22`
+  on the twelve PNGs: `exclusion-extra`/`exclusions-unsorted`
+  `dataHash.match` + informational; `alg-missing`/`alg-sha384`
+  `dataHash.match`; three shape faults and `hard-binding-missing`/`-bmff`
+  exit 1 with no report; `hash-as-text` and `exclusions-too-many`
+  decode and mismatch; `hard-bindings-two` `assertion.multipleHardBindings`
+  with the manifest's url. `composer check` → all green, 163 passed
+  (the script under Pint/PHPStan). / Reasoned: the missing-binding url
+  by analogy with the measured multiple-binding url; `.malformed` kept
+  for `hash-as-text` and the exclusion bound where c2patool is looser.
+- Decided by Maurice: step 26a as explained. Amendment 1 made under the
+  spec's first Open question ("amends the criterion before the tests"),
+  for his confirmation.

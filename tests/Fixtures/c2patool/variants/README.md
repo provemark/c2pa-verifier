@@ -35,3 +35,21 @@ Added 2026-09-21 (step 24, for SPEC-011), all `../../binding/<name>.png`:
 No JSON for `assertion-duplicate-label`, `assertion-undeclared-unknown-uuid`
 (`Error: assertion missing: url = …`) and `claim-alg-missing` (`Error:
 unknown algorithm`): c2patool exits 1 without a report.
+
+Added 2026-09-21 (step 26, for SPEC-012), all `../../binding/<name>.png`:
+
+| file | what c2patool says |
+|---|---|
+| `exclusion-extra.json` | `Invalid` (signature only); `assertion.dataHash.match` with url `…/c2pa.assertions/c2pa.hash.data`, explanation `data hash valid`; the informational `assertion.dataHash.additionalExclusionsPresent`, same url, `extra data hash exclusions found`; three `hashedURI.match` |
+| `exclusions-unsorted.json` | the same |
+| `hash-as-text.json` | `Invalid`; `assertion.hashedURI.mismatch` + `assertion.dataHash.mismatch` on `c2pa.hash.data` — c2patool reads a text string as the hash |
+| `exclusions-too-many.json` | `Invalid`; `assertion.hashedURI.mismatch` + `assertion.dataHash.mismatch` + the informational — 1,025 ranges accepted |
+| `alg-missing.json` | `Invalid` (signature only); `assertion.dataHash.match` — the claim's `alg` applied |
+| `alg-sha384.json` | `Invalid` (signature only); `assertion.dataHash.match` — the assertion's own `alg` applied |
+| `hard-bindings-two.json` | `Invalid`; `assertion.multipleHardBindings` with url **`self#jumbf=/c2pa/urn:c2pa:488bf983-…`** (the manifest), explanation `claim has multiple data bindings`; two `dataHash.match`, four `hashedURI.match` |
+
+No JSON for `exclusions-not-list`, `exclusion-start-negative`,
+`exclusion-length-text` (`Error: could not decode assertion c2pa.hash.data`),
+`hard-binding-missing` (`Error: claim missing hard binding`) and
+`hard-binding-bmff` (`Error: could not decode assertion c2pa.hash.bmff.v2`):
+c2patool exits 1 without a report.

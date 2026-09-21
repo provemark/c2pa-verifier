@@ -87,3 +87,48 @@ aa1117a22c2b8cded2aa20b86ec289b899d72257643616a8c838cfbd5586228d  claim-alg-sha1
 5427a3829343fb9927f7c6c7a2c612e6ed1951ba6532abad8de183666dc12c5d  claim-alg-missing.bin
 778d9d6a0d399229e83aa568f01533409ce776441a53b45a17c26658d22206bd  claim-redacted.bin
 ```
+
+## Added 2026-09-21 (step 26, for SPEC-012)
+
+Twelve store-level variants from `bin/make-data-hash-variants.php`, the
+same PNG store, measured with c2patool 0.27.22 the same day
+(`notes/step-26-data-hash-variants.md`). Where the edit is meant to be
+*valid* (`exclusion-extra`, `exclusions-unsorted`, `alg-missing`,
+`alg-sha384`, `hard-bindings-two`, and the two relabelled ones) the data
+hash was recomputed over the carrier PNG minus the ranges, and the claim's
+hashed URI for the assertion recomputed, so that only the signature is
+broken — c2patool's `assertion.dataHash.match` on those is the check on
+the script's arithmetic. The shape-fault variants leave the hashed URI
+as it was.
+
+| file | what is wrong | c2patool 0.27.22 | spec |
+|---|---|---|---|
+| `exclusion-extra` | a second exclusion `{46500, 64}` over IDAT data; the store's exclusion grown by the 19 bytes the entry adds (46,056); hash and hashed URI recomputed | `assertion.dataHash.match` + informational `assertion.dataHash.additionalExclusionsPresent`; `claimSignature.mismatch` | SPEC-012 AC4 |
+| `exclusions-unsorted` | the same two ranges, written in reverse order | the same | SPEC-012 AC5 (sorted first) |
+| `exclusions-not-list` | `exclusions` the one map itself, not a list of one | `Error: could not decode assertion c2pa.hash.data … invalid type: map, expected a sequence` — no report | SPEC-012 AC6 (`.malformed`) |
+| `exclusion-start-negative` | `start` −1 (CBOR major type 1) | `Error: … invalid value: integer -1, expected u64` — no report | SPEC-012 AC6 (`.malformed`) |
+| `exclusion-length-text` | `length` the text `"46037"` | `Error: … invalid type: string "46037", expected u64` — no report | SPEC-012 AC6 (`.malformed`) |
+| `hash-as-text` | `hash` a 32-character text string instead of 32 bytes | decodes: `assertion.hashedURI.mismatch` (not recomputed) + `assertion.dataHash.mismatch` | SPEC-012 AC6 (`.malformed` — stricter) |
+| `exclusions-too-many` | 1,025 zero-length ranges (`99 04 01`) | decodes: `assertion.hashedURI.mismatch` + `assertion.dataHash.mismatch` + the informational — no bound | SPEC-012 AC6 (`.malformed`, `maxExclusions` 1024) |
+| `alg-missing` | the assertion's `alg` pair removed (the claim's `sha256` applies); the store's exclusion shrunk by 11 (46,026) | `assertion.dataHash.match`; `claimSignature.mismatch` | SPEC-012 AC7 |
+| `alg-sha384` | `alg` `sha384`, a 48-byte hash; the store's exclusion grown by 16 (46,053) | `assertion.dataHash.match`; `claimSignature.mismatch` | SPEC-012 AC7 |
+| `hard-binding-missing` | the `c2pa.hash.data` box and the claim's url for it relabelled `c2pa.othr.data` | `Error: claim missing hard binding` — no report | SPEC-012 AC8 (`claim.hardBindings.missing`) |
+| `hard-binding-bmff` | relabelled `c2pa.hash.bmff.v2` (the exclusion left at 46,037; the box is 3 bytes longer) | `Error: could not decode assertion c2pa.hash.bmff.v2 … missing field xpath` — no report | SPEC-012 AC8 (`general.error`, M8) |
+| `hard-bindings-two` | a second, identical `c2pa.hash.data` box at the end of the store and a second, identical claim entry; the store's exclusion grown to 46,319, hash and hashed URIs recomputed in both | `assertion.multipleHardBindings` with url `self#jumbf=/c2pa/urn:c2pa:488bf983-…` (the manifest, not the claim box — SPEC-012 amendment 1); two `dataHash.match`; `claimSignature.mismatch` | SPEC-012 AC8 |
+
+SHA-256 of the stores (as printed by the script):
+
+```
+398dbc7d578a939bf96004e04d9767302264c9ad9015b7c908909c73f0bc84e9  exclusion-extra.bin
+c18add206430e6f79c984f133eee13743f1b43ee700a4bbfb6122ec07219bca8  exclusions-unsorted.bin
+3f47ee86479bb72ab9f7b40ff790179b1e107d490781b303bdd1ba05863f1909  exclusions-not-list.bin
+6c978af9171e9d384ef819d0072cbd53718f362793a76184c59efabc6a9e89b5  exclusion-start-negative.bin
+96732f33552f4405767a9dc172a410833d7ec517c5af2d73ba39b0eac17b4c75  exclusion-length-text.bin
+d38421c3ea4d9f3edfdcc0cf47c0f3886846a5c2400a3923a5372696277855c0  hash-as-text.bin
+55ff5244cdfadf003cf00cc7b2a5dccc23912420e09448f240deb5628a4ae8a0  exclusions-too-many.bin
+6ed29b335374e3364201c4fc65df0bf74cdcb20ba045eab0ffb44e8417361382  alg-missing.bin
+f680656d80323b6423e3df7c0bff0722278a23d36c133d92fe2fe66a61047327  alg-sha384.bin
+274b1d77e4220869240846b23a8ac9908731bf71e80949831e9d5a799acb3343  hard-binding-missing.bin
+328dbb4c3cc6b5b7c0120816487030901636a92741422f7cc8dad2b2f9d5c8cb  hard-binding-bmff.bin
+2fa508250976bd2f9f033d9e9ff995ad4c769773b2061aa28702bb0f72c20f0d  hard-bindings-two.bin
+```
