@@ -1905,3 +1905,29 @@ README are where the disclosure lives.
   with `Tests: 173 passed` (1340 assertions on 8.3, 1342 on 8.4/8.5 —
   the Ed25519 pair, as before); `all green` `success`.
 - Decided by Maurice: push; the Verifier layer before M5.
+
+## 2026-09-21 — SPEC-013 draft: the Verifier
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "en dan b" (the Verifier layer before M5), then "akkoord,
+  schrijf SPEC-013 als draft".
+- Produced: `specs/SPEC-013-verifier.md` (draft, ten criteria), the row
+  in `docs/milestones.md`, this entry. No `src/` change.
+- Measured: `c2patool 0.27.22` on `fixture-unsigned.{jpg,png,webp}` →
+  `Error: No claim found`; on `jpeg/not-a-jpeg.bin` → `Error:
+  Unsupported file type`; on `binding/pad-nonzero.png` →
+  `validation_status` `[signingCredential.untrusted,
+  assertion.hashedURI.mismatch]` (no data-hash failure). With `jq` on
+  the recorded JSON: after `claimSignature.mismatch` c2patool still
+  reports `assertion.hashedURI.mismatch` and `assertion.dataHash.mismatch`
+  (`hashed-uri-truncated.json`) — it does not stop at a broken signature;
+  the sister `ManifestReport`'s accessor names read from its source.
+  `php bin/spec-check.php` → `OK: 14 spec(s), 13 test file(s)`. /
+  Reasoned: the order from §15.3; continuing after a signature failure
+  (the explanation earlier this session said "stop" — the measurement
+  says the oracle continues, and a failure on top of a failure changes
+  no verdict, so the draft continues); the skip after a hashed-URI
+  mismatch as decided in SPEC-011; "no manifest" as `Invalid` without
+  statuses, an unknown format as `general.error`; AC10's normalisation
+  table from the divergences SPEC-011/012 recorded.
+- Decided by Maurice: the Verifier layer before M5; the draft awaits his
+  reading.
