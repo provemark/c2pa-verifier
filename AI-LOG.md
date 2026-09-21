@@ -1582,3 +1582,24 @@ README are where the disclosure lives.
   8.3 / 8.4 / 8.5 each `success` with `Tests: 143 passed`, each with
   `Cache restored`; `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — The SPEC-010 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "maak alle tests".
+- Produced: `tests/Unit/Report/ReportTest.php`, 10 tests for 10 criteria
+  — the fixtures and variants through SPEC-001/2/3 → 005 → 007 → the
+  check; the step-19 vectors through a `checkBytes($cose, $claim, $url)`
+  entry next to `check(Manifest)` (an addition to the sketch, for inputs
+  that have no manifest); the step-12 CBOR variants spliced into the PNG
+  store's claim box for `claim.cbor.invalid`; the sister library's
+  `validationStatusCodes()` / `validationState()` on our `toArray()`
+  merged into SPEC-007's store array; `docs/milestones.md` row; this
+  entry. No `src/` change.
+- Measured: `vendor/bin/pest --group=SPEC-010` → **10 failed**, every one
+  on a missing class (`ClaimSignatureCheck` ×5, `StatusCode` ×2,
+  `ValidationStatus` ×2, `ValidationResult` ×1); `spec-check` `OK: 11
+  spec(s), 11 test file(s)`.
+- Reasoned: AC9 compares the whole array except the explanation text of
+  the success entry (ours, not c2patool's); AC10 pins the twelve strings
+  sorted, and "an empty report is Invalid".
+- Decided by Maurice: Claude writes all the tests.
