@@ -1796,3 +1796,15 @@ README are where the disclosure lives.
   check where the store is; the twelve new variants listed as an open
   question for the tests-first step.
 - Decided by Maurice: none yet — the draft awaits his reading.
+
+## 2026-09-21 — SPEC-012 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: `specs/SPEC-012-data-hash-check.md` status `approved`, the
+  M4 row in `docs/milestones.md`, this entry.
+- Measured: `php bin/spec-check.php` → OK. / Reasoned: nothing.
+- Decided by Maurice: SPEC-012 approved as drafted — the exact-range rule
+  for the store's exclusion, `ManifestStoreBytes::$ranges` as the
+  SPEC-001/002/003 amendment, the first informational code, the Deptrac
+  arrow `Hash` → `Container`, and the hashed-URI ordering deferred to the
+  Verifier layer.
