@@ -2420,3 +2420,16 @@ README are where the disclosure lives.
   in the test, fixed with `in_array`. / Reasoned: the error is added
   after the active manifest's checks so the reader still gets them.
 - Decided by Maurice: fail closed until M7 (step 36).
+
+## 2026-09-21 — CI green on the official corpus
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `ce1d345..1695977` (six commits) to `origin/main`;
+  this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`,
+  no `PRIVATE KEY` under the trust and profile fixtures, visibility
+  `PRIVATE`. Run `35652036005` on `1695977`: conclusion `success`; PHP
+  8.3 / 8.4 / 8.5 each `success` with `Tests: 204 passed` (2204
+  assertions on 8.3, 2206 on 8.4/8.5) — the 26 official files and both
+  drift alarms hold on the CI runner; `all green` `success`.
+- Decided by Maurice: push.
