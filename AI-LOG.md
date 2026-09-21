@@ -907,3 +907,13 @@ README are where the disclosure lives.
   unknown content-box types kept as `UnknownBox` (SPEC-005's third open
   question, "keep").
 - Decided by Maurice: build step 11b with the `Support` layer.
+
+## 2026-09-21 — CI green on SPEC-005
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja, push maar en lees de CI-run".
+- Produced: pushed `e5840b6` and `d433527` to `origin/main`; this entry.
+- Measured: before the push, 0 attribution lines and no tracked file
+  matching `key`. Run `35572440777` on `d433527`: conclusion `success`;
+  PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 90 passed`; `all green`
+  `success`.
+- Decided by Maurice: push.
