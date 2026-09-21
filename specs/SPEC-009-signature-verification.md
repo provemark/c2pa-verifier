@@ -55,13 +55,17 @@ holds.
     signature is `R‖S` of 64, 96 or 132 bytes for those curves (each half
     the curve's byte size), converted to DER `SEQUENCE { INTEGER r,
     INTEGER s }` with leading zeros stripped and one added back when the
-    high bit is set; then `openssl_verify` with SHA-256/384/512.
+    high bit is set, **and the long-form length byte when the sequence
+    exceeds 127 bytes** (P-521: measured in step 19, the short form makes
+    OpenSSL return −1); then `openssl_verify` with SHA-256/384/512.
   - **PS256 (−37), PS384 (−38), PS512 (−39)**: the key must be RSA of at
     least 2048 bits (§13.2.1; keys above 16,384 bits may be refused and
     are). Two paths by the leaf's key algorithm: a key whose
     SubjectPublicKeyInfo is `id-RSASSA-PSS` (`openssl_pkey_get_details`
     type −1) → `openssl_verify` with the hash, which OpenSSL performs as
-    PSS for that key type; an ordinary `rsaEncryption` key →
+    PSS for that key type and refuses (−1) when the key's own PSS
+    parameters name another hash (measured in step 19 — that −1 is
+    "cannot verify", never `true`); an ordinary `rsaEncryption` key →
     `openssl_public_decrypt` with `OPENSSL_NO_PADDING` to recover the
     encoded message, then EMSA-PSS-VERIFY (RFC 8017 §9.1.2) with MGF1 over
     the same hash and a salt length equal to the hash length (RFC 8230
@@ -75,6 +79,11 @@ holds.
     else `CoseException` naming the missing extension — never a silent
     `false`.
   - Any other `alg` → `CoseException` naming it.
+  - `openssl_verify` returns 1, 0 or −1: only 1 is `true`; 0 is `false`;
+    −1 (an OpenSSL error: a key the operation cannot use, a mismatching
+    parameter) is `false` too, with the OpenSSL error string in the
+    exception when the key was already accepted as fitting — never
+    silently `true`.
 - Every path is exercised by a recorded vector: the protected bytes, the
   claim bytes, the signature and the leaf certificate (public), committed
   as data; the private keys that produced the synthetic ones never enter
@@ -149,13 +158,17 @@ questions).
 
 - **AC7 — PS256 under an ordinary RSA key verifies through EMSA-PSS, and PKCS#1 v1.5 does not pass**
   - Given the synthetic vectors `ps256-rsa2048` (a PSS signature, salt 32,
-    made by OpenSSL), `ps256-rsa2048-v15` (the same key and bytes signed
-    PKCS#1 v1.5 — what a lax verifier would accept), `ps384-rsa3072`,
-    `ps512-rsa4096`
+    made by OpenSSL), `ps256-rsa2048-v15` (a second key, the same bytes
+    signed PKCS#1 v1.5 under `alg` −37 — what a verifier that calls
+    `openssl_verify` on a plain key wrongly accepts: measured, it returns
+    1), `ps384-rsa3072`, `ps512-rsa4096`, and
+    `ps384-under-rsapss-sha256-key` (an `id-RSASSA-PSS` key whose
+    parameters say SHA-256, signed SHA-256, presented as PS384)
   - When verified
   - Then `ps256-rsa2048`, `ps384-rsa3072` and `ps512-rsa4096` return
-    `true` and their flipped-claim variants `false`; and
-    `ps256-rsa2048-v15` returns `false`
+    `true` and their flipped-claim variants `false`; `ps256-rsa2048-v15`
+    returns `false`; and `ps384-under-rsapss-sha256-key` returns `false`
+    (OpenSSL refuses the parameter mismatch with −1)
 
 - **AC8 — EdDSA verifies, through sodium or OpenSSL**
   - Given the synthetic vector `eddsa-ed25519` (a positive signature and
@@ -180,8 +193,10 @@ questions).
   - Then the PNG's DER begins `30 4? 02 20` or `30 4? 02 21 00` according
     to its high bit, `strlen` matches, and the three synthetic pairs give
     `02 01 00`, `02 21 00 …` and `02 01 00` for the integer in question;
-    and a 63-byte input is not converted but reported (`false` from
-    `verify()`)
+    the P-521 vector's 132-byte signature converts to a sequence with the
+    long-form length (`30 81 8?`) — the short form was measured to make
+    OpenSSL return −1; and a 63-byte input is not converted but reported
+    (`false` from `verify()`)
 
 - **AC11 — the leaf's key is read from the certificate, not from the chain's order**
   - Given the PNG's `CoseSign1` with its chain reversed (a synthetic
@@ -204,13 +219,14 @@ questions).
   variants of step 16; the hand verification of step 16 with
   `ext-openssl`, including the plain-RSA PSS/v1.5 pair; `web-auth/cose-lib`
   4.8.2's `ECDSA.php` and `PSSRSA.php` as reference reading (MIT) for the
-  DER conversion and EMSA-PSS; the synthetic vectors to be produced in a
-  measurement step before approval (Open questions).
+  DER conversion and EMSA-PSS; the fourteen vectors of
+  `tests/Fixtures/signatures/` (step 19, 2026-09-21: OpenSSL 3.6.3 CLI,
+  each self-verified by OpenSSL and re-verified in PHP through the
+  step-16 paths).
 - Reasoned: refusing RSA keys above 16,384 bits (§13.2.1 "may"); reading
-  the raw Ed25519 key as the last 32 bytes of a 44-byte SPKI (RFC 8410);
-  that OpenSSL enforces the PSS parameters of an `id-RSASSA-PSS` key
-  against the requested hash — to be measured in the same step with a
-  mismatching key.
+  the raw Ed25519 key as the last 32 bytes of a 44-byte SPKI (RFC 8410).
+  Measured in step 19: OpenSSL does enforce an `id-RSASSA-PSS` key's
+  parameters (−1 on a mismatching hash).
 
 ## API sketch
 
@@ -250,14 +266,11 @@ holds a private key or signs.
 
 ## Open questions
 
-- **The synthetic vectors** (`tests/Fixtures/signatures/*.json`: alg,
-  protected bytes, claim bytes, signature, leaf certificate PEM; the
-  private keys deleted) are produced in a measurement step before
-  approval: throw-away keys for P-384, P-521, secp256k1, RSA 1024/2048/
-  3072/4096 and Ed25519, signed with OpenSSL's CLI over a `Sig_structure`
-  built by `CoseSign1::sigStructure()`; each checked with `openssl dgst
-  -verify` before it is recorded; the `rsassaPss`-key-with-mismatching-hash
-  question answered in the same step. Blocker for approval.
+- Resolved before approval (step 19, 2026-09-21): fourteen vectors under
+  `tests/Fixtures/signatures/`, made by `bin/make-signature-vectors.php`
+  (keys deleted), each self-verified by OpenSSL and re-verified in PHP;
+  the P-521 long-form DER length and the PSS-parameter refusal were found
+  there and are in the criteria.
 - **Whether `verify()` should return a small result object** (`valid`,
   `alg`, `keyKind`) instead of `bool`, for SPEC-010's report. Proposal:
   `bool` here, the report assembles from `CoseSign1` and the result.

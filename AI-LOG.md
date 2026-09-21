@@ -1368,3 +1368,28 @@ README are where the disclosure lives.
   list of synthetic vectors the measurement step must produce.
 - Decided by Maurice: none yet; the draft awaits the vector step and his
   approval.
+
+## 2026-09-21 — Step 19: the SPEC-009 vectors, and what they found
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ja doe die stap".
+- Produced: `bin/make-signature-vectors.php`; fourteen JSON vectors under
+  `tests/Fixtures/signatures/` with a README; SPEC-009 draft updated
+  (long-form DER length in Scope and AC10, the PSS-parameter refusal and
+  the three outcomes of `openssl_verify` in Scope, AC7 extended,
+  References, the blocking open question resolved);
+  `notes/step-19-signature-vectors.md`; `NOTES.md`; `docs/milestones.md`;
+  this entry.
+- Measured: OpenSSL 3.6.3; every vector self-verified by OpenSSL in the
+  script; keys deleted (printed); every vector re-verified in PHP through
+  the step-16 paths — `es512-p521` returned −1 until the DER `SEQUENCE`
+  length was written in long form (then 1, flipped byte 0);
+  `ps384-under-rsapss-sha256-key` → `openssl_verify(SHA-384)` −1 and
+  SHA-256 1; `ps256-rsa2048-v15` → `openssl_verify` 1, EMSA-PSS false;
+  `es256-p256k1` and `ps256-rsa1024` verify mathematically (1 / true);
+  `eddsa-ed25519` → sodium true, `openssl_verify(0)` 1; PHPStan eleven
+  findings on the script (a closure's docblock), fixed with a named
+  function; `composer check` exit 0.
+- Reasoned: the salt-length convention; PHP 8.3/8.4 Ed25519 support left
+  to CI.
+- Decided by Maurice: do the measurement step. SPEC-009 now awaits his
+  approval.
