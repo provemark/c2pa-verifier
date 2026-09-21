@@ -966,3 +966,13 @@ README are where the disclosure lives.
   proves only a type error and is recorded as such.
 - Decided by Maurice: do the measurement step. SPEC-006 now awaits his
   approval.
+
+## 2026-09-21 — SPEC-006 approved; push
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "goedgekeurd, push maar en lees de CI-run".
+- Produced: SPEC-006 → `approved`; `docs/milestones.md` row; this entry;
+  pushed `1059aaf`, `8d3ffbf` and this commit to `origin/main`.
+- Measured: before the push, 0 attribution lines and no tracked file
+  matching `key`; `spec-check` `OK: 7 spec(s), 6 test file(s)`. The CI
+  run: see the next entry.
+- Decided by Maurice: SPEC-006 approved as drafted after step 12.

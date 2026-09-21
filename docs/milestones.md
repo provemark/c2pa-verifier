@@ -69,7 +69,7 @@ specifying is the tool that enforces exactly that.
 | 10 | Twenty-three malformed stores (`bin/make-jumbf-variants.php`, `tests/Fixtures/jumbf/`) through c2patool — `notes/step-10-jumbf-variants.md` | done 2026-09-21 |
 | SPEC-005 | JUMBF: box frame, superbox, description box, content boxes, the C2PA UUIDs | implemented 2026-09-21: 19 tests red → green, 90 in all; `Support` layer added (SPEC-004 amendment 1) — step 11 |
 | 12 | Sixteen CBOR values recorded (`tests/Fixtures/cbor/*.json`); four claim-level faults through c2patool (`bin/make-cbor-vectors.php`) — `notes/step-12-cbor-vectors.md` | done 2026-09-21 |
-| SPEC-006 | CBOR: the measured subset, definite lengths only, fail closed on the rest | draft 2026-09-21, values recorded and variants measured, awaiting approval |
+| SPEC-006 | CBOR: the measured subset, definite lengths only, fail closed on the rest | approved 2026-09-21; red tests next |
 | SPEC-007 | Claim v1 and v2, assertion store, `claim_generator_info` | — |
 
 ## After M0
