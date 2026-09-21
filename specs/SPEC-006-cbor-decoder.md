@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-21                      |
 | Supersedes | —                                                 |
@@ -223,7 +223,7 @@ questions). RFC 8949 Appendix A and Appendix F are quoted by their hex.
   oracle on duplicates: c2pa-rs reads `claim-duplicate-key` and fails on
   the missing `alg`, not on the second `dc:title`; RFC 8949 §5.6)*
   - Given `a1400a` (a byte-string key), `a1800a` (an array key),
-    `a201020103` (the key 1 twice), `a26161016161 02` (the key `"a"`
+    `a201020103` (the key 1 twice), `a2616101616102` (the key `"a"`
     twice)
   - When each is decoded
   - Then each throws `CborException` naming the offset of the offending
@@ -341,18 +341,18 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
-| AC11                 | —                           | —                    |
-| AC12                 | —                           | —                    |
-| AC13                 | —                           | —                    |
-| AC14                 | —                           | —                    |
-| AC15                 | —                           | —                    |
+| AC1 | tests/Unit/Cbor/CborDecoderTest.php :: AC1: the PNG claim decodes to its seven keys / SPEC-006 | src/Cbor/CborDecoder.php :: decode(), item(), map() |
+| AC2 | tests/Unit/Cbor/CborDecoderTest.php :: AC2: the sixteen measured blobs decode to their recorded values; AC2: the PNG signature is tag 18 over four items with a detached payload / SPEC-006 | src/Cbor/CborDecoder.php :: item(); src/Cbor/CborTag.php |
+| AC3 | tests/Unit/Cbor/CborDecoderTest.php :: AC3: byte strings and text strings are different types / SPEC-006 | src/Cbor/CborDecoder.php :: item() (major types 2 and 3); src/Cbor/CborBytes.php |
+| AC4 | tests/Unit/Cbor/CborDecoderTest.php :: AC4: RFC 8949 Appendix A, the supported rows, decode as printed / SPEC-006 | src/Cbor/CborDecoder.php :: item(), argument(), simple() |
+| AC5 | tests/Unit/Cbor/CborDecoderTest.php :: AC5: integers beyond PHP's range are an error / SPEC-006 | src/Cbor/CborDecoder.php :: fits() |
+| AC6 | tests/Unit/Cbor/CborDecoderTest.php :: AC6: indefinite lengths are an error naming the offset / SPEC-006 | src/Cbor/CborDecoder.php :: item() (additional information 31) |
+| AC7 | tests/Unit/Cbor/CborDecoderTest.php :: AC7: floats are an error naming the offset / SPEC-006 | src/Cbor/CborDecoder.php :: simple() |
+| AC8 | tests/Unit/Cbor/CborDecoderTest.php :: AC8: unknown simple values and undefined are an error / SPEC-006 | src/Cbor/CborDecoder.php :: simple() |
+| AC9 | tests/Unit/Cbor/CborDecoderTest.php :: AC9: reserved additional information and a stray break are an error / SPEC-006 | src/Cbor/CborDecoder.php :: item() (28–30, break) |
+| AC10 | tests/Unit/Cbor/CborDecoderTest.php :: AC10: truncation is an error naming where the bytes ran out / SPEC-006 | src/Cbor/CborDecoder.php :: take(), string() |
+| AC11 | tests/Unit/Cbor/CborDecoderTest.php :: AC11: bytes after the value are an error / SPEC-006 | src/Cbor/CborDecoder.php :: decode() |
+| AC12 | tests/Unit/Cbor/CborDecoderTest.php :: AC12: text strings must be UTF-8, shown as hex when they are not / SPEC-006 | src/Cbor/CborDecoder.php :: item() (major type 3); src/Support/Bytes.php :: hex() |
+| AC13 | tests/Unit/Cbor/CborDecoderTest.php :: AC13: map keys are int or string, and unique / SPEC-006 | src/Cbor/CborDecoder.php :: map(), kind(), show() |
+| AC14 | tests/Unit/Cbor/CborDecoderTest.php :: AC14: limits are enforced before memory is spent / SPEC-006 | src/Cbor/CborDecoder.php :: enter(), countable(), string() |
+| AC15 | tests/Unit/Cbor/CborDecoderTest.php :: AC15: the default limits are 32 and 65536, and sufficient for the sixteen blobs / SPEC-006 | src/Cbor/CborDecoder.php :: DEFAULT_MAX_DEPTH, DEFAULT_MAX_ITEMS, __construct() |

@@ -107,10 +107,15 @@ it('AC1: the PNG claim decodes to its seven keys', function (): void {
         ->and($claim['claim_generator_info'])->toBe(['name' => 'c2pa-verifier fixtures', 'version' => '0.0.0', 'org.contentauth.c2pa_rs' => '0.90.22'])
         ->and($claim['alg'])->toBe('sha256')
         ->and($claim['created_assertions'])->toHaveCount(1)
-        ->and($claim['created_assertions'][0]['url'])->toBe('self#jumbf=c2pa.assertions/c2pa.hash.data')
-        ->and($claim['created_assertions'][0]['hash'])->toBeInstanceOf(CborBytes::class)
-        ->and(base64_encode($claim['created_assertions'][0]['hash']->bytes))->toBe('Cxd9XpB7zgi4c3qUdT2c4DM6BpUCH16Yyn43iCeZ5LI=')
         ->and(array_key_exists('claim_version', $claim))->toBeFalse();
+
+    $created = $claim['created_assertions'];
+    assert(is_array($created) && is_array($created[0]));
+    $hash = $created[0]['hash'];
+    expect($created[0]['url'])->toBe('self#jumbf=c2pa.assertions/c2pa.hash.data')
+        ->and($hash)->toBeInstanceOf(CborBytes::class);
+    assert($hash instanceof CborBytes);
+    expect(base64_encode($hash->bytes))->toBe('Cxd9XpB7zgi4c3qUdT2c4DM6BpUCH16Yyn43iCeZ5LI=');
 })->group('SPEC-006');
 
 it('AC2: the sixteen measured blobs decode to their recorded values', function (): void {
@@ -128,16 +133,22 @@ it('AC2: the PNG signature is tag 18 over four items with a detached payload', f
     expect($signature)->toBeInstanceOf(CborTag::class);
     assert($signature instanceof CborTag);
     expect($signature->number)->toBe(18)
-        ->and($signature->value)->toHaveCount(4)
-        ->and($signature->value[0])->toBeInstanceOf(CborBytes::class)
-        ->and(strlen($signature->value[0]->bytes))->toBe(1285)
-        ->and(array_keys($signature->value[1]))->toBe(['pad'])
-        ->and(strlen($signature->value[1]['pad']->bytes))->toBe(10932)
-        ->and($signature->value[2])->toBeNull()
-        ->and(strlen($signature->value[3]->bytes))->toBe(64);
+        ->and($signature->value)->toBeArray()
+        ->and($signature->value)->toHaveCount(4);
+    /** @var array{0: mixed, 1: mixed, 2: mixed, 3: mixed} $parts */
+    $parts = $signature->value;
+    [$protected, $unprotected, $payload, $sig] = $parts;
+    assert($protected instanceof CborBytes && is_array($unprotected) && $sig instanceof CborBytes);
+    $pad = $unprotected['pad'];
+    assert($pad instanceof CborBytes);
+    expect(strlen($protected->bytes))->toBe(1285)
+        ->and(array_keys($unprotected))->toBe(['pad'])
+        ->and(strlen($pad->bytes))->toBe(10932)
+        ->and($payload)->toBeNull()
+        ->and(strlen($sig->bytes))->toBe(64);
 
     $adobe = (new CborDecoder)->decode(spec006Recorded('adobe-20220124-C--c2pa.signature')['bytes']);
-    assert($adobe instanceof CborTag);
+    assert($adobe instanceof CborTag && is_array($adobe->value) && is_array($adobe->value[1]));
     expect(array_keys($adobe->value[1]))->toBe(['x5chain', 'sigTst', 'pad']);
 })->group('SPEC-006');
 
@@ -145,10 +156,13 @@ it('AC3: byte strings and text strings are different types', function (): void {
     $hashData = (new CborDecoder)->decode(spec006Recorded('png--c2pa.hash.data')['bytes']);
 
     assert(is_array($hashData));
-    expect($hashData['hash'])->toBeInstanceOf(CborBytes::class)
-        ->and(strlen($hashData['hash']->bytes))->toBe(32)
-        ->and($hashData['pad'])->toBeInstanceOf(CborBytes::class)
-        ->and(strlen($hashData['pad']->bytes))->toBe(8)
+    $hash = $hashData['hash'];
+    $pad = $hashData['pad'];
+    expect($hash)->toBeInstanceOf(CborBytes::class)
+        ->and($pad)->toBeInstanceOf(CborBytes::class);
+    assert($hash instanceof CborBytes && $pad instanceof CborBytes);
+    expect(strlen($hash->bytes))->toBe(32)
+        ->and(strlen($pad->bytes))->toBe(8)
         ->and($hashData['name'])->toBe('jumbf manifest')
         ->and($hashData['alg'])->toBe('sha256')
         ->and($hashData['exclusions'])->toBe([['start' => 33, 'length' => 46037]]);
@@ -176,6 +190,7 @@ it('AC4: RFC 8949 Appendix A, the supported rows, decode as printed', function (
         'c349010000000000000000' => new CborTag(3, new CborBytes("\x01\x00\x00\x00\x00\x00\x00\x00\x00")),
     ];
     foreach ($rows as $hex => $expected) {
+        $hex = (string) $hex; // PHP turns keys like '17' into ints
         expect(spec006Decode($hex))->toEqual($expected, $hex);
     }
 })->group('SPEC-006');
@@ -193,6 +208,7 @@ it('AC6: indefinite lengths are an error naming the offset', function (): void {
         '83018202039f0405ff' => 5, 'bf61610161629f0203ffff' => 0, 'bf6346756ef563416d7421ff' => 0,
     ];
     foreach ($rows as $hex => $offset) {
+        $hex = (string) $hex;
         expect(fn () => spec006Decode($hex))
             ->toThrow(CborException::class, "indefinite length at offset {$offset} is not supported");
     }
@@ -221,6 +237,7 @@ it('AC8: unknown simple values and undefined are an error', function (): void {
 
 it('AC9: reserved additional information and a stray break are an error', function (): void {
     foreach (['1c' => 28, '1d' => 29, '1e' => 30, '3c' => 28, '5c' => 28, '7c' => 28, '9c' => 28, 'bc' => 28, 'dc' => 28, 'fc' => 28] as $hex => $ai) {
+        $hex = (string) $hex;
         expect(fn () => spec006Decode($hex))
             ->toThrow(CborException::class, "additional information {$ai} at offset 0 is reserved");
     }
@@ -237,6 +254,7 @@ it('AC10: truncation is an error naming where the bytes ran out', function (): v
         'c0' => 1,
     ];
     foreach ($rows as $hex => $offset) {
+        $hex = (string) $hex; // PHP turns keys like '18' into ints
         expect(fn () => spec006Decode($hex))
             ->toThrow(CborException::class, "unexpected end of input at offset {$offset}");
     }
@@ -258,7 +276,7 @@ it('AC13: map keys are int or string, and unique', function (): void {
     expect(fn () => spec006Decode('a1400a'))->toThrow(CborException::class, 'map key at offset 1 is a byte string');
     expect(fn () => spec006Decode('a1800a'))->toThrow(CborException::class, 'map key at offset 1 is an array');
     expect(fn () => spec006Decode('a201020103'))->toThrow(CborException::class, 'duplicate map key 1 at offset 3');
-    expect(fn () => spec006Decode('a2616101616102'))->toThrow(CborException::class, 'duplicate map key "a" at offset 5');
+    expect(fn () => spec006Decode('a2616101616102'))->toThrow(CborException::class, 'duplicate map key "a" at offset 4');
 
     $claim = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/cbor/claim-duplicate-key.cbor');
     expect(fn () => (new CborDecoder)->decode($claim))

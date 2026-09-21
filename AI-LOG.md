@@ -1021,3 +1021,21 @@ README are where the disclosure lives.
   offset 0 needs 4294967296 bytes, 0 available`); the AC4 rows compared
   with `toEqual` so `CborBytes`/`CborTag` compare by value.
 - Decided by Maurice: Claude writes all the tests.
+
+## 2026-09-21 — Step 13: the CBOR decoder (SPEC-006 implemented)
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, bouw de decoder".
+- Produced: `src/Cbor/{CborDecoder,CborBytes,CborTag,CborException}.php`;
+  SPEC-006 → `implemented` with Traceability (and one hex typo in AC13
+  fixed); three fixes in the test file (int-coerced hex keys, a
+  miscounted offset, type narrowing); `notes/step-13-cbor-decoder.md`;
+  `NOTES.md`; `docs/milestones.md`; this entry.
+- Measured: first run 13 passed, 3 failed (all test-file mistakes);
+  second run 1 failed (`a2000000`: duplicate reported before truncation —
+  the duplicate check moved after the value); PHPStan 29 + 1 findings
+  resolved by narrowing and prose; `composer check` exit 0, **106 passed
+  (528 assertions)**.
+- Reasoned: the order "value, then duplicate check" so the RFC's
+  truncation reading wins; the `"1"`/`1` key-collision refusal; integers
+  beyond 2⁶³−1 detected through `unpack('J')` reading back negative.
+- Decided by Maurice: build step 13b.
