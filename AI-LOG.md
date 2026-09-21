@@ -1097,3 +1097,12 @@ README are where the disclosure lives.
   and an error for this parse layer — the Verifier layer must map it.
 - Decided by Maurice: do the measurement step. SPEC-007 now awaits his
   approval.
+
+## 2026-09-21 — SPEC-007 approved; push
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "goedgekeurd, push maar en lees de CI-run".
+- Produced: SPEC-007 → `approved`; `docs/milestones.md` row; this entry;
+  pushed `9a88d9f`, `2599876` and this commit to `origin/main`.
+- Measured: before the push, 0 attribution lines and no tracked `*.key`;
+  `spec-check` `OK: 8 spec(s), 7 test file(s)`. The CI run: next entry.
+- Decided by Maurice: SPEC-007 approved as drafted after step 14.
