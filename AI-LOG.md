@@ -1319,3 +1319,22 @@ README are where the disclosure lives.
   of 16384`); AC6 checks the encoder both by its bytes and by decoding
   the result with SPEC-006.
 - Decided by Maurice: Claude writes all the tests.
+
+## 2026-09-21 — Step 18: CoseSign1 (SPEC-008 implemented)
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, bouw CoseSign1".
+- Produced: `src/Cose/{CoseSign1,CoseException}.php`; SPEC-008 →
+  `implemented` with Traceability, the open questions resolved and the
+  `otherHeaders` reading recorded; two test-file fixes (AC5's prefix
+  length, AC11's expected keys); `notes/step-18-cose-sign1.md`;
+  `NOTES.md`; `docs/milestones.md`; this entry.
+- Measured: first run 8 passed, 3 failed, 1 warning — AC5 (test cut 20
+  bytes for an 18-byte prefix), AC4/AC11 (`otherHeaders` definition:
+  everything but labels 1 and 33), the warning from `openssl_x509_read`
+  on the broken leaf (now caught through a scoped error handler and the
+  OpenSSL error queue drained); PHPStan six `chr()` findings → `pack('C')`;
+  `composer check` exit 0, **132 passed (730 assertions)**, Deptrac 0
+  violations.
+- Reasoned: the unreachable large-length branches of the encoder; the
+  error-queue drain on principle.
+- Decided by Maurice: build step 18b.

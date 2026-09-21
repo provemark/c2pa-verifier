@@ -69,7 +69,7 @@ function spec008Cn(CborBytes $der): string
 function spec008BstrHead(int $length): string
 {
     return match (true) {
-        $length < 24 => chr(0x40 | $length),
+        $length < 24 => pack('C', 0x40 | $length),
         $length < 256 => "\x58".pack('C', $length),
         $length < 65536 => "\x59".pack('n', $length),
         default => "\x5a".pack('N', $length),
@@ -169,7 +169,7 @@ it('AC5: the Sig_structure is byte-exact', function (): void {
     }
 
     $png = spec008Manifest('fixture-signed.png');
-    expect(bin2hex(substr(spec008Parse($png)->sigStructure($png->claimBytes()), 0, 20)))
+    expect(bin2hex(substr(spec008Parse($png)->sigStructure($png->claimBytes()), 0, 18)))
         ->toBe('846a5369676e6174757265315905'.'05a20126');
 })->group('SPEC-008');
 
@@ -228,7 +228,7 @@ it('AC11: 33 wins over the string label', function (): void {
         ->and($cose->chain)->toHaveCount(2)
         ->and(spec008Cn($cose->chain[0]))->toBe('C2PA Signer')
         ->and($cose->chainProtected)->toBeTrue()
-        ->and(array_keys($cose->otherHeaders))->toBe(['x5chain']);
+        ->and(array_keys($cose->otherHeaders))->toBe(['x5chain', 'pad']);
 })->group('SPEC-008');
 
 it('AC12: limits are enforced before allocation', function (): void {

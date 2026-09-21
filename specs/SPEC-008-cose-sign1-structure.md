@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-21                      |
 | Supersedes | —                                                 |
@@ -282,11 +282,12 @@ final readonly class CoseSign1
   AC7–AC11 are built by `bin/make-cose-variants.php` and measured; AC12's
   limit cases are synthetic in the test (a chain limit of 2 on the Adobe
   signature, a declared 20,000-byte certificate).
-- **Whether `fromBytes()` should take a `CoseSign1` decoded by the caller
-  instead of bytes** — the `Manifest` layer has already decoded the
-  signature box once (SPEC-007 checks it is one `cbor` box) but discards
-  the value. Proposal: bytes in, decode here; one decode more costs
-  microseconds and keeps `Cose` independent of `Manifest`. Non-blocker.
+- Resolved at implementation: bytes in, decoded here; `Cose` sees `Cbor`
+  and `Support` only.
+- Clarified at implementation (the AC4/AC11 reading): `otherHeaders`
+  holds every header of both buckets except the labels 1 and 33 — a
+  deprecated `"x5chain"` stays visible there whether it was the chain
+  used (AC4) or a duplicate (AC11).
 
 ## Traceability
 
@@ -295,15 +296,15 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
-| AC11                 | —                           | —                    |
-| AC12                 | —                           | —                    |
+| AC1 | tests/Unit/Cose/CoseSign1Test.php :: AC1: the PNG signature parses to its four parts / SPEC-008 | src/Cose/CoseSign1.php :: fromBytes() |
+| AC2 | tests/Unit/Cose/CoseSign1Test.php :: AC2: the chain comes from the protected header, leaf first / SPEC-008 | src/Cose/CoseSign1.php :: findChain(), chain() |
+| AC3 | tests/Unit/Cose/CoseSign1Test.php :: AC3: the JPEG and WebP signatures have the same shape as the PNG signature / SPEC-008 | src/Cose/CoseSign1.php :: fromBytes() |
+| AC4 | tests/Unit/Cose/CoseSign1Test.php :: AC4: a 2022 signature: PS256, the chain unprotected under the string label, a timestamp / SPEC-008 | src/Cose/CoseSign1.php :: findChain() (unprotected, deprecated label), fromBytes() (sigTst, otherHeaders) |
+| AC5 | tests/Unit/Cose/CoseSign1Test.php :: AC5: the Sig_structure is byte-exact / SPEC-008 | src/Cose/CoseSign1.php :: sigStructure(), head() |
+| AC6 | tests/Unit/Cose/CoseSign1Test.php :: AC6: the encoder writes shortest-form lengths and the structure decodes back to four items / SPEC-008 | src/Cose/CoseSign1.php :: head() |
+| AC7 | tests/Unit/Cose/CoseSign1Test.php :: AC7: not a tagged COSE_Sign1 is an error / SPEC-008 | src/Cose/CoseSign1.php :: fromBytes() (tag and item checks) |
+| AC8 | tests/Unit/Cose/CoseSign1Test.php :: AC8: a present payload is an error / SPEC-008 | src/Cose/CoseSign1.php :: fromBytes() (payload check) |
+| AC9 | tests/Unit/Cose/CoseSign1Test.php :: AC9: the protected header must be a map with an integer alg / SPEC-008 | src/Cose/CoseSign1.php :: fromBytes() (protected header and alg checks) |
+| AC10 | tests/Unit/Cose/CoseSign1Test.php :: AC10: a missing or malformed chain is an error / SPEC-008 | src/Cose/CoseSign1.php :: findChain(), chain(), isX509() |
+| AC11 | tests/Unit/Cose/CoseSign1Test.php :: AC11: 33 wins over the string label / SPEC-008 | src/Cose/CoseSign1.php :: findChain() (label order) |
+| AC12 | tests/Unit/Cose/CoseSign1Test.php :: AC12: limits are enforced before allocation / SPEC-008 | src/Cose/CoseSign1.php :: fromBytes() (protected limit), chain() (chain and certificate limits), DEFAULT_MAX_* |
