@@ -288,17 +288,22 @@ it('AC8: redactions are refused until M7', function (): void {
 })->group('SPEC-011');
 
 it('AC9: the codes are verbatim, and success is told apart', function (): void {
+    // SPEC-011's fifteen; SPEC-012 added the six of the data hash (its AC10 asserts the full twenty-one)
     $values = array_map(static fn (StatusCode $c): string => $c->value, StatusCode::cases());
-    sort($values);
-    expect($values)->toBe([
+    foreach ([
         'algorithm.unsupported', 'assertion.hashedURI.match', 'assertion.hashedURI.mismatch',
         'assertion.json.invalid', 'assertion.missing', 'assertion.undeclared',
         'claim.cbor.invalid', 'claim.malformed', 'claim.missing', 'claim.multiple',
         'claimSignature.mismatch', 'claimSignature.missing', 'claimSignature.validated',
         'general.error', 'signingCredential.invalid',
-    ]);
+    ] as $value) {
+        expect($values)->toContain($value);
+    }
     $successes = [StatusCode::ClaimSignatureValidated, StatusCode::AssertionHashedUriMatch];
     foreach (StatusCode::cases() as $code) {
+        if (str_starts_with($code->value, 'assertion.dataHash') || str_contains($code->value, 'HardBindings')) {
+            continue;   // SPEC-012's
+        }
         expect($code->isSuccess())->toBe(in_array($code, $successes, true), $code->value)
             ->and($code->isFailure())->toBe(! in_array($code, $successes, true), $code->value);
     }

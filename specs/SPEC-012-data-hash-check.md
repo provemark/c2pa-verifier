@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-21                      |
 | Supersedes | —                                                 |
@@ -156,8 +156,11 @@ recorded in the READMEs (Open questions).
     the `assertion.dataHash.match` entry's code and url under
     `validation_results.activeManifest.success` in c2patool's recorded
     JSON; and `ValidationResult::fromStatuses(…, ['dataHash'])` is
-    `Valid`. For the WebP the pad byte (offset 100,955) is inside the
-    hashed bytes: flipping it in a copy gives `.mismatch`
+    `Valid`. For the WebP the pad byte (offset 100,955) lies outside the
+    store's range (which ends there) and inside the hashed bytes: the
+    match's explanation says `313 of 100956 bytes`. A non-zero pad byte
+    never reaches this check — SPEC-003 refuses it in the extractor
+    (amendment 3)
 
 - **AC2 — one changed pixel byte: `assertion.dataHash.mismatch`, as c2patool** *(M4's "done when", the tampered half)*
   - Given `binding/pixel-changed.png`, `binding/pixel-changed.jpg`,
@@ -391,6 +394,13 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
    there). The sister library's `validationCodes()` reads
    `validation_status`, so the shape matters: it must show what
    c2patool would show.
+3. **2026-09-21, step 27, at implementation** — AC1's last clause said
+   that flipping the WebP pad byte in a copy gives `.mismatch`. It cannot:
+   SPEC-003 (approved, implemented) refuses a non-zero pad byte with a
+   `ContainerException` before any check runs — fail-closed one layer
+   earlier. The clause now proves the same fact from the match itself
+   (313 of 100,956 bytes hashed, the store's range ending at 100,955)
+   and asserts SPEC-003's refusal. No outcome changed.
 
 ## Traceability
 
@@ -399,13 +409,13 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
+| AC1 | tests/Unit/Hash/DataHashCheckTest.php :: AC1: the four fixtures: assertion.dataHash.match, and the words are c2patool's / SPEC-012 | src/Hash/DataHashCheck.php :: check(), hashExcept(); src/Container/ManifestStoreBytes.php :: $ranges; src/Container/{Jpeg,Png,Webp}ManifestStoreExtractor.php :: extract() (the ranges) |
+| AC2 | tests/Unit/Hash/DataHashCheckTest.php :: AC2: one changed pixel byte: assertion.dataHash.mismatch, as c2patool / SPEC-012 | src/Hash/DataHashCheck.php :: check() (hash_equals), hashExcept() |
+| AC3 | tests/Unit/Hash/DataHashCheckTest.php :: AC3: the exclusion must hold the store, exactly / SPEC-012 | src/Hash/DataHashCheck.php :: check() (count($store->ranges), $range === $storeRange, past-end); src/Container/ManifestStoreBytes.php :: __construct() (merging) |
+| AC4 | tests/Unit/Hash/DataHashCheckTest.php :: AC4: additional exclusions are honoured and reported / SPEC-012 | src/Hash/DataHashCheck.php :: check() ($others); src/Report/StatusCode.php :: isInformational(); src/Report/ValidationResult.php :: fromStatuses(), toArray() (SPEC-010 amendment 2) |
+| AC5 | tests/Unit/Hash/DataHashCheckTest.php :: AC5: overlapping exclusions: assertion.dataHash.malformed / SPEC-012 | src/Hash/DataHashCheck.php :: check() (usort, overlap) |
+| AC6 | tests/Unit/Hash/DataHashCheckTest.php :: AC6: shape faults: malformed, and a missing hash is a mismatch / SPEC-012 | src/Hash/DataHashCheck.php :: check() (shape, $maxExclusions) |
+| AC7 | tests/Unit/Hash/DataHashCheckTest.php :: AC7: the algorithm: the assertion's, else the claim's, else unsupported / SPEC-012 | src/Hash/DataHashCheck.php :: check() ($data['alg'] ?? $claim->alg, ALGORITHMS) |
+| AC8 | tests/Unit/Hash/DataHashCheckTest.php :: AC8: exactly one hard binding / SPEC-012 | src/Hash/DataHashCheck.php :: check() ($bindings, isOtherHardBinding()) |
+| AC9 | tests/Unit/Hash/DataHashCheckTest.php :: AC9: streamed, not slurped / SPEC-012 | src/Hash/DataHashCheck.php :: hashExcept() (StreamReader, $chunkSize) |
+| AC10 | tests/Unit/Hash/DataHashCheckTest.php :: AC10: the codes are verbatim, and informational is a third kind / SPEC-012 | src/Report/StatusCode.php :: the six cases, isSuccess(), isInformational(), isFailure(); src/Report/ValidationResult.php :: fromStatuses() |

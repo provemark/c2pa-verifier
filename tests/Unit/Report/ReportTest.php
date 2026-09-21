@@ -327,7 +327,7 @@ it('AC9: the array shape is c2patool\'s, plus the checks performed', function ()
 it('AC10: every code is verbatim, and success and failure are told apart', function (): void {
     $values = array_map(static fn (StatusCode $c): string => $c->value, StatusCode::cases());
     sort($values);
-    // SPEC-010's twelve; SPEC-011 added assertion.hashedURI.match/.mismatch and assertion.undeclared (its AC9 asserts the full fifteen)
+    // SPEC-010's twelve; SPEC-011 and SPEC-012 added their own (SPEC-012 AC10 asserts the full twenty-one and the three kinds)
     foreach ([
         'algorithm.unsupported', 'assertion.json.invalid', 'assertion.missing',
         'claim.cbor.invalid', 'claim.malformed', 'claim.missing', 'claim.multiple',
@@ -337,8 +337,8 @@ it('AC10: every code is verbatim, and success and failure are told apart', funct
         expect($values)->toContain($value);
     }
     foreach (StatusCode::cases() as $code) {
-        if ($code === StatusCode::AssertionHashedUriMatch) {
-            continue;   // SPEC-011's success
+        if (str_starts_with($code->value, 'assertion.') && ! in_array($code->value, ['assertion.json.invalid', 'assertion.missing'], true)) {
+            continue;   // SPEC-011's and SPEC-012's, with their own successes and the informational
         }
         expect($code->isSuccess())->toBe($code === StatusCode::ClaimSignatureValidated, $code->value)
             ->and($code->isFailure())->toBe($code !== StatusCode::ClaimSignatureValidated, $code->value);

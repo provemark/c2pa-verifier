@@ -62,8 +62,8 @@ that list is complete.
 - `Report\ValidationResult`: the statuses, the state, and
   `checksPerformed` — the names of the checks that produced them
   (`signature` here; `hashBinding`, `trust`, `timestamp` later). `toArray()`
-  in c2patool's shape: `validation_status` holding the failures and
-  informational statuses (what the sister parser's `validationCodes()`
+  in c2patool's shape: `validation_status` holding the failures (only —
+  amendment 2, measured; what the sister parser's `validationCodes()`
   reads), `validation_results.activeManifest.{success, informational,
   failure}` holding all, `validation_state`; plus `checks_performed`,
   a key c2patool does not have, so that a consumer can tell a partial
@@ -348,6 +348,7 @@ already); `Cose` may see `Manifest` (the arrow exists, unused until now).
    codes of this spec are present and that `claimSignature.validated` is
    the only success *among them*; the exact set of fifteen and the second
    success are SPEC-011 AC9's. No criterion changed.
+2. **2026-09-21, with SPEC-012's implementation, measured in step 26** — c2patool 0.27.22's `validation_status` holds failures only (an informational appears under `activeManifest.informational` alone); `ValidationResult::toArray()` now does the same, and the Scope's description of `validation_status` reads accordingly. With it, `Valid` requires at least one success *and* no failure, so that a report of informational statuses alone is `Invalid` like an empty one (SPEC-012 AC10). AC10's test skips the later specs' codes. No criterion of this spec changed in outcome: every test of it still passes.
 
 ## Traceability
 

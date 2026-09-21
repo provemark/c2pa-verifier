@@ -272,6 +272,10 @@ rest of the data, then the pad byte. Keeps walking to see a second `C2PA`
   header size recomputed for the shorter file (measured: 100,947 = file −
   8), so AC5 does not fire on it and AC12 is the criterion it exercises.
 
+## Amendments
+
+1. **2026-09-21, defined in SPEC-012 and approved with it** — `ManifestStoreBytes` gains `public array $ranges`, the byte ranges of the file the store and its container framing occupy, one per piece, contiguous pieces merged: for WebP the `C2PA` chunk from its FourCC through its data (`8 + strlen(store)`), the pad byte excluded — it is hashed, measured in step 23 — `[312, 100643]` on the fixture. No criterion of this spec changed; the bytes are as they were.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

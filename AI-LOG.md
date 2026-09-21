@@ -1862,3 +1862,33 @@ README are where the disclosure lives.
   the implementation commit as SPEC-010 amendment 2.
 - Decided by Maurice: step 26b as explained. Amendment 2 for his
   confirmation.
+
+## 2026-09-21 — Step 27: SPEC-012 implemented, the data-hash check; M4 complete
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met stap 27".
+- Produced: `src/Hash/DataHashCheck.php`; `src/Container/ManifestStoreBytes.php`
+  (`$ranges`, merged in the constructor) and the three extractors
+  (SPEC-001/002/003 amendment, recorded in each); `src/Report/StatusCode.php`
+  (+6, `isInformational()` real); `src/Report/ValidationResult.php`
+  (`validation_status` failures only; `Valid` needs a success — SPEC-010
+  amendment 2, recorded there, Scope text adjusted); `deptrac.yaml`
+  (`Hash` → `Container`); `tests/Unit/Report/ReportTest.php` AC10 and
+  `tests/Unit/Hash/HashedUriCheckTest.php` AC9 widened (SPEC-011
+  amendment 1); `tests/Unit/Hash/DataHashCheckTest.php` corrected (three
+  variadic `toContain()` calls; AC1's pad-byte clause — SPEC-012
+  amendment 3); SPEC-012 → `implemented` with Traceability;
+  `notes/step-27-data-hash-check.md`, `NOTES.md`, `docs/milestones.md`
+  (M4 done), this entry.
+- Measured: first run `4 failed, 6 passed` — three test faults (Pest's
+  variadic `toContain()`, again), one AC1 clause SPEC-003 makes
+  impossible (`pad byte at offset 100955 is 01, not 00`), and one code
+  fault (informational alone came out `Valid`). After: `composer check`
+  → Pint passed, PHPStan `[OK] No errors`, Deptrac `Violations 0`, Pest
+  `173 passed (1342 assertions)`; AC9's 48 MiB file under 4 MiB peak
+  growth in 0.13 s; `bin/spec-check.php` → `OK: 13 spec(s), 13 test
+  file(s)`. / Reasoned: `Valid` = a success and no failure; the
+  exact-range rule's messages name the store's range and the nearest
+  exclusion; the digests in a mismatch's explanation.
+- Decided by Maurice: step 27 as explained. Amendment 3 and SPEC-010
+  amendment 2's second half (`Valid` needs a success) for his
+  confirmation.

@@ -31,12 +31,17 @@ final readonly class ValidationResult
      */
     public static function fromStatuses(array $statuses, array $checksPerformed): self
     {
-        $failed = $statuses === [];
+        // Valid needs at least one success and no failure: an empty report, or
+        // one of informational statuses alone, is not a clean one (SPEC-010
+        // AC10, SPEC-012 AC10).
+        $succeeded = false;
+        $failed = false;
         foreach ($statuses as $status) {
+            $succeeded = $succeeded || $status->code->isSuccess();
             $failed = $failed || $status->code->isFailure();
         }
 
-        return new self($statuses, $failed ? ValidationState::Invalid : ValidationState::Valid, $checksPerformed);
+        return new self($statuses, $succeeded && ! $failed ? ValidationState::Valid : ValidationState::Invalid, $checksPerformed);
     }
 
     /** @return array<string, mixed> */
@@ -54,7 +59,7 @@ final readonly class ValidationResult
         }
 
         return [
-            'validation_status' => [...$failure, ...$informational],
+            'validation_status' => $failure,   // failures only, as c2patool 0.27.22 (SPEC-010 amendment 2, measured in step 26)
             'validation_results' => ['activeManifest' => ['success' => $success, 'informational' => $informational, 'failure' => $failure]],
             'validation_state' => $this->state->value,
             'checks_performed' => $this->checksPerformed,

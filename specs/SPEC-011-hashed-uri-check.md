@@ -326,6 +326,10 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report` (already), plus `Jumbf`
   returns the children. Public property, as `$box` and `$assertions`
   already are; a method would only hide a field.
 
+## Amendments
+
+1. **2026-09-21, with SPEC-012's implementation** — `StatusCode` grew by SPEC-012's six codes; AC9's test now asserts that this spec's fifteen are present and leaves the exact twenty-one and the informational kind to SPEC-012 AC10. No criterion changed.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

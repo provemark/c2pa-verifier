@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\ManifestStoreBytes;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
+use Provemark\C2paVerifier\Cose\ClaimSignatureCheck;
 use Provemark\C2paVerifier\Hash\DataHashCheck;
+use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\Manifest;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
@@ -99,13 +102,27 @@ function spec012OraclePairs(array $oracle, string $kind, string $prefix): array
 /** @return list<array{code: string, url: string}> */
 function spec012Pairs(ValidationStatus ...$statuses): array
 {
-    return array_map(static fn (ValidationStatus $s): array => ['code' => $s->code->value, 'url' => $s->url], $statuses);
+    return array_values(array_map(static fn (ValidationStatus $s): array => ['code' => $s->code->value, 'url' => $s->url], $statuses));
 }
 
-/** @return list<string> */
+/**
+ * @param  list<ValidationStatus>  $statuses
+ * @return list<string>
+ */
 function spec012Codes(array $statuses): array
 {
     return array_map(static fn (ValidationStatus $s): string => $s->code->value, $statuses);
+}
+
+/** @return resource */
+function spec012Stream(string $path)
+{
+    $stream = fopen($path, 'rb');
+    if ($stream === false) {
+        throw new RuntimeException("cannot open {$path}");
+    }
+
+    return $stream;
 }
 
 it('AC1: the four fixtures: assertion.dataHash.match, and the words are c2patool\'s', function (): void {
@@ -130,19 +147,23 @@ it('AC1: the four fixtures: assertion.dataHash.match, and the words are c2patool
             ->and($result->checksPerformed)->toBe(['dataHash'], $name);
     }
 
-    // the WebP pad byte (odd chunk size) is outside the exclusion and inside the hash
+    // the WebP pad byte (odd chunk size, offset 100,955) is outside the range and inside the hash: 100,956 − 100,643 = 313 bytes hashed
+    [$manifest, $stream, $store] = spec012Open('fixture-signed.webp');
+    expect(filesize(dirname(__DIR__, 2).'/Fixtures/fixture-signed.webp'))->toBe(100956)
+        ->and($store->ranges[0]['start'] + $store->ranges[0]['length'])->toBe(100955);
+    $statuses = (new DataHashCheck)->check($manifest, $stream, $store);
+    expect($statuses[0]->explanation)->toContain('313 of 100956 bytes');
+    // a non-zero pad byte never reaches this check: SPEC-003 refuses it in the extractor (amendment 3)
     $webp = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/fixture-signed.webp');
-    expect(strlen($webp))->toBe(100956)->and($webp[100955])->toBe("\0");
     $webp[100955] = "\x01";
     $tmp = tempnam(sys_get_temp_dir(), 'spec012-webp');
     file_put_contents($tmp, $webp);
-    $stream = fopen($tmp, 'rb');
-    $store = (new WebpManifestStoreExtractor)->extract($stream);
-    assert($store !== null);
-    $manifest = ManifestStore::fromTree((new JumbfParser)->parse($store->bytes))->active;
-    $statuses = (new DataHashCheck)->check($manifest, $stream, $store);
-    unlink($tmp);
-    expect(spec012Codes($statuses))->toBe(['assertion.dataHash.mismatch']);
+    $stream = spec012Stream($tmp);
+    try {
+        expect(fn () => (new WebpManifestStoreExtractor)->extract($stream))->toThrow(ContainerException::class, 'pad byte at offset 100955 is 01, not 00');
+    } finally {
+        unlink($tmp);
+    }
 })->group('SPEC-012');
 
 it('AC2: one changed pixel byte: assertion.dataHash.mismatch, as c2patool', function (): void {
@@ -163,7 +184,7 @@ it('AC3: the exclusion must hold the store, exactly', function (): void {
         $statuses = spec012Check($variant);
         expect(spec012Codes($statuses))->toBe(['assertion.dataHash.mismatch'], $variant)
             ->and($statuses[0]->explanation)->not->toMatch(SPEC012_HEX64, "{$variant}: not hashed")
-            ->and($statuses[0]->explanation)->toContain('exclusion', $variant)
+            ->and($statuses[0]->explanation)->toContain('exclusion')
             ->and(ValidationResult::fromStatuses($statuses, ['dataHash'])->state)->toBe(ValidationState::Invalid, $variant);
     }
     // the store moved by 16 bytes: the message names where it is and where the exclusion is
@@ -196,17 +217,14 @@ it('AC4: additional exclusions are honoured and reported', function (): void {
     // c2patool lists an informational under activeManifest.informational only, never under validation_status (measured, step 26)
     expect($array['validation_status'])->toBe([])
         ->and(spec012OraclePairs($oracle, 'validation_status', 'assertion.dataHash'))->toBe([]);
-    assert(is_array($array['validation_results']) && is_array($array['validation_results']['activeManifest']));
-    $ours = $array['validation_results']['activeManifest'];
-    expect(array_map(static fn (array $s): array => ['code' => $s['code'], 'url' => $s['url']], $ours['informational']))
-        ->toBe(spec012OraclePairs($oracle, 'informational', 'assertion.dataHash'));
-    expect(array_map(static fn (array $s): array => ['code' => $s['code'], 'url' => $s['url']], $ours['success']))
-        ->toBe(spec012OraclePairs($oracle, 'success', 'assertion.dataHash'));
+    // our toArray() has c2patool's shape, so the same reader serves both sides
+    expect(spec012OraclePairs($array, 'informational', 'assertion.dataHash'))->toBe(spec012OraclePairs($oracle, 'informational', 'assertion.dataHash'))
+        ->and(spec012OraclePairs($array, 'success', 'assertion.dataHash'))->toBe(spec012OraclePairs($oracle, 'success', 'assertion.dataHash'));
 
     // the same file under SPEC-011 and SPEC-010: hashed URIs match, only the signature fails
     [$manifest] = spec012Open('binding/exclusion-extra.png');
-    expect(spec012Codes((new \Provemark\C2paVerifier\Hash\HashedUriCheck)->check($manifest)))->each->toBe('assertion.hashedURI.match');
-    expect((new \Provemark\C2paVerifier\Cose\ClaimSignatureCheck)->check($manifest)[0]->code)->toBe(StatusCode::ClaimSignatureMismatch);
+    expect(spec012Codes((new HashedUriCheck)->check($manifest)))->each->toBe('assertion.hashedURI.match');
+    expect((new ClaimSignatureCheck)->check($manifest)[0]->code)->toBe(StatusCode::ClaimSignatureMismatch);
 })->group('SPEC-012');
 
 it('AC5: overlapping exclusions: assertion.dataHash.malformed', function (): void {
@@ -238,7 +256,7 @@ it('AC6: shape faults: malformed, and a missing hash is a mismatch', function ()
     ] as $variant => $word) {
         $statuses = spec012Check($variant);
         expect(spec012Codes($statuses))->toBe(['assertion.dataHash.malformed'], $variant)
-            ->and($statuses[0]->explanation)->toContain($word, $variant)
+            ->and($statuses[0]->explanation)->toContain($word)
             ->and($statuses[0]->explanation)->not->toMatch(SPEC012_HEX64, $variant)
             ->and(ValidationResult::fromStatuses($statuses, ['dataHash'])->state)->toBe(ValidationState::Invalid, $variant);
     }
@@ -299,7 +317,7 @@ it('AC9: streamed, not slurped', function (): void {
     unset($chunk);
     expect(filesize($tmp))->toBeGreaterThan(48 * 1024 * 1024);
 
-    $stream = fopen($tmp, 'rb');
+    $stream = spec012Stream($tmp);
     $store = (new PngManifestStoreExtractor)->extract($stream);
     assert($store !== null);
     $manifest = ManifestStore::fromTree((new JumbfParser)->parse($store->bytes))->active;

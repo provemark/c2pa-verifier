@@ -76,6 +76,7 @@ deptrac:
       - Cbor
       - Report
       - Jumbf          # SPEC-011: Superbox::payload(), UnknownBox
+      - Container      # SPEC-012: StreamReader, ManifestStoreBytes::$ranges
     Trust:
       - Manifest
       - Report

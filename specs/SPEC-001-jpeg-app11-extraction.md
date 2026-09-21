@@ -267,6 +267,7 @@ checks and limits pass. It never calls `file_get_contents`.
    reported "inside the segment" for a segment that is complete when the
    file ends exactly after it. SPEC-002 and SPEC-003 already decide this
    by the file's end; SPEC-004 gives all three the same reader.
+3. **2026-09-21, defined in SPEC-012 and approved with it** — `ManifestStoreBytes` gains `public array $ranges`, the byte ranges of the file the store and its container framing occupy, one per piece, contiguous pieces merged: for JPEG each APP11 piece from its marker through its data (`2 + length`), so the two-piece fixture gives one range `[20, 94772]` and the gap variant of AC4 two. No criterion of this spec changed; the bytes are as they were.
 
 ## Traceability
 

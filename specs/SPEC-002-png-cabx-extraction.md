@@ -249,6 +249,10 @@ calls `file_get_contents`. `fread` with a length of 0 throws in PHP 8, and
   they bound the same thing (the store's size). Proposal: keep the name
   that says what is actually checked in each container. Non-blocker.
 
+## Amendments
+
+1. **2026-09-21, defined in SPEC-012 and approved with it** — `ManifestStoreBytes` gains `public array $ranges`, the byte ranges of the file the store and its container framing occupy, one per piece, contiguous pieces merged: for PNG the `caBX` chunk from its length field through its CRC (`12 + strlen(store)`), `[33, 46037]` on the fixture. No criterion of this spec changed; the bytes are as they were.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

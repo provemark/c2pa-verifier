@@ -135,6 +135,10 @@ final readonly class PngManifestStoreExtractor
             $storeOffset = $offset;
         }
 
-        return $store === null ? null : new ManifestStoreBytes($store);
+        if ($store === null || $storeOffset === null) {
+            return null;
+        }
+
+        return new ManifestStoreBytes($store, [['start' => $storeOffset, 'length' => 12 + strlen($store)]]);   // length, type, data, CRC
     }
 }

@@ -56,6 +56,7 @@ final readonly class JpegManifestStoreExtractor
         $lBox = null;
         $tBox = null;
         $collected = '';
+        $ranges = [];
 
         while (true) {
             $offset = $reader->tell();
@@ -164,6 +165,7 @@ final readonly class JpegManifestStoreExtractor
             }
 
             $collected .= $reader->readExactly($dataLength, $offset, sprintf('piece %d data', $pieceNumber));
+            $ranges[] = ['start' => $offset, 'length' => 2 + $length];   // marker, length field, piece header, data
             $pieces++;
         }
 
@@ -179,7 +181,7 @@ final readonly class JpegManifestStoreExtractor
             ));
         }
 
-        return new ManifestStoreBytes($collected);
+        return new ManifestStoreBytes($collected, $ranges);
     }
 
     /**

@@ -150,7 +150,11 @@ final readonly class WebpManifestStoreExtractor
             }
         }
 
-        return $store === null ? null : new ManifestStoreBytes($store);
+        if ($store === null || $storeOffset === null) {
+            return null;
+        }
+
+        return new ManifestStoreBytes($store, [['start' => $storeOffset, 'length' => 8 + strlen($store)]]);   // FourCC, size, data; the pad byte is hashed (step 23)
     }
 
     /**
