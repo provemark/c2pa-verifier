@@ -2159,3 +2159,23 @@ README are where the disclosure lives.
   unchanged. / Reasoned: "depth" as links walked; the private-key block
   refused by its BEGIN line so the message never sees the body.
 - Decided by Maurice: step 32 as explained.
+
+## 2026-09-21 — CI green on SPEC-014; re-signing with throw-away keys allowed for tooling
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar"; then, put as an explicit question, whether a
+  tooling script may re-sign the PNG fixture with throw-away keys to
+  make SPEC-015's certificate-profile variants.
+- Produced: pushed `2ddfe18..9ebac39` (ten commits) to `origin/main`;
+  this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`,
+  no `PRIVATE KEY` in `tests/Fixtures/trust/`, visibility `PRIVATE`.
+  Run `35640449671` on `9ebac39`: conclusion `success`; PHP 8.3 / 8.4 /
+  8.5 each `success` with `Tests: 193 passed` (1827 assertions on 8.3,
+  1829 on 8.4/8.5); `all green` `success`.
+- Decided by Maurice: push. And: a tooling script under `bin/` may
+  re-sign the fixture with keys that exist only during the run and are
+  never written — public certificates, the re-signed variants and
+  c2patool's verdicts (with the throw-away root as anchor) are what is
+  committed; the product never signs, no key enters the repository.
+  (He first answered too quickly, asked for the question to be put
+  again, and confirmed the same answer.)
