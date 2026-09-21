@@ -1175,3 +1175,29 @@ README are where the disclosure lives.
   `success`. The AC6 equivalence test runs on CI without Docker or a
   network call during the test itself.
 - Decided by Maurice: push.
+
+## 2026-09-21 — Step 16: the four signatures verified by hand; cose-lib measured
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "leg de meetstap voor M3 uit", then "ja akkoord".
+- Produced: `bin/make-cose-variants.php`, three `.bin` + `.png` under
+  `tests/Fixtures/cose/` with a README; `notes/step-16-cose-signature.md`;
+  `NOTES.md`; `docs/milestones.md` (M3 table); this entry. No `src/` or
+  `composer.json` change; the probe, the throw-away RSA key (deleted) and
+  cose-lib 4.8.2 lived in the scratch directory only.
+- Measured: C2PA 2.4 §13.2.1–13.2.6 and the x5chain clauses read; the
+  four COSE_Sign1 structures decoded with our own code; the Sig_structure
+  built and verified with `openssl_verify` — ES256 ×3 valid (R‖S → DER),
+  PS256 (Adobe) valid because the leaf key's SPKI is `rsassaPss` and
+  OpenSSL applies PSS for that key type (`openssl_pkey_get_details` type
+  −1; `openssl_public_decrypt` refuses the key); one claim byte flipped →
+  invalid ×4; cross-fixture → invalid; a plain-RSA PSS signature made
+  with OpenSSL → `openssl_verify` invalid, manual EMSA-PSS valid, v1.5
+  the reverse; cose-lib: 3 packages / 2.5 MB, ES256 = the same
+  `openssl_verify` call, PS256 via brick/math + EMSA-PSS, **cannot read
+  the Adobe certificate**; c2patool on the three variants →
+  `claimSignature.mismatch` ×3. PHPStan/Pint on the script clean;
+  `composer check` exit 0.
+- Reasoned: the two-path PS256 design; accepting an unprotected x5chain
+  as c2patool does; three M3 specs; the ADR-0001 amendment proposal.
+- Decided by Maurice: do the measurement step. Pending: the ADR-0001
+  amendment (COSE written here on `ext-openssl`).

@@ -73,6 +73,16 @@ specifying is the tool that enforces exactly that.
 | 14 | c2patool's JSON recorded (`tests/Fixtures/c2patool/`); fifteen claim variants through c2patool (`bin/make-claim-variants.php`) — `notes/step-14-claim-variants.md` | done 2026-09-21 |
 | SPEC-007 | Claim v1 and v2, assertion store, `claim_generator_info`, the JSON view for the sister library | implemented 2026-09-21: 14 tests red → green, 120 in all; AC6 (the sister library's `fromJson()`) green — step 15. **M2 complete** |
 
+## M3, step by step
+
+| Step | What | Status |
+|---|---|---|
+| 16 | The four signatures verified with `ext-openssl`, PSS measured with both key kinds, three broken variants through c2patool, `cose-lib` measured — `notes/step-16-cose-signature.md` | done 2026-09-21 |
+| ADR-0001 | Amendment proposed: COSE verification written here on `ext-openssl` | awaiting the maintainer |
+| SPEC-008 | COSE_Sign1: structure, headers, `x5chain`, the `Sig_structure` | — |
+| SPEC-009 | Signature verification per algorithm, key-fits-algorithm | — |
+| SPEC-010 | `Report`: `claimSignature.validated` / `.mismatch`, `assertion.json.invalid` | — |
+
 ## After M0
 
 M1 opens with SPEC-001 (JPEG APP11 → manifest store bytes) as a draft. It
