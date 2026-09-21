@@ -2227,3 +2227,14 @@ README are where the disclosure lives.
   measurements deferred to the tests-first step (profile check without
   settings / with verify_trust off; expired + wrong anchor).
 - Decided by Maurice: KU as c2pa-rs keeps it (option a).
+
+## 2026-09-21 — SPEC-015 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: `specs/SPEC-015-certificate-profile.md` status `approved`,
+  the row in `docs/milestones.md`, this entry.
+- Measured: `php bin/spec-check.php` → OK. / Reasoned: nothing.
+- Decided by Maurice: SPEC-015 approved as drafted — the eight profile
+  rules, KU as c2pa-rs (option a), one `.invalid` per fault,
+  `signature_info` per manifest, unknown critical extensions as the
+  named gap until M6.
