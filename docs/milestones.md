@@ -93,6 +93,7 @@ specifying is the tool that enforces exactly that.
 | SPEC-011 | The hashed-URI check: every entry of the claim hashed against its box, `assertion.hashedURI.match`/`.mismatch`, `assertion.undeclared` for boxes no entry names (unknown boxes too), `algorithm.unsupported` per §15.4.2/§13.1, redactions refused until M7; SPEC-007 amendment 2 (`assertionStore` public), Deptrac `Hash` → `Jumbf` | implemented 2026-09-21: 10 tests red → green, 163 in all; SPEC-007 amendment 2, SPEC-010 amendment 1 (AC10's test) — step 25 |
 | 24a | The eight SPEC-011 variants made (`bin/make-hashed-uri-variants.php`, helpers shared in `bin/variant-helpers.php`) and measured through c2patool; no criterion contradicted, three divergences recorded — `notes/step-24-hashed-uri-variants.md` | done 2026-09-21 |
 | 24b | The ten SPEC-011 tests (`tests/Unit/Hash/HashedUriCheckTest.php`), seen red: nine on the missing `Hash\HashedUriCheck`, AC9 on the enum still holding twelve codes | done 2026-09-21 |
+| SPEC-012 | The data-hash check: exactly one `c2pa.hash.data`, shape checked, the store's exclusion equal to the store's file range (from `ManifestStoreBytes::$ranges`, SPEC-001/002/003 amendment), the asset hashed in 64 KiB chunks with the exclusions skipped, six codes incl. the first informational; Deptrac `Hash` → `Container` | draft 2026-09-21 |
 
 ## After M0
 

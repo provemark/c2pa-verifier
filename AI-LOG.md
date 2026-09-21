@@ -1779,3 +1779,20 @@ README are where the disclosure lives.
   assertions SPEC-009 amendment 1 skips there — 1101 on 8.4 and 8.5),
   Composer cache restored on all three; `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-21 — SPEC-012 draft: the data-hash check
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "ga door met SPEC-012 als draft".
+- Produced: `specs/SPEC-012-data-hash-check.md` (draft, ten criteria),
+  the M4 row in `docs/milestones.md`, this entry. No `src/` change.
+- Measured: nothing new — the spec rests on step 23's probe and table,
+  step 02's gap variant, and the step-14/23 c2patool JSON (all four
+  fixtures carry `assertion.dataHash.match` under `success`, checked with
+  `jq`); `php bin/spec-check.php` → `OK: 13 spec(s), 12 test file(s)`.
+  / Reasoned: §18.5, §15.10.1.2, §15.12.1, §15.4.2, §13.1 as read in
+  step 23; the exact-range rule for the store's exclusion (stricter than
+  c2patool's literal reading, same verdict on every measured variant);
+  `ManifestStoreBytes::$ranges` as the way the Container layer tells the
+  check where the store is; the twelve new variants listed as an open
+  question for the tests-first step.
+- Decided by Maurice: none yet — the draft awaits his reading.
