@@ -105,7 +105,7 @@ specifying is the tool that enforces exactly that.
 |---|---|---|
 | 30 | Trust measured: the certificates, the fixtures' chains, c2patool under nine settings (`tests/Fixtures/trust/`, `tests/Fixtures/c2patool/trusted/`), c2pa-rs's trust and profile checks read from source, `ext-openssl`'s reach — `notes/step-30-trust-measured.md` | done 2026-09-21 |
 | ADR-0003 | X.509 chain and profile written here on `ext-openssl` (no `phpseclib`, no temp files, no `checkpurpose` except as a second oracle); allowed list first; the EKU list as c2pa-rs keeps it (Maurice: option a); RFC 3161 open until M6 | accepted 2026-09-21 |
-| SPEC-014 | Trust: `TrustSettings` (the shared format, contents not paths, whole or absent), `Certificate` on `openssl_x509_parse`/`_verify`, `ChainCheck` (allowed list first, then the walk to an anchor — DER-equal or signed by one, no trust by name), `Trusted` as a state with the measured rule (`untrusted` alone keeps `Valid`), `validation_status` omitted when empty, `Verifier::verify($stream, ?TrustSettings)` (SPEC-013 amendment 3); the second oracle `openssl_x509_checkpurpose` | draft 2026-09-21 |
+| SPEC-014 | Trust: `TrustSettings` (the shared format, contents not paths, whole or absent), `Certificate` on `openssl_x509_parse`/`_verify`, `ChainCheck` (allowed list first, then the walk to an anchor — DER-equal or signed by one, no trust by name), `Trusted` as a state with the measured rule (`untrusted` alone keeps `Valid`), `validation_status` omitted when empty, `Verifier::verify($stream, ?TrustSettings)` (SPEC-013 amendment 3); the second oracle `openssl_x509_checkpurpose` | approved 2026-09-21 |
 
 ## After M0
 

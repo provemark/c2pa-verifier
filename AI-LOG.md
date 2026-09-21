@@ -2080,3 +2080,14 @@ README are where the disclosure lives.
   from the measured JSON (`untrusted` alone keeps `Valid`); settings
   whole or absent; the second oracle in the tests.
 - Decided by Maurice: none yet — the draft awaits his reading.
+
+## 2026-09-21 — SPEC-014 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: `specs/SPEC-014-trust-settings-and-chain.md` status
+  `approved`, the row in `docs/milestones.md`, this entry.
+- Measured: `php bin/spec-check.php` → OK. / Reasoned: nothing.
+- Decided by Maurice: SPEC-014 approved as drafted — settings whole or
+  absent, allowed list first, the walk ending at a certificate equal to
+  or signed by an anchor, the three-state rule, `validation_status`
+  omitted when empty, `Verifier::verify($stream, ?TrustSettings)`.
