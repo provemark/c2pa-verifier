@@ -2471,3 +2471,16 @@ README are where the disclosure lives.
   files as a corpus. For his confirmation: the CAWG refusal (SPEC-013
   amendment 7), SPEC-007 amendment 4, SPEC-010 amendment 4, SPEC-013
   amendment 6.
+
+## 2026-09-21 — CI green on the c2pa-rs corpus
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `db3e45e..dcdb72f` (three commits) to `origin/main`;
+  this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`,
+  no `PRIVATE KEY` under the trust, profile and c2pa-rs fixtures,
+  visibility `PRIVATE`. Run `35654841579` on `dcdb72f`: conclusion
+  `success`; PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 206
+  passed` (2251 assertions on 8.3, 2253 on 8.4/8.5); `all green`
+  `success`.
+- Decided by Maurice: push.
