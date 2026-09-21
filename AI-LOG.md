@@ -1660,3 +1660,13 @@ README are where the disclosure lives.
   §15.12.1, §13.1 read from the 2.4 text; the codes for SPEC-011/012
   listed in the note.
 - Decided by Maurice: the measurement step as explained.
+
+## 2026-09-21 — CI green on step 23
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar en lees de CI-run".
+- Produced: pushed `cfc0984` to `origin/main`; this entry.
+- Measured: before the push, 0 attribution lines and no tracked `*.key`.
+  Run `35586595620` on `cfc0984`: conclusion `success`; PHP 8.3 / 8.4 /
+  8.5 each `success` with `Tests: 153 passed`, Composer cache restored
+  on all three (no downloads); `all green` `success`.
+- Decided by Maurice: push.
