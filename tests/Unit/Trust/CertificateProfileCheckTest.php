@@ -325,6 +325,14 @@ it('AC6: the rules the variants cannot show, on hand-built parse data', function
         expect(array_map(static fn (ValidationStatus $s): string => $s->code->value, $statuses))->toBe(['signingCredential.invalid'], $word)
             ->and($statuses[0]->explanation)->toContain($word);
     }
+
+    // amendment 3: sha384WithRSAEncryption is on c2pa-rs's list — the Truepic camera files' leaves are signed with it
+    $truepic = spec015HandBuilt(static function (array $parsed, array $key): array {
+        $parsed['signatureTypeLN'] = 'sha384WithRSAEncryption';
+
+        return [$parsed, $key];
+    });
+    expect(array_map(static fn (ValidationStatus $s): string => $s->code->value, $check->checkLeaf($truepic, null, null, SPEC015_PNG_SIGNATURE)))->toBe([]);
 })->group('SPEC-015');
 
 it('AC7: signature_info is c2patool\'s', function (): void {

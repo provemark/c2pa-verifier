@@ -58,8 +58,9 @@ box payloads. Nothing here knows what a claim is (SPEC-007).
   needs it (tag 18, COSE_Sign1, in M3) decides what it means.
 - Errors, each with the byte offset: additional information 28–30
   (reserved), 31 (indefinite length — RFC 8949 §3.2.3, forbidden by
-  §4.2.1), the `break` code `0xff` anywhere, floats (major type 7 with
-  additional information 25, 26, 27), simple values other than 20–22
+  §4.2.1), the `break` code `0xff` anywhere, ~~floats (major type 7 with
+  additional information 25, 26, 27)~~ (decoded since amendment 2),
+  simple values other than 20–22
   (including `undefined`, 23, and the two-byte form with a value below
   32, §3.3), truncation, trailing bytes.
 - Limits, checked before memory is spent: nesting depth (default 32;
@@ -171,15 +172,25 @@ questions). RFC 8949 Appendix A and Appendix F are quoted by their hex.
     claim with `created_assertions` as `9f … ff`)
   - Then it throws `CborException` naming the offset of the `9f`
 
-- **AC7 — floats are an error naming the offset** *(oracle: c2pa-rs →
-  `claim could not be converted from CBOR` on `claim-float`, a type error
-  on the field, not a float check)*
-  - Given `f90000`, `f93c00`, `fb3ff199999999999a`, `fa47c35000`,
-    `f97c00` (Infinity), `f97e00` (NaN), and `c1fb41d452d9ec200000`
-    (tag 1 over a float)
+- **AC7 — floats decode to PHP floats, all three widths** *(amendment 2,
+  2026-09-21: the original criterion refused floats; four of the C2PA's
+  own test files carry them — see Amendments)*
+  - Given the RFC 8949 Appendix A vectors `f90000` (0.0), `f93c00`
+    (1.0), `f93e00` (1.5), `f9c400` (−4.0), `f97bff` (65504.0, the
+    largest half), `f90001` (5.960464477539063e-8, a subnormal half),
+    `fa47c35000` (100000.0), `fa7f7fffff` (3.4028234663852886e38),
+    `fb3ff199999999999a` (1.1), `fb7e37e43c8800759c` (1.0e300),
+    `f97c00` (+Infinity), `f9fc00` (−Infinity), `f97e00` (NaN),
+    `fa7f800000` and `fb7ff0000000000000` (+Infinity as single and
+    double), and `c1fb41d452d9ec200000` (tag 1 over 1363896240.5)
   - When each is decoded
-  - Then each throws `CborException` naming the float's offset (0 for the
-    first six, 1 for the last) and that floats are not supported
+  - Then each is the PHP float named, `is_nan()` true for the NaN, the
+    tagged one a `CborTag(1, 1363896240.5)`; a float truncated inside
+    its bytes (`f93c`, `fa47c350`, `fb3ff19999999999`) throws
+    `CborException` naming the offset; and the manifest stores of
+    `public-testfiles/nikon-20221019-building.jpeg` and the three
+    `truepic-20230212-*.jpg` parse to a `ManifestStore` (their `stds.exif`
+    and `com.truepic.custom.odometry` assertions carry floats)
 
 - **AC8 — unknown simple values and `undefined` are an error**
   - Given `f7` (undefined), `f0` (simple 16), `f8ff` (simple 255), and
@@ -333,6 +344,10 @@ messages.
   consistent with the oracle.
 - **`CborTag` for tags 2/3 (bignums)**: passed through; whether a later
   layer should refuse them is that layer's question. Non-blocker.
+
+## Amendments
+
+1. **2026-09-21, step 37 …**
 
 ## Traceability
 

@@ -117,6 +117,7 @@ specifying is the tool that enforces exactly that.
 | Step | What | Status |
 |---|---|---|
 | 36 | The 26 JPEGs of `c2pa-org/public-testfiles` (`legacy/1.4/image/jpeg/`) as fixtures with c2patool's JSON; 20 of 26 states equal on first contact; two findings — floats (SPEC-006) and ingredient manifests (SPEC-013, fail closed until M7) — `notes/step-36-public-testfiles.md` | done 2026-09-21 |
+| 37 | SPEC-006 amendment 2: floats decode (AC7 turned around, red → green); SPEC-015 amendment 3: `sha384/512WithRSAEncryption`; the four camera files through the front door — Nikon equal to c2patool, Truepic raises the exclusion-rule question (SPEC-012) and needs M6 — `notes/step-37-floats.md` | done 2026-09-21 |
 | 31a | `x5chain-leaf-only` (protected header shortened, pad grown, store length kept) and two settings variants made (`bin/make-trust-variants.php`) and measured through c2patool — `notes/step-31-trust-variants.md` | done 2026-09-21 |
 | 31b | The ten SPEC-014 tests (`tests/Unit/Trust/ChainCheckTest.php`), seen red: eight on the missing `Trust\TrustSettings`, AC9 on the missing enum case, AC10 on the enum holding twenty-one codes; `SPEC013_CORPUS` moved to `tests/Pest.php`, shared | done 2026-09-21 |
 

@@ -2353,3 +2353,32 @@ README are where the disclosure lives.
   fail-closed interim.
 - Decided by Maurice: the 26 files as fixtures; a store with more than
   one manifest is `Invalid` until M7 (option 1).
+
+## 2026-09-21 — Step 37: floats decode; the camera files through the front door
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met stap 37" (after "20 van 26 states gelijk.
+  moet dit niet gefixt?" — answered: yes, in steps 37 and 38, with the
+  table of which difference each fixes).
+- Produced: `specs/SPEC-006-cbor-decoder.md` (AC7 rewritten, Scope,
+  amendment 2), `tests/Unit/Cbor/CborDecoderTest.php` (AC7: the RFC
+  vectors, truncation, the four camera files), `src/Cbor/CborDecoder.php`
+  (`float()`); `src/Trust/CertificateProfileCheck.php` (+2 RSA
+  algorithms), `specs/SPEC-015-certificate-profile.md` (amendment 3),
+  `tests/Unit/Trust/CertificateProfileCheckTest.php` (AC6 positive
+  case); `notes/step-37-floats.md`, `NOTES.md`, `docs/milestones.md`,
+  this entry.
+- Measured: AC7 red (`float at offset 0 is not supported`), then
+  `composer check` → `203 passed (2102 assertions)`, Pint/PHPStan/
+  Deptrac green. The four camera files with the full settings: Nikon
+  `Invalid` with `signingCredential.expired` + `.untrusted`, equal to
+  c2patool; Truepic ×3 `Invalid` here (`expired`, `invalid`,
+  `untrusted`, `dataHash.mismatch`) vs `Valid` (`untrusted`) there.
+  c2pa-rs `certificate_profile.rs:181–188`: SHA-384/512 with RSA
+  allowed (my step-30 reading was short). Truepic's exclusion
+  `[0, 206316]` vs the store at `[13617, 192699]`; c2patool's
+  `signature_info.time` `2023-02-12T18:44:26+00:00` on a one-day
+  certificate. / Reasoned: the half-float conversion; the exclusion
+  invariant is "covers", not "equals" — proposed as SPEC-012 amendment
+  5 for Maurice's decision; the validity time is M6's.
+- Decided by Maurice: floats decode (step 36's discussion). Open for
+  him: the exclusion rule (equals → covers).

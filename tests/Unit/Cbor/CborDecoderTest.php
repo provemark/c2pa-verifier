@@ -9,6 +9,8 @@ use Provemark\C2paVerifier\Cbor\CborTag;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
+use Provemark\C2paVerifier\Jumbf\JumbfParser;
+use Provemark\C2paVerifier\Manifest\ManifestStore;
 
 /*
  * SPEC-006: CBOR, the measured subset decoded, the rest refused. The
@@ -219,13 +221,40 @@ it('AC6: indefinite lengths are an error naming the offset', function (): void {
         ->toThrow(CborException::class, "indefinite length at offset {$offset} is not supported");
 })->group('SPEC-006');
 
-it('AC7: floats are an error naming the offset', function (): void {
-    foreach (['f90000', 'f93c00', 'fb3ff199999999999a', 'fa47c35000', 'f97c00', 'f97e00'] as $hex) {
-        expect(fn () => spec006Decode($hex))
-            ->toThrow(CborException::class, 'float at offset 0 is not supported');
+it('AC7: floats decode to PHP floats, all three widths', function (): void {
+    // RFC 8949 Appendix A, plus a subnormal half and the two other infinities (amendment 2)
+    foreach ([
+        'f90000' => 0.0, 'f93c00' => 1.0, 'f93e00' => 1.5, 'f9c400' => -4.0, 'f97bff' => 65504.0, 'f90001' => 5.960464477539063e-8,
+        'fa47c35000' => 100000.0, 'fa7f7fffff' => 3.4028234663852886e38,
+        'fb3ff199999999999a' => 1.1, 'fb7e37e43c8800759c' => 1.0e300,
+        'f97c00' => INF, 'f9fc00' => -INF, 'fa7f800000' => INF, 'fb7ff0000000000000' => INF,
+    ] as $hex => $expected) {
+        $value = spec006Decode($hex);
+        expect($value)->toBeFloat($hex)
+            ->and($value)->toBe($expected, $hex);
     }
-    expect(fn () => spec006Decode('c1fb41d452d9ec200000'))
-        ->toThrow(CborException::class, 'float at offset 1 is not supported');
+    $nan = spec006Decode('f97e00');
+    expect(is_float($nan) && is_nan($nan))->toBeTrue();
+
+    $tagged = spec006Decode('c1fb41d452d9ec200000');
+    expect($tagged)->toBeInstanceOf(CborTag::class);
+    assert($tagged instanceof CborTag);
+    expect($tagged->number)->toBe(1)
+        ->and($tagged->value)->toBe(1363896240.5);
+
+    foreach (['f93c' => 0, 'fa47c350' => 0, 'fb3ff19999999999' => 0, 'a161'.'66'.'f97c' => 3] as $hex => $offset) {
+        expect(fn () => spec006Decode($hex))->toThrow(CborException::class, "offset {$offset}");
+    }
+
+    // the four camera files of the C2PA's own test set carry floats in their assertions
+    foreach (['nikon-20221019-building.jpeg', 'truepic-20230212-camera.jpg', 'truepic-20230212-landscape.jpg', 'truepic-20230212-library.jpg'] as $file) {
+        $stream = fopen(dirname(__DIR__, 2).'/Fixtures/public-testfiles/'.$file, 'rb');
+        assert($stream !== false);
+        $store = (new JpegManifestStoreExtractor)->extract($stream);
+        assert($store !== null);
+        $manifestStore = ManifestStore::fromTree((new JumbfParser)->parse($store->bytes));
+        expect($manifestStore->active->assertions)->not->toBe([], $file);
+    }
 })->group('SPEC-006');
 
 it('AC8: unknown simple values and undefined are an error', function (): void {

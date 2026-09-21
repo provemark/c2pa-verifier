@@ -70,8 +70,9 @@ and without the trust file; the test certificate without a trust file →
      `signingCredential.expired`, explanation naming both dates and the
      time used and that no timestamp was consulted (`expired`).
   4. **Signature algorithm** one of `sha256WithRSAEncryption`,
-     `ecdsa-with-SHA256`, `ecdsa-with-SHA384`, `ecdsa-with-SHA512`,
-     `ED25519`, `rsassaPss` (c2pa-rs's list; OpenSSL's names, the PSS
+     `sha384WithRSAEncryption`, `sha512WithRSAEncryption` (the last two
+     added by amendment 3), `ecdsa-with-SHA256`, `ecdsa-with-SHA384`,
+     `ecdsa-with-SHA512`, `ED25519`, `rsassaPss` (c2pa-rs's list; OpenSSL's names, the PSS
      parameters left to OpenSSL when it verified the link); else
      `.invalid` (reasoned; no variant — OpenSSL will not sign with an
      algorithm outside its own).
@@ -359,6 +360,7 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
    in the public key's DER — a byte search, not ASN.1 parsing; without
    it the Adobe fixture's leaf was `.invalid` ("key of type other"). No
    criterion's outcome changed.
+3. **2026-09-21, step 37, found by the Truepic test files** — rule 4's list lacked `sha384WithRSAEncryption` and `sha512WithRSAEncryption`; c2pa-rs's `certificate_profile.rs:181–188` has both (my step-30 reading stopped at the first line of the condition), and the three `truepic-20230212-*.jpg` leaves are signed with SHA-384/RSA — `signingCredential.invalid` here, a clean profile at c2patool. Both added; AC6's test gains the Truepic leaf as a positive case. No other criterion changed.
 
 ## Traceability
 

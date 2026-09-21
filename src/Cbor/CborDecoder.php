@@ -11,7 +11,7 @@ use Provemark\C2paVerifier\Support\Bytes;
  * (SPEC-006). Major types 0–7 with definite lengths; integers within PHP's
  * int; byte strings as CborBytes, text as string (valid UTF-8), arrays as
  * lists, maps as arrays with int|string keys, tags as CborTag, and of major
- * type 7 only false, true and null. Indefinite lengths, floats, other simple
+ * type 7 false, true, null and floats (amendment 2). Indefinite lengths, other simple
  * values, reserved additional information, duplicate keys, truncation and
  * trailing bytes are errors naming the offset. Limits are checked before
  * anything is allocated. Decodes only; nothing here encodes.
@@ -124,11 +124,11 @@ final readonly class CborDecoder
         return $argument;
     }
 
-    /** Major type 7: false, true, null; everything else is refused before its bytes are read. */
+    /** Major type 7: false, true, null, and the three float widths (SPEC-006 amendment 2); everything else is refused before its bytes are read. */
     private function simple(string $bytes, int &$offset, int $head, int $additional): mixed
     {
-        if ($additional >= 25) {
-            throw new CborException(sprintf('float at offset %d is not supported', $head));
+        if ($additional >= 25) {   // 28–31 were refused before this point
+            return $this->float($bytes, $offset, $head, $additional);
         }
         if ($additional === 24) {
             $value = ord($this->take($bytes, $offset, 1, sprintf('the simple value at offset %d', $head)));
@@ -144,6 +144,48 @@ final readonly class CborDecoder
             23 => throw new CborException(sprintf('simple value 23 (undefined) at offset %d is not supported', $head)),
             default => throw new CborException(sprintf('simple value %d at offset %d is not supported', $additional, $head)),
         };
+    }
+
+    /**
+     * An IEEE 754 float of 16, 32 or 64 bits (RFC 8949 §3.3), as a PHP
+     * float. Single and double are unpack()'s 'G' and 'E'; half precision
+     * PHP does not know, so its 1 + 5 + 10 bits are converted by hand —
+     * subnormals, the infinities and NaN included. Decoding a float touches
+     * no verification: every hash this verifier checks is over bytes.
+     */
+    private function float(string $bytes, int &$offset, int $head, int $additional): float
+    {
+        $width = match ($additional) {
+            25 => 2, 26 => 4, default => 8
+        };
+        $raw = $this->take($bytes, $offset, $width, sprintf('the float at offset %d', $head));
+        if ($width === 4) {
+            /** @var array{1: float} $u */
+            $u = unpack('G', $raw);
+
+            return $u[1];
+        }
+        if ($width === 8) {
+            /** @var array{1: float} $u */
+            $u = unpack('E', $raw);
+
+            return $u[1];
+        }
+
+        /** @var array{1: int} $u */
+        $u = unpack('n', $raw);
+        $half = $u[1];
+        $sign = ($half & 0x8000) !== 0 ? -1.0 : 1.0;
+        $exponent = ($half >> 10) & 0x1F;
+        $mantissa = $half & 0x03FF;
+        if ($exponent === 0x1F) {
+            return $mantissa === 0 ? $sign * INF : NAN;
+        }
+        if ($exponent === 0) {
+            return $sign * $mantissa * 2 ** -24;   // subnormal: no implicit leading 1
+        }
+
+        return $sign * (1 + $mantissa / 1024) * 2 ** ($exponent - 15);
     }
 
     /** The bytes of a definite-length string, after checking they are all there. */

@@ -27,7 +27,7 @@ final readonly class CertificateProfileCheck
     /** c2pa-rs's valid_eku_oids.cfg: emailProtection, documentSigning, timeStamping, OCSPSigning, MS C2PA Signing, C2PA Signing. */
     public const BUILT_IN_EKUS = ['1.3.6.1.5.5.7.3.4', '1.3.6.1.5.5.7.3.36', '1.3.6.1.5.5.7.3.8', '1.3.6.1.5.5.7.3.9', '1.3.6.1.4.1.311.76.59.1.9', '1.3.6.1.4.1.62558.2.1'];
 
-    private const SIGNATURE_ALGORITHMS = ['sha256WithRSAEncryption', 'ecdsa-with-SHA256', 'ecdsa-with-SHA384', 'ecdsa-with-SHA512', 'ED25519', 'rsassaPss'];
+    private const SIGNATURE_ALGORITHMS = ['sha256WithRSAEncryption', 'sha384WithRSAEncryption', 'sha512WithRSAEncryption', 'ecdsa-with-SHA256', 'ecdsa-with-SHA384', 'ecdsa-with-SHA512', 'ED25519', 'rsassaPss'];
 
     private const CURVES = ['prime256v1', 'secp384r1', 'secp521r1'];
 
