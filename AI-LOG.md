@@ -1564,3 +1564,12 @@ README are where the disclosure lives.
   keeps the absolute form.
 - Decided by Maurice: do the measurement step. SPEC-010 now awaits his
   approval.
+
+## 2026-09-21 — SPEC-010 approved; push
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "goedgekeurd, push maar en lees de CI-run".
+- Produced: SPEC-010 → `approved`; `docs/milestones.md` row; this entry;
+  pushed `07afc75`, `f28a758`, `6d2bbc6` and this commit to `origin/main`.
+- Measured: before the push, 0 attribution lines and no tracked `*.key`;
+  `spec-check` `OK: 11 spec(s), 10 test file(s)`. The CI run: next entry.
+- Decided by Maurice: SPEC-010 approved as drafted after step 21.
