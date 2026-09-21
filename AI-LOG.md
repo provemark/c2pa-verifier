@@ -1470,3 +1470,12 @@ README are where the disclosure lives.
   silent `false`); the test had asserted the 8.4+ behaviour everywhere.
   The boundary is now a tested fact, not a comment.
 - Decided by Maurice: push.
+
+## 2026-09-21 — CI green on SPEC-009, all three PHP versions
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (same request) read the CI run.
+- Produced: this entry.
+- Measured: run `35581284766` on `8f53ee32`: conclusion `success`; PHP
+  8.3 / 8.4 / 8.5 each `success` with `Tests: 143 passed`; `all green`
+  `success`.
+- Decided by Maurice: push.
