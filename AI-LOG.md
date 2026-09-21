@@ -1573,3 +1573,12 @@ README are where the disclosure lives.
 - Measured: before the push, 0 attribution lines and no tracked `*.key`;
   `spec-check` `OK: 11 spec(s), 10 test file(s)`. The CI run: next entry.
 - Decided by Maurice: SPEC-010 approved as drafted after step 21.
+
+## 2026-09-21 — CI green after SPEC-010's approval
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (same request) read the CI run.
+- Produced: this entry.
+- Measured: run `35583334608` on `0d3ff9ee`: conclusion `success`; PHP
+  8.3 / 8.4 / 8.5 each `success` with `Tests: 143 passed`, each with
+  `Cache restored`; `all green` `success`.
+- Decided by Maurice: push.
