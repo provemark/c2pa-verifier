@@ -87,3 +87,85 @@ decision in the record rather than a surprise in a diff.
 
 `docs/comparison.md` still says ISOBMFF has no hard binding. It stays that
 way until it is false.
+
+---
+
+# 78b — M8's hard binding, and the alarms that rang
+
+All seven green, **397 passed** in all, `composer check` exit 0.
+
+```
+MP4 : Trusted | ['signature','certificate','trust','hashedUris','actions','bmffHash']
+AVIF: Trusted
+PNG : Trusted | [… ,'dataHash']
+```
+
+An MP4 and an AVIF now verify **whole**. A video whose pixels were replaced
+after signing is `Invalid` because somebody checked, which is the sentence
+this milestone was for.
+
+## Three alarms rang, and all three were right
+
+**SPEC-025's snapshot.** Adding two status codes changed a contract class,
+and `ApiSurfaceTest` failed at once. The recorded surface went from 91
+symbols to 93, and the diff is exactly two lines:
+
+```
++Report\StatusCode :: const AssertionBmffHashMatch
++Report\StatusCode :: const AssertionBmffHashMismatch
+```
+
+That is what that file is for: a promise that grew, visible in review
+rather than discovered by a consumer.
+
+**SPEC-015's enum count.** `toHaveCount(39)` failed with 41. It is
+deliberate, it names every spec that ever added a code, and it now names
+this one too.
+
+**Two success lists in tests.** `DataHashCheckTest` and
+`HashedUriCheckTest` each enumerate which codes are successes; both had to
+learn `assertion.bmffHash.match`. This is the pattern step 75 warned about
+— *an alarm that lists what it knows about is blind to arrivals* — except
+here the lists are exhaustive over the enum, so an arrival breaks them.
+That is the good version of the pattern, and it is worth noticing that the
+difference between the two is whether the list is checked against reality
+or merely written down.
+
+## Two bugs of mine, both found by the tests
+
+**The stream was at its end.** `BmffHashCheck` walked the boxes from
+wherever the previous checks had left the file pointer, which is EOF, and
+reported `unexpected end of file while reading the box size at offset 0`.
+One `rewind()`, and the comment that says why it is there.
+
+**The oracle helper read the wrong key.** Ours reported both failures and
+the test still failed — because `spec027OracleFailures()` read
+`validation_status`, and `c2patool` drops that key when every failure it
+has is scoped to a manifest, reporting them under `validation_results`
+instead. The helper reads both shapes now. Worth recording because the
+failure looked exactly like a verifier bug and was a test bug, which is the
+direction that wastes the most time.
+
+## The amendment: `checks_performed` said something untrue
+
+The spec named the statuses and said nothing about `checks_performed`, so
+an ISOBMFF file came back listing `dataHash` — a check that never ran. A
+caller reading that list would conclude the data hash had been verified.
+
+Amendment 1 makes it say `bmffHash` when the binding manifest carries
+`c2pa.hash.bmff.v3`. **Weight B: the report's shape changed, no verdict
+did**, and it awaits confirmation. Leaving the older name would have been
+shorter and untrue, and a list whose whole job is to say what was done must
+not name something that was not.
+
+## What M8 still does not do
+
+Fragmented BMFF, Merkle trees, and the `subset`, `length`, `version` and
+`flags` exclusion filters — every one refused **by name**, never ignored.
+`docs/comparison.md` says so on its own row. Ignoring a filter would hash
+the wrong bytes and call the result a match, and that is the single outcome
+this project refuses above all others.
+
+Nested exclusion paths are refused too. `c2pa-rs` resolves them; no file
+here has one, and an untested branch that looks tested is worse than a
+refusal that says what it is.

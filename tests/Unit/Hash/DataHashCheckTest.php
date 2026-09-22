@@ -354,7 +354,7 @@ it('AC10: the codes are verbatim, and informational is a third kind', function (
     ] as $value) {
         expect($values)->toContain($value);
     }
-    $successes = [StatusCode::ClaimSignatureValidated, StatusCode::AssertionHashedUriMatch, StatusCode::AssertionDataHashMatch];
+    $successes = [StatusCode::ClaimSignatureValidated, StatusCode::AssertionHashedUriMatch, StatusCode::AssertionDataHashMatch, StatusCode::AssertionBmffHashMatch];   // the last added by SPEC-027
     foreach (StatusCode::cases() as $code) {
         if (in_array($code, [StatusCode::SigningCredentialTrusted, StatusCode::SigningCredentialUntrusted], true) || str_starts_with($code->value, 'timeStamp.') || str_starts_with($code->value, 'ingredient.')) {
             continue;   // SPEC-014's, SPEC-017's and SPEC-020's

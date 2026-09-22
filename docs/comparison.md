@@ -16,7 +16,7 @@ and never the other way round.
 | Time-stamp manifests (`c2tm`), compressed manifests (`c2cm`) | `c2tm` ignored, `c2cm` decompressed | refused with a message of their own — deprecated (§11.2.5) and Brotli, which PHP does not carry | — |
 | Redacted assertions | validated (`assertion.notRedacted`, the claim-signature hash method) | a claim with a non-empty `redacted_assertions` is refused (`general.error`) — no corpus file has a real redaction to measure against | a fixture, then a spec |
 | GIF, TIFF, SVG, audio, PDF | yes | JPEG, PNG, WebP and ISOBMFF only (`unsupported file type`) | later |
-| ISOBMFF (MP4, MOV, AVIF) | validated, hard binding included | the container is read (SPEC-026); `c2pa.hash.bmff.v3` is not, so the file is `Invalid` with the hard binding named — never a silent `Valid` | the BMFF hash spec |
+| ISOBMFF (MP4, MOV, AVIF) | validated, hard binding included | read and verified, hard binding included (SPEC-026, SPEC-027) — except fragmented files and the `subset`/`length`/`version`/`flags` exclusion filters, each refused by name | a fragmented fixture, then a spec |
 | CAWG identity assertions | validated (their own X.509 credential) | refused (`general.error` on the assertion) — `C_with_CAWG_data`, `cawg_ica` | a CAWG spec |
 | Remote manifests (`dcterms:provenance` URL) | fetched over the network | reported as `remote_manifest`, never fetched — `cloud.jpg`, the Photoshop file | never (by design) |
 | OCSP staples, certificate revocation | checked (with network) | not checked | never in the verification path |

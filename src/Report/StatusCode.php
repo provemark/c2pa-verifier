@@ -34,6 +34,8 @@ enum StatusCode: string
     case AssertionActionMalformed = 'assertion.action.malformed';
     case AssertionDataHashMatch = 'assertion.dataHash.match';
     case AssertionDataHashMismatch = 'assertion.dataHash.mismatch';
+    case AssertionBmffHashMatch = 'assertion.bmffHash.match';
+    case AssertionBmffHashMismatch = 'assertion.bmffHash.mismatch';
     case AssertionDataHashMalformed = 'assertion.dataHash.malformed';
     case AssertionDataHashAdditionalExclusionsPresent = 'assertion.dataHash.additionalExclusionsPresent';
     case ClaimHardBindingsMissing = 'claim.hardBindings.missing';
@@ -59,7 +61,7 @@ enum StatusCode: string
 
     public function isSuccess(): bool
     {
-        return $this === self::ClaimSignatureValidated || $this === self::AssertionHashedUriMatch || $this === self::AssertionDataHashMatch || $this === self::SigningCredentialTrusted
+        return $this === self::ClaimSignatureValidated || $this === self::AssertionHashedUriMatch || $this === self::AssertionDataHashMatch || $this === self::AssertionBmffHashMatch || $this === self::SigningCredentialTrusted
             || $this === self::TimeStampValidated || $this === self::TimeStampTrusted
             || $this === self::IngredientManifestValidated;   // SPEC-021: the ingredient's manifest box hashed as recorded
     }

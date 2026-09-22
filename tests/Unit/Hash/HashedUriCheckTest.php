@@ -302,7 +302,7 @@ it('AC9: the codes are verbatim, and success is told apart', function (): void {
     ] as $value) {
         expect($values)->toContain($value);
     }
-    $successes = [StatusCode::ClaimSignatureValidated, StatusCode::AssertionHashedUriMatch];
+    $successes = [StatusCode::ClaimSignatureValidated, StatusCode::AssertionHashedUriMatch, StatusCode::AssertionBmffHashMatch];   // the last added by SPEC-027
     foreach (StatusCode::cases() as $code) {
         if (str_starts_with($code->value, 'assertion.dataHash') || str_contains($code->value, 'HardBindings') || in_array($code->value, ['signingCredential.trusted', 'signingCredential.untrusted'], true) || str_starts_with($code->value, 'timeStamp.') || str_starts_with($code->value, 'ingredient.')) {
             continue;   // SPEC-012's, SPEC-014's, SPEC-017's and SPEC-020's

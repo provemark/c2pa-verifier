@@ -62,6 +62,35 @@ final readonly class IsobmffManifestStoreExtractor
     ) {}
 
     /**
+     * The top-level boxes, in file order (SPEC-027 needs the same walk this class
+     * already does, and duplicating it would be a second truth).
+     *
+     * @param  resource  $stream  a readable, seekable stream positioned at 0
+     * @return list<array{offset: int, length: int, type: string}>
+     *
+     * @throws ContainerException on every malformed case
+     */
+    public function topLevelBoxes($stream): array
+    {
+        $reader = new StreamReader($stream, 'box');
+        $end = $reader->end();
+
+        $boxes = [];
+        $offset = 0;
+        while ($offset + self::BOX_HEADER_LENGTH <= $end) {
+            if (count($boxes) >= $this->maxBoxes) {
+                throw new ContainerException(sprintf('more than %d top-level boxes (offset %d)', $this->maxBoxes, $offset));
+            }
+            [$size, $header, $type] = $this->boxHeader($reader, $offset, $end);
+            $boxes[] = ['offset' => $offset, 'length' => $size, 'type' => $type];
+            $reader->skip($size - $header, $offset);
+            $offset += $size;
+        }
+
+        return $boxes;
+    }
+
+    /**
      * @param  resource  $stream  a readable, seekable stream positioned at 0
      * @return ManifestStoreBytes|null null when the file carries no C2PA box (AC2)
      *

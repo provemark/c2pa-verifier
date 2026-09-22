@@ -3,6 +3,8 @@ Cli\Command :: method __construct
 Cli\Command :: method run
 Report\StatusCode :: const AlgorithmUnsupported
 Report\StatusCode :: const AssertionActionMalformed
+Report\StatusCode :: const AssertionBmffHashMatch
+Report\StatusCode :: const AssertionBmffHashMismatch
 Report\StatusCode :: const AssertionDataHashAdditionalExclusionsPresent
 Report\StatusCode :: const AssertionDataHashMalformed
 Report\StatusCode :: const AssertionDataHashMatch

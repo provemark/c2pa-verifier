@@ -68,8 +68,19 @@ function spec027OracleFailures(string $name): array
 {
     /** @var array<string, mixed> $oracle */
     $oracle = json_decode((string) file_get_contents(Corpus::fixtures()."/c2patool/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
+    // c2patool drops `validation_status` when every failure it has is scoped to a
+    // manifest, and reports them under validation_results instead. Both shapes occur
+    // among the recorded oracles here, so both are read.
     $codes = [];
     foreach ((array) ($oracle['validation_status'] ?? []) as $status) {
+        assert(is_array($status) && is_string($status['code']));
+        $codes[$status['code']] = true;
+    }
+    /** @var array<string, mixed> $results */
+    $results = (array) ($oracle['validation_results'] ?? []);
+    /** @var array<string, mixed> $active */
+    $active = (array) ($results['activeManifest'] ?? []);
+    foreach ((array) ($active['failure'] ?? []) as $status) {
         assert(is_array($status) && is_string($status['code']));
         $codes[$status['code']] = true;
     }

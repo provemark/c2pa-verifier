@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -190,6 +190,19 @@ final readonly class BmffHashCheck
 }
 ```
 
+## Amendments
+
+1. **2026-09-22, step 78b, found while wiring the verifier** — this spec
+   named the statuses and said nothing about `checks_performed`, so on an
+   ISOBMFF file it read `dataHash` for a check that never ran. A caller
+   reading that list would conclude the data hash had been verified. It now
+   says `bmffHash` when the binding manifest carries
+   `c2pa.hash.bmff.v3`, and `dataHash` otherwise. **Weight B: the report's
+   shape changed, no verdict did.** The alternative — leaving the older
+   name because it is what the field has always said — was rejected for the
+   reason this project rejects every silent answer: a list whose job is to
+   say what was done must not name something that was not.
+
 ## Open questions
 
 1. **A file whose first top-level box is included.** Both fixtures begin
@@ -217,12 +230,15 @@ final readonly class BmffHashCheck
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
 least one test; every source file maps back to this spec.
 
-| Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
-|----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
+All tests are in `tests/Unit/Hash/BmffHashCheckTest.php`, group `SPEC-027`;
+the source is `src/Hash/BmffHashCheck.php` unless another file is named.
+
+| Acceptance criterion | Test (name) | Source (symbol) |
+|---|---|---|
+| AC1 | `AC1: the two fixtures verify, and the refusal SPEC-026 left behind is gone` | `check()`, `digest()`; `src/Verifier/Verifier.php` (the dispatch) |
+| AC2 | `AC2: one changed byte of mdat is a mismatch, as at c2patool` | `digest()`, `StatusCode::AssertionBmffHashMismatch` |
+| AC3 | `AC3: a box that moved is a mismatch even though every hashed byte is identical` | `digest()` (the `pack('J', …)` offset marker) |
+| AC4 | `AC4: the data filter excludes our own box and no other uuid box` | `included()`, `matches()` |
+| AC5 | `AC5: an exclusion this verifier cannot honour is refused, not ignored` | `matches()`, `UNSUPPORTED_FILTERS`, `src/Hash/HashException.php` |
+| AC6 | `AC6: the assertion's own shape is checked before a digest is computed` | `assertionOf()` |
+| AC7 | `AC7: no image fixture changes its answer because ISOBMFF gained a hard binding` | `src/Verifier/Verifier.php` (the dispatch), `DataHashCheck` unchanged |

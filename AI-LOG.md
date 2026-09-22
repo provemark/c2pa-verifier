@@ -4483,3 +4483,29 @@ README are where the disclosure lives.
   marked `@internal`, named here rather than appearing in a diff.
 - Decided by Maurice: approval of SPEC-027. Open for him: nothing new;
   78b implements.
+
+## 2026-09-22 — Step 78b, SPEC-027 implemented
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 78b".
+- Produced: `src/Hash/BmffHashCheck.php`, `src/Hash/HashException.php`,
+  two `StatusCode` cases, `topLevelBoxes()` on the ISOBMFF extractor, the
+  dispatch in `Verifier`; SPEC-027 amendment 1, Traceability filled,
+  status `implemented`; the recorded API surface, the enum count and two
+  success lists updated; `docs/comparison.md`; the second half of
+  `notes/step-78-bmff-hash-tests.md`; `NOTES.md`, `docs/milestones.md`.
+- Measured: `composer check` exit 0, 397 passed (7427 assertions). The
+  MP4 and the AVIF are `Trusted` with `bmffHash` in `checks_performed`;
+  the PNG is unchanged with `dataHash`. Three alarms fired and all three
+  were right: the SPEC-025 snapshot (91 → 93 symbols, a two-line diff
+  naming exactly the two new codes), SPEC-015's enum count (39 → 41), and
+  two exhaustive success lists in existing tests.
+- Reasoned: that `Hash → Container` already existed in Deptrac, so the
+  box walk could be exposed on the extractor rather than duplicated —
+  SPEC-027's open question 3 answered without a new arrow. Two bugs of
+  mine were found by the tests: the stream was at EOF when the check ran
+  (one `rewind()`), and the oracle helper read `validation_status` where
+  c2patool had used `validation_results` — a failure that looked like a
+  verifier bug and was a test bug.
+- Decided by Maurice: approval of SPEC-027. Open for him: confirmation of
+  amendment 1 (weight B, the first since step 75), and what comes after
+  M8.

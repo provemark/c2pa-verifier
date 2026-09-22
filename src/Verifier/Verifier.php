@@ -16,6 +16,7 @@ use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
 use Provemark\C2paVerifier\Cose\ClaimSignatureCheck;
 use Provemark\C2paVerifier\Cose\CoseException;
 use Provemark\C2paVerifier\Cose\CoseSign1;
+use Provemark\C2paVerifier\Hash\BmffHashCheck;
 use Provemark\C2paVerifier\Hash\DataHashCheck;
 use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfException;
@@ -60,6 +61,7 @@ final readonly class Verifier
         private PngManifestStoreExtractor $png = new PngManifestStoreExtractor,
         private WebpManifestStoreExtractor $webp = new WebpManifestStoreExtractor,
         private IsobmffManifestStoreExtractor $isobmff = new IsobmffManifestStoreExtractor,
+        private BmffHashCheck $bmffHash = new BmffHashCheck,
         private JumbfParser $jumbf = new JumbfParser,
         private ClaimSignatureCheck $signature = new ClaimSignatureCheck,
         private HashedUriCheck $hashedUris = new HashedUriCheck,
@@ -288,9 +290,20 @@ final readonly class Verifier
             if ($binding === null) {
                 $statuses[] = new ValidationStatus(StatusCode::ClaimHardBindingsMissing, sprintf('self#jumbf=/c2pa/%s/%s', $manifest->label, $manifest->claim->version === 2 ? 'c2pa.claim.v2' : 'c2pa.claim'), 'the active manifest is an update manifest and no manifest up its parentOf chain carries a hard binding (C2PA 2.4 §15.12)');
             } else {
-                $statuses = [...$statuses, ...$this->dataHash->check($binding, $stream, $store, $hasUpdate)];
+                // SPEC-027: ISOBMFF binds through c2pa.hash.bmff.v3, whose exclusions are
+                // box paths rather than byte ranges. Which check runs follows the assertion
+                // the manifest actually carries, not the container it arrived in.
+                $statuses = [...$statuses, ...(array_key_exists(BmffHashCheck::LABEL, $binding->assertions)
+                    ? $this->bmffHash->check($binding, $stream)
+                    : $this->dataHash->check($binding, $stream, $store, $hasUpdate))];
             }
-            $checks[] = 'dataHash';
+            // SPEC-027 amendment 1: `checks_performed` says which hard binding ran, so
+            // that a caller reading it cannot mistake a BMFF file for one whose data hash
+            // was verified. Naming both `dataHash` would be shorter and untrue. With no
+            // binding manifest at all, nothing ran and the name stays the older one.
+            $checks[] = $binding !== null && array_key_exists(BmffHashCheck::LABEL, $binding->assertions)
+                ? 'bmffHash'
+                : 'dataHash';
         }
 
         // the graph's statuses last: they are scoped to their ingredient assertions and render
