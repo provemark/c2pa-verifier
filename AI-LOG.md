@@ -4396,3 +4396,27 @@ README are where the disclosure lives.
 - Decided by Maurice: to have the spec drafted — which is exactly what
   did not happen, and he is told why rather than handed a spec resting on
   a reconstruction.
+
+## 2026-09-22 — Step 77, the BMFF hash reproduced
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en doe de instrumentatie".
+- Produced: pushed `16a9c2f`; `notes/step-77-bmff-hash-reproduced.md`,
+  `NOTES.md`, `docs/milestones.md`. Nothing in `src/` changed.
+- Measured: c2pa-rs v0.90.22 built in a container with two `eprintln!`
+  lines patched into its hashing loop, run against this repository's own
+  `fixture-signed.mp4` and `fixture-signed.avif`. It prints a marker at
+  13610 and 14563 for the MP4 and at 13611 and 13846 for the AVIF —
+  which are exactly the offsets of the top-level boxes no exclusion
+  matches (`moov`, `mdat`; `meta`, `mdat`). Recomputing by hand as
+  `u64be(offset) || box bytes` per included top-level box reproduces both
+  stored hashes exactly: `87d4d42c438fe632766d…` and
+  `81955e02ee8dee9c5305…`.
+- Reasoned: that the offsets are what binds position as well as content,
+  which is why the excluded C2PA box is safe to exclude. Also that the
+  first patch printed nothing because it matched only one of two
+  identical loops — an instrument that silently measures nothing looks
+  like one that measures zero. Two cases remain unmeasured and belong in
+  the spec as open questions: a file whose first top-level box is
+  included, and a nested exclusion path such as `/moov/trak`.
+- Decided by Maurice: to instrument rather than read on. Open for him:
+  the spec, which can now be written.
