@@ -4,8 +4,8 @@ Signed files from writers the three older corpora do not have — OpenAI,
 Amazon Bedrock, TrustNXT's `c2pa-ts`, Adobe Photoshop 2026 — plus one
 two-manifest CAWG file, taken from the test data of other open-source
 C2PA implementations on 2026-09-22. Their licences are alongside; the
-files are unchanged. No private key is here (`grep -l 'PRIVATE KEY'`
-over this directory is empty).
+files are unchanged. No private key is here: a search for a PEM
+private-key header over this directory finds nothing.
 
 | file | origin (commit) | licence | writer / signer | what it brings |
 |---|---|---|---|---|

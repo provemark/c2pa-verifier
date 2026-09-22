@@ -2792,3 +2792,21 @@ README are where the disclosure lives.
   DER-safe acceptance rule.
 - Decided by Maurice: step 44 with finding 3 included.
 
+
+## 2026-09-22 — CI green on steps 43–44
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `c8f6a25..c530655` (three commits) to `origin/main`;
+  one wording change in `tests/Fixtures/writers/README.md` (below); this
+  entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`,
+  visibility `PRIVATE`, tree clean, Deptrac 0 violations (checked by
+  name this time); the `PRIVATE KEY` grep over the fixtures hit **one
+  file** — the writers README, whose own sentence quoted the grep. No
+  key: a search for the PEM header `-----BEGIN … PRIVATE KEY-----` finds
+  nothing anywhere under `tests/Fixtures`. The README sentence is
+  reworded so the plain grep stays a usable check. Run `35705987729` on
+  `c530655`: conclusion `success`; `composer check` on PHP 8.3 / 8.4 /
+  8.5 each `success` with `Tests: 293 passed` (3470 assertions on 8.3,
+  3472 on 8.4/8.5); `all green` `success`.
+- Decided by Maurice: push.
