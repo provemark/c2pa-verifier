@@ -148,6 +148,16 @@ specifying is the tool that enforces exactly that.
 | 50 | Release hygiene: `README.md` rewritten (status, use, verdicts, trust settings, the two findings), `SECURITY.md` (scope, reporting, the findings named), `CONTRIBUTING.md` (the way of working as rules), `CHANGELOG.md` (per milestone, unreleased), `docs/comparison.md` (less / equal / different, measured, by name) — `notes/step-50-release-hygiene.md` | done 2026-09-22 |
 | 51 | Every amendment on one page for the maintainer's confirmation — 51 amendments over 17 specs sorted by weight (A: rules of the verifier, B: report/API, C: literals), those already decided marked; SPEC-006's floats amendment, left as a stub in step 37, written out and the list renumbered — `notes/step-51-amendments-for-confirmation.md` | confirmed by Maurice van Loon 2026-09-22, all three groups |
 
+## After M6: the command line, then M7
+
+Maurice's decision (2026-09-22): the repository stays private until M7
+(ingredient manifests) is done as well; the command line comes first
+because every later measurement is easier with it.
+
+| Step | What | Status |
+|---|---|---|
+| SPEC-019 | The command line: `bin/c2pa-verify <file> [--settings <path>]` — `VerificationReport::toJson()` plus one newline on stdout, `Error: …` on stderr, exit 0 (Trusted/Valid) / 1 (Invalid, report still printed) / 2 (no report: usage, unreadable file, unreadable or invalid settings); a thin `Cli\Command::run()` around the public API, the executable a shim; c2patool's exit status measured and departed from in two rows (Invalid exits 0 there; a missing settings file is ignored there) — both fail-open, so not copied | draft 2026-09-22 |
+
 ## After M0
 
 M1 opens with SPEC-001 (JPEG APP11 → manifest store bytes) as a draft. It

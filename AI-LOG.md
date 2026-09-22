@@ -3081,3 +3081,25 @@ README are where the disclosure lives.
 - Decided by Maurice: push; **no NLnet/Restack application** — the
   3 November 2026 deadline no longer binds anything in this repository,
   and "private until after the application" no longer gates going public.
+
+## 2026-09-22 — SPEC-019 drafted: the command line; M7 before public
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, schrijf SPEC-019 als draft"; mid-way, "Ik wil M7 wel
+  voordat het publiek gaat".
+- Produced: `specs/SPEC-019-command-line.md` (draft: `bin/c2pa-verify
+  <file> [--settings <path>]`, `toJson()` + newline on stdout, `Error: …`
+  on stderr, exit 0/1/2 by verdict, a `Cli\Command::run()` tested
+  in-process, AC1–AC12); the milestones section "After M6"; this entry.
+- Measured: c2patool 0.27.22's exit status on ten inputs (`c2patool <file>
+  >/dev/null 2>err; rc=$?`): 0 on a Valid *and on an Invalid* report, 1
+  with `Error: …` and no JSON on no manifest / no hard binding /
+  unsupported type / missing file / unparsable settings, **0 with a
+  missing settings file silently ignored**, 2 on usage faults. A first
+  measurement that read `$?` after a command substitution said 0 for
+  everything and was discarded. Reasoned: that the exit status should
+  carry the verdict (0 Trusted/Valid, 1 Invalid, 2 no report) and that an
+  unreadable settings file must be a refusal — both departures from
+  c2patool, named in the spec; my earlier proposal "exit code as
+  c2patool's" was reasoned and wrong, corrected in the spec's Problem.
+- Decided by Maurice: SPEC-019 as a draft; **M7 (ingredient manifests)
+  before the repository goes public**.
