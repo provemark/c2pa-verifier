@@ -3068,3 +3068,16 @@ README are where the disclosure lives.
   clause (SPEC-013 #7 the CAWG refusal among them), the fifteen
   report/API changes, the twenty literals.
 
+
+## 2026-09-22 — CI green on step 51; no NLnet application
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar", then "ik ga geen NLNet-aanvraag doen".
+- Produced: pushed `44708ec..5e7e33c` (three commits); this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`, no
+  PEM private-key header under the fixtures, visibility `PRIVATE`, tree
+  clean. Run `35712457950` on `5e7e33c`: conclusion `success`;
+  `composer check` on PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 301
+  passed`; `all green` `success`.
+- Decided by Maurice: push; **no NLnet/Restack application** — the
+  3 November 2026 deadline no longer binds anything in this repository,
+  and "private until after the application" no longer gates going public.
