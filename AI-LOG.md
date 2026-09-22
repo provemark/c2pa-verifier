@@ -3371,3 +3371,12 @@ README are where the disclosure lives.
   cover rule still applies afterwards, so it can never hide bytes
   outside the store).
 - Decided by Maurice: SPEC-022 as a draft.
+
+## 2026-09-22 — SPEC-022 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: SPEC-022 status `approved`, the milestones row; this entry.
+- Measured: `bin/spec-check.php` OK. Reasoned: nothing.
+- Decided by Maurice: SPEC-022 approved as drafted — `c2um` read, the
+  §11.2.3 rules, the binding through the `parentOf` chain and the
+  §15.12.1.1 exclusion adjustment with the cover rule kept over it.
