@@ -8,6 +8,20 @@ public API is stable. Dates are the day the work was committed.
 
 ## Unreleased
 
+### Coverage and a fix (2026-09-22)
+- `tests/Fixtures/matrix/`: the three unsigned fixtures signed with all
+  seven signature algorithms in all three containers, plus two files
+  whose data hash is sha384 and sha512 — the cells the four corpora left
+  empty (Es512, Ps384, Ps512 and Ed25519 were in no file at all, and
+  WebP in one). The fifth drift alarm compares every one with
+  `c2patool`'s JSON, with and without the test roots.
+- Fixed: **on PHP 8.3 every Ed25519-signed file was `Invalid`**
+  (`signingCredential.invalid`, "key of type other") and `Trusted` on
+  8.4 and 8.5 — the key's kind is now read from the
+  SubjectPublicKeyInfo's algorithm OID, as the RSASSA-PSS case already
+  was. The C2PA rule never changed; no fixture could show it until the
+  matrix existed (SPEC-015 amendment 5).
+
 ### M7 — ingredient and update manifests (2026-09-22)
 - SPEC-022: update manifests (`c2um`) are read and judged — C2PA 2.4
   §11.2.3's rules (`manifest.update.invalid`,

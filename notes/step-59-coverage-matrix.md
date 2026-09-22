@@ -99,3 +99,36 @@ algorithm.
   more found files for *these* gaps, because the expected answer comes
   with the file; and that the remaining gaps above are worth naming
   rather than papering over.
+
+## 5. What the matrix found within minutes: a verdict that depended on the PHP version
+
+The first CI run after the matrix went in was **red on PHP 8.3 only**
+(run 35730308123): `matrix/ed25519.jpg` was `Invalid` here and `Trusted`
+at c2patool. Reproduced locally with `php@8.3`:
+
+```
+claimSignature.validated     the claim signature verifies under the leaf certificate (alg -8)
+signingCredential.invalid    signing certificate invalid: key of type other (256 bits); …
+```
+
+The signature verified — sodium did its work — but the **certificate
+profile** refused the key. `Certificate::keyFacts()` recognised Ed25519
+only through `openssl_pkey_get_details()['ed25519']`, which PHP provides
+from **8.4** onward; on 8.3 the key reads as type `other` and fell
+through to "no kind this verifier knows". The RSASSA-PSS case already
+worked around exactly this by reading the algorithm OID out of the
+SubjectPublicKeyInfo; Ed25519 (1.3.101.112) now joins it.
+
+Before the fix, PHP 8.3: `Invalid`. After: `Trusted` — the same answer
+8.4 and 8.5 gave all along, and c2patool's.
+
+This is what the matrix was for. The bug had been in the code since
+SPEC-015 (M5) and no fixture could see it, because until step 59 **no
+file in the repository carried an Ed25519 signature**; the algorithm was
+tested with a hand-made vector through `SignatureVerifier`, which is the
+part that was never broken. It is also a reminder that "the tests are
+green" means "green on the PHP the author ran": CI's three versions are
+not a formality.
+
+SPEC-015 amendment 5; the regression test asserts the key kind and the
+verdict on any PHP (AC11).

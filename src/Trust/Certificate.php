@@ -231,10 +231,16 @@ final readonly class Certificate
         if (is_array($key['ed25519'] ?? null)) {
             return ['Ed25519', $bits, null];
         }
-        // An RSASSA-PSS key (SPKI algorithm 1.2.840.113549.1.1.10) is RSA to PHP's
-        // type -1: the algorithm OID in the public key's DER says what it is.
+        // The algorithm OID in the public key's DER says what the key is where PHP's own type does
+        // not: an RSASSA-PSS key (1.2.840.113549.1.1.10) is type -1 on every version, and an Ed25519
+        // key (1.3.101.112) has no `ed25519` details before PHP 8.4 — measured on 8.3, where every
+        // Ed25519-signed file was `signingCredential.invalid` ("key of type other") until this read
+        // it from the DER instead (SPEC-015 amendment 5).
         if (is_string($key['key'] ?? null)) {
             $spki = base64_decode(preg_replace('/-----[^-]+-----|\s/', '', $key['key']) ?? '', true);
+            if ($spki !== false && str_contains(substr($spki, 0, 32), "\x06\x03\x2b\x65\x70")) {
+                return ['Ed25519', $bits === 0 ? 256 : $bits, null];
+            }
             if ($spki !== false && (str_contains($spki, "\x06\x09\x2a\x86\x48\x86\xf7\x0d\x01\x01\x0a") || str_contains($spki, "\x06\x09\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01"))) {
                 return ['RSA', $bits, null];
             }

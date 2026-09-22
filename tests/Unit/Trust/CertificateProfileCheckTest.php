@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationState;
 use Provemark\C2paVerifier\Report\ValidationStatus;
+use Provemark\C2paVerifier\Tests\Support\Corpus;
 use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\TrustSettings;
@@ -426,4 +428,22 @@ it('AC10: the codes are verbatim, and the drift alarm grows', function (): void 
         expect($report->result->state->value)->toBe($oracle['validation_state'], $variant)
             ->and(spec015Codes($report, 'signingCredential'))->toBe(spec015OracleCredential($oracle), $variant);
     }
+})->group('SPEC-015');
+
+// amendment 5 (2026-09-22, found by the coverage matrix on PHP 8.3): the key kind comes from the
+// SPKI's algorithm OID, not from PHP's key-type constant. Before PHP 8.4 an Ed25519 key has no
+// `ed25519` details and reads as type "other", which made every Ed25519-signed file
+// signingCredential.invalid on 8.3 and Trusted on 8.4/8.5 — a verdict that depended on the runtime.
+it('AC11: an Ed25519 signer is recognised on every PHP, from the SPKI algorithm OID', function (): void {
+    $store = Corpus::manifestStore('matrix/ed25519.png') ?? throw new RuntimeException('no store');
+    $cose = CoseSign1::fromBytes($store->active->signatureBytes());
+    $leaf = Certificate::fromDer($cose->chain[0]->bytes);
+
+    expect($leaf->keyType)->toBe('Ed25519')
+        ->and($leaf->keyBits)->toBe(256);
+
+    // and the profile accepts it: the C2PA rule (§14.5) has always allowed Ed25519
+    $report = spec015Verify('matrix/ed25519.png', TrustSettings::fromJson((string) file_get_contents(spec015Fixtures().'/matrix/test-roots.settings.json')));
+    expect($report->result->state)->toBe(ValidationState::Trusted)
+        ->and(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialInvalid))->toBe([]);
 })->group('SPEC-015');

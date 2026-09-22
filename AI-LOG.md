@@ -3513,3 +3513,23 @@ README are where the disclosure lives.
   gaps that remain (one oracle, no timestamp and no claim v1 in the
   matrix) named in the note rather than papered over.
 - Decided by Maurice: the matrix first, before the public decision.
+
+## 2026-09-22 — The matrix finds a verdict that depended on the PHP version
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (the push of step 59; CI answered).
+- Produced: pushed `660a4a9..6ad9e55`; CI run 35730308123 red on **PHP
+  8.3 only**; the cause found and fixed in `src/Trust/Certificate.php`
+  (`keyFacts()` reads the Ed25519 OID out of the SPKI), SPEC-015
+  amendment 5, a regression test (AC11 in
+  `tests/Unit/Trust/CertificateProfileCheckTest.php`), the note's fifth
+  section, CHANGELOG, `docs/comparison.md`, the milestones and NOTES
+  rows; this entry.
+- Measured: `matrix/ed25519.jpg` `Invalid` on PHP 8.3 against c2patool's
+  `Trusted`; reproduced locally with php@8.3 —
+  `signingCredential.invalid: key of type other (256 bits)` while the
+  signature itself verified (`claimSignature.validated`). After the fix,
+  PHP 8.3 gives `Trusted`, the same as 8.4/8.5. Whole suite on both:
+  349 passed on 8.5 and on 8.3. Reasoned: the bug has been there since
+  SPEC-015 (M5) and no fixture could see it, because no file carried an
+  Ed25519 signature until step 59.
+- Decided by Maurice: none.

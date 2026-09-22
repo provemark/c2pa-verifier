@@ -71,3 +71,7 @@ without an anchor — 34 corpus files, informational, no verdict changes.
   `Valid` by `c2patool` and land in bytes the format leaves uncovered.
 - Two wrong `Valid`s found by the absence audit and closed (see
   `SECURITY.md`); the method is now part of every spec.
+- Every signature algorithm and every hash algorithm exercised by a file
+  a writer produced, not only by a vector (`tests/Fixtures/matrix/`,
+  step 59) — which is how a wrong `Invalid` on PHP 8.3 for every
+  Ed25519-signed file was found and fixed (SPEC-015 amendment 5).
