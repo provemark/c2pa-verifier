@@ -2935,3 +2935,17 @@ README are where the disclosure lives.
   inventory of gates and the SPEC-018 proposal.
 - Decided by Maurice: start the absence audit.
 
+## 2026-09-22 — SPEC-018 as a draft
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, schrijf SPEC-018 als draft".
+- Produced: `specs/SPEC-018-actions-assertion.md` (draft, six criteria,
+  API sketch); a row in `docs/milestones.md`; this entry.
+- Measured: every readable corpus manifest (49) — claim version, actions
+  labels, which list holds the assertion and its first action: eight v2
+  manifests all open with `created`/`opened`; six v1 manifests carry no
+  actions assertion and one (`exp-test1.png`) opens with `c2pa.edited`,
+  all accepted by c2patool as v1. Reasoned: the two normative rules
+  versus c2pa-rs's content family; the v1 exemption from
+  `verify_actions`; the gate for unvouched assertions.
+- Decided by Maurice: none yet (the draft awaits approval).
+
