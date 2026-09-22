@@ -13,7 +13,7 @@ only; the fixes it calls for are step 44.
 | repository | image files | new here | note |
 |---|---|---|---|
 | `c2pa-org/public-testfiles` (CC BY-SA 4.0, pushed 2026-07-30) | 115 under `legacy/1.4/image/jpeg`, of which 26 assets — all already in `tests/Fixtures/public-testfiles/` — and 89 recorded thumbnails/JSON under `manifests/`; `2.2/image/{good,bad}/…` hold READMEs and `.gitkeep` only | none | the 2.2 tree is empty; `manifests/` are c2patool outputs of an older version — a historical oracle at most |
-| `encypherai/c2pa-conformance-suite` (no licence declared, pushed 2026-09-17, 1 star) | 0 | none | a Python validator over 242 knowledge-graph predicates with 140 JSON rubric vectors; no assets. Possibly a second *tool* to compare with later, not a corpus |
+| `encypherai/c2pa-conformance-suite` (**Apache-2.0** — corrected in step 71; this row said "no licence declared", pushed 2026-09-17, 1 star) | 0 | none | a Python validator over 242 knowledge-graph predicates with 140 JSON rubric vectors; no assets. Possibly a second *tool* to compare with later, not a corpus |
 | `richardwooding/c2pa` (Go, MIT) | 4 | 2 | `c2pa_2x_openai.png` (OpenAI), `cawg_ica.jpg`; `c2pa_signed.jpg` = `c2pa-rs/CA.jpg`, `cawg_x509.jpg` = `C_with_CAWG_data.jpg` (md5) |
 | `TrustNXT/c2pa-ts` (TypeScript, Apache-2.0) | 4 | 2 | `amazon-titan-g1.png` (Amazon Bedrock), `trustnxt-icon-signed-timestamp.jpg` (written by `c2pa-ts` itself); two unsigned |
 | `contentauth/c2pa-js` (MIT) | 12 | 1 | `PirateShip_save_credentials_to_cloud.jpg` (Photoshop 27.4, remote manifest); the rest are c2pa-rs fixtures |

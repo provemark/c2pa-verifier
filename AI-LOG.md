@@ -4132,3 +4132,37 @@ README are where the disclosure lives.
   amendment 1, the version number of a first tag, where the contract text
   lives long-term, whether `Cli\Command` belongs in it, and the
   visibility change.
+
+## 2026-09-22 — Step 71, the conformance suite
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met de conformance-suite" — the last of the four
+  gaps named when the maintainer asked to be certain.
+- Produced: `notes/step-71-conformance-suite.md`; a correction to step
+  43's note; `NOTES.md`, `docs/milestones.md`. Nothing in `src/`
+  changed, and the suite is not vendored.
+- Measured: `encypherai/c2pa-conformance-suite` at e2feae1 (2026-09-17)
+  carries an **Apache-2.0** licence, where step 43's table said none was
+  declared. It is a third independent implementation — its own container
+  extractor, JUMBF/CBOR parser and crypto verification in Python — not a
+  rubric. Run without a trust store: `fixture-signed.png`,
+  `fixture-signed.webp`, `adobe-20220124-C.jpg` and OpenAI's file get
+  `claimSignature.validated`; `fixture-signed.jpg` and `c2pa-rs/CA.jpg`
+  get `claimSignature.missing` plus `dataHash.mismatch`, on files
+  c2patool 0.27.22, this verifier and the Go implementation all accept.
+  Its extraction of our JPEG is 94740 bytes, byte-count identical to
+  ours, so the divergence is downstream and container-specific. Its
+  coverage on our files is thin: 128 of 150 predicates skipped on the
+  JPEG. Its catalogue holds 150 predicates formalising 237 normative
+  C2PA 2.4 rules; 101 apply to JPEG/PNG/WebP (ASSE 27, CRYP 25, STRU 19,
+  INGR 8, CONT 7, CROSS 6, IMG 4, TIME 4, TRUS 1).
+- Reasoned: that three independent readings against one settles who is
+  wrong here, and that their empty failure messages make the JPEG path a
+  job for its authors rather than a question about ours. Also, reading
+  `PRED-ASSE-009` led to a stale message of our own: `HashedUriCheck`
+  tells a user redactions are "not supported before M7", and M7 closed in
+  step 57 — and `ManifestGraph::$redactedAssertions` may be unreachable,
+  because a claim declaring redactions is refused before the graph is
+  walked.
+- Decided by Maurice: to run the suite. Open for him: mapping the 101
+  applicable predicates against what this verifier checks, and the stale
+  redaction message with the question it raises.
