@@ -19,13 +19,25 @@ final readonly class TimestampResult
     /**
      * @param  list<ValidationStatus>  $statuses
      * @param  int|null  $time  genTime when validated, else null
+     * @param  string|null  $timeFraction  genTime's fractional-second digits, for signature_info.time (SPEC-017 amendment 2)
      */
     public function __construct(
         public bool $present,
         public array $statuses,
         public ?int $time,
         public bool $trusted,
+        public ?string $timeFraction = null,
     ) {}
+
+    /** The time as c2patool prints it: ISO 8601, UTC, the token's own fraction digits. */
+    public function timeIso(): ?string
+    {
+        if ($this->time === null) {
+            return null;
+        }
+
+        return gmdate('Y-m-d\TH:i:s', $this->time).($this->timeFraction === null ? '' : '.'.$this->timeFraction).'+00:00';
+    }
 
     /** No sigTst / sigTst2 header at all. */
     public static function none(): self

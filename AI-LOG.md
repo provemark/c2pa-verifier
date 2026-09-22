@@ -2767,3 +2767,28 @@ README are where the disclosure lives.
   manifest note) and the ranking of what is still unmeasured.
 - Decided by Maurice: start step 43.
 
+## 2026-09-22 — Step 44: the writers corpus's findings fixed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met stap 44, en neem bevinding 3 erbij".
+- Produced: SPEC-016 amendment 3, SPEC-017 amendments 2–3, SPEC-013
+  amendment 9 (text first); tests seen red — `TimeStampTokenTest` AC11 ×5,
+  `TimestampCheckTest` AC11, `VerifierTest` AC13–AC14, `SPEC013_WRITERS_*`
+  in `tests/Pest.php`; then `src/Asn1/Der.php` (`integer(signed:)`,
+  `timeFraction()`), `src/Timestamp/{TstInfo,TimestampResult,SignerInfo,
+  TimestampCheck}.php` (fraction, `timeIso()`, the DER-canonical SET,
+  `ecdsaDer()`), `src/Container/RemoteManifestDetector.php`,
+  `src/Verifier/{VerificationReport,Verifier}.php` (`remote_manifest`);
+  Traceability rows; `notes/step-44-writers-fixes.md`; rows in `NOTES.md`
+  and `docs/milestones.md`; this entry.
+- Measured: the new tests red (7 of 8; AC13 green at once) and the
+  reasons; after the nonce fix the `c2pa-ts` token still failing, then
+  `openssl_verify` by hand over five candidate inputs (only the sorted
+  SET verifies); `composer check` green, `Tests: 293 passed (3472
+  assertions)`; the writers corpus through the front door (the table in
+  the note). Two test slips of mine caught by the red run (an unimported
+  `Asn1Exception` making `toThrow` read the class name as a message; a
+  list destructuring of an associative array). Reasoned: X.690 §11.6's
+  ordering rule; RFC 3279's DER form versus `c2pa-ts`'s raw one; the
+  DER-safe acceptance rule.
+- Decided by Maurice: step 44 with finding 3 included.
+

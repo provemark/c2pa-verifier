@@ -10,6 +10,7 @@ use Provemark\C2paVerifier\Container\FormatDetector;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\ManifestStoreBytes;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
+use Provemark\C2paVerifier\Container\RemoteManifestDetector;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
 use Provemark\C2paVerifier\Cose\ClaimSignatureCheck;
 use Provemark\C2paVerifier\Cose\CoseException;
@@ -61,6 +62,7 @@ final readonly class Verifier
         private ChainCheck $trust = new ChainCheck,
         private CertificateProfileCheck $certificate = new CertificateProfileCheck,
         private TimestampCheck $timestamp = new TimestampCheck,
+        private RemoteManifestDetector $remote = new RemoteManifestDetector,
     ) {}
 
     /**
@@ -92,7 +94,8 @@ final readonly class Verifier
             ], []));
         }
         if ($store === null) {
-            return new VerificationReport($format, false, null, ValidationResult::fromStatuses([], []));
+            // no store in the file: say whether one is declared by URL (never fetched; SPEC-013 amendment 9)
+            return new VerificationReport($format, false, null, ValidationResult::fromStatuses([], []), null, $this->remote->detect($stream));
         }
 
         // 3. the manifest
@@ -159,8 +162,9 @@ final readonly class Verifier
         };
 
         $info = ['alg' => $alg, 'issuer' => $leaf->organization, 'common_name' => $leaf->subjectCn(), 'cert_serial_number' => $leaf->serialDecimal];
-        if ($timestamp->time !== null) {
-            $info['time'] = gmdate('c', $timestamp->time);
+        $time = $timestamp->timeIso();
+        if ($time !== null) {
+            $info['time'] = $time;
         }
 
         return $info;

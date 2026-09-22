@@ -463,3 +463,52 @@ it('AC12: the oracle\'s own fixtures are a third drift alarm, and a CAWG identit
         ->and($errors[0]->explanation)->toContain('cawg.identity')
         ->and(in_array('signingCredential.trusted', array_map(static fn (ValidationStatus $s): string => $s->code->value, $cawg->result->statuses), true))->toBeTrue();
 })->group('SPEC-013');
+
+it('AC13: the writers corpus is a fourth drift alarm — c2patool\'s state unless stricter by name', function (): void {
+    foreach (SPEC013_WRITERS_CORPUS as $name) {
+        $path = glob(dirname(__DIR__, 2)."/Fixtures/writers/{$name}.*")[0] ?? throw new RuntimeException("no file for {$name}");
+        $report = (new Verifier)->verify(spec013Stream('writers/'.basename($path)));
+        /** @var array<string, mixed> $oracle */
+        $oracle = json_decode((string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/c2patool/writers/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
+        $expected = $oracle['validation_state'];
+        if (in_array($name, array_merge(SPEC013_WRITERS_MULTI, SPEC013_WRITERS_REMOTE, SPEC013_WRITERS_TSA_NOT_CONFIGURED), true)) {
+            $expected = 'Invalid';
+        }
+        expect($report->result->state->value)->toBe($expected, $name)
+            ->and($report->hasManifest)->toBe(! in_array($name, SPEC013_WRITERS_REMOTE, true), $name);
+        $expired = in_array('signingCredential.expired', spec013Failures($report), true);
+        expect($expired)->toBe(in_array($name, SPEC013_WRITERS_TSA_NOT_CONFIGURED, true), $name);
+        // never more lenient: every failure here that c2patool does not have is a general.error refusal by name
+        $theirs = [];
+        foreach ((array) ($oracle['validation_status'] ?? []) as $status) {
+            assert(is_array($status) && is_string($status['code']));
+            $theirs[] = $status['code'];
+        }
+        foreach (spec013Failures($report) as $code) {
+            if (! in_array($code, $theirs, true)) {
+                expect(in_array($code, ['general.error', 'signingCredential.expired'], true))->toBeTrue("{$name}: {$code} is a failure here and not at c2patool");
+            }
+        }
+    }
+})->group('SPEC-013');
+
+it('AC14: a remote manifest is reported by its URL, never fetched', function (): void {
+    foreach ([
+        'c2pa-rs/cloud.jpg' => 'https://cai-manifests.adobe.com/manifests/adobe-urn-uuid-5f37e182-3687-462e-a7fb-573462780391',
+        'c2pa-rs/cloudx.jpg' => 'https://cai-manifestx.adobe.com/manifests/adobe-urn-uuid-5f37e182-3687-462e-a7fb-573462780391',
+        'writers/adobe-20260304-photoshop-remote-manifest.jpg' => 'https://cai-manifests.adobe.com/manifests/urn-c2pa-d41d1251-5724-47d0-b86c-00c43c656d92-adobe',
+    ] as $relative => $url) {
+        $report = (new Verifier)->verify(spec013Stream($relative));
+        $array = $report->toArray();
+        expect($report->hasManifest)->toBeFalse($relative)
+            ->and($report->remoteManifestUrl)->toBe($url, $relative)
+            ->and($array['remote_manifest'])->toBe($url, $relative)
+            ->and(array_keys($array))->toContain('remote_manifest')
+            ->and($report->result->checksPerformed)->toBe([], $relative);   // nothing fetched, nothing checked
+    }
+    foreach (['fixture-unsigned.jpg', 'fixture-unsigned.png', 'fixture-unsigned.webp', 'public-testfiles/adobe-20220124-A.jpg', 'fixture-signed.jpg'] as $relative) {
+        $report = (new Verifier)->verify(spec013Stream($relative));
+        expect($report->remoteManifestUrl)->toBeNull($relative)
+            ->and(array_keys($report->toArray()))->not->toContain('remote_manifest');
+    }
+})->group('SPEC-013');

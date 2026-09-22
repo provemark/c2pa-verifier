@@ -35,6 +35,7 @@ final readonly class SignerInfo
      * @param  array<string, string>  $otherAttributes  OID => the Attribute's DER
      * @param  string  $signatureAlgorithm  OID
      * @param  string|null  $signatureParameters  RSA-PSS: the parameters' DER
+     * @param  list<string>  $attributeEncodings  every signed Attribute's DER in the order written (for the DER-canonical SET)
      */
     public function __construct(
         public int $version,
@@ -50,12 +51,38 @@ final readonly class SignerInfo
         public string $signatureAlgorithm,
         public ?string $signatureParameters,
         public string $signature,
+        public array $attributeEncodings = [],
     ) {}
 
-    /** The signed attributes with `A0` → `31` (RFC 5652 §5.4): what the signature covers. */
+    /**
+     * What the signature covers (RFC 5652 §5.4): the *DER* encoding of the
+     * SET OF Attribute — the `[0]` tag replaced by `SET`, and the attributes
+     * in DER's SET OF order (X.690 §11.6: ascending by encoded octets, the
+     * shorter padded with zeros). Every TSA measured until step 43 wrote
+     * them sorted, so this equalled the re-tag; `c2pa-ts` writes them
+     * unsorted and signs the sorted form (SPEC-017 amendment 3).
+     */
     public function signedAttributesForVerification(): string
     {
-        return "\x31".substr($this->signedAttributes, 1);
+        $encodings = $this->attributeEncodings;
+        usort($encodings, static function (string $a, string $b): int {
+            $n = max(strlen($a), strlen($b));
+
+            return strcmp(str_pad($a, $n, "\0"), str_pad($b, $n, "\0"));
+        });
+        $body = implode('', $encodings);
+
+        return "\x31".self::length(strlen($body)).$body;
+    }
+
+    private static function length(int $n): string
+    {
+        if ($n < 128) {
+            return pack('C', $n);
+        }
+        $bytes = ltrim(pack('N', $n), "\0");
+
+        return pack('C', 0x80 | strlen($bytes)).$bytes;
     }
 
     /**
@@ -95,7 +122,9 @@ final readonly class SignerInfo
         $signingTime = null;
         $contentType = null;
         $other = [];
+        $encodings = [];
         foreach ($signedAttrs->children ?? [] as $attribute) {
+            $encodings[] = $attribute->encoded();
             $parts = $attribute->sequence();
             if (count($parts) !== 2) {
                 throw new TimestampException(sprintf('Attribute at offset %d has %d fields, not type and values', $attribute->offset, count($parts)));
@@ -134,7 +163,7 @@ final readonly class SignerInfo
         $signatureParameters = $signatureAlgorithm === self::OID_RSA_PSS && isset($signatureAlgorithmParts[1]) ? $signatureAlgorithmParts[1]->encoded() : null;
         $signature = $fields[$i + 1]->octets();
 
-        return new self($version, $sidIssuer, $sidSerial, $sidSubjectKeyId, $digestAlgorithm, $signedAttrs->encoded(), $messageDigest, $signingTime, $contentType, $other, $signatureAlgorithm, $signatureParameters, $signature);
+        return new self($version, $sidIssuer, $sidSerial, $sidSubjectKeyId, $digestAlgorithm, $signedAttrs->encoded(), $messageDigest, $signingTime, $contentType, $other, $signatureAlgorithm, $signatureParameters, $signature, $encodings);
     }
 
     /** @param list<Der> $values */

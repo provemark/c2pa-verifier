@@ -19,7 +19,8 @@ use Provemark\C2paVerifier\Report\ValidationResult;
 final readonly class VerificationReport
 {
     /**
-     * @param  array{alg: string, issuer: ?string, common_name: string, cert_serial_number: string}|null  $signatureInfo  the active manifest's signer as c2patool prints it (SPEC-015); null when the chain could not be read
+     * @param  array{alg: string, issuer: ?string, common_name: string, cert_serial_number: string, time?: string}|null  $signatureInfo  the active manifest's signer as c2patool prints it (SPEC-015), with `time` when the timestamp validated (SPEC-017); null when the chain could not be read
+     * @param  string|null  $remoteManifestUrl  a manifest declared by URL in the file's XMP, never fetched (SPEC-013 amendment 9)
      */
     public function __construct(
         public string $format,
@@ -27,6 +28,7 @@ final readonly class VerificationReport
         public ?ManifestStore $store,
         public ValidationResult $result,
         public ?array $signatureInfo = null,
+        public ?string $remoteManifestUrl = null,
     ) {}
 
     /** @return array<string, mixed> */
@@ -46,6 +48,7 @@ final readonly class VerificationReport
         ] + (array_key_exists('validation_status', $result) ? ['validation_status' => $result['validation_status']] : []) + [
             'format' => $this->format,
             'has_manifest' => $this->hasManifest,
+        ] + ($this->remoteManifestUrl === null ? [] : ['remote_manifest' => $this->remoteManifestUrl]) + [
             'checks_performed' => $result['checks_performed'],
         ];
     }

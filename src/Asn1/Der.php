@@ -105,15 +105,32 @@ final readonly class Der
         return $this->childrenOf(self::SET);
     }
 
-    /** A non-negative INTEGER as a decimal string; negative values are refused (none of the timestamp structures has one). */
-    public function integer(): string
+    /**
+     * An INTEGER as a decimal string. Non-negative unless $signed: serials,
+     * versions and counts are never negative, but an RFC 3161 nonce is a
+     * random value TSA clients encode as they draw it, high bit and all
+     * (SPEC-016 amendment 3) — read as two's complement, with a minus sign.
+     */
+    public function integer(bool $signed = false): string
     {
         $bytes = $this->integerBytes();
-        if (ord($bytes[0]) >= 0x80) {
+        if (ord($bytes[0]) < 0x80) {
+            return Bytes::hexToDecimal(bin2hex($bytes));
+        }
+        if (! $signed) {
             throw new Asn1Exception(sprintf('INTEGER at offset %d is negative (%s)', $this->offset, Bytes::hex(substr($bytes, 0, 4))));
         }
+        // −x = ~(x − 1): invert the octets and add one, from the least significant end
+        $magnitude = ~$bytes;
+        for ($i = strlen($magnitude) - 1; $i >= 0; $i--) {
+            $sum = ord($magnitude[$i]) + 1;
+            $magnitude[$i] = chr($sum & 0xFF);
+            if ($sum < 0x100) {
+                break;
+            }
+        }
 
-        return Bytes::hexToDecimal(bin2hex($bytes));
+        return '-'.Bytes::hexToDecimal(bin2hex($magnitude));
     }
 
     /** The content octets of an INTEGER, checked for the minimal two's-complement encoding DER requires (X.690 §8.3.2). */
@@ -247,6 +264,21 @@ final readonly class Der
         }
 
         return $epoch;
+    }
+
+    /**
+     * The digits after the point of a GeneralizedTime with fractional seconds
+     * (RFC 3161 allows them; c2patool keeps them in `signature_info.time`),
+     * as written; null when there are none or for a UTCTime.
+     */
+    public function timeFraction(): ?string
+    {
+        $this->time();   // the same validation, the same refusals
+        if ($this->tag !== self::GENERALIZED_TIME) {
+            return null;
+        }
+
+        return preg_match('/\.(\d+)Z\z/', $this->contents, $m) === 1 ? $m[1] : null;
     }
 
     /** This element, asserted context-specific [n]. */

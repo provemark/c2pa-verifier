@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Asn1\Asn1Exception;
 use Provemark\C2paVerifier\Asn1\DerReader;
 use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
@@ -400,3 +401,42 @@ test('SPEC-016 AC10: every corpus token parses, and none takes the reader past i
         ->and($parsed)->toBe(37)
         ->and($malformed)->toBe(['c2pa-rs/CA_ct.jpg']);
 })->group('SPEC-016');
+
+// ---------------------------------------------------------------------------
+// AC11 (amendment 3) — the writers corpus: negative nonces are legal DER, fractional genTime is kept
+
+test('SPEC-016 AC11: a negative INTEGER reads signed on request and is refused otherwise', function (): void {
+    $negative = spec016Der('02 04 cc a0 6a b7');   // Amazon's nonce: 0x-335F9549
+    expect($negative->integer(signed: true))->toBe('-861902153')
+        ->and(spec016Der('02 0a 9e d2 e8 ad a4 db 4e 49 b2 f2')->integer(signed: true))->toBe('-458901332827496636632334')   // c2pa-ts's: 0x-612D17525B24B1B64D0E
+        ->and(spec016Der('02 01 ff')->integer(signed: true))->toBe('-1')
+        ->and(spec016Der('02 02 ff 7f')->integer(signed: true))->toBe('-129')
+        ->and(spec016Der('02 01 7f')->integer(signed: true))->toBe('127')
+        ->and(spec016Der('02 02 00 80')->integer(signed: true))->toBe('128');
+    expect(fn () => $negative->integer())->toThrow(Asn1Exception::class, 'negative');
+})->group('SPEC-016');
+
+test('SPEC-016 AC11: GeneralizedTime fractions are kept as the token wrote them', function (): void {
+    expect(spec016Der('18 13 32 30 32 34 30 38 30 36 32 31 35 33 33 37 2e 35 30 30 5a')->timeFraction())->toBe('500')
+        ->and(spec016Der('18 0f 32 30 32 34 30 38 30 36 32 31 35 33 33 37 5a')->timeFraction())->toBeNull()
+        ->and(spec016Der('17 0d 32 34 30 38 30 36 32 31 35 33 33 37 5a')->timeFraction())->toBeNull()
+        ->and(spec016Der('18 16 32 30 32 36 30 38 32 36 31 30 34 38 35 35 2e 38 33 37 33 38 31 5a')->timeFraction())->toBe('837381')
+        ->and(spec016Der('18 16 32 30 32 36 30 38 32 36 31 30 34 38 35 35 2e 38 33 37 33 38 31 5a')->time())->toBe(1787741335);   // 2026-08-26T10:48:55Z
+    expect(fn () => spec016Der('18 10 32 30 32 34 30 38 30 36 32 31 35 33 33 37 2e 5a')->time())->toThrow(Asn1Exception::class);   // a point with no digits
+})->group('SPEC-016');
+
+foreach ([
+    'writers/amazon-20240925-titan-g1.png' => ['nonce' => '-861902153', 'fraction' => null, 'genTime' => '2024-09-25T08:29:07+00:00', 'alg' => SPEC016_OID_SHA384],
+    'writers/trustnxt-20260113-icon-signed-timestamp.jpg' => ['nonce' => '-458901332827496636632334', 'fraction' => '669', 'genTime' => '2026-01-13T12:35:40+00:00', 'alg' => SPEC016_OID_SHA256],
+    'writers/openai-20260826-c2pa_2x.png' => ['nonce' => Certificate::hexToDecimal('DB206C4A40883B57'), 'fraction' => '837381', 'genTime' => '2026-08-26T10:48:55+00:00', 'alg' => SPEC016_OID_SHA256],
+] as $file => $expected) {
+    test('SPEC-016 AC11: the writer token parses — '.$file, function () use ($file, $expected): void {
+        $token = TimeStampToken::fromHeaderValue(Corpus::headerValue($file));
+        $tst = $token->tstInfo;
+        expect($tst->nonce)->toBe($expected['nonce'])
+            ->and($tst->genTimeFraction)->toBe($expected['fraction'])
+            ->and(gmdate('c', $tst->genTime))->toBe($expected['genTime'])
+            ->and($tst->hashAlgorithm)->toBe($expected['alg'])
+            ->and($token->signedData->signerCertificate())->not->toBeNull();
+    })->group('SPEC-016');
+}

@@ -572,3 +572,43 @@ test('SPEC-017 AC10: the NO_TIMESTAMP exceptions are gone; TSA_NOT_CONFIGURED na
         ->and($with->result->state->value)->toBe('Invalid')
         ->and(spec017Oracle('timestamp/exp-test1-full-plus-digicert-g4')['validation_state'])->toBe('Invalid');
 })->group('SPEC-017');
+
+// ---------------------------------------------------------------------------
+// AC11 (amendment 2) — the writers corpus: the time as c2patool renders it, and the tokens that were malformed validate
+
+test('SPEC-017 AC11: on the writers corpus signature_info.time equals c2patool\'s, and the negative-nonce tokens validate', function (): void {
+    $expected = [
+        'openai-20260826-c2pa_2x.png' => ['validated' => true, 'time' => '2026-08-26T10:48:55.837381+00:00'],
+        'amazon-20240925-titan-g1.png' => ['validated' => true, 'time' => '2024-09-25T08:29:07+00:00'],
+        'trustnxt-20260113-icon-signed-timestamp.jpg' => ['validated' => true, 'time' => '2026-01-13T12:35:40.669+00:00'],
+        'c2pa-rs-cawg_ica.jpg' => ['validated' => false, 'time' => null],
+    ];
+    foreach ($expected as $name => ['validated' => $validated, 'time' => $time]) {
+        $report = spec017Verify("writers/{$name}");
+        $codes = spec017Codes($report);
+        expect(in_array('timeStamp.validated', $codes, true))->toBe($validated, $name)
+            ->and(in_array('timeStamp.malformed', $codes, true))->toBeFalse($name)
+            ->and($report->signatureInfo['time'] ?? null)->toBe($time, $name);
+        $oracle = spec017Oracle('writers/'.pathinfo($name, PATHINFO_FILENAME));
+        $manifests = $oracle['manifests'];
+        assert(is_array($manifests) && is_string($oracle['active_manifest']));
+        $active = $manifests[$oracle['active_manifest']];
+        assert(is_array($active) && is_array($active['signature_info']));
+        expect($active['signature_info']['time'] ?? null)->toBe($time, $name);
+    }
+
+    // Amazon: ES384, expired at now, valid at its DigiCert stamp — the cross-certificate as anchor lifts `expired`, as c2patool's Valid
+    $bare = spec017Verify('writers/amazon-20240925-titan-g1.png');
+    expect(spec017Failures($bare))->toContain('signingCredential.expired')
+        ->and($bare->result->state->value)->toBe('Invalid');
+    $anchored = spec017Verify('writers/amazon-20240925-titan-g1.png', spec017Settings('digicert-trusted-root-g4'));
+    expect(spec017Failures($anchored))->not->toContain('signingCredential.expired')
+        ->and(spec017Codes($anchored))->toContain('timeStamp.trusted')
+        ->and($anchored->result->state->value)->toBe('Valid')
+        ->and(spec017Oracle('writers/amazon-20240925-titan-g1')['validation_state'])->toBe('Valid');
+
+    // c2pa-ts: a v1 claim with sigTst2 — validated, the pairing unchecked as c2pa-rs leaves it
+    $ts = spec017Verify('writers/trustnxt-20260113-icon-signed-timestamp.jpg');
+    expect(spec017Manifest('writers/trustnxt-20260113-icon-signed-timestamp.jpg')->claim->version)->toBe(1)
+        ->and(spec017Status($ts, StatusCode::TimeStampValidated)?->explanation)->toContain('C2PA Signer');
+})->group('SPEC-017');

@@ -1,4 +1,4 @@
-# Files from other writers (step 43)
+    # Files from other writers (step 43)
 
 Signed files from writers the three older corpora do not have — OpenAI,
 Amazon Bedrock, TrustNXT's `c2pa-ts`, Adobe Photoshop 2026 — plus one

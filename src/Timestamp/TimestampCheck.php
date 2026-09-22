@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Timestamp;
 
+use Provemark\C2paVerifier\Asn1\Asn1Exception;
 use Provemark\C2paVerifier\Asn1\DerReader;
 use Provemark\C2paVerifier\Cose\CoseException;
 use Provemark\C2paVerifier\Cose\CoseSign1;
+use Provemark\C2paVerifier\Cose\EcdsaSignature;
 use Provemark\C2paVerifier\Cose\OpenSsl;
 use Provemark\C2paVerifier\Cose\PublicKey;
 use Provemark\C2paVerifier\Cose\RsaPss;
@@ -93,7 +95,7 @@ final readonly class TimestampCheck
                     ? new ValidationStatus($s->code, $s->url, sprintf('%s (1 of %d tokens judged)', $s->explanation, count($header->tokens)))
                     : $s,
                 $result->statuses,
-            ), $result->time, $result->trusted);
+            ), $result->time, $result->trusted, $result->timeFraction);
         }
 
         return $result;
@@ -171,7 +173,7 @@ final readonly class TimestampCheck
         // 7. the TSA's trust: the profile with timeStamping alone, then the chain to a configured anchor
         $tsaSettings = self::tsaSettings($settings);
         if (! $tsaSettings->verifyTrust) {
-            return new TimestampResult(true, $statuses, $tst->genTime, false);
+            return new TimestampResult(true, $statuses, $tst->genTime, false, $tst->genTimeFraction);
         }
         $trusted = false;
         $faults = $this->profile->checkLeaf($signer, $tsaSettings, $tst->genTime, $url, ekus: [self::OID_EKU_TIME_STAMPING]);
@@ -181,7 +183,7 @@ final readonly class TimestampCheck
             try {
                 $ordered = $this->orderedChain($signerDer, $sd->certificates);
             } catch (TrustException $e) {
-                return new TimestampResult(true, [...$statuses, $this->status(StatusCode::TimeStampUntrusted, $url, sprintf('timestamp cert untrusted: %s — a certificate in the token could not be read: %s', $tsaName, $e->getMessage()))], $tst->genTime, false);
+                return new TimestampResult(true, [...$statuses, $this->status(StatusCode::TimeStampUntrusted, $url, sprintf('timestamp cert untrusted: %s — a certificate in the token could not be read: %s', $tsaName, $e->getMessage()))], $tst->genTime, false, $tst->genTimeFraction);
             }
             foreach ($this->chain->checkCertificates($ordered, $tsaSettings, $url) as $outcome) {
                 $trusted = $outcome->code === StatusCode::SigningCredentialTrusted;
@@ -193,7 +195,7 @@ final readonly class TimestampCheck
             }
         }
 
-        return new TimestampResult(true, $statuses, $tst->genTime, $trusted);
+        return new TimestampResult(true, $statuses, $tst->genTime, $trusted, $tst->genTimeFraction);
     }
 
     /**
@@ -257,7 +259,7 @@ final readonly class TimestampCheck
                     return false;
                 }
 
-                return $this->opensslVerify($tbs, $si->signature, $key, self::OPENSSL_ALGOS[$hash]);
+                return $this->opensslVerify($tbs, self::ecdsaDer($si->signature, $key), $key, self::OPENSSL_ALGOS[$hash]);
             default:   // rsa-pss: MGF1 with the same hash, salt = hash length (RFC 8017; as SPEC-009)
                 if ($key->kind === PublicKey::KIND_RSA_PSS) {
                     return $this->opensslVerify($tbs, $si->signature, $key, self::OPENSSL_ALGOS[$hash]);
@@ -269,6 +271,35 @@ final readonly class TimestampCheck
                 }
 
                 return RsaPss::verify($tbs, $si->signature, $key->key, $hash, $key->bits);
+        }
+    }
+
+    /**
+     * A CMS ECDSA signature is DER `ECDSA-Sig-Value` (RFC 3279 §2.2.3), and
+     * `c2pa-ts` writes it as raw R‖S (SPEC-017 amendment 3; c2patool accepts
+     * it). Raw is taken only when the bytes are not a well-formed DER
+     * SEQUENCE of two INTEGERs and are exactly two coordinates long; DER
+     * passes through unchanged.
+     */
+    private static function ecdsaDer(string $signature, PublicKey $key): string
+    {
+        if (self::isDerEcdsaSignature($signature)) {
+            return $signature;
+        }
+        $curveBytes = intdiv($key->bits + 7, 8);
+
+        return EcdsaSignature::toDer($signature, $curveBytes) ?? $signature;
+    }
+
+    private static function isDerEcdsaSignature(string $bytes): bool
+    {
+        try {
+            $seq = (new DerReader(maxDepth: 2, maxElements: 3, maxBytes: 256))->read($bytes);
+            $parts = $seq->sequence();
+
+            return count($parts) === 2 && $parts[0]->integerBytes() !== '' && $parts[1]->integerBytes() !== '';
+        } catch (Asn1Exception) {
+            return false;
         }
     }
 

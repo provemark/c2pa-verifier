@@ -32,6 +32,7 @@ final readonly class TstInfo
      * @param  string|null  $nonce  decimal
      * @param  string|null  $tsa  the GeneralName's DER
      * @param  string|null  $extensions  the Extensions' DER (none critical)
+     * @param  string|null  $genTimeFraction  the fractional-second digits of genTime as written, or null (amendment 3)
      */
     public function __construct(
         public int $version,
@@ -45,6 +46,7 @@ final readonly class TstInfo
         public ?string $nonce,
         public ?string $tsa,
         public ?string $extensions,
+        public ?string $genTimeFraction = null,
     ) {}
 
     /**
@@ -91,6 +93,7 @@ final readonly class TstInfo
         $serialNumber = $fields[3]->integer();
         try {
             $genTime = $fields[4]->time();
+            $genTimeFraction = $fields[4]->timeFraction();
         } catch (Asn1Exception $e) {
             throw new TimestampException('TSTInfo genTime: '.$e->getMessage(), 0, $e);
         }
@@ -114,7 +117,7 @@ final readonly class TstInfo
             $i++;
         }
         if ($i < $count && $fields[$i]->is(TagClass::Universal, Der::INTEGER)) {
-            $nonce = $fields[$i]->integer();
+            $nonce = $fields[$i]->integer(signed: true);   // a random value, either sign (amendment 3)
             $i++;
         }
         if ($i < $count && $fields[$i]->is(TagClass::ContextSpecific, 0)) {
@@ -129,7 +132,7 @@ final readonly class TstInfo
             throw new TimestampException(sprintf('TSTInfo has an unexpected %s at offset %d after its known fields', $fields[$i]->describe(), $fields[$i]->offset));
         }
 
-        return new self($version, $policy, $hashAlgorithm, $hashedMessage, $serialNumber, $genTime, $accuracy, $ordering, $nonce, $tsa, $extensions);
+        return new self($version, $policy, $hashAlgorithm, $hashedMessage, $serialNumber, $genTime, $accuracy, $ordering, $nonce, $tsa, $extensions, $genTimeFraction);
     }
 
     private static function accuracy(Der $der): TstAccuracy
