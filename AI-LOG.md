@@ -3165,3 +3165,12 @@ README are where the disclosure lives.
   `gh run view --log-failed`; `composer check` exit 0, 314 tests.
   Reasoned: masking one clock-bearing message keeps the rest byte-exact.
 - Decided by Maurice: push; the M7 measurement next.
+
+## 2026-09-22 — CI green on step 52
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (the push above).
+- Produced: pushed `787c2c7..4e46fa2`; this entry.
+- Measured: run 35714591867 on `4e46fa2`: conclusion `success`, `composer
+  check` on PHP 8.3 / 8.4 / 8.5 each `success`, 314 passed. Reasoned:
+  nothing.
+- Decided by Maurice: none.
