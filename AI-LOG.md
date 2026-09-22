@@ -3832,3 +3832,28 @@ README are where the disclosure lives.
 - Decided by Maurice: push. Open for him: confirmation of the three
   amendments in step 64, the eight cross-file test helpers that block
   `--parallel`, and the visibility change.
+
+## 2026-09-22 — Step 66, the resource audit
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met de resource-audit" — the second of the four
+  gaps named when the maintainer said he wanted to be certain the library
+  is sound before it is seen.
+- Produced: `notes/step-66-resource-audit.md`, `NOTES.md`,
+  `docs/milestones.md`. Nothing in `src/` was changed.
+- Measured (PHP 8.5, peak = `memory_get_peak_usage(true)`): the corpus
+  costs 6–15 MB and 1–38 ms; a 256 MB asset costs 6.0 MB and 667 ms, so
+  `c2pa.hash.data` streams; APP11 reassembly is linear (128/512/960
+  pieces → 4/10/18 ms). Manifest stores: 8 MiB → 22 MB, 32 MiB → 70 MB,
+  63 MiB → 132 MB and a **PHP fatal error** under `memory_limit=128M`
+  inside `PngManifestStoreExtractor.php:121`, 64 MiB → refused by the
+  bound at 6 MB. The same 60 MiB store as JPEG costs 66 MB, because the
+  PNG path concatenates the chunk twice and again for the CRC. Store
+  sizes across 212 corpus files: median 45 kB, p90 241 kB, largest
+  3.36 MB.
+- Reasoned: that a fatal error is not failing closed — it cannot be
+  caught, the caller gets no status code, and the length that would have
+  allowed a cheap refusal is declared in the chunk header before the read.
+- Decided by Maurice: to run the audit. Open for him: the PNG double
+  copy (no rule change), lowering the default bound from 64 MiB (a rule
+  change in SPEC-001, SPEC-002, SPEC-003), and whether the bound should
+  be relative to the host's memory limit rather than absolute.
