@@ -3707,3 +3707,25 @@ README are where the disclosure lives.
   `approved`. Reasoned: nothing.
 - Decided by Maurice: approval of SPEC-023. Implementation may now begin,
   tests first.
+
+## 2026-09-22 — Step 63a, the SPEC-023 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 63a" — the red phase of SPEC-023.
+- Produced: `tests/Unit/PackageTest.php` (13 tests, group SPEC-023),
+  `tests/Fixtures/package-check/` with four trees and a README,
+  `ext-phar` in `require-dev`, `notes/step-63-published-package.md`.
+- Measured: the first red was a single fatal on the missing
+  `bin/package-check.php`, and it aborted the entire run — the other 353
+  tests stopped reporting; with the `require_once` guarded by
+  `is_file()`, 13 failed and 353 passed (7176 assertions), each failure
+  naming its own missing function. `php bin/spec-check.php` OK, 24 specs,
+  29 test files. Pint passed. PHPStan: 83 errors, all in the new test
+  file, all following from the undefined functions — red on purpose, as
+  the first milestone's CI was red on SPEC-001's missing classes.
+  `composer validate` valid. Reasoned: that "shipped" cannot mean "not
+  export-ignore" — under that reading a directory added later ships by
+  default and AC1's finding is impossible, so the shipped set is
+  declared and the two statements are checked against each other.
+- Decided by Maurice: approval of SPEC-023 and both its blocking
+  questions. Open for him: the AC3 ceiling (4 MB against 1.9 measured)
+  and reading the tar with `PharData`, both carried into 63b as proposed.
