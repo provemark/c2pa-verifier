@@ -2738,3 +2738,12 @@ README are where the disclosure lives.
 - Measured: `vendor/bin/deptrac analyse` — 32 violations before, 0 after,
   428 allowed; `composer check` green, 285 tests.
 - Decided by Maurice: push.
+
+## 2026-09-22 — CI green on M6
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (the same "push maar").
+- Produced: this entry.
+- Measured: run `35704398866` on `c8f6a25`: conclusion `success`;
+  `composer check` on PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 285
+  passed` (3375 assertions on 8.3, 3377 on 8.4/8.5); `all green` `success`.
+- Decided by Maurice: none.
