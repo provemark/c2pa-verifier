@@ -4275,3 +4275,32 @@ README are where the disclosure lives.
   `approved`. Reasoned: nothing.
 - Decided by Maurice: approval of SPEC-026. Implementation may now begin,
   tests first.
+
+## 2026-09-22 — Step 74a, the SPEC-026 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 74a" — the red phase of SPEC-026.
+- Produced: `tests/Unit/Container/IsobmffManifestStoreExtractorTest.php`
+  (9 tests, group SPEC-026), `bin/make-isobmff-variants.php` and ten
+  variants under `tests/Fixtures/isobmff/` with a README,
+  `tests/Fixtures/c2patool/isobmff/`, `fixture-unsigned.avif` and
+  `fixture-signed.avif` with `c2patool/avif.json`,
+  `notes/step-74-isobmff-tests.md`, `NOTES.md`, `docs/milestones.md`.
+- Measured: AVIF, which AC9 required to be measured rather than assumed —
+  signed with the same test certificates, it is the same container in
+  every respect (`ftyp`, then the C2PA `uuid` box at offset 32 with the
+  same twenty-one-byte preamble, purpose `manifest`, merkle 0, a 13 534-
+  byte store), the existing stack reads it into one claim v2 manifest
+  with `c2pa.hash.bmff.v3`, and c2patool says `Valid` with
+  `assertion.bmffHash.match`. No amendment was needed. c2patool over the
+  ten variants: it agrees on seven, ignores an unknown purpose as "no
+  claim found", and reads `size == 0` on a non-last box anyway. Pest 9
+  failed / 381 passed; PHPStan 25 errors, all from the unknown class;
+  Pint and `bin/spec-check.php` (27 specs, 32 test files) clean.
+- Reasoned: that the two divergences are the right kind of strictness — a
+  box that announces itself as C2PA and then says something unreadable is
+  not a file without credentials, and a box claiming "to the end of the
+  file" while something follows is a contradiction a reader must not
+  resolve quietly. Also why these variants are committed where SPEC-024's
+  were generated: the bytes here are evidence somebody can open.
+- Decided by Maurice: approval of SPEC-026. Open for him: its four
+  non-blocking questions, which 74b answers in code.
