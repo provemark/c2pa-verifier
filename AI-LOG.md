@@ -5036,3 +5036,30 @@ README are where the disclosure lives.
 - Decided by Maurice: to do this step before going public. Open for him:
   whether stapled OCSP becomes SPEC-030; the version of a first tag; the
   visibility change; the announcement.
+
+## 2026-09-22 — Step 91, SPEC-030 drafted: stapled OCSP
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, schrijf SPEC-030 als draft".
+- Produced: `specs/SPEC-030-stapled-ocsp.md` (status `draft`, ten
+  acceptance criteria, three open questions), `NOTES.md`,
+  `docs/milestones.md`.
+- Measured, before a line of the spec was written: `rVals` sits in the
+  **unprotected** COSE bucket (`protected: 1, 33` / `unprotected: sigTst,
+  rVals, pad`) — it is not covered by the signature. And: c2patool
+  0.27.22 emits **no** OCSP status code of its own on `ocsp.jpg` or
+  `ocsp_with_assertion.jpg`; the single `signingCredential.ocsp.skipped`
+  in this repository's oracles was written by a claim *generator* into an
+  ingredient's recorded `validationResults`, not by the verifier. The
+  conformance catalogue names RFC 5019 §3.2 requirements 1–4 as the
+  acceptance rules, which is the citation the spec uses rather than a
+  guessed section number.
+- Reasoned: the four consequences of that unsigned header, which are the
+  spec's spine — a stapled response may lower trust but never raise it;
+  an unverifiable one may never fail the file, because otherwise editing
+  one unsigned byte is a denial vector against any valid asset; only a
+  verified `revoked` counts; and absence proves nothing, so what was not
+  checked must be said out loud.
+- Decided by Maurice: to draft it. Open for him: the three questions in
+  the spec (stale responses, the AC3 fixture, whether `notRevoked` should
+  be recorded at all), then approval; the version of a first tag; the
+  visibility change; the announcement.
