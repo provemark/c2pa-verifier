@@ -3967,3 +3967,19 @@ README are where the disclosure lives.
   confirmation round (three from step 64, three from step 67b), the
   cross-file test helpers that block `--parallel`, the PNG double copy,
   the public API surface, and the visibility change.
+
+## 2026-09-22 — Step 68, the amendment list since step 58
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "maak de amendment-lijst".
+- Produced: `notes/step-68-amendments-since-58.md`, replacing step 64's
+  page, which was never confirmed and covered only three of the six;
+  step 64's note now carries a superseded banner. `NOTES.md`,
+  `docs/milestones.md`.
+- Measured: every `## Amendments` section of every spec, parsed — 74 in
+  all, of which 51 were confirmed at step 51 and 17 at step 58, leaving
+  exactly 6 (SPEC-001 #4, SPEC-002 #2, SPEC-003 #2, SPEC-013 #12,
+  SPEC-015 #5, SPEC-023 #1). The arithmetic is the check that none was
+  missed. Reasoned: their weight — two in group A, none in B, two
+  entries in C; and that the three bound amendments are one decision, so
+  they are one row.
+- Decided by Maurice: nothing yet; the list awaits his confirmation.

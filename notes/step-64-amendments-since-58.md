@@ -1,5 +1,10 @@
 # Step 64 — The three amendments since step 58, for the maintainer's confirmation
 
+> **Superseded by [`step-68-amendments-since-58.md`](step-68-amendments-since-58.md)**
+> (2026-09-22). This page was never confirmed; three more amendments were
+> written in step 67b, and all six are listed together there. Kept for the
+> record, not for confirming.
+
 *2026-09-22.* The spec template allows an approved spec to be amended when
 a measurement made before or during its tests-first step shows the
 criterion wrong; the amendment is written into the spec at once, so that
