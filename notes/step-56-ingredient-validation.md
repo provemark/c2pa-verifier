@@ -71,3 +71,65 @@ alarms, which 56b will have to keep green).
   manifest is kept while one about the ingredient is dropped) and on the
   file. The file alone would not show the guard, because c2patool's own
   answer there is "nothing is dropped".
+
+## 56b — the implementation
+
+*2026-09-22, same day.*
+
+- `src/Verifier/IngredientManifestCheck.php` — `check()` walks
+  `ManifestGraph::$referenced` in walk order; per manifest: `hash()` (box
+  payload → `ingredient.manifest.validated`; the pre-1.3 hash over the
+  claim's CBOR → silence; neither → `ingredient.manifest.mismatch`; an
+  algorithm PHP cannot compute → `algorithm.unsupported`), then
+  `manifest()` — timestamp, signature, certificate profile, chain and
+  trust, hashed URIs, actions, **no data hash** — every status re-scoped
+  to the assertion's URI, then `drop()` with `recorded()`.
+  It lives in `Verifier`, not `Manifest`: the parsers may not depend on
+  `Cose`, `Trust`, `Hash` or `Timestamp` (Deptrac), and the spec's own
+  open question answered itself that way.
+- `Report\StatusCode` gains `ingredient.manifest.validated` (a success)
+  and `ingredient.manifest.mismatch`; the enum is 36 cases.
+- `Verifier`: the check runs after `actions`, adds `ingredients` to
+  `checks_performed` where the graph reached a manifest, and the
+  multi-manifest refusal of SPEC-013 amendment 5 is gone.
+
+### Measured
+
+- 7 red (2 already true) → **9 green**; `composer check` exit 0 with
+  **336 tests**. `bin/fuzz.php 20260922 3`: 312 runs over 104 files, **0
+  faults**, one survivor that stayed `Valid` — `c2patool` calls the same
+  file `Trusted`, so it is a byte the format leaves uncovered, the
+  category step 45 already measured.
+- Five existing criteria had to change with this one (SPEC-021
+  amendment 3): SPEC-013 AC11 (a multi-manifest store is measured like
+  any other now), SPEC-013 AC12's stricter list, SPEC-017's helper (the
+  active manifest's statuses only — an ingredient's timestamp is checked
+  too now), the enum count, and SPEC-020 AC6 (the E-clm file's refusal
+  is gone: it is `Invalid` on its own merits).
+- Two test literals of the approved text were wrong and were corrected
+  against the files (amendments 1–2): a second delta exists on the AC2
+  variant (the ingredient manifest has an ingredient of its own), and
+  `E-clm-CAICAI` gets no `ingredients` check because its one reference
+  names a manifest that is not in the store.
+- Pest's variadic `toContain($needle, $message)` caught me a seventh
+  time; the message read as a second needle. `in_array(...)` plus
+  `toBeTrue($message)`, as everywhere else in this suite.
+- From the shell, `adobe-20220124-CACA.jpg` with the test anchors:
+  `Trusted`, `checks_performed` with `ingredients`, and two deltas — the
+  ingredient manifest fully validated (its own timestamp, signature,
+  trust and six hashed URIs) and its parent's `ingredient.unknownProvenance`.
+
+### What this closes, and what it does not
+
+Seventeen of the eighteen multi-manifest corpus files are now measured
+rather than refused, and their verdicts are c2patool's — sixteen exactly,
+two (`ocsp`, `ocsp_with_assertion`) `Invalid` here by the named TSA
+leniency. `adobe-20220124-E-uri-CIE-sig-CA`, the file that made SPEC-013
+amendment 5, is `Invalid` for c2patool's reason; `adobe-20220124-CIE-sig-CA`,
+whose ingredient signature is genuinely broken but *recorded* by the
+assertion that used it, is `Trusted` — the specification's rule, copied,
+with the guard that nothing an ingredient assertion says can cancel a
+fault in the manifest being verified.
+
+Still refused by name: `update_manifest` (a `c2um` box — SPEC-022), the
+CAWG file, a claim with redactions, and the graph's bounds.

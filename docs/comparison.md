@@ -13,7 +13,8 @@ and never the other way round.
 
 | what | `c2patool` | this verifier | until |
 |---|---|---|---|
-| Ingredient manifests, manifest chains, update manifests | validates the whole tree | the ingredient assertions are read and the graph walked (SPEC-020: provenance, missing and malformed reported under `ingredientDeltas`), but the manifests they name are not validated, so a store with more than one manifest is still refused (`general.error`, `Invalid`) — `_MULTI` lists: 10 official files, 7 c2pa-rs, 1 writers | SPEC-021 |
+| Update manifests (`c2um`) | validated | the JUMBF parser refuses the box — `update_manifest` | SPEC-022 |
+| Redacted assertions | validated (`assertion.notRedacted`, the claim-signature hash method) | a claim with a non-empty `redacted_assertions` is refused (`general.error`) — no corpus file has a real redaction to measure against | a fixture, then a spec |
 | ISOBMFF (MP4, MOV, AVIF), GIF, TIFF, SVG, audio, PDF | yes | JPEG, PNG, WebP only (`unsupported file type`) | M8 and later |
 | CAWG identity assertions | validated (their own X.509 credential) | refused (`general.error` on the assertion) — `C_with_CAWG_data`, `cawg_ica` | a CAWG spec |
 | Remote manifests (`dcterms:provenance` URL) | fetched over the network | reported as `remote_manifest`, never fetched — `cloud.jpg`, the Photoshop file | never (by design) |
@@ -31,7 +32,9 @@ lengths), claim v1/v2, COSE ES256/384/512, PS256/384/512, Ed25519, hashed
 URIs, the data hash with the *cover* rule, certificate profile, chain and
 trust under nine settings variants, the timestamp (35 corpus tokens
 `validated` with `signature_info.time` byte-equal), the actions opening
-rule — on every corpus file that is not in an exception list, and on every
+rule, the ingredient graph and the ingredient manifests (SPEC-020/021:
+seventeen multi-manifest files, sixteen verdicts exactly c2patool's, the
+two others by the TSA leniency below) — on every corpus file that is not in an exception list, and on every
 own variant, the state and the failure codes with their URLs are
 `c2patool`'s. Nothing is more lenient.
 
@@ -42,7 +45,7 @@ own variant, the state and the failure codes with their URLs are
 | A timestamp authority is trusted **only** through the configured anchors; `c2patool` reports `timeStamp.trusted` for DigiCert and Truepic TSAs with no anchor configured and `untrusted` for a 2025 DigiCert responder — not derivable from the 0.90.22 source (step 40 §5) | C2PA 2.4 §14.6.1: a *trusted* timestamp; trust by observation is not trust | ADR-0004 decision 3; `_TSA_NOT_CONFIGURED` (Truepic ×3, `ocsp*`, `exp-test1`, Amazon, Pixel — `expired` at now here, `Valid` there; with the anchor configured they are equal, measured in SPEC-017 AC6/AC11/AC12) |
 | `timeStamp.*` is informational, as at `c2patool`; the timestamp's one effect is the time the signer's validity is judged at | c2pa-rs logs every timestamp fault informational | SPEC-017 |
 | A `signingTime` attribute that differs from `genTime` is `malformed` (c2pa-rs prefers `signingTime`) | fail closed; no corpus token has them differ | ADR-0004 decision 5 |
-| A store with more than one manifest is `Invalid` until M7 | a fault in a manifest not looked at must not yield `Trusted` (`adobe-20220124-E-uri-CIE-sig-CA` was) | SPEC-013 amendment 5 |
+| A claim with `redacted_assertions` is refused | the claim-signature hash method and `assertion.notRedacted` are unmeasured; a claim that says "redacted" is not passed on trust | SPEC-011, kept by SPEC-021 |
 | A CAWG identity assertion is `Invalid` until validated | `Trusted` on a credential never examined (`C_with_CAWG_data`) | SPEC-013 amendment 7 |
 | A header with both `sigTst` and `sigTst2` is `malformed` (c2pa-rs takes `sigTst2`) | fail closed; no corpus file has both | SPEC-016 AC8 |
 | The data hash is not read after a hashed-URI *mismatch* on `c2pa.hash.data` (four own variants report a strict subset of `c2patool`'s failures) | the assertion is not what the signer saw | SPEC-011 decision 1, `SPEC013_SUBSET_ONLY` |

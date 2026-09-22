@@ -9,6 +9,19 @@ public API is stable. Dates are the day the work was committed.
 ## Unreleased
 
 ### M7 (in progress) — ingredient manifests (2026-09-22)
+- SPEC-021: the manifests an ingredient assertion names are validated —
+  the box hash it recorded (`ingredient.manifest.validated` /
+  `.mismatch`; the pre-1.3 hash over the claim accepted silently) and
+  then the manifest itself: timestamp, signature, certificate profile,
+  chain and trust, hashed URIs, actions. Never the data hash: an
+  ingredient's hard binding covers its own asset. A fault the ingredient
+  assertion *recorded* is dropped, as the specification says and
+  `c2patool` does — except when it names the active manifest, which no
+  ingredient assertion may speak for. **A store with more than one
+  manifest is no longer refused** (SPEC-013 amendment 5 lifted):
+  seventeen corpus files are measured now, sixteen with c2patool's
+  verdict exactly. Still refused by name: update manifests (`c2um`),
+  CAWG identity assertions, claims with redactions.
 - SPEC-020: the ingredient assertion (`c2pa.ingredient`, `.v2`, `.v3`)
   and the graph it draws over the manifest store — the walk from the
   active manifest with bounds and cycle detection,

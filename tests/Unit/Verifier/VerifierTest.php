@@ -383,7 +383,7 @@ it('AC10: the drift alarm: every recorded c2patool JSON, state and failures', fu
     expect($subsetOnly)->toBe($expected);
 })->group('SPEC-013');
 
-it('AC11: a store with more than one manifest is refused until M7', function (): void {
+it('AC11: a store with more than one manifest is measured like any other, its ingredient manifests validated (SPEC-021)', function (): void {
     $full = TrustSettings::fromJson((string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/trust/full.settings.json'));
     $verify = static function (string $name) use ($full): VerificationReport {
         $path = glob(dirname(__DIR__, 2)."/Fixtures/public-testfiles/{$name}.*")[0] ?? throw new RuntimeException("no file for {$name}");
@@ -395,17 +395,21 @@ it('AC11: a store with more than one manifest is refused until M7', function ():
         return json_decode((string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/c2patool/public-testfiles/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
     };
 
+    // SPEC-021 validates the manifests an ingredient assertion names, so these files are measured like
+    // any other: c2patool's state, and no refusal of our own (the criterion this replaced refused every
+    // multi-manifest store — SPEC-013 amendment 5, lifted).
     foreach (SPEC013_PUBLIC_MULTI as $name) {
         $report = $verify($name);
         $errors = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::GeneralError));
         $count = $report->store === null ? 0 : count($report->store->manifests);
         expect($count)->toBeGreaterThan(1, $name)
-            ->and($errors)->toHaveCount(1, $name)
-            ->and($errors[0]->url)->toBe('self#jumbf=/c2pa', $name)
-            ->and($errors[0]->explanation)->toContain((string) $count)
-            ->and($errors[0]->explanation)->toContain('M7')
-            ->and($report->result->checksPerformed)->toBe(['timestamp', 'signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash'], $name)   // every file of this list carries a timestamp
-            ->and($report->result->state)->toBe(ValidationState::Invalid, $name);
+            ->and($errors)->toBe([], $name)
+            // `ingredients` only where the graph reached a manifest: E-clm-CAICAI's one reference names a
+            // manifest that is not in the store (`contentbeef:…`), so there is nothing to validate
+            ->and($report->result->checksPerformed)->toBe($name === 'adobe-20220124-E-clm-CAICAI'
+                ? ['timestamp', 'signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash']
+                : ['timestamp', 'signature', 'certificate', 'trust', 'hashedUris', 'actions', 'ingredients', 'dataHash'], $name)
+            ->and($report->result->state->value)->toBe($c2patool($name)['validation_state'], $name);
     }
     $single = $verify('adobe-20220124-C');
     expect(array_filter($single->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::GeneralError))->toBe([])
@@ -419,8 +423,8 @@ it('AC11: a store with more than one manifest is refused until M7', function ():
         $report = $verify($name);
         $oracle = $c2patool($name);
         $expected = $oracle['validation_state'];
-        if (in_array($name, SPEC013_PUBLIC_MULTI, true) || in_array($name, SPEC013_PUBLIC_TSA_NOT_CONFIGURED, true)) {
-            $expected = 'Invalid';
+        if (in_array($name, SPEC013_PUBLIC_TSA_NOT_CONFIGURED, true)) {
+            $expected = 'Invalid';   // the Truepic files: their TSA is not configured, so the signer is judged at now
         }
         expect($report->result->state->value)->toBe($expected, $name);
         if (in_array($name, SPEC013_PUBLIC_TSA_NOT_CONFIGURED, true)) {
@@ -444,7 +448,10 @@ it('AC12: the oracle\'s own fixtures are a third drift alarm, and a CAWG identit
         $oracle = json_decode((string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/c2patool/c2pa-rs/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
         $report = $verify($name);
         $expected = $oracle['validation_state'];
-        $stricter = array_merge(SPEC013_RS_MULTI, SPEC013_RS_TSA_NOT_CONFIGURED, SPEC013_RS_REMOTE, SPEC013_RS_CAWG);
+        // SPEC-021 validates ingredient manifests; what stays stricter is the update manifest (a c2um
+        // box the JUMBF parser refuses until SPEC-022), the TSA-not-configured files, the remote one
+        // and CAWG
+        $stricter = array_merge(['update_manifest'], SPEC013_RS_TSA_NOT_CONFIGURED, SPEC013_RS_REMOTE, SPEC013_RS_CAWG);
         if (in_array($name, $stricter, true)) {
             $expected = 'Invalid';
         }

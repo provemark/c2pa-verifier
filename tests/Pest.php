@@ -57,6 +57,9 @@ const SPEC013_PUBLIC_CORPUS = [
     'adobe-20220124-E-sig-CA', 'adobe-20220124-E-uri-CA', 'adobe-20220124-E-uri-CIE-sig-CA', 'adobe-20220124-XCA', 'adobe-20220124-XCI',
     'nikon-20221019-building', 'truepic-20230212-camera', 'truepic-20230212-landscape', 'truepic-20230212-library',
 ];
+// SPEC-021 validates the manifests an ingredient assertion names, so a multi-manifest store is no
+// longer refused for being one; what stays in these lists is what is still refused or lenient by
+// name. The files themselves are now measured like any other (SPEC-021 AC3).
 const SPEC013_PUBLIC_MULTI = [
     'adobe-20220124-CACA', 'adobe-20220124-CACAICAICICA', 'adobe-20220124-CAIAIIICAICIICAIICICA', 'adobe-20220124-CAICA', 'adobe-20220124-CAICAI',
     'adobe-20220124-CICA', 'adobe-20220124-CICACACA', 'adobe-20220124-CIE-sig-CA', 'adobe-20220124-E-clm-CAICAI', 'adobe-20220124-E-uri-CIE-sig-CA',

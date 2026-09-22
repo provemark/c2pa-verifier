@@ -30,6 +30,7 @@ declare(strict_types=1);
 require __DIR__.'/../vendor/autoload.php';
 require __DIR__.'/variant-helpers.php';
 
+use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Cose\CoseSign1;
@@ -233,11 +234,12 @@ if (! is_dir($dir) && ! mkdir($dir, 0755, true)) {
 file_put_contents("{$dir}/throw-away-root.pem", $rootPem);
 $storeCfg = (string) file_get_contents($root.'/tests/Fixtures/trust/store.cfg');
 $full = json_decode((string) file_get_contents($root.'/tests/Fixtures/trust/full.settings.json'), true, 512, JSON_THROW_ON_ERROR);
-assert(is_array($full) && is_array($full['trust']));
+assert(is_array($full) && is_array($full['trust']) && is_string($full['trust']['trust_anchors']));
+$testAnchors = $full['trust']['trust_anchors'];
 // the throw-away root *and* the test hierarchy: the ingredient manifests of CACA are signed by the
 // C2PA test certificates, and only the fault under test may make a variant Invalid
 file_put_contents("{$dir}/throw-away-root.settings.json", json_encode([
-    'trust' => ['trust_anchors' => $rootPem.(string) $full['trust']['trust_anchors'], 'trust_config' => $storeCfg],
+    'trust' => ['trust_anchors' => $rootPem.$testAnchors, 'trust_config' => $storeCfg],
     'verify' => ['verify_trust' => true],
 ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
 
@@ -297,7 +299,9 @@ $edited[$flipAt] = chr(ord($edited[$flipAt]) ^ 0x01);
 // the referring activeManifest hash in the active manifest's c2pa.ingredient.v3 assertion
 $ingredientBoxHash = hash('sha256', substr($edited, $ingredient->box->offset + 8, $ingredient->box->length - 8), true);
 $assertionBox = $active->assertionStore->child('c2pa.ingredient.v3') ?? throw new RuntimeException('no c2pa.ingredient.v3 in the active manifest');
-$oldReference = $active->assertions['c2pa.ingredient.v3']->data['activeManifest']['hash']->bytes ?? throw new RuntimeException('no activeManifest hash');
+$ingredientData = $active->assertions['c2pa.ingredient.v3']->data;
+assert(is_array($ingredientData) && is_array($ingredientData['activeManifest']) && $ingredientData['activeManifest']['hash'] instanceof CborBytes);
+$oldReference = $ingredientData['activeManifest']['hash']->bytes;
 $at = strpos($edited, $oldReference, $assertionBox->offset);
 if ($at === false || $at > $assertionBox->offset + $assertionBox->length) {
     throw new RuntimeException('the activeManifest hash is not in the ingredient assertion box');
@@ -357,7 +361,11 @@ $app11 = static function (string $jpeg, string $store): string {
         if ($marker === 0xDA) {
             break;
         }
-        $length = (int) unpack('n', substr($jpeg, $p + 2, 2))[1];
+        $header = unpack('n', substr($jpeg, $p + 2, 2));
+        if ($header === false || ! is_int($header[1])) {
+            throw new RuntimeException("cannot read the segment length at {$p}");
+        }
+        $length = $header[1];
         if ($marker === 0xEB) {
             if ($first) {
                 $out = substr_replace($out, substr($store, 0, 8), $p + 4 + 8, 8);   // LBox and TBox

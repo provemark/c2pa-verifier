@@ -120,8 +120,11 @@ it('AC2: a matching box hash does not stand in for validating the manifest', fun
     expect($report->result->state)->toBe(ValidationState::Invalid)
         ->and($codes)->toContain('ingredient.manifest.validated')
         ->and($codes)->toContain('claimSignature.mismatch');
-    // one scope: the active manifest's ingredient assertion
-    expect(array_values(array_unique(array_map(static fn (ValidationStatus $s): string => (string) $s->ingredientUri, $scoped))))->toHaveCount(1);
+    // one scope for the validation statuses: the active manifest's ingredient assertion. (The graph's
+    // own `ingredient.unknownProvenance` for the ingredient manifest's parent is scoped to that
+    // manifest's assertion — SPEC-020's, and a second scope in the report.)
+    $validation = array_values(array_filter($scoped, static fn (ValidationStatus $s): bool => $s->code !== StatusCode::IngredientUnknownProvenance));
+    expect(array_values(array_unique(array_map(static fn (ValidationStatus $s): string => (string) $s->ingredientUri, $validation))))->toBe(['self#jumbf=/c2pa/urn:c2pa:fff4c43d-ffb0-4f23-bd0b-f47f1cf82057:contentauth/c2pa.assertions/c2pa.ingredient.v3']);
     // c2patool: the same two codes in the same delta, and the same state
     $oracle = spec020Oracle('ingredient-manifest/ingredient-signature-broken.json');
     $delta = spec020Deltas($oracle)[0];
@@ -142,7 +145,8 @@ it('AC3: every multi-manifest corpus file: the state and the failure codes are c
         $theirs = spec021OracleFailures($oracle);
         $ours = spec021Failures($report);
         if (in_array($name, $refused, true)) {
-            expect($ours)->toContain('general.error', $name);
+            // toContain() is variadic in Pest: a message would read as a second needle
+            expect(in_array('general.error', $ours, true))->toBeTrue("{$name}: no refusal");
             $checked++;
 
             continue;
@@ -246,7 +250,7 @@ it('AC7: the data hash never runs on an ingredient manifest', function (): void 
         ->and($dataHash[0]->url)->toContain($report->store?->active->label ?? 'x');
     // the ingredient manifest does carry a hard binding of its own — it binds *its* asset, not this file
     $store = Corpus::manifestStore('public-testfiles/adobe-20220124-CACA.jpg') ?? throw new RuntimeException('no store');
-    $ingredientLabel = array_key_first($store->manifests);
+    $ingredientLabel = (string) array_key_first($store->manifests);
     expect(array_key_exists('c2pa.hash.data', $store->manifests[$ingredientLabel]->assertions))->toBeTrue();
 })->group('SPEC-021');
 

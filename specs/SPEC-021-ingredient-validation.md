@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -376,7 +376,28 @@ instead, beside the orchestration that already holds those collaborators.
 
 ## Amendments
 
-(none yet)
+1. **2026-09-22, step 56b, measured** — AC2's "one scope" was written for
+   the variant and is wrong for the report: the *ingredient* manifest of
+   `CACA` has an ingredient assertion of its own, so SPEC-020's
+   `ingredient.unknownProvenance` gives the report a second delta. The
+   criterion holds for the statuses this spec adds, which is what it was
+   about; the test says so.
+2. **2026-09-22, step 56b, measured** — AC8's `checks_performed` list
+   holds `ingredients` only where the graph actually reached a manifest,
+   which the Scope already said: `adobe-20220124-E-clm-CAICAI` names a
+   manifest that is not in the store, so there is nothing to validate and
+   the key is absent. The criterion's example is narrowed to the files
+   that do reach one.
+3. **2026-09-22, step 56b, consequences in the existing alarms** — three
+   criteria of earlier specs had to change with this one, which AC3
+   foresaw for the first: SPEC-013 AC11 no longer expects a refusal for a
+   multi-manifest store (it expects c2patool's state and
+   `checks_performed` with `ingredients`), SPEC-013 AC12's "stricter"
+   list keeps only `update_manifest` of the `_MULTI` names, and SPEC-017's
+   test helper reads the **active** manifest's statuses only, since an
+   ingredient's timestamp is now checked too and its statuses are scoped.
+   The `_MULTI` lists in `tests/Pest.php` stay as the enumeration of
+   multi-manifest files, no longer as "expected `Invalid`".
 
 ## Traceability
 
@@ -385,4 +406,15 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
+| AC1 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC1 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`hash()`); src/Report/StatusCode.php |
+| AC2 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC2 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`check()`, `manifest()`) |
+| AC3 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC3 / SPEC-021; tests/Unit/Verifier/VerifierTest.php :: AC11, AC12 / SPEC-013 | src/Verifier/Verifier.php (the refusal of SPEC-013 amendment 5 removed) |
+| AC4 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC4 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`recorded()`, `drop()`) |
+| AC5 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC5 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`drop()`, the active-manifest guard) |
+| AC6 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC6 / SPEC-021 | src/Hash/HashedUriCheck.php (the redaction refusal, kept) |
+| AC7 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC7 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`manifest()`: no data hash) |
+| AC8 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC8 / SPEC-021 | src/Verifier/Verifier.php (`checks_performed`); src/Report/ValidationResult.php |
+| AC9 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC9 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`check()`: the first assertion that named it) |
+| AC10 | tests/Unit/Verifier/VerifierTest.php :: AC10–AC13 / SPEC-013; tests/Unit/Cli/CommandTest.php :: AC11 / SPEC-019; bin/fuzz.php | the whole verification path |
+
+`src/Verifier/IngredientManifestCheck.php` maps to this spec; `StatusCode`'s two new cases are its. Measured 2026-09-22: 7 red (2 already true) → 9 green, `composer check` exit 0, 336 tests, 312 fuzz runs with no fault.

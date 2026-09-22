@@ -119,7 +119,7 @@ it('AC6: E-clm-CAICAI: ingredient.manifest.missing with the bare label, scoped, 
     expect($missing)->toHaveCount(1)
         ->and($missing[0]->url)->toBe('contentbeef:urn:uuid:8bb8ad50-ef2f-4f75-b709-a0e302d58019')
         ->and($missing[0]->ingredientUri)->toBe('self#jumbf=/c2pa/contentauth:urn:uuid:a4ec0a2e-2a4a-4652-bede-762c0362b236/c2pa.assertions/c2pa.ingredient__1')
-        ->and($refusals)->toHaveCount(1)
+        ->and($refusals)->toBe([])   // SPEC-021 lifted the multi-manifest refusal: the file is Invalid on its own merits now
         ->and($report->result->state)->toBe(ValidationState::Invalid);
     $array = $report->toArray();
     $codes = array_column(spec020Failures($array), 'code');

@@ -402,7 +402,7 @@ it('AC9: M5\'s "done when": with and without the trust file, the verdicts are c2
 
 it('AC10: the codes are verbatim, and the drift alarm grows', function (): void {
     $values = array_map(static fn (StatusCode $c): string => $c->value, StatusCode::cases());
-    expect($values)->toHaveCount(34)   // SPEC-017 added the six timeStamp codes, SPEC-018 assertion.action.malformed, SPEC-020 the three ingredient codes
+    expect($values)->toHaveCount(36)   // SPEC-017 the six timeStamp codes, SPEC-018 assertion.action.malformed, SPEC-020 three ingredient codes, SPEC-021 two more
         ->and($values)->toContain('signingCredential.expired')
         ->and(StatusCode::SigningCredentialExpired->isFailure())->toBeTrue();
 

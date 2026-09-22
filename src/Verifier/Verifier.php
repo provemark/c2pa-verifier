@@ -66,6 +66,7 @@ final readonly class Verifier
         private TimestampCheck $timestamp = new TimestampCheck,
         private RemoteManifestDetector $remote = new RemoteManifestDetector,
         private ActionsCheck $actions = new ActionsCheck,
+        private IngredientManifestCheck $ingredients = new IngredientManifestCheck,
     ) {}
 
     /**
@@ -121,17 +122,13 @@ final readonly class Verifier
             $graph = ManifestGraph::fromStore($manifestStore);
             $graphStatuses = $graph->statuses;
         } catch (ManifestException $e) {
+            $graph = null;
             $graphStatuses = [new ValidationStatus($e->status, $e->url ?? self::STORE_URL, $e->getMessage())];
         }
 
         $timestamp = $this->timestamp->check($manifestStore->active, $settings);
-        $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp, $graphStatuses);
-        // until M7 validates ingredient manifests, a store with more than one is refused: the
-        // fault may sit in a manifest this verifier has not looked at (SPEC-013 amendment 5)
+        $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp, $graphStatuses, $graph);
         $refusals = [];
-        if (count($manifestStore->manifests) > 1) {
-            $refusals[] = new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('the store holds %d manifests; ingredient manifests are not validated before M7, and a fault in one of them would not be seen — refused until then', count($manifestStore->manifests)));
-        }
         // a CAWG identity assertion carries a credential of its own that c2pa-rs validates; this verifier
         // does not yet, and will not call Trusted what it has not looked at (SPEC-013 amendment 7)
         foreach (array_keys($manifestStore->active->assertions) as $label) {
@@ -190,8 +187,9 @@ final readonly class Verifier
      *
      * @param  resource  $stream
      * @param  list<ValidationStatus>  $graphStatuses  the ingredient graph's, each scoped (SPEC-020)
+     * @param  ManifestGraph|null  $graph  null when the graph could not be built (a bound was exceeded)
      */
-    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings, TimestampResult $timestamp, array $graphStatuses): ValidationResult
+    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings, TimestampResult $timestamp, array $graphStatuses, ?ManifestGraph $graph): ValidationResult
     {
         $manifest = $manifestStore->active;
         // the timestamp first, as c2patool lists it; informational only, but it supplies the time below (SPEC-017)
@@ -238,6 +236,13 @@ final readonly class Verifier
         }
         $statuses = [...$statuses, ...$this->actions->check($manifest, $unreadable)];
         $checks[] = 'actions';
+
+        // the manifests the graph found: their box hash and everything the active manifest gets
+        // except the data hash, scoped to the assertion that named them (SPEC-021)
+        if ($graph !== null && $graph->referenced !== []) {
+            $statuses = [...$statuses, ...$this->ingredients->check($manifestStore, $graph, $settings)];
+            $checks[] = 'ingredients';
+        }
 
         // the data hash runs unless the claim declares a c2pa.hash.data whose hashed URI failed — then the
         // assertion is not what the signer saw and hashedURI.mismatch already refuses the file. With no

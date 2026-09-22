@@ -47,6 +47,8 @@ enum StatusCode: string
     case TimeStampMismatch = 'timeStamp.mismatch';
     case TimeStampOutsideValidity = 'timeStamp.outsideValidity';
     case TimeStampUntrusted = 'timeStamp.untrusted';
+    case IngredientManifestValidated = 'ingredient.manifest.validated';
+    case IngredientManifestMismatch = 'ingredient.manifest.mismatch';
     case IngredientManifestMissing = 'ingredient.manifest.missing';
     case IngredientUnknownProvenance = 'ingredient.unknownProvenance';
     case AssertionIngredientMalformed = 'assertion.ingredient.malformed';
@@ -55,7 +57,8 @@ enum StatusCode: string
     public function isSuccess(): bool
     {
         return $this === self::ClaimSignatureValidated || $this === self::AssertionHashedUriMatch || $this === self::AssertionDataHashMatch || $this === self::SigningCredentialTrusted
-            || $this === self::TimeStampValidated || $this === self::TimeStampTrusted;
+            || $this === self::TimeStampValidated || $this === self::TimeStampTrusted
+            || $this === self::IngredientManifestValidated;   // SPEC-021: the ingredient's manifest box hashed as recorded
     }
 
     public function isInformational(): bool

@@ -78,6 +78,9 @@ function spec017OracleCodes(array $oracle, string $list): array
 function spec017Codes(VerificationReport|TimestampResult $report): array
 {
     $statuses = $report instanceof VerificationReport ? $report->result->statuses : $report->statuses;
+    // the active manifest's own: since SPEC-021 an ingredient manifest's timestamp is checked too, and
+    // its statuses are scoped to the assertion that named it — they are that spec's subject, not this one's
+    $statuses = array_values(array_filter($statuses, static fn (ValidationStatus $s): bool => $s->ingredientUri === null));
 
     return array_map(static fn (ValidationStatus $s): string => $s->code->value, $statuses);
 }

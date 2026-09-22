@@ -3315,3 +3315,22 @@ README are where the disclosure lives.
   assertion now guards it. Reasoned: the hash-mismatch case through the
   seam (no writer ships one), AC5 tested at the seam and on the file.
 - Decided by Maurice: start 56a.
+
+## 2026-09-22 — Step 56b: the ingredient manifests validated; SPEC-021 implemented
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 56b".
+- Produced: `src/Verifier/IngredientManifestCheck.php`, two `StatusCode`
+  cases, `ingredients` in `checks_performed`, the multi-manifest refusal
+  removed from `Verifier`; SPEC-021 → `implemented` (Traceability,
+  amendments 1–3), SPEC-013 amendment 11 (amendment 5 lifted); five
+  existing criteria updated (SPEC-013 AC11/AC12, SPEC-017's helper, the
+  enum count, SPEC-020 AC6); the 56b half of the note, CHANGELOG,
+  `docs/comparison.md`, the milestones and NOTES rows; this entry.
+- Measured: 7 red → 9 green; `composer check` exit 0, 336 tests;
+  `bin/fuzz.php 20260922 3` — 312 runs, 0 faults, one survivor that
+  c2patool also calls `Trusted`. Seventeen multi-manifest files are
+  measured instead of refused; sixteen verdicts equal c2patool's, the
+  two others (`ocsp`, `ocsp_with_assertion`) by the named TSA leniency.
+  Two approved test literals were wrong and were corrected against the
+  files. Reasoned: the check belongs in the Verifier layer (Deptrac).
+- Decided by Maurice: go ahead with 56b.
