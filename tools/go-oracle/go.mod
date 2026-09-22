@@ -1,0 +1,12 @@
+module oracle
+
+go 1.26.0
+
+require github.com/richardwooding/c2pa v0.22.0
+
+require (
+	github.com/fxamacker/cbor/v2 v2.9.3 // indirect
+	github.com/veraison/go-cose v1.3.0 // indirect
+	github.com/x448/float16 v0.8.4 // indirect
+	golang.org/x/crypto v0.56.0 // indirect
+)

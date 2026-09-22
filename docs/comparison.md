@@ -38,6 +38,19 @@ two others by the TSA leniency below) — on every corpus file that is not in an
 own variant, the state and the failure codes with their URLs are
 `c2patool`'s. Nothing is more lenient.
 
+## Where a second implementation disagrees
+
+Measured on 2026-09-22 (step 61) by running `richardwooding/c2pa`
+v0.22.0 — an independently written pure-Go verifier — over the same 257
+files with the same trust anchors.
+
+| what | here and at `c2patool` | the Go verifier |
+|---|---|---|
+| A signer whose KeyUsage is `nonRepudiation` alone | `Trusted` (`c2pa-rs`'s rule, mirrored by SPEC-015 on the maintainer's decision) | `signingCredential.invalid` |
+| A signer whose EKU is the C2PA signing OID `1.3.6.1.4.1.62558.2.1` | `Trusted` (the OID is on `c2pa-rs`'s accepted list) | `signingCredential.invalid` |
+| `c2pa-rs/update_manifest.jpg`: the stale exclusion of a binding written before an update manifest was appended (C2PA 2.4 §15.12.1.1) | `assertion.dataHash.match` — and the digest the assertion records matches the *adjusted* exclusion, measured both ways | `assertion.dataHash.mismatch` |
+| Thirteen container-, JUMBF- and claim-level malformations this verifier refuses (`png/crc-wrong`, `jumbf/root-label`, …) | refused here, accepted by `c2patool` | accepted |
+
 ## Where this verifier differs by design
 
 | difference | why | where named |

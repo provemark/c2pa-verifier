@@ -3578,3 +3578,30 @@ README are where the disclosure lives.
   `35735714668` on `531c53c`: conclusion `success`; `composer check` on
   PHP 8.3 / 8.4 / 8.5 each `success`, 353 passed. Reasoned: nothing.
 - Decided by Maurice: push.
+
+## 2026-09-22 — Step 61: a second, independent oracle
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met de Go-verifier als tweede oracle".
+- Produced: `tools/go-oracle/` (a dozen lines around `c2pa.Validate`,
+  its go.mod/go.sum and a README), `notes/step-61-second-oracle.md`, a
+  new section in `docs/comparison.md`, the milestones and NOTES rows;
+  this entry. No product code changed.
+- Measured: 257 files (92 corpus + matrix, 165 variants) through
+  `richardwooding/c2pa` v0.22.0 in a `golang:1.26` container, each with
+  the same trust anchors this verifier was given. Results: the Go
+  verifier reports `assertion.dataHash.mismatch` on
+  `c2pa-rs/update_manifest.jpg`, where hashing the file both ways shows
+  the recorded digest matches the exclusion **adjusted** to the store's
+  current range (C2PA 2.4 §15.12.1.1) — a false `Invalid` of theirs;
+  thirteen files this verifier refuses are accepted by both other
+  implementations (strictness already named in SPEC-001/002/003/005/007);
+  two profile variants (`no-digital-signature`, `eku-c2pa`) are refused
+  by the Go verifier and `Trusted` here and at c2patool, both by the
+  maintainer's step-33 decision to mirror c2pa-rs. **No file where
+  another implementation found a fault this verifier missed.** A first
+  run showed ten more differences that were nothing but
+  `signingCredential.untrusted` from passing the wrong anchors file;
+  re-run per family, they disappeared. Reasoned: that the Go mismatch is
+  a bug rather than a reading — the digest decides.
+- Decided by Maurice: run the second oracle. Open for him: whether to
+  report the finding to that project.
