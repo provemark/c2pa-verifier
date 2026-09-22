@@ -156,7 +156,7 @@ because every later measurement is easier with it.
 
 | Step | What | Status |
 |---|---|---|
-| SPEC-019 | The command line: `bin/c2pa-verify <file> [--settings <path>]` — `VerificationReport::toJson()` plus one newline on stdout, `Error: …` on stderr, exit 0 (Trusted/Valid) / 1 (Invalid, report still printed) / 2 (no report: usage, unreadable file, unreadable or invalid settings); a thin `Cli\Command::run()` around the public API, the executable a shim; c2patool's exit status measured and departed from in two rows (Invalid exits 0 there; a missing settings file is ignored there) — both fail-open, so not copied | draft 2026-09-22 |
+| SPEC-019 | The command line: `bin/c2pa-verify <file> [--settings <path>]` — `VerificationReport::toJson()` plus one newline on stdout, `Error: …` on stderr, exit 0 (Trusted/Valid) / 1 (Invalid, report still printed) / 2 (no report: usage, unreadable file, unreadable or invalid settings); a thin `Cli\Command::run()` around the public API, the executable a shim; c2patool's exit status measured and departed from in two rows (Invalid exits 0 there; a missing settings file is ignored there) — both fail-open, so not copied | approved 2026-09-22 |
 
 ## After M0
 

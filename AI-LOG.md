@@ -3103,3 +3103,12 @@ README are where the disclosure lives.
   c2patool's" was reasoned and wrong, corrected in the spec's Problem.
 - Decided by Maurice: SPEC-019 as a draft; **M7 (ingredient manifests)
   before the repository goes public**.
+
+## 2026-09-22 — SPEC-019 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: SPEC-019 status `approved`, the milestones row; this entry.
+- Measured: `bin/spec-check.php` OK. Reasoned: nothing.
+- Decided by Maurice: SPEC-019 approved as drafted — the exit status
+  carries the verdict (0 / 1 / 2) and an unreadable settings file is a
+  refusal, both departures from c2patool.
