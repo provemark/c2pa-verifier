@@ -2896,3 +2896,15 @@ README are where the disclosure lives.
   fuzzing (no writer omits the binding), and the corpus-policy lesson.
 - Decided by Maurice: start step 47.
 
+
+## 2026-09-22 — CI green on steps 46–47
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `358b86f..9dd90e2` (three commits); this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`, no
+  PEM private-key header under the fixtures, visibility `PRIVATE`, tree
+  clean, Deptrac 0 violations. Run `35708908130` on `9dd90e2`:
+  conclusion `success`; `composer check` on PHP 8.3 / 8.4 / 8.5 each
+  `success` with `Tests: 295 passed` (3502 assertions on 8.3, 3504 on
+  8.4/8.5); `all green` `success`.
+- Decided by Maurice: push.
