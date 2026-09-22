@@ -4691,3 +4691,15 @@ README are where the disclosure lives.
   finds `Verifier` and not this class concludes fragmented streams are
   unsupported, which the README's Public API table and
   `docs/comparison.md` have to prevent. Still open: approval of the spec.
+
+## 2026-09-22 — SPEC-028 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: `specs/SPEC-028-fragmented-bmff.md` status `draft` →
+  `approved`, the Approved field filled; `docs/milestones.md` updated.
+- Measured: `php bin/spec-check.php` OK, 29 specs, SPEC-028 reported
+  `approved`. Reasoned: nothing.
+- Decided by Maurice: approval of SPEC-028. Implementation may now begin,
+  tests first — and the red phase owes one measurement before AC4 can be
+  asserted: what c2patool says about a fragment of one stream offered
+  inside another.
