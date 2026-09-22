@@ -217,7 +217,10 @@ final readonly class ActionsCheck
      */
     public function check(Manifest $manifest, array $unreadable = []): array;
 
-    /** The seam: one decoded actions assertion, as claim $version. @return list<string> faults */
+    /** The seam for AC4: the ordered actions assertions (created first, then gathered) as check() collects them. @param list<array{url: string, data: mixed}> $actions @return list<ValidationStatus> */
+    public function checkAssertions(string $manifestUrl, int $version, array $actions): array;
+
+    /** The seam for AC6: one decoded actions assertion, as claim $version. @return list<string> faults */
     public function checkData(mixed $data, int $version): array;
 }
 
@@ -240,7 +243,7 @@ final readonly class ActionsCheck
 
 ## Amendments
 
-*(none yet)*
+1. **2026-09-22, step 49a, measured before the tests** — (a) c2patool does not put the empty-list fault on any url: `actions-empty.png` makes it exit 1 with "validation rule was violated: No Action array in Actions" and no report (`tests/Fixtures/c2patool/absence/actions-empty.stderr.txt`); AC3's second half keeps the assertion's url for this verifier's `assertion.action.malformed`, as the spec proposed, with the oracle's refusal as the equality. (b) No signed v1 fixture can be made from the v2 PNG fixture without rewriting its claim, so AC4's v1 half runs through a seam: `ActionsCheck::checkAssertions(string $manifestUrl, int $version, list<array{url: string, data: mixed}> $actions)` — the ordered actions assertions (created list first, then gathered) as `check()` collects them from a `Manifest`; `check()` is that collection plus this call. (c) `actions-first-edited.png` measured: c2patool `Invalid`, `assertion.action.malformed` on the manifest's url, "first action must be created or opened" — AC3's first half as written.
 
 ## Traceability
 

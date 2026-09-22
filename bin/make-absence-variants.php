@@ -19,6 +19,8 @@ declare(strict_types=1);
  *   no-thumbnail         the thumbnail box and its entry removed — the control: nothing requires a thumbnail
  *   hash-data-gathered   nothing removed; hash.data moved from created_assertions to gathered_assertions, actions moved to created
  *   created-empty        nothing removed; created_assertions = [], every entry in gathered_assertions
+ *   actions-first-edited the actions assertion's first action rewritten to c2pa.edited (SPEC-018 AC3)
+ *   actions-empty        the actions assertion's `actions` list emptied (SPEC-018 AC3)
  *
  * Usage: php bin/make-absence-variants.php <scratch-dir>. Tooling.
  */
@@ -199,6 +201,21 @@ function rebind(string $store, string $png, int $shift, int $hashDataBox, int $c
     return bReplace($store, $claimHash, substr($store, $claimHash, 32), $uri);
 }
 
+/** The claim's hashed URI for the assertion box at $box recomputed (sha256 over the box minus its 8-byte header, §8.4.2.3). */
+function rehashEntry(string $store, int $box, int $claimAt, string $label): string
+{
+    $boxLength = bU32($store, $box);
+    $uri = hash('sha256', substr($store, $box + 8, $boxLength - 8), true);
+    $claim = bMapPairs($store, $claimAt);
+    $entry = entryFor($store, $claim['created_assertions'][1], $label) ?? entryFor($store, $claim['gathered_assertions'][1], $label);
+    if ($entry === null) {
+        throw new RuntimeException("no {$label} entry in the claim");
+    }
+    $claimHash = bMapPairs($store, $entry)['hash'][1] + 2;
+
+    return bReplace($store, $claimHash, substr($store, $claimHash, 32), $uri);
+}
+
 /**
  * The store with the claim lists rewritten and the named boxes removed (later edits first).
  *
@@ -236,6 +253,27 @@ $variants = [
     'hash-data-gathered' => editWith($s, $createdStart, $createdEnd, $gatheredStart, $gatheredEnd, $claimBox, $storeBox, $list($actionsEntry), $list($thumbEntry, $hashDataEntry), []),
     'created-empty' => editWith($s, $createdStart, $createdEnd, $gatheredStart, $gatheredEnd, $claimBox, $storeBox, "\x80", $list($thumbEntry, $actionsEntry, $hashDataEntry), []),
 ];
+
+// ---- the actions assertion's content (SPEC-018 AC3): the cbor box at ACTIONS_BOX + 73, its payload at + 81 ----
+$actionsCbor = $ACTIONS_BOX + 73;
+$actionsPayload = $ACTIONS_BOX + 81;
+$actionsBoxes = [0, 38, 117, $ACTIONS_BOX, $actionsCbor];
+if (substr($s, $actionsCbor + 4, 4) !== 'cbor' || substr($s, $actionsPayload, 9) !== "\xa1\x67actions") {
+    throw new RuntimeException('the actions assertion is not laid out as step 09 measured');
+}
+$firstAction = strpos($s, "\x6cc2pa.created", $actionsPayload);   // the text "c2pa.created" (12 chars) after `action`
+$actionsList = $actionsPayload + 9;                                 // 81 a2 …
+if ($firstAction === false || $firstAction > $ACTIONS_BOX + 195 || $s[$actionsList] !== "\x81") {
+    throw new RuntimeException('the actions list is not the one-entry list measured');
+}
+$listEnd = bCborEnd($s, $actionsList);
+foreach ([
+    'actions-first-edited' => [bSplice($s, $firstAction, 13, "\x6bc2pa.edited", $actionsBoxes), 1],
+    'actions-empty' => [bSplice($s, $actionsList, $listEnd - $actionsList, "\x80", $actionsBoxes), $listEnd - $actionsList - 1],
+] as $name => [$edited, $shrunk]) {
+    $edited = rehashEntry($edited, $ACTIONS_BOX, $CLAIM - $shrunk, 'c2pa.actions.v2');
+    $variants[$name] = rebind($edited, $png, $shrunk, $HASH_DATA_BOX, $CLAIM);
+}
 
 // ---- the throw-away hierarchy: a P-256 root and a leaf on the C2PA profile ----
 $cnf = <<<'CNF'

@@ -2956,3 +2956,24 @@ README are where the disclosure lives.
 - Measured: `bin/spec-check.php` OK. Reasoned: nothing new.
 - Decided by Maurice: SPEC-018 approved as drafted.
 
+## 2026-09-22 — Step 49a: the SPEC-018 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 49a".
+- Produced: `bin/make-absence-variants.php` extended (two content
+  variants, `rehashEntry()`); `tests/Fixtures/absence/actions-first-edited.*`,
+  `actions-empty.*` and the regenerated six with their root; c2patool's
+  JSON/stderr under `tests/Fixtures/c2patool/absence/`; README rows;
+  `tests/Unit/Manifest/ActionsCheckTest.php` (six tests); SPEC-018
+  amendment 1 and the `checkAssertions()` seam in its API sketch;
+  `notes/step-49-actions-check.md`; rows in `NOTES.md` and
+  `docs/milestones.md`; this entry.
+- Measured: the six variants built (keys deleted, no PEM private-key
+  header under the fixtures); c2patool on each with and without the root
+  (`actions-first-edited` `Invalid` on the manifest url; `actions-empty`
+  exit 1 "No Action array in Actions"); this verifier `Valid`/`Trusted`
+  on both; `vendor/bin/pest --group=SPEC-018` → 6 failed, AC1 on the
+  verdict (`Valid` ≠ `Invalid`), the rest on the missing enum case and
+  class; the whole suite 295 passed beside them; Pint clean. Reasoned:
+  why no signed v1 variant can come from the v2 fixture.
+- Decided by Maurice: start 49a.
+

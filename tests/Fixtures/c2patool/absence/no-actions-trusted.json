@@ -20,7 +20,7 @@
         "alg": "Es256",
         "issuer": "C2PA Verifier throw-away hierarchy",
         "common_name": "no hard binding",
-        "cert_serial_number": "614663"
+        "cert_serial_number": "896479"
       },
       "label": "urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0",
       "claim_version": 2
