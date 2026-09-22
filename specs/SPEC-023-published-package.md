@@ -174,6 +174,10 @@ real archive and belong in a test that builds one.
 
 ## Open questions
 
+Both blockers were decided on 2026-09-22, the day the draft was written;
+the answers are recorded in place below rather than removed, so that the
+reasoning that led to them stays readable.
+
 1. **Shelling out to `git` from a test.** AC2, AC3, AC5 and AC6 need the
    archive Composer would fetch, and only `git archive` produces it;
    re-implementing it in PHP would be a second truth of exactly the kind
@@ -181,8 +185,12 @@ real archive and belong in a test that builds one.
    path, not the tooling — `bin/fuzz.php` and the fixture builders already
    run outside it — but this is the first time a *test* would do it. The
    proposal is to allow it in this spec's tests only, named here, with the
-   test skipping itself when `git` is not on the path. **Blocker: the
-   maintainer decides before the tests are written.**
+   test skipping itself when `git` is not on the path. **Decided by
+   Maurice van Loon, 2026-09-22: yes.** A test in this spec's group may
+   invoke `git`; no other test may, and nothing in `src/` ever may. The
+   rule against `exec` is unchanged where it counts — the verification
+   path — and this exception is written here so that a reader who finds
+   `exec` in a test knows it was a decision and where it was taken.
 2. **Reading the tar.** `PharData` is core and needs no dependency;
    extracting with the `tar` binary is one more `exec`. Proposal:
    `PharData`, and `ext-phar` named in `require-dev`. Non-blocker.
@@ -194,7 +202,10 @@ real archive and belong in a test that builds one.
    should instead be lean — `src/`, `bin/`, `composer.json`, `LICENSE`,
    `README.md` and nothing else — then AC4 becomes "the shipped markdown has
    no relative links at all" and AC5 needs another home for the disclosure.
-   **Blocker: it decides what this spec is about.**
+   **Decided by Maurice van Loon, 2026-09-22: they ship.** The package
+   carries its own record — `docs/`, `specs/`, `notes/` and `AI-LOG.md`
+   travel with the code, and AC4 and AC5 stand as written. The cost is
+   measured and small: under 2 MB in all, against 500 kB of source.
 
 ## Traceability
 

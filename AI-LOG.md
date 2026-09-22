@@ -3681,3 +3681,19 @@ README are where the disclosure lives.
   two blocking questions in the spec — whether a test may shell out to
   `git` for the real archive, and whether `specs/` and `notes/` ship at
   all, which decides what AC4 and AC5 mean.
+
+## 2026-09-22 — SPEC-023's two blocking questions answered
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en ja op allebei" — push the draft and answer both
+  blocking open questions with yes.
+- Produced: pushed `dc298b9`; recorded both decisions in place in
+  `specs/SPEC-023-published-package.md` and in `docs/milestones.md`.
+- Measured: `php bin/spec-check.php` OK, 24 specs, SPEC-023 still
+  `draft`. Reasoned: nothing — this entry records decisions, not
+  findings.
+- Decided by Maurice: (1) a test in SPEC-023's group may invoke `git`,
+  because only `git archive` produces the archive Composer fetches and
+  re-implementing it would be a second truth; no other test may, and
+  nothing in `src/` ever may. (2) `docs/`, `specs/`, `notes/` and
+  `AI-LOG.md` ship with the package, so AC4 and AC5 stand as written.
+  Still open: approval of the spec itself.
