@@ -3380,3 +3380,26 @@ README are where the disclosure lives.
 - Decided by Maurice: SPEC-022 approved as drafted — `c2um` read, the
   §11.2.3 rules, the binding through the `parentOf` chain and the
   §15.12.1.1 exclusion adjustment with the cover rule kept over it.
+
+## 2026-09-22 — Step 57a: the SPEC-022 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "begin met 57a".
+- Produced: `bin/make-update-manifest-variants.php`,
+  `tests/Fixtures/update-manifest/` (6 variants + throw-away root +
+  settings + README), `tests/Fixtures/c2patool/update-manifest/`
+  (3 JSON, 3 stderr, README),
+  `tests/Unit/Verifier/UpdateManifestTest.php` (9 tests),
+  `notes/step-57-update-manifests.md`, the milestones and NOTES rows;
+  this entry.
+- Measured: c2patool on the six variants — `manifest.update.invalid` for
+  a disallowed action, `assertion.dataHash.mismatch` for a byte outside
+  the store, `manifest.multipleParents` for two parents, and three hard
+  exits without JSON ("assertion missing", "claim missing hard binding"
+  ×2); this verifier says `general.error` on the five JPEG variants (the
+  `c2um` refusal) and **`Trusted`** on the two-parent PNG — a leniency
+  AC6 closes. `pest --group=SPEC-022`: 9 failed, each for its own
+  reason. The APP11 writer asserts a byte-exact round trip before
+  writing. Reasoned: AC4's fourth rule and AC4(c)'s relationship value
+  are tested differently than the approved text says (the claim's CBOR
+  uses indefinite lengths) — both for the amendment list.
+- Decided by Maurice: start 57a.
