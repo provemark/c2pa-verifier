@@ -4455,3 +4455,31 @@ README are where the disclosure lives.
   tests first — and the red phase must build a file whose first top-level
   box is included, because that is what tells the measured marker rule
   apart from its alternative.
+
+## 2026-09-22 — Step 78a, the SPEC-027 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 78a" — the red phase of SPEC-027.
+- Produced: `tests/Unit/Hash/BmffHashCheckTest.php` (7 tests, group
+  SPEC-027), `bin/make-bmff-variants.php` with three variants under
+  `tests/Fixtures/bmff/` and their c2patool JSON,
+  `notes/step-78-bmff-hash-tests.md`, `NOTES.md`, `docs/milestones.md`.
+- Measured: the spec's blocking question. `ftyp` must be the first box of
+  a valid ISOBMFF file and `/ftyp` is in every exclusion list c2patool
+  writes, so no file it produces can have an included first box. Replacing
+  the four bytes `ftyp` inside the assertion's exclusion path with `zzzz`
+  — every CBOR length unchanged — leaves an exclusion matching no box, and
+  the instrumented c2pa-rs of step 77 then printed `marker offset=0`
+  followed by `range 0..=31`. So a marker precedes **every** included
+  top-level box, the first included. AC1 and AC3 stand; no amendment.
+  c2patool on the three variants: `assertion.bmffHash.mismatch` on each,
+  with `assertion.hashedURI.mismatch` beside it on `xpath-nested`. Pest 7
+  failed / 390 passed; PHPStan 21 errors from the missing class and the
+  missing status code; Pint and spec-check clean.
+- Reasoned: that `box-moved` is the criterion the marker code exists for —
+  delete the markers and every other criterion here still passes — which
+  is why the test asserts the hashed bytes are byte-for-byte identical
+  before it asserts anything about a verdict. And that `Hash` is the only
+  layer without an exception of its own, so 78b adds `HashException`
+  marked `@internal`, named here rather than appearing in a diff.
+- Decided by Maurice: approval of SPEC-027. Open for him: nothing new;
+  78b implements.
