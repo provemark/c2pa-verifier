@@ -4616,3 +4616,34 @@ README are where the disclosure lives.
 - Decided by Maurice: push, and both amendments confirmed. Open for him:
   the fragmented BMFF case, which is all that stands between M8 and
   closed; the version number of a first tag; and the visibility change.
+
+## 2026-09-22 — Step 82, fragmented BMFF measured
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "doe het gefragmenteerde geval".
+- Produced: `tests/Fixtures/bmff-fragmented/` (an init segment and five
+  fragments, 40 kB, with the commands that made them),
+  `notes/step-82-fragmented-bmff.md`, `NOTES.md`, `docs/milestones.md`.
+  Nothing in `src/` changed; the stream is still refused by name.
+- Measured: no reachable repository holds a fragmented C2PA stream, so
+  two were built with `ffmpeg` 8.0 and `c2patool fragment` from this
+  repository's own `fixture-unsigned.mp4` — one of five fragments, one of
+  seven. A signed init carries `purpose: manifest` and an assertion with
+  **no `hash`** but a `merkle` list
+  (`{uniqueId, localId, count, alg, initHash, hashes}`); each fragment
+  carries its own C2PA box with `purpose: merkle`
+  (`{uniqueId, localId, location, hashes}`). `initHash` is the ordinary
+  v3 digest of step 77 applied to the init segment — reproduced exactly.
+  A fragment's leaf hash is that same digest applied to the fragment with
+  the same exclusion list — reproduced exactly. The tree puts the largest
+  power of two smaller than the leaf count on the left and the rest on
+  the right, with `sha256(left ‖ right)`; all five proofs of the first
+  stream and all seven of the second reach the recorded root.
+- Reasoned: that the seven-fragment stream earned its cost. The obvious
+  rule — consume the bits of `location` from the least significant end —
+  verifies four of the five leaves in the first stream and fails the
+  fifth, the lone leaf one level up. Measuring one stream would have
+  produced a rule that is right four times out of five, which is the most
+  dangerous kind of wrong. Also: a fragmented stream is **more than one
+  file**, and nothing in this verifier's public API has anywhere to put
+  that — a bigger question than the hash, and one for the spec's scope.
+- Decided by Maurice: to do the fragmented case. Open for him: the spec.
