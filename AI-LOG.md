@@ -4119,3 +4119,16 @@ README are where the disclosure lives.
   the seven exceptions as `@internal`. Open for him: where the contract
   text lives long-term, whether `Cli\Command` belongs in it, the version
   number of a first tag, and confirmation of amendment 1.
+
+## 2026-09-22 — CI on step 70
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar" — push SPEC-025's approval, red tests and
+  implementation.
+- Produced: pushed `f2f24bb`, `19ce950` and `92f52a4` to `origin/main`.
+- Measured: the pre-push checks — attribution 0, private-key patterns 0,
+  repository PRIVATE, tree clean. CI run 35752965247: success on PHP 8.3,
+  8.4 and 8.5, 381 passed. Reasoned: nothing.
+- Decided by Maurice: push. Open for him: confirmation of SPEC-025
+  amendment 1, the version number of a first tag, where the contract text
+  lives long-term, whether `Cli\Command` belongs in it, and the
+  visibility change.
