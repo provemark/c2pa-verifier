@@ -399,6 +399,16 @@ instead, beside the orchestration that already holds those collaborators.
    The `_MULTI` lists in `tests/Pest.php` stay as the enumeration of
    multi-manifest files, no longer as "expected `Invalid`".
 
+4. **2026-09-22, step 57b, measured on `update_manifest.jpg` (SPEC-022
+   amendment 5)** — the drop set is the union of what **every** ingredient
+   assertion in the store recorded, not only the assertion a status was
+   found under, and it covers the graph's scoped statuses (SPEC-020's
+   `ingredient.unknownProvenance` and friends) as well as this spec's. A
+   v3 assertion records the whole tree it validated, so c2patool drops a
+   parent's statuses on the strength of the active manifest's record.
+   `IngredientManifestCheck::recordedInStore()`; the active-manifest guard
+   is unchanged.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

@@ -45,7 +45,7 @@ final readonly class DataHashCheck
      * @param  resource  $stream  the asset, readable and seekable
      * @return list<ValidationStatus>
      */
-    public function check(Manifest $manifest, $stream, ManifestStoreBytes $store): array
+    public function check(Manifest $manifest, $stream, ManifestStoreBytes $store, bool $adjustForUpdate = false): array
     {
         $manifestUrl = sprintf('self#jumbf=/c2pa/%s', $manifest->label);
 
@@ -124,6 +124,30 @@ final readonly class DataHashCheck
         }
         if (strlen($expected) !== self::ALGORITHMS[$alg]) {
             return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('%s carries a %d-byte hash, but %s produces %d bytes', self::LABEL, strlen($expected), $alg, self::ALGORITHMS[$alg]))];
+        }
+
+        // ---- the store grew under an update manifest (§15.12.1.1) ----
+        // The binding was written before the update manifest was appended, so the exclusion that starts
+        // where the store starts is short by exactly what was added. The specification says to treat it
+        // as the store's *current* length and to move every later exclusion by the difference. The
+        // adjustment is never trusted on its own: the cover rule below still has to hold afterwards, so
+        // it can widen an exclusion to the store and never past it.
+        if ($adjustForUpdate && $store->ranges !== []) {
+            $first = $store->ranges[0];
+            $adjust = 0;
+            foreach ($exclusions as $i => $range) {
+                if ($range['start'] === $first['start']) {
+                    $adjust = $first['length'] - $range['length'];
+                    $exclusions[$i] = $first;
+                }
+            }
+            if ($adjust !== 0) {
+                foreach ($exclusions as $i => $range) {
+                    if ($range['start'] > $first['start']) {
+                        $exclusions[$i] = ['start' => $range['start'] + $adjust, 'length' => $range['length']];
+                    }
+                }
+            }
         }
 
         // ---- exclusions in order (§15.12.1) ----

@@ -23,6 +23,7 @@ use Provemark\C2paVerifier\Manifest\ActionsCheck;
 use Provemark\C2paVerifier\Manifest\ManifestException;
 use Provemark\C2paVerifier\Manifest\ManifestGraph;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
+use Provemark\C2paVerifier\Manifest\UpdateManifestCheck;
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationResult;
 use Provemark\C2paVerifier\Report\ValidationStatus;
@@ -67,6 +68,7 @@ final readonly class Verifier
         private RemoteManifestDetector $remote = new RemoteManifestDetector,
         private ActionsCheck $actions = new ActionsCheck,
         private IngredientManifestCheck $ingredients = new IngredientManifestCheck,
+        private UpdateManifestCheck $updateManifests = new UpdateManifestCheck,
     ) {}
 
     /**
@@ -237,6 +239,16 @@ final readonly class Verifier
         $statuses = [...$statuses, ...$this->actions->check($manifest, $unreadable)];
         $checks[] = 'actions';
 
+        // an update manifest lives under §11.2.3's rules, and a standard manifest under §15.11's
+        // one-parent rule — both need the graph's ingredients (SPEC-022)
+        if ($graph !== null) {
+            $scopes = [];
+            foreach ($graph->referenced as $referenced => $urls) {
+                $scopes[$referenced] = $urls[0];
+            }
+            $statuses = [...$statuses, ...$this->updateManifests->check($manifestStore, $graph->ingredients, $scopes)];
+        }
+
         // the manifests the graph found: their box hash and everything the active manifest gets
         // except the data hash, scoped to the assertion that named them (SPEC-021)
         if ($graph !== null && $graph->referenced !== []) {
@@ -256,12 +268,35 @@ final readonly class Verifier
             }
         }
         if (! $declaredAndFailed) {
-            $statuses = [...$statuses, ...$this->dataHash->check($manifest, $stream, $store)];
+            // the binding covers the asset's bytes, and it lives in the active manifest unless that is an
+            // update manifest — then it is found up the parentOf chain (§15.12). The exclusion it carries
+            // was written before the update manifest was appended, so it is adjusted to the store's
+            // current range (§15.12.1.1) — see DataHashCheck.
+            $hasUpdate = false;
+            foreach ($manifestStore->manifests as $other) {
+                $hasUpdate = $hasUpdate || $other->isUpdateManifest;
+            }
+            $binding = $hasUpdate && $graph !== null
+                ? UpdateManifestCheck::bindingManifest($manifestStore, $graph->ingredients)
+                : $manifest;
+            if ($binding === null) {
+                $statuses[] = new ValidationStatus(StatusCode::ClaimHardBindingsMissing, sprintf('self#jumbf=/c2pa/%s/%s', $manifest->label, $manifest->claim->version === 2 ? 'c2pa.claim.v2' : 'c2pa.claim'), 'the active manifest is an update manifest and no manifest up its parentOf chain carries a hard binding (C2PA 2.4 §15.12)');
+            } else {
+                $statuses = [...$statuses, ...$this->dataHash->check($binding, $stream, $store, $hasUpdate)];
+            }
             $checks[] = 'dataHash';
         }
 
         // the graph's statuses last: they are scoped to their ingredient assertions and render
-        // under `ingredientDeltas`, so their place in this list does not change the report
-        return ValidationResult::fromStatuses([...$statuses, ...$graphStatuses], $checks);
+        // under `ingredientDeltas`, so their place in this list does not change the report.
+        // Every scoped status — the graph's and the ingredient manifests' — is then weighed against
+        // what the store's ingredient assertions recorded: a fault a writer acknowledged is not
+        // re-reported, unless it names the active manifest (SPEC-021, CAI-12751)
+        $statuses = [...$statuses, ...$graphStatuses];
+        if ($graph !== null) {
+            $statuses = $this->ingredients->drop($statuses, IngredientManifestCheck::recordedInStore($graph->ingredients), $manifestStore->active->label);
+        }
+
+        return ValidationResult::fromStatuses($statuses, $checks);
     }
 }

@@ -13,7 +13,7 @@ and never the other way round.
 
 | what | `c2patool` | this verifier | until |
 |---|---|---|---|
-| Update manifests (`c2um`) | validated | the JUMBF parser refuses the box — `update_manifest` | SPEC-022 |
+| Time-stamp manifests (`c2tm`), compressed manifests (`c2cm`) | `c2tm` ignored, `c2cm` decompressed | refused with a message of their own — deprecated (§11.2.5) and Brotli, which PHP does not carry | — |
 | Redacted assertions | validated (`assertion.notRedacted`, the claim-signature hash method) | a claim with a non-empty `redacted_assertions` is refused (`general.error`) — no corpus file has a real redaction to measure against | a fixture, then a spec |
 | ISOBMFF (MP4, MOV, AVIF), GIF, TIFF, SVG, audio, PDF | yes | JPEG, PNG, WebP only (`unsupported file type`) | M8 and later |
 | CAWG identity assertions | validated (their own X.509 credential) | refused (`general.error` on the assertion) — `C_with_CAWG_data`, `cawg_ica` | a CAWG spec |
@@ -51,6 +51,7 @@ own variant, the state and the failure codes with their URLs are
 | The data hash is not read after a hashed-URI *mismatch* on `c2pa.hash.data` (four own variants report a strict subset of `c2patool`'s failures) | the assertion is not what the signer saw | SPEC-011 decision 1, `SPEC013_SUBSET_ONLY` |
 | A parse fault stops this verifier where `c2patool` goes on (`json-broken`) | a report, not a guess | `SPEC013_SUBSET_ONLY` |
 | Some faults `c2patool` reports with a hard exit (no JSON) are a report here: `claim missing hard binding`, `No Action array in Actions`, undecodable assertions | the caller gets a verdict and a reason either way | SPEC-012, SPEC-018 |
+| A hash assertion in an update manifest is `manifest.update.invalid`; `c2patool` reports nothing and validates the assertion as the asset's binding (`Trusted`) — its rule for this sits in unreachable code (`c2pa-rs claim.rs verify_internal`) | C2PA 2.4 §11.2.3: "An Update Manifest shall not contain assertions of types `c2pa.hash.data` …" | SPEC-022 amendment 2 |
 | `assertion.action.malformed` on the manifest carries the bare manifest label as its url — `c2patool`'s inconsistency, copied so that code and url compare | drift-alarm equality | SPEC-018 amendment 2 |
 | The command's exit status carries the verdict (0 `Trusted`/`Valid`, 1 `Invalid`, 2 no report); `c2patool` exits 0 on an `Invalid` report and 1 only when it prints no JSON. A `--settings` file that cannot be read is a refusal (exit 2); `c2patool` ignores it and reports without trust | fail closed: `c2pa-verify "$f" && publish "$f"` must not publish a tampered file, and a mistyped settings path must not turn `Trusted` into an unexamined `Valid` | SPEC-019 (exit status measured 2026-09-22) |
 

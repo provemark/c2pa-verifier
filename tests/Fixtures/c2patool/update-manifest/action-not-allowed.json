@@ -254,7 +254,7 @@
         "alg": "Es256",
         "issuer": "C2PA Verifier throw-away hierarchy",
         "common_name": "update manifests",
-        "cert_serial_number": "555491"
+        "cert_serial_number": "371154"
       },
       "label": "urn:c2pa:d9702464-4d0f-4e39-98e3-4ad5f4fa6a44:update_manifest_vendor",
       "claim_version": 2

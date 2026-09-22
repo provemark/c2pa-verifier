@@ -3403,3 +3403,27 @@ README are where the disclosure lives.
   are tested differently than the approved text says (the claim's CBOR
   uses indefinite lengths) — both for the amendment list.
 - Decided by Maurice: start 57a.
+
+## 2026-09-22 — Step 57b: update manifests; SPEC-022 implemented, M7 complete
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 57b".
+- Produced: `src/Manifest/UpdateManifestCheck.php`; `c2um` read and
+  `c2tm` refused in `JumbfParser`; `Manifest::$isUpdateManifest`; the
+  §15.12.1.1 adjustment in `DataHashCheck`; three `StatusCode` cases; the
+  update exemption in `ActionsCheck`; the store-wide drop set in
+  `IngredientManifestCheck`/`Verifier`; SPEC-022 → `implemented`
+  (Traceability, amendments 1–5) and amendments in SPEC-005, SPEC-018
+  (#3) and SPEC-021 (#4); the 57b half of the note, CHANGELOG,
+  `docs/comparison.md`, `tests/Pest.php`, five existing criteria, the
+  milestones and NOTES rows; this entry.
+- Measured: 9 red → green; `composer check` exit 0, 345 tests;
+  `bin/fuzz.php 20260922 2` — 208 runs, 0 faults. Four findings on the
+  files: c2patool calls `hash-in-update` `Trusted` because c2pa-rs's rule
+  for it is unreachable (we are stricter, by the specification and named);
+  SPEC-018's update exemption existed only on paper; an empty
+  `claim_generator_info` is rendered by c2patool and so kept; the drop
+  set must be store-wide (one delta against our three). A near-miss:
+  removing `update_manifest` from a list took it out of
+  `SPEC013_RS_CORPUS` itself — the CLI's file count (68 against 69)
+  caught it.
+- Decided by Maurice: go ahead with 57b.

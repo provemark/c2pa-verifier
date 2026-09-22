@@ -35,6 +35,8 @@ final readonly class Manifest
         public Superbox $assertionStore,
         private Superbox $claimBox,
         private Superbox $signatureBox,
+        /** A c2um box: it adds assertions without touching the content, and its rules differ (SPEC-022, C2PA 2.4 §11.2.3). */
+        public bool $isUpdateManifest = false,
     ) {}
 
     public static function fromBox(Superbox $box): self
@@ -83,7 +85,7 @@ final readonly class Manifest
             $assertions[$assertionLabel] = new Assertion($assertionLabel, $assertionBox, $data);
         }
 
-        $manifest = new self($label, $claim, $assertions, $box, $assertionStore, $claimBox, $signatureBox);
+        $manifest = new self($label, $claim, $assertions, $box, $assertionStore, $claimBox, $signatureBox, $box->description->uuid === JumbfParser::UUID_UPDATE_MANIFEST);
         $manifest->checkReferences();
 
         return $manifest;

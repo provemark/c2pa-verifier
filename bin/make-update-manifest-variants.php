@@ -120,7 +120,8 @@ function umJpegWithStore(string $jpeg, string $store, int $segmentAt): string
  * The update manifest's claim: the offset of its CBOR payload, that payload's length, and the offset
  * of the manifest box itself.
  *
- * @return array{0: int, 1: int, 2: int}
+ * @return array{0: int, 1: int, 2: int, 3: int, 4: int} payload offset, payload length, manifest box,
+ *                                                       claim superbox, cbor box — the last two are what an edit inside the claim must grow or shrink
  */
 function umClaimAt(string $store): array
 {
@@ -135,7 +136,7 @@ function umClaimAt(string $store): array
                 throw new RuntimeException('the claim box does not hold a cbor box');
             }
 
-            return [$payload + 8, bU32($store, $payload) - 8, $box];
+            return [$payload + 8, bU32($store, $payload) - 8, $box, $p, $payload];
         }
         $p += $len;
     }
@@ -436,6 +437,17 @@ printf("%s  %d bytes  action-not-allowed\n", hash('sha256', $edited), strlen($ed
 $tsBox = umAssertionBoxOffset($s, 'c2pa.time-stamp');
 $oldTsHash = umClaimHash($s, 'c2pa.time-stamp');
 $renamed = bSplice($s, $tsBox + 33, strlen('c2pa.time-stamp'), 'c2pa.hash.data', umEnclosing($s, 'c2pa.time-stamp', false));
+// the claim names the assertion by url as well: "self#jumbf=c2pa.assertions/c2pa.time-stamp" (41
+// characters, CBOR head 78 29) becomes ".../c2pa.hash.data" (40, head 78 28). Without this the
+// variant only proves that a claim naming a box that is not there is refused (measured: it was)
+[$claimAtBefore, $claimLengthBefore] = umClaimAt($renamed);
+$oldUrl = "\x78\x2a".'self#jumbf=c2pa.assertions/c2pa.time-stamp';   // 42 characters, CBOR head 78 2a
+$urlAt = strpos($renamed, $oldUrl, $claimAtBefore);
+if ($urlAt === false || $urlAt > $claimAtBefore + $claimLengthBefore) {
+    throw new RuntimeException('the claim does not name c2pa.time-stamp by url');
+}
+[, , $manifestBoxAt, $claimBoxAt, $cborBoxAt] = umClaimAt($renamed);
+$renamed = bSplice($renamed, $urlAt, strlen($oldUrl), "\x78\x29".'self#jumbf=c2pa.assertions/c2pa.hash.data', [0, $manifestBoxAt, $claimBoxAt, $cborBoxAt]);
 $renamed = umRehash($renamed, 'c2pa.hash.data', $oldTsHash);
 $renamed = umResign($renamed, $leafDer, $rootDer, $keys, 'hash-in-update');
 file_put_contents("{$dir}/hash-in-update.jpg", umJpegWithStore($jpeg, $renamed, $segmentAt));

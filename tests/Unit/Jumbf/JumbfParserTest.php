@@ -302,13 +302,16 @@ it('AC12: description-box faults are errors naming the box and the fault', funct
         ->toThrow(JumbfException::class, 'offset 32839: private box c2sx is not c2sh');
 })->group('SPEC-005');
 
-it('AC13: compressed and update manifests are errors, not skips', function (): void {
+it('AC13: compressed manifests and compressed boxes are errors, not skips; update manifests are read (SPEC-022)', function (): void {
     expect(fn () => spec005Parse(spec005Variant('uuid-c2cm')))
         ->toThrow(JumbfException::class, 'offset 38: compressed manifests (c2cm) are not supported');
-    expect(fn () => spec005Parse(spec005Variant('uuid-c2um')))
-        ->toThrow(JumbfException::class, 'offset 38: update manifests (c2um) are not supported');
     expect(fn () => spec005Parse(spec005Variant('brob')))
         ->toThrow(JumbfException::class, 'offset 33073: compressed boxes (brob) are not supported');
+    // amended by SPEC-022: a c2um box is walked into like a c2ma one, and the manifest knows what it is.
+    // A c2tm box — the deprecated time-stamp manifest — took its place in the refusal (SPEC-022 AC7).
+    $tree = spec005Parse(spec005Variant('uuid-c2um'));
+    expect($tree->superboxes()[0]->description->uuid)->toBe(JumbfParser::UUID_UPDATE_MANIFEST)
+        ->and($tree->superboxes()[0]->superboxes())->not->toBe([]);
 })->group('SPEC-005');
 
 it('AC14: bfdb without bidb is an error naming the bfdb box', function (): void {

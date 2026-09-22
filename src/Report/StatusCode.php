@@ -52,6 +52,9 @@ enum StatusCode: string
     case IngredientManifestMissing = 'ingredient.manifest.missing';
     case IngredientUnknownProvenance = 'ingredient.unknownProvenance';
     case AssertionIngredientMalformed = 'assertion.ingredient.malformed';
+    case ManifestUpdateInvalid = 'manifest.update.invalid';
+    case ManifestUpdateWrongParents = 'manifest.update.wrongParents';
+    case ManifestMultipleParents = 'manifest.multipleParents';
     case GeneralError = 'general.error';
 
     public function isSuccess(): bool

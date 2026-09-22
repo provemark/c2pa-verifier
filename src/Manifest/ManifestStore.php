@@ -30,7 +30,7 @@ final readonly class ManifestStore
     {
         $manifests = [];
         foreach ($root->superboxes() as $child) {
-            if ($child->description->uuid === JumbfParser::UUID_MANIFEST) {
+            if (in_array($child->description->uuid, [JumbfParser::UUID_MANIFEST, JumbfParser::UUID_UPDATE_MANIFEST], true)) {
                 $manifest = Manifest::fromBox($child);
                 $manifests[$manifest->label] = $manifest;
             }

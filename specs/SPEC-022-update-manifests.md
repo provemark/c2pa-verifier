@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -356,7 +356,51 @@ actions check.
 
 ## Amendments
 
-(none yet)
+1. **2026-09-22, step 57a, no fixture** — AC4's fourth rule ("more than
+   one ingredient assertion") is tested at the seam
+   (`UpdateManifestCheck::rules()`), not with a signed variant: adding a
+   second ingredient means splicing an entry into this update manifest's
+   claim, whose CBOR uses **indefinite lengths**, which the byte-level
+   tooling of this project does not write. AC4(c) uses `inputTo` rather
+   than `componentOf` for the same reason of length (one byte shorter,
+   the edit stays inside the assertion); both break "exactly one
+   `parentOf`", which is the rule under test.
+2. **2026-09-22, step 57b, measured — stricter than c2patool** — a hash
+   assertion in an update manifest is `manifest.update.invalid` here and
+   **`Trusted`** at c2patool: c2pa-rs's rule for it sits inside the
+   branch for manifests that are *not* update manifests
+   (`claim.rs verify_internal`) and can never fire, so c2patool takes the
+   assertion as the asset's binding and validates it. C2PA 2.4 §11.2.3 is
+   plain ("An Update Manifest shall not contain assertions of types
+   `c2pa.hash.data` …"), and this verifier follows the specification.
+   Named in `docs/comparison.md`.
+3. **2026-09-22, step 57b, measured** — SPEC-018's opening rule (a 2.x
+   manifest opens with `c2pa.created` or `c2pa.opened`) does **not**
+   apply to an update manifest: §11.2.3 gives it four actions of its own,
+   none of them an opening, and SPEC-018's own Problem section says "an
+   update manifest is exempt" — the code did not, because update
+   manifests could not be read when it was written.
+   `ActionsCheck::checkAssertions()` takes the exemption as a parameter.
+   Without it the `action-not-allowed` variant reported
+   `assertion.action.malformed` next to `manifest.update.invalid`, which
+   c2patool does not.
+4. **2026-09-22, step 57b, measured** — an **empty**
+   `claim_generator_info` is kept as an empty list, not turned into
+   `null`: c2patool renders `"claim_generator_info": []` for
+   `update_manifest.jpg`'s parent, so the field is there and says
+   nothing. (A `null` one stays absent — SPEC-007 amendment 4.) The
+   Scope's wording "counts as absent" is narrowed to "is read, not
+   refused".
+5. **2026-09-22, step 57b, measured — and it changes SPEC-021** — the set
+   of statuses to drop is the union of what **every** ingredient
+   assertion in the store recorded, and it is applied to the graph's
+   scoped statuses as well as the ingredient manifests'. SPEC-021 wrote
+   the rule per assertion; `update_manifest.jpg` shows why that is too
+   narrow: the active v3 assertion's `validationResults` records the
+   *parent's* two `ingredient.unknownProvenance` entries, and c2patool
+   drops both, leaving one delta where this verifier had three. The
+   guard is unchanged: a status whose url names the active manifest is
+   never dropped.
 
 ## Traceability
 
@@ -365,4 +409,14 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
+| AC1 | tests/Unit/Verifier/UpdateManifestTest.php :: AC1 / SPEC-022 | src/Jumbf/JumbfParser.php (`c2um` in KNOWN_SUPERBOXES); src/Manifest/Manifest.php (`$isUpdateManifest`); src/Manifest/ManifestStore.php |
+| AC2 | tests/Unit/Verifier/UpdateManifestTest.php :: AC2 / SPEC-022 | src/Manifest/UpdateManifestCheck.php (`bindingManifest()`); src/Verifier/Verifier.php |
+| AC3 | tests/Unit/Verifier/UpdateManifestTest.php :: AC3 / SPEC-022 | src/Hash/DataHashCheck.php (the §15.12.1.1 adjustment) |
+| AC4 | tests/Unit/Verifier/UpdateManifestTest.php :: AC4 / SPEC-022 | src/Manifest/UpdateManifestCheck.php (`rules()`); src/Manifest/ActionsCheck.php (the update exemption) |
+| AC5 | tests/Unit/Verifier/UpdateManifestTest.php :: AC5 / SPEC-022 | src/Verifier/Verifier.php (`claim.hardBindings.missing` when the chain ends) |
+| AC6 | tests/Unit/Verifier/UpdateManifestTest.php :: AC6 / SPEC-022 | src/Manifest/UpdateManifestCheck.php (`rules()`, the one-parent rule) |
+| AC7 | tests/Unit/Verifier/UpdateManifestTest.php :: AC7 / SPEC-022; tests/Unit/Jumbf/JumbfParserTest.php :: AC13 / SPEC-005 | src/Jumbf/JumbfParser.php (`refuseUnreadable()`, `UUID_TIMESTAMP_MANIFEST`) |
+| AC8 | tests/Unit/Verifier/UpdateManifestTest.php :: AC8 / SPEC-022 | src/Manifest/Claim.php (an empty `claim_generator_info`) |
+| AC9 | tests/Unit/Verifier/UpdateManifestTest.php :: AC9 / SPEC-022; tests/Unit/Verifier/VerifierTest.php :: AC12 / SPEC-013 | tests/Pest.php; the whole verification path |
+
+`src/Manifest/UpdateManifestCheck.php` maps to this spec; `StatusCode`'s three new cases are its. Measured 2026-09-22: 9 red → 9 green, `composer check` exit 0, 345 tests, 208 fuzz runs with no fault.

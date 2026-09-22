@@ -77,3 +77,73 @@ error is recorded beside the JSON of the others.
   "exactly one `parentOf`", and `inputTo` is one byte shorter than
   `parentOf`, which keeps the edit inside the assertion without moving
   the claim. Also for the amendment list.
+
+## 57b — the implementation
+
+*2026-09-22, same day.*
+
+- `Jumbf\JumbfParser`: `c2um` joins the superboxes it walks into; `c2tm`
+  takes its place in the refusals (`c2cm` unchanged). `Manifest` carries
+  `$isUpdateManifest` from the box UUID; `ManifestStore` keeps `c2um`
+  boxes like any other manifest.
+- `Manifest\UpdateManifestCheck`: `rules()` — the four rules of §11.2.3
+  and §15.11's one-parent rule, on nothing but the facts they need (the
+  seam AC4d is tested through); `check()` — them over every manifest in
+  the store, the url the claim's, the scope the assertion that named the
+  manifest; `bindingManifest()` — the active manifest, or the first
+  standard manifest with a `c2pa.hash.data` up the `parentOf` chain.
+- `Hash\DataHashCheck` takes `$adjustForUpdate`: the exclusion that starts
+  where the store starts becomes the store's current range and later
+  exclusions shift by the difference (§15.12.1.1). The *cover* rule runs
+  afterwards, so the adjustment can widen an exclusion to the store and
+  never past it — AC3's second half proves it with a byte changed outside
+  the store.
+- `Report\StatusCode` gains `manifest.update.invalid`,
+  `manifest.update.wrongParents`, `manifest.multipleParents` (39 cases).
+
+### Measured, and four things the files taught us
+
+- 9 red → **9 green**; `composer check` exit 0 with **345 tests**;
+  `bin/fuzz.php 20260922 2`: 208 runs, 0 faults.
+- **A rule c2pa-rs cannot apply.** `hash-in-update` is `Trusted` at
+  c2patool: its check for a hash assertion in an update manifest sits
+  inside the branch for manifests that are *not* update manifests
+  (`claim.rs verify_internal`) and can never fire, so c2patool takes the
+  assertion as the asset's binding and validates it. §11.2.3 forbids it
+  in as many words. This verifier is stricter here, by name (SPEC-022
+  amendment 2, `docs/comparison.md`).
+- **SPEC-018's exemption existed only on paper.** Its Problem section
+  says "an update manifest is exempt" from the opening rule, but the code
+  could not tell one — `c2um` was refused when it was written. Without
+  the exemption the `action-not-allowed` variant reported
+  `assertion.action.malformed` beside `manifest.update.invalid`, which
+  c2patool does not. `ActionsCheck::checkAssertions()` takes the flag now
+  (SPEC-018 amendment 3).
+- **An empty `claim_generator_info` is not absent.** c2patool renders
+  `"claim_generator_info": []` for this file's parent, so it is kept as
+  an empty list; a `null` one stays absent (amendment 4).
+- **The drop set is store-wide** — and this changes SPEC-021. The active
+  v3 ingredient assertion records the *parent's* two
+  `ingredient.unknownProvenance` entries in its `validationResults`, and
+  c2patool drops both: one delta where this verifier had three.
+  `IngredientManifestCheck::recordedInStore()` collects what every
+  ingredient assertion in the store recorded, and the Verifier applies it
+  to every scoped status, the graph's included (SPEC-021 amendment 4).
+- Five existing criteria moved with this one: SPEC-005 AC13 (`c2um` read,
+  `c2tm` refused), SPEC-013 AC12 (`update_manifest` no longer stricter),
+  the enum count, and `tests/Pest.php`'s comment on the `_MULTI` lists.
+  One near-miss worth recording: removing `update_manifest` from a list I
+  had not read carefully took it out of `SPEC013_RS_CORPUS` — the corpus
+  itself — and the CLI's file count caught it (68 against 69).
+
+### From the shell
+
+```
+bin/c2pa-verify tests/Fixtures/c2pa-rs/update_manifest.jpg --settings …/full.settings.json
+state Trusted  checks [signature, certificate, trust, hashedUris, actions, ingredients, dataHash]
+deltas  …/c2pa.ingredient.v3 → ingredient.manifest.validated
+dataHash url  …6a6b4dbe…/c2pa.assertions/c2pa.hash.data     (the parent's, §15.12)
+```
+
+**M7 is complete**: every multi-manifest file in the four corpora is now
+measured rather than refused.

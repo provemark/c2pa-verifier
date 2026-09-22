@@ -101,16 +101,24 @@ it('AC3: the stale exclusion is adjusted to the store, and no further', function
 // AC4
 it('AC4: an update manifest that breaks §11.2.3', function (): void {
     // (a) an action outside the four allowed values
+    // the opening rule of SPEC-018 does not apply to an update manifest (§11.2.3 gives it four actions
+    // of its own, none of them an opening) — without that exemption this file would also report
+    // assertion.action.malformed, which c2patool does not (SPEC-022 amendment 3)
     $action = spec020Verify('update-manifest/action-not-allowed.jpg', SPEC022_VARIANT_SETTINGS);
     expect($action->result->state)->toBe(ValidationState::Invalid)
-        ->and(in_array('manifest.update.invalid', spec022Failures($action), true))->toBeTrue()
-        ->and(spec020Oracle('update-manifest/action-not-allowed.json')['validation_state'])->toBe('Invalid')
-        ->and(spec021OracleFailures('update-manifest/action-not-allowed.json'))->toBe(['manifest.update.invalid']);
+        ->and(spec022Failures($action))->toBe(['manifest.update.invalid'])
+        ->and(spec022Failures($action))->toBe(spec021OracleFailures('update-manifest/action-not-allowed.json'))
+        ->and(spec020Oracle('update-manifest/action-not-allowed.json')['validation_state'])->toBe('Invalid');
 
-    // (b) a hash assertion in an update manifest (c2patool exits without JSON: "assertion missing")
+    // (b) a hash assertion in an update manifest. c2patool says **Trusted**: c2pa-rs's rule for this
+    // sits in the branch for manifests that are *not* update manifests and can never fire
+    // (claim.rs verify_internal), so it validates the assertion as the binding instead. §11.2.3 is
+    // plain — "An Update Manifest shall not contain assertions of types c2pa.hash.data …" — and this
+    // verifier is stricter here, by name (SPEC-022 amendment 2, docs/comparison.md)
     $hash = spec020Verify('update-manifest/hash-in-update.jpg', SPEC022_VARIANT_SETTINGS);
     expect($hash->result->state)->toBe(ValidationState::Invalid)
-        ->and(in_array('manifest.update.invalid', spec022Failures($hash), true))->toBeTrue();
+        ->and(spec022Failures($hash))->toBe(['manifest.update.invalid'])
+        ->and(spec020Oracle('update-manifest/hash-in-update.json')['validation_state'])->toBe('Trusted');
 
     // (c) no parentOf ingredient (c2patool: "claim missing hard binding", exit 1)
     $input = spec020Verify('update-manifest/ingredient-inputto.jpg', SPEC022_VARIANT_SETTINGS);
@@ -165,10 +173,12 @@ it('AC7: c2cm and c2tm stay refused; only c2um was opened', function (): void {
 })->group('SPEC-022');
 
 // AC8
-it('AC8: an empty claim_generator_info counts as absent, like null', function (): void {
+it('AC8: an empty claim_generator_info is read, not refused', function (): void {
+    // an empty list is one that is *there* and says nothing: c2patool renders `claim_generator_info: []`
+    // for this parent, so it stays an empty list rather than becoming null (SPEC-022 amendment 4)
     $update = Corpus::manifestStore('c2pa-rs/update_manifest.jpg') ?? throw new RuntimeException('no store');
-    $parent = $update->manifests[array_key_first($update->manifests)];
-    expect($parent->claim->claimGeneratorInfo)->toBeNull();
+    $parent = $update->manifests[(string) array_key_first($update->manifests)];
+    expect($parent->claim->claimGeneratorInfo)->toBe([]);
 
     $ocsp = Corpus::manifestStore('c2pa-rs/ocsp.jpg') ?? throw new RuntimeException('no store');
     $first = $ocsp->manifests[(string) array_key_first($ocsp->manifests)];
@@ -190,8 +200,11 @@ it('AC8: an empty claim_generator_info counts as absent, like null', function ()
 
 // AC9
 it('AC9: the corpora are unchanged and update_manifest joins them', function (): void {
-    expect(in_array('update_manifest', SPEC013_RS_MULTI, true))->toBeFalse('update_manifest still counts as refused')
-        ->and(in_array('update_manifest', SPEC013_NOT_YET, true))->toBeFalse('update_manifest still counts as not-yet');
+    // it is still a multi-manifest file (that list is the enumeration of them), and it is measured
+    // like the rest: the refusal it used to get is gone
+    $report = spec020Verify('c2pa-rs/update_manifest.jpg', SPEC021_SETTINGS);
+    expect(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::GeneralError))->toBe([]);
+    expect($report->result->state->value)->toBe(spec020Oracle('c2pa-rs/update_manifest.json')['validation_state']);
     $graph = ManifestGraph::fromStore(Corpus::manifestStore('c2pa-rs/update_manifest.jpg') ?? throw new RuntimeException('no store'));
     expect(array_keys($graph->referenced))->toHaveCount(1)
         ->and($graph->missing)->toBe([])

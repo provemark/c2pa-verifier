@@ -399,6 +399,14 @@ here, since `Jumbf` is a leaf layer and may not depend on `Container`
   content type), error for claim and signature superboxes (§11.1.4.4 says
   "a single CBOR content type box"). Non-blocker.
 
+**2026-09-22, step 57b, defined in SPEC-022 and approved with it** —
+AC13 is amended: an update manifest (`c2um`) is **read**, like a `c2ma`
+box, because SPEC-022 validates one. What stays refused with a message of
+its own: compressed manifests (`c2cm`, Brotli), compressed boxes
+(`brob`), and — new — time-stamp manifests (`c2tm`), which C2PA 2.4
+§11.2.5 deprecates and says are "not to be … read by manifest
+consumers".
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

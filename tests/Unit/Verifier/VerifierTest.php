@@ -448,10 +448,9 @@ it('AC12: the oracle\'s own fixtures are a third drift alarm, and a CAWG identit
         $oracle = json_decode((string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/c2patool/c2pa-rs/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
         $report = $verify($name);
         $expected = $oracle['validation_state'];
-        // SPEC-021 validates ingredient manifests; what stays stricter is the update manifest (a c2um
-        // box the JUMBF parser refuses until SPEC-022), the TSA-not-configured files, the remote one
-        // and CAWG
-        $stricter = array_merge(['update_manifest'], SPEC013_RS_TSA_NOT_CONFIGURED, SPEC013_RS_REMOTE, SPEC013_RS_CAWG);
+        // SPEC-021 validates ingredient manifests and SPEC-022 reads update manifests; what stays
+        // stricter is the TSA-not-configured files, the remote one and CAWG
+        $stricter = array_merge(SPEC013_RS_TSA_NOT_CONFIGURED, SPEC013_RS_REMOTE, SPEC013_RS_CAWG);
         if (in_array($name, $stricter, true)) {
             $expected = 'Invalid';
         }

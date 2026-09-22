@@ -8,7 +8,25 @@ public API is stable. Dates are the day the work was committed.
 
 ## Unreleased
 
-### M7 (in progress) — ingredient manifests (2026-09-22)
+### M7 — ingredient and update manifests (2026-09-22)
+- SPEC-022: update manifests (`c2um`) are read and judged — C2PA 2.4
+  §11.2.3's rules (`manifest.update.invalid`,
+  `manifest.update.wrongParents`), §15.11's one-parent rule
+  (`manifest.multipleParents`, which closes a leniency: two parents were
+  `Trusted` here), the hard binding found up the `parentOf` chain
+  (§15.12) and its stale exclusion adjusted to the store's current range
+  (§15.12.1.1) with the cover rule still over it. Time-stamp manifests
+  (`c2tm`) are refused in their place; compressed manifests (`c2cm`)
+  stay refused. **Every multi-manifest file in the four corpora is now
+  measured rather than refused.**
+- Stricter than `c2patool` by the specification: a hash assertion in an
+  update manifest is `manifest.update.invalid` here and `Trusted` there
+  (the rule sits in unreachable code in c2pa-rs) — `docs/comparison.md`.
+- Fixed: the opening rule of SPEC-018 no longer applies to an update
+  manifest (it never should have — the spec said so, the code could not);
+  an empty `claim_generator_info` is read rather than refused; the set of
+  statuses an ingredient assertion's record silences is the store's, not
+  one assertion's (SPEC-021 amendment 4).
 - SPEC-021: the manifests an ingredient assertion names are validated —
   the box hash it recorded (`ingredient.manifest.validated` /
   `.mismatch`; the pre-1.3 hash over the claim accepted silently) and

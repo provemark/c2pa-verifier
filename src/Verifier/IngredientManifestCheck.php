@@ -72,7 +72,7 @@ final readonly class IngredientManifestCheck
             $manifest = $store->manifests[$label];
             $mine = $this->hash($manifest, $ingredient);
             $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings)];
-            $statuses = [...$statuses, ...$this->drop($mine, self::recorded($ingredient), $store->active->label)];
+            $statuses = [...$statuses, ...$mine];
         }
 
         return $statuses;
@@ -161,6 +161,28 @@ final readonly class IngredientManifestCheck
     }
 
     /**
+     * Everything the store's ingredient assertions recorded, as one set of keys: c2pa-rs compares a
+     * scoped status against all of them, not only against the assertion it was found under, because a
+     * v3 assertion records the whole tree it validated (`update_manifest.jpg`: the active assertion's
+     * `validationResults` carries the parent's two `ingredient.unknownProvenance` entries, and
+     * c2patool drops both).
+     *
+     * @param  array<string, list<IngredientAssertion>>  $ingredients  per manifest label, from the graph
+     * @return list<string>
+     */
+    public static function recordedInStore(array $ingredients): array
+    {
+        $keys = [];
+        foreach ($ingredients as $list) {
+            foreach ($list as $ingredient) {
+                $keys = [...$keys, ...self::recorded($ingredient)];
+            }
+        }
+
+        return array_values(array_unique($keys));
+    }
+
+    /**
      * What the ingredient assertion recorded, as "code url" keys: v1 and v2 read `validationStatus`,
      * v3 the whole `validationResults` map (its active manifest and every ingredient delta). A
      * recorded url that is relative is made absolute against the manifest the assertion references,
@@ -231,6 +253,9 @@ final readonly class IngredientManifestCheck
         $active = sprintf('self#jumbf=/c2pa/%s', $activeLabel);
 
         return array_values(array_filter($statuses, static function (ValidationStatus $status) use ($recorded, $active): bool {
+            if ($status->ingredientUri === null) {
+                return true;   // the active manifest's own line, never dropped
+            }
             if ($status->url === $active || str_starts_with($status->url, $active.'/')) {
                 return true;   // the guard: no ingredient assertion speaks for the manifest being verified
             }

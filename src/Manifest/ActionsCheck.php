@@ -55,7 +55,7 @@ final readonly class ActionsCheck
         }
 
         // c2patool's url for the manifest-level faults of this rule is the bare manifest label (measured, SPEC-018 amendment 2)
-        return $this->checkAssertions($manifest->label, $manifest->claim->version, $actions);
+        return $this->checkAssertions($manifest->label, $manifest->claim->version, $actions, $manifest->isUpdateManifest);
     }
 
     /**
@@ -67,7 +67,7 @@ final readonly class ActionsCheck
      * @param  list<array{url: string, data: mixed}>  $actions
      * @return list<ValidationStatus>
      */
-    public function checkAssertions(string $manifestLabel, int $version, array $actions): array
+    public function checkAssertions(string $manifestLabel, int $version, array $actions, bool $isUpdateManifest = false): array
     {
         $malformed = static fn (string $url, string $why): ValidationStatus => new ValidationStatus(StatusCode::AssertionActionMalformed, $url, $why);
         if ($version < 2) {
@@ -84,7 +84,12 @@ final readonly class ActionsCheck
                 $statuses[] = $malformed($assertion['url'], 'actions assertion malformed: '.$fault);
             }
         }
-        // rule 1: the first one opens with c2pa.created or c2pa.opened
+        // rule 1: the first one opens with c2pa.created or c2pa.opened — an update manifest is exempt
+        // (C2PA 2.4 §11.2.3 gives it four actions of its own, none of them an opening; measured on
+        // update_manifest.jpg's variant, where c2patool reports only the update rule — SPEC-022)
+        if ($isUpdateManifest) {
+            return $statuses;
+        }
         if ($actions === []) {
             $statuses[] = $malformed($manifestLabel, 'first action must be created or opened: the manifest has no actions assertion (C2PA 2.4 §18, a 2.x manifest opens with c2pa.created or c2pa.opened)');
         } else {

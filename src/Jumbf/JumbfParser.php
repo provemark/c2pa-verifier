@@ -32,6 +32,8 @@ final readonly class JumbfParser
 
     public const UUID_UPDATE_MANIFEST = '6332756d-0011-0010-8000-00aa00389b71';  // c2um
 
+    public const UUID_TIMESTAMP_MANIFEST = '6332746d-0011-0010-8000-00aa00389b71'; // c2tm (deprecated, §11.2.5)
+
     public const UUID_ASSERTION_STORE = '63326173-0011-0010-8000-00aa00389b71';  // c2as
 
     public const UUID_CLAIM = '6332636c-0011-0010-8000-00aa00389b71';            // c2cl
@@ -48,7 +50,7 @@ final readonly class JumbfParser
 
     /** The superbox types this parser walks into. */
     private const KNOWN_SUPERBOXES = [
-        self::UUID_MANIFEST_STORE, self::UUID_MANIFEST, self::UUID_ASSERTION_STORE,
+        self::UUID_MANIFEST_STORE, self::UUID_MANIFEST, self::UUID_UPDATE_MANIFEST, self::UUID_ASSERTION_STORE,
         self::UUID_CLAIM, self::UUID_CLAIM_SIGNATURE,
         self::UUID_CBOR_ASSERTION, self::UUID_JSON_ASSERTION, self::UUID_EMBEDDED_FILE, self::UUID_UUID_ASSERTION,
     ];
@@ -187,14 +189,18 @@ final readonly class JumbfParser
         return new UnknownBox($offset, $lBox, Bytes::printable($tBox), null, null, $walk->slice($offset, $lBox));
     }
 
-    /** Compressed and update manifests: an error, never a silent skip (AC13). */
+    /**
+     * Compressed and time-stamp manifests: an error, never a silent skip (AC13). Update manifests
+     * (`c2um`) are read since SPEC-022; `c2cm` needs Brotli, and `c2tm` is deprecated and "not to be
+     * … read by manifest consumers" (C2PA 2.4 §11.2.5).
+     */
     private function refuseUnreadable(DescriptionBox $description, int $superboxOffset): void
     {
         if ($description->uuid === self::UUID_COMPRESSED_MANIFEST) {
             throw new JumbfException(sprintf('superbox at offset %d: compressed manifests (c2cm) are not supported', $superboxOffset));
         }
-        if ($description->uuid === self::UUID_UPDATE_MANIFEST) {
-            throw new JumbfException(sprintf('superbox at offset %d: update manifests (c2um) are not supported', $superboxOffset));
+        if ($description->uuid === self::UUID_TIMESTAMP_MANIFEST) {
+            throw new JumbfException(sprintf('superbox at offset %d: time-stamp manifests (c2tm) are deprecated and not supported (C2PA 2.4 §11.2.5)', $superboxOffset));
         }
     }
 

@@ -79,7 +79,7 @@ const SPEC013_RS_CORPUS = [
     'C', 'CA', 'CACA', 'CACAE-uri-CA', 'CA_ct', 'CIE-sig-CA', 'C_with_CAWG_data', 'E-sig-CA', 'XCA',
     'adobe-20220124-E-clm-CAICAI', 'boxhash', 'cloud', 'legacy_ingredient_hash', 'ocsp', 'ocsp_with_assertion', 'update_manifest', 'exp-test1',
 ];
-const SPEC013_RS_MULTI = ['CACA', 'CACAE-uri-CA', 'CIE-sig-CA', 'legacy_ingredient_hash', 'update_manifest', 'ocsp', 'ocsp_with_assertion'];
+const SPEC013_RS_MULTI = ['CACA', 'CACAE-uri-CA', 'CIE-sig-CA', 'legacy_ingredient_hash', 'update_manifest', 'ocsp', 'ocsp_with_assertion'];   // the files with more than one manifest; all measured since SPEC-021, update_manifest since SPEC-022
 const SPEC013_RS_TSA_NOT_CONFIGURED = ['ocsp', 'ocsp_with_assertion', 'exp-test1'];
 const SPEC013_RS_REMOTE = ['cloud'];
 const SPEC013_RS_CAWG = ['C_with_CAWG_data'];
