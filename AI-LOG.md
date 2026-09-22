@@ -4986,3 +4986,25 @@ README are where the disclosure lives.
 - Decided by Maurice: push, and all three amendments confirmed. Open for
   him: whether `bin/api-check.php` joins `composer check`; the version
   number of a first tag; the visibility change; the announcement.
+
+## 2026-09-22 — Step 89, api-check joins `composer check`
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, doe api-check in composer check".
+- Produced: `composer.json` (`api-check` script, second step of `check`);
+  `apiContract()` and `apiClass()` in `bin/api-check.php` with
+  `tests/Unit/ApiSurfaceTest.php` reading both instead of keeping copies;
+  README, CONTRIBUTING, `notes/step-89-api-check-in-green.md`, `NOTES.md`,
+  `docs/milestones.md`.
+- Measured: `composer check` green — 411 passed, PHPStan max, Deptrac 0,
+  api-check 10 classes / 95 symbols / surface matches. The new step
+  falsified rather than assumed: an extra line appended to
+  `public-surface.txt` makes `composer api-check` exit 1 with the symbol
+  named, and the file was restored.
+- Reasoned: that running the script fixes the smaller half of the problem.
+  The contract list existed twice — nine names in the script, ten in the
+  test — and two definitions of a promise are none; with one list the
+  script is a second copy of a test that already runs, and what it adds is
+  that the command the README tells a reader to run is one CI proves works.
+  Said so in the note rather than calling it a new alarm.
+- Decided by Maurice: api-check in `composer check`. Open for him: the
+  version of a first tag; the visibility change; the announcement.

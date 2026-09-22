@@ -120,8 +120,10 @@ formats. If you need something from it that the report does not give you,
 that is worth an issue rather than a workaround.
 
 The surface is recorded in `tests/Fixtures/api/public-surface.txt` and
-checked on every run (`php bin/api-check.php`), so a symbol cannot join or
-leave the contract by accident.
+checked on every run: `bin/api-check.php` is a step of `composer check`, and
+so runs in CI on all three PHP versions. A symbol cannot join or leave the
+contract by accident, and the list of contract classes lives in that script
+alone.
 
 ## Design rules
 
@@ -158,7 +160,7 @@ leave the contract by accident.
 
 ```bash
 composer install
-composer check      # spec-check, Pint (test mode), PHPStan level max, Deptrac, Pest
+composer check      # spec-check, api-check, Pint (test mode), PHPStan level max, Deptrac, Pest
 ```
 
 Every feature starts as a spec in [`specs/`](specs/) (template:

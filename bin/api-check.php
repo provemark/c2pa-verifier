@@ -153,21 +153,67 @@ function apiCompare(array $recorded, array $live): ApiCheckResult
     return new ApiCheckResult($findings);
 }
 
+/**
+ * The classes a caller may build on: the contract, and the only list of it.
+ *
+ * `tests/Unit/ApiSurfaceTest.php` reads this rather than keeping a second copy.
+ * It kept one until step 89, and the two drifted for four commits — the test
+ * gained `FragmentedVerifier` in step 83 and this file did not, which nothing
+ * caught because this script was not part of `composer check`. It is now, and
+ * there is one list.
+ *
+ * `TrustException` is here and the other seven exception types are not: SPEC-013
+ * turns those into statuses before the public boundary, while this one escapes
+ * from `TrustSettings::fromJson()`.
+ *
+ * @return list<string> short names, `Verifier\Verifier` style
+ */
+function apiContract(): array
+{
+    return [
+        'Cli\Command',
+        'Report\StatusCode',
+        'Report\ValidationResult',
+        'Report\ValidationState',
+        'Report\ValidationStatus',
+        'Trust\TrustException',
+        'Trust\TrustSettings',
+        'Verifier\FragmentedVerifier',
+        'Verifier\VerificationReport',
+        'Verifier\Verifier',
+    ];
+}
+
+/**
+ * A contract class by its short name, narrowed to a `class-string`.
+ *
+ * The narrowing is what tells the analyser this really is a class, and it fails
+ * loudly the moment a name in `apiContract()` goes stale — which is the point of
+ * keeping the names in one place.
+ *
+ * @return class-string
+ */
+function apiClass(string $short): string
+{
+    $name = 'Provemark\C2paVerifier\\'.$short;
+    if (! class_exists($name) && ! enum_exists($name) && ! interface_exists($name)) {
+        throw new RuntimeException("no such class: {$name}");
+    }
+
+    return $name;
+}
+
 // Run as a script: check this repository and print what it found.
 if (isset($argv) && realpath($argv[0]) === realpath(__FILE__)) {
     require dirname(__DIR__).'/vendor/autoload.php';
 
-    $contract = [
-        'Cli\Command', 'Report\StatusCode', 'Report\ValidationResult', 'Report\ValidationState',
-        'Report\ValidationStatus', 'Trust\TrustException', 'Trust\TrustSettings',
-        'Verifier\FragmentedVerifier', 'Verifier\VerificationReport', 'Verifier\Verifier',
-    ];
+    $contract = apiContract();
     $classes = apiPublicClasses(dirname(__DIR__).'/src');
     $result = apiCheck($classes, $contract);
 
     $live = [];
     foreach ($contract as $short) {
-        foreach (apiSurface('Provemark\C2paVerifier\\'.$short) as $symbol) {
+        foreach (apiSurface(apiClass($short)) as $symbol) {
             $live[] = $short.' :: '.$symbol;
         }
     }

@@ -23,43 +23,31 @@ if (is_file($apiCheckScript)) {
 }
 
 /**
- * The ten classes a caller may build on (SPEC-025 AC1, amendment 2). `TrustException` is here
- * and the other seven exception types are not: SPEC-013 turns those into statuses
- * before the public boundary, so no caller can meet them, while this one escapes
- * from TrustSettings::fromJson() and the CLI catches exactly it.
+ * The ten classes a caller may build on (SPEC-025 AC1, amendment 2), read from
+ * `bin/api-check.php` rather than copied.
+ *
+ * This function held a second copy of the list until step 89, and the two drifted:
+ * `FragmentedVerifier` went into the contract here in step 83 and into the script
+ * four commits later. A promise with two definitions has none. What still makes a
+ * change to the contract visible in review is the recorded surface, which grows or
+ * shrinks by every symbol of the class that moved.
  *
  * @return list<string>
  */
 function spec025Contract(): array
 {
-    return [
-        'Cli\Command',
-        'Report\StatusCode',
-        'Report\ValidationResult',
-        'Report\ValidationState',
-        'Report\ValidationStatus',
-        'Trust\TrustException',
-        'Trust\TrustSettings',
-        'Verifier\FragmentedVerifier',
-        'Verifier\VerificationReport',
-        'Verifier\Verifier',
-    ];
+    return apiContract();
 }
 
 /**
- * A contract class by its short name, narrowed: `class_exists()` is what tells the
- * analyser this really is a class-string, and it fails loudly if a name goes stale.
+ * A contract class by its short name, narrowed — `bin/api-check.php`'s, for the
+ * same reason as the contract itself: one definition, not two.
  *
  * @return class-string
  */
 function spec025Class(string $short): string
 {
-    $name = 'Provemark\C2paVerifier\\'.$short;
-    if (! class_exists($name) && ! enum_exists($name) && ! interface_exists($name)) {
-        throw new RuntimeException("no such class: {$name}");
-    }
-
-    return $name;
+    return apiClass($short);
 }
 
 function spec025Source(): string

@@ -56,6 +56,7 @@
     },
     "scripts": {
         "spec-check": "php bin/spec-check.php",
+        "api-check": "php bin/api-check.php",
         "format": "pint",
         "lint": "pint --test",
         "analyse": "phpstan analyse --memory-limit=512M",
@@ -63,6 +64,7 @@
         "test": "pest",
         "check": [
             "@spec-check",
+            "@api-check",
             "@lint",
             "@analyse",
             "@deptrac",
@@ -70,6 +72,6 @@
         ]
     },
     "scripts-descriptions": {
-        "check": "The single definition of green: spec-check, Pint (test mode), PHPStan level max, Deptrac, Pest."
+        "check": "The single definition of green: spec-check, api-check, Pint (test mode), PHPStan level max, Deptrac, Pest."
     }
 }

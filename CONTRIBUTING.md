@@ -34,7 +34,7 @@ meant to be measured. If that is how you like to work, welcome.
 ## Before you open a pull request
 
 ```bash
-composer check   # spec-check, Pint (test mode), PHPStan level max, Deptrac, Pest
+composer check   # spec-check, api-check, Pint (test mode), PHPStan level max, Deptrac, Pest
 ```
 
 All five must pass on PHP 8.3, 8.4 and 8.5 (CI runs them). Also:
