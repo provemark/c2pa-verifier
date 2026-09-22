@@ -456,7 +456,7 @@ least one test; every source file maps back to this spec.
 | AC4 | tests/Unit/Manifest/IngredientAssertionTest.php :: AC4 / SPEC-020 | src/Manifest/ManifestGraph.php (the `inputTo` rule) |
 | AC5 | tests/Unit/Manifest/ManifestGraphTest.php :: AC5 / SPEC-020 | src/Manifest/ManifestGraph.php (`fromStore()`, `fromIngredients()`, `assertionLabels()`) |
 | AC6 | tests/Unit/Verifier/IngredientDeltasTest.php :: AC6 / SPEC-020 | src/Manifest/ManifestGraph.php; src/Verifier/Verifier.php |
-| AC7 | tests/Unit/Manifest/ManifestGraphTest.php :: AC7 (two tests) / SPEC-020 | src/Manifest/ManifestGraph.php (`MAX_DEPTH`, `MAX_ASSERTIONS`, the cycle rule) |
+| AC7 | tests/Unit/Manifest/ManifestGraphTest.php :: AC7 (three tests, the third added in step 65b: a cycle stops that branch, not the walk) / SPEC-020 | src/Manifest/ManifestGraph.php (`MAX_DEPTH`, `MAX_ASSERTIONS`, the cycle rule) |
 | AC8 | tests/Unit/Verifier/IngredientDeltasTest.php :: AC8 / SPEC-020 | src/Manifest/ManifestStore.php (`ingredientsArray()`, `manifestArray()`) |
 | AC9 | tests/Unit/Verifier/IngredientDeltasTest.php :: AC9 / SPEC-020 | src/Report/ValidationStatus.php (`$ingredientUri`); src/Report/ValidationResult.php (`toArray()`) |
 | AC10 | tests/Unit/Verifier/VerifierTest.php :: SPEC-013 AC10–AC13; tests/Unit/Cli/CommandTest.php :: AC11 / SPEC-019 | src/Verifier/Verifier.php |

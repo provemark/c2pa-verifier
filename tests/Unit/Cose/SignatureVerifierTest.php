@@ -8,6 +8,7 @@ use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
 use Provemark\C2paVerifier\Cose\CoseException;
 use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Cose\EcdsaSignature;
+use Provemark\C2paVerifier\Cose\RsaPss;
 use Provemark\C2paVerifier\Cose\SignatureVerifier;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\Manifest;
@@ -228,4 +229,77 @@ it('AC11: the leaf key is read from chain[0], so a reversed chain is a mismatch,
     $v = spec009Vector('chain-reversed');
     expect($v['expect'])->toBe('false')
         ->and((new SignatureVerifier)->verify($v['cose'], $v['claim']))->toBeFalse();
+})->group('SPEC-009');
+
+/*
+ * AC7, the trailer byte (step 65b). Mutation testing found that removing
+ * `if ($em[$emLen - 1] !== "\xbc") return false;` from RsaPss::emsaPssVerify breaks
+ * no test: every PSS encoding the corpus carries is either whole, so the check
+ * passes either way, or broken in a way `hash_equals` catches at the end. RFC 8017
+ * §9.1.2 step 4 requires the check, so it gets a case of its own.
+ *
+ * The encoding is built here rather than taken from a file, because a signature
+ * whose *only* defect is that last byte cannot be produced without the private key
+ * that made it. The key is generated in memory for this test and is never written:
+ * no key enters this repository, test key or otherwise.
+ */
+
+function spec009Mgf1(string $seed, int $length, string $hash): string
+{
+    $mask = '';
+    for ($counter = 0; strlen($mask) < $length; $counter++) {
+        $mask .= hash($hash, $seed.pack('N', $counter), true);
+    }
+
+    return substr($mask, 0, $length);
+}
+
+/** EMSA-PSS-ENCODE (RFC 8017 §9.1.1) with sLen = hLen, the trailer byte left open. */
+function spec009PssEncode(string $message, string $salt, int $emBits, string $hash, string $trailer): string
+{
+    $mHash = hash($hash, $message, true);
+    $hLen = strlen($mHash);
+    $emLen = intdiv($emBits + 7, 8);
+    $h = hash($hash, str_repeat("\0", 8).$mHash.$salt, true);
+    $db = str_repeat("\0", $emLen - strlen($salt) - $hLen - 2)."\x01".$salt;
+    $maskedDb = $db ^ spec009Mgf1($h, $emLen - $hLen - 1, $hash);
+    $topBits = 8 * $emLen - $emBits;
+    if ($topBits > 0) {
+        $maskedDb[0] = chr(ord($maskedDb[0]) & (0xFF >> $topBits));
+    }
+
+    return $maskedDb.$h.$trailer;
+}
+
+it('AC7: the EMSA-PSS trailer byte is checked: 0xbc verifies, anything else does not', function (): void {
+    $key = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_RSA, 'private_key_bits' => 2048]);
+    expect($key)->not->toBeFalse();
+    assert($key instanceof OpenSSLAsymmetricKey);
+    $details = openssl_pkey_get_details($key);
+    assert(is_array($details) && is_string($details['key']));
+    $public = openssl_pkey_get_public($details['key']);
+    assert($public instanceof OpenSSLAsymmetricKey);
+
+    $message = 'the Sig_structure this test stands in for';
+    $salt = random_bytes(32);
+
+    // the same encoding twice, differing in one byte: the one RFC 8017 §9.1.2 step 4 names
+    $whole = spec009PssEncode($message, $salt, 2047, 'sha256', "\xbc");
+    $wrong = spec009PssEncode($message, $salt, 2047, 'sha256', "\xbb");
+    expect(strlen($whole))->toBe(256)
+        ->and($wrong)->toBe(substr($whole, 0, -1)."\xbb")
+        ->and(substr($whole, 0, -1))->toBe(substr($wrong, 0, -1));
+
+    $signatures = [];
+    foreach (['whole' => $whole, 'wrong' => $wrong] as $name => $em) {
+        $signature = null;
+        expect(openssl_private_encrypt($em, $signature, $key, OPENSSL_NO_PADDING))->toBeTrue($name);
+        if (! is_string($signature)) {
+            throw new RuntimeException("no signature for {$name}");
+        }
+        $signatures[$name] = $signature;
+    }
+
+    expect(RsaPss::verify($message, $signatures['whole'], $public, 'sha256', 2048))->toBeTrue()
+        ->and(RsaPss::verify($message, $signatures['wrong'], $public, 'sha256', 2048))->toBeFalse();
 })->group('SPEC-009');

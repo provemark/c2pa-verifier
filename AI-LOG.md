@@ -3784,3 +3784,33 @@ README are where the disclosure lives.
   the total would not have added up. Reasoned: the weight of each — one
   group A (a verdict changed on PHP 8.3), none in B, two in C.
 - Decided by Maurice: nothing yet; the list awaits his confirmation.
+
+## 2026-09-22 — Step 65, mutation testing
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "Ik wil echt heel zeker weten dat alles goed en netjes is" —
+  from which four gaps were named and the maintainer chose the first:
+  "akkoord, begin met de mutatietesten", then "akkoord, begin met 65b".
+- Produced: two tests (`tests/Unit/Cose/SignatureVerifierTest.php` — the
+  EMSA-PSS trailer byte; `tests/Unit/Manifest/ManifestGraphTest.php` — a
+  cycle followed by a real reference), the redundant Ed25519 branch
+  removed from `src/Trust/Certificate.php`, Traceability rows in
+  SPEC-009 and SPEC-020, `notes/step-65-mutation-testing.md`, `NOTES.md`,
+  `docs/milestones.md`.
+- Measured: `pest --mutate --everything --covered-only` over `src/`:
+  4 547 killed, 90 untested, 3 timeouts, score **98.06%**, 935 s. Each
+  new test was seen red by applying its own escaped mutation by hand and
+  restoring it. Re-measured, `RsaPss` and `ManifestGraph` are at 100%.
+  `composer check` exit 0, 368 passed on PHP 8.5 and on 8.3 locally.
+  Infection was installed and removed again: it asks the test binary for
+  the PHPUnit version, gets Pest, guesses "before 9.3" and writes a
+  `<filter><whitelist>` block PHPUnit 12 rejects.
+- Reasoned, and corrected by measurement: the first reading of the
+  trailer-byte gap was that `hash_equals` would catch it anyway. It does
+  not — changing only that byte leaves every later step agreeing, and
+  `RsaPss::verify()` returns `true` for an encoding RFC 8017 §9.1.2 step
+  4 rejects. Not a forgery route (the signature is the RSA operation over
+  the whole encoded message), but an acceptance this verifier should not
+  make. The test, not the reading, settled it.
+- Decided by Maurice: run mutation testing, then 65b. Open for him: the
+  eight cross-file test helpers that block `--parallel`, which need a
+  step of their own by hand.

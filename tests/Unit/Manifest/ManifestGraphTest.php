@@ -134,6 +134,32 @@ it('AC7: a cycle is assertion.ingredient.malformed on the assertion that closes 
         ->and($graph->walk)->toBe(['self#jumbf=/c2pa/A/c2pa.assertions/c2pa.ingredient.v3', 'self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient.v3']);
 })->group('SPEC-020');
 
+it('AC7: a cycle stops that branch, not the walk: the assertions after it are still followed', function (): void {
+    // Step 65b. Mutation testing found that turning the `continue` after a cyclic
+    // reference into `break` breaks no test: every cyclic fixture had the cycle in
+    // its last assertion, so there was nothing behind it to lose. B names A, which
+    // is in the path, and then names C, which is not.
+    $graph = ManifestGraph::fromIngredients('A', [
+        'A' => [spec020Synthetic('A', 'c2pa.ingredient.v3', 'B')],
+        'B' => [
+            spec020Synthetic('B', 'c2pa.ingredient.v3', 'A'),
+            spec020Synthetic('B', 'c2pa.ingredient.v3__1', 'C'),
+        ],
+        'C' => [],
+    ], []);
+    $malformed = array_values(array_filter($graph->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::AssertionIngredientMalformed));
+
+    expect($malformed)->toHaveCount(1)
+        ->and(str_contains($malformed[0]->explanation, 'cyclic'))->toBeTrue($malformed[0]->explanation)
+        // the assertion behind the cyclic one was read: C is reached, and the walk names it
+        ->and(array_keys($graph->referenced))->toBe(['B', 'C'])
+        ->and($graph->walk)->toBe([
+            'self#jumbf=/c2pa/A/c2pa.assertions/c2pa.ingredient.v3',
+            'self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient.v3',
+            'self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient.v3__1',
+        ]);
+})->group('SPEC-020');
+
 it('AC7: a chain deeper than 32 and a manifest with more than 256 ingredient assertions are general.error', function (): void {
     $chain = [];
     for ($n = 0; $n <= 33; $n++) {

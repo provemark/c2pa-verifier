@@ -228,14 +228,14 @@ final readonly class Certificate
         if (($key['type'] ?? null) === OPENSSL_KEYTYPE_RSA || is_array($key['rsa'] ?? null)) {
             return ['RSA', $bits, null];
         }
-        if (is_array($key['ed25519'] ?? null)) {
-            return ['Ed25519', $bits, null];
-        }
         // The algorithm OID in the public key's DER says what the key is where PHP's own type does
         // not: an RSASSA-PSS key (1.2.840.113549.1.1.10) is type -1 on every version, and an Ed25519
         // key (1.3.101.112) has no `ed25519` details before PHP 8.4 — measured on 8.3, where every
         // Ed25519-signed file was `signingCredential.invalid` ("key of type other") until this read
-        // it from the DER instead (SPEC-015 amendment 5).
+        // it from the DER instead (SPEC-015 amendment 5). PHP 8.4 and later do report `ed25519`
+        // details, and the branch that read them is gone (step 65b): mutation testing showed no test
+        // can tell the two apart, because this OID read answers identically on every version. One
+        // path for one question; CI on 8.4 is what proves it, since that is where the details exist.
         if (is_string($key['key'] ?? null)) {
             $spki = base64_decode(preg_replace('/-----[^-]+-----|\s/', '', $key['key']) ?? '', true);
             if ($spki !== false && str_contains(substr($spki, 0, 32), "\x06\x03\x2b\x65\x70")) {
