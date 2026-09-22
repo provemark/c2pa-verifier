@@ -2869,3 +2869,30 @@ README are where the disclosure lives.
   `Valid`) — to be shown red in step 47 before it is closed.
 - Decided by Maurice: start with more writers.
 
+## 2026-09-22 — Step 47: the wrong Valid closed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met stap 47" (and, on the way, "wat is
+  hard-binding?" — answered in conversation and in the note).
+- Produced: `bin/make-no-hard-binding-variant.php`;
+  `tests/Fixtures/binding/no-hard-binding.{png,bin}`,
+  `no-hard-binding-root.{pem,settings.json}` (README rows there and under
+  `c2patool/variants/`); SPEC-013 AC15 (`VerifierTest`), amendment 10,
+  Traceability; the data-hash gate in `src/Verifier/Verifier.php`;
+  `SPEC013_SUBSET_ONLY` minus `claim-alg-sha1`;
+  `notes/step-47-no-hard-binding.md`; rows in `NOTES.md` and
+  `docs/milestones.md`; this entry.
+- Measured: the variant built (45 743 bytes; its store parses, the claim
+  names two assertions, the signature verifies under the throw-away
+  leaf; the key directory deleted, no PEM private-key header under
+  `tests/Fixtures`); c2patool on it with and without the root as anchor
+  (`Error: claim missing hard binding`, exit 1); this verifier before the
+  fix (`Valid` / `Trusted`, `checks_performed` without `dataHash`); AC15
+  red on `Valid` ≠ `Invalid`; after the fix `composer check` green with
+  295 tests; the first gate's side effects on `hard-bindings-two`
+  (narrowed to the mismatch code) and `claim-alg-sha1` (now equal to
+  c2patool's failure set); a fuzz replay (seed 100 ×40: 0 faults). One
+  script slip caught by its own guard (the JUMBF type read at +8 instead
+  of +4). Reasoned: why the hole was invisible to every corpus and to
+  fuzzing (no writer omits the binding), and the corpus-policy lesson.
+- Decided by Maurice: start step 47.
+

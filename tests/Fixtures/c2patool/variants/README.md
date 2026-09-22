@@ -53,3 +53,8 @@ No JSON for `exclusions-not-list`, `exclusion-start-negative`,
 `hard-binding-missing` (`Error: claim missing hard binding`) and
 `hard-binding-bmff` (`Error: could not decode assertion c2pa.hash.bmff.v2`):
 c2patool exits 1 without a report.
+
+Step 47: `no-hard-binding` (`../../binding/no-hard-binding.png`, a signed
+manifest without any hard binding) — `Error: claim missing hard binding`,
+exit 1, no report, with and without `no-hard-binding-root.settings.json`.
+

@@ -23,9 +23,10 @@ const SPEC013_PNG = 'self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc
 
 /** The files where this verifier reports a strict subset of c2patool's failures, by decision (SPEC-013 AC10). */
 const SPEC013_SUBSET_ONLY = [
-    // decision 1 of SPEC-011: the data hash is skipped after a hashed-URI mismatch on c2pa.hash.data
-    // (hashed-uri-changed and hashed-uris-two-changed are not here: c2patool's data hash *matched* on them, so the sets are equal)
-    'variants/exclusions-overlap', 'variants/hashed-uri-truncated', 'variants/hash-as-text', 'variants/exclusions-too-many', 'variants/claim-alg-sha1',
+    // decision 1 of SPEC-011: the data hash is skipped after a hashed-URI *mismatch* on c2pa.hash.data
+    // (hashed-uri-changed and hashed-uris-two-changed are not here: c2patool's data hash *matched* on them, so the sets are equal;
+    // claim-alg-sha1 left this list in step 47: its hash.data entry is algorithm.unsupported, not a mismatch, so the data hash runs and the sets are equal)
+    'variants/exclusions-overlap', 'variants/hashed-uri-truncated', 'variants/hash-as-text', 'variants/exclusions-too-many',
     // a parse fault stops this verifier where c2patool goes on
     'variants/json-broken',
 ];
@@ -511,4 +512,33 @@ it('AC14: a remote manifest is reported by its URL, never fetched', function ():
         expect($report->remoteManifestUrl)->toBeNull($relative)
             ->and(array_keys($report->toArray()))->not->toContain('remote_manifest');
     }
+})->group('SPEC-013');
+
+it('AC15: a signed manifest with no hard binding is claim.hardBindings.missing and Invalid, never Valid', function (): void {
+    // step 47: before this criterion the data-hash check ran only when the hash.data hashed URI matched;
+    // with no hash.data at all it never ran, and this file was Valid (Trusted with its root as anchor)
+    $bare = (new Verifier)->verify(spec013Stream('binding/no-hard-binding.png'));
+    $codes = spec013Codes($bare);
+    expect($bare->result->state)->toBe(ValidationState::Invalid)
+        ->and(in_array('claim.hardBindings.missing', $codes, true))->toBeTrue()
+        ->and(in_array('claimSignature.validated', $codes, true))->toBeTrue()   // the signature is fine: that is the point
+        ->and($bare->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash']);
+    $missing = array_values(array_filter($bare->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::ClaimHardBindingsMissing));
+    expect($missing)->toHaveCount(1)
+        ->and($missing[0]->url)->toBe('self#jumbf=/c2pa/'.($bare->store?->active->label ?? ''))
+        ->and($missing[0]->explanation)->toContain('c2pa.hash.data');
+
+    $anchored = (new Verifier)->verify(spec013Stream('binding/no-hard-binding.png'), TrustSettings::fromJson((string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/binding/no-hard-binding-root.settings.json')));
+    expect($anchored->result->state)->toBe(ValidationState::Invalid)
+        ->and(in_array('signingCredential.trusted', spec013Codes($anchored), true))->toBeTrue()
+        ->and(in_array('claim.hardBindings.missing', spec013Codes($anchored), true))->toBeTrue();
+
+    // the relabelled variant of step 26 says so too now, next to its broken signature
+    $relabelled = (new Verifier)->verify(spec013Stream('binding/hard-binding-missing.png'));
+    expect(in_array('claim.hardBindings.missing', spec013Codes($relabelled), true))->toBeTrue()
+        ->and($relabelled->result->checksPerformed)->toContain('dataHash');
+    // and a hash.data whose hashed URI does not match is still refused without the data hash being read
+    $tampered = (new Verifier)->verify(spec013Stream('binding/hashed-uris-two-changed.png'));
+    expect(in_array('assertion.hashedURI.mismatch', spec013Codes($tampered), true))->toBeTrue()
+        ->and($tampered->result->checksPerformed)->not->toContain('dataHash');
 })->group('SPEC-013');

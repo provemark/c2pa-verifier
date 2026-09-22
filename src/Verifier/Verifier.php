@@ -172,7 +172,8 @@ final readonly class Verifier
 
     /**
      * Steps 4–6 on the active manifest: the signature, the hashed URIs, and
-     * the data hash when the claim vouched for its assertion.
+     * the data hash — always, unless its assertion is declared and its hashed
+     * URI failed (SPEC-013 amendment 10).
      *
      * @param  resource  $stream
      */
@@ -213,14 +214,18 @@ final readonly class Verifier
         $statuses = [...$statuses, ...$hashedUris];
         $checks[] = 'hashedUris';
 
+        // the data hash runs unless the claim declares a c2pa.hash.data whose hashed URI failed — then the
+        // assertion is not what the signer saw and hashedURI.mismatch already refuses the file. With no
+        // c2pa.hash.data at all it runs and says claim.hardBindings.missing: a signed manifest without a
+        // hard binding was Valid here until step 47 (SPEC-013 amendment 10)
         $dataHashUrl = sprintf('self#jumbf=/c2pa/%s/c2pa.assertions/%s', $manifest->label, DataHashCheck::LABEL);
-        $vouched = false;
+        $declaredAndFailed = false;
         foreach ($hashedUris as $status) {
-            if ($status->code === StatusCode::AssertionHashedUriMatch && $status->url === $dataHashUrl) {
-                $vouched = true;
+            if ($status->url === $dataHashUrl && $status->code === StatusCode::AssertionHashedUriMismatch) {
+                $declaredAndFailed = true;
             }
         }
-        if ($vouched) {
+        if (! $declaredAndFailed) {
             $statuses = [...$statuses, ...$this->dataHash->check($manifest, $stream, $store)];
             $checks[] = 'dataHash';
         }

@@ -145,3 +145,24 @@ c2patool 0.27.22 (`notes/step-31-trust-variants.md`):
 ```
 fd4f6c7ef15644d1bb48e404e6ff0a040259f7b289f742158b53ced602834ef4  x5chain-leaf-only.bin
 ```
+
+## Step 47 (SPEC-013 amendment 10): a signed manifest with no hard binding
+
+`bin/make-no-hard-binding-variant.php <scratch>` — the `c2pa.hash.data`
+box removed from the assertion store, the claim's `created_assertions`
+holding the actions assertion instead and `gathered_assertions` the
+thumbnail, and the claim re-signed with a throw-away P-256 hierarchy
+(keys outside the repository, deleted at the end of the run; the public
+root in `no-hard-binding-root.pem` and, as the only anchor, in
+`no-hard-binding-root.settings.json`). Every run makes a new hierarchy,
+so the store's hash differs per run; the shape does not.
+
+| variant | what | c2patool 0.27.22 | this verifier before step 47 |
+|---|---|---|---|
+| `no-hard-binding` | signature valid, both hashed URIs match, no `c2pa.hash.data` anywhere | `Error: claim missing hard binding` — exit 1, no report, with and without the root as anchor | **`Valid`** without settings, **`Trusted`** with the root as anchor — the data-hash check never ran (`checks_performed` ended at `hashedUris`) |
+
+The case the brief's §8 puts first: a wrong `Valid`. Found by reasoning
+in step 46, shown here, closed in step 47 (SPEC-013 amendment 10:
+the data-hash check runs unless `c2pa.hash.data` is declared and its
+hashed URI failed; absent → `claim.hardBindings.missing`).
+
