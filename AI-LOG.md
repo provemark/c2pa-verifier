@@ -3998,3 +3998,27 @@ README are where the disclosure lives.
   host-relative refusal, and the key's kind stays read from the
   SubjectPublicKeyInfo OID on every PHP version. Seventy-four amendments
   are now confirmed, none outstanding.
+
+## 2026-09-22 — Step 69, the API surface
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "begin daarna met het API-oppervlak" — the third of the four
+  gaps named when the maintainer asked to be certain before this is seen.
+- Produced: `notes/step-69-api-surface.md`, `NOTES.md`,
+  `docs/milestones.md`. Nothing in `src/` was changed.
+- Measured, by reflection over every class in `src/`: 69 public classes,
+  interfaces and enums; 192 public methods, 137 public constants, 202
+  public properties — **600 public symbols**, none carrying `@internal`.
+  The README's example names two classes and four accessors; the CLI uses
+  five classes. Drawing the contract at what a caller needs gives 99
+  symbols, sixteen per cent. Eight exception types exist and SPEC-013
+  turns seven of them into statuses before the public boundary; only
+  `TrustException` escapes, from `TrustSettings::fromJson()`.
+- Reasoned: that `VerificationReport::$store` re-admits the `Manifest`,
+  `Jumbf` and `Cbor` layers to the contract through one property, so
+  drawing a line at 99 symbols means deciding what that property is;
+  and that `@internal` is documentation rather than enforcement, which
+  is the right weight for a library whose layers are deliberately
+  testable on their own.
+- Decided by Maurice: to run the audit. Open for him: naming the
+  contract, marking the rest `@internal`, a snapshot test of the public
+  surface, and whether a first tag is `0.1.0` or `1.0.0`.
