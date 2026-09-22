@@ -3283,3 +3283,13 @@ README are where the disclosure lives.
   artefact (the writers oracles were recorded without settings).
 - Decided by Maurice: validate the found manifests before pushing —
   SPEC-021 first, the push after.
+
+## 2026-09-22 — SPEC-021 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: SPEC-021 status `approved`, the milestones row; this entry.
+- Measured: `bin/spec-check.php` OK. Reasoned: nothing.
+- Decided by Maurice: SPEC-021 approved as drafted — the ingredient
+  manifests validated, what the ingredient assertion recorded dropped
+  with the active-manifest guard, redactions refused until a fixture,
+  SPEC-013 amendment 5 lifted.
