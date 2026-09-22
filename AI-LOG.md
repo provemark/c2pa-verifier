@@ -4758,3 +4758,20 @@ README are where the disclosure lives.
   shape. Open for him: confirmation of SPEC-025 amendment 2, and what
   comes after M8 — the version number of a first tag, and the visibility
   change.
+
+## 2026-09-22 — The SPEC-025 amendment confirmed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en bevestig het amendement".
+- Produced: pushed `a540565` and `8812853`;
+  `notes/step-84-amendment-since-81.md`; the confirmation stamped into
+  SPEC-025 #2; `NOTES.md`, `docs/milestones.md`.
+- Measured: 81 amendments across the specs, of which 80 were confirmed by
+  step 81. Pre-push checks: attribution 0, private-key patterns 0,
+  repository PRIVATE, tree clean.
+- Reasoned: that nothing a caller already had changed — `Verifier` keeps
+  its signature and every whole-file answer, which SPEC-028 AC7 asserts
+  on every run — and that both contract alarms fired without anybody
+  having to remember them, which is what step 75's note asked for after
+  SPEC-024 #1 slipped past an alarm that only enumerated what it knew.
+- Decided by Maurice: the amendment confirmed. Open for him: the version
+  number of a first tag, and the visibility change.

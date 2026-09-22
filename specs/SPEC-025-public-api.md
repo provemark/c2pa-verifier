@@ -225,6 +225,9 @@ reasoning that led to it stays readable.
    AC5 failed until the README's Public API table named it. Neither had to
    be remembered.
 
+   Confirmed by Maurice van Loon, 2026-09-22 (step 84).
+
+
 
 ## Traceability
 
