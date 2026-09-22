@@ -3439,3 +3439,19 @@ README are where the disclosure lives.
   `composer check` on PHP 8.3 / 8.4 / 8.5 each `success`, 345 passed;
   `all green` `success`. Reasoned: nothing.
 - Decided by Maurice: push.
+
+## 2026-09-22 — Step 58: the amendment list since step 51
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "maak de amendment-lijst".
+- Produced: `notes/step-58-amendments-for-confirmation.md` (seventeen
+  amendments over eight specs, one line each, sorted by weight, with the
+  confirmation column empty); SPEC-005's amendment given a proper
+  `## Amendments` section and a number; the milestones and NOTES rows;
+  this entry.
+- Measured: the amendment counts per spec read out of the files
+  (`awk` over each `## Amendments` section); `bin/spec-check.php` OK.
+  Reasoned: the weights (A: six, B: two, C: nine) and the two lines
+  flagged for a second look — SPEC-022 #2 (stricter than c2patool on a
+  rule c2patool has but cannot reach) and SPEC-013 #11 (eighteen
+  verdicts move).
+- Decided by Maurice: none yet — the page is for his confirmation.
