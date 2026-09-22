@@ -5008,3 +5008,31 @@ README are where the disclosure lives.
   Said so in the note rather than calling it a new alarm.
 - Decided by Maurice: api-check in `composer check`. Open for him: the
   version of a first tag; the visibility change; the announcement.
+
+## 2026-09-22 — Step 90, the 111 conformance obligations mapped
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, leg de 101 predicaten naast onze checks".
+- Produced: `docs/conformance.md` (every applicable predicate with a
+  verdict and an anchor, plus what the gaps would cost),
+  `notes/step-90-conformance-mapping.md`, `NOTES.md`,
+  `docs/milestones.md`, and a README Status paragraph that had gone stale
+  ("Not yet: ISOBMFF video (M8)" — M8 closed in step 83b).
+- Measured: the suite's catalogue re-read from a fresh clone — 150
+  predicates, of which **111** apply now, not step 71's 101: closing M8
+  added `video_bmff` (8) and `streaming_bmff` (2). Verdicts: 49 yes, 12
+  partial, 7 closed, 21 by design, 22 gaps. And the one finding that
+  needed measuring rather than reasoning: `tests/Fixtures/c2pa-rs/
+  ocsp.jpg` carries `rVals.ocspVals[0]`, 2264 bytes of DER, which
+  `openssl ocsp -respin` reads as `Cert Status: good`, produced
+  2025-08-11, next update 2025-08-18. `CoseSign1` parses that header into
+  `$otherHeaders['rVals']` and nothing reads it.
+- Reasoned: the table itself, and it says so — a reading of 111 rules
+  against this code by the same hands that wrote it, not a measurement.
+  The suite was not used as a judge; step 71 measured why it cannot be.
+  The gaps are sorted by consequence rather than by number: one can yield
+  a wrong `Trusted` (stapled OCSP, four predicates, one cause), eight are
+  laxer than 2.4 about what a manifest may say without letting a changed
+  byte through, and the rest are stricter or differently named.
+- Decided by Maurice: to do this step before going public. Open for him:
+  whether stapled OCSP becomes SPEC-030; the version of a first tag; the
+  visibility change; the announcement.

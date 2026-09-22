@@ -19,16 +19,23 @@ WordPress and Drupal sites live. The other PHP routes to C2PA verification
 
 ## Status
 
-Milestones M0–M7 are done: the verifier reads the three containers,
-JUMBF and CBOR, claim v1 and v2, verifies COSE signatures (ES256/384/512,
-PS256/384/512, Ed25519), the hashed URIs and the data hash, the
-certificate profile and chain, and the timestamp — and closes with
-`Trusted`, `Valid` or `Invalid`. It also follows a file's provenance
-backwards: the manifests an ingredient assertion names are validated in
-their own right, update manifests included, and a fault in one of them
-is reported against the ingredient that brought it in rather than
-hidden. Not yet: ISOBMFF video (M8) and the assertion-content rules
-beyond the actions and ingredient assertions.
+Milestones M0–M8 are done: the verifier reads JPEG, PNG and WebP and, since
+M8, ISOBMFF — MP4, MOV, AVIF, HEIC and fragmented DASH streams — then JUMBF
+and CBOR, claim v1 and v2, and verifies COSE signatures (ES256/384/512,
+PS256/384/512, Ed25519), the hashed URIs, the data hash and the BMFF hash
+(`v2` and `v3`), the certificate profile and chain, and the timestamp —
+closing with `Trusted`, `Valid` or `Invalid`. It also follows a file's
+provenance backwards: the manifests an ingredient assertion names are
+validated in their own right, update manifests included, and a fault in one
+of them is reported against the ingredient that brought it in rather than
+hidden.
+
+Not yet: revocation — including **OCSP responses stapled into the manifest**,
+which need no network — and the assertion-content rules beyond the actions
+and ingredient assertions.
+[`docs/conformance.md`](docs/conformance.md) is the honest version of that
+sentence: all 111 applicable obligations of C2PA 2.4, one by one, with what
+this verifier does about each and what the 22 gaps would cost.
 [`docs/milestones.md`](docs/milestones.md) has the plan and every step;
 [`NOTES.md`](NOTES.md) the record; [`docs/comparison.md`](docs/comparison.md)
 what it does, does not do, and where it differs from `c2patool`, measured.
