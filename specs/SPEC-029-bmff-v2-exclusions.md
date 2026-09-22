@@ -235,7 +235,7 @@ rather than a second parse.
    criterion compares against, and the reason is written above so the next
    reader does not re-measure it.
 
-   Confirmed by Maurice van Loon: pending.
+   Confirmed by Maurice van Loon, 2026-09-22 (step 88).
 
 ## Open questions
 

@@ -427,7 +427,7 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
    `Invalid` before and after; what differs is one sentence, and it stopped
    being true on the day M8 closed.
 
-   Confirmed by Maurice van Loon: pending.
+   Confirmed by Maurice van Loon, 2026-09-22 (step 88).
 
 
 ## Traceability

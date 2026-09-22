@@ -242,7 +242,7 @@ final readonly class BmffHashCheck
    failed now passes.** What changed is which of the two refusals a
    synthetic fixture gets.
 
-   Confirmed by Maurice van Loon: pending.
+   Confirmed by Maurice van Loon, 2026-09-22 (step 88).
 
 ## Open questions
 

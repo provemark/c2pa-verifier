@@ -4955,3 +4955,21 @@ README are where the disclosure lives.
   rather than a refusal keeps the criterion's purpose intact.
 - Decided by Maurice: none this step. Open for him: the three amendments
   above, all pending confirmation.
+
+## 2026-09-22 — Step 88, the three amendments since step 84, confirmed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en bevestig alle drie de amendementen".
+- Produced: step 87b pushed (`b9bd252..e2f1667`); SPEC-029 #1, SPEC-027 #3
+  and SPEC-012 #6 stamped confirmed; `notes/step-88-amendments-since-84.md`,
+  `NOTES.md`, `docs/milestones.md`.
+- Measured: 84 numbered amendments across the specs, none outstanding;
+  `git log --format=%B | grep -i "claude\|anthropic"` empty before the
+  push; the repository is still PRIVATE.
+- Reasoned: that all three are weight C — no rule of the verifier changed
+  in either direction. SPEC-029 #1 is the one worth reading: it replaced a
+  comparison between two verifiers with different trust anchors by one
+  where both sides are asked the same question, rather than relaxing the
+  criterion to whatever this verifier happens to produce.
+- Decided by Maurice: confirmation of all three amendments. Open for him:
+  whether `bin/api-check.php` joins `composer check`; the version of a
+  first tag; the visibility change; the announcement.
