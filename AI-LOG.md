@@ -4420,3 +4420,26 @@ README are where the disclosure lives.
   included, and a nested exclusion path such as `/moov/trak`.
 - Decided by Maurice: to instrument rather than read on. Open for him:
   the spec, which can now be written.
+
+## 2026-09-22 — SPEC-027 drafted
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en schrijf de spec".
+- Produced: pushed `277c344`; `specs/SPEC-027-bmff-hash.md` (status
+  `draft`, seven acceptance criteria), a line in `docs/milestones.md`.
+- Measured: nothing new; the spec rests on step 77's reproduction and
+  step 73's exclusion list, both cited with their numbers. `php
+  bin/spec-check.php`: OK, 28 specs, SPEC-027 `draft`.
+- Reasoned: that AC3 — a box that moved is a mismatch even when its bytes
+  did not — is the criterion the offset markers exist for, and without it
+  the marker code could be deleted and every other test would still pass.
+  And that the filters `c2pa-rs` supports but no fixture here exercises
+  (`length`, `version`, `flags`, `subset`, nested paths, `merkle`) must be
+  **refused by name** rather than implemented: ignoring a filter would
+  compute a digest over the wrong bytes and call the result a match,
+  which is the one outcome this project refuses above all others, and
+  implementing one against no fixture is an untested branch that looks
+  tested.
+- Decided by Maurice: to instrument, and then to have the spec written.
+  Open for him: approval, and the blocking question — a file whose first
+  top-level box is included, which neither fixture has and on which the
+  two readings of the marker rule differ.
