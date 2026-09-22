@@ -214,6 +214,9 @@ final readonly class BmffHashCheck
    files rather than two. No rule changed: the same digest over the same
    algorithm, on two more flavours of the same container.
 
+   Confirmed by Maurice van Loon, 2026-09-22 (step 81).
+
+
 
 ## Open questions
 

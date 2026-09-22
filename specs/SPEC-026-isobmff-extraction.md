@@ -260,6 +260,9 @@ final readonly class IsobmffManifestStoreExtractor
    `fixture-unsigned.png` with macOS `sips`, so nothing third-party enters)
    join AVIF, each with its recorded `c2patool` verdict.
 
+   Confirmed by Maurice van Loon, 2026-09-22 (step 81).
+
+
 
 ## Traceability
 

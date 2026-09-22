@@ -4587,3 +4587,21 @@ README are where the disclosure lives.
 - Decided by Maurice: to record MOV and HEIC. Open for him: confirmation
   of the two amendments, and the fragmented case, which is all that stands
   between M8 and closed.
+
+## 2026-09-22 — The two amendments confirmed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en bevestig de twee amendementen".
+- Produced: pushed `62e05fc`; `notes/step-81-amendments-since-79.md`; the
+  confirmation stamped into SPEC-026 #2 and SPEC-027 #2; `NOTES.md`,
+  `docs/milestones.md`.
+- Measured: the amendment count across every spec — 80, of which 78 were
+  confirmed by step 79. Pre-push checks: attribution 0, private-key
+  patterns 0, repository PRIVATE, tree clean.
+- Reasoned: that SPEC-026 #2 is the first amendment here written because
+  of something *said* rather than something built. Every earlier one
+  corrected a criterion measurement showed wrong; this one corrects a
+  criterion that was too narrow to stop a sentence. Its new rule is about
+  the record rather than the code, which is the only kind that would have
+  caught it, because what went wrong was not a bug.
+- Decided by Maurice: both amendments confirmed. Open for him: the
+  fragmented BMFF case, which is all that stands between M8 and closed.
