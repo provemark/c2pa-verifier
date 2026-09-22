@@ -4526,3 +4526,14 @@ README are where the disclosure lives.
   changes at all.
 - Decided by Maurice: the amendment confirmed. Open for him: what comes
   after M8, the version number of a first tag, and the visibility change.
+
+## 2026-09-22 — CI on steps 78 and 79
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the push that carried step 78 and the confirmation.
+- Produced: pushed `a7ef9a5` and `8623340` to `origin/main`.
+- Measured: CI run 35767885230: success on PHP 8.3, 8.4 and 8.5, 397
+  passed — the first CI run in which this verifier checks a hard binding
+  on video. Reasoned: nothing.
+- Decided by Maurice: push, and the amendment confirmed. Open for him:
+  what comes after M8, the version number of a first tag, and the
+  visibility change.
