@@ -3650,3 +3650,13 @@ README are where the disclosure lives.
   carry out the three repairs. Open for him: a `CODE_OF_CONDUCT.md`; a
   spec for the published package, without which the `.gitattributes`
   guard cannot be a test; and the visibility change itself.
+
+## 2026-09-22 — CI on step 62
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar" — push the public-readiness step.
+- Produced: pushed `9510a2e` to `origin/main`.
+- Measured: the pre-push checks — attribution 0, private-key patterns 0,
+  repository PRIVATE, tree clean. CI run 35739984051 on `9510a2e`:
+  success on PHP 8.3, 8.4 and 8.5, 353 tests. Reasoned: nothing.
+- Decided by Maurice: push. Open for him: SPEC-023 (the published
+  package), a code of conduct, and the visibility change.
