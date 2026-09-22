@@ -176,6 +176,10 @@ final readonly class MemoryBudget
 
 ## Open questions
 
+Both blockers were decided on 2026-09-22, the day the draft was written;
+the answers are recorded in place below rather than removed, so that the
+reasoning that led to them stays readable.
+
 1. **Which status code.** The §15 vocabulary has no entry for "too large
    for this host", and this project does not invent vocabulary. The
    proposal is `general.error`, which is what every other container fault
@@ -194,8 +198,15 @@ final readonly class MemoryBudget
    makes behaviour depend on the host's configuration, which no other rule
    in this verifier does: the same file could be `Invalid` on one host and
    `Trusted` on another. The alternative is the absolute bound alone, and a
-   fatal error on hosts smaller than it. **Blocker: it is the heart of the
-   spec, and it is a genuine trade-off rather than an oversight.**
+   fatal error on hosts smaller than it. **Decided by Maurice van Loon,
+   2026-09-22: yes, read it.** A verifier that fails closed owes the caller
+   an honest "this does not fit here" rather than a blank 500, and reading
+   the limit makes the difference between hosts visible *in the report*
+   instead of invisible in a crash. The cost is accepted and must be put
+   where a user will meet it: the same file can be refused on a small host
+   and read on a large one, so AC2's explanation has to say that the file
+   was not judged at all — nobody may mistake a refusal for a verdict
+   about the content.
 
 ## Traceability
 

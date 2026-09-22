@@ -3875,3 +3875,22 @@ README are where the disclosure lives.
   a largest-ever-seen store of 3.36 MB), and whether reading
   `ini_get('memory_limit')` is acceptable at all, since it would make the
   same file `Invalid` on one host and `Trusted` on another.
+
+## 2026-09-22 — SPEC-024's two blocking questions answered
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en ja op allebei".
+- Produced: pushed `1508fc0` and `73f1809`; both decisions recorded in
+  place in `specs/SPEC-024-resource-bounds.md` and in
+  `docs/milestones.md`.
+- Measured: `php bin/spec-check.php` OK, 25 specs, SPEC-024 still
+  `draft`. Reasoned: the first question was put as a choice ("16 MiB, or
+  lower?") rather than a yes/no, so "ja" is read as agreement with the
+  proposed 16 MiB; the reading is written into the spec beside the
+  decision, and reversing it costs one constant and one test literal.
+- Decided by Maurice: (1) the default bound becomes 16 MiB — 4.8× the
+  largest store measured in 212 corpus files and 350× the median. (2)
+  `ini_get('memory_limit')` is read, accepting that the same file can be
+  refused on a small host and read on a large one; AC2's explanation must
+  therefore say that the file was not judged at all, so that a refusal is
+  never mistaken for a verdict about its content. Still open: approval of
+  the spec itself.
