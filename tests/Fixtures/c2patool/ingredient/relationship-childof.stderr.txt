@@ -1,0 +1,4 @@
+Error: could not decode assertion c2pa.ingredient.v3 (version 3, content type application/cbor): the assertion had a mandatory field: relationship that could not be decoded
+
+Caused by:
+    the assertion had a mandatory field: relationship that could not be decoded

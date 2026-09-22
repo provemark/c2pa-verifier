@@ -3222,3 +3222,23 @@ README are where the disclosure lives.
 - Produced: SPEC-020 status `approved`, the milestones row; this entry.
 - Measured: `bin/spec-check.php` OK. Reasoned: nothing.
 - Decided by Maurice: SPEC-020 approved as drafted.
+
+## 2026-09-22 — Step 54a: the SPEC-020 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 54a".
+- Produced: `bin/make-ingredient-variants.php`, `tests/Fixtures/ingredient/`
+  (11 signed variants + throw-away root + README),
+  `tests/Fixtures/c2patool/ingredient/` (5 JSON, 6 stderr, README),
+  `tests/Unit/Manifest/IngredientAssertionTest.php`,
+  `tests/Unit/Manifest/ManifestGraphTest.php`,
+  `tests/Unit/Verifier/IngredientDeltasTest.php` (13 tests),
+  `notes/step-54-ingredient-assertion-and-graph.md`, the milestones and
+  NOTES rows; this entry.
+- Measured: every variant `Valid` here today (`bin/c2pa-verify`);
+  c2patool on the eleven (exit codes, stderr, JSON — see the note);
+  `pest --group=SPEC-020` 13 failed (three substantive); Pint and PHPStan
+  on the script clean. The variants were regenerated once and the
+  c2patool JSON re-recorded after it. Reasoned: the malformed rules as
+  the union of specification and c2pa-rs; the read-vs-skip question on a
+  mismatched ingredient assertion, raised for the maintainer.
+- Decided by Maurice: start 54a.
