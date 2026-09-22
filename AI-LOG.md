@@ -3024,3 +3024,14 @@ README are where the disclosure lives.
   own.
 - Decided by Maurice: start the release hygiene.
 
+
+## 2026-09-22 — CI green on step 50
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `cebd8b9..44708ec` (two commits); this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`, no
+  PEM private-key header under the fixtures, visibility `PRIVATE`, tree
+  clean. Run `35711867418` on `44708ec`: conclusion `success`;
+  `composer check` on PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 301
+  passed`; `all green` `success`.
+- Decided by Maurice: push.
