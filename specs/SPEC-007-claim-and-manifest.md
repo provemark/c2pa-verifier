@@ -397,7 +397,7 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
    claim box. `Manifest::fromBox()` wraps each section with `at($url,
    …)`; `ManifestException::at()` adds the url only where none was set.
    No criterion of this spec changed; every message is as it was.
-4. **2026-09-21, step 39, found by c2pa-rs's `ocsp.jpg`** — a `claim_generator_info` whose value is CBOR `null` is treated as absent (c2pa-rs writes `null` in some v1 claims and reads it as none); before, `Claim::fromMap()` refused it as "not a non-empty list of maps". A v2 claim still requires the field (AC9). Test: ManifestStoreTest "AC5 (amendment 4)". No other criterion changed.
+4. **2026-09-21, step 39, found by c2pa-rs's `ocsp.jpg`** *(confirmed by Maurice van Loon, 2026-09-22)* — a `claim_generator_info` whose value is CBOR `null` is treated as absent (c2pa-rs writes `null` in some v1 claims and reads it as none); before, `Claim::fromMap()` refused it as "not a non-empty list of maps". A v2 claim still requires the field (AC9). Test: ManifestStoreTest "AC5 (amendment 4)". No other criterion changed.
 
 ## Traceability
 

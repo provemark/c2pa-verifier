@@ -3054,3 +3054,17 @@ README are where the disclosure lives.
   Reasoned: the weight classes and which amendments carry a decision.
 - Decided by Maurice: none yet — the page awaits his confirmation.
 
+## 2026-09-22 — The amendments confirmed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "bevestigd, alle drie de groepen".
+- Produced: the confirmation column of `notes/step-51-amendments-for-confirmation.md`
+  filled and dated; the sixteen group-A amendment lines in nine specs
+  stamped "confirmed by Maurice van Loon, 2026-09-22"; the milestones
+  row; this entry.
+- Measured: `bin/spec-check.php` OK; 16 stamps placed by script, 44
+  table rows dated. Reasoned: nothing.
+- Decided by Maurice: all 51 amendments confirmed — the six rules he had
+  decided at the time and the ten rules made under the measurement
+  clause (SPEC-013 #7 the CAWG refusal among them), the fifteen
+  report/API changes, the twenty literals.
+
