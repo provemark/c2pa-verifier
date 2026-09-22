@@ -3334,3 +3334,16 @@ README are where the disclosure lives.
   Two approved test literals were wrong and were corrected against the
   files. Reasoned: the check belongs in the Verifier layer (Deptrac).
 - Decided by Maurice: go ahead with 56b.
+
+## 2026-09-22 — CI green on steps 53–56 (M7's first two specs)
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `4e46fa2..4447f7f` (ten commits: the CI record of step
+  52, step 53's measurement, SPEC-020 draft/approve/red/green, step 55's
+  measurement, SPEC-021 draft/approve/red/green); this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`, no
+  PEM private-key header under the fixtures, visibility `PRIVATE`, tree
+  clean. Run `35724724999` on `4447f7f`: conclusion `success`;
+  `composer check` on PHP 8.3 / 8.4 / 8.5 each `success`, 336 passed;
+  `all green` `success`. Reasoned: nothing.
+- Decided by Maurice: push.
