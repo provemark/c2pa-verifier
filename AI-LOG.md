@@ -3347,3 +3347,27 @@ README are where the disclosure lives.
   `composer check` on PHP 8.3 / 8.4 / 8.5 each `success`, 336 passed;
   `all green` `success`. Reasoned: nothing.
 - Decided by Maurice: push.
+
+## 2026-09-22 — SPEC-022 drafted: update manifests
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, schrijf SPEC-022 als draft".
+- Produced: `specs/SPEC-022-update-manifests.md` (draft, AC1–AC9), the
+  milestones row; this entry. No code.
+- Measured: `c2pa-rs/update_manifest.jpg` read by hand (the parser
+  refuses the `c2um` box): two manifests — the parent `c2ma` with seven
+  assertions and a `c2pa.hash.data` excluding `{start 9964, length
+  18874}`, and the active `c2um` (claim v2) with `c2pa.actions.v2`
+  (`c2pa.opened`, `c2pa.edited.metadata`), `c2pa.time-stamp` and one
+  `parentOf` ingredient; the store's range in the file is `{9964,
+  43607}`, so the parent's exclusion is stale by 24 733 bytes — the
+  §15.12.1.1 adjustment is the crux. c2patool: `Trusted`, with
+  `assertion.dataHash.match` under the **active** manifest and one delta
+  (`ingredient.manifest.validated`, url ending `/c2pa.claim`). The
+  parent's `claim_generator_info` is `[]`, which this verifier refuses
+  today. Read: C2PA 2.4 §11.2.3, §11.2.5, §15.11.2.2, §15.12, §15.12.1.1;
+  c2pa-rs `claim.rs` (`ALLOWED_UPDATE_MANIFEST_ACTIONS`,
+  `verify_internal`) and `store.rs` (`get_hash_binding_manifest`).
+  Reasoned: the codes per broken rule, the adjustment's bounds (the
+  cover rule still applies afterwards, so it can never hide bytes
+  outside the store).
+- Decided by Maurice: SPEC-022 as a draft.
