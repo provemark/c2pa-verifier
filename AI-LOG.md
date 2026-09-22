@@ -4022,3 +4022,23 @@ README are where the disclosure lives.
 - Decided by Maurice: to run the audit. Open for him: naming the
   contract, marking the rest `@internal`, a snapshot test of the public
   surface, and whether a first tag is `0.1.0` or `1.0.0`.
+
+## 2026-09-22 — SPEC-025 drafted
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, schrijf SPEC-025 als draft, en $store wordt
+  @internal".
+- Produced: `specs/SPEC-025-public-api.md` (status `draft`, five
+  acceptance criteria), a line in `docs/milestones.md`.
+- Measured: nothing new; the spec rests on step 69's reflection numbers,
+  cited in it. `php bin/spec-check.php`: OK, 26 specs, SPEC-025 `draft`.
+- Reasoned: that marking `$store` `@internal` takes nothing away — the
+  property stays, it works, and the docblock says what it is; what ends
+  is an implied support the project never gave. And that the version
+  number of a first tag is not a property of the code, so it is out of
+  scope: this spec makes either choice honest without making it.
+- Decided by Maurice: that `VerificationReport::$store` is `@internal`,
+  so the parse model is not frozen by a tag. Open for him: the seven
+  layer exceptions a caller never meets (proposed `@internal`, with
+  `TrustException` in the contract, which is the only one that escapes),
+  where the contract is written, whether `Cli\Command` belongs in it, and
+  the version number of the first tag.
