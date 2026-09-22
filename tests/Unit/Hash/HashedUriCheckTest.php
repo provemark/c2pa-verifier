@@ -278,7 +278,10 @@ it('AC8: redactions are refused until M7', function (): void {
     ])
         ->and($statuses[3]->url)->toBe(SPEC011_PNG.'/c2pa.claim.v2')
         ->and($statuses[3]->explanation)->toContain('redacted_assertions')
-        ->and($statuses[3]->explanation)->toContain('M7')
+        // the reason, not a milestone: step 72 found this pinned to "M7", which closed in
+        // step 57, so the message told a user to wait for something that had happened
+        ->and($statuses[3]->explanation)->toContain('15.11.3.3.1')
+        ->and($statuses[3]->explanation)->toContain('assertion.notRedacted')
         ->and(ValidationResult::fromStatuses($statuses, ['hashedUris'])->state)->toBe(ValidationState::Invalid);
 
     foreach (['fixture-signed.png', 'fixture-signed.jpg', 'fixture-signed.webp', 'public-testfiles/adobe-20220124-C.jpg'] as $fixture) {

@@ -4179,3 +4179,29 @@ README are where the disclosure lives.
   and the question it raises about `ManifestGraph::$redactedAssertions`,
   confirmation of SPEC-025 amendment 1, the version number of a first
   tag, and the visibility change.
+
+## 2026-09-22 — Step 72, the redaction message
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met de redactie-vraag".
+- Produced: the explanation and docblock in `src/Hash/HashedUriCheck.php`
+  restated; the assertion in `tests/Unit/Hash/HashedUriCheckTest.php`
+  that pinned `M7` replaced by two that pin the reason;
+  `notes/step-72-redaction.md`, `NOTES.md`, `docs/milestones.md`.
+- Measured: 2 of 174 corpus files with a manifest store carry a non-empty
+  `redacted_assertions`, and one of those is a tampered variant of our
+  own. On the signed one, `ingredient-manifest/redacted.png`, both this
+  verifier and c2patool 0.27.22 say `Invalid` — we with `general.error`,
+  c2patool with `assertion.selfRedacted` and `assertion.action.redacted`,
+  neither of which exists in this project's `StatusCode`. The redacted
+  URI points at `c2pa.actions.v2` in the same manifest, so the file is
+  both a self-redaction and an action redaction. And
+  `ManifestGraph::fromStore()` on that file returns
+  `redactedAssertions: 1` — the field is reachable. `composer check`
+  exit 0, 381 passed.
+- Reasoned: nothing was wrong with the rule, which SPEC-021 and
+  `docs/comparison.md` record as the maintainer's decision with its real
+  reason; what was wrong was a runtime message naming a milestone that
+  had closed, which reads as "nearly over" when the refusal is
+  deliberate. A test asserting `M7` was how that survived.
+- Decided by Maurice: to look at the redaction question. Open for him:
+  the same items as before, minus this one.

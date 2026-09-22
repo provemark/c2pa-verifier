@@ -18,7 +18,7 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * the entry's algorithm — else the claim's (§15.4.2) — and compared with
  * the hash the claim carries. Then every box in the assertion store that
  * no entry resolved to is reported undeclared, unknown boxes included, and
- * a claim that declares redactions is refused until M7. Every entry is
+ * a claim that declares redactions is refused outright. Every entry is
  * reported; nothing stops at the first mismatch.
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
@@ -64,7 +64,13 @@ final readonly class HashedUriCheck
             $statuses[] = new ValidationStatus(
                 StatusCode::GeneralError,
                 sprintf('self#jumbf=/c2pa/%s/%s', $manifest->label, $manifest->claim->version === 2 ? 'c2pa.claim.v2' : 'c2pa.claim'),
-                sprintf('the claim declares %d redacted_assertions; redactions (C2PA 2.4 §6.7) are not supported before M7, and a claim that says "redacted" is not passed on trust', count($redacted)),
+                sprintf(
+                    'the claim declares %d redacted_assertions; this verifier refuses such a claim rather than guessing at it. '
+                    .'Validating a redaction needs the claim-signature hash method (C2PA 2.4 §15.11.3.3.1) and the '
+                    .'assertion.notRedacted check, neither of which this verifier implements, so a claim that says '
+                    .'"redacted" is not passed on trust',
+                    count($redacted),
+                ),
             );
         }
 
