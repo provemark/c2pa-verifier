@@ -23,8 +23,8 @@ nothing a user of the verifier could notice.
 
 | spec | # | what | why | confirmed |
 |---|---|---|---|---|
-| SPEC-001, SPEC-002, SPEC-003 | 4, 2, 2 | **The bound on the manifest store falls from 64 MiB to 16 MiB in all three containers**, and a store that fits the bound but not the host's remaining memory is refused before it is read | step 66 measured a 63 MiB store — *inside* the old bound — needing 132 MB and ending a 128 MB host with a PHP fatal error instead of returning `Invalid`. A fatal cannot be caught, so the caller got no report and no status code at all. Across 212 corpus stores the median is 45 kB and the largest ever met 3.36 MB, so the old figure was nineteen times anything real | — |
-| SPEC-015 | 5 | **A key's kind is read from the SubjectPublicKeyInfo algorithm OID** where PHP's own key type does not say it; Ed25519 (1.3.101.112) joins the RSASSA-PSS OID that was already read this way | before PHP 8.4 an Ed25519 key has no `ed25519` details and `openssl_pkey_get_details()` reports type "other", so the profile said `signingCredential.invalid` — **every Ed25519-signed file was `Invalid` on PHP 8.3 and `Trusted` on 8.4 and 8.5**. A verdict that depended on the runtime. §14.5 has always allowed Ed25519; the bug could not be seen before the coverage matrix, because no fixture carried such a signature | — |
+| SPEC-001, SPEC-002, SPEC-003 | 4, 2, 2 | **The bound on the manifest store falls from 64 MiB to 16 MiB in all three containers**, and a store that fits the bound but not the host's remaining memory is refused before it is read | step 66 measured a 63 MiB store — *inside* the old bound — needing 132 MB and ending a 128 MB host with a PHP fatal error instead of returning `Invalid`. A fatal cannot be caught, so the caller got no report and no status code at all. Across 212 corpus stores the median is 45 kB and the largest ever met 3.36 MB, so the old figure was nineteen times anything real | confirmed 2026-09-22 |
+| SPEC-015 | 5 | **A key's kind is read from the SubjectPublicKeyInfo algorithm OID** where PHP's own key type does not say it; Ed25519 (1.3.101.112) joins the RSASSA-PSS OID that was already read this way | before PHP 8.4 an Ed25519 key has no `ed25519` details and `openssl_pkey_get_details()` reports type "other", so the profile said `signingCredential.invalid` — **every Ed25519-signed file was `Invalid` on PHP 8.3 and `Trusted` on 8.4 and 8.5**. A verdict that depended on the runtime. §14.5 has always allowed Ed25519; the bug could not be seen before the coverage matrix, because no fixture carried such a signature | confirmed 2026-09-22 |
 
 ## B — the report's shape, the API
 
@@ -34,8 +34,8 @@ None.
 
 | spec | # | what | confirmed |
 |---|---|---|---|
-| SPEC-013 | 12 | The coverage matrix (`tests/Fixtures/matrix/`) joins the four corpora as a **fifth drift alarm**, with three new criteria: AC16 (every algorithm in every format), AC17 (state, failure codes and `signature_info` against c2patool's JSON with and without the test roots), AC18 (the two trust answers). No rule of the spec changed | — |
-| SPEC-023 | 1 | **AC6 rewritten** before a line of the checker was written: it asked for the archive in an empty directory "with no `vendor/`", which no PHP library can satisfy — `bin/c2pa-verify` is a shim that requires an autoloader. The criterion now describes the layout Composer creates, and the autoloader is built from the `autoload.psr-4` map in the archive's **own** `composer.json` | — |
+| SPEC-013 | 12 | The coverage matrix (`tests/Fixtures/matrix/`) joins the four corpora as a **fifth drift alarm**, with three new criteria: AC16 (every algorithm in every format), AC17 (state, failure codes and `signature_info` against c2patool's JSON with and without the test roots), AC18 (the two trust answers). No rule of the spec changed | confirmed 2026-09-22 |
+| SPEC-023 | 1 | **AC6 rewritten** before a line of the checker was written: it asked for the archive in an empty directory "with no `vendor/`", which no PHP library can satisfy — `bin/c2pa-verify` is a shim that requires an autoloader. The criterion now describes the layout Composer creates, and the autoloader is built from the `autoload.psr-4` map in the archive's **own** `composer.json` | confirmed 2026-09-22 |
 
 ## Three things worth a second look before confirming
 
@@ -67,7 +67,13 @@ None.
 
 ## Confirmation
 
-Awaiting Maurice van Loon.
+**All six confirmed by Maurice van Loon on 2026-09-22** ("bevestigd, alle
+zes"), the three flagged lines included: the store bound stays at 16 MiB
+with the host-relative refusal beside it, so this verifier will decline to
+examine a file it cannot hold and will say that is what it did; and the
+key's kind stays read from the SubjectPublicKeyInfo OID on every PHP
+version. Group A's amendment lines in SPEC-001, SPEC-002, SPEC-003 and
+SPEC-015 carry the same stamp.
 
 ## How to confirm (the procedure, as in steps 51 and 58)
 

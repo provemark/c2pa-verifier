@@ -287,6 +287,8 @@ rest of the data, then the pad byte. Keeps walking to see a second `C2PA`
    largest ever met 3.36 MB, so the old figure was nineteen times anything
    real. A store at the new bound peaks at 38 MB, which a 64 MB host
    survives. AC15's literal changes with it.
+   Confirmed by Maurice van Loon, 2026-09-22 (step 68).
+
 
 ## Traceability
 

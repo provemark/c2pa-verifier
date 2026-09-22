@@ -3983,3 +3983,18 @@ README are where the disclosure lives.
   entries in C; and that the three bound amendments are one decision, so
   they are one row.
 - Decided by Maurice: nothing yet; the list awaits his confirmation.
+
+## 2026-09-22 — The six amendments confirmed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "bevestigd, alle zes".
+- Produced: the confirmation dated on
+  `notes/step-68-amendments-since-58.md` and stamped into the four
+  group-A amendment lines themselves (SPEC-001 #4, SPEC-002 #2,
+  SPEC-003 #2, SPEC-015 #5), as the procedure of steps 51 and 58
+  requires; `docs/milestones.md`.
+- Measured: `php bin/spec-check.php` OK, 25 specs. Reasoned: nothing.
+- Decided by Maurice: all six amendments confirmed, the three flagged
+  lines included — the store bound stays at 16 MiB with the
+  host-relative refusal, and the key's kind stays read from the
+  SubjectPublicKeyInfo OID on every PHP version. Seventy-four amendments
+  are now confirmed, none outstanding.

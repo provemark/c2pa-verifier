@@ -376,6 +376,8 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
    could not be seen before the matrix, because no fixture carried an
    Ed25519 signature. Test: AC11 in
    `tests/Unit/Trust/CertificateProfileCheckTest.php`.
+   Confirmed by Maurice van Loon, 2026-09-22 (step 68).
+
 
 ## Traceability
 

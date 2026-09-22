@@ -280,6 +280,8 @@ checks and limits pass. It never calls `file_get_contents`.
    largest ever met 3.36 MB, so the old figure was nineteen times anything
    real. A store at the new bound peaks at 38 MB, which a 64 MB host
    survives. AC12's literal changes with it; `DEFAULT_MAX_PIECES` is untouched, and the note beside it ("2048 x 64 KiB, above MAX_LBOX") still holds.
+   Confirmed by Maurice van Loon, 2026-09-22 (step 68).
+
 
 ## Traceability
 

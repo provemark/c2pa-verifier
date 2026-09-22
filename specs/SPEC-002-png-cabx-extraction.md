@@ -264,6 +264,8 @@ calls `file_get_contents`. `fread` with a length of 0 throws in PHP 8, and
    largest ever met 3.36 MB, so the old figure was nineteen times anything
    real. A store at the new bound peaks at 38 MB, which a 64 MB host
    survives. AC13's literal changes with it.
+   Confirmed by Maurice van Loon, 2026-09-22 (step 68).
+
 
 ## Traceability
 
