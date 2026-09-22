@@ -4647,3 +4647,26 @@ README are where the disclosure lives.
   file**, and nothing in this verifier's public API has anywhere to put
   that — a bigger question than the hash, and one for the spec's scope.
 - Decided by Maurice: to do the fragmented case. Open for him: the spec.
+
+## 2026-09-22 — SPEC-028 drafted
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en schrijf de spec".
+- Produced: pushed `3146ae5`; `specs/SPEC-028-fragmented-bmff.md`
+  (status `draft`, seven acceptance criteria, no API sketch), a line in
+  `docs/milestones.md`.
+- Measured: nothing new; the spec rests on step 82's reproduction and
+  step 77's digest rule, both cited. `php bin/spec-check.php`: OK, 29
+  specs, SPEC-028 `draft`.
+- Reasoned: that the API sketch is deliberately absent, because the shape
+  depends on the blocking question and sketching one would make a
+  decision look like a detail. That AC4 — a fragment from the other
+  stream, internally valid and belonging to a different tree — is the
+  substitution a Merkle root exists to prevent, and c2patool's answer to
+  it must be recorded before the criterion is asserted. And that AC6
+  refuses more than one `merkle` map rather than guessing at rendition
+  selection: the field is a list, what selects among them is unmeasured,
+  and a guess would pick a tree and call the result a match.
+- Decided by Maurice: to do the fragmented case and have the spec
+  written. Open for him: approval, and the blocking question — how a
+  caller offers an init segment and N fragments, which grows SPEC-025's
+  recorded surface whichever shape is chosen.
