@@ -365,7 +365,7 @@ actions check.
    than `componentOf` for the same reason of length (one byte shorter,
    the edit stays inside the assertion); both break "exactly one
    `parentOf`", which is the rule under test.
-2. **2026-09-22, step 57b, measured — stricter than c2patool** — a hash
+2. **2026-09-22, step 57b, measured — stricter than c2patool** *(confirmed by Maurice van Loon, 2026-09-22)* — a hash
    assertion in an update manifest is `manifest.update.invalid` here and
    **`Trusted`** at c2patool: c2pa-rs's rule for it sits inside the
    branch for manifests that are *not* update manifests
@@ -384,14 +384,14 @@ actions check.
    Without it the `action-not-allowed` variant reported
    `assertion.action.malformed` next to `manifest.update.invalid`, which
    c2patool does not.
-4. **2026-09-22, step 57b, measured** — an **empty**
+4. **2026-09-22, step 57b, measured** *(confirmed by Maurice van Loon, 2026-09-22)* — an **empty**
    `claim_generator_info` is kept as an empty list, not turned into
    `null`: c2patool renders `"claim_generator_info": []` for
    `update_manifest.jpg`'s parent, so the field is there and says
    nothing. (A `null` one stays absent — SPEC-007 amendment 4.) The
    Scope's wording "counts as absent" is narrowed to "is read, not
    refused".
-5. **2026-09-22, step 57b, measured — and it changes SPEC-021** — the set
+5. **2026-09-22, step 57b, measured — and it changes SPEC-021** *(confirmed by Maurice van Loon, 2026-09-22)* — the set
    of statuses to drop is the union of what **every** ingredient
    assertion in the store recorded, and it is applied to the graph's
    scoped statuses as well as the ingredient manifests'. SPEC-021 wrote

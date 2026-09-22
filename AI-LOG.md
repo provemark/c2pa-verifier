@@ -3455,3 +3455,22 @@ README are where the disclosure lives.
   rule c2patool has but cannot reach) and SPEC-013 #11 (eighteen
   verdicts move).
 - Decided by Maurice: none yet — the page is for his confirmation.
+
+## 2026-09-22 — The seventeen amendments confirmed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "bevestigd, alle drie de groepen".
+- Produced: the confirmation column of
+  `notes/step-58-amendments-for-confirmation.md` filled and dated, with a
+  Confirmation section naming the two flagged lines; the seven group-A
+  amendment lines in SPEC-005, SPEC-013, SPEC-018, SPEC-021 and SPEC-022
+  stamped "confirmed by Maurice van Loon, 2026-09-22"; the milestones and
+  NOTES rows; this entry.
+- Measured: `bin/spec-check.php` OK; 18 table rows dated, 7 stamps
+  placed by script. Reasoned: nothing.
+- Decided by Maurice: all seventeen amendments confirmed — among them
+  that a store with more than one manifest is no longer refused
+  (SPEC-013 #11), that `c2um` is read and `c2tm` refused (SPEC-005),
+  that the opening rule spares an update manifest (SPEC-018 #3), that a
+  hash assertion in an update manifest stays **stricter than c2patool**
+  (SPEC-022 #2), that an empty `claim_generator_info` is read
+  (SPEC-022 #4), and that the drop set is store-wide (SPEC-021 #4).

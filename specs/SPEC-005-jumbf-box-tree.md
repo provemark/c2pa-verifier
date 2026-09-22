@@ -401,7 +401,7 @@ here, since `Jumbf` is a leaf layer and may not depend on `Container`
 
 ## Amendments
 
-1. **2026-09-22, step 57b, defined in SPEC-022 and approved with it** —
+1. **2026-09-22, step 57b, defined in SPEC-022 and approved with it** *(confirmed by Maurice van Loon, 2026-09-22)* —
    AC13 is amended: an update manifest (`c2um`) is **read**, like a
    `c2ma` box, because SPEC-022 validates one. What stays refused with a
    message of its own: compressed manifests (`c2cm`, Brotli), compressed

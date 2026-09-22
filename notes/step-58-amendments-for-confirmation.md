@@ -21,34 +21,34 @@ nothing a user of the verifier could notice.
 
 | spec | # | what | why | confirmed |
 |---|---|---|---|---|
-| SPEC-013 | 11 | **A store with more than one manifest is no longer refused.** Amendment 5's "`Invalid` until M7" is lifted: the manifests an ingredient assertion names are validated, so a fault in one is reported rather than refused unseen | SPEC-021; seventeen corpus files are measured now, sixteen with c2patool's verdict exactly | |
-| SPEC-005 | 1 | An **update manifest (`c2um`) is read** like a `c2ma` box; **`c2tm`** (the deprecated time-stamp manifest) takes its place among the refusals, beside `c2cm` and `brob` | SPEC-022 validates one; §11.2.5 says a `c2tm` is "not to be … read by manifest consumers" | |
-| SPEC-018 | 3 | The opening rule (a 2.x manifest opens with `c2pa.created` or `c2pa.opened`) **does not apply to an update manifest** | this spec's own Problem section said so; the code could not tell, because `c2um` was refused when it was written. Measured: without the exemption, SPEC-022's variant reports a code c2patool does not | |
-| SPEC-022 | 2 | A **hash assertion in an update manifest** is `manifest.update.invalid` — **stricter than c2patool**, which calls the same file `Trusted` | C2PA 2.4 §11.2.3 forbids it in as many words; c2pa-rs's rule for it sits in a branch that can never run (`claim.rs verify_internal`), so c2patool validates the assertion as the asset's binding instead. Named in `docs/comparison.md` | |
-| SPEC-022 | 4 | An **empty `claim_generator_info`** (`[]`) is read as a field that is there and says nothing, not refused as malformed — and rendered as `[]` | c2patool renders it so for `update_manifest.jpg`'s parent; a `null` one stays absent (SPEC-007 amendment 4) | |
-| SPEC-021 | 4 (= SPEC-022 #5) | The set of statuses an ingredient assertion's record silences is the **whole store's**, not one assertion's, and it covers the graph's statuses too | a v3 assertion records the whole tree it validated: `update_manifest.jpg`'s active assertion carries the *parent's* two `ingredient.unknownProvenance` entries, and c2patool drops both — one delta where this verifier had three. The guard is unchanged: nothing about the active manifest is ever dropped | |
+| SPEC-013 | 11 | **A store with more than one manifest is no longer refused.** Amendment 5's "`Invalid` until M7" is lifted: the manifests an ingredient assertion names are validated, so a fault in one is reported rather than refused unseen | SPEC-021; seventeen corpus files are measured now, sixteen with c2patool's verdict exactly | confirmed 2026-09-22 |
+| SPEC-005 | 1 | An **update manifest (`c2um`) is read** like a `c2ma` box; **`c2tm`** (the deprecated time-stamp manifest) takes its place among the refusals, beside `c2cm` and `brob` | SPEC-022 validates one; §11.2.5 says a `c2tm` is "not to be … read by manifest consumers" | confirmed 2026-09-22 |
+| SPEC-018 | 3 | The opening rule (a 2.x manifest opens with `c2pa.created` or `c2pa.opened`) **does not apply to an update manifest** | this spec's own Problem section said so; the code could not tell, because `c2um` was refused when it was written. Measured: without the exemption, SPEC-022's variant reports a code c2patool does not | confirmed 2026-09-22 |
+| SPEC-022 | 2 | A **hash assertion in an update manifest** is `manifest.update.invalid` — **stricter than c2patool**, which calls the same file `Trusted` | C2PA 2.4 §11.2.3 forbids it in as many words; c2pa-rs's rule for it sits in a branch that can never run (`claim.rs verify_internal`), so c2patool validates the assertion as the asset's binding instead. Named in `docs/comparison.md` | confirmed 2026-09-22 |
+| SPEC-022 | 4 | An **empty `claim_generator_info`** (`[]`) is read as a field that is there and says nothing, not refused as malformed — and rendered as `[]` | c2patool renders it so for `update_manifest.jpg`'s parent; a `null` one stays absent (SPEC-007 amendment 4) | confirmed 2026-09-22 |
+| SPEC-021 | 4 (= SPEC-022 #5) | The set of statuses an ingredient assertion's record silences is the **whole store's**, not one assertion's, and it covers the graph's statuses too | a v3 assertion records the whole tree it validated: `update_manifest.jpg`'s active assertion carries the *parent's* two `ingredient.unknownProvenance` entries, and c2patool drops both — one delta where this verifier had three. The guard is unchanged: nothing about the active manifest is ever dropped | confirmed 2026-09-22 |
 
 ## B — the report's shape, the API
 
 | spec | # | what | why | confirmed |
 |---|---|---|---|---|
-| SPEC-007 | 5 | `claim_generator_info` is rendered through `ManifestStore::plain()` like every other value (bytes as base64) | `toJson()` threw `JsonException` on OpenAI's file, whose generator carries an icon with a 32-byte hash — an exception escaping the public API, unseen because the writers alarm compares states and codes, not the rendering | |
-| SPEC-020 | 2 (part) | The `ingredients` rendering follows the files: `manifest_data` only when the referenced label is in the store; an ingredient's `thumbnail` identifier is printed where the thumbnail lives (the ingredient's own manifest when the URI is absolute, the referring one when it is relative) | c2patool prints exactly that (`E-clm-CAICAI`, `CACAE-uri-CA`) | |
+| SPEC-007 | 5 | `claim_generator_info` is rendered through `ManifestStore::plain()` like every other value (bytes as base64) | `toJson()` threw `JsonException` on OpenAI's file, whose generator carries an icon with a 32-byte hash — an exception escaping the public API, unseen because the writers alarm compares states and codes, not the rendering | confirmed 2026-09-22 |
+| SPEC-020 | 2 (part) | The `ingredients` rendering follows the files: `manifest_data` only when the referenced label is in the store; an ingredient's `thumbnail` identifier is printed where the thumbnail lives (the ingredient's own manifest when the URI is absolute, the referring one when it is relative) | c2patool prints exactly that (`E-clm-CAICAI`, `CACAE-uri-CA`) | confirmed 2026-09-22 |
 
 ## C — literals, counts, seams, layers
 
 | spec | # | what | confirmed |
 |---|---|---|---|
-| SPEC-019 | 1 | the `Cli` Deptrac layer also names `Report` (`ValidationState` for the exit status); the API sketch had three layers | |
-| SPEC-020 | 1 | the two corpus files that declare their manifest by URL carry **no store**, so they cannot be compared: AC3's list is fifteen files, and AC1's v3 examples come from `c2pa-rs/CACA` and `adobe-20220124-CAI` | |
-| SPEC-020 | 2 (rest) | c2pa-rs writes `alg: sha256` on its ingredient reference (AC1 said none); the two `E-clm` files keep one manifest the walk never reaches, so `unreferenced` is not empty for them | |
-| SPEC-020 | 3 | c2patool's delta list is a **subsequence** of the walk (it drops what an assertion recorded), and `ManifestGraph::$walk` is a public field the API sketch did not name | |
-| SPEC-021 | 1 | AC2's "one scope" holds for the statuses that spec adds; the report has a second delta because the ingredient manifest has an ingredient of its own | |
-| SPEC-021 | 2 | `checks_performed` holds `ingredients` only where the graph actually reached a manifest (`E-clm-CAICAI` names one that is not in the store) | |
-| SPEC-021 | 3 | five criteria of earlier specs changed with it: SPEC-013 AC11 and AC12, SPEC-017's test helper (the active manifest's statuses only), the enum count, SPEC-020 AC6 | |
-| SPEC-022 | 1 | AC4's fourth rule is tested at the seam and AC4(c) uses `inputTo` rather than `componentOf`: this update manifest's claim uses **indefinite-length CBOR**, which the byte-level tooling does not write | |
-| SPEC-022 | 3 | (the same fact as SPEC-018 #3, seen from this spec) | |
-| SPEC-022 | 5 | (the same fact as SPEC-021 #4, seen from this spec) | |
+| SPEC-019 | 1 | the `Cli` Deptrac layer also names `Report` (`ValidationState` for the exit status); the API sketch had three layers | confirmed 2026-09-22 |
+| SPEC-020 | 1 | the two corpus files that declare their manifest by URL carry **no store**, so they cannot be compared: AC3's list is fifteen files, and AC1's v3 examples come from `c2pa-rs/CACA` and `adobe-20220124-CAI` | confirmed 2026-09-22 |
+| SPEC-020 | 2 (rest) | c2pa-rs writes `alg: sha256` on its ingredient reference (AC1 said none); the two `E-clm` files keep one manifest the walk never reaches, so `unreferenced` is not empty for them | confirmed 2026-09-22 |
+| SPEC-020 | 3 | c2patool's delta list is a **subsequence** of the walk (it drops what an assertion recorded), and `ManifestGraph::$walk` is a public field the API sketch did not name | confirmed 2026-09-22 |
+| SPEC-021 | 1 | AC2's "one scope" holds for the statuses that spec adds; the report has a second delta because the ingredient manifest has an ingredient of its own | confirmed 2026-09-22 |
+| SPEC-021 | 2 | `checks_performed` holds `ingredients` only where the graph actually reached a manifest (`E-clm-CAICAI` names one that is not in the store) | confirmed 2026-09-22 |
+| SPEC-021 | 3 | five criteria of earlier specs changed with it: SPEC-013 AC11 and AC12, SPEC-017's test helper (the active manifest's statuses only), the enum count, SPEC-020 AC6 | confirmed 2026-09-22 |
+| SPEC-022 | 1 | AC4's fourth rule is tested at the seam and AC4(c) uses `inputTo` rather than `componentOf`: this update manifest's claim uses **indefinite-length CBOR**, which the byte-level tooling does not write | confirmed 2026-09-22 |
+| SPEC-022 | 3 | (the same fact as SPEC-018 #3, seen from this spec) | confirmed 2026-09-22 |
+| SPEC-022 | 5 | (the same fact as SPEC-021 #4, seen from this spec) | confirmed 2026-09-22 |
 
 ## Two things worth a second look before confirming
 
@@ -63,6 +63,15 @@ nothing a user of the verifier could notice.
    `Trusted`, four stay `Invalid` for c2patool's own reasons, and two
    (`ocsp`, `ocsp_with_assertion`) stay `Invalid` for the TSA leniency
    ADR-0004 already named.
+
+## Confirmation
+
+**All three groups confirmed by Maurice van Loon on 2026-09-22**
+("bevestigd, alle drie de groepen"), the two flagged lines included:
+this verifier stays stricter than c2patool on a hash assertion in an
+update manifest (SPEC-022 #2), and the multi-manifest refusal stays
+lifted (SPEC-013 #11). Group A's amendment lines in the specs carry the
+same stamp.
 
 ## How to confirm (the procedure, as in step 51)
 

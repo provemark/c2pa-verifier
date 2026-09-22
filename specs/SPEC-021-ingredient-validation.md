@@ -400,7 +400,7 @@ instead, beside the orchestration that already holds those collaborators.
    multi-manifest files, no longer as "expected `Invalid`".
 
 4. **2026-09-22, step 57b, measured on `update_manifest.jpg` (SPEC-022
-   amendment 5)** — the drop set is the union of what **every** ingredient
+   amendment 5)** *(confirmed by Maurice van Loon, 2026-09-22)* — the drop set is the union of what **every** ingredient
    assertion in the store recorded, not only the assertion a status was
    found under, and it covers the graph's scoped statuses (SPEC-020's
    `ingredient.unknownProvenance` and friends) as well as this spec's. A
