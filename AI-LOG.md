@@ -4785,3 +4785,32 @@ README are where the disclosure lives.
   stream, and the run that closes M8. Reasoned: nothing.
 - Decided by Maurice: push, and the amendment confirmed. Open for him:
   the version number of a first tag, and the visibility change.
+
+## 2026-09-22 — Step 85, the public fixtures re-checked
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "Is alles nu geimplementeerd. Kan je nog testen met publieke
+  fixtures."
+- Produced: `tests/Fixtures/c2pa-rs/video1.mp4` with
+  `tests/Fixtures/c2patool/c2pa-rs/video1.json`, a paragraph in that
+  corpus's README, `notes/step-85-public-fixtures.md`,
+  `docs/comparison.md`, `NOTES.md`, `docs/milestones.md`. Nothing in
+  `src/` changed; 404 tests still pass.
+- Measured: `c2pa-org/public-testfiles` re-cloned — its `2.2` tree still
+  holds only `.gitkeep` and READMEs, as step 43 found, and all 25 legacy
+  JPEG assets here are byte-identical to upstream. `c2pa-rs`'s fixture
+  directory holds nine ISOBMFF files this project never had, because step
+  39 predated M8: eight agree with c2patool (`legacy.mp4` expired,
+  `dashinit.mp4` deliberately broken upstream, `nested_moov_1000.mp4`
+  which c2patool cannot parse at all, and five with no manifest), and
+  `video1.mp4` does not — `Valid` at c2patool, `Invalid` here.
+- Reasoned: the reason is that `video1.mp4` carries
+  **`c2pa.hash.bmff.v2`**, which SPEC-027 put out of scope "if a file
+  with one ever turns up". One has, in the reference implementation's own
+  fixtures, and it is not exotic — it also carries the only trusted RFC
+  3161 timestamp of any ISOBMFF file here, and an ingredient. The refusal
+  is the right shape, but "M8 is closed" and "every ISOBMFF file verifies"
+  are different sentences and only the first is true. What v2 would take
+  is unmeasured, and the route is the one step 77 used: instrument
+  c2pa-rs rather than reason about it.
+- Decided by Maurice: to ask. Open for him: whether v2 is worth a spec,
+  and the version and visibility decisions.

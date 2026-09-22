@@ -30,3 +30,10 @@ with the full test trust settings, is under `../c2patool/c2pa-rs/`.
 
 Timestamps: 13 of the 17 JSON files carry `timeStamp.validated` (and
 mostly `timeStamp.trusted`) — the M6 oracle.
+
+`video1.mp4` joined in step 85, long after the rest: step 39 mined this
+repository before M8 existed and skipped every ISOBMFF file. It is the
+evidence for a hole — it carries **`c2pa.hash.bmff.v2`**, which this
+verifier refuses by name while `c2patool` validates it — and it holds the
+only trusted RFC 3161 timestamp of any ISOBMFF file here. Its recorded
+verdict is in `../c2patool/c2pa-rs/video1.json`.
