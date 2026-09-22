@@ -3567,3 +3567,14 @@ README are where the disclosure lives.
   code of our own for an unreferenced manifest (§15 has none, and the
   project invents none) — it is named in `docs/comparison.md` instead.
 - Decided by Maurice: run the absence audit.
+
+## 2026-09-22 — CI green on step 60
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `6718482..531c53c` (the absence audit for M7); this
+  entry.
+- Measured: before the push, 0 attribution lines, no tracked key or PEM
+  private-key header, visibility `PRIVATE`, tree clean. Run
+  `35735714668` on `531c53c`: conclusion `success`; `composer check` on
+  PHP 8.3 / 8.4 / 8.5 each `success`, 353 passed. Reasoned: nothing.
+- Decided by Maurice: push.
