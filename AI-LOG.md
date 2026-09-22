@@ -3697,3 +3697,13 @@ README are where the disclosure lives.
   nothing in `src/` ever may. (2) `docs/`, `specs/`, `notes/` and
   `AI-LOG.md` ship with the package, so AC4 and AC5 stand as written.
   Still open: approval of the spec itself.
+
+## 2026-09-22 — SPEC-023 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: `specs/SPEC-023-published-package.md` status `draft` →
+  `approved`, the Approved field filled; `docs/milestones.md` updated.
+- Measured: `php bin/spec-check.php` OK, 24 specs, SPEC-023 reported
+  `approved`. Reasoned: nothing.
+- Decided by Maurice: approval of SPEC-023. Implementation may now begin,
+  tests first.
