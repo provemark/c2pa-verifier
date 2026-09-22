@@ -5135,3 +5135,21 @@ README are where the disclosure lives.
 - Decided by Maurice: SPEC-030 amendment 1 confirmed. Open for him:
   SPEC-030 amendment 2 and SPEC-025 amendment 3; the version of a first
   tag; the visibility change; the announcement.
+
+## 2026-09-22 — Step 93, the three amendments since step 88, confirmed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, bevestig beide amendementen".
+- Produced: SPEC-030 #2 and SPEC-025 #3 stamped confirmed (SPEC-030 #1
+  was confirmed with 92b); `notes/step-93-amendments-since-88.md`,
+  `NOTES.md`, `docs/milestones.md`.
+- Measured: 87 numbered amendments across the specs, none outstanding.
+- Reasoned: that SPEC-030 #2 is worth more than its weight suggests. Had
+  the implementation followed the specification's wrong OID, all ten
+  acceptance criteria would still have passed — six of them expect
+  `skipped`, two test a seam that would have answered the same way — while
+  the feature did nothing at all. What caught it was a fixture that had to
+  be built rather than downloaded, from `openssl`, an independent source
+  of the same number; and AC7 and AC8, green while the bug was there and
+  red when it went, are the same lesson from the other side.
+- Decided by Maurice: both amendments confirmed. Open for him: the version
+  of a first tag; the visibility change; the announcement.

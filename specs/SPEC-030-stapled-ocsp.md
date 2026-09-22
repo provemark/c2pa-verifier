@@ -368,7 +368,7 @@ needs an amendment with this spec — the same shape as when
    skipped and the whole feature would have been silently inert, which is
    why it is recorded rather than quietly corrected.
 
-   Confirmed by Maurice van Loon: pending.
+   Confirmed by Maurice van Loon, 2026-09-22 (step 93).
 
 ## Open questions
 

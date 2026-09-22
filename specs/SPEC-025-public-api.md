@@ -246,7 +246,7 @@ reasoning that led to it stays readable.
    run with "public but not recorded" on all four cases before any of this
    was written down.
 
-   Confirmed by Maurice van Loon: pending.
+   Confirmed by Maurice van Loon, 2026-09-22 (step 93).
 
 
 ## Traceability
