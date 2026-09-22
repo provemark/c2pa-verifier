@@ -2832,3 +2832,15 @@ README are where the disclosure lives.
   leaves uncovered) and the limits of random mutation.
 - Decided by Maurice: the fuzz step first.
 
+
+## 2026-09-22 — CI green on step 45
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `c530655..358b86f` (two commits); this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`, no
+  PEM private-key header under the fixtures, visibility `PRIVATE`, tree
+  clean, Deptrac 0 violations. Run `35706917105` on `358b86f`:
+  conclusion `success`; `composer check` on PHP 8.3 / 8.4 / 8.5 each
+  `success` with `Tests: 293 passed` (3470 assertions on 8.3, 3472 on
+  8.4/8.5); `all green` `success`.
+- Decided by Maurice: push.
