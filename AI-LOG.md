@@ -3543,3 +3543,27 @@ README are where the disclosure lives.
   the first run where PHP 8.3 agrees with the other two on every
   Ed25519 file. Reasoned: nothing.
 - Decided by Maurice: none.
+
+## 2026-09-22 — Step 60: the absence audit for M7
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met de afwezigheids-audit".
+- Produced: `bin/make-m7-absence-variants.php` (this project's first
+  two-manifest store builder), `tests/Fixtures/m7-absence/` (4 stores +
+  both-roots settings + throw-away root + README),
+  `tests/Fixtures/c2patool/m7-absence/` (4 oracles + README),
+  `tests/Unit/Verifier/M7AbsenceTest.php` (4 tests),
+  `notes/step-60-m7-absence-audit.md`, two rows in
+  `docs/comparison.md`, the milestones and NOTES rows; this entry.
+- Measured: the inventory of every gate M7 added (13 rows), three of
+  which had no file; the four stores through this verifier and c2patool
+  with the same settings — control `Trusted` both, `ingredient-no-actions`
+  `Invalid` with `assertion.action.malformed` both, `unreferenced-broken`
+  `Trusted` both (its signature proven broken by checking it directly),
+  `no-claim-signature` `Trusted` both. `composer check` exit 0, 353
+  tests. Two build lessons recorded: the fixture's claim names its
+  signature box absolutely (so a relabelled copy must be re-signed), and
+  the copy must drop its thumbnail or the store passes 65535 bytes and
+  the exclusion can no longer be a two-byte CBOR integer. Reasoned: no
+  code of our own for an unreferenced manifest (§15 has none, and the
+  project invents none) — it is named in `docs/comparison.md` instead.
+- Decided by Maurice: run the absence audit.
