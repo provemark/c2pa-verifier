@@ -4882,3 +4882,15 @@ README are where the disclosure lives.
   nested deeper is refused by name rather than read short — a walk that
   stops early and reports what it found would hash bytes the signer
   excluded and call the result a match. Still open: approval.
+
+## 2026-09-22 — SPEC-029 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: `specs/SPEC-029-bmff-v2-exclusions.md` status `draft` →
+  `approved`, the Approved field filled; `docs/milestones.md` updated.
+- Measured: `php bin/spec-check.php` OK, 30 specs, SPEC-029 reported
+  `approved`. Reasoned: nothing.
+- Decided by Maurice: approval of SPEC-029. Implementation may now begin,
+  tests first — AC3 first, because it carries the exact ranges the
+  instrumented c2pa-rs printed and is therefore the sharpest test of the
+  nested resolution.
