@@ -3857,3 +3857,21 @@ README are where the disclosure lives.
   copy (no rule change), lowering the default bound from 64 MiB (a rule
   change in SPEC-001, SPEC-002, SPEC-003), and whether the bound should
   be relative to the host's memory limit rather than absolute.
+
+## 2026-09-22 — SPEC-024 drafted
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, schrijf die spec als draft" — after the resource audit
+  named three follow-ups, two of which change rules.
+- Produced: `specs/SPEC-024-resource-bounds.md` (status `draft`, five
+  acceptance criteria), a line in `docs/milestones.md`.
+- Measured: nothing new; the spec rests on step 66's numbers, which are
+  cited in it with the commands that produced them. `php
+  bin/spec-check.php`: OK, 25 specs, SPEC-023 `implemented`, SPEC-024
+  `draft`. Reasoned: that the PNG double copy belongs outside this spec
+  because it changes no rule, and that the spec's numbers must assume it
+  has not happened yet.
+- Decided by Maurice: that the spec should be written. Open for him: the
+  two blocking questions — the new default bound (16 MiB proposed against
+  a largest-ever-seen store of 3.36 MB), and whether reading
+  `ini_get('memory_limit')` is acceptable at all, since it would make the
+  same file `Invalid` on one host and `Trusted` on another.
