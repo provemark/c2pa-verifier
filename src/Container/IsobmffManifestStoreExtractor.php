@@ -44,6 +44,28 @@ final readonly class IsobmffManifestStoreExtractor
     /** As SPEC-001's piece limit: a file is not allowed to cost an unbounded walk. */
     public const DEFAULT_MAX_BOXES = 4096;
 
+    /**
+     * How deep `boxTree()` descends before refusing (SPEC-029).
+     *
+     * `/moov/trak/mdia/minf/stbl/stco` is six segments — the deepest path any
+     * measured exclusion uses — and eight leaves room for a container this project
+     * has not met. A file nested deeper is refused by name rather than read short:
+     * a walk that stops early and reports what it found would leave bytes the
+     * signer excluded inside the digest and call the result a match.
+     */
+    public const DEFAULT_MAX_BOX_DEPTH = 8;
+
+    /**
+     * The box types this walk descends into, and how many bytes of their own come
+     * first. ISO/IEC 14496-12 gives `meta` a version and flags before its children;
+     * the rest begin immediately.
+     */
+    private const CONTAINERS = [
+        'moov' => 0, 'trak' => 0, 'mdia' => 0, 'minf' => 0, 'stbl' => 0,
+        'moof' => 0, 'traf' => 0, 'mfra' => 0, 'edts' => 0, 'dinf' => 0,
+        'udta' => 0, 'mvex' => 0, 'meta' => 4,
+    ];
+
     private const TYPE_UUID = 'uuid';
 
     /** size (4) + type (4). */
@@ -60,6 +82,68 @@ final readonly class IsobmffManifestStoreExtractor
         public int $maxBoxes = self::DEFAULT_MAX_BOXES,
         private MemoryBudget $budget = new MemoryBudget,
     ) {}
+
+    /**
+     * Every box to the configured depth, in file order, each with the path an
+     * exclusion's `xpath` is matched against (SPEC-029).
+     *
+     * The path is built as the walk descends — `/moov/trak/mdia/minf/stbl/stco` —
+     * so resolving an exclusion is a comparison rather than a second parse. This
+     * lives here rather than in the hash check because nothing may parse a box in
+     * two places (the maintainer's decision, 2026-09-22).
+     *
+     * @param  resource  $stream  a readable, seekable stream positioned at 0
+     * @return list<array{offset: int, length: int, type: string, path: string}>
+     *
+     * @throws ContainerException on every malformed case, and when a box nests
+     *                            deeper than DEFAULT_MAX_BOX_DEPTH
+     */
+    public function boxTree($stream): array
+    {
+        $reader = new StreamReader($stream, 'box');
+        $end = $reader->end();
+        rewind($stream);
+
+        $boxes = [];
+        $this->descend($reader, 0, $end, '', 1, $boxes);
+
+        return $boxes;
+    }
+
+    /**
+     * @param  list<array{offset: int, length: int, type: string, path: string}>  $boxes
+     *
+     * @throws ContainerException
+     */
+    private function descend(StreamReader $reader, int $from, int $to, string $parent, int $depth, array &$boxes): void
+    {
+        if ($depth > self::DEFAULT_MAX_BOX_DEPTH) {
+            throw new ContainerException(sprintf(
+                'boxes nest deeper than %d at offset %d; this verifier refuses rather than reading a file short',
+                self::DEFAULT_MAX_BOX_DEPTH,
+                $from,
+            ));
+        }
+
+        $offset = $from;
+        while ($offset + self::BOX_HEADER_LENGTH <= $to) {
+            if (count($boxes) >= $this->maxBoxes) {
+                throw new ContainerException(sprintf('more than %d boxes (offset %d)', $this->maxBoxes, $offset));
+            }
+            [$size, $header, $type] = $this->boxHeader($reader, $offset, $to);
+            $path = $parent.'/'.$type;
+            $boxes[] = ['offset' => $offset, 'length' => $size, 'type' => $type, 'path' => $path];
+
+            $skip = array_key_exists($type, self::CONTAINERS) ? self::CONTAINERS[$type] : null;
+            if ($skip !== null && $size > $header + $skip) {
+                $reader->skip($skip, $offset);
+                $this->descend($reader, $offset + $header + $skip, $offset + $size, $path, $depth + 1, $boxes);
+            } else {
+                $reader->skip($size - $header, $offset);
+            }
+            $offset += $size;
+        }
+    }
 
     /**
      * The CBOR of this file's C2PA box when its purpose is `merkle`, or null when it

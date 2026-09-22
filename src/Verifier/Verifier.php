@@ -293,7 +293,7 @@ final readonly class Verifier
                 // SPEC-027: ISOBMFF binds through c2pa.hash.bmff.v3, whose exclusions are
                 // box paths rather than byte ranges. Which check runs follows the assertion
                 // the manifest actually carries, not the container it arrived in.
-                $statuses = [...$statuses, ...(array_key_exists(BmffHashCheck::LABEL, $binding->assertions)
+                $statuses = [...$statuses, ...(BmffHashCheck::labelOf($binding) !== null
                     ? $this->bmffHash->check($binding, $stream)
                     : $this->dataHash->check($binding, $stream, $store, $hasUpdate))];
             }
@@ -301,7 +301,7 @@ final readonly class Verifier
             // that a caller reading it cannot mistake a BMFF file for one whose data hash
             // was verified. Naming both `dataHash` would be shorter and untrue. With no
             // binding manifest at all, nothing ran and the name stays the older one.
-            $checks[] = $binding !== null && array_key_exists(BmffHashCheck::LABEL, $binding->assertions)
+            $checks[] = $binding !== null && BmffHashCheck::labelOf($binding) !== null
                 ? 'bmffHash'
                 : 'dataHash';
         }

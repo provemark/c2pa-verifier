@@ -4921,3 +4921,37 @@ README are where the disclosure lives.
   rather than another comment.
 - Decided by Maurice: approval of SPEC-029 and both its questions. Open
   for him: nothing new; 87b implements.
+
+## 2026-09-22 — Step 87b, SPEC-029 implemented: `c2pa.hash.bmff.v2` verifies
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 87b" — make the seven SPEC-029 tests green.
+- Produced: `Container/IsobmffManifestStoreExtractor::boxTree()` with
+  `DEFAULT_MAX_BOX_DEPTH = 8` and the container list; `Hash/BmffHashCheck`
+  grew `LABELS`, `labelOf()`, `plan()`, `ranges()`, `remaining()`, and
+  `matches()` was turned inside out to resolve a path before refusing a
+  filter; `digest()` now emits a marker only where the plan says so;
+  `Verifier` routes on `labelOf()` and `DataHashCheck` stopped claiming
+  the two labels; three amendments (SPEC-029 #1, SPEC-027 #3,
+  SPEC-012 #6); a new oracle
+  `tests/Fixtures/c2patool/timestamp/video1-full-plus-digicert-g4.json`;
+  `bin/api-check.php`'s contract list fixed; SPEC-029 `implemented` with
+  Traceability; `docs/comparison.md`, `NOTES.md`, `docs/milestones.md` and
+  the 87b half of `notes/step-87-bmff-v2-tests.md`.
+- Measured: `composer check` green — 411 tests, 7494 assertions; PHPStan
+  max, Pint, Deptrac 0 violations; `bin/api-check.php` 10 classes,
+  95 symbols, recorded surface matches. `video1.mp4` under
+  `trust/full-plus-digicert-g4.settings.json`: `Valid`, one failure
+  (`signingCredential.untrusted`, on the ingredient), identical to
+  c2patool 0.27.22 under the same settings across the active manifest and
+  the ingredient deltas. Without settings the two differ by
+  `signingCredential.expired`, and c2patool no-settings was re-run to
+  confirm it is the operating system's trust store doing it.
+- Reasoned: that the divergence is the design decision, not a fault —
+  this verifier has no system trust store, so an old file needs its TSA
+  anchor named before the comparison is between equals; that
+  `DataHashCheck` should still answer `general.error` when asked about a
+  binding it does not own, because silence is the one thing this project
+  refuses; and that `xpath-nested.mp4` failing through a digest mismatch
+  rather than a refusal keeps the criterion's purpose intact.
+- Decided by Maurice: none this step. Open for him: the three amendments
+  above, all pending confirmation.

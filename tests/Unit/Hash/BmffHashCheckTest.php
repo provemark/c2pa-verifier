@@ -163,19 +163,22 @@ it('AC4: the data filter excludes our own box and no other uuid box', function (
 })->group('SPEC-027');
 
 it('AC5: an exclusion this verifier cannot honour is refused, not ignored', function (): void {
-    // a nested xpath, in a real file: /free became /a/b, four bytes inside the assertion
+    // a nested xpath, in a real file: /free became /a/b, four bytes inside the
+    // assertion. SPEC-027 amendment 3: nested paths are implemented since SPEC-029,
+    // so this one is no longer refused — it resolves to nothing, `free` is hashed
+    // after all, and the digest says so. Invalid either way, which is the point.
     $report = spec027Verify('bmff/xpath-nested.mp4', trusted: false);
-    $explanations = implode(' | ', array_map(static fn (ValidationStatus $s): string => $s->explanation, $report->result->statuses));
+    $codes = array_map(static fn (ValidationStatus $s): string => $s->code->value, $report->result->statuses);
 
     expect($report->result->state)->toBe(ValidationState::Invalid)
-        ->and(str_contains($explanations, '/a/b'))->toBeTrue($explanations);
+        ->and(in_array(StatusCode::AssertionBmffHashMismatch->value, $codes, true))->toBeTrue(implode(' | ', $codes));
 
-    // and at the seam, the filters c2pa-rs has and no fixture here carries
+    // and at the seam, the filters c2pa-rs has that this verifier still cannot honour
     foreach ([
-        ['xpath' => '/free', 'subset' => [['offset' => 0, 'length' => 4]]],
         ['xpath' => '/free', 'length' => 8],
         ['xpath' => '/free', 'version' => 0],
         ['xpath' => '/free', 'flags' => "\x00\x00\x00"],
+        ['xpath' => '/free', 'exact' => true],
     ] as $exclusion) {
         expect(fn () => BmffHashCheck::included(
             [['offset' => 0, 'length' => 8, 'type' => 'free']],

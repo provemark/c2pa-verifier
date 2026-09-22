@@ -121,13 +121,19 @@ range — none of which any fixture here exercises.
     in the digest.
 
 - **AC5 — an exclusion this verifier cannot honour is refused, not ignored** *(malformed input)*
-  - Given an assertion carrying a `subset`, `length`, `version` or `flags`
-    filter, or a `merkle` field, or an `xpath` with more than one segment
+  *(amended 2026-09-22, see Amendments 3)*
+  - Given an assertion carrying a `length`, `version`, `flags` or `exact`
+    filter on a path that resolves
   - When it is verified
   - Then the file is `Invalid` with the unsupported element named. Ignoring
     a filter would compute a digest over the wrong bytes and call the
     result a match, which is the one outcome this project refuses above all
     others.
+  - And given a nested `xpath` that names no box in the file — SPEC-029
+    implements nested paths, so one that resolves to nothing excludes
+    nothing — the file is `Invalid` through
+    `assertion.bmffHash.mismatch`: the bytes it meant to leave out are
+    hashed, and the digest says so.
 
 - **AC6 — the assertion's own shape is checked**
   - Given an assertion with no `hash`, an `alg` this verifier does not
@@ -217,6 +223,26 @@ final readonly class BmffHashCheck
    Confirmed by Maurice van Loon, 2026-09-22 (step 81).
 
 
+3. **2026-09-22, step 87b, while implementing SPEC-029** — AC5 listed
+   `subset` and "an `xpath` with more than one segment" among the things
+   this verifier refuses. Both are implemented now: `c2pa.hash.bmff.v2`
+   cannot be verified without them, six of `video1.mp4`'s eight exclusions
+   being nested and four carrying a `subset`. The refusal list is what is
+   left — `length`, `version`, `flags`, `exact` — and it still fires only
+   once the path resolves, so a filter on a box the file does not have
+   cannot fail a file it does not touch (SPEC-029 AC6).
+
+   The fixture `bmff/xpath-nested.mp4`, built for this criterion, now
+   answers `assertion.bmffHash.mismatch` where it answered a refusal: its
+   `/a/b` names nothing, so `free` is hashed and the digest differs. The
+   file is `Invalid` either way, which is what the criterion exists to
+   protect.
+
+   **Weight A: nothing that passed before fails now, and nothing that
+   failed now passes.** What changed is which of the two refusals a
+   synthetic fixture gets.
+
+   Confirmed by Maurice van Loon: pending.
 
 ## Open questions
 

@@ -62,7 +62,11 @@ function spec029Stream(?string $bytes = null)
     return $memory;
 }
 
-/** The plan the digest follows: each range, and whether a marker precedes it. */
+/**
+ * The plan the digest follows: each range, and whether a marker precedes it.
+ *
+ * @return list<array{offset: int, length: int, marker: bool}>
+ */
 function spec029Plan(): array
 {
     $extractor = new IsobmffManifestStoreExtractor;
@@ -100,7 +104,16 @@ function spec029Exclusions(): array
 
 function spec029Verify(?string $bytes = null): VerificationReport
 {
-    return (new Verifier)->verify(spec029Stream($bytes), null);
+    // the C2PA test anchors plus the cross-certificate that signs this file's two
+    // DigiCert timestamps. Both sides need it: c2patool falls back to the operating
+    // system's trust store for a responder (step 40 §5) and this verifier never
+    // does, so without the anchor the two judge the 2022 signers at different
+    // moments and the comparison is not between equals (SPEC-029 amendment 1).
+    $settings = TrustSettings::fromJson(
+        (string) file_get_contents(Corpus::fixtures().'/trust/full-plus-digicert-g4.settings.json'),
+    );
+
+    return (new Verifier)->verify(spec029Stream($bytes), $settings);
 }
 
 /** @return list<string> */
@@ -113,15 +126,23 @@ it('AC1: video1.mp4 verifies, and its failures are c2patool\'s', function (): vo
     $report = spec029Verify();
 
     /** @var array<string, mixed> $oracle */
-    $oracle = json_decode((string) file_get_contents(Corpus::fixtures().'/c2patool/c2pa-rs/video1.json'), true, 512, JSON_THROW_ON_ERROR);
+    $oracle = json_decode((string) file_get_contents(Corpus::fixtures().'/c2patool/timestamp/video1-full-plus-digicert-g4.json'), true, 512, JSON_THROW_ON_ERROR);
     /** @var array<string, mixed> $results */
     $results = (array) ($oracle['validation_results'] ?? []);
-    /** @var array<string, mixed> $active */
-    $active = (array) ($results['activeManifest'] ?? []);
+
+    // the active manifest and its ingredient deltas together: c2patool keeps the
+    // ingredient's statuses in a list of their own, this verifier reports one list
+    $scopes = [(array) ($results['activeManifest'] ?? [])];
+    foreach ((array) ($results['ingredientDeltas'] ?? []) as $delta) {
+        assert(is_array($delta));
+        $scopes[] = (array) ($delta['validationDeltas'] ?? []);
+    }
     $theirs = [];
-    foreach ((array) ($active['failure'] ?? []) as $status) {
-        assert(is_array($status) && is_string($status['code']));
-        $theirs[$status['code']] = true;
+    foreach ($scopes as $scope) {
+        foreach ((array) ($scope['failure'] ?? []) as $status) {
+            assert(is_array($status) && is_string($status['code']));
+            $theirs[$status['code']] = true;
+        }
     }
     $ours = [];
     foreach ($report->result->statuses as $status) {
@@ -132,9 +153,11 @@ it('AC1: video1.mp4 verifies, and its failures are c2patool\'s', function (): vo
     ksort($theirs);
     ksort($ours);
 
-    expect(spec029Codes($report))->toContain(StatusCode::AssertionBmffHashMatch->value)
+    expect($report->result->state)->toBe(ValidationState::Valid)
+        ->and(spec029Codes($report))->toContain(StatusCode::AssertionBmffHashMatch->value)
         ->and(array_keys($ours))->toBe(array_keys($theirs))
-        // the binding, the timestamp and the ingredient all pass: only trust fails
+        // the binding, the timestamp and the ingredient hash all pass; what fails is
+        // the ingredient's own chain, which ends at an intermediate nothing signs
         ->and(array_keys($ours))->toBe(['signingCredential.untrusted']);
 })->group('SPEC-029');
 
@@ -157,15 +180,17 @@ it('AC3: the nested paths resolve to exactly the ranges c2pa-rs hashes', functio
 })->group('SPEC-029');
 
 it('AC4: subset narrows, and length 0 runs to the end of the box', function (): void {
-    $box = [['offset' => 100, 'length' => 40, 'type' => 'stco', 'path' => '/moov/trak/mdia/minf/stbl/stco']];
+    // the arithmetic, on a box of its own: AC3 covers the nesting, with the real
+    // file and the ranges the instrumented c2pa-rs printed
+    $box = [['offset' => 100, 'length' => 40, 'type' => 'stco', 'path' => '/stco']];
     $read = static fn (int $at, int $length): string => str_repeat("\0", max($length, 0));
 
     // length 0: offset 16 to the end, so 24 bytes gone and 16 kept
-    expect(BmffHashCheck::plan($box, [['xpath' => '/moov/trak/mdia/minf/stbl/stco', 'subset' => [['offset' => 16, 'length' => 0]]]], $read))
+    expect(BmffHashCheck::plan($box, [['xpath' => '/stco', 'subset' => [['offset' => 16, 'length' => 0]]]], $read))
         ->toBe([['offset' => 100, 'length' => 16, 'marker' => true]]);
 
     // an explicit length takes exactly that many, clipped to the box
-    expect(BmffHashCheck::plan($box, [['xpath' => '/moov/trak/mdia/minf/stbl/stco', 'subset' => [['offset' => 16, 'length' => 8]]]], $read))
+    expect(BmffHashCheck::plan($box, [['xpath' => '/stco', 'subset' => [['offset' => 16, 'length' => 8]]]], $read))
         ->toBe([
             ['offset' => 100, 'length' => 16, 'marker' => true],
             ['offset' => 124, 'length' => 16, 'marker' => false],
@@ -185,10 +210,10 @@ it('AC6: flags is refused when the path exists, and ignored when it cannot match
     // video1.mp4 carries two flags exclusions on /moof paths, and a non-fragmented
     // file has no moof — so reading the list must not refuse this file (AC1 proves
     // it does not). Refusing has to come from resolving a path that is there.
-    $box = [['offset' => 0, 'length' => 16, 'type' => 'tfhd', 'path' => '/moof/traf/tfhd']];
+    $box = [['offset' => 0, 'length' => 16, 'type' => 'tfhd', 'path' => '/tfhd']];
     $read = static fn (int $at, int $length): string => str_repeat("\0", max($length, 0));
 
-    expect(fn () => BmffHashCheck::plan($box, [['xpath' => '/moof/traf/tfhd', 'flags' => "\x01\x00\x00"]], $read))
+    expect(fn () => BmffHashCheck::plan($box, [['xpath' => '/tfhd', 'flags' => "\x01\x00\x00"]], $read))
         ->toThrow(HashException::class);
 
     // and a box nested deeper than the bound is refused, never read short

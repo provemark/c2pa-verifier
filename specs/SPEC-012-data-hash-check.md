@@ -253,7 +253,8 @@ recorded in the READMEs (Open questions).
   - When checked
   - Then the first gives `claim.hardBindings.missing` with the
     manifest's url `self#jumbf=/c2pa/<label>`; the second `general.error`
-    naming `c2pa.hash.bmff.v2` and M8; the third
+    naming `c2pa.hash.bmff.v2` and the check that does verify it
+    *(amended 2026-09-22, see Amendments 6)*; the third
     `assertion.multipleHardBindings` with the manifest's url, equal to
     the code and url of that entry in c2patool's recorded
     `validation_status` (step 26); nothing hashed; all `Invalid`
@@ -410,6 +411,24 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
    and asserts SPEC-003's refusal. No outcome changed.
 4. **2026-09-21, with SPEC-014's implementation** — `StatusCode` grew by the two trust codes; AC10's test now asserts this spec's twenty-one are present and skips the two (SPEC-014 AC10 asserts the twenty-three). AC4's test expects `validation_status` absent rather than `[]` (SPEC-013 amendment 3). No criterion changed in outcome.
 5. **2026-09-21, step 38, decided by Maurice van Loon after step 37** *(confirmed by Maurice van Loon, 2026-09-22)* — the store's exclusion must *cover* the store, not equal it. `truepic-20230212-*.jpg` (the C2PA's own test files) exclude `[0, 206316]` for a store at `[13617, 192699]`: the file head as well; c2patool takes the range as written and the data hash matches. The exclusion sits inside the signed claim's hashed URI: a writer that excludes more than the store hides bytes from its own binding, which the signer chose and vouched for; what a verifier must require is that the store lies inside the excluded region. Scope item 5 and AC3 changed; every step-23 variant still fails (part of the store uncovered). No other criterion changed.
+
+6. **2026-09-22, step 87b, while implementing SPEC-029** — AC8 asked for
+   the word "M8" in the answer this check gives a manifest whose hard
+   binding is `c2pa.hash.bmff.v2`. M8 is finished and that binding is
+   verified, by `BmffHashCheck`; `Verifier` routes a manifest carrying one
+   there and never here. The status stays `general.error` — a caller who
+   asks this check about a binding it does not own gets an answer, never a
+   silence — and its message now names the check that does verify it
+   instead of a milestone that has passed. The unversioned `c2pa.hash.bmff`
+   and the box and collection hashes keep the older message: those really
+   are not implemented.
+
+   **Weight A: no verdict changed.** Through the public API that fixture is
+   `Invalid` before and after; what differs is one sentence, and it stopped
+   being true on the day M8 closed.
+
+   Confirmed by Maurice van Loon: pending.
+
 
 ## Traceability
 

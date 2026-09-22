@@ -57,6 +57,12 @@ final readonly class DataHashCheck
             $label = $box->description->label;
             if ($label === self::LABEL) {
                 $bindings[] = $box;
+            } elseif (in_array($label, BmffHashCheck::LABELS, true)) {
+                // SPEC-027/029: these two are verified, by BmffHashCheck, and the Verifier
+                // routes a manifest that carries one there rather than here. Reaching this
+                // line means someone called this check directly with a BMFF binding, and
+                // saying "not supported" would be untrue since M8.
+                return [new ValidationStatus(StatusCode::GeneralError, sprintf('%s/c2pa.assertions/%s', $manifestUrl, $label), sprintf('the hard binding %s is verified by BmffHashCheck, not here; this check answers for %s alone', $label, self::LABEL))];
             } elseif (self::isOtherHardBinding($label)) {
                 return [new ValidationStatus(StatusCode::GeneralError, sprintf('%s/c2pa.assertions/%s', $manifestUrl, $label), sprintf('the hard binding %s is not supported yet: BMFF, box and collection hashes are M8 and later; only %s is verified today', $label, self::LABEL))];
             }

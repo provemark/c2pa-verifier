@@ -42,11 +42,21 @@ final readonly class BmffHashCheck
 {
     public const LABEL = 'c2pa.hash.bmff.v3';
 
+    /**
+     * The hard bindings this check answers to (SPEC-029).
+     *
+     * v2 and v3 share the digest exactly; what differs is the exclusion list, and
+     * v2's is the precise one — nested paths and `subset` where v3 names whole
+     * top-level boxes. Measured in step 86 by instrumenting c2pa-rs.
+     */
+    public const LABELS = [self::LABEL, 'c2pa.hash.bmff.v2'];
+
     /** Read in 64 KiB pieces, as SPEC-012 does: a video is not held in memory. */
     public const DEFAULT_CHUNK_SIZE = 64 * 1024;
 
     /** The filters c2pa-rs honours and no fixture here carries (SPEC-027 AC5). */
-    private const UNSUPPORTED_FILTERS = ['subset', 'length', 'version', 'flags', 'exact'];
+    /** `subset` was here until SPEC-029 implemented it; the rest await a file that uses them. */
+    private const UNSUPPORTED_FILTERS = ['length', 'version', 'flags', 'exact'];
 
     /**
      * @param  iterable<string, resource>  $fragments  a name and an open stream, one at
@@ -66,15 +76,16 @@ final readonly class BmffHashCheck
      */
     public function check(Manifest $manifest, $stream): array
     {
-        $url = sprintf('self#jumbf=/c2pa/%s/c2pa.assertions/%s', $manifest->label, self::LABEL);
+        $label = self::labelOf($manifest) ?? self::LABEL;
+        $url = sprintf('self#jumbf=/c2pa/%s/c2pa.assertions/%s', $manifest->label, $label);
 
         try {
-            $assertion = $this->assertionOf($manifest->assertions[self::LABEL]->data ?? null);
+            $assertion = $this->assertionOf($manifest->assertions[$label]->data ?? null);
             // the checks before this one have read the stream to its end; the box walk
             // reads forward from wherever it is told to start
             rewind($stream);
-            $boxes = $this->boxes->topLevelBoxes($stream);
-            $included = self::included($boxes, $assertion['exclusions'], function (int $at, int $length) use ($stream): string {
+            $boxes = $this->boxes->boxTree($stream);
+            $included = self::plan($boxes, $assertion['exclusions'], function (int $at, int $length) use ($stream): string {
                 if ($length < 1) {
                     return '';
                 }
@@ -352,10 +363,140 @@ final readonly class BmffHashCheck
         ];
     }
 
+    /** Which BMFF binding this manifest carries, newest first, or null for none. */
+    public static function labelOf(Manifest $manifest): ?string
+    {
+        foreach (self::LABELS as $label) {
+            if (array_key_exists($label, $manifest->assertions)) {
+                return $label;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The ranges the digest covers, in file order, each saying whether an offset
+     * marker precedes it (SPEC-029).
+     *
+     * A marker belongs to a top-level box, not to a range: a nested exclusion
+     * punches a hole inside a box and the pieces on either side share the one
+     * marker. Measured, step 86 — `moov` comes back as three ranges and one
+     * marker, because two `stco` boxes are excluded from their offset 16 onward.
+     *
+     * @param  list<array{offset: int, length: int, type: string, path: string}>  $tree  as the extractor gives it
+     * @param  list<array<string, mixed>>  $exclusions
+     * @param  callable(int, int): string  $readAt
+     * @return list<array{offset: int, length: int, marker: bool}>
+     *
+     * @throws HashException on a filter this verifier does not implement
+     */
+    public static function plan(array $tree, array $exclusions, callable $readAt): array
+    {
+        $excluded = [];
+        foreach ($tree as $box) {
+            foreach ($exclusions as $exclusion) {
+                if (! self::matches($box, $exclusion, $readAt)) {
+                    continue;
+                }
+                foreach (self::ranges($box, $exclusion) as $range) {
+                    $excluded[] = $range;
+                }
+            }
+        }
+
+        $plan = [];
+        foreach ($tree as $box) {
+            if ($box['path'] !== '/'.$box['type']) {
+                continue;   // markers and ranges are per top-level box
+            }
+            $first = true;
+            foreach (self::remaining($box, $excluded) as $span) {
+                $plan[] = ['offset' => $span['offset'], 'length' => $span['length'], 'marker' => $first];
+                $first = false;
+            }
+        }
+
+        return $plan;
+    }
+
+    /**
+     * What an exclusion takes out of a box: the whole of it, or the subsets it names.
+     *
+     * `length: 0` means to the end of the box, and an explicit length is clipped to
+     * it — measured on this file's two 40-byte `stco` boxes, excluded from offset
+     * 16 (step 86).
+     *
+     * @param  array{offset: int, length: int, type: string, path: string}  $box
+     * @param  array<string, mixed>  $exclusion
+     * @return list<array{offset: int, length: int}>
+     */
+    private static function ranges(array $box, array $exclusion): array
+    {
+        $subsets = $exclusion['subset'] ?? null;
+        if ($subsets === null) {
+            return [['offset' => $box['offset'], 'length' => $box['length']]];
+        }
+        if (! is_array($subsets) || ! array_is_list($subsets)) {
+            throw new HashException(self::LABEL.': an exclusion subset is not a list');
+        }
+
+        $out = [];
+        foreach ($subsets as $subset) {
+            if (! is_array($subset) || ! is_int($subset['offset'] ?? null) || ! is_int($subset['length'] ?? null)) {
+                throw new HashException(self::LABEL.': a subset has no integer offset and length');
+            }
+            if ($subset['offset'] > $box['length']) {
+                continue;
+            }
+            $length = $subset['length'] === 0
+                ? $box['length'] - $subset['offset']
+                : min($subset['length'], $box['length'] - $subset['offset']);
+            $out[] = ['offset' => $box['offset'] + $subset['offset'], 'length' => $length];
+        }
+
+        return $out;
+    }
+
+    /**
+     * A box minus everything excluded inside it, in file order.
+     *
+     * @param  array{offset: int, length: int, type: string, path: string}  $box
+     * @param  list<array{offset: int, length: int}>  $excluded
+     * @return list<array{offset: int, length: int}>
+     */
+    private static function remaining(array $box, array $excluded): array
+    {
+        $inside = [];
+        foreach ($excluded as $range) {
+            $start = max($range['offset'], $box['offset']);
+            $stop = min($range['offset'] + $range['length'], $box['offset'] + $box['length']);
+            if ($stop > $start) {
+                $inside[] = ['offset' => $start, 'length' => $stop - $start];
+            }
+        }
+        usort($inside, static fn (array $a, array $b): int => $a['offset'] <=> $b['offset']);
+
+        $out = [];
+        $at = $box['offset'];
+        $end = $box['offset'] + $box['length'];
+        foreach ($inside as $range) {
+            if ($range['offset'] > $at) {
+                $out[] = ['offset' => $at, 'length' => $range['offset'] - $at];
+            }
+            $at = max($at, $range['offset'] + $range['length']);
+        }
+        if ($at < $end) {
+            $out[] = ['offset' => $at, 'length' => $end - $at];
+        }
+
+        return $out;
+    }
+
     /**
      * The top-level boxes no exclusion matches, in file order.
      *
-     * @param  list<array{offset: int, length: int, type: string}>  $boxes
+     * @param  list<array{offset: int, length: int, type: string, path?: string}>  $boxes
      * @param  list<array<string, mixed>>  $exclusions
      * @param  callable(int, int): string  $readAt  the asset's bytes at an offset, for the data filter
      * @return list<array{offset: int, length: int}>
@@ -382,7 +523,7 @@ final readonly class BmffHashCheck
     }
 
     /**
-     * @param  array{offset: int, length: int, type: string}  $box
+     * @param  array{offset: int, length: int, type: string, path?: string}  $box
      * @param  array<string, mixed>  $exclusion
      * @param  callable(int, int): string  $readAt
      *
@@ -390,33 +531,37 @@ final readonly class BmffHashCheck
      */
     private static function matches(array $box, array $exclusion, callable $readAt): bool
     {
+        $xpath = $exclusion['xpath'] ?? null;
+        if (! is_string($xpath) || $xpath === '' || $xpath[0] !== '/') {
+            throw new HashException(self::LABEL.': an exclusion has no usable xpath');
+        }
+
+        // The path first, and a refusal only after it resolves. video1.mp4 carries
+        // two `flags` exclusions on /moof paths and has no moof at all; refusing
+        // while reading the list would make a file fail on exclusions that touch
+        // nothing (SPEC-029 AC6).
+        // SPEC-027's callers hand over top-level boxes without a path; a box that
+        // has none is at the top level and its path is its type.
+        $path = $box['path'] ?? '/'.$box['type'];
+        if ($path !== $xpath) {
+            return false;
+        }
+
         foreach (self::UNSUPPORTED_FILTERS as $filter) {
-            if (array_key_exists($filter, $exclusion)) {
+            if (($exclusion[$filter] ?? null) !== null) {
                 throw new HashException(sprintf(
-                    '%s: an exclusion carries a %s filter, which this verifier does not implement; ignoring it would hash the wrong bytes',
+                    '%s: the exclusion %s carries a %s filter, which this verifier does not implement; ignoring it would hash the wrong bytes',
                     self::LABEL,
+                    $xpath,
                     $filter,
                 ));
             }
         }
 
-        $xpath = $exclusion['xpath'] ?? null;
-        if (! is_string($xpath) || $xpath === '' || $xpath[0] !== '/') {
-            throw new HashException(self::LABEL.': an exclusion has no usable xpath');
-        }
-        if (substr_count($xpath, '/') > 1) {
-            throw new HashException(sprintf(
-                '%s: the exclusion path %s names a nested box, which this verifier does not resolve; only top-level paths are read',
-                self::LABEL,
-                $xpath,
-            ));
-        }
-        if (substr($xpath, 1) !== $box['type']) {
-            return false;
-        }
-
         // The data filter: this is how the manifest excludes itself without naming an
-        // offset that would move — the uuid box whose bytes at offset 8 are the C2PA UUID.
+        // offset that would move — the uuid box whose bytes at offset 8 are the C2PA
+        // UUID. video1.mp4 proves it does real work: it holds a second uuid box that
+        // is hashed (SPEC-029 AC5).
         $data = $exclusion['data'] ?? null;
         if ($data === null) {
             return true;
@@ -443,14 +588,18 @@ final readonly class BmffHashCheck
 
     /**
      * @param  resource  $stream
-     * @param  list<array{offset: int, length: int}>  $included
+     * @param  list<array{offset: int, length: int, marker?: bool}>  $included
      */
     private function digest($stream, array $included, string $alg): string
     {
         $context = hash_init($alg);
         foreach ($included as $range) {
-            // the offset first, as a big-endian uint64: this is what binds position
-            hash_update($context, pack('J', $range['offset']));
+            // the offset first, as a big-endian uint64: this is what binds position.
+            // One marker per top-level box, not per range — a nested exclusion splits
+            // a box and the pieces share its marker (SPEC-029).
+            if ($range['marker'] ?? true) {
+                hash_update($context, pack('J', $range['offset']));
+            }
             if (fseek($stream, $range['offset']) !== 0) {
                 return '';
             }

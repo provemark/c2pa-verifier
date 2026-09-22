@@ -160,7 +160,7 @@ if (isset($argv) && realpath($argv[0]) === realpath(__FILE__)) {
     $contract = [
         'Cli\Command', 'Report\StatusCode', 'Report\ValidationResult', 'Report\ValidationState',
         'Report\ValidationStatus', 'Trust\TrustException', 'Trust\TrustSettings',
-        'Verifier\VerificationReport', 'Verifier\Verifier',
+        'Verifier\FragmentedVerifier', 'Verifier\VerificationReport', 'Verifier\Verifier',
     ];
     $classes = apiPublicClasses(dirname(__DIR__).'/src');
     $result = apiCheck($classes, $contract);

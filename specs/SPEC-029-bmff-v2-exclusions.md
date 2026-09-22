@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -89,12 +89,19 @@ SPEC-027 implements it.
 ## Behavior
 
 - **AC1 — `video1.mp4` verifies** *(happy path; oracle: `c2patool` 0.27.22)*
-  - Given `tests/Fixtures/c2pa-rs/video1.mp4`
-  - When it is verified without trust settings
-  - Then `assertion.bmffHash.match` is reported and the failure codes equal
-    those in `tests/Fixtures/c2patool/c2pa-rs/video1.json` — which are
-    `signingCredential.untrusted` and nothing else, so the binding, the
-    timestamp and the ingredient all pass.
+  *(amended 2026-09-22, see Amendments 1)*
+  - Given `tests/Fixtures/c2pa-rs/video1.mp4` and
+    `tests/Fixtures/trust/full-plus-digicert-g4.settings.json` — the C2PA
+    test anchors plus the cross-certificate that signs this file's two
+    DigiCert timestamps, so that both sides judge the signers at the same
+    moment in time
+  - When it is verified
+  - Then the state is `Valid`, `assertion.bmffHash.match` is reported, and
+    the failure codes equal those in
+    `tests/Fixtures/c2patool/timestamp/video1-full-plus-digicert-g4.json`
+    — over the active manifest and its ingredient deltas together, which
+    are `signingCredential.untrusted` and nothing else, so the binding, the
+    timestamp and the ingredient hash all pass.
 
 - **AC2 — a changed byte in a hashed region is a mismatch** *(required: the error path)*
   - Given that file with one byte of `mdat` altered, **as a stream rather
@@ -200,6 +207,36 @@ public function boxTree($stream): array;
 built as the walk descends — so resolving an exclusion is a comparison
 rather than a second parse.
 
+## Amendments
+
+1. **2026-09-22, step 87b, found while making AC1 green** — AC1 asked for
+   the file to be verified *without* trust settings, and for the failures to
+   equal the recorded `c2patool/c2pa-rs/video1.json`. Measured, that
+   comparison is not between equals. `c2patool` falls back to the operating
+   system's trust store for the timestamp authority — step 40 §5 already
+   measured that its `timeStamp.trusted` for the DigiCert 2023 responder
+   does not depend on the anchor configured — so without settings it trusts
+   both DigiCert stamps, judges this file's 2022 signers at the moment they
+   were stamped, and reports `claimSignature.insideValidity`. This verifier
+   has no system trust store by design: trust comes from the settings file
+   and from nowhere else. Without one it cannot trust the responder, judges
+   the ingredient's 2022-04-04 certificate at *now*, and correctly adds
+   `signingCredential.expired`.
+
+   Both answers are right about their own inputs; only the criterion was
+   wrong, by asking two verifiers with different anchors for the same list.
+   AC1 now names `full-plus-digicert-g4.settings.json` on both sides, and
+   the oracle is recorded under it. Under those anchors the two agree
+   status for status, in both scopes: `Valid`, one failure, the
+   ingredient's `signingCredential.untrusted`.
+
+   **Weight A: no rule of this specification changed** — not the digest,
+   not the exclusions, not the label. What changed is which oracle file the
+   criterion compares against, and the reason is written above so the next
+   reader does not re-measure it.
+
+   Confirmed by Maurice van Loon: pending.
+
 ## Open questions
 
 1. **Whether `LABELS` changes the dispatch in `Verifier`.** Today it reads
@@ -232,10 +269,10 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
+| AC1 | `tests/Unit/Hash/BmffV2ExclusionsTest.php :: AC1: video1.mp4 verifies, and its failures are c2patool's` | `Verifier\Verifier::verify()` (the two-label dispatch); `Hash\BmffHashCheck::labelOf(), check()`; `tests/Fixtures/c2patool/timestamp/video1-full-plus-digicert-g4.json` |
+| AC2 | `tests/Unit/Hash/BmffV2ExclusionsTest.php :: AC2: a changed byte in a hashed region is a mismatch` | `Hash\BmffHashCheck::check(), digest()` |
+| AC3 | `tests/Unit/Hash/BmffV2ExclusionsTest.php :: AC3: the nested paths resolve to exactly the ranges c2pa-rs hashes` | `Hash\BmffHashCheck::plan(), matches()`; `Container\IsobmffManifestStoreExtractor::boxTree()` |
+| AC4 | `tests/Unit/Hash/BmffV2ExclusionsTest.php :: AC4: subset narrows, and length 0 runs to the end of the box` | `Hash\BmffHashCheck::ranges(), remaining()` |
+| AC5 | `tests/Unit/Hash/BmffV2ExclusionsTest.php :: AC5: the data filter tells two uuid boxes apart` | `Hash\BmffHashCheck::matches()` (the `data` filter, after the path resolves) |
+| AC6 | `tests/Unit/Hash/BmffV2ExclusionsTest.php :: AC6: flags is refused when the path exists, and ignored when it cannot match` | `Hash\BmffHashCheck::matches()`, `UNSUPPORTED_FILTERS`; `Container\IsobmffManifestStoreExtractor::DEFAULT_MAX_BOX_DEPTH` |
+| AC7 | `tests/Unit/Hash/BmffV2ExclusionsTest.php :: AC7: every v3 fixture answers exactly as it did` | `Hash\BmffHashCheck::LABELS`; `Hash\DataHashCheck::check()` (it no longer claims the two labels) |

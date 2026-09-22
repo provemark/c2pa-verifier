@@ -299,8 +299,11 @@ it('AC8: exactly one hard binding', function (): void {
         ->and($none[0]->url)->toBe(SPEC012_PNG);
 
     $bmff = spec012Check('binding/hard-binding-bmff.png');
+    // SPEC-012 amendment 6: M8 is finished and this binding is verified, by
+    // BmffHashCheck — Verifier routes a manifest carrying one there and never here.
+    // Asked directly, this check still answers rather than falling silent.
     expect(spec012Codes($bmff))->toBe(['general.error'])
-        ->and($bmff[0]->explanation)->toContain('c2pa.hash.bmff.v2')->toContain('M8');
+        ->and($bmff[0]->explanation)->toContain('c2pa.hash.bmff.v2')->toContain('BmffHashCheck');
 
     $two = spec012Check('binding/hard-bindings-two.png');
     expect(spec012Codes($two))->toBe(['assertion.multipleHardBindings'])
