@@ -160,6 +160,12 @@ because every later measurement is easier with it.
 | 52a | The twelve SPEC-019 tests (`tests/Unit/Cli/CommandTest.php`), seen red (`Class … Cli\Command not found` ×12): stdout byte-equal to the API on every corpus file, exit 0/1/2, the two departures from c2patool asserted (AC3, AC7), the directory case measured (`fopen` succeeds on a directory; the command refuses it) — `notes/step-52-command-line.md` | done 2026-09-22 |
 | 52b | `Cli\Command` (four steps, no `@`, no temp file), the `bin/c2pa-verify` shim, Composer `bin`, the `Cli` Deptrac layer; 12 red → green; **AC11 found `toJson()` throwing `JsonException` on the OpenAI file** — `claim_generator_info` rendered raw (a 32-byte icon hash), fixed as SPEC-007 amendment 5 with its own red-then-green test; 314 tests; README, comparison, CHANGELOG | done 2026-09-22 |
 
+## M7, step by step
+
+| Step | What | Status |
+|---|---|---|
+| 53 | Ingredients measured: C2PA 2.4 §15.11/§15.12/§11.2.3/§18.16 read; c2pa-rs `verify_store` → `ingredient_checks` → `from_store` → `validation_state` read and named; the 18 multi-manifest corpus files walked with the own parsers — active = last box everywhere, 12 files hash the ingredient manifest by the **legacy claim-CBOR hash**, 6 by the box payload, no redactions anywhere, one `c2um`; c2patool drops failures the ingredient assertion *attested* (`CIE-sig-CA`: a broken ingredient signature, `Trusted`) — proposals: SPEC-020 (assertion + graph), SPEC-021 (validation, deltas, state), SPEC-022 (update manifests); attested failures copied with the CAI-12751 guard; redactions refused until a fixture exists — `notes/step-53-ingredients-measured.md` | done 2026-09-22 |
+
 ## After M0
 
 M1 opens with SPEC-001 (JPEG APP11 → manifest store bytes) as a draft. It

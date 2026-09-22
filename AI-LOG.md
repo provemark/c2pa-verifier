@@ -3174,3 +3174,21 @@ README are where the disclosure lives.
   check` on PHP 8.3 / 8.4 / 8.5 each `success`, 314 passed. Reasoned:
   nothing.
 - Decided by Maurice: none.
+
+## 2026-09-22 — Step 53: ingredients measured before M7
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "begin daarna met de m7 meting".
+- Produced: `notes/step-53-ingredients-measured.md`, the M7 section in
+  `docs/milestones.md`, the NOTES row; this entry. No code.
+- Measured: a scratch script over the 18 multi-manifest corpus files with
+  this verifier's own parsers — manifest boxes and kinds, every ingredient
+  assertion's version/relationship/fields, each manifest reference hashed
+  as box payload and as claim CBOR against the hashed URI (12 files legacy,
+  6 payload, 1 refused `c2um`, 1 reference not in the store), active =
+  last box against every oracle; c2patool's recorded JSON summarised
+  (state, active failures, per-delta codes, recorded ingredient
+  statuses). Read: C2PA 2.4 (downloaded, §8.4.2.3, §11.2.3, §15.11,
+  §15.12, §18.16), c2pa-rs 0.90.22 `store.rs`, `validation_results.rs`,
+  `validation_status.rs` (fetched at the tag). Reasoned: the three-spec
+  split and the four proposals in the note's §4.
+- Decided by Maurice: none yet — the note ends with the proposals.
