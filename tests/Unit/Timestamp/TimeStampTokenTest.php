@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 use Provemark\C2paVerifier\Asn1\DerReader;
 use Provemark\C2paVerifier\Cbor\CborBytes;
-use Provemark\C2paVerifier\Container\FormatDetector;
-use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
-use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
-use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
-use Provemark\C2paVerifier\Cose\CoseSign1;
-use Provemark\C2paVerifier\Jumbf\JumbfParser;
-use Provemark\C2paVerifier\Manifest\ManifestStore;
+use Provemark\C2paVerifier\Tests\Support\Corpus;
+use Provemark\C2paVerifier\Tests\Support\DerPatch;
 use Provemark\C2paVerifier\Timestamp\TimestampException;
 use Provemark\C2paVerifier\Timestamp\TimestampHeader;
 use Provemark\C2paVerifier\Timestamp\TimeStampToken;
@@ -55,155 +50,15 @@ function spec016Five(): array
     ];
 }
 
-function spec016Fixtures(): string
-{
-    return dirname(__DIR__, 2).'/Fixtures';
-}
-
-/** The active manifest's COSE_Sign1 of a corpus file, or null when the file has no manifest store. */
-function spec016Cose(string $relative): ?CoseSign1
-{
-    $stream = fopen(spec016Fixtures().'/'.$relative, 'rb');
-    if ($stream === false) {
-        throw new RuntimeException("cannot open {$relative}");
-    }
-    $format = (new FormatDetector)->detect($stream);
-    $store = match ($format) {
-        'jpeg' => (new JpegManifestStoreExtractor)->extract($stream),
-        'png' => (new PngManifestStoreExtractor)->extract($stream),
-        'webp' => (new WebpManifestStoreExtractor)->extract($stream),
-        default => null,
-    };
-    fclose($stream);
-    if ($store === null) {
-        return null;
-    }
-    $manifests = ManifestStore::fromTree((new JumbfParser)->parse($store->bytes));
-
-    return CoseSign1::fromBytes($manifests->active->signatureBytes());
-}
-
-/** The raw sigTst / sigTst2 value (tstTokens[0].val) of the active manifest. */
-function spec016HeaderValue(string $relative): string
-{
-    $cose = spec016Cose($relative);
-    if ($cose === null) {
-        throw new RuntimeException("{$relative} has no manifest");
-    }
-    $header = $cose->unprotected['sigTst2'] ?? $cose->unprotected['sigTst'] ?? null;
-    $first = is_array($header) && is_array($header['tstTokens'] ?? null) && is_array($header['tstTokens'][0] ?? null) ? $header['tstTokens'][0] : [];
-    $val = $first['val'] ?? null;
-    if (! $val instanceof CborBytes) {
-        throw new RuntimeException("{$relative} carries no timestamp header");
-    }
-
-    return $val->bytes;
-}
-
-/**
- * A test-side DER walker for the patches of AC7: the identifier, header
- * length and content length of the element at $offset. Independent of the
- * reader under test on purpose — a patch must not depend on the code it
- * is meant to exercise.
- *
- * @return array{tag: int, headerLength: int, length: int}
- */
-function spec016Element(string $bytes, int $offset): array
-{
-    $tag = ord($bytes[$offset]);
-    $first = ord($bytes[$offset + 1]);
-    if ($first < 0x80) {
-        return ['tag' => $tag, 'headerLength' => 2, 'length' => $first];
-    }
-    $n = $first & 0x7F;
-    $length = 0;
-    for ($i = 0; $i < $n; $i++) {
-        $length = ($length << 8) | ord($bytes[$offset + 2 + $i]);
-    }
-
-    return ['tag' => $tag, 'headerLength' => 2 + $n, 'length' => $length];
-}
-
-function spec016Length(int $length): string
-{
-    if ($length < 0x80) {
-        return pack('C', $length);
-    }
-    $bytes = ltrim(pack('N', $length), "\0");
-
-    return pack('C', 0x80 | strlen($bytes)).$bytes;
-}
-
-/**
- * Replace $oldLength bytes at $at by $new and re-encode the length of every
- * enclosing element (DER-minimal), walking from the root. An OCTET STRING
- * whose contents enclose $at is descended into as if it were constructed
- * (the eContent holds the TSTInfo's DER; a digest is not descended into).
- * $oldLength 0 inserts at $at; an
- * insertion at the end of nested elements is ambiguous, so $inside names
- * the element (by offset) whose contents receive it — the walk stops there.
- */
-function spec016Splice(string $bytes, int $at, int $oldLength, string $new, ?int $inside = null): string
-{
-    $path = [];
-    $offset = 0;
-    while (true) {
-        $element = spec016Element($bytes, $offset);
-        $contentsStart = $offset + $element['headerLength'];
-        $contentsEnd = $contentsStart + $element['length'];
-        // constructed, or an OCTET STRING that wraps a SEQUENCE (the eContent) — never one that holds a digest
-        $descendable = ($element['tag'] & 0x20) !== 0 || ($element['tag'] === 0x04 && $element['length'] > 0 && ord($bytes[$contentsStart]) === 0x30);
-        $enclosesStrictly = $at >= $contentsStart && $at + $oldLength <= $contentsEnd && ! ($at === $offset && $oldLength === $element['headerLength'] + $element['length']);
-        if (! $enclosesStrictly) {
-            break;
-        }
-        $path[] = $offset; // its length changes even when it is a primitive holding the target (the imprint's OCTET STRING)
-        if (! $descendable || $offset === $inside) {
-            break;
-        }
-        $child = $contentsStart;
-        $next = null;
-        while ($child < $contentsEnd) {
-            $c = spec016Element($bytes, $child);
-            $childEnd = $child + $c['headerLength'] + $c['length'];
-            if ($at >= $child && $at + $oldLength <= $childEnd) {
-                $next = $child;
-                break;
-            }
-            $child = $childEnd;
-        }
-        if ($next === null) {
-            break; // $at is between children (an insertion point) or at the very end
-        }
-        $offset = $next;
-    }
-    if ($path === []) {
-        throw new LogicException("no element encloses offset {$at}");
-    }
-    if ($inside !== null && ! in_array($inside, $path, true)) {
-        throw new LogicException("the walk to offset {$at} did not pass the element at {$inside}: ".implode(',', $path));
-    }
-    $bytes = substr_replace($bytes, $new, $at, $oldLength);
-    $delta = strlen($new) - $oldLength;
-    foreach (array_reverse($path) as $p) {
-        $element = spec016Element($bytes, $p);
-        $header = pack('C', $element['tag']).spec016Length($element['length'] + $delta);
-        $bytes = substr_replace($bytes, $header, $p, $element['headerLength']);
-        $delta += strlen($header) - $element['headerLength'];
-    }
-
-    return $bytes;
-}
-
 /** Offsets in C.jpg's sigTst value (a TimeStampResp of 5951 bytes): the token starts at 9; the rest as `openssl asn1parse` prints them on the token, plus 9. */
 function spec016C(): string
 {
-    return spec016HeaderValue('c2pa-rs/C.jpg');
+    return Corpus::headerValue('c2pa-rs/C.jpg');
 }
 
 foreach (spec016Five() as $file => $expected) {
     test('SPEC-016 AC3: the five tokens\' TSTInfo, field by field as openssl ts prints it — '.$file, function () use ($file, $expected): void {
-        $token = TimeStampToken::fromHeaderValue(spec016HeaderValue($file));
+        $token = TimeStampToken::fromHeaderValue(Corpus::headerValue($file));
         $tst = $token->tstInfo;
         expect($tst->version)->toBe(1)
             ->and($tst->policy)->toBe($expected['policy'])
@@ -224,7 +79,7 @@ foreach (spec016Five() as $file => $expected) {
 
 foreach (spec016Five() as $file => $expected) {
     test('SPEC-016 AC4: the SignedData and the one SignerInfo — '.$file, function () use ($file, $expected): void {
-        $token = TimeStampToken::fromHeaderValue(spec016HeaderValue($file));
+        $token = TimeStampToken::fromHeaderValue(Corpus::headerValue($file));
         $sd = $token->signedData;
         $si = $sd->signerInfo;
         expect($sd->version)->toBe(3)
@@ -265,7 +120,7 @@ foreach (spec016Five() as $file => $expected) {
 
 foreach (spec016Five() as $file => $expected) {
     test('SPEC-016 AC5: the cut is right — the re-tagged signed attributes verify — '.$file, function () use ($file, $expected): void {
-        $token = TimeStampToken::fromHeaderValue(spec016HeaderValue($file));
+        $token = TimeStampToken::fromHeaderValue(Corpus::headerValue($file));
         $si = $token->signedData->signerInfo;
         $signer = $token->signedData->signerCertificate();
         assert($signer !== null);
@@ -288,7 +143,7 @@ foreach (spec016Five() as $file => $expected) {
 
 test('SPEC-016 AC6: both wrappers, either header — a TimeStampResp (sigTst) and a bare ContentInfo (sigTst2) parse, and so do each other\'s shape', function (): void {
     $response = spec016C();
-    $bare = spec016HeaderValue('c2pa-rs/C_with_CAWG_data.jpg');
+    $bare = Corpus::headerValue('c2pa-rs/C_with_CAWG_data.jpg');
     expect(strlen($response))->toBe(5951)->and(bin2hex(substr($response, 0, 9)))->toBe('3082173b3003020100')
         ->and(strlen($bare))->toBe(5998)->and(bin2hex(substr($bare, 0, 15)))->toBe('3082176a06092a864886f70d010702');
 
@@ -312,7 +167,7 @@ test('SPEC-016 AC6: both wrappers, either header — status 1 (grantedWithMods) 
 
     // PKIStatusInfo { status 2, statusString { "bad request" } } — the SEQUENCE grows from 3 to 20 bytes
     $statusInfo = "\x02\x01\x02"."\x30\x0d\x0c\x0b".'bad request';
-    $rejected = spec016Splice($response, 4, 5, "\x30".chr(strlen($statusInfo)).$statusInfo);
+    $rejected = DerPatch::splice($response, 4, 5, "\x30".chr(strlen($statusInfo)).$statusInfo);
     expect(fn () => TimeStampToken::fromHeaderValue($rejected))->toThrow(TimestampException::class, 'rejection');
     try {
         TimeStampToken::fromHeaderValue($rejected);
@@ -325,7 +180,7 @@ test('SPEC-016 AC6: both wrappers, either header — status 1 (grantedWithMods) 
 })->group('SPEC-016');
 
 test('SPEC-016 AC6: both wrappers, either header — a ContentInfo whose OID is not signedData is refused naming the OID', function (): void {
-    $bare = spec016HeaderValue('c2pa-rs/C_with_CAWG_data.jpg');
+    $bare = Corpus::headerValue('c2pa-rs/C_with_CAWG_data.jpg');
     // 1.2.840.113549.1.7.2 (signedData) → 1.2.840.113549.1.7.1 (data): the last OID byte
     expect(bin2hex(substr($bare, 4, 11)))->toBe('06092a864886f70d010702');
     $data = substr_replace($bare, "\x01", 14, 1);
@@ -361,16 +216,16 @@ test('SPEC-016 AC7: the token\'s own rules are enforced, one refusal each — eC
 
 test('SPEC-016 AC7: the token\'s own rules are enforced, one refusal each — two SignerInfos', function () use ($c): void {
     $bytes = $c();
-    $set = spec016SignerInfoSet($bytes);
+    $set = DerPatch::signerInfoSet($bytes);
     $signerInfo = substr($bytes, $set['contents'], $set['length']);
-    $patched = spec016Splice($bytes, $set['contents'] + $set['length'], 0, $signerInfo, inside: $set['offset']);
+    $patched = DerPatch::splice($bytes, $set['contents'] + $set['length'], 0, $signerInfo, inside: $set['offset']);
     expect(fn () => TimeStampToken::fromHeaderValue($patched))->toThrow(TimestampException::class, 'exactly one SignerInfo, found 2');
 })->group('SPEC-016');
 
 test('SPEC-016 AC7: the token\'s own rules are enforced, one refusal each — zero SignerInfos', function () use ($c): void {
     $bytes = $c();
-    $set = spec016SignerInfoSet($bytes);
-    $patched = spec016Splice($bytes, $set['contents'], $set['length'], '');
+    $set = DerPatch::signerInfoSet($bytes);
+    $patched = DerPatch::splice($bytes, $set['contents'], $set['length'], '');
     expect(fn () => TimeStampToken::fromHeaderValue($patched))->toThrow(TimestampException::class, 'exactly one SignerInfo, found 0');
 })->group('SPEC-016');
 
@@ -385,27 +240,27 @@ test('SPEC-016 AC7: the token\'s own rules are enforced, one refusal each — a 
     $bytes = $c();
     // TSTInfo at 72: 30 6e | 02 01 01 | 06 09 policy | 30 31 { 30 0d { 06 09 sha256, 05 00 }, 04 20 <32> }
     expect(bin2hex(substr($bytes, 72 + 33, 2)))->toBe('0420');
-    $patched = spec016Splice($bytes, 72 + 35 + 31, 1, '');
+    $patched = DerPatch::splice($bytes, 72 + 35 + 31, 1, '');
     expect(fn () => TimeStampToken::fromHeaderValue($patched))->toThrow(TimestampException::class, '31 bytes');
 })->group('SPEC-016');
 
 test('SPEC-016 AC7: the token\'s own rules are enforced, one refusal each — a SignerInfo without signedAttrs', function () use ($c): void {
     $bytes = $c();
-    $attrs = spec016SignedAttrs($bytes);
-    $patched = spec016Splice($bytes, $attrs['offset'], $attrs['headerLength'] + $attrs['length'], '');
+    $attrs = DerPatch::signedAttrs($bytes);
+    $patched = DerPatch::splice($bytes, $attrs['offset'], $attrs['headerLength'] + $attrs['length'], '');
     expect(fn () => TimeStampToken::fromHeaderValue($patched))->toThrow(TimestampException::class, 'signedAttrs');
 })->group('SPEC-016');
 
 test('SPEC-016 AC7: the token\'s own rules are enforced, one refusal each — signedAttrs without messageDigest', function () use ($c): void {
     $bytes = $c();
-    $attribute = spec016Attribute($bytes, '2a864886f70d010904'); // messageDigest 1.2.840.113549.1.9.4
-    $patched = spec016Splice($bytes, $attribute['offset'], $attribute['headerLength'] + $attribute['length'], '');
+    $attribute = DerPatch::attribute($bytes, '2a864886f70d010904'); // messageDigest 1.2.840.113549.1.9.4
+    $patched = DerPatch::splice($bytes, $attribute['offset'], $attribute['headerLength'] + $attribute['length'], '');
     expect(fn () => TimeStampToken::fromHeaderValue($patched))->toThrow(TimestampException::class, 'messageDigest');
 })->group('SPEC-016');
 
 test('SPEC-016 AC7: the token\'s own rules are enforced, one refusal each — a contentType attribute that is not the eContentType', function () use ($c): void {
     $bytes = $c();
-    $attribute = spec016Attribute($bytes, '2a864886f70d010903'); // contentType 1.2.840.113549.1.9.3
+    $attribute = DerPatch::attribute($bytes, '2a864886f70d010903'); // contentType 1.2.840.113549.1.9.3
     // its value: SET { OID id-ct-TSTInfo } — the OID's last byte
     $valueOid = $attribute['offset'] + $attribute['headerLength'] + 11 + 2 + 2;
     expect(bin2hex(substr($bytes, $valueOid, 11)))->toBe('2a864886f70d0109100104');
@@ -422,7 +277,7 @@ test('SPEC-016 AC7: the token\'s own rules are enforced, one refusal each — a 
 
 test('SPEC-016 AC7: the token\'s own rules are enforced, one refusal each — no certificates at all', function () use ($c): void {
     $bytes = $c();
-    $patched = spec016Splice($bytes, 184, 4 + 4873, '');
+    $patched = DerPatch::splice($bytes, 184, 4 + 4873, '');
     expect(fn () => TimeStampToken::fromHeaderValue($patched))->toThrow(TimestampException::class, 'certificates');
 })->group('SPEC-016');
 
@@ -431,75 +286,9 @@ test('SPEC-016 AC7: the token\'s own rules are enforced, one refusal each — a 
     // extensions [1] IMPLICIT Extensions { Extension { OID 1.2.3.4, critical TRUE, OCTET STRING "" } } appended to the TSTInfo
     $extension = "\x30\x0a"."\x06\x03\x2a\x03\x04"."\x01\x01\xff"."\x04\x00";
     $extensions = "\xa1".chr(strlen($extension)).$extension; // IMPLICIT: the [1] is the SEQUENCE OF itself
-    $patched = spec016Splice($bytes, 72 + 2 + 110, 0, $extensions, inside: 72);
+    $patched = DerPatch::splice($bytes, 72 + 2 + 110, 0, $extensions, inside: 72);
     expect(fn () => TimeStampToken::fromHeaderValue($patched))->toThrow(TimestampException::class, 'critical');
 })->group('SPEC-016');
-
-/**
- * The SET OF SignerInfo of a sigTst value: its offset, header length, contents offset and length. Found as the last child of SignedData.
- *
- * @return array{offset: int, headerLength: int, contents: int, length: int, tag: int}
- */
-function spec016SignerInfoSet(string $bytes): array
-{
-    $signedData = 9 + 19; // the SEQUENCE inside [0] inside ContentInfo, on the C.jpg token: offset 19, plus the wrapper
-    $sd = spec016Element($bytes, $signedData);
-    $child = $signedData + $sd['headerLength'];
-    $end = $child + $sd['length'];
-    $last = null;
-    while ($child < $end) {
-        $e = spec016Element($bytes, $child);
-        $last = ['offset' => $child, 'headerLength' => $e['headerLength'], 'contents' => $child + $e['headerLength'], 'length' => $e['length'], 'tag' => $e['tag']];
-        $child += $e['headerLength'] + $e['length'];
-    }
-    if ($last === null || $last['tag'] !== 0x31) {
-        throw new LogicException('the last child of SignedData is not a SET');
-    }
-
-    return $last;
-}
-
-/**
- * The [0] signedAttrs of the one SignerInfo.
- *
- * @return array{offset: int, headerLength: int, length: int}
- */
-function spec016SignedAttrs(string $bytes): array
-{
-    $set = spec016SignerInfoSet($bytes);
-    $si = spec016Element($bytes, $set['contents']);
-    $child = $set['contents'] + $si['headerLength'];
-    $end = $child + $si['length'];
-    while ($child < $end) {
-        $e = spec016Element($bytes, $child);
-        if ($e['tag'] === 0xA0) {
-            return ['offset' => $child, 'headerLength' => $e['headerLength'], 'length' => $e['length']];
-        }
-        $child += $e['headerLength'] + $e['length'];
-    }
-    throw new LogicException('no signedAttrs');
-}
-
-/**
- * The Attribute SEQUENCE inside signedAttrs whose OID has the given hex contents.
- *
- * @return array{offset: int, headerLength: int, length: int}
- */
-function spec016Attribute(string $bytes, string $oidHex): array
-{
-    $attrs = spec016SignedAttrs($bytes);
-    $child = $attrs['offset'] + $attrs['headerLength'];
-    $end = $child + $attrs['length'];
-    while ($child < $end) {
-        $e = spec016Element($bytes, $child);
-        $oid = spec016Element($bytes, $child + $e['headerLength']);
-        if (bin2hex(substr($bytes, $child + $e['headerLength'] + $oid['headerLength'], $oid['length'])) === $oidHex) {
-            return ['offset' => $child, 'headerLength' => $e['headerLength'], 'length' => $e['length']];
-        }
-        $child += $e['headerLength'] + $e['length'];
-    }
-    throw new LogicException("no attribute {$oidHex}");
-}
 
 test('SPEC-016 AC8: bounded — a token is at most maxBytes, a header at most maxTokens — a header with neither sigTst nor sigTst2 is null; one with both is refused', function (): void {
     expect(TimestampHeader::fromUnprotected([]))->toBeNull()
@@ -547,7 +336,7 @@ test('SPEC-016 AC8: bounded — a token is at most maxBytes, a header at most ma
 })->group('SPEC-016');
 
 test('SPEC-016 AC9: CA_ct.jpg is the corpus\'s malformed token, and the message says why — genTime 20240806216337Z: minute 63 at offset 86 of the TSTInfo', function (): void {
-    $value = spec016HeaderValue('c2pa-rs/CA_ct.jpg');
+    $value = Corpus::headerValue('c2pa-rs/CA_ct.jpg');
     $thrown = null;
     try {
         TimeStampToken::fromHeaderValue($value);
@@ -557,7 +346,7 @@ test('SPEC-016 AC9: CA_ct.jpg is the corpus\'s malformed token, and the message 
     expect($thrown)->toBeInstanceOf(TimestampException::class, 'CA_ct.jpg parsed');
     assert($thrown !== null);
     expect($thrown->getMessage())->toContain('genTime')->toContain('63')->toContain('offset 86');
-    $oracle = json_decode((string) file_get_contents(spec016Fixtures().'/c2patool/c2pa-rs/CA_ct.json'), true, 512, JSON_THROW_ON_ERROR);
+    $oracle = json_decode((string) file_get_contents(Corpus::fixtures().'/c2patool/c2pa-rs/CA_ct.json'), true, 512, JSON_THROW_ON_ERROR);
     assert(is_array($oracle));
     $codes = [];
     array_walk_recursive($oracle, function (mixed $value, mixed $key) use (&$codes): void {
@@ -571,7 +360,7 @@ test('SPEC-016 AC9: CA_ct.jpg is the corpus\'s malformed token, and the message 
 test('SPEC-016 AC10: every corpus token parses, and none takes the reader past its bounds — 38 timestamped files, 37 parse; one token, one SignerInfo, version 1, two or three certificates with the signer among them', function (): void {
     $files = [];
     foreach (['public-testfiles', 'c2pa-rs', 'binding'] as $dir) {
-        foreach (glob(spec016Fixtures()."/{$dir}/*.{jpg,png,webp}", GLOB_BRACE) ?: [] as $path) {
+        foreach (glob(Corpus::fixtures()."/{$dir}/*.{jpg,png,webp}", GLOB_BRACE) ?: [] as $path) {
             $files[] = $dir.'/'.basename($path);
         }
     }
@@ -580,7 +369,7 @@ test('SPEC-016 AC10: every corpus token parses, and none takes the reader past i
     $malformed = [];
     foreach ($files as $relative) {
         try {
-            $cose = spec016Cose($relative);
+            $cose = Corpus::cose($relative);
         } catch (Throwable) {
             continue; // no manifest, or a store this verifier refuses for other reasons — not this spec's concern
         }

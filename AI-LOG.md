@@ -2675,3 +2675,26 @@ README are where the disclosure lives.
 - Measured: `bin/spec-check.php` OK. Reasoned: nothing new.
 - Decided by Maurice: SPEC-017 approved as drafted.
 
+## 2026-09-22 — Step 42a: the SPEC-017 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 42a".
+- Produced: `tests/Unit/Timestamp/TimestampCheckTest.php` (15 tests);
+  `tests/Support/Corpus.php` and `DerPatch.php` (the SPEC-016 helpers,
+  moved; SPEC-016 Traceability updated); `tests/Fixtures/trust/
+  {truepic-root,digicert-trusted-root-g4}.pem` and three settings files
+  (README rows); `tests/Fixtures/c2patool/timestamp/` (six JSONs, README);
+  `tests/Pest.php` and `VerifierTest` with the `_TSA_NOT_CONFIGURED`
+  lists; `notes/step-42-timestamp-check-tests.md`; rows in `NOTES.md`
+  and `docs/milestones.md`; this entry.
+- Measured: `openssl pkcs7 -print_certs` for the two anchors and their
+  validity; c2patool 0.27.22 under the three settings files on the
+  Truepic three, `C.jpg`, `CACA.jpg` and `exp-test1.png` (states and
+  codes in the note); `vendor/bin/pest --group=SPEC-017` → 15 failed
+  (13 assertions), the whole suite 15 failed / 270 passed, SPEC-013
+  12 passed, SPEC-016 64 passed after the helper move; AC1's file count
+  35 with no unreadable store; Pint passed; PHPStan only the missing
+  symbols. One mistake of mine caught by the suite: a greedy regex that
+  removed the SPEC-016 tests along with the helpers (64 → 31), restored
+  from git and redone. Reasoned: nothing beyond the spec.
+- Decided by Maurice: start 42a.
+

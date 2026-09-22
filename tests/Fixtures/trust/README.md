@@ -15,3 +15,12 @@ is empty and stays so).
 
 What c2patool 0.27.22 said under each, on the PNG and Adobe fixtures, is
 in `../c2patool/trusted/` and in `notes/step-30-trust-measured.md`.
+
+Added 2026-09-22 (step 42a, for SPEC-017 — TSA anchors, public
+certificates cut out of the corpus tokens):
+
+| file | what |
+|---|---|
+| `truepic-root.pem`, `truepic-root.settings.json` | `CN=RootCA, OU=Lens, O=Truepic` (self-signed, 2021–2036), from the Truepic tokens; the settings hold it as the only anchor with `store.cfg` as `trust_config` |
+| `digicert-trusted-root-g4.pem`, `digicert-trusted-root-g4.settings.json` | the `DigiCert Trusted Root G4` cross-certificate (issued by `DigiCert Assured ID Root CA`, 2022–2031) as the DigiCert tokens carry it; the only anchor in its settings |
+| `full-plus-digicert-g4.settings.json` | `full`'s two test anchors plus the DigiCert cross-certificate — for the c2pa-rs corpus, whose signers reach the test root and whose DigiCert TSAs reach the cross-certificate |

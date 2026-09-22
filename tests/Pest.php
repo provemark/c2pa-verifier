@@ -46,8 +46,9 @@ const SPEC013_CORPUS = [
  * expectation is c2patool's state, except where this verifier is stricter on
  * purpose, named here so that the milestone closing the gap must remove the
  * name: MULTI (more than one manifest → Invalid until M7, SPEC-013 amendment 5)
- * and NO_TIMESTAMP (validity judged at now until M6: the Truepic leaves lived
- * one day).
+ * and TSA_NOT_CONFIGURED (the file is expired at now here because its TSA
+ * reaches no configured anchor, while c2patool trusts that TSA without one —
+ * SPEC-017 AC6 measures the same files with the anchor configured).
  */
 const SPEC013_PUBLIC_CORPUS = [
     'adobe-20220124-C', 'adobe-20220124-CA', 'adobe-20220124-CACA', 'adobe-20220124-CACAICAICICA', 'adobe-20220124-CAI',
@@ -60,12 +61,14 @@ const SPEC013_PUBLIC_MULTI = [
     'adobe-20220124-CACA', 'adobe-20220124-CACAICAICICA', 'adobe-20220124-CAIAIIICAICIICAIICICA', 'adobe-20220124-CAICA', 'adobe-20220124-CAICAI',
     'adobe-20220124-CICA', 'adobe-20220124-CICACACA', 'adobe-20220124-CIE-sig-CA', 'adobe-20220124-E-clm-CAICAI', 'adobe-20220124-E-uri-CIE-sig-CA',
 ];
-const SPEC013_PUBLIC_NO_TIMESTAMP = ['truepic-20230212-camera', 'truepic-20230212-landscape', 'truepic-20230212-library'];
+const SPEC013_PUBLIC_TSA_NOT_CONFIGURED = ['truepic-20230212-camera', 'truepic-20230212-landscape', 'truepic-20230212-library'];
 
 /*
  * The c2pa-rs fixtures (sdk/tests/fixtures at 58eac79, step 39) with a c2patool
  * JSON — SPEC-013 AC12's third drift alarm. Named exceptions, each removed by
- * the milestone that closes it: MULTI (M7), NO_TIMESTAMP (M6), REMOTE (a manifest
+ * the milestone that closes it: MULTI (M7), TSA_NOT_CONFIGURED (expired at now
+ * under `full`, whose anchors no DigiCert TSA reaches — SPEC-017 AC10 shows the
+ * cross-certificate un-expires exp-test1), REMOTE (a manifest
  * c2patool fetched over the network — never here), CAWG (an identity assertion
  * this verifier does not validate; a later spec).
  */
@@ -74,6 +77,6 @@ const SPEC013_RS_CORPUS = [
     'adobe-20220124-E-clm-CAICAI', 'boxhash', 'cloud', 'legacy_ingredient_hash', 'ocsp', 'ocsp_with_assertion', 'update_manifest', 'exp-test1',
 ];
 const SPEC013_RS_MULTI = ['CACA', 'CACAE-uri-CA', 'CIE-sig-CA', 'legacy_ingredient_hash', 'update_manifest', 'ocsp', 'ocsp_with_assertion'];
-const SPEC013_RS_NO_TIMESTAMP = ['ocsp', 'ocsp_with_assertion'];
+const SPEC013_RS_TSA_NOT_CONFIGURED = ['ocsp', 'ocsp_with_assertion', 'exp-test1'];
 const SPEC013_RS_REMOTE = ['cloud'];
 const SPEC013_RS_CAWG = ['C_with_CAWG_data'];

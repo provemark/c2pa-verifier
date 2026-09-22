@@ -414,12 +414,12 @@ it('AC11: a store with more than one manifest is refused until M7', function ():
         $report = $verify($name);
         $oracle = $c2patool($name);
         $expected = $oracle['validation_state'];
-        if (in_array($name, SPEC013_PUBLIC_MULTI, true) || in_array($name, SPEC013_PUBLIC_NO_TIMESTAMP, true)) {
+        if (in_array($name, SPEC013_PUBLIC_MULTI, true) || in_array($name, SPEC013_PUBLIC_TSA_NOT_CONFIGURED, true)) {
             $expected = 'Invalid';
         }
         expect($report->result->state->value)->toBe($expected, $name);
-        if (in_array($name, SPEC013_PUBLIC_NO_TIMESTAMP, true)) {
-            expect(in_array('signingCredential.expired', spec013Failures($report), true))->toBeTrue($name);   // M6 removes this
+        if (in_array($name, SPEC013_PUBLIC_TSA_NOT_CONFIGURED, true)) {
+            expect(in_array('signingCredential.expired', spec013Failures($report), true))->toBeTrue($name);   // SPEC-017 AC6: gone once the Truepic root is an anchor
         }
     }
     foreach (['adobe-20220124-A', 'adobe-20220124-I'] as $name) {
@@ -439,7 +439,7 @@ it('AC12: the oracle\'s own fixtures are a third drift alarm, and a CAWG identit
         $oracle = json_decode((string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/c2patool/c2pa-rs/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
         $report = $verify($name);
         $expected = $oracle['validation_state'];
-        $stricter = array_merge(SPEC013_RS_MULTI, SPEC013_RS_NO_TIMESTAMP, SPEC013_RS_REMOTE, SPEC013_RS_CAWG);
+        $stricter = array_merge(SPEC013_RS_MULTI, SPEC013_RS_TSA_NOT_CONFIGURED, SPEC013_RS_REMOTE, SPEC013_RS_CAWG);
         if (in_array($name, $stricter, true)) {
             $expected = 'Invalid';
         }
@@ -448,7 +448,7 @@ it('AC12: the oracle\'s own fixtures are a third drift alarm, and a CAWG identit
             expect($report->hasManifest)->toBeFalse($name);
         }
         $expired = in_array('signingCredential.expired', spec013Failures($report), true);
-        expect($expired)->toBe(in_array($name, SPEC013_RS_NO_TIMESTAMP, true) || $name === 'exp-test1', $name);   // exp-test1 is expired at c2patool too
+        expect($expired)->toBe(in_array($name, SPEC013_RS_TSA_NOT_CONFIGURED, true), $name);   // expired at now: their DigiCert TSAs reach no anchor in `full` (SPEC-017 AC10)
     }
     // the CAWG file: the manifest is fine, the identity assertion is not looked at — so not Trusted
     $cawg = $verify('C_with_CAWG_data');
