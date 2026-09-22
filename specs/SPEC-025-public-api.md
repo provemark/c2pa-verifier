@@ -38,7 +38,7 @@ build on** — and without it, the first tag promises all six hundred by
 default, which is the opposite of what a careful library does.
 
 Drawing the line where the README, the CLI and the sister library's adapter
-put it gives eight classes and **99 symbols, sixteen per cent** of the
+put it gives nine classes and about **a hundred symbols, a sixth** of the
 surface. One property undoes most of that: `VerificationReport::$store` is
 a `?ManifestStore`, which exposes `$manifests` and `$active`, which are
 `Manifest` objects exposing claim, assertions and signature — the whole
@@ -84,13 +84,14 @@ the project stops implying support it never gave.
 ## Behavior
 
 - **AC1 — the contract is a list, and the list is exact**
-  - Given the eight classes named as the contract (`Verifier\Verifier`,
+  - Given the nine classes named as the contract (`Verifier\Verifier`,
     `Verifier\VerificationReport`, `Report\ValidationResult`,
     `Report\ValidationStatus`, `Report\ValidationState`,
-    `Report\StatusCode`, `Trust\TrustSettings`, `Cli\Command`)
+    `Report\StatusCode`, `Trust\TrustSettings`, `Trust\TrustException`,
+    `Cli\Command`)
   - When the public surface of each is read by reflection
   - Then it equals the recorded snapshot, symbol for symbol; and none of
-    the eight carries `@internal` on its class docblock.
+    the nine carries `@internal` on its class docblock.
 
 - **AC2 — everything else says so** *(required: the error path)*
   - Given every other public class, interface and enum in `src/`
@@ -170,6 +171,10 @@ change to it appears as a reviewable diff.
 
 ## Open questions
 
+The one blocker was decided on 2026-09-22, the day the draft was written;
+the answer is recorded in place below rather than removed, so that the
+reasoning that led to it stays readable.
+
 1. **The seven layer exceptions.** `Asn1Exception`, `CborException`,
    `ContainerException`, `CoseException`, `JumbfException`,
    `ManifestException` and `TimestampException` never reach a caller:
@@ -177,7 +182,11 @@ change to it appears as a reviewable diff.
    escapes, from `TrustSettings::fromJson()`, and the CLI catches exactly
    that one. The proposal is that the seven are `@internal` and
    `TrustException` is in the contract — the same reasoning as `$store`, in
-   a smaller shape. **Blocker: it changes what AC1's list contains.**
+   a smaller shape. **Decided by Maurice van Loon, 2026-09-22: yes.** The
+   seven are `@internal`; `TrustException` joins the contract as the ninth
+   class, because it is the one exception a caller can actually meet and
+   therefore the one they may need to catch. AC1's list is nine classes,
+   not eight.
 2. **Where the contract is written.** The README is where a caller looks,
    but it is also the file most likely to drift from the code. The
    alternative is a `docs/api.md` that the snapshot test can read, with the

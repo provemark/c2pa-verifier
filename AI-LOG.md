@@ -4042,3 +4042,21 @@ README are where the disclosure lives.
   `TrustException` in the contract, which is the only one that escapes),
   where the contract is written, whether `Cli\Command` belongs in it, and
   the version number of the first tag.
+
+## 2026-09-22 — SPEC-025's blocking question answered
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en ja op de zeven exceptions".
+- Produced: pushed `4cb2432` and `c0c47a1`; the decision recorded in
+  place in `specs/SPEC-025-public-api.md`, with AC1's list grown from
+  eight classes to nine; `docs/milestones.md`.
+- Measured: `php bin/spec-check.php` OK, 26 specs, SPEC-025 still
+  `draft`. Reasoned: nothing beyond what the decision records.
+- Decided by Maurice: the seven layer exceptions
+  (`Asn1Exception`, `CborException`, `ContainerException`,
+  `CoseException`, `JumbfException`, `ManifestException`,
+  `TimestampException`) are `@internal`, because SPEC-013 turns each into
+  a status before the public boundary and no caller can meet them;
+  `TrustException` joins the contract as the ninth class, being the one
+  that escapes, from `TrustSettings::fromJson()`. Still open: approval of
+  the spec, where the contract is written, whether `Cli\Command` belongs
+  in it, and the version number of the first tag.
