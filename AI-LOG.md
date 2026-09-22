@@ -4864,3 +4864,21 @@ README are where the disclosure lives.
   and the blocking question — whether SPEC-026's extractor grows a
   depth-bounded child walk or this check does its own, which would be a
   second truth about box parsing.
+
+## 2026-09-22 — SPEC-029's blocking question answered
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, doe de extractor met een grens".
+- Produced: both open questions recorded in place in
+  `specs/SPEC-029-bmff-v2-exclusions.md`, with the API sketch rewritten
+  around `boxTree()`; `docs/milestones.md`.
+- Measured: `php bin/spec-check.php` OK, 30 specs, SPEC-029 still
+  `draft`. Reasoned: nothing new.
+- Decided by Maurice: the depth-bounded child walk lives in
+  `IsobmffManifestStoreExtractor`, not in the hash check — so nothing
+  parses a box in two places, and the walk stays in `Container`, which
+  `Hash` already depends on. The bound is **eight**: six is what the
+  deepest real path (`/moov/trak/mdia/minf/stbl/stco`) needs, eight
+  leaves room for a container this project has not met, and a file
+  nested deeper is refused by name rather than read short — a walk that
+  stops early and reports what it found would hash bytes the signer
+  excluded and call the result a match. Still open: approval.

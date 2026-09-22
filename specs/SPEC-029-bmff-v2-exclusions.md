@@ -176,9 +176,29 @@ public const LABELS = ['c2pa.hash.bmff.v3', 'c2pa.hash.bmff.v2'];
 private static function resolve(array $tree, string $xpath): array;
 ```
 
-The box walk needs to descend, which SPEC-026's extractor does not do
-today: it reads the top level and stops. Whether it grows a depth or this
-check walks its own is Open question 2.
+The descent lives in the extractor (Open question 2, decided), so nothing
+parses a box in two places:
+
+```php
+// src/Container/IsobmffManifestStoreExtractor.php
+
+/** Boxes deeper than this are refused, never read short (SPEC-029). */
+public const DEFAULT_MAX_BOX_DEPTH = 8;
+
+/**
+ * The box tree to the configured depth, in file order.
+ *
+ * @param  resource  $stream
+ * @return list<array{offset: int, length: int, type: string, path: string}>
+ *
+ * @throws ContainerException when a box nests deeper than the bound
+ */
+public function boxTree($stream): array;
+```
+
+`path` is what an `xpath` is matched against — `/moov/trak/mdia/minf/stbl/stco`
+built as the walk descends — so resolving an exclusion is a comparison
+rather than a second parse.
 
 ## Open questions
 
@@ -192,12 +212,18 @@ check walks its own is Open question 2.
    level and `Hash` already depends on `Container`. Either the extractor
    grows a depth-bounded child walk, or this check does its own — which
    would be a second truth about box parsing, and this project has refused
-   that before. Proposal: the extractor, with a bound. **Blocker: it
-   decides what AC3 asserts against.**
+   that before. **Decided by Maurice van Loon, 2026-09-22: the extractor,
+   with a bound.** `IsobmffManifestStoreExtractor` grows a depth-bounded
+   child walk and this check asks it; nothing parses a box in two places.
+   The walk stays in `Container`, which `Hash` already depends on, so no
+   Deptrac arrow moves.
 3. **How deep is deep enough.** `/moov/trak/mdia/minf/stbl/stco` is six
-   segments. A bound of eight would cover it with room; a file nested
-   deeper than the bound must be refused rather than silently under-read.
-   Non-blocker, but the number belongs in the spec rather than in the code.
+   segments. **Decided with question 2: eight**, named here rather than
+   left in the code. Six is what the deepest real path needs, eight leaves
+   room for a container this project has not met, and a file nested deeper
+   is **refused by name** rather than silently under-read — a walk that
+   stops early and reports what it found would hash bytes the signer
+   excluded and call the result a match.
 
 ## Traceability
 
