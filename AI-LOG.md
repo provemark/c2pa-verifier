@@ -2722,3 +2722,19 @@ README are where the disclosure lives.
   chain ordering rule from c2pa-rs's `order_certificates_leaf_to_root`.
 - Decided by Maurice: go on with 42b.
 
+
+## 2026-09-22 — Push of M6, CI red on Deptrac, fixed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `f3311a9..61114aa` (five commits); run `35704251235`
+  on `61114aa` failed on all three PHP versions — Deptrac: `Timestamp`
+  may not depend on `Cose` and `Trust` (32 violations, all in
+  `TimestampCheck`). SPEC-017's Scope had named exactly those two layers
+  ("Cose and Trust join in SPEC-017") and I did not write the rule into
+  `deptrac.yaml`; worse, my local `composer check` read-out grepped for
+  "Errors" and not for "Violations", so the red line went by unseen.
+  Fixed: `deptrac.yaml` allows `Timestamp` → `Cose`, `Trust`, `Manifest`;
+  this entry; pushed as the next commit.
+- Measured: `vendor/bin/deptrac analyse` — 32 violations before, 0 after,
+  428 allowed; `composer check` green, 285 tests.
+- Decided by Maurice: push.

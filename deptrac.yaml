@@ -91,6 +91,9 @@ deptrac:
     Timestamp:
       - Asn1           # SPEC-016: the token as data
       - Cbor           # SPEC-016: CborBytes in the header
+      - Cose           # SPEC-017: CoseSign1, PublicKey, RsaPss, OpenSsl for the CMS signature
+      - Trust          # SPEC-017: the TSA through Certificate, CertificateProfileCheck, ChainCheck
+      - Manifest       # SPEC-017: the active manifest's signature bytes
       - Report
       - Support
     # Orchestration may use everything.
