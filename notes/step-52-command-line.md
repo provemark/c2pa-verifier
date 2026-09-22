@@ -134,3 +134,14 @@ ingredient files, a reader's own file) one command; the JSON-rendering
 hole it found is the first fault of that kind in the writers corpus and
 argues for a rendering drift alarm — `toJson()` on every corpus file —
 which AC11 now is, for as long as the command exists.
+
+### CI, and one flaky comparison
+
+Run 35714422755 on `787c2c7`: PHP 8.3 and 8.4 green, **PHP 8.5 red** on
+AC11 — `truepic-20230212-camera` without settings: the expectation and
+the command's run straddled a second, and the `signingCredential.expired`
+message names the second of the check ("expired at 2026-09-22T10:10:09Z"
+against "…:10Z", "checked at now"). Not a fault of the command; a fault of
+the test's byte-equality on a message that carries the clock. AC11 now
+masks that one timestamp (`expired at <now>: `) on both sides before
+comparing; everything else stays byte-exact.

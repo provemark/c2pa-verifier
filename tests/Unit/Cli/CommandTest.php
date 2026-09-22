@@ -289,7 +289,10 @@ test('every corpus file, with and without settings: stdout equals the API, the e
             $label = $name.($settings === null ? '' : ' (settings)');
             $state = spec019State($out);
             $state = is_string($state) ? $state : 'Invalid';
-            expect($out)->toBe($expected, $label)
+            // an expired signer "checked at now" names the second of the check; the expectation and the
+            // command run one after the other and may straddle a second (seen on CI, run 35714422755)
+            $now = '/expired at \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z: /';
+            expect(preg_replace($now, 'expired at <now>: ', $out))->toBe(preg_replace($now, 'expired at <now>: ', $expected), $label)
                 ->and($status)->toBe(in_array($state, ['Trusted', 'Valid'], true) ? 0 : 1, "{$label}: {$state}")
                 ->and($err)->toBe('', $label);
             $seen[$state]++;

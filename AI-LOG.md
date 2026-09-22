@@ -3150,3 +3150,18 @@ README are where the disclosure lives.
   1, missing file / missing settings → 2 with `Error: …`. Reasoned:
   `is_dir()` as a guard before `fopen()`; settings read before the file.
 - Decided by Maurice: go ahead with 52b.
+
+## 2026-09-22 — Push after step 52; CI red on PHP 8.5, a flaky second
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar", then "begin daarna met de m7 meting".
+- Produced: pushed `5e7e33c..787c2c7` (five commits); run 35714422755:
+  8.3 and 8.4 `success`, 8.5 `failure` — SPEC-019 AC11 on
+  `truepic-20230212-camera`: the `signingCredential.expired` message
+  names "now" to the second and the two runs straddled one. AC11 masks
+  that timestamp on both sides (`tests/Unit/Cli/CommandTest.php`); the
+  note's CI paragraph; this entry.
+- Measured: pre-push 0 attribution lines, no `*.key`, no PEM private-key
+  header, visibility `PRIVATE`, tree clean; the failing diff read from
+  `gh run view --log-failed`; `composer check` exit 0, 314 tests.
+  Reasoned: masking one clock-bearing message keeps the rest byte-exact.
+- Decided by Maurice: push; the M7 measurement next.
