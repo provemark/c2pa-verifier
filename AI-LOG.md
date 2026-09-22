@@ -3660,3 +3660,24 @@ README are where the disclosure lives.
   success on PHP 8.3, 8.4 and 8.5, 353 tests. Reasoned: nothing.
 - Decided by Maurice: push. Open for him: SPEC-023 (the published
   package), a code of conduct, and the visibility change.
+
+## 2026-09-22 — SPEC-023 drafted
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, schrijf SPEC-023 als draft" — after asking what such a
+  spec would contain, the maintainer approved drafting it.
+- Produced: `specs/SPEC-023-published-package.md` (status `draft`, six
+  acceptance criteria), a line in `docs/milestones.md`.
+- Measured: before writing AC4, whether it is satisfiable at all — the
+  archive holds 96 markdown files and 0 relative links pointing outside
+  it, so the package is self-contained today; and that no shipped
+  markdown links into `tests/`. `php bin/spec-check.php`: OK, 24 specs,
+  28 test files, SPEC-023 reported `draft`. Reasoned: the three failure
+  modes in the Problem section — a new top-level directory, a dist that
+  is small but broken, and a package that stops describing itself; the
+  second is why AC6 exists, since a suite running against the working
+  tree cannot see a dist that lost a file.
+- Decided by Maurice: that the spec should be written, with the scope
+  proposed (AC1–AC6, publishing decisions left out). Open for him: the
+  two blocking questions in the spec — whether a test may shell out to
+  `git` for the real archive, and whether `specs/` and `notes/` ship at
+  all, which decides what AC4 and AC5 mean.
