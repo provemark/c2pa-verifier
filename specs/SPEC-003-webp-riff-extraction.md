@@ -237,7 +237,7 @@ declare(strict_types=1);
 
 final readonly class WebpManifestStoreExtractor
 {
-    public const DEFAULT_MAX_CHUNK_LENGTH = 64 * 1024 * 1024;   // as SPEC-002
+    public const DEFAULT_MAX_CHUNK_LENGTH = 16 * 1024 * 1024;   // as SPEC-002
 
     public function __construct(
         public int $maxChunkLength = self::DEFAULT_MAX_CHUNK_LENGTH,
@@ -276,6 +276,18 @@ rest of the data, then the pad byte. Keeps walking to see a second `C2PA`
 
 1. **2026-09-21, defined in SPEC-012 and approved with it** — `ManifestStoreBytes` gains `public array $ranges`, the byte ranges of the file the store and its container framing occupy, one per piece, contiguous pieces merged: for WebP the `C2PA` chunk from its FourCC through its data (`8 + strlen(store)`), the pad byte excluded — it is hashed, measured in step 23 — `[312, 100643]` on the fixture. No criterion of this spec changed; the bytes are as they were.
 
+2. **2026-09-22, step 67b, defined in SPEC-024 and approved with it** —
+   the default bound on the manifest store falls from **64 MiB to 16 MiB**,
+   and a store that fits the bound but not the host's remaining memory is
+   refused before it is read. Step 66 measured why: a 63 MiB store — inside
+   this criterion's own limit — needs 132 MB and ends a 128 MB host with a
+   PHP fatal error instead of returning `Invalid`, which cannot be caught
+   and leaves the caller no report at all. Measured beside it: across 212
+   corpus stores the median is 45 kB, the 90th percentile 241 kB and the
+   largest ever met 3.36 MB, so the old figure was nineteen times anything
+   real. A store at the new bound peaks at 38 MB, which a 64 MB host
+   survives. AC15's literal changes with it.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -297,5 +309,5 @@ least one test; every source file maps back to this spec.
 | AC12 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC12: a missing pad byte is an error naming the offset where it was expected; AC12: a pad byte that is not zero is an error naming the offset and the byte / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: readPad() |
 | AC13 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC13: an odd-length chunk before C2PA is skipped correctly, pad included / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: skip(), readPad() |
 | AC14 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC14: a chunk length above the limit is an error before the data is read / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (`$maxChunkLength` check before the LBox read) |
-| AC15 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC15: the default limit is 64 MiB / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: DEFAULT_MAX_CHUNK_LENGTH, __construct() |
+| AC15 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC15: the default limit is 16 MiB / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: DEFAULT_MAX_CHUNK_LENGTH, __construct() |
 | AC16 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC16: the header size is checked against the file before any chunk header is read / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: extract() (size check before the loop, stream repositioned first) |

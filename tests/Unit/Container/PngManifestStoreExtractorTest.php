@@ -112,10 +112,10 @@ it('AC12: a chunk length above the limit is an error before the data is read', f
     expect(ftell($stream))->toBeLessThanOrEqual(41);
 })->group('SPEC-002');
 
-it('AC13: the default limit is 64 MiB', function (): void {
+it('AC13: the default limit is 16 MiB', function (): void {
     $extractor = new PngManifestStoreExtractor;
 
-    expect($extractor->maxChunkLength)->toBe(64 * 1024 * 1024)
+    expect($extractor->maxChunkLength)->toBe(16 * 1024 * 1024)   // SPEC-024 amendment
         ->and(hash('sha256', $extractor->extract(spec002Stream('fixture-signed.png'))->bytes ?? ''))->toBe(SPEC002_STORE_SHA256);
 })->group('SPEC-002');
 

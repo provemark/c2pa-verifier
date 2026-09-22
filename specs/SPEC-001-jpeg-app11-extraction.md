@@ -220,7 +220,7 @@ final class ContainerException extends \RuntimeException {}
 final readonly class JpegManifestStoreExtractor
 {
     public const DEFAULT_MAX_PIECES = 2048;         // 2048 × 64 KiB ≈ 128 MiB, above MAX_LBOX
-    public const DEFAULT_MAX_LBOX   = 64 * 1024 * 1024;
+    public const DEFAULT_MAX_LBOX   = 16 * 1024 * 1024;
 
     public function __construct(
         public int $maxPieces = self::DEFAULT_MAX_PIECES,
@@ -269,6 +269,18 @@ checks and limits pass. It never calls `file_get_contents`.
    by the file's end; SPEC-004 gives all three the same reader.
 3. **2026-09-21, defined in SPEC-012 and approved with it** — `ManifestStoreBytes` gains `public array $ranges`, the byte ranges of the file the store and its container framing occupy, one per piece, contiguous pieces merged: for JPEG each APP11 piece from its marker through its data (`2 + length`), so the two-piece fixture gives one range `[20, 94772]` and the gap variant of AC4 two. No criterion of this spec changed; the bytes are as they were.
 
+4. **2026-09-22, step 67b, defined in SPEC-024 and approved with it** —
+   the default bound on the manifest store falls from **64 MiB to 16 MiB**,
+   and a store that fits the bound but not the host's remaining memory is
+   refused before it is read. Step 66 measured why: a 63 MiB store — inside
+   this criterion's own limit — needs 132 MB and ends a 128 MB host with a
+   PHP fatal error instead of returning `Invalid`, which cannot be caught
+   and leaves the caller no report at all. Measured beside it: across 212
+   corpus stores the median is 45 kB, the 90th percentile 241 kB and the
+   largest ever met 3.36 MB, so the old figure was nineteen times anything
+   real. A store at the new bound peaks at 38 MB, which a 64 MB host
+   survives. AC12's literal changes with it; `DEFAULT_MAX_PIECES` is untouched, and the note beside it ("2048 x 64 KiB, above MAX_LBOX") still holds.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -287,7 +299,7 @@ least one test; every source file maps back to this spec.
 | AC9 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC9: an LBox above the limit is an error before any piece data is read; AC9: more pieces than the limit is an error at the piece that exceeds it / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$maxLBox`, `$maxPieces` checks before the data read) |
 | AC10 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC10: a stream that does not start with FF D8 is an error / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (SOI check) |
 | AC11 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC11: two different box instance numbers are an error naming both / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$fields['en'] !== $instanceNumber`) |
-| AC12 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC12: the default limits are 2048 pieces and 64 MiB / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: DEFAULT_MAX_PIECES, DEFAULT_MAX_LBOX, __construct() |
+| AC12 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC12: the default limits are 2048 pieces and 16 MiB / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: DEFAULT_MAX_PIECES, DEFAULT_MAX_LBOX, __construct() |
 | AC13 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC13: pieces after SOS are not scanned; the result is null / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (loop ends at SOS) |
 | AC14 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC14: a file truncated before the first piece is an error naming the segment offset, not null / SPEC-001 | src/Container/StreamReader.php :: skip() (end-of-file look-up, amendment 2) |
 | AC15 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC15: a marker without a length field before SOS is an error naming the marker and its offset / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: hasLengthField(), extract() |

@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -213,10 +213,14 @@ reasoning that led to them stays readable.
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
 least one test; every source file maps back to this spec.
 
-| Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
-|----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
+All tests are in `tests/Unit/Container/ResourceBoundsTest.php`, group
+`SPEC-024`, and run through `tests/Support/verify-probe.php` — one
+verification per process, so that the memory limit can be chosen.
+
+| Acceptance criterion | Test (name) | Source (file/symbol) |
+|---|---|---|
+| AC1 | `AC1: the default bound is 16 MiB in all three containers`; `AC1: a store above the bound is refused without being read` | `JpegManifestStoreExtractor::DEFAULT_MAX_LBOX`, `PngManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH`, `WebpManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH` (SPEC-001 amendment 4, SPEC-002 amendment 2, SPEC-003 amendment 2) |
+| AC2 | `AC2: a store that does not fit the host is refused, and the process survives` | `src/Support/MemoryBudget.php :: allows(), remainingBytes()`; the three extractors' budget check |
+| AC3 | `AC3: with no memory limit only the absolute bound applies` | `MemoryBudget::parseLimit()` (null for `-1`, empty, or a form it does not understand), `MemoryBudget::allows()` returning true on null |
+| AC4 | `AC4: every signed fixture verifies the same under a 128 MB limit as under a generous one` | the whole read path; the alarm, not a change |
+| AC5 | `AC5: every refusal arrives in the report, never as an exception past the public API` | `ContainerException` → `src/Verifier/Verifier.php :: check()` (SPEC-013) |

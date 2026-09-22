@@ -3926,3 +3926,27 @@ README are where the disclosure lives.
 - Decided by Maurice: approval of SPEC-024 and both its blocking
   questions. Open for him: the `DEFAULT_SHARE` of remaining memory, which
   67b must measure rather than assume.
+
+## 2026-09-22 — Step 67b, SPEC-024 implemented
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 67b".
+- Produced: `src/Support/MemoryBudget.php`; the bound lowered to 16 MiB
+  and a budget check added in all three extractors; amendments in
+  SPEC-001 (#4), SPEC-002 (#2) and SPEC-003 (#2); SPEC-024's Traceability
+  filled and status set to `implemented`; the second half of
+  `notes/step-67-resource-bounds.md`; `NOTES.md`, `docs/milestones.md`.
+- Measured: the peak curve the share rests on — a store of 4 MiB peaks at
+  14.0 MB, 8 MiB at 22.0 MB, 16 MiB at 38.0 MB, so peak is about twice
+  the store plus six megabytes; `DEFAULT_SHARE = 0.25` therefore leaves
+  about half the limit unused at the largest permitted size, and 16 MiB
+  is survivable on a 64 MB host. Step 66's scenario repeated: the 63 MiB
+  store that ended a 128 MB process now returns `Invalid` at 6.0 MB and
+  2 ms, and does the same on 32 MB; a 15 MiB store is refused on 32 MB
+  but read on 512 MB (36.0 MB, 38 ms). `composer check` exit 0, 374
+  passed (7292 assertions).
+- Reasoned: that null from `parseLimit()` must mean *no restriction* and
+  never *no memory*, so that a configuration we failed to parse cannot
+  become a reason to refuse valid files — which is what AC3 pins.
+- Decided by Maurice: approval of SPEC-024, the 16 MiB bound and reading
+  `memory_limit`. Open for him: confirmation of the three new amendments,
+  which now stand at six awaiting a round.

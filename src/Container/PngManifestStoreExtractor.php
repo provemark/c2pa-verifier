@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Provemark\C2paVerifier\Container;
 
 use Provemark\C2paVerifier\Support\Bytes;
+use Provemark\C2paVerifier\Support\MemoryBudget;
 
 /**
  * PNG `caBX` → manifest store bytes (SPEC-002; C2PA 2.4 §A.3).
@@ -19,7 +20,11 @@ use Provemark\C2paVerifier\Support\Bytes;
  */
 final readonly class PngManifestStoreExtractor
 {
-    public const DEFAULT_MAX_CHUNK_LENGTH = 64 * 1024 * 1024;   // as SPEC-001's DEFAULT_MAX_LBOX
+    // SPEC-024: 16 MiB, not 64. Measured in step 66 over 212 corpus stores: median
+    // 45 kB, p90 241 kB, largest ever met 3.36 MB. A store at this bound peaks at
+    // 38 MB (step 67b), which a 64 MB host survives; the old 64 MiB needed 132 MB and
+    // ended a 128 MB host with a fatal error. Same figure in SPEC-001 and SPEC-003.
+    public const DEFAULT_MAX_CHUNK_LENGTH = 16 * 1024 * 1024;
 
     private const SIGNATURE = "\x89PNG\r\n\x1a\n";
 
@@ -32,6 +37,7 @@ final readonly class PngManifestStoreExtractor
 
     public function __construct(
         public int $maxChunkLength = self::DEFAULT_MAX_CHUNK_LENGTH,
+        private MemoryBudget $budget = new MemoryBudget,
     ) {}
 
     /**
@@ -91,6 +97,15 @@ final readonly class PngManifestStoreExtractor
                     'caBX chunk length %d exceeds the limit of %d bytes (offset %d)',
                     $chunk['length'],
                     $this->maxChunkLength,
+                    $offset,
+                ));
+            }
+            if (! $this->budget->allows($chunk['length'])) {
+                throw new ContainerException(sprintf(
+                    'caBX chunk length %d does not fit this host: %d bytes of memory remain. '
+                    .'The file was not examined, so this is not a judgement about it (offset %d)',
+                    $chunk['length'],
+                    $this->budget->remainingBytes() ?? 0,
                     $offset,
                 ));
             }

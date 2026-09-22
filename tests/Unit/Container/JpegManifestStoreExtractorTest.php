@@ -106,11 +106,11 @@ it('AC11: two different box instance numbers are an error naming both', function
         ->toThrow(ContainerException::class, 'box instance number 530 in piece 2 differs from 529');
 })->group('SPEC-001');
 
-it('AC12: the default limits are 2048 pieces and 64 MiB', function (): void {
+it('AC12: the default limits are 2048 pieces and 16 MiB', function (): void {
     $extractor = new JpegManifestStoreExtractor;
 
     expect($extractor->maxPieces)->toBe(2048)
-        ->and($extractor->maxLBox)->toBe(64 * 1024 * 1024)
+        ->and($extractor->maxLBox)->toBe(16 * 1024 * 1024)   // SPEC-024 amendment
         ->and(hash('sha256', $extractor->extract(spec001Stream('fixture-signed.jpg'))->bytes ?? ''))->toBe(SPEC001_STORE_SHA256);
 })->group('SPEC-001');
 

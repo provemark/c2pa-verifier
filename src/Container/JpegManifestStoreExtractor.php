@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Provemark\C2paVerifier\Container;
 
 use Provemark\C2paVerifier\Support\Bytes;
+use Provemark\C2paVerifier\Support\MemoryBudget;
 
 /**
  * JPEG APP11 → manifest store bytes (SPEC-001; C2PA 2.4 §A.3.1).
@@ -20,7 +21,11 @@ final readonly class JpegManifestStoreExtractor
 {
     public const DEFAULT_MAX_PIECES = 2048;         // 2048 × 64 KiB ≈ 128 MiB, above MAX_LBOX
 
-    public const DEFAULT_MAX_LBOX = 64 * 1024 * 1024;
+    // SPEC-024: 16 MiB, not 64. Measured in step 66 over 212 corpus stores: median
+    // 45 kB, p90 241 kB, largest ever met 3.36 MB. A store at this bound peaks at
+    // 38 MB (step 67b), which a 64 MB host survives; the old 64 MiB needed 132 MB and
+    // ended a 128 MB host with a fatal error. Same figure in SPEC-002 and SPEC-003.
+    public const DEFAULT_MAX_LBOX = 16 * 1024 * 1024;
 
     private const MARKER_SOS = 0xDA;
 
@@ -32,6 +37,7 @@ final readonly class JpegManifestStoreExtractor
     public function __construct(
         public int $maxPieces = self::DEFAULT_MAX_PIECES,
         public int $maxLBox = self::DEFAULT_MAX_LBOX,
+        private MemoryBudget $budget = new MemoryBudget,
     ) {}
 
     /**
@@ -106,6 +112,16 @@ final readonly class JpegManifestStoreExtractor
                     'piece %d exceeds the limit of %d piece(s) (offset %d)',
                     $pieceNumber,
                     $this->maxPieces,
+                    $offset,
+                ));
+            }
+            if ($fields['lbox'] <= $this->maxLBox && ! $this->budget->allows($fields['lbox'])) {
+                throw new ContainerException(sprintf(
+                    'LBox %d does not fit this host: %d bytes of memory remain. '
+                    .'The file was not examined, so this is not a judgement about it (piece %d, offset %d)',
+                    $fields['lbox'],
+                    $this->budget->remainingBytes() ?? 0,
+                    $pieceNumber,
                     $offset,
                 ));
             }

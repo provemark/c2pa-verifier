@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Provemark\C2paVerifier\Container;
 
 use Provemark\C2paVerifier\Support\Bytes;
+use Provemark\C2paVerifier\Support\MemoryBudget;
 
 /**
  * WebP RIFF `C2PA` → manifest store bytes (SPEC-003; C2PA 2.4 §A.3).
@@ -20,7 +21,11 @@ use Provemark\C2paVerifier\Support\Bytes;
  */
 final readonly class WebpManifestStoreExtractor
 {
-    public const DEFAULT_MAX_CHUNK_LENGTH = 64 * 1024 * 1024;   // as SPEC-002
+    // SPEC-024: 16 MiB, not 64. Measured in step 66 over 212 corpus stores: median
+    // 45 kB, p90 241 kB, largest ever met 3.36 MB. A store at this bound peaks at
+    // 38 MB (step 67b), which a 64 MB host survives; the old 64 MiB needed 132 MB and
+    // ended a 128 MB host with a fatal error. Same figure in SPEC-001 and SPEC-002.
+    public const DEFAULT_MAX_CHUNK_LENGTH = 16 * 1024 * 1024;
 
     private const RIFF = 'RIFF';
 
@@ -36,6 +41,7 @@ final readonly class WebpManifestStoreExtractor
 
     public function __construct(
         public int $maxChunkLength = self::DEFAULT_MAX_CHUNK_LENGTH,
+        private MemoryBudget $budget = new MemoryBudget,
     ) {}
 
     /**
@@ -107,6 +113,15 @@ final readonly class WebpManifestStoreExtractor
                     throw new ContainerException(sprintf(
                         'two C2PA chunks at offsets %d and %d; a WebP carries at most one manifest store',
                         $storeOffset,
+                        $offset,
+                    ));
+                }
+                if ($chunk['length'] <= $this->maxChunkLength && ! $this->budget->allows($chunk['length'])) {
+                    throw new ContainerException(sprintf(
+                        'C2PA chunk length %d does not fit this host: %d bytes of memory remain. '
+                        .'The file was not examined, so this is not a judgement about it (offset %d)',
+                        $chunk['length'],
+                        $this->budget->remainingBytes() ?? 0,
                         $offset,
                     ));
                 }

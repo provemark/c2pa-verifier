@@ -214,7 +214,7 @@ declare(strict_types=1);
 
 final readonly class PngManifestStoreExtractor
 {
-    public const DEFAULT_MAX_CHUNK_LENGTH = 64 * 1024 * 1024;   // as SPEC-001's DEFAULT_MAX_LBOX
+    public const DEFAULT_MAX_CHUNK_LENGTH = 16 * 1024 * 1024;   // as SPEC-001's DEFAULT_MAX_LBOX
 
     public function __construct(
         public int $maxChunkLength = self::DEFAULT_MAX_CHUNK_LENGTH,
@@ -253,6 +253,18 @@ calls `file_get_contents`. `fread` with a length of 0 throws in PHP 8, and
 
 1. **2026-09-21, defined in SPEC-012 and approved with it** — `ManifestStoreBytes` gains `public array $ranges`, the byte ranges of the file the store and its container framing occupy, one per piece, contiguous pieces merged: for PNG the `caBX` chunk from its length field through its CRC (`12 + strlen(store)`), `[33, 46037]` on the fixture. No criterion of this spec changed; the bytes are as they were.
 
+2. **2026-09-22, step 67b, defined in SPEC-024 and approved with it** —
+   the default bound on the manifest store falls from **64 MiB to 16 MiB**,
+   and a store that fits the bound but not the host's remaining memory is
+   refused before it is read. Step 66 measured why: a 63 MiB store — inside
+   this criterion's own limit — needs 132 MB and ends a 128 MB host with a
+   PHP fatal error instead of returning `Invalid`, which cannot be caught
+   and leaves the caller no report at all. Measured beside it: across 212
+   corpus stores the median is 45 kB, the 90th percentile 241 kB and the
+   largest ever met 3.36 MB, so the old figure was nineteen times anything
+   real. A store at the new bound peaks at 38 MB, which a 64 MB host
+   survives. AC13's literal changes with it.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -272,5 +284,5 @@ least one test; every source file maps back to this spec.
 | AC10 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC10: a chunk length field that is off by one is an error naming LBox and the chunk length / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (LBox check, before the CRC) |
 | AC11 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC11: a caBX of 4 bytes is an error naming the length and the 8-byte minimum; AC11: an empty caBX is an error, not "no store" / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (`BOX_HEADER_LENGTH` check) |
 | AC12 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC12: a chunk length above the limit is an error before the data is read / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (`$maxChunkLength` check before the LBox read) |
-| AC13 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC13: the default limit is 64 MiB / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: DEFAULT_MAX_CHUNK_LENGTH, __construct() |
+| AC13 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC13: the default limit is 16 MiB / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: DEFAULT_MAX_CHUNK_LENGTH, __construct() |
 | AC14 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC14: a file that ends before IEND is an error naming the offset where a chunk header was expected, not null / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (chunk header read via `readUpTo`), src/Container/StreamReader.php :: skip() |

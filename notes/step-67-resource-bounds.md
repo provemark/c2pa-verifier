@@ -80,3 +80,82 @@ and the share with it.
 PHPStan are clean — unlike SPEC-023's red phase, nothing here refers to a
 symbol that does not exist yet, because the constants being asserted about
 are already there and merely hold the wrong value.
+
+---
+
+# 67b — the implementation, and the number that was assumed
+
+All six green, **374 passed** in all, `composer check` exit 0.
+
+## The share is measured now, not reasoned
+
+SPEC-024 proposed `DEFAULT_SHARE = 0.25` from a reading of the code. This
+step measured the curve it rests on (PNG, peak =
+`memory_get_peak_usage(true)`, generous limit):
+
+| store | peak |
+|---|---|
+| 4 MiB | 14.0 MB |
+| 8 MiB | 22.0 MB |
+| 16 MiB | 38.0 MB |
+
+Peak is about **twice the store plus six megabytes** — the store is held
+once as bytes and again as the box tree that quotes it. A quarter of what
+remains therefore leaves roughly half the limit unused at the largest
+permitted size: on a 64 MB host the most a store may be is 16 MiB, peaking
+at 38 MB; on 32 MB it is 8 MiB, peaking at 22 MB; on 16 MB it is 4 MiB,
+peaking at 14 MB. The proposal survived contact with the numbers, which is
+worth saying only because it might not have.
+
+The same curve settles the new bound. **16 MiB peaks at 38 MB, which a
+64 MB host survives** — the old 64 MiB needed 132 MB and ended a 128 MB
+host outright.
+
+## The scenario of step 66, repeated
+
+The file that killed a 128 MB process, and the case the host-relative rule
+exists for:
+
+| case | before | after |
+|---|---|---|
+| 63 MiB store, `memory_limit=128M` | **PHP fatal error** | `Invalid`, 6.0 MB, 2 ms |
+| 63 MiB store, `memory_limit=32M` | fatal | `Invalid`, 6.0 MB, 2 ms |
+| 15 MiB store, `memory_limit=32M` | fatal | `Invalid`, 6.0 MB, 2 ms — refused by the host's limit, not the bound |
+| 15 MiB store, `memory_limit=512M` | read | read: 36.0 MB, 38 ms |
+
+The last two lines are the whole trade-off in two rows: the same file, read
+on one host and refused on another. That is why the refusal's wording says
+what it says — *"The file was not examined, so this is not a judgement about
+it"* — and why AC2 asserts on that sentence rather than only on the code.
+A refusal that reads like a verdict would be worse than the fatal error it
+replaces.
+
+## Three specs were amended, because three criteria named the old figure
+
+Lowering the constant made three older tests fail, and that was the right
+signal rather than a nuisance: SPEC-001 AC12, SPEC-002 AC13 and SPEC-003
+AC15 each assert the default bound, and each said 64 MiB. Amendments were
+written into all three (SPEC-001 #4, SPEC-002 #2, SPEC-003 #2) before the
+literals were touched, so that no test is green against a text it
+contradicts. They await the maintainer's confirmation with the next
+amendment round.
+
+`DEFAULT_MAX_PIECES` in SPEC-001 is untouched, and the comment beside it
+— "2048 × 64 KiB, above MAX_LBOX" — still holds: 128 MiB of pieces is still
+more than the bound, so the piece count still cannot be the binding limit.
+
+## Where the check sits, and why there
+
+In each extractor, straight after the absolute bound and before the read —
+the one place where the declared length is known and nothing large has been
+allocated yet. `MemoryBudget` is a `Support` leaf, which `Container` was
+already allowed to depend on, so no Deptrac arrow was added. It is a
+constructor argument with a default, so a caller who knows better about
+their host can supply their own, and the tests do not have to reach into
+`ini_set` to be deterministic.
+
+`parseLimit()` returns null for `-1`, for an empty value, and for anything
+whose shape it does not recognise — and null means *no restriction*, never
+*no memory*. That direction is deliberate and is what AC3 pins: a
+configuration we failed to parse may not quietly become a reason to refuse
+valid files.
