@@ -146,8 +146,8 @@ c2pa-rs's profile check rejects.
   unconfigured TSA `Invalid`. The specification puts the cost where it
   belongs — the time — and so do we.
 - **Reading `sigTst` only, or `sigTst2` only.** The corpora carry both
-  (35 JPEGs with `sigTst`, 2 with `sigTst2`, measured over the two
-  external corpora; `ocsp*.png` are v2 too); the countersigned bytes
+  (35 JPEGs with `sigTst`, 2 with `sigTst2`, plus `exp-test1.png` with
+  `sigTst` — measured over the two external corpora in step 41a); the countersigned bytes
   differ, and either alone leaves a class of files at now.
 
 ## Consequences

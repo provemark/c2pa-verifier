@@ -34,6 +34,10 @@ deptrac:
       collectors:
         - type: directory
           value: src/Trust/.*
+    - name: Asn1           # M6, SPEC-016: the DER reader (ten tags, definite lengths)
+      collectors:
+        - type: directory
+          value: src/Asn1/.*
     - name: Timestamp      # M6: RFC 3161
       collectors:
         - type: directory
@@ -82,10 +86,13 @@ deptrac:
       - Report
       - Cose           # SPEC-014: the x5chain from CoseSign1
       - Support
+    Asn1:
+      - Support
     Timestamp:
-      - Manifest
-      - Cbor
+      - Asn1           # SPEC-016: the token as data
+      - Cbor           # SPEC-016: CborBytes in the header
       - Report
+      - Support
     # Orchestration may use everything.
     Verifier:
       - Container
@@ -95,6 +102,7 @@ deptrac:
       - Cose
       - Hash
       - Trust
+      - Asn1
       - Timestamp
       - Report
       - Support        # SPEC-013: Bytes::hex() for the unknown-format message (the leaf every layer may use)

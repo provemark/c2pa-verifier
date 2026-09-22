@@ -2582,3 +2582,28 @@ README are where the disclosure lives.
 - Measured: `bin/spec-check.php` OK. Reasoned: nothing new.
 - Decided by Maurice: SPEC-016 approved as drafted.
 
+## 2026-09-22 — Step 41a: the SPEC-016 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 41a".
+- Produced: `tests/Unit/Asn1/DerReaderTest.php` (28 tests),
+  `tests/Unit/Timestamp/TimeStampTokenTest.php` (36 tests, with a
+  test-side DER walker for the patches), the `Asn1` layer and
+  `Timestamp` rules in `deptrac.yaml`, SPEC-016 amendment 1, one
+  sentence of ADR-0004 corrected, `notes/step-41-timestamp-tests.md`,
+  rows in `NOTES.md` and `docs/milestones.md`; this entry.
+- Measured: `vendor/bin/pest --group=SPEC-016` → 64 failed, every one
+  on `Asn1\DerReader` (28), `Timestamp\TimeStampToken` (30) or
+  `Timestamp\TimestampHeader` (5) not found; the full suite 64 failed /
+  206 passed; Pint clean; Deptrac 0 errors. The twelve patched tokens
+  written from the test helpers and run through `openssl asn1parse`
+  (all parse; a structural diff shows only the intended change; the
+  two structural TSTInfo patches checked with `-strparse`). The
+  timestamp header of every corpus file in all three formats (38 files,
+  one token each, none with both headers); depth and element count per
+  token (`asn1parse`: d=18, 311 at most). Three faults in my own
+  helpers found by those checks and fixed before the commit (the
+  imprint's OCTET STRING off the re-encoding path; an Extension length
+  of 11 for 10 bytes; a walker descending into digest bytes until
+  memory ran out). Reasoned: nothing beyond the spec.
+- Decided by Maurice: start 41a.
+

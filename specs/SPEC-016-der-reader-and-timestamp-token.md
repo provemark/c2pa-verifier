@@ -501,7 +501,7 @@ final class TimestampException extends \RuntimeException {}
 
 ## Amendments
 
-*(none yet)*
+1. **2026-09-22, step 41a, measured before the tests** — three literals corrected by the measurement: AC10 counts **38** timestamped files (35 `sigTst` and 2 `sigTst2` JPEGs plus `c2pa-rs/exp-test1.png`, the one PNG with a header), 37 parse; the bounds pinned in AC10 are `maxDepth` 20 and `maxElements` 512 (`openssl asn1parse` shows d=18 — nineteen levels — and 311 elements at most, on the Truepic tokens), not "below 16 / 2 048"; AC4's Truepic token carries `signingCertificateV2` next to `CMSAlgorithmProtection` (the test lists `[1.2.840.113549.1.9.52, …16.2.47]`). No file carries both headers (AC8's rule is measured, not assumed).
 
 ## Traceability
 
