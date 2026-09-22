@@ -2949,3 +2949,10 @@ README are where the disclosure lives.
   `verify_actions`; the gate for unvouched assertions.
 - Decided by Maurice: none yet (the draft awaits approval).
 
+## 2026-09-22 — SPEC-018 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: SPEC-018 status `approved`; the milestones row; this entry.
+- Measured: `bin/spec-check.php` OK. Reasoned: nothing new.
+- Decided by Maurice: SPEC-018 approved as drafted.
+
