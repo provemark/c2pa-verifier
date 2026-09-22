@@ -4537,3 +4537,29 @@ README are where the disclosure lives.
 - Decided by Maurice: push, and the amendment confirmed. Open for him:
   what comes after M8, the version number of a first tag, and the
   visibility change.
+
+## 2026-09-22 — Step 80, M8 is not done
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "maar is M8 nu af?", and then "waarom ging je dan al verder?".
+- Produced: `notes/step-80-m8-is-not-done.md`; corrections in
+  `README.md`, `docs/comparison.md` and `docs/milestones.md`;
+  `NOTES.md`. Nothing in `src/` changed; 397 tests still pass.
+- Measured: a MOV signed with c2patool 0.27.22 and the test certificates
+  verifies here as `Trusted` with `bmffHash` in `checks_performed`, and
+  c2patool calls the same file `Valid` — measured **after** the claim had
+  been written, in a scratch directory, with no fixture or test to hold
+  it.
+- Reasoned, and it is a correction of my own conduct: SPEC-027 being
+  implemented was treated as M8 being done. They are different, and M8's
+  description names Merkle trees and exclusions that are not built. And
+  MOV was written into three tracked files — the README and the
+  comparison table among them — on the strength of ISOBMFF covering it in
+  principle. That the guess held is luck; a claim that happens to be true
+  is indistinguishable in the record from one that was checked. The
+  project's own rule (measured ≠ reasoned, and say which) was not applied
+  to a sentence about formats because it did not feel like a measurement,
+  and it was one.
+- Decided by Maurice: to ask. Open for him: a MOV fixture and HEIC
+  measured (needing amendments to SPEC-026 AC9 and SPEC-027 AC1, whose
+  literals say "the two fixtures"), then a fragmented fixture and the
+  Merkle spec.

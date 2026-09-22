@@ -3,7 +3,8 @@
 A verifier for [C2PA](https://c2pa.org) Content Credentials in pure PHP.
 
 It reads the manifest store out of a JPEG, PNG, WebP or ISOBMFF file
-(MP4, MOV, AVIF), checks the claim
+(MP4 and AVIF are covered by tests; MOV verifies too but has no fixture
+here yet), checks the claim
 signature, the hash binding to the asset, the certificate chain against a
 trust list you supply, and the RFC 3161 timestamp, and returns a verdict that
 means the same as [`c2patool`](https://github.com/contentauth/c2pa-rs)'s —
