@@ -3006,3 +3006,21 @@ README are where the disclosure lives.
   `success` with `Tests: 301 passed` (3616 assertions on 8.3, 3618 on
   8.4/8.5); `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-22 — Step 50: release hygiene
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met de release-hygiëne".
+- Produced: `README.md` (rewritten), `SECURITY.md`, `CONTRIBUTING.md`,
+  `CHANGELOG.md`, `docs/comparison.md`, `notes/step-50-release-hygiene.md`;
+  rows in `NOTES.md` and `docs/milestones.md`; this entry. No code.
+- Measured: a live report of `fixture-signed.jpg` under the full settings
+  (the README example); the exception lists in `tests/Pest.php` and
+  `VerifierTest` for the comparison's counts (two counts corrected after
+  a first draft: 10 official `_MULTI` files, four subset-only variants);
+  the milestone dates; `composer check` green, 301 tests; the five files
+  searched for local paths and the local instruction file — none.
+  Reasoned: the wording of scope, vulnerability and non-vulnerability in
+  `SECURITY.md`; the contributor rules as a restatement of the project's
+  own.
+- Decided by Maurice: start the release hygiene.
+
