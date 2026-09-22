@@ -182,13 +182,13 @@ Measured on the `C.jpg` token (5938 bytes), the CAWG and CACA tokens:
 | need | `ext-openssl` | measured |
 |---|---|---|
 | `TSTInfo` fields (`genTime`, imprint, alg, serial, nonce) | **not exposed** by any `openssl_*` function; the CLI's `openssl ts -reply -text` prints them, but the CLI is `exec` | a DER reader is needed |
-| the token's certificates | `openssl_pkcs7_read()` needs PEM PKCS7 and fails on the token (`no content type`); the CLI extracts them | a DER reader is needed (or `openssl_x509_read` on each DER once cut out — that works, as in M5) |
+| the token's certificates | `openssl_pkcs7_read()` fails on the DER (`no start line`) but returns all three as PEM when the same bytes are base64-wrapped as `-----BEGIN PKCS7-----` (measured, `C.jpg`) | reachable without a DER reader; or `openssl_x509_read` on each DER once cut out, as in M5 |
 | CMS signature over `signedAttrs` | `openssl_cms_verify($file, OPENSSL_CMS_NOVERIFY, …, OPENSSL_ENCODING_DER)` → `true` — **file-based only** (a temp file per token); `openssl_cms_verify(…, 0, null, [$anchor])` → `certificate verify error`: with the real anchor the reason is `unsuitable certificate purpose` (OpenSSL's CMS verify demands the S/MIME purpose; the TSA leaf has EKU `timeStamping` only, and PHP exposes no `-purpose` switch) | signature yes, chain **no** |
 | the same by hand | cut `signedAttrs` out of the DER, replace its `[0]` tag (`A0`) by `SET` (`31`, RFC 5652 §5.4), `openssl_verify($attrs, $sig, $leafKey, OPENSSL_ALGO_SHA256)` → `1`; one bit flipped → `0`; `messageDigest` attribute `==` `sha256(eContent)` → `true`; the 2025 RSA-4096 token → `1` likewise | **works without a file** |
 | TSA chain to an anchor | our M5 `ChainCheck` (`openssl_x509_verify` link by link, allowed list first) applies unchanged once the certificates are cut out; the token's third certificate is a **cross-certificate** (DigiCert Trusted Root G4 issued by DigiCert Assured ID Root CA), not a self-signed root — an anchor by subject *and* key, as SPEC-014 already matches | reasoned; M5 code |
 | signature algorithms seen | `rsaEncryption` with sha256 (DigiCert 2022/2023/2025); `sha384WithRSAEncryption` as the *signature* algorithm with sha384 (Truepic) — the digest can come from either field | two spellings to accept |
 
-The one thing `ext-openssl` cannot do at all is read `TSTInfo`. Every
+What `ext-openssl` cannot do at all is read `TSTInfo` and `SignerInfo`. Every
 route to M6 therefore contains a DER reader for a small, fixed
 grammar: `SEQUENCE`, `SET`, `[n]` context tags, `INTEGER`, `OCTET
 STRING`, `OID`, `NULL`, `UTCTime`, `GeneralizedTime`, `BOOLEAN` —

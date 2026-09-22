@@ -2523,3 +2523,21 @@ README are where the disclosure lives.
   empty-anchor case — which contradicts the measured `trusted`; left
   unresolved and written down as such.
 - Decided by Maurice: start step 40 (the measurement) before ADR-0004.
+
+## 2026-09-22 — ADR-0004 as a draft
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, schrijf ADR-0004 als draft".
+- Produced: `docs/adr/ADR-0004-rfc3161-on-an-own-der-reader.md` (status
+  `draft`, decided by nobody yet); a row in `docs/milestones.md`; one
+  finding folded into `notes/step-40-timestamp-measured.md` §6 and the
+  ADR; this entry.
+- Measured: `openssl_pkcs7_read()` on the `C.jpg` token — `false` on the
+  DER (`no start line`), the three certificates as PEM when the same
+  bytes are base64-wrapped as `BEGIN PKCS7`; the header kind per corpus
+  JPEG through the step-40 scratch script (35 `sigTst`, 2 `sigTst2`,
+  12 none). Reasoned: the decision rests on step 40 and on ADR-0001/0003's
+  rules (no temp files, no dependency for convenience).
+- Decided by Maurice: none yet — the draft proposes an own DER reader
+  over `phpseclib`, TSA trust only through configured anchors, and
+  `genTime` over `signingTime` with a difference as `malformed`.
+
