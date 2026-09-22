@@ -4443,3 +4443,15 @@ README are where the disclosure lives.
   Open for him: approval, and the blocking question — a file whose first
   top-level box is included, which neither fixture has and on which the
   two readings of the marker rule differ.
+
+## 2026-09-22 — SPEC-027 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: `specs/SPEC-027-bmff-hash.md` status `draft` → `approved`,
+  the Approved field filled; `docs/milestones.md` updated.
+- Measured: `php bin/spec-check.php` OK, 28 specs, SPEC-027 reported
+  `approved`. Reasoned: nothing.
+- Decided by Maurice: approval of SPEC-027. Implementation may now begin,
+  tests first — and the red phase must build a file whose first top-level
+  box is included, because that is what tells the measured marker rule
+  apart from its alternative.
