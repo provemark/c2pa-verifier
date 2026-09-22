@@ -27,7 +27,7 @@ was read from the specification and the code.
 | `nikon-20221019-building.jpg` | — | no timestamp; stays `expired` at now, as c2patool | — | — | — |
 | `adobe-20220124-*.jpg` (20 files) | `sigTst` | `{tstTokens: [{val: bstr}]}`, the bstr a full `TimeStampResp` (`30 82 … 30 03 02 01 00` — status Granted, then the token) | DigiCert Timestamp 2022 | 2023-01-24 | sha256 |
 | `truepic-20230212-*.jpg` (3) | `sigTst` | same, `TimeStampResp` | Truepic Lens Time-Stamping Authority (private root in the token) | 2023-02-12 | sha384 |
-| `C.jpg`, `CA.jpg`, `boxhash.jpg`, `exp-test1.jpg`, `CA_ct.jpg`, … (c2pa-rs) | `sigTst` | same | DigiCert Timestamp 2023 | 2024-08-06 | sha256 |
+| `C.jpg`, `CA.jpg`, `boxhash.jpg`, `exp-test1.png`, `CA_ct.jpg`, … (c2pa-rs) | `sigTst` | same | DigiCert Timestamp 2023 | 2024-08-06 | sha256 |
 | `C_with_CAWG_data.jpg`, `CACA.jpg`, `ocsp*.jpg` (c2pa-rs, claim v2) | `sigTst2` | `{tstTokens: [{val: bstr}]}`, the bstr the `TimeStampToken` itself (`ContentInfo`, `30 82 … 06 09 2a 86 48 86 f7 0d 01 07 02`) | DigiCert SHA256 RSA4096 Timestamp Responder 2025 1 | 2025-07-29 / 2025-10-16 | sha256 |
 
 Measured with a scratch script over the project's own `CoseSign1`
@@ -96,9 +96,13 @@ Three things to hold on to:
    `Trusted`. The store's comment says why: *"Timestamps failures are
    not fatal according to C2PA spec"* (`cose_validator.rs`). What a
    failed timestamp does cost is the *time*: the certificate is then
-   judged at now — that is how `exp-test1.jpg` is `Invalid` at
-   c2patool with a `validated`, `trusted` timestamp (the signer's
-   certificate had expired before the stamp; measured in step 39).
+   judged at now. (A first version of this note offered `exp-test1` as
+   the example of an expiry judged at the stamp; that was wrong, measured
+   on 2026-09-22 while drafting SPEC-017: the file is `exp-test1.png`,
+   its active signer `cai-prod` was valid 2022-03-01 to 2023-03-01 and the
+   stamp is 2022-04-20, so c2patool logs `claimSignature.insideValidity`
+   for it; the file is `Invalid` because one of its six manifests is
+   self-signed — `signingCredential.invalid` — not for any expiry.)
 2. **`signature_info.time`** is the token's `genTime` rendered ISO
    (`2024-08-06T21:53:37+00:00` for `C.jpg`); absent when there is no
    header. SPEC-015 AC7 excludes this key until M6; M6 brings it in.
@@ -223,8 +227,7 @@ timestamped files across five TSAs, one corrupt time, one mismatch).
   verdict is the time SPEC-015 judges validity at (`CertificateProfileCheck`
   already takes an epoch, `null` = now). That removes the two
   `_NO_TIMESTAMP` exceptions (Truepic; `ocsp*.jpg`), brings
-  `signature_info.time` under AC7, and must keep Nikon and
-  `exp-test1.jpg` `Invalid`.
+  `signature_info.time` under AC7, and must keep Nikon `expired`.
 - Two more fail-closed rules from the corpus: a `GeneralizedTime`
   that is not a date is `malformed` (`CA_ct.jpg`); a `signingTime`
   attribute, when present, is the time (c2pa-rs), and the two must

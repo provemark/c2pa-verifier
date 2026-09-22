@@ -2645,3 +2645,26 @@ README are where the disclosure lives.
   with `Tests: 270 passed` (2887 assertions on 8.3, 2889 on 8.4/8.5);
   `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-22 — SPEC-017 as a draft
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "wat moet er nog allemaal gebeuren voordat deze verifier public
+  kan worden?" (answered in conversation with a four-part list; no file)
+  and "akkoord, schrijf SPEC-017 als draft".
+- Produced: `specs/SPEC-017-timestamp-check.md` (draft, ten criteria,
+  API sketch, the amendments it will need in SPEC-010/013/014/015 named);
+  a factual correction in `notes/step-40-timestamp-measured.md` (the
+  `exp-test1` example); a row in `docs/milestones.md`; this entry.
+- Measured: c2patool's success/informational/failure order on `C.jpg`,
+  `CACA.jpg`, the Truepic and `exp-test1` JSONs (`timeStamp.*` first;
+  `signature_info.time` present only with `validated`;
+  `claimSignature.insideValidity` on 39 of 41 JSONs including the expired
+  Nikon file); `exp-test1.png`'s six manifests, its self-signed one, and
+  its active signer's validity (2022-03-01..2023-03-01) against the stamp
+  (2022-04-20) — the step-40 note had this wrong; the header name against
+  the claim version on six corpus files (v1 ↔ `sigTst`, v2 ↔ `sigTst2`);
+  c2pa-rs `sigtst.rs` at main for the header choice ("first time stamp
+  header" only). Reasoned: the order and codes from `verify.rs` as read
+  in step 40; PSS and the SKI path (no corpus token).
+- Decided by Maurice: none yet (the draft awaits approval).
+
