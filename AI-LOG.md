@@ -2810,3 +2810,25 @@ README are where the disclosure lives.
   8.5 each `success` with `Tests: 293 passed` (3470 assertions on 8.3,
   3472 on 8.4/8.5); `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-22 — Step 45: light fuzzing
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "heb je nu alle fixtures die je nodig hebt …" (answered in
+  conversation: covered / thin / uncovered) and "akkoord, begin met de
+  fuzz-stap".
+- Produced: `bin/fuzz.php` (PHPStan max, Pint), `notes/step-45-fuzz.md`,
+  rows in `NOTES.md` and `docs/milestones.md`; this entry. No change
+  under `src/`.
+- Measured: three campaigns, 70 870 runs over 101 files (seeds 1–5 ×60,
+  11–13 ×80, 100 ×200): 0 faults, 312 `Valid` survivors, each run
+  through c2patool 0.27.22 — 312 `Valid`, 0 disagreements; a seed
+  replays identically (md5 of the suspect list); where sample survivors'
+  flips landed (the `pad` header — 23 665 of 27 070 store bytes in the
+  `c2pa-ts` file; the timestamp token in `C.jpg`); peak memory 36 MiB,
+  slowest run 0.03 s. One script fault of my own on the first run (the
+  store ranges read as a pair instead of `start`/`length`; the `store8`
+  kind flipped byte 0 eight times) — fixed before any campaign counted.
+  Reasoned: why the survivors are right (the bytes the specification
+  leaves uncovered) and the limits of random mutation.
+- Decided by Maurice: the fuzz step first.
+
