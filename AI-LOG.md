@@ -4605,3 +4605,14 @@ README are where the disclosure lives.
   caught it, because what went wrong was not a bug.
 - Decided by Maurice: both amendments confirmed. Open for him: the
   fragmented BMFF case, which is all that stands between M8 and closed.
+
+## 2026-09-22 — CI on steps 80 and 81
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the push that carried step 80b and the confirmations.
+- Produced: pushed `62e05fc` and `faaca1d` to `origin/main`.
+- Measured: CI run 35769603105: success on PHP 8.3, 8.4 and 8.5, 397
+  passed, now with four ISOBMFF flavours held by fixtures. Reasoned:
+  nothing.
+- Decided by Maurice: push, and both amendments confirmed. Open for him:
+  the fragmented BMFF case, which is all that stands between M8 and
+  closed; the version number of a first tag; and the visibility change.
