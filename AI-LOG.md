@@ -4355,3 +4355,14 @@ README are where the disclosure lives.
 - Decided by Maurice: all three amendments confirmed. Open for him: the
   BMFF hash spec, the version number of a first tag, and the visibility
   change.
+
+## 2026-09-22 — CI on steps 74 and 75
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the push that carried step 74 and the confirmations.
+- Produced: pushed `b358b84` and `25b497b` to `origin/main`.
+- Measured: CI run 35763727228: success on PHP 8.3, 8.4 and 8.5, 390
+  passed — the first CI run in which this verifier reads an ISOBMFF file.
+  Reasoned: nothing.
+- Decided by Maurice: push, and all three amendments confirmed. Open for
+  him: the BMFF hash spec, the version number of a first tag, and the
+  visibility change.
