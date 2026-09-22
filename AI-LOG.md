@@ -3894,3 +3894,13 @@ README are where the disclosure lives.
   therefore say that the file was not judged at all, so that a refusal is
   never mistaken for a verdict about its content. Still open: approval of
   the spec itself.
+
+## 2026-09-22 — SPEC-024 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: `specs/SPEC-024-resource-bounds.md` status `draft` →
+  `approved`, the Approved field filled; `docs/milestones.md` updated.
+- Measured: `php bin/spec-check.php` OK, 25 specs, SPEC-024 reported
+  `approved`. Reasoned: nothing.
+- Decided by Maurice: approval of SPEC-024. Implementation may now begin,
+  tests first.
