@@ -2844,3 +2844,28 @@ README are where the disclosure lives.
   `success` with `Tests: 293 passed` (3470 assertions on 8.3, 3472 on
   8.4/8.5); `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-22 — Step 46: more writers, from Wikimedia Commons
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met meer schrijvers".
+- Produced: two files in `tests/Fixtures/writers/` (Pixel 10, public
+  domain; Lightroom Classic, CC BY-SA 4.0 with attribution) with
+  c2patool's JSON; `tests/Fixtures/trust/google-c2pa-mobile-ica.pem`,
+  `google-c2pa-pixel-tsa-ica.pem`, `google-pixel-intermediates.settings.json`
+  and c2patool's JSON under them; `SPEC013_WRITERS_*` extended;
+  `TimestampCheckTest` AC12; README rows; `notes/step-46-more-writers.md`;
+  rows in `NOTES.md` and `docs/milestones.md`; this entry.
+- Measured: the Commons API over eight categories (counts in the note),
+  36 downloads probed with c2patool (4 with a manifest), licences and
+  sha1s from `extmetadata`; c2patool and this verifier on both files with
+  and without the Google anchors (equal states and codes; `time`
+  byte-equal); the signer and TSA chains of the Pixel file; the
+  front-door run of `binding/hard-binding-missing.png` (Invalid for
+  `claimSignature.mismatch` only, `checks_performed` without `dataHash`)
+  — the hole; `composer check` green, 294 tests. One rate-limit refusal
+  from the Commons API after too many quick calls; slowed down and
+  identified with a contact address, as their policy asks. Reasoned: the
+  hole's consequence (a signed manifest without a hard binding would be
+  `Valid`) — to be shown red in step 47 before it is closed.
+- Decided by Maurice: start with more writers.
+

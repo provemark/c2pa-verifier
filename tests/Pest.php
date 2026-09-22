@@ -87,7 +87,7 @@ const SPEC013_RS_CAWG = ['C_with_CAWG_data'];
  * never fetched), TSA_NOT_CONFIGURED (expired at now; the DigiCert TSA
  * reaches no anchor without settings — SPEC-017 AC11 lifts it with one).
  */
-const SPEC013_WRITERS_CORPUS = ['openai-20260826-c2pa_2x', 'amazon-20240925-titan-g1', 'trustnxt-20260113-icon-signed-timestamp', 'adobe-20260304-photoshop-remote-manifest', 'c2pa-rs-cawg_ica'];
+const SPEC013_WRITERS_CORPUS = ['openai-20260826-c2pa_2x', 'amazon-20240925-titan-g1', 'trustnxt-20260113-icon-signed-timestamp', 'adobe-20260304-photoshop-remote-manifest', 'c2pa-rs-cawg_ica', 'google-20250919-pixel10-npld-picnic-table', 'adobe-20260425-lightroom-classic-church'];
 const SPEC013_WRITERS_MULTI = ['c2pa-rs-cawg_ica'];
 const SPEC013_WRITERS_REMOTE = ['adobe-20260304-photoshop-remote-manifest'];
-const SPEC013_WRITERS_TSA_NOT_CONFIGURED = ['amazon-20240925-titan-g1'];
+const SPEC013_WRITERS_TSA_NOT_CONFIGURED = ['amazon-20240925-titan-g1', 'google-20250919-pixel10-npld-picnic-table'];   // Pixel: a three-month signer, valid at its Google stamp (step 46)

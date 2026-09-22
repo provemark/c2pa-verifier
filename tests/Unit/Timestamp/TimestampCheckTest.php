@@ -612,3 +612,26 @@ test('SPEC-017 AC11: on the writers corpus signature_info.time equals c2patool\'
     expect(spec017Manifest('writers/trustnxt-20260113-icon-signed-timestamp.jpg')->claim->version)->toBe(1)
         ->and(spec017Status($ts, StatusCode::TimeStampValidated)?->explanation)->toContain('C2PA Signer');
 })->group('SPEC-017');
+
+// ---------------------------------------------------------------------------
+// AC12 (step 46) — a camera: Pixel 10, a three-month signer and Google's own TSA, both under Google intermediates
+
+test('SPEC-017 AC12: the Pixel 10 file is expired at now and Trusted under Google\'s intermediates, as c2patool', function (): void {
+    $bare = spec017Verify('writers/google-20250919-pixel10-npld-picnic-table.jpg');
+    expect(spec017Failures($bare))->toContain('signingCredential.expired')
+        ->and(spec017Codes($bare))->toContain('timeStamp.validated')
+        ->and(spec017Status($bare, StatusCode::TimeStampUntrusted)?->explanation)->toContain('Google Pixel Time Stamping Authority')
+        ->and($bare->signatureInfo['time'] ?? null)->toBe('2025-09-19T21:57:51+00:00')
+        ->and($bare->result->state->value)->toBe('Invalid');
+    $oracle = spec017Oracle('writers/google-20250919-pixel10-npld-picnic-table');
+    expect($oracle['validation_state'])->toBe('Invalid')
+        ->and(spec017Sorted(spec017OracleCodes($oracle, 'failure')))->toBe(spec017Failures($bare));
+
+    $anchored = spec017Verify('writers/google-20250919-pixel10-npld-picnic-table.jpg', spec017Settings('google-pixel-intermediates'));
+    $theirs = spec017Oracle('timestamp/google-20250919-pixel10-npld-picnic-table-google-intermediates');
+    expect($anchored->result->state->value)->toBe('Trusted')
+        ->and($theirs['validation_state'])->toBe('Trusted')
+        ->and(spec017Failures($anchored))->toBe([])
+        ->and(spec017Codes($anchored))->toContain('timeStamp.trusted')
+        ->and(spec017Codes($anchored))->toContain('signingCredential.trusted');
+})->group('SPEC-017');
