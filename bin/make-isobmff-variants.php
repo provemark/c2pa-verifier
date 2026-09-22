@@ -28,7 +28,7 @@ if (! is_dir($directory) && ! mkdir($directory, 0o755, true)) {
     throw new RuntimeException("cannot create {$directory}");
 }
 
-/** @return array{offset: int, size: int, type: string, header: int} the top-level boxes */
+/** @return list<array{offset: int, size: int, type: string, header: int}> the top-level boxes */
 function boxes(string $bytes): array
 {
     $found = [];
@@ -100,12 +100,11 @@ $unknown = substr_replace($box, 'nonsense', $purposeAt, 8);
 $write('purpose-unknown.mp4', $before.$unknown.$after);
 
 // AC5: no null terminator before the end of the box — the string runs off.
-$unterminated = $box;
-for ($i = $purposeAt; $i < strlen($unterminated); $i++) {
-    if ($unterminated[$i] === "\x00") {
-        $unterminated[$i] = "\x41";
-    }
-}
+// Only the purpose field and the merkle offset behind it: the store stays intact, so
+// the extractor is refused for the one reason this variant is about.
+$unterminated = substr($box, 0, $purposeAt)
+    .str_replace("\x00", "\x41", substr($box, $purposeAt, 32))
+    .substr($box, $purposeAt + 32);
 $write('purpose-unterminated.mp4', $before.$unterminated.$after);
 
 // AC6: a size smaller than the header it announces.

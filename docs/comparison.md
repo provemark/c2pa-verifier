@@ -15,7 +15,8 @@ and never the other way round.
 |---|---|---|---|
 | Time-stamp manifests (`c2tm`), compressed manifests (`c2cm`) | `c2tm` ignored, `c2cm` decompressed | refused with a message of their own — deprecated (§11.2.5) and Brotli, which PHP does not carry | — |
 | Redacted assertions | validated (`assertion.notRedacted`, the claim-signature hash method) | a claim with a non-empty `redacted_assertions` is refused (`general.error`) — no corpus file has a real redaction to measure against | a fixture, then a spec |
-| ISOBMFF (MP4, MOV, AVIF), GIF, TIFF, SVG, audio, PDF | yes | JPEG, PNG, WebP only (`unsupported file type`) | M8 and later |
+| GIF, TIFF, SVG, audio, PDF | yes | JPEG, PNG, WebP and ISOBMFF only (`unsupported file type`) | later |
+| ISOBMFF (MP4, MOV, AVIF) | validated, hard binding included | the container is read (SPEC-026); `c2pa.hash.bmff.v3` is not, so the file is `Invalid` with the hard binding named — never a silent `Valid` | the BMFF hash spec |
 | CAWG identity assertions | validated (their own X.509 credential) | refused (`general.error` on the assertion) — `C_with_CAWG_data`, `cawg_ica` | a CAWG spec |
 | Remote manifests (`dcterms:provenance` URL) | fetched over the network | reported as `remote_manifest`, never fetched — `cloud.jpg`, the Photoshop file | never (by design) |
 | OCSP staples, certificate revocation | checked (with network) | not checked | never in the verification path |
@@ -58,6 +59,7 @@ files with the same trust anchors.
 | A timestamp authority is trusted **only** through the configured anchors; `c2patool` reports `timeStamp.trusted` for DigiCert and Truepic TSAs with no anchor configured and `untrusted` for a 2025 DigiCert responder — not derivable from the 0.90.22 source (step 40 §5) | C2PA 2.4 §14.6.1: a *trusted* timestamp; trust by observation is not trust | ADR-0004 decision 3; `_TSA_NOT_CONFIGURED` (Truepic ×3, `ocsp*`, `exp-test1`, Amazon, Pixel — `expired` at now here, `Valid` there; with the anchor configured they are equal, measured in SPEC-017 AC6/AC11/AC12) |
 | `timeStamp.*` is informational, as at `c2patool`; the timestamp's one effect is the time the signer's validity is judged at | c2pa-rs logs every timestamp fault informational | SPEC-017 |
 | A `signingTime` attribute that differs from `genTime` is `malformed` (c2pa-rs prefers `signingTime`) | fail closed; no corpus token has them differ | ADR-0004 decision 5 |
+| An ISOBMFF `uuid` box whose purpose this verifier cannot read is an error; `c2patool` reports "no claim found" | a box that announces itself as C2PA and then says something unreadable is not a file without credentials | SPEC-026 AC5 |
 | A claim with `redacted_assertions` is refused | the claim-signature hash method and `assertion.notRedacted` are unmeasured; a claim that says "redacted" is not passed on trust | SPEC-011, kept by SPEC-021 |
 | A CAWG identity assertion is `Invalid` until validated | `Trusted` on a credential never examined (`C_with_CAWG_data`) | SPEC-013 amendment 7 |
 | A header with both `sigTst` and `sigTst2` is `malformed` (c2pa-rs takes `sigTst2`) | fail closed; no corpus file has both | SPEC-016 AC8 |

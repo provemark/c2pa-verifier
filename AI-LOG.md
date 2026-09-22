@@ -4304,3 +4304,33 @@ README are where the disclosure lives.
   were generated: the bytes here are evidence somebody can open.
 - Decided by Maurice: approval of SPEC-026. Open for him: its four
   non-blocking questions, which 74b answers in code.
+
+## 2026-09-22 — Step 74b, SPEC-026 implemented
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 74b".
+- Produced: `src/Container/IsobmffManifestStoreExtractor.php`; `isobmff`
+  in `FormatDetector` and a fourth arm in `Verifier`; SPEC-026 amendment
+  1, Traceability filled with the measured store SHA-256, status
+  `implemented`; SPEC-024 amendment 1 and its test widened to four
+  containers; `docs/comparison.md` and the README; the second half of
+  `notes/step-74-isobmff-tests.md`; `NOTES.md`, `docs/milestones.md`.
+- Measured: `composer check` exit 0, 390 passed (7376 assertions).
+  `bin/c2pa-verify` on the signed MP4: `Invalid`, `format: isobmff`,
+  `has_manifest: true`, with `the hard binding c2pa.hash.bmff.v3 is not
+  supported yet` — read, then refused by name. The store's SHA-256 is
+  `58b8f2cce9f90ccb41239a8428c723a427862eb58670e8ca803dbd1a6f4a3a82`.
+- Reasoned, and corrected by the implementation: AC7 asked to refuse a
+  `size == 0` box that is not the last, and that case cannot occur —
+  the declaration is what makes a box the last one. Amendment 1 says so
+  and names the cost: such a box can swallow its successors and nothing
+  in the container betrays it; the hard binding is what catches it, which
+  is why c2patool answers `Invalid` there rather than refusing to parse.
+  Also recorded: `StreamReader` is sequential and the first draft passed
+  absolute offsets to it, which walked into the middle of a box; and
+  PHPStan, not a test, is what forced the wiring decision into the open
+  (`Match expression does not handle remaining value: 'isobmff'`).
+  SPEC-024 AC1's test named three constants and could not see a fourth —
+  a test that enumerates what it knows cannot notice what it does not.
+- Decided by Maurice: approval of SPEC-026. Open for him: confirmation of
+  three amendments now (SPEC-025 #1, SPEC-026 #1, SPEC-024 #1), and the
+  BMFF hash spec.

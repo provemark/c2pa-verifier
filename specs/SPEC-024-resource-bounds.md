@@ -65,7 +65,7 @@ satisfies neither.
 
 **In scope**
 
-- The default bound on the manifest store, in all three containers.
+- The default bound on the manifest store, in every container this verifier reads.
 - A refusal, before the store is read, when its declared length cannot fit
   in the memory this process may still allocate — with a status code, a
   verdict, and no allocation of that size attempted.
@@ -90,7 +90,8 @@ satisfies neither.
 ## Behavior
 
 - **AC1 — the default bound is 16 MiB, and a larger store is refused cheaply**
-  - Given a JPEG, PNG or WebP whose declared store length is above the
+  *(amended 2026-09-22, see Amendments 1)*
+  - Given a JPEG, PNG, WebP or ISOBMFF file whose declared store length is above the
     default bound
   - When it is verified with a generous memory limit
   - Then the report is `Invalid` with a status code, the explanation names
@@ -208,6 +209,17 @@ reasoning that led to them stays readable.
    was not judged at all — nobody may mistake a refusal for a verdict
    about the content.
 
+## Amendments
+
+1. **2026-09-22, step 74b, defined in SPEC-026 and approved with it** —
+   AC1 said "a JPEG, PNG or WebP" and the Scope said "all three
+   containers". SPEC-026 adds a fourth, and its extractor carries the same
+   16 MiB bound and consults the same `MemoryBudget`, so the rule is
+   unchanged and only its reach is wider. The criterion's test gains the
+   fourth constant; nothing else moves. Named in SPEC-026's open questions
+   before either was written, so that it arrived as a consequence rather
+   than a surprise.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -219,7 +231,7 @@ verification per process, so that the memory limit can be chosen.
 
 | Acceptance criterion | Test (name) | Source (file/symbol) |
 |---|---|---|
-| AC1 | `AC1: the default bound is 16 MiB in all three containers`; `AC1: a store above the bound is refused without being read` | `JpegManifestStoreExtractor::DEFAULT_MAX_LBOX`, `PngManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH`, `WebpManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH` (SPEC-001 amendment 4, SPEC-002 amendment 2, SPEC-003 amendment 2) |
+| AC1 | `AC1: the default bound is 16 MiB in every container this verifier reads`; `AC1: a store above the bound is refused without being read` | `JpegManifestStoreExtractor::DEFAULT_MAX_LBOX`, `PngManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH`, `WebpManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH` (SPEC-001 amendment 4, SPEC-002 amendment 2, SPEC-003 amendment 2) |
 | AC2 | `AC2: a store that does not fit the host is refused, and the process survives` | `src/Support/MemoryBudget.php :: allows(), remainingBytes()`; the three extractors' budget check |
 | AC3 | `AC3: with no memory limit only the absolute bound applies` | `MemoryBudget::parseLimit()` (null for `-1`, empty, or a form it does not understand), `MemoryBudget::allows()` returning true on null |
 | AC4 | `AC4: every signed fixture verifies the same under a 128 MB limit as under a generous one` | the whole read path; the alarm, not a change |

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Container\IsobmffManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
@@ -108,10 +109,13 @@ function spec024Probe(string $file, string $memoryLimit, ?string $settings = nul
     return $decoded + ['died' => false];
 }
 
-it('AC1: the default bound is 16 MiB in all three containers', function (): void {
+it('AC1: the default bound is 16 MiB in every container this verifier reads', function (): void {
+    // SPEC-024 amendment 1: four since SPEC-026 added ISOBMFF, which carries the
+    // same bound and consults the same budget
     expect(PngManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH)->toBe(SPEC024_BOUND)
         ->and(WebpManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH)->toBe(SPEC024_BOUND)
-        ->and(JpegManifestStoreExtractor::DEFAULT_MAX_LBOX)->toBe(SPEC024_BOUND);
+        ->and(JpegManifestStoreExtractor::DEFAULT_MAX_LBOX)->toBe(SPEC024_BOUND)
+        ->and(IsobmffManifestStoreExtractor::DEFAULT_MAX_BOX_LENGTH)->toBe(SPEC024_BOUND);
 })->group('SPEC-024');
 
 it('AC1: a store above the bound is refused without being read', function (): void {

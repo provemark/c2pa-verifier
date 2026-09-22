@@ -102,7 +102,9 @@ it('AC5: a purpose this verifier does not read is an error naming it', function 
             spec026Extract("isobmff/{$variant}.mp4");
             expect(false)->toBeTrue("{$variant} did not throw");
         } catch (ContainerException $e) {
-            expect($e->getMessage())->toContain($purpose, $variant);
+            // not toContain($purpose, $variant): Pest reads the second argument as
+            // another needle rather than a message (the ninth time in this project)
+            expect(str_contains($e->getMessage(), $purpose))->toBeTrue("{$variant}: {$e->getMessage()}");
         }
     }
 
@@ -113,21 +115,31 @@ it('AC5: a purpose this verifier does not read is an error naming it', function 
 
 it('AC6: a box header that does not fit is an error, and nothing is read past the end', function (): void {
     foreach (['size-below-header', 'size-past-end', 'largesize-missing'] as $variant) {
-        expect(fn () => spec026Extract("isobmff/{$variant}.mp4"))
-            ->toThrow(ContainerException::class, '', $variant);
+        try {
+            spec026Extract("isobmff/{$variant}.mp4");
+            expect(false)->toBeTrue("{$variant} did not throw");
+        } catch (ContainerException $e) {
+            expect($e->getMessage())->not->toBe('', $variant);
+        }
     }
 })->group('SPEC-026');
 
-it('AC7: size zero is the last box, or it is an error', function (): void {
-    // not last: the box would swallow everything after it, which is a contradiction
-    expect(fn () => spec026Extract('isobmff/size-zero-not-last.mp4'))
-        ->toThrow(ContainerException::class);
+it('AC7: size zero runs to the end of the stream, and cannot be caught here', function (): void {
+    // SPEC-026 amendment 1: the declaration is what makes a box the last one, so a
+    // box that swallows what followed it reads as one long box and nothing in the
+    // container betrays it. c2patool reads both variants the same way.
+    $last = spec026Extract('isobmff/size-zero-last.mp4');
+    expect($last)->not->toBeNull();
+    assert($last !== null);
+    expect(strlen($last))->toBe(SPEC026_STORE_LENGTH);
 
-    // last: legal, and the store runs to the end of the stream
-    $bytes = spec026Extract('isobmff/size-zero-last.mp4');
-    expect($bytes)->not->toBeNull();
-    assert($bytes !== null);
-    expect(strlen($bytes))->toBe(SPEC026_STORE_LENGTH);
+    // the other variant swallows the boxes after it: read, longer, and left to the
+    // hard binding to catch — which is why c2patool answers Invalid rather than refusing
+    $swallowed = spec026Extract('isobmff/size-zero-not-last.mp4');
+    expect($swallowed)->not->toBeNull();
+    assert($swallowed !== null);
+    expect(strlen($swallowed))->toBeGreaterThan(SPEC026_STORE_LENGTH)
+        ->and(spec026Oracle('isobmff/size-zero-not-last')['validation_state'])->toBe('Invalid');
 })->group('SPEC-026');
 
 it('AC8: the bounds of SPEC-024 apply here too', function (): void {

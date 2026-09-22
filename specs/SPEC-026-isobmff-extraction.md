@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -125,12 +125,15 @@ SHA-256 this spec records once, measured.
   - Then each is a `ContainerException` naming the offset and what was
     expected, and no read is attempted past the end of the stream.
 
-- **AC7 — `size == 0` is the last box, or it is an error** *(malformed input)*
+- **AC7 — `size == 0` runs to the end of the stream** *(amended 2026-09-22, see Amendments 1)*
   - Given a box declaring `size == 0`, which ISO/IEC 14496-12 defines as
     "to the end of the file"
-  - When it is not the last top-level box, or when it is the C2PA box
-  - Then the first is a `ContainerException`; the second is read, with its
-    length taken from the end of the stream.
+  - When it is read
+  - Then its length is taken from the end of the stream, and if it is the
+    C2PA box its store is read to there. There is no "not the last box"
+    case to refuse: the declaration is what makes a box the last one, so a
+    reader cannot tell a deliberate one from a truncation of what followed.
+    What that costs is named in the Amendment, and belongs to the hash.
 
 - **AC8 — the bounds of SPEC-024 apply here too**
   - Given a C2PA `uuid` box whose declared store is larger than the
@@ -218,19 +221,46 @@ final readonly class IsobmffManifestStoreExtractor
    designed, and it is mentioned so that the red phase is not mistaken for
    a fault. Non-blocker.
 
+## Amendments
+
+1. **2026-09-22, step 74b, found by the implementation** — AC7 asked for a
+   `size == 0` box that is *not* the last one to be refused. That case
+   cannot occur. `size == 0` means "to the end of the file", so the
+   declaration itself makes the box the last one: a reader that honours it
+   consumes everything after it, and a reader that does not has stopped
+   honouring the format. The variant built for it
+   (`isobmff/size-zero-not-last.mp4`) is read as one box running to the
+   end, exactly as `c2patool` reads it.
+
+   The criterion now says what is true, and the cost is named rather than
+   wished away: a box declaring `size == 0` **can** swallow the boxes that
+   followed it, and nothing in the container betrays that. What catches it
+   is the hard binding — the bytes it swallowed are the bytes the hash
+   covers — which is why `c2patool` answers `Invalid` on that variant
+   rather than refusing to parse it, and why this verifier will do the same
+   once `c2pa.hash.bmff.v3` exists. Until then an ISOBMFF file has no hard
+   binding here and is `Invalid` for that reason, which happens to cover
+   this case too, for the wrong reason. Written down so that the next spec
+   knows it inherits this.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
 least one test; every source file maps back to this spec.
 
-| Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
-|----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
+All tests are in `tests/Unit/Container/IsobmffManifestStoreExtractorTest.php`,
+group `SPEC-026`; the source is `src/Container/IsobmffManifestStoreExtractor.php`
+unless another file is named. The store of `fixture-signed.mp4` is 13 533 bytes,
+SHA-256 `58b8f2cce9f90ccb41239a8428c723a427862eb58670e8ca803dbd1a6f4a3a82`.
+
+| Acceptance criterion | Test (name) | Source (symbol) |
+|---|---|---|
+| AC1 | `AC1: a signed MP4 gives the store, and the existing stack reads it` | `extract()`, `readStore()` |
+| AC2 | `AC2: an ISOBMFF file with no C2PA box yields null, not an error` | `extract()` (the null return) |
+| AC3 | `AC3: ftyp is detected as isobmff, and nothing else is guessed` | `src/Container/FormatDetector.php :: detect()`; `src/Verifier/Verifier.php` (the fourth match arm) |
+| AC4 | `AC4: two C2PA boxes are an error naming both offsets` | `extract()` (the walk continues past the first) |
+| AC5 | `AC5: a purpose this verifier does not read is an error naming it` | `readStore()`, `PURPOSE_MANIFEST` |
+| AC6 | `AC6: a box header that does not fit is an error, and nothing is read past the end` | `boxHeader()` |
+| AC7 | `AC7: size zero runs to the end of the stream, and cannot be caught here` | `boxHeader()` (amendment 1) |
+| AC8 | `AC8: the bounds of SPEC-024 apply here too` | `DEFAULT_MAX_BOX_LENGTH`, `MemoryBudget` |
+| AC9 | `AC9: AVIF is the same container, measured rather than assumed` | `extract()`; `tests/Fixtures/fixture-signed.avif` |

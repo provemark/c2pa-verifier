@@ -7,6 +7,7 @@ namespace Provemark\C2paVerifier\Verifier;
 use Provemark\C2paVerifier\Cbor\CborException;
 use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\FormatDetector;
+use Provemark\C2paVerifier\Container\IsobmffManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\ManifestStoreBytes;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
@@ -58,6 +59,7 @@ final readonly class Verifier
         private JpegManifestStoreExtractor $jpeg = new JpegManifestStoreExtractor,
         private PngManifestStoreExtractor $png = new PngManifestStoreExtractor,
         private WebpManifestStoreExtractor $webp = new WebpManifestStoreExtractor,
+        private IsobmffManifestStoreExtractor $isobmff = new IsobmffManifestStoreExtractor,
         private JumbfParser $jumbf = new JumbfParser,
         private ClaimSignatureCheck $signature = new ClaimSignatureCheck,
         private HashedUriCheck $hashedUris = new HashedUriCheck,
@@ -83,7 +85,7 @@ final readonly class Verifier
             $head = $this->formats->head($stream);
 
             return new VerificationReport('unknown', false, null, ValidationResult::fromStatuses([
-                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG or WebP signature', Bytes::hex($head))),
+                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, WebP or ISOBMFF signature', Bytes::hex($head))),
             ], []));
         }
 
@@ -93,6 +95,10 @@ final readonly class Verifier
                 'jpeg' => $this->jpeg->extract($stream),
                 'png' => $this->png->extract($stream),
                 'webp' => $this->webp->extract($stream),
+                // SPEC-026: the container only. There is no BMFF hard-binding check yet,
+                // so the data hash finds no `c2pa.hash.data` and says
+                // claim.hardBindings.missing — Invalid, named, and never a silent Valid.
+                'isobmff' => $this->isobmff->extract($stream),
             };
         } catch (ContainerException $e) {
             return new VerificationReport($format, true, null, ValidationResult::fromStatuses([

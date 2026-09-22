@@ -19,7 +19,7 @@ final readonly class FormatDetector
 
     /**
      * @param  resource  $stream  readable and seekable
-     * @return 'jpeg'|'png'|'webp'|null
+     * @return 'jpeg'|'png'|'webp'|'isobmff'|null
      */
     public function detect($stream): ?string
     {
@@ -32,6 +32,12 @@ final readonly class FormatDetector
         }
         if (strlen($head) === self::PROBE_LENGTH && str_starts_with($head, 'RIFF') && substr($head, 8, 4) === 'WEBP') {
             return 'webp';
+        }
+        // ISOBMFF (SPEC-026): MP4, MOV, AVIF and HEIC all open with a `ftyp` box, and
+        // the brand that follows is not read — a file that declares `ftyp` and carries
+        // a C2PA `uuid` box is one this verifier can read whatever its brand says.
+        if (strlen($head) === self::PROBE_LENGTH && substr($head, 4, 4) === 'ftyp') {
+            return 'isobmff';
         }
 
         return null;
