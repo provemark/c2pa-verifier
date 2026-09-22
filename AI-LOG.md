@@ -2553,3 +2553,25 @@ README are where the disclosure lives.
   anchors; `timeStamp.*` informational with the time as its one effect;
   `genTime` over `signingTime`, a difference `malformed`.
 
+## 2026-09-22 — SPEC-016 as a draft
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, schrijf SPEC-016 als draft".
+- Produced: `specs/SPEC-016-der-reader-and-timestamp-token.md` (draft,
+  ten acceptance criteria, API sketch for `Asn1\{Der,DerReader,TagClass,
+  Asn1Exception}` and `Timestamp\{TimestampHeader,TimeStampToken,
+  SignedData,SignerInfo,TstInfo,TstAccuracy,TimestampException}`); a
+  row in `docs/milestones.md`; this entry. `bin/spec-check.php`: OK,
+  17 specs.
+- Measured: for the criteria's literals — `openssl ts -reply -token_in
+  -text` and `openssl cms -cmsout -print` on the five step-40 tokens
+  (policy, imprint algorithm and prefix, serial, genTime, nonce,
+  accuracy, TSA name; SignerInfo `sid`, digest and signature
+  algorithms, the signed attributes by OID); `openssl asn1parse` for
+  the `eContent` sizes (112/114/227/113/113) and the signed-attribute
+  offsets; the Truepic TSA key (RSA-4096); the epoch of
+  `240806215337Z` and the decimal of the `C.jpg` serial (`php`).
+  Reasoned: the ten-tag grammar and its refusals from X.690 §8/§10;
+  "exactly one signer" from RFC 3161 §2.4.2; the re-tagging from
+  RFC 5652 §5.4; both wrappers from both headers as c2pa-rs.
+- Decided by Maurice: none yet (the draft awaits approval).
+
