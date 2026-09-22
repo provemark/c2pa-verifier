@@ -88,13 +88,14 @@ file that does not exist; both are fail-open (SPEC-019).
 
 ## Public API
 
-Nine classes are the contract. Their public members are what this package
+Ten classes are the contract. Their public members are what this package
 promises; a release may add to them, and will not remove or rename them
 without saying so.
 
 | class | what it is for |
 |---|---|
 | `Verifier\Verifier` | the one call: `verify($stream, $settings)` |
+| `Verifier\FragmentedVerifier` | a DASH init segment and its fragments as one verdict: `verify($init, $fragments, $settings)`, one open fragment stream at a time |
 | `Verifier\VerificationReport` | what comes back: `$result`, `$format`, `$hasManifest`, `$remoteManifestUrl`, `$signatureInfo`, `toArray()`, `toJson()` |
 | `Report\ValidationResult` | the verdict and the statuses behind it |
 | `Report\ValidationStatus` | one status: its code, the JUMBF URI it concerns, a sentence |

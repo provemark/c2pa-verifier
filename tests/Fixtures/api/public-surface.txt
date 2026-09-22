@@ -79,6 +79,8 @@ Trust\TrustSettings :: property allowedList
 Trust\TrustSettings :: property trustAnchors
 Trust\TrustSettings :: property trustConfig
 Trust\TrustSettings :: property verifyTrust
+Verifier\FragmentedVerifier :: method merkleMapOf
+Verifier\FragmentedVerifier :: method verify
 Verifier\VerificationReport :: method __construct
 Verifier\VerificationReport :: method toArray
 Verifier\VerificationReport :: method toJson

@@ -4731,3 +4731,30 @@ README are where the disclosure lives.
 - Decided by Maurice: approval of SPEC-028 and the `FragmentedVerifier`
   shape. Open for him: nothing new; 83b implements, and the contract
   snapshot grows from nine classes to ten by design.
+
+## 2026-09-22 — Step 83b, SPEC-028 implemented and M8 closed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 83b".
+- Produced: `src/Verifier/FragmentedVerifier.php`; the merkle path in
+  `src/Hash/BmffHashCheck.php` (`checkMerkle()`, `checkFragment()`,
+  `merkleMapOf()`, `path()`); `merklePayload()` on the ISOBMFF
+  extractor; SPEC-025 amendment 2 and the contract widened to ten
+  classes in the test, the checker, the snapshot and the README;
+  SPEC-028's Traceability filled and status `implemented`;
+  `docs/comparison.md`; the second half of
+  `notes/step-83-fragmented-tests.md`; `NOTES.md`, `docs/milestones.md`.
+- Measured: `composer check` exit 0, 404 passed (7474 assertions). The
+  five-fragment stream verifies whole; a changed init segment, a changed
+  fragment, a foreign fragment, a withheld one and a repeated one each
+  fail with the file named.
+- Reasoned: that the shape kept this small — `Verifier` already takes its
+  `BmffHashCheck` as an argument, so handing it one that knows this
+  call's fragments leaves the dispatch, the report and every other rule
+  untouched, and nothing is patched after the fact. PHPStan caught the
+  first draft's injected `Verifier` that was never read: an ignored
+  dependency reads as a seam, and there was none. Removing it shrank the
+  contract from 96 symbols to 95.
+- Decided by Maurice: approval of SPEC-028 and the `FragmentedVerifier`
+  shape. Open for him: confirmation of SPEC-025 amendment 2, and what
+  comes after M8 — the version number of a first tag, and the visibility
+  change.

@@ -113,7 +113,7 @@ it('AC2: the init segment is bound, and the explanation says it was the init', f
 
 it('AC3: a tampered fragment is caught and named', function (): void {
     $fragments = spec028Five();
-    $fragments[2] = 'broken/seg_3-byte-changed.m4s';
+    $fragments = [...array_slice($fragments, 0, 2), 'broken/seg_3-byte-changed.m4s', ...array_slice($fragments, 3)];
     $report = spec028Verify($fragments, trusted: false);
 
     expect($report->result->state)->toBe(ValidationState::Invalid)
@@ -127,7 +127,7 @@ it('AC4: a fragment of another stream does not pass, though it is valid in its o
     // substitution a Merkle root exists to prevent, and c2patool answers
     // assertion.bmffHash.mismatch on the same set (recorded, step 83a).
     $fragments = spec028Five();
-    $fragments[2] = 'foreign-seg_3.m4s';
+    $fragments = [...array_slice($fragments, 0, 2), 'foreign-seg_3.m4s', ...array_slice($fragments, 3)];
     $report = spec028Verify($fragments, trusted: false);
 
     expect($report->result->state)->toBe(ValidationState::Invalid)
@@ -143,10 +143,13 @@ it('AC5: the count is part of the promise', function (): void {
     foreach (['four of five' => $short, 'one offered twice' => $repeated] as $name => $fragments) {
         $report = spec028Verify($fragments, trusted: false);
 
+        // not toContain($needle, $name): Pest reads the second argument as another
+        // needle rather than a message — the tenth time in this project
+        $explanations = strtolower(spec028Explanations($report));
         expect($report->result->state)->toBe(ValidationState::Invalid, $name)
-            // the numbers, both of them, so the caller can see what was expected
-            ->and(spec028Explanations($report))->toContain('5', $name)
-            ->and(strtolower(spec028Explanations($report)))->toContain('fragment', $name);
+            ->and(str_contains($explanations, 'fragment'))->toBeTrue("{$name}: {$explanations}")
+            // the numbers, so the caller can see what was expected against what came
+            ->and(str_contains($explanations, '5'))->toBeTrue($name);
     }
 })->group('SPEC-028');
 

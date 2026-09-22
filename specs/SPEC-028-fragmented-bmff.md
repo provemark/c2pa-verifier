@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -242,12 +242,17 @@ statuses: a fragmented stream is many files, and each status says which.
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
 least one test; every source file maps back to this spec.
 
-| Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
-|----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
+All tests are in `tests/Unit/Verifier/FragmentedVerifierTest.php`, group
+`SPEC-028`. The class a caller holds is
+`src/Verifier/FragmentedVerifier.php`; the work is in
+`src/Hash/BmffHashCheck.php`, which SPEC-027 already had.
+
+| Acceptance criterion | Test (name) | Source (symbol) |
+|---|---|---|
+| AC1 | `AC1: an init segment and its fragments verify` | `FragmentedVerifier::verify()`, `BmffHashCheck::checkMerkle()` |
+| AC2 | `AC2: the init segment is bound, and the explanation says it was the init` | `BmffHashCheck::checkMerkle()` (the `initHash` comparison) |
+| AC3 | `AC3: a tampered fragment is caught and named` | `BmffHashCheck::checkFragment()` |
+| AC4 | `AC4: a fragment of another stream does not pass, though it is valid in its own` | `BmffHashCheck::checkFragment()`, `path()` |
+| AC5 | `AC5: the count is part of the promise` | `BmffHashCheck::checkMerkle()` (the count), `checkFragment()` (a location filled twice) |
+| AC6 | `AC6: more than one merkle map is refused by name` | `FragmentedVerifier::merkleMapOf()`, `BmffHashCheck::merkleMapOf()` |
+| AC7 | `AC7: a whole file still behaves exactly as it did` | `Verifier` (unchanged), `BmffHashCheck::check()` |

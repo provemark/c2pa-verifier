@@ -23,7 +23,7 @@ if (is_file($apiCheckScript)) {
 }
 
 /**
- * The nine classes a caller may build on (SPEC-025 AC1). `TrustException` is here
+ * The ten classes a caller may build on (SPEC-025 AC1, amendment 2). `TrustException` is here
  * and the other seven exception types are not: SPEC-013 turns those into statuses
  * before the public boundary, so no caller can meet them, while this one escapes
  * from TrustSettings::fromJson() and the CLI catches exactly it.
@@ -40,6 +40,7 @@ function spec025Contract(): array
         'Report\ValidationStatus',
         'Trust\TrustException',
         'Trust\TrustSettings',
+        'Verifier\FragmentedVerifier',
         'Verifier\VerificationReport',
         'Verifier\Verifier',
     ];
@@ -91,7 +92,7 @@ it('AC1: the recorded surface is exactly what the contract classes expose today'
     }
 
     expect($live)->toBe(spec025Recorded())
-        ->and($live)->toHaveCount(93);   // 91 until SPEC-027 added two bmffHash codes
+        ->and($live)->toHaveCount(95);   // 91, then two bmffHash codes, then SPEC-028's tenth class
 })->group('SPEC-025');
 
 it('AC1: no class of the contract is marked internal', function (): void {

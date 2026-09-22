@@ -62,6 +62,58 @@ final readonly class IsobmffManifestStoreExtractor
     ) {}
 
     /**
+     * The CBOR of this file's C2PA box when its purpose is `merkle`, or null when it
+     * has no C2PA box or one with another purpose (SPEC-028).
+     *
+     * A fragment of a fragmented stream carries a box of its own holding its leaf
+     * index and the sibling hashes up to the root. `extract()` refuses that purpose,
+     * and rightly: it is not a manifest store. This reads it for what it is.
+     *
+     * @param  resource  $stream  a readable, seekable stream positioned at 0
+     *
+     * @throws ContainerException on every malformed case
+     */
+    public function merklePayload($stream): ?string
+    {
+        $reader = new StreamReader($stream, 'box');
+        $end = $reader->end();
+        $offset = 0;
+        while ($offset + self::BOX_HEADER_LENGTH <= $end) {
+            [$size, $header, $type] = $this->boxHeader($reader, $offset, $end);
+            $read = $header;
+            if ($type === self::TYPE_UUID && $size >= $header + 16) {
+                $isC2pa = $reader->readExactly(16, $offset, 'the UUID') === self::C2PA_UUID;
+                $read += 16;
+                if ($isC2pa) {
+                    $available = $size - $read;
+                    if ($available < 5) {
+                        throw new ContainerException(sprintf('C2PA box at offset %d holds %d bytes after its UUID', $offset, $available));
+                    }
+                    $reader->readExactly(4, $offset, 'version and flags');
+                    $remaining = $available - 4;
+                    $purpose = '';
+                    while ($remaining > 0) {
+                        $byte = $reader->readExactly(1, $offset, 'the purpose');
+                        $remaining--;
+                        if ($byte === "\x00") {
+                            break;
+                        }
+                        $purpose .= $byte;
+                    }
+
+                    return $purpose === 'merkle' && $remaining > 0
+                        ? $reader->readExactly($remaining, $offset, 'the merkle data')
+                        : null;
+                }
+            }
+            $reader->skip($size - $read, $offset);
+            $offset += $size;
+        }
+
+        return null;
+    }
+
+    /**
      * The top-level boxes, in file order (SPEC-027 needs the same walk this class
      * already does, and duplicating it would be a second truth).
      *

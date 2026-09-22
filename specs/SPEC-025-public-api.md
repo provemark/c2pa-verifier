@@ -84,14 +84,15 @@ the project stops implying support it never gave.
 ## Behavior
 
 - **AC1 — the contract is a list, and the list is exact**
-  - Given the nine classes named as the contract (`Verifier\Verifier`,
-    `Verifier\VerificationReport`, `Report\ValidationResult`,
-    `Report\ValidationStatus`, `Report\ValidationState`,
-    `Report\StatusCode`, `Trust\TrustSettings`, `Trust\TrustException`,
-    `Cli\Command`)
+  - Given the ten classes named as the contract (`Verifier\Verifier`,
+    `Verifier\FragmentedVerifier`, `Verifier\VerificationReport`,
+    `Report\ValidationResult`, `Report\ValidationStatus`,
+    `Report\ValidationState`, `Report\StatusCode`, `Trust\TrustSettings`,
+    `Trust\TrustException`, `Cli\Command`) *(amended 2026-09-22, see
+    Amendments 2)*
   - When the public surface of each is read by reflection
   - Then it equals the recorded snapshot, symbol for symbol; and none of
-    the nine carries `@internal` on its class docblock.
+    the ten carries `@internal` on its class docblock.
 
 - **AC2 — everything else says so** *(required: the error path)*
   - Given every other public class, interface and enum in `src/`
@@ -210,6 +211,19 @@ reasoning that led to it stays readable.
    part of the promise"*. The test asserts on that shape instead of on
    absence. Nothing about the property or its docblock changed.
    Confirmed by Maurice van Loon, 2026-09-22 (step 75).
+
+2. **2026-09-22, step 83b, defined in SPEC-028 and approved with it** — the
+   contract grows to ten classes: `Verifier\FragmentedVerifier`, which
+   takes a DASH init segment and its fragments. This is the first time a
+   class has been *added* to the promise rather than the surface merely
+   being recorded, and it is what the snapshot is for: the diff is two
+   lines, `method merkleMapOf` and `method verify`, in review rather than
+   discovered by a consumer.
+
+   The alarm rang on its own, twice. `ApiSurfaceTest` AC2 failed the moment
+   the class landed — in neither the contract nor marked `@internal` — and
+   AC5 failed until the README's Public API table named it. Neither had to
+   be remembered.
 
 
 ## Traceability
