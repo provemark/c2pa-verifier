@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Verifier;
 
+use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cbor\CborException;
 use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\FormatDetector;
@@ -22,6 +23,7 @@ use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfException;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\ActionsCheck;
+use Provemark\C2paVerifier\Manifest\Manifest;
 use Provemark\C2paVerifier\Manifest\ManifestException;
 use Provemark\C2paVerifier\Manifest\ManifestGraph;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
@@ -35,6 +37,7 @@ use Provemark\C2paVerifier\Timestamp\TimestampResult;
 use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\ChainCheck;
+use Provemark\C2paVerifier\Trust\OcspCheck;
 use Provemark\C2paVerifier\Trust\TrustException;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 
@@ -69,6 +72,7 @@ final readonly class Verifier
         private ChainCheck $trust = new ChainCheck,
         private CertificateProfileCheck $certificate = new CertificateProfileCheck,
         private TimestampCheck $timestamp = new TimestampCheck,
+        private OcspCheck $revocation = new OcspCheck,
         private RemoteManifestDetector $remote = new RemoteManifestDetector,
         private ActionsCheck $actions = new ActionsCheck,
         private IngredientManifestCheck $ingredients = new IngredientManifestCheck,
@@ -232,6 +236,19 @@ final readonly class Verifier
             $checks[] = 'trust';
         }
 
+        // revocation, as far as it can be known without a network: the OCSP responses the
+        // signer stapled into its own signature (SPEC-030). It runs after the chain, which
+        // supplies the issuer, and after the timestamp, which supplies the judged time. It
+        // speaks on every file, including those with nothing stapled: what was not checked
+        // has to be visible, or a caller cannot tell silence from a clean answer.
+        $statuses = [...$statuses, ...$this->revocation->check(
+            $this->unprotectedHeader($manifest),
+            $this->chainOf($manifest),
+            $at,
+            sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label),
+        )];
+        $checks[] = 'revocation';
+
         $hashedUris = $this->hashedUris->check($manifest);
         $statuses = [...$statuses, ...$hashedUris];
         $checks[] = 'hashedUris';
@@ -317,5 +334,35 @@ final readonly class Verifier
         }
 
         return ValidationResult::fromStatuses($statuses, $checks);
+    }
+
+    /**
+     * The signature's unprotected header, or an empty one when it cannot be read.
+     *
+     * A signature this verifier cannot parse has already failed elsewhere, with its
+     * own status; there is nothing for revocation to add to that (SPEC-030).
+     *
+     * @return array<int|string, mixed>
+     */
+    private function unprotectedHeader(Manifest $manifest): array
+    {
+        try {
+            return CoseSign1::fromBytes($manifest->signatureBytes())->unprotected;
+        } catch (CoseException|ManifestException) {
+            return [];
+        }
+    }
+
+    /** @return list<Certificate> the signer's chain, leaf first; empty when it cannot be read */
+    private function chainOf(Manifest $manifest): array
+    {
+        try {
+            return array_map(
+                static fn (CborBytes $c): Certificate => Certificate::fromDer($c->bytes),
+                CoseSign1::fromBytes($manifest->signatureBytes())->chain,
+            );
+        } catch (CoseException|ManifestException|TrustException) {
+            return [];
+        }
     }
 }

@@ -259,8 +259,8 @@ it('AC8: checks_performed gains ingredients, and only where the graph reached a 
     $multi = spec020Verify('public-testfiles/adobe-20220124-CACA.jpg', SPEC021_SETTINGS);
     $single = spec020Verify('public-testfiles/adobe-20220124-CA.jpg', SPEC021_SETTINGS);
 
-    expect($multi->result->checksPerformed)->toBe(['timestamp', 'signature', 'certificate', 'trust', 'hashedUris', 'actions', 'ingredients', 'dataHash'])
-        ->and($single->result->checksPerformed)->toBe(['timestamp', 'signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash']);
+    expect($multi->result->checksPerformed)->toBe(['timestamp', 'signature', 'certificate', 'trust', 'revocation', 'hashedUris', 'actions', 'ingredients', 'dataHash'])
+        ->and($single->result->checksPerformed)->toBe(['timestamp', 'signature', 'certificate', 'trust', 'revocation', 'hashedUris', 'actions', 'dataHash']);
     // the deltas are grouped by assertion URI in walk order, active failures first in the flat list
     $graph = ManifestGraph::fromStore($multi->store ?? throw new RuntimeException('no store'));
     $uris = array_column(spec020Deltas($multi->toArray()), 'ingredientAssertionURI');

@@ -65,7 +65,7 @@ test('SPEC-018 AC1: the audit\'s file — assertion.action.malformed on the mani
         expect($malformed)->toHaveCount(1, $oracleName)
             ->and($malformed[0]->url)->toBe($label)   // c2patool's url for this rule is the bare manifest label (amendment 2)
             ->and($malformed[0]->explanation)->toContain('no actions assertion')
-            ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash']);
+            ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'revocation', 'hashedUris', 'actions', 'dataHash']);
         $theirs = array_values(array_filter(spec018OracleFailures(spec018Oracle($oracleName)), static fn (array $f): bool => $f['code'] === 'assertion.action.malformed'));
         expect($theirs)->toHaveCount(1)
             ->and($theirs[0]['url'])->toBe($malformed[0]->url)

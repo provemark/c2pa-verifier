@@ -229,6 +229,26 @@ reasoning that led to it stays readable.
 
 
 
+3. **2026-09-22, step 92b, with SPEC-030's implementation** — `StatusCode`
+   grows by four cases: `signingCredential.ocsp.revoked`, `.notRevoked`,
+   `.unknown` and `.skipped`. The enum is one of the ten contract classes,
+   so the recorded surface goes from 95 symbols to **99**, and a caller
+   matching exhaustively on `StatusCode` now has four more arms to cover.
+
+   **Weight B: the report's shape grew, no verdict of an existing file
+   changed** — SPEC-030 AC9 asserts exactly that, over twelve verdicts
+   measured the step before. What is new is that every file now carries one
+   `signingCredential.ocsp.*` line, because a check that was skipped has to
+   be visible.
+
+   The alarm rang on its own again: `bin/api-check.php`, which joined
+   `composer check` in step 89 after drifting for four commits, refused the
+   run with "public but not recorded" on all four cases before any of this
+   was written down.
+
+   Confirmed by Maurice van Loon: pending.
+
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

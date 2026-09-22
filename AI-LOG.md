@@ -5104,3 +5104,34 @@ README are where the disclosure lives.
   those words rather than left as an assumption.
 - Decided by Maurice: none this step. Open for him: amendment 1, pending
   confirmation.
+
+## 2026-09-22 — Step 92b, SPEC-030 implemented: stapled OCSP
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, bevestig het amendement en ga door met 92b".
+- Produced: `src/Trust/OcspCheck.php`; four `StatusCode` cases; the call
+  in `Verifier` after the chain and the timestamp, with `revocation` in
+  `checksPerformed`; `deptrac.yaml` (Trust may read Asn1 and Cbor);
+  SPEC-030 amendment 1 confirmed and amendment 2 written; SPEC-025
+  amendment 3; the recorded surface 95 → 99; 24 test literals updated;
+  `docs/conformance.md`, `docs/comparison.md`, README, the 92b half of
+  `notes/step-92-ocsp-tests.md`, `NOTES.md`, `docs/milestones.md`.
+- Measured: `composer check` green — 421 passed (7584 assertions),
+  PHPStan max, Deptrac 0 violations, api-check 10 classes / 99 symbols.
+  The four fixtures answer at the seam: `revoked.der` →
+  `signingCredential.ocsp.revoked` (serial 1, keyCompromise),
+  `good.der` → `notRevoked`, `removed.der` → `skipped` (removeFromCRL is
+  not a revocation), `other-good.der` → `skipped` (another certificate).
+  `ocsp.jpg` gives `notRevoked` under the DigiCert anchor, where the
+  judged time is the attested 2025-08-13, and `skipped` without it, where
+  the judged time is now and the response expired on 2025-08-18.
+- Reasoned: nothing load-bearing. The three corrections were all found by
+  something that runs — the fixture caught the wrong OID
+  (`1.3.6.1.5.5.7.48.1` is id-pkix-ocsp, not id-pkix-ocsp-basic; following
+  the spec would have left the feature silently inert while ten criteria
+  passed), PHPStan's always-true ternary led to an empty CBOR map being
+  read as a list, and Deptrac refused the build until both new layer
+  edges were written down. Two tests were green *because* of the OID bug
+  and went red when it was fixed; that is recorded in the note.
+- Decided by Maurice: SPEC-030 amendment 1 confirmed. Open for him:
+  SPEC-030 amendment 2 and SPEC-025 amendment 3; the version of a first
+  tag; the visibility change; the announcement.

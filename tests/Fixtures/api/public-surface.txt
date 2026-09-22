@@ -34,6 +34,10 @@ Report\StatusCode :: const ManifestUpdateInvalid
 Report\StatusCode :: const ManifestUpdateWrongParents
 Report\StatusCode :: const SigningCredentialExpired
 Report\StatusCode :: const SigningCredentialInvalid
+Report\StatusCode :: const SigningCredentialOcspNotRevoked
+Report\StatusCode :: const SigningCredentialOcspRevoked
+Report\StatusCode :: const SigningCredentialOcspSkipped
+Report\StatusCode :: const SigningCredentialOcspUnknown
 Report\StatusCode :: const SigningCredentialTrusted
 Report\StatusCode :: const SigningCredentialUntrusted
 Report\StatusCode :: const TimeStampMalformed

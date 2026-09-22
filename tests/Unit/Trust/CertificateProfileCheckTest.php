@@ -109,6 +109,11 @@ function spec015Codes(VerificationReport $report, string $prefix = ''): array
 {
     $codes = [];
     foreach ($report->result->statuses as $status) {
+        // signingCredential.ocsp.* belongs to SPEC-030, not to the certificate profile;
+        // a prefix filter written before it existed would otherwise swallow it
+        if (str_starts_with($status->code->value, 'signingCredential.ocsp.')) {
+            continue;
+        }
         if (str_starts_with($status->code->value, $prefix)) {
             $codes[] = $status->code->value;
         }
@@ -404,7 +409,7 @@ it('AC9: M5\'s "done when": with and without the trust file, the verdicts are c2
 
 it('AC10: the codes are verbatim, and the drift alarm grows', function (): void {
     $values = array_map(static fn (StatusCode $c): string => $c->value, StatusCode::cases());
-    expect($values)->toHaveCount(41)   // SPEC-027 two bmffHash codes; SPEC-017 six timeStamp codes, SPEC-018 one, SPEC-020 three ingredient codes, SPEC-021 two, SPEC-022 three manifest codes
+    expect($values)->toHaveCount(45)   // SPEC-027 two bmffHash codes; SPEC-017 six timeStamp codes, SPEC-018 one, SPEC-020 three ingredient codes, SPEC-021 two, SPEC-022 three manifest codes, SPEC-030 four signingCredential.ocsp codes
         ->and($values)->toContain('signingCredential.expired')
         ->and(StatusCode::SigningCredentialExpired->isFailure())->toBeTrue();
 

@@ -197,13 +197,17 @@ it('AC3: a verified revoked response is a failure', function (): void {
     expect($status->code)->toBe(StatusCode::SigningCredentialOcspRevoked)
         ->and($status->code->isFailure())->toBeTrue();
 
-    foreach (['01', 'keyCompromise'] as $needle) {
+    // the serial as this verifier renders it everywhere: decimal, not openssl's hex
+    foreach (['serial 1', 'keyCompromise'] as $needle) {
         expect(str_contains($status->explanation, $needle))->toBeTrue("{$needle} missing from: {$status->explanation}");
     }
 
     // and the same response offered for another file's chain proves the two
     // fixtures are not accidentally interchangeable
     $bytes = (new JpegManifestStoreExtractor)->extract(spec030Stream());
+    if ($bytes === null) {
+        throw new RuntimeException('no store in ocsp.jpg');
+    }
     $store = ManifestStore::fromTree((new JumbfParser)->parse($bytes->bytes));
     $chain = array_map(static fn (object $c): Certificate => Certificate::fromDer($c->bytes), CoseSign1::fromBytes($store->active->signatureBytes())->chain);
 
@@ -247,7 +251,9 @@ it('AC7: malformed input is skipped by name, never an exception', function (): v
         'an entry is not a byte string' => ['rVals' => ['ocspVals' => ['not bytes']]],
         'not DER at all' => spec030Header(["\x00\x01\x02\x03"]),
         'truncated' => spec030Header([substr($good, 0, 40)]),
-        'no single response' => spec030Header([substr($good, 0, 2).substr($good, 2)]),
+        // DER that parses and is not an OCSPResponse: a certificate, which begins
+        // with a SEQUENCE where an OCSPResponseStatus should be
+        'well-formed DER, wrong structure' => spec030Header([spec030Certificate('ca')->der]),
     ];
 
     foreach ($cases as $name => $header) {

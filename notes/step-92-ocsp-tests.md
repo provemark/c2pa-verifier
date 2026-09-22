@@ -116,3 +116,87 @@ risky — correctly. A test that cannot fail today is not an alarm.
 trust layer after the chain and the timestamp, and — because `StatusCode`
 is one of the ten contract classes — a SPEC-025 amendment, since the
 recorded public surface grows by four lines.
+
+---
+
+# Step 92b — SPEC-030 implemented: revocation without a network
+
+*2026-09-22.* Ten green, 421 in the suite (7584 assertions), PHPStan max
+clean, Deptrac at zero.
+
+```
+Tests: 421 passed (7584 assertions)
+```
+
+## What was built
+
+`Trust\OcspCheck` reads `rVals.ocspVals`, parses RFC 6960, matches a
+`SingleResponse`'s `CertID` to the signer's certificate, verifies the
+response under a responder tied to the signer's own issuer, and applies
+`certStatus` at the judged time — a trusted timestamp's, else now.
+`StatusCode` grew by four cases. `Verifier` calls it after the chain (which
+supplies the issuer) and after the timestamp (which supplies the time), and
+`checksPerformed` gained `revocation`.
+
+## Two layer lines moved, deliberately
+
+The trust layer may now depend on `Asn1` and on `Cbor`. An RFC 6960
+response is DER, and it arrives as a CBOR byte string; both are low-level
+decoders that `Cose` already depends on, so no cycle appears. Deptrac
+refused the build until each was written down, which is what it is for.
+
+## Three things the code got wrong first, and how they surfaced
+
+**The OID.** The spec said `id-pkix-ocsp-basic` is `1.3.6.1.5.5.7.48.1`.
+It is not: that arc is *id-pkix-ocsp*, the access method in an AIA
+extension, and the response type is one deeper, `…48.1.1`. The fixture
+said so — "is of type 1.3.6.1.5.5.7.48.1.1, not id-pkix-ocsp-basic" — and
+the fixture was right. Had the code followed the spec as written, **every
+stapled response would have been skipped and the whole feature would have
+been silently inert**, with all ten criteria passing for the wrong reason
+on the two that matter. SPEC-030 amendment 2 records it rather than
+quietly correcting it.
+
+**Two tests passed while the OID was wrong.** AC7 and AC8 were green
+before the fix and red after it. That is worth saying plainly: they were
+passing because everything was being skipped, which is exactly the failure
+mode "assert that something specific is PRESENT" exists to catch.
+
+**An empty CBOR map.** PHPStan objected to an always-true ternary, and
+following it led somewhere real: an empty CBOR map and an empty list are
+the same PHP value, so `rVals: {}` was being reported as "a list, not a
+map". It now reads as a header that carries nothing.
+
+## The report grew on every file, and 24 tests said so
+
+`signingCredential.ocsp.skipped` appears on every asset without a stapled
+response, and `revocation` in every `checksPerformed`. Twenty-four tests
+asserted exact lists and failed — the alarms working, not breaking. Each
+was updated to record the growth rather than to stop looking:
+
+- the drift alarms that count `StatusCode::cases()`: 41 → 45;
+- the alarms that walk every code weighing success against failure: the
+  `signingCredential.ocsp.` family added to their skip lists, as
+  SPEC-017's `timeStamp.` and SPEC-020's `ingredient.` families were;
+- two helpers that filtered statuses by the prefix `signingCredential`,
+  which now catches a family that is not theirs — narrowed, with the
+  reason in the code;
+- `bin/api-check.php` refused the run before any of this was written down:
+  "public but not recorded" on all four cases. 95 symbols → 99, and
+  SPEC-025 amendment 3.
+
+## A second divergence from c2patool, by design
+
+c2patool 0.27.22 emits no OCSP status code of its own on either file that
+carries a stapled response. This verifier emits one on **every** file. So
+`VerifierTest` AC1, which asserts that every status we report is one
+c2patool also reports, now skips this family — next to the `timeStamp.
+untrusted` exception of ADR-0004, and for a related reason: where c2patool
+is quiet about what it did not do, this project is not.
+
+## What is still open
+
+SPEC-030's own limits are unchanged: no online OCSP, no AIA, no CRL, and
+no revocation for any certificate but the signer's leaf. And AC3 still has
+no second implementation behind it. `docs/conformance.md` is updated —
+five gaps closed, **17 left**, none of which can produce a wrong `Trusted`.

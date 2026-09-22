@@ -1,6 +1,7 @@
 # Conformance: 111 named obligations, one by one
 
-*Measured 2026-09-22 (step 90).* This table puts every predicate of
+*Measured 2026-09-22 (step 90); updated the same day after SPEC-030 closed
+five of its gaps (step 92).* This table puts every predicate of
 [`encypherai/c2pa-conformance-suite`](https://github.com/encypherai/c2pa-conformance-suite)
 that applies to the containers this verifier reads next to what this
 verifier actually does. The suite's catalogue formalises **237 normative
@@ -31,11 +32,11 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | verdict | predicates |
 |---|---|
-| **yes** | 49 |
+| **yes** | 54 |
 | partial | 12 |
 | closed | 7 |
 | by design | 21 |
-| **gap** | 22 |
+| **gap** | 17 |
 | **total** | 111 |
 
 ## Cross-format (6)
@@ -91,11 +92,11 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-STRU-008` | shall | Claim required fields and claim_generator_info name presence | **yes** — `Claim::fromMap()` requires every required field and a `name` in `claim_generator_info`, both `claim.malformed` (SPEC-007) |
 | `PRED-STRU-009` | shall | Generator-info icon field structural validation | **gap** — an `icon` inside `claim_generator_info` is not validated |
 | `PRED-STRU-010` | should | CA certificate revocation via AIA OCSP | by design — revocation via AIA OCSP needs the network (SPEC-014 puts revocation out of scope) |
-| `PRED-STRU-011` | shall | Signer certificate revocation validation process | **gap** — **OCSP responses stapled in the manifest (`rVals`) are not read** — no network is needed for this one |
-| `PRED-STRU-012` | shall | Multiple OCSP responses: try each until one passes | **gap** — follows from STRU-011: with no stapled response read, none is tried |
+| `PRED-STRU-011` | shall | Signer certificate revocation validation process | **yes** — `Trust\OcspCheck` reads `rVals.ocspVals` and applies `certStatus` (SPEC-030); a certificate with no revocation information is treated as not revoked, by saying `skipped` |
+| `PRED-STRU-012` | shall | Multiple OCSP responses: try each until one passes | **yes** — `Trust\OcspCheck::check()` tries each stapled response and stops at the first that proves something, a `revoked` winning over a `good` |
 | `PRED-STRU-013` | should | Online OCSP fallback when no revocation info in manifest | by design — online OCSP fallback needs the network |
-| `PRED-STRU-014` | shall | OCSP revoked certStatus disambiguation and rejection | **gap** — follows from STRU-011: a `revoked` certStatus in the manifest is never seen |
-| `PRED-STRU-015` | shall | OCSP skipped and OCSP inaccessible informational codes | **gap** — this verifier skips OCSP and **says nothing**; the rule asks for `signingCredential.ocsp.skipped` |
+| `PRED-STRU-014` | shall | OCSP revoked certStatus disambiguation and rejection | **yes** — `Trust\OcspCheck::statusOf()` separates `removeFromCRL` from a real revocation (RFC 6960 §4.2.1) and rejects only the latter |
+| `PRED-STRU-015` | shall | OCSP skipped and OCSP inaccessible informational codes | **yes** — every file now carries one `signingCredential.ocsp.*` line, and a skipped check says so — SPEC-030 AC5 |
 | `PRED-STRU-016` | shall | Online OCSP certStatus unknown/revoked outcome handling | by design — online OCSP outcomes need the network |
 | `PRED-STRU-017` | should | Forward-compatible c2pa.metadata assertion field tolerance | **yes** — `c2pa.metadata` is not validated at all, so unknown fields cannot be rejected |
 | `PRED-STRU-018` | shall | Hashed URI field presence and destination reachability | partial — an absent or unresolvable hashed URI is caught, and reported as `assertion.missing`: this verifier has no `hashedURI.missing` code |
@@ -125,7 +126,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-CRYP-018` | may | Claimed time of signing via iat header validation | by design — the `iat` claimed time of signing is not read; a `may` |
 | `PRED-CRYP-019` | shall | Claimed time of signing inside/outside validity informational code | **gap** — follows from CRYP-018: no `timeOfSigning.*` codes exist here |
 | `PRED-CRYP-020` | shall | CA certificate revocation check at signing time | by design — CA revocation at signing time needs revocation data (SPEC-014) |
-| `PRED-CRYP-021` | shall | OCSP response from manifest store revocation check | **gap** — the same stapled-OCSP gap as STRU-011 |
+| `PRED-CRYP-021` | shall | OCSP response from manifest store revocation check | **yes** — the same stapled-OCSP path; `notRevoked` is recorded with the caveat that the header carrying it is unsigned |
 | `PRED-CRYP-022` | may | Online OCSP query fallback | by design — online OCSP query; no network |
 | `PRED-CRYP-023` | shall | Online OCSP response acceptance and not-revoked determination | by design — online OCSP acceptance; no network |
 | `PRED-CRYP-024` | shall | c2pa.session-keys signerBinding signature verification | **gap** — `c2pa.session-keys` is not recognised, so its `signerBinding` signature is not verified |
@@ -215,61 +216,40 @@ A gap is only interesting through its consequence. The question this
 project asks of everything is the same one: **can it make this verifier say
 `Valid` about something that is not?** Sorted by that answer.
 
-### 1. It could say `Trusted` about a revoked certificate
+### 1. Closed since this table was written: stapled OCSP
 
-`PRED-STRU-011`, `PRED-STRU-012`, `PRED-STRU-014`, `PRED-CRYP-021` — four
-predicates, one cause: **OCSP responses stapled into the manifest are not
-read.**
+`PRED-STRU-011`, `-012`, `-014`, `-015` and `PRED-CRYP-021` were one gap
+with one cause — **OCSP responses stapled into the manifest were not read**
+— and it was the only entry here that could produce a wrong `Trusted`.
+SPEC-030 closed it on 2026-09-22 (steps 91–92).
 
-Revocation as a whole is out of scope and has been since SPEC-014, for a
-stated reason: an OCSP query is a network call, and there is no network in
-the verification path. That reasoning covers the *online* predicates
-(`STRU-010`, `013`, `016`, `CRYP-020`, `022`, `023`) and they are marked
-*by design* above.
+The reasoning is kept because it is what shaped the fix. Revocation as a
+whole is out of scope and has been since SPEC-014, for a stated reason: an
+OCSP query is a network call, and there is no network in the verification
+path. That covers the *online* predicates (`STRU-010`, `013`, `016`,
+`CRYP-020`, `022`, `023`), which are still marked *by design* above. It
+never covered a response the signer had already placed **inside the file**.
 
-It does not cover the stapled ones. A claim generator may place OCSP
-responses in the signature's `rVals` header, inside the file; reading them
-needs no network at all. If such a response says the signer's certificate
-was revoked, C2PA 2.4 requires `signingCredential.ocsp.revoked` and a
-rejection. This verifier does not look, so it would report
-`signingCredential.trusted` on a file whose own manifest carries the
-evidence against it.
-
-**This is the one gap in the table that can produce a wrong `Valid` about
-integrity-adjacent trust**, and it is the only one whose fix needs no new
-input this verifier refuses on principle.
-
-Measured, on a fixture this repository already holds — `c2pa-rs`'s
-`ocsp.jpg` — the response is really there and really readable:
+What `ocsp.jpg` actually carries, measured:
 
 ```
 rVals: ocspVals[0] = 2264 bytes of DER
 $ openssl ocsp -respin ocsp.der -resp_text -noverify
-  Responder Id: 17299372FFA7FB5832FFB2E08EB0EDA85006FAAD
-  Produced At:  Aug 11 21:51:18 2025 GMT
-  Cert Status:  good
-  This Update:  Aug 11 21:51:18 2025 GMT
-  Next Update:  Aug 18 21:51:18 2025 GMT
+  Cert Status:  good        This Update: Aug 11 21:51:18 2025 GMT
+  Produced At:  Aug 11 21:51:18 2025 GMT   Next Update: Aug 18 21:51:18 2025 GMT
   Responder:    CN=Adobe Product Services G3 OCSP Responder 2025-07-15…
 ```
 
-`CoseSign1` already parses that header — it sits in `$otherHeaders['rVals']`
-and nothing reads it. On this file the answer is `good`, so no verdict here
-is wrong today; a response saying `revoked` would be ignored exactly as
-thoroughly. Note also that this response expired on 2025-08-18, which is its
-own question: a stale stapled response is not evidence of anything, and the
-rule about what to do then is `PRED-STRU-013`'s online fallback, which this
-verifier will not make.
+The header holding it is **unprotected** — not covered by the signature —
+which is the measurement the whole of SPEC-030 is built on: a stapled
+response may lower trust and never raise it, and may never fail a file it
+cannot prove anything about. A `revoked` answer that verifies under a
+responder tied to the signer's own issuer now makes the file `Invalid`;
+anything unreadable, unverifiable or about another certificate is
+`signingCredential.ocsp.skipped`, which costs no verdict.
 
-The pieces for a fix are in the repository: a DER reader (SPEC-016), the
-certificate model (SPEC-015), the chain walk (SPEC-014) and two fixtures.
-What is missing is the decision to add four status codes and one check.
-
-`PRED-STRU-015` is the smaller half of the same story: a validator that
-skips OCSP **must say so**, with `signingCredential.ocsp.skipped`. This one
-says nothing. `checksPerformed` exists precisely so a caller can see what
-ran; a skipped check that leaves no trace is the shape of silence this
-project refuses everywhere else.
+And every file now says what was not checked. A skipped check that leaves
+no trace was the shape of silence this project refuses everywhere else.
 
 ### 2. It could call a file `Valid` that C2PA 2.4 says is malformed
 

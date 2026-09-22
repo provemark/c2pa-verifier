@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -88,7 +88,7 @@ this specification's spine:
 - Reading `rVals` from the COSE unprotected header: a map with an
   `ocspVals` key holding a list of DER-encoded `OCSPResponse` byte strings.
 - Parsing RFC 6960 `OCSPResponse`: `responseStatus`, and `responseBytes`
-  whose `responseType` is `id-pkix-ocsp-basic` (1.3.6.1.5.5.7.48.1)
+  whose `responseType` is `id-pkix-ocsp-basic` (1.3.6.1.5.5.7.48.1.1 — *amended 2026-09-22, see Amendments 2*)
   carrying a `BasicOCSPResponse` — `tbsResponseData`, `signatureAlgorithm`,
   `signature`, and the optional `certs`.
 - Verifying the response's signature: the responder is either the signer's
@@ -353,6 +353,21 @@ needs an amendment with this spec — the same shape as when
    asymmetry, not the codes, not the judged time. What changed is which
    fixture and which settings each criterion names.
 
+   Confirmed by Maurice van Loon, 2026-09-22 (step 92b).
+
+2. **2026-09-22, step 92b, at implementation** — the Scope gave
+   `id-pkix-ocsp-basic` as `1.3.6.1.5.5.7.48.1`. That arc is *id-pkix-ocsp*,
+   the access method named in an Authority Information Access extension; the
+   response type is one arc deeper, `1.3.6.1.5.5.7.48.1.1`. Measured on
+   `tests/Fixtures/ocsp/revoked.der`, which a first implementation refused
+   with "is of type 1.3.6.1.5.5.7.48.1.1, not id-pkix-ocsp-basic" — the
+   fixture was right and the specification text was wrong.
+
+   **Weight C: a wrong number in prose.** No rule changed; had the code
+   followed the spec as written, every stapled response would have been
+   skipped and the whole feature would have been silently inert, which is
+   why it is recorded rather than quietly corrected.
+
    Confirmed by Maurice van Loon: pending.
 
 ## Open questions
@@ -411,13 +426,13 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
+| AC1 | `tests/Unit/Trust/OcspCheckTest.php :: AC1: a stapled good response is read and reported, and changes no verdict` | `Trust\OcspCheck::check(), statusOf()`; `Verifier\Verifier::check()` (the call after trust); `StatusCode::SigningCredentialOcspNotRevoked` |
+| AC2 | `tests/Unit/Trust/OcspCheckTest.php :: AC2: a response whose signature does not verify is skipped, not believed and not fatal` | `Trust\OcspCheck::verify()`; the code is informational, so no verdict moves |
+| AC3 | `tests/Unit/Trust/OcspCheckTest.php :: AC3: a verified revoked response is a failure` | `Trust\OcspCheck::statusOf(), certStatus()`; `bin/make-ocsp-variants.php`; `tests/Fixtures/ocsp/revoked.der` |
+| AC4 | `tests/Unit/Trust/OcspCheckTest.php :: AC4: a response for another certificate is not applied` | `Trust\OcspCheck::matching(), issuerName(), issuerKey()` |
+| AC5 | `tests/Unit/Trust/OcspCheckTest.php :: AC5: a file without rVals says what was not checked` | `Trust\OcspCheck::check()` (the empty-`rVals` branch); `Verifier\Verifier::check()` adds `revocation` to `checksPerformed` |
+| AC6 | `tests/Unit/Trust/OcspCheckTest.php :: AC6: a stale good is not evidence` | `Trust\OcspCheck::statusOf()` (the freshness window); `Verifier\Verifier::check()` passes the judged time |
+| AC7 | `tests/Unit/Trust/OcspCheckTest.php :: AC7: malformed input is skipped by name, never an exception` | `Trust\OcspCheck::responseBytes(), usable()` |
+| AC8 | `tests/Unit/Trust/OcspCheckTest.php :: AC8: removeFromCRL is not a revocation` | `Trust\OcspCheck::REASON_REMOVE_FROM_CRL`, `statusOf()`; `tests/Fixtures/ocsp/removed.der` |
+| AC9 | `tests/Unit/Trust/OcspCheckTest.php :: AC9: nothing that passed stops passing` | the twelve verdicts measured in step 92a; `Report\StatusCode::isInformational()` |
+| AC10 | `tests/Unit/Trust/OcspCheckTest.php :: AC10: bounded, like every other parser here` | `Trust\OcspCheck::DEFAULT_MAX_RESPONSES`, `DEFAULT_MAX_RESPONSE_BYTES`, `responseBytes()` |

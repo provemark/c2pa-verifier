@@ -337,8 +337,8 @@ it('AC10: every code is verbatim, and success and failure are told apart', funct
         expect($values)->toContain($value);
     }
     foreach (StatusCode::cases() as $code) {
-        if ((str_starts_with($code->value, 'assertion.') && ! in_array($code->value, ['assertion.json.invalid', 'assertion.missing'], true)) || in_array($code->value, ['signingCredential.trusted', 'signingCredential.untrusted'], true) || str_starts_with($code->value, 'timeStamp.') || str_starts_with($code->value, 'ingredient.')) {
-            continue;   // SPEC-011's, SPEC-012's, SPEC-014's, SPEC-017's and SPEC-020's, with their own successes and the informational
+        if ((str_starts_with($code->value, 'assertion.') && ! in_array($code->value, ['assertion.json.invalid', 'assertion.missing'], true)) || in_array($code->value, ['signingCredential.trusted', 'signingCredential.untrusted'], true) || str_starts_with($code->value, 'timeStamp.') || str_starts_with($code->value, 'ingredient.') || str_starts_with($code->value, 'signingCredential.ocsp.')) {
+            continue;   // SPEC-011's, SPEC-012's, SPEC-014's, SPEC-017's, SPEC-020's and SPEC-030's, with their own successes and the informational
         }
         expect($code->isSuccess())->toBe($code === StatusCode::ClaimSignatureValidated, $code->value)
             ->and($code->isFailure())->toBe($code !== StatusCode::ClaimSignatureValidated, $code->value);

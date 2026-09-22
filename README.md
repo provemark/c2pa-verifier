@@ -30,9 +30,14 @@ validated in their own right, update manifests included, and a fault in one
 of them is reported against the ingredient that brought it in rather than
 hidden.
 
-Not yet: revocation — including **OCSP responses stapled into the manifest**,
-which need no network — and the assertion-content rules beyond the actions
-and ingredient assertions.
+Since SPEC-030 it also reads the **OCSP responses a signer staples into its
+own signature**, so a certificate its own manifest reports as revoked is no
+longer called trusted — and every file says whether revocation was checked
+at all.
+
+Not yet: revocation that needs the network (an online OCSP query, an AIA
+fetch, a CRL), which this verifier will not make, and the assertion-content
+rules beyond the actions and ingredient assertions.
 [`docs/conformance.md`](docs/conformance.md) is the honest version of that
 sentence: all 111 applicable obligations of C2PA 2.4, one by one, with what
 this verifier does about each and what the 22 gaps would cost.

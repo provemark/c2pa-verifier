@@ -549,12 +549,12 @@ test('SPEC-017 AC9: the report — timeStamp entries first, signature_info with 
     assert(is_array($ours));
     expect($ours)->toBe($theirs)   // byte for byte, keys in c2patool's order: alg, issuer, common_name, cert_serial_number, time
         ->and(array_keys($ours))->toBe(['alg', 'issuer', 'common_name', 'cert_serial_number', 'time'])
-        ->and($array['checks_performed'])->toBe(['timestamp', 'signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash']);
+        ->and($array['checks_performed'])->toBe(['timestamp', 'signature', 'certificate', 'trust', 'revocation', 'hashedUris', 'actions', 'dataHash']);
 
     $plain = spec017Verify('fixture-signed.jpg')->toArray();
     assert(is_array($plain['manifests']) && is_string($plain['active_manifest']) && is_array($plain['manifests'][$plain['active_manifest']]));
     expect($plain['manifests'][$plain['active_manifest']]['signature_info'])->not->toHaveKey('time')
-        ->and($plain['checks_performed'])->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash']);
+        ->and($plain['checks_performed'])->toBe(['signature', 'certificate', 'trust', 'revocation', 'hashedUris', 'actions', 'dataHash']);
 })->group('SPEC-017');
 
 // ---------------------------------------------------------------------------

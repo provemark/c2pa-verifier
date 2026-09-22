@@ -57,13 +57,21 @@ enum StatusCode: string
     case ManifestUpdateInvalid = 'manifest.update.invalid';
     case ManifestUpdateWrongParents = 'manifest.update.wrongParents';
     case ManifestMultipleParents = 'manifest.multipleParents';
+    // SPEC-030: revocation as far as it can be known without a network — the OCSP
+    // responses a signer staples into its own signature. The header carrying them is
+    // unprotected, so a stapled response may lower trust and never raise it.
+    case SigningCredentialOcspRevoked = 'signingCredential.ocsp.revoked';
+    case SigningCredentialOcspNotRevoked = 'signingCredential.ocsp.notRevoked';
+    case SigningCredentialOcspUnknown = 'signingCredential.ocsp.unknown';
+    case SigningCredentialOcspSkipped = 'signingCredential.ocsp.skipped';
     case GeneralError = 'general.error';
 
     public function isSuccess(): bool
     {
         return $this === self::ClaimSignatureValidated || $this === self::AssertionHashedUriMatch || $this === self::AssertionDataHashMatch || $this === self::AssertionBmffHashMatch || $this === self::SigningCredentialTrusted
             || $this === self::TimeStampValidated || $this === self::TimeStampTrusted
-            || $this === self::IngredientManifestValidated;   // SPEC-021: the ingredient's manifest box hashed as recorded
+            || $this === self::IngredientManifestValidated   // SPEC-021: the ingredient's manifest box hashed as recorded
+            || $this === self::SigningCredentialOcspNotRevoked;   // SPEC-030 — and its explanation says how little that proves
     }
 
     public function isInformational(): bool
@@ -71,7 +79,11 @@ enum StatusCode: string
         // every timeStamp failure is informational: a broken timestamp costs the time, never the verdict (C2PA 2.4 §15; c2pa-rs; SPEC-017)
         return $this === self::AssertionDataHashAdditionalExclusionsPresent
             || $this === self::IngredientUnknownProvenance                 // SPEC-020: an ingredient without a manifest (§15.11.3.3)
-            || $this === self::TimeStampMalformed || $this === self::TimeStampMismatch || $this === self::TimeStampOutsideValidity || $this === self::TimeStampUntrusted;
+            || $this === self::TimeStampMalformed || $this === self::TimeStampMismatch || $this === self::TimeStampOutsideValidity || $this === self::TimeStampUntrusted
+            // SPEC-030: a response this verifier could not use costs nothing. The header is
+            // unsigned, so failing a file over one would let an attacker deny any valid asset
+            // by editing a byte no signature covers.
+            || $this === self::SigningCredentialOcspSkipped || $this === self::SigningCredentialOcspUnknown;
     }
 
     public function isFailure(): bool
