@@ -2484,3 +2484,42 @@ README are where the disclosure lives.
   passed` (2251 assertions on 8.3, 2253 on 8.4/8.5); `all green`
   `success`.
 - Decided by Maurice: push.
+
+## 2026-09-22 — Step 40: the timestamp measured before M6
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "okay, wat moet er nu gebeuren?" (a roadmap: M6 first, the
+  measurement step before its ADR and specs), then "akkoord, begin met
+  stap 40".
+- Produced: `notes/step-40-timestamp-measured.md`; rows in `NOTES.md`
+  and `docs/milestones.md` (a new "M6, step by step" section); this
+  entry. No code, no fixtures, no specs — a measurement step. Scratch
+  material (extracted tokens, two reconstruction scripts, the 0.90.22
+  sources fetched from GitHub) stays outside the repository.
+- Measured: the `sigTst`/`sigTst2` headers of the three corpora
+  through the project's `CoseSign1` (shape, TSA, `genTime`, imprint
+  algorithm — `openssl ts -reply -text`); the countersigned bytes
+  rebuilt over `CoseSign1`/`claimBytes()` and compared with the
+  imprint on four tokens (equal) and on `E-sig-CA` (not equal, as
+  c2patool's `timeStamp.mismatch`); `jq` over 41 oracle JSONs for the
+  `timeStamp.*` codes and `signature_info.time`; `CA_ct.jpg`'s
+  `genTime` `20240806216337Z` (minute 63) as the cause of
+  `timeStamp.malformed`; `signingTime` == `genTime` and 0 indefinite
+  lengths on five tokens (`openssl cms -cmsout -print`,
+  `openssl asn1parse`); `openssl_cms_verify` with `NOVERIFY` on a temp
+  file → `true`, with the real anchor → `unsuitable certificate
+  purpose` (no `-purpose` in PHP); the CMS signature by hand:
+  `signedAttrs` re-tagged `A0`→`31`, `openssl_verify` with the TSA
+  leaf key → `1`, one bit flipped → `0`, `messageDigest` ==
+  `sha256(eContent)`, also on the RSA-4096 2025 token; c2patool with
+  no settings / full test settings / `verify_timestamp_trust`
+  true and false on `C.jpg` and `CACA.jpg` (`trusted` and `untrusted`
+  unchanged by any of it); `strings` over the c2patool binary (seven
+  test PEMs, no TSA names, `c2pa/0.90.22`); `diff` of the 2023 and
+  2025 DigiCert leaf certificates (issuer, dates, URLs only).
+  Reasoned: c2pa-rs `time_stamp/verify.rs` (0.90.22, line-referenced)
+  for the order of checks and the informational logging;
+  `cose/sigtst.rs` (main) for `cose_countersign_data`; both
+  `check_certificate_trust` implementations at the tag for the
+  empty-anchor case — which contradicts the measured `trusted`; left
+  unresolved and written down as such.
+- Decided by Maurice: start step 40 (the measurement) before ADR-0004.

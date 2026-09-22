@@ -124,6 +124,12 @@ specifying is the tool that enforces exactly that.
 | 31a | `x5chain-leaf-only` (protected header shortened, pad grown, store length kept) and two settings variants made (`bin/make-trust-variants.php`) and measured through c2patool — `notes/step-31-trust-variants.md` | done 2026-09-21 |
 | 31b | The ten SPEC-014 tests (`tests/Unit/Trust/ChainCheckTest.php`), seen red: eight on the missing `Trust\TrustSettings`, AC9 on the missing enum case, AC10 on the enum holding twenty-one codes; `SPEC013_CORPUS` moved to `tests/Pest.php`, shared | done 2026-09-21 |
 
+## M6, step by step
+
+| Step | What | Status |
+|---|---|---|
+| 40 | The timestamp measured: five TSAs' tokens in bytes (`sigTst` = `TimeStampResp`, `sigTst2` = `TimeStampToken`), the countersigned bytes proven by hand on four tokens (`CounterSignature` Sig_structure: v1 over the claim, v2 over the signature bstr), c2patool's `timeStamp.*` over 41 oracle JSONs (informational, never `Invalid`), c2pa-rs's nine checks in order, `ext-openssl`'s reach (no `TSTInfo`; CMS signature by `openssl_verify` over re-tagged `signedAttrs`, no temp file; `openssl_cms_verify` unusable for a TSA chain), and one unresolved point (`timeStamp.trusted` without anchors) — `notes/step-40-timestamp-measured.md` | done 2026-09-22 |
+
 ## After M0
 
 M1 opens with SPEC-001 (JPEG APP11 → manifest store bytes) as a draft. It
