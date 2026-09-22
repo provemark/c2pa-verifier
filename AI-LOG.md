@@ -2631,3 +2631,17 @@ README are where the disclosure lives.
   DER minimal-length rules from X.690.
 - Decided by Maurice: go on with 41b.
 
+
+## 2026-09-22 — CI green on SPEC-016
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `dcdb72f..f3311a9` (eight commits: the CI record,
+  step 40, ADR-0004 draft and accepted, SPEC-016 draft and approved,
+  steps 41a and 41b) to `origin/main`; this entry.
+- Measured: before the push, 0 attribution lines in `git log`, no
+  tracked `*.key`, no `PRIVATE KEY` under `tests/Fixtures`, visibility
+  `PRIVATE`, tree clean. Run `35701477192` on `f3311a9`: conclusion
+  `success`; `composer check` on PHP 8.3 / 8.4 / 8.5 each `success`
+  with `Tests: 270 passed` (2887 assertions on 8.3, 2889 on 8.4/8.5);
+  `all green` `success`.
+- Decided by Maurice: push.
