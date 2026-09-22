@@ -2908,3 +2908,30 @@ README are where the disclosure lives.
   `success` with `Tests: 295 passed` (3502 assertions on 8.3, 3504 on
   8.4/8.5); `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-22 — Step 48: the absence audit
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "wat adviseer je nu te doen?" (answered: the absence audit
+  first, then release hygiene, then M7) and "akkoord, begin met de
+  afwezigheids-audit".
+- Produced: `bin/make-absence-variants.php`; `tests/Fixtures/absence/`
+  (four signed variants, the throw-away root and its settings, README);
+  `tests/Fixtures/c2patool/absence/` (eight JSONs, README);
+  `notes/step-48-absence-audit.md` (the inventory and the findings);
+  rows in `NOTES.md` and `docs/milestones.md`; this entry. No change
+  under `src/`.
+- Measured: every existing variant through the front door, listing
+  those whose only failures are the broken signature (all intended-valid
+  variants, none an absence); the four new variants built (keys deleted,
+  no PEM private-key header under the fixtures) — the first build showed
+  `no-actions`/`no-thumbnail` `Invalid` for `assertion.dataHash.mismatch`
+  because a removed box shortens the store, hence the re-binding in the
+  script; c2patool on each with and without the root (`no-actions`
+  `Invalid` — `assertion.action.malformed`; the others `Valid`/`Trusted`
+  or both refuse); this verifier on each (`no-actions` `Valid`/`Trusted`);
+  c2pa-rs `claim.rs` 0.90.22 `verify_actions` read for the rule and its
+  v1 exemption; `composer check` green, 295 tests. One c2patool call of
+  mine failed on a quoted argument and was rerun. Reasoned: the
+  inventory of gates and the SPEC-018 proposal.
+- Decided by Maurice: start the absence audit.
+
