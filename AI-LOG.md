@@ -3752,3 +3752,21 @@ README are where the disclosure lives.
 - Decided by Maurice: approval of SPEC-023 and both its blocking
   questions, earlier today. The AC6 amendment is written into the spec
   and awaits his confirmation with the next amendment round.
+
+## 2026-09-22 — CI on step 63
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar" — push the SPEC-023 approval, the red tests and the
+  implementation.
+- Produced: pushed `8c3b22a`, `04a109f` and `11a9c66` to `origin/main`.
+- Measured: the pre-push checks — attribution 0, private-key patterns 0,
+  repository PRIVATE, tree clean. CI run 35742362853 on `11a9c66`:
+  success on PHP 8.3, 8.4 and 8.5, 366 passed. The run was also the test
+  of `fetch-depth: 0`: AC3's historical archive really ran there
+  (`✓ it AC3: the dist as it would have shipped before .gitattributes`,
+  0.17s on each version) rather than skipping itself, which is what a
+  depth-1 checkout would have caused. Reasoned: the assertion count is
+  7220 on 8.4 and 8.5 against 7218 on 8.3 — two assertions that a
+  version-conditional test does not reach on 8.3; unchanged by this step
+  and not investigated here.
+- Decided by Maurice: push. Open for him: confirmation of SPEC-023
+  amendment 1 at the next amendment round, and the visibility change.
