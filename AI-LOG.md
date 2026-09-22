@@ -3814,3 +3814,21 @@ README are where the disclosure lives.
 - Decided by Maurice: run mutation testing, then 65b. Open for him: the
   eight cross-file test helpers that block `--parallel`, which need a
   step of their own by hand.
+
+## 2026-09-22 — CI on steps 64 and 65
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar" — push the amendment list and the mutation-testing
+  step.
+- Produced: pushed `1a85b97` and `e85cabd` to `origin/main`.
+- Measured: the pre-push checks — attribution 0, private-key patterns 0,
+  repository PRIVATE, tree clean. CI run 35748494988: success on PHP
+  8.3, 8.4 and 8.5, 368 passed. The 8.4 job is the point of this run: it
+  is the only place PHP reports `ed25519` key details, so it is what
+  proves the branch removed in step 65b was truly redundant —
+  `AC18: every matrix file is Trusted with the roots and untrusted
+  without them` passes there, and the matrix carries Ed25519 in all
+  three containers. Both new tests pass on all three versions.
+  Reasoned: nothing.
+- Decided by Maurice: push. Open for him: confirmation of the three
+  amendments in step 64, the eight cross-file test helpers that block
+  `--parallel`, and the visibility change.
