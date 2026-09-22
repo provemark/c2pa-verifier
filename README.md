@@ -18,13 +18,16 @@ WordPress and Drupal sites live. The other PHP routes to C2PA verification
 
 ## Status
 
-Milestones M0–M6 are done: the verifier reads the three containers,
+Milestones M0–M7 are done: the verifier reads the three containers,
 JUMBF and CBOR, claim v1 and v2, verifies COSE signatures (ES256/384/512,
 PS256/384/512, Ed25519), the hashed URIs and the data hash, the
 certificate profile and chain, and the timestamp — and closes with
-`Trusted`, `Valid` or `Invalid`. Not yet: ingredient manifests (M7 — a
-store with more than one manifest is refused, on purpose), ISOBMFF video
-(M8), and the assertion-content rules beyond the actions assertion.
+`Trusted`, `Valid` or `Invalid`. It also follows a file's provenance
+backwards: the manifests an ingredient assertion names are validated in
+their own right, update manifests included, and a fault in one of them
+is reported against the ingredient that brought it in rather than
+hidden. Not yet: ISOBMFF video (M8) and the assertion-content rules
+beyond the actions and ingredient assertions.
 [`docs/milestones.md`](docs/milestones.md) has the plan and every step;
 [`NOTES.md`](NOTES.md) the record; [`docs/comparison.md`](docs/comparison.md)
 what it does, does not do, and where it differs from `c2patool`, measured.
@@ -97,8 +100,10 @@ file that does not exist; both are fail-open (SPEC-019).
 - **`c2patool`'s verdict, verbatim.** `validation_state` and the C2PA 2.4
   §15 status codes are the only vocabulary; where this verifier differs
   from `c2patool` it is stricter by a named rule, never more lenient, and
-  four fixture corpora (75 files from nine writers) are run as drift
-  alarms in every test run.
+  five fixture corpora (96 files from nine writers) are run as drift
+  alarms in every test run. A second, independent implementation — the
+  Go verifier `richardwooding/c2pa` — has been run over the same files,
+  to catch what agreeing with one oracle can hide.
 - **No trust by name.** Only a chain that cryptographically reaches an
   anchor counts.
 - **Fail closed.** Unknown box, unknown algorithm, unknown claim version,

@@ -3625,3 +3625,28 @@ README are where the disclosure lives.
   PHP 8.3, 8.4 and 8.5, 353 tests. Reasoned: nothing.
 - Decided by Maurice: push. Open for him: whether the second-oracle
   finding goes to that project, and the public decision.
+
+## 2026-09-22 — Step 62, public-readiness
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "Ik wil eerst zeker weten dat de repo netjes is voor public" —
+  establish that the repository is fit to be seen before it is, and then
+  "akkoord, begin met stap 62" on the three repairs the audit named.
+- Produced: `README.md` and `SECURITY.md` corrected (M0–M7, ingredient
+  manifests moved from the not-verified list to the verified one, the
+  corpus numbers re-counted, the second oracle named); `.gitattributes`
+  added; the repository description and nine topics set;
+  `notes/step-62-public-readiness.md`, `NOTES.md`, `docs/milestones.md`.
+- Measured: six secret patterns over the whole history, 0 each; local
+  paths in tracked files, 0; `CLAUDE.md` referenced once, in `.gitignore`;
+  dead relative links in tracked markdown, 0; `TODO`/`FIXME`/`XXX`/`HACK`,
+  0; secrets in CI, none; `php bin/spec-check.php` OK on 23 specs and 28
+  test files; the dist `git archive --format=tar HEAD | wc -c` 62.9 MB
+  before and 1.9 MB with `--worktree-attributes` after, `tests/` being
+  63 440 kB of it against `src/` 500 kB; the five corpora hold 96 distinct
+  files, counted by path; `composer check` exit 0, 353 tests, 7176
+  assertions. Reasoned: which paths still belong in the dist — everything
+  the README links to, so the package stays self-describing.
+- Decided by Maurice: run the audit before any visibility change, and
+  carry out the three repairs. Open for him: a `CODE_OF_CONDUCT.md`; a
+  spec for the published package, without which the `.gitattributes`
+  guard cannot be a test; and the visibility change itself.

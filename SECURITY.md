@@ -41,11 +41,17 @@ COSE_Sign1 signature under the leaf certificate, the hashed URI of every
 assertion the claim names, the `c2pa.hash.data` binding over the asset,
 the leaf certificate's C2PA profile, the chain to a configured anchor,
 the RFC 3161 timestamp (signature, imprint, TSA chain) and the validity
-window it supplies, and the actions assertion's opening rule.
+window it supplies, the actions assertion's opening rule, and the
+manifests an ingredient assertion names — each validated in its own
+right, update manifests included, with a fault reported against the
+ingredient that brought it in.
 
-Not verified (each refused or named, never silently accepted): ingredient
-manifests and everything in a store with more than one manifest (refused
-until M7), CAWG identity assertions (refused), ISOBMFF/BMFF hashes (refused),
+Not verified (each refused or named, never silently accepted): a
+manifest no ingredient assertion reaches (ignored, as C2PA 2.4
+§15.11.3.3 directs, and rendered so the caller sees it is there), an
+ingredient naming a manifest the store does not hold
+(`ingredient.unknownProvenance`), CAWG identity assertions (refused),
+ISOBMFF/BMFF hashes (refused),
 `c2pa.hash.data.part` / `c2pa.hash.multi-asset` (a second asset's hashes —
 unread here as in `c2patool`), the content rules of assertions other than
 the actions opening rule, and OCSP / certificate revocation of any kind

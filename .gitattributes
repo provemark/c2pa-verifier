@@ -1,0 +1,22 @@
+# What a `composer require` downloads.
+#
+# Composer fetches the dist archive, which is `git archive` — so without this
+# file every user of the package pulls the test fixtures too: 63 MB of signed
+# images against 500 kB of source (measured, step 62). The fixtures are the
+# drift alarms; they belong in the repository and not in a consumer's
+# vendor/ directory.
+#
+# What still ships, on purpose: src/, bin/, docs/, specs/, notes/ and
+# AI-LOG.md. They are what the README links to, and a package that describes
+# how it was built and where it differs from c2patool should carry that with
+# it. Together they are under 2 MB.
+
+/tests          export-ignore
+/.github        export-ignore
+/tools          export-ignore
+/.gitattributes export-ignore
+/.gitignore     export-ignore
+/phpunit.xml    export-ignore
+/phpstan.neon   export-ignore
+/pint.json      export-ignore
+/deptrac.yaml   export-ignore
