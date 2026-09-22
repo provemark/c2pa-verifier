@@ -4814,3 +4814,31 @@ README are where the disclosure lives.
   c2pa-rs rather than reason about it.
 - Decided by Maurice: to ask. Open for him: whether v2 is worth a spec,
   and the version and visibility decisions.
+
+## 2026-09-22 — Step 86, bmff v2 measured
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en zoek v2 uit".
+- Produced: pushed `b9bd252`; `notes/step-86-bmff-v2.md`, `NOTES.md`,
+  `docs/milestones.md`. Nothing in `src/` changed.
+- Measured: `video1.mp4`'s `c2pa.hash.bmff.v2` assertion holds eight
+  exclusions, of which six use **nested** paths (`/meta/iloc`,
+  `/mfra/tfra`, `/moov/trak/mdia/minf/stbl/stco` and `co64`,
+  `/moof/traf/tfhd` and `trun`), four carry a **`subset`** and two carry
+  **`flags`** — the three filters SPEC-027 refuses by name. c2pa-rs
+  instrumented and run on the file prints four markers for four included
+  top-level boxes and **no marker before the continuation ranges**, so
+  the digest is exactly SPEC-027's. The two holes inside `moov` are the
+  two `stco` boxes (40 bytes each, excluded from offset 16), which pins
+  `subset` length 0 as "to the end of the box".
+- Reasoned: that v2 and v3 are not the same instruction with a different
+  number — v2's exclusion list is the precise one and v3's is five whole
+  top-level boxes, so no single default list serves both. Two details
+  carried forward: `video1.mp4` has a **second `uuid` box that is
+  hashed**, so the data filter does real work rather than ceremony; and
+  `free` is hashed under v2 while v3 excludes it. And one thing a v2 spec
+  cannot measure with what is on hand: whether `/moof/traf/tfhd` and
+  `trun` ever match in a non-fragmented file, so `flags` would be
+  implemented against nothing — a fragmented **v2** stream would settle
+  it and this project has only a fragmented v3 one.
+- Decided by Maurice: to investigate v2. Open for him: whether it becomes
+  a spec.
