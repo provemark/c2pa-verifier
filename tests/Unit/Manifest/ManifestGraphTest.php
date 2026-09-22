@@ -58,20 +58,25 @@ it('AC5: the graph of the multi-manifest files — root, references, missing, un
     foreach (spec020Multi() as $name => $relative) {
         $store = Corpus::manifestStore($relative) ?? throw new RuntimeException($relative);
         $graph = ManifestGraph::fromStore($store);
-        $oracle = json_decode((string) file_get_contents(Corpus::fixtures().'/c2patool/'.preg_replace('/\.[a-z]+$/', '.json', $relative)), true, 512, JSON_THROW_ON_ERROR);
-        assert(is_array($oracle) && is_array($oracle['validation_results']));
+        $oracle = spec020Oracle((string) preg_replace('/\.[a-z]+$/', '.json', $relative));
 
         expect($graph->active)->toBe($oracle['active_manifest'], $name)
             ->and($graph->active)->toBe(array_key_last($store->manifests), $name)
             ->and(count($graph->referenced))->toBe($expectedReferenced[$name] ?? 1, $name)
-            ->and($graph->unreferenced)->toBe([], $name)
+            // the two E-clm copies keep a manifest nobody reaches: their reference names contentbeef:… (amendment 2)
+            ->and($graph->unreferenced)->toBe(str_contains($name, 'E-clm') ? ['contentauth:urn:uuid:8bb8ad50-ef2f-4f75-b709-a0e302d58019'] : [], $name)
             ->and($graph->redactedAssertions)->toBe([], $name);
-        // every referenced label is a manifest c2patool rendered an ingredient for
+        // every referenced label is a manifest c2patool rendered an ingredient for — a reference to a
+        // label that is not in the store counts as missing here, and c2patool renders it all the same
         $rendered = [];
-        foreach ($oracle['manifests'] as $manifest) {
-            foreach ($manifest['ingredients'] ?? [] as $ingredient) {
-                if (isset($ingredient['active_manifest'])) {
-                    $rendered[] = $ingredient['active_manifest'];
+        assert(is_array($oracle['manifests']));
+        foreach (array_keys($oracle['manifests']) as $manifestLabel) {
+            $manifest = spec020OracleManifest((string) preg_replace('/\.[a-z]+$/', '.json', $relative), (string) $manifestLabel);
+            foreach ((array) ($manifest['ingredients'] ?? []) as $ingredient) {
+                assert(is_array($ingredient));
+                $referenced = $ingredient['active_manifest'] ?? null;
+                if (is_string($referenced) && array_key_exists($referenced, $store->manifests)) {
+                    $rendered[] = $referenced;
                 }
             }
         }
@@ -86,9 +91,28 @@ it('AC5: the graph of the multi-manifest files — root, references, missing, un
         } else {
             expect($graph->missing)->toBe([], $name);
         }
-        // the walk order is c2patool's delta order
-        $deltaUris = array_column($oracle['validation_results']['ingredientDeltas'], 'ingredientAssertionURI');
-        expect($graph->walk)->toBe($deltaUris, $name);
+        // the walk order is c2patool's delta order. c2patool's list can be shorter: a status an
+        // ingredient assertion already recorded is dropped from the top-level report, and an
+        // assertion whose every status was dropped leaves no delta at all (c2pa-rs
+        // ValidationResults::from_store; the dropping itself is SPEC-021). So the deltas must be a
+        // *subsequence* of the walk — same URIs, same order, gaps allowed (amendment 3)
+        $deltaUris = array_column(spec020Deltas($oracle), 'ingredientAssertionURI');
+        $remaining = $graph->walk;
+        foreach ($deltaUris as $uri) {
+            $at = array_search($uri, $remaining, true);
+            expect($at)->not->toBeFalse("{$name}: {$uri} is not in the walk after the previous delta");
+            $remaining = array_slice($remaining, (int) $at + 1);
+        }
+        // and where no ingredient assertion recorded anything, nothing can be dropped: the two are equal
+        $recorded = false;
+        foreach ($graph->ingredients as $list) {
+            foreach ($list as $ingredient) {
+                $recorded = $recorded || $ingredient->validationStatus !== null || $ingredient->validationResults !== null;
+            }
+        }
+        if (! $recorded) {
+            expect($graph->walk)->toBe($deltaUris, $name);
+        }
         $checked++;
     }
     expect($checked)->toBe(17);

@@ -17,37 +17,88 @@ use Provemark\C2paVerifier\Tests\Support\Corpus;
  * drift alarms and SPEC-019 AC11, which keep running.
  */
 
+/*
+ * The single-manifest corpus files that carry an ingredient assertion *in the file*. SPEC-020's
+ * AC3 said sixteen and counted `c2pa-rs/cloud` and the Photoshop file among them; both declare
+ * their manifest by URL and carry no store, so c2patool's JSON for them describes a manifest it
+ * fetched over the network and there is nothing here to compare (SPEC-020 amendment 1).
+ */
 const SPEC020_SINGLE = [
     'public-testfiles/adobe-20220124-CA', 'public-testfiles/adobe-20220124-CAI', 'public-testfiles/adobe-20220124-CI', 'public-testfiles/adobe-20220124-CII',
     'public-testfiles/adobe-20220124-E-dat-CA', 'public-testfiles/adobe-20220124-E-sig-CA', 'public-testfiles/adobe-20220124-E-uri-CA',
     'public-testfiles/adobe-20220124-XCA', 'public-testfiles/adobe-20220124-XCI',
-    'c2pa-rs/CA', 'c2pa-rs/CA_ct', 'c2pa-rs/E-sig-CA', 'c2pa-rs/XCA', 'c2pa-rs/boxhash', 'c2pa-rs/cloud',
-    'writers/adobe-20260304-photoshop-remote-manifest', 'writers/adobe-20260425-lightroom-classic-church',
+    'c2pa-rs/CA', 'c2pa-rs/CA_ct', 'c2pa-rs/E-sig-CA', 'c2pa-rs/XCA', 'c2pa-rs/boxhash',
+    'writers/adobe-20260425-lightroom-classic-church',
 ];
 
 /** @return array{0: string, 1: array<string, mixed>} the fixture path and the oracle JSON for a corpus name */
 function spec020Corpus(string $name): array
 {
     [$dir, $base] = explode('/', $name, 2);
-    $path = glob(Corpus::fixtures()."/{$dir}/{$base}.*")[0] ?? throw new RuntimeException("no file for {$name}");
     $files = array_values(array_filter(glob(Corpus::fixtures()."/{$dir}/{$base}.*") ?: [], static fn (string $f): bool => ! str_ends_with($f, '.json')));
-    /** @var array<string, mixed> $oracle */
-    $oracle = json_decode((string) file_get_contents(Corpus::fixtures()."/c2patool/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
+    $path = $files[0] ?? throw new RuntimeException("no file for {$name}");
 
-    return ["{$dir}/".basename($files[0] ?? $path), $oracle];
+    return ["{$dir}/".basename($path), spec020Oracle("{$name}.json")];
+}
+
+/**
+ * A report's or an oracle's active-manifest statuses of one kind, typed.
+ *
+ * @param  array<string, mixed>  $array
+ * @return list<array<string, string>>
+ */
+function spec020Active(array $array, string $kind): array
+{
+    $results = $array['validation_results'] ?? [];
+    assert(is_array($results) && is_array($results['activeManifest']));
+
+    /** @var list<array<string, string>> */
+    return array_values((array) $results['activeManifest'][$kind]);
+}
+
+/**
+ * The ingredients one manifest of a store renders, typed.
+ *
+ * @param  array<string, mixed>  $array  a ManifestStore::toArray()
+ * @return list<array<string, mixed>>
+ */
+function spec020Rendered(array $array, string $label): array
+{
+    assert(is_array($array['manifests']));
+    $manifest = $array['manifests'][$label] ?? null;
+    assert(is_array($manifest));
+
+    /** @var list<array<string, mixed>> */
+    return array_values((array) ($manifest['ingredients'] ?? []));
+}
+
+/**
+ * The assertion labels one manifest of a store renders.
+ *
+ * @param  array<string, mixed>  $array
+ * @return list<string>
+ */
+function spec020AssertionLabels(array $array, string $label): array
+{
+    assert(is_array($array['manifests']));
+    $manifest = $array['manifests'][$label] ?? null;
+    assert(is_array($manifest));
+
+    /** @var list<string> */
+    return array_column((array) $manifest['assertions'], 'label');
 }
 
 // AC3
-it('AC3: the sixteen single-manifest files: ingredientDeltas equal c2patool\'s, informational, in order', function (): void {
-    $remote = [...SPEC013_RS_REMOTE, ...array_map(static fn (string $n): string => $n, SPEC013_WRITERS_REMOTE)];
+it('AC3: the fifteen single-manifest files: ingredientDeltas equal c2patool\'s, informational, in order', function (): void {
+    expect(SPEC020_SINGLE)->toHaveCount(15);
     foreach (SPEC020_SINGLE as $name) {
         [$relative, $oracle] = spec020Corpus($name);
         $report = spec020Verify($relative, 'trust/full.settings.json');
         $array = $report->toArray();
-        assert(is_array($oracle['validation_results']));
 
-        expect($array['validation_results']['ingredientDeltas'] ?? null)->toBe($oracle['validation_results']['ingredientDeltas'], $name);
-        foreach ($array['validation_results']['activeManifest']['informational'] as $status) {
+        expect(spec020Deltas($array))->toBe(spec020Deltas($oracle), $name)
+            ->and(spec020Deltas($array))->not->toBe([], $name);
+        foreach (spec020Active($array, 'informational') as $status) {
             expect(str_starts_with($status['code'], 'ingredient.'))->toBeFalse("{$name}: {$status['code']} under activeManifest");
         }
         foreach ($report->result->statuses as $status) {
@@ -55,9 +106,7 @@ it('AC3: the sixteen single-manifest files: ingredientDeltas equal c2patool\'s, 
                 expect(str_starts_with($status->code->value, 'ingredient.'))->toBeFalse("{$name}: a new failure {$status->code->value}");
             }
         }
-        if (! in_array(basename($name), $remote, true)) {
-            expect($array['validation_state'])->toBe($oracle['validation_state'], $name);
-        }
+        expect($array['validation_state'])->toBe($oracle['validation_state'], $name);
     }
 })->group('SPEC-020');
 
@@ -73,13 +122,13 @@ it('AC6: E-clm-CAICAI: ingredient.manifest.missing with the bare label, scoped, 
         ->and($refusals)->toHaveCount(1)
         ->and($report->result->state)->toBe(ValidationState::Invalid);
     $array = $report->toArray();
-    $codes = array_column($array['validation_status'], 'code');
+    $codes = array_column(spec020Failures($array), 'code');
     expect(array_values(array_unique($codes)))->toContain('ingredient.manifest.missing')
         ->and(count(array_keys($codes, 'ingredient.manifest.missing', true)))->toBe(1);
     // c2patool: the same code and url in the delta of the same assertion
     [, $oracle] = spec020Corpus('public-testfiles/adobe-20220124-E-clm-CAICAI');
     $delta = null;
-    foreach ($oracle['validation_results']['ingredientDeltas'] as $d) {
+    foreach (spec020Deltas($oracle) as $d) {
         if ($d['ingredientAssertionURI'] === $missing[0]->ingredientUri) {
             $delta = $d;
         }
@@ -98,13 +147,15 @@ it('AC8: ingredients render as c2patool prints them, and leave the assertions li
         [$relative, $oracle] = spec020Corpus($name);
         $store = Corpus::manifestStore($relative) ?? throw new RuntimeException($relative);
         $array = $store->toArray();
-        foreach ($oracle['manifests'] as $label => $manifest) {
-            $ours = $array['manifests'][$label] ?? null;
-            expect($ours)->toBeArray("{$name}: {$label}");
-            $expected = $manifest['ingredients'] ?? [];
-            $rendered = $ours['ingredients'] ?? [];
+        assert(is_array($oracle['manifests']));
+        foreach (array_keys($oracle['manifests']) as $manifestLabel) {
+            $label = (string) $manifestLabel;
+            $manifest = spec020OracleManifest("{$name}.json", $label);
+            $expected = (array) ($manifest['ingredients'] ?? []);
+            $rendered = spec020Rendered($array, $label);
             expect(count($rendered))->toBe(count($expected), "{$name}: {$label}: ingredient count");
             foreach ($expected as $n => $theirs) {
+                assert(is_array($theirs) && is_int($n));
                 $mine = $rendered[$n];
                 foreach ($keys as $key) {
                     expect(array_key_exists($key, $mine))->toBe(array_key_exists($key, $theirs), "{$name}: {$label}[{$n}].{$key} presence");
@@ -114,15 +165,15 @@ it('AC8: ingredients render as c2patool prints them, and leave the assertions li
                 }
                 expect(array_key_exists('validation_results', $mine))->toBe(array_key_exists('validation_results', $theirs), "{$name}: {$label}[{$n}].validation_results presence");
                 if (array_key_exists('validation_results', $theirs)) {
-                    expect(array_keys($mine['validation_results']))->toBe(array_keys($theirs['validation_results']), "{$name}: {$label}[{$n}].validation_results keys");
+                    expect(array_keys((array) $mine['validation_results']))->toBe(array_keys((array) $theirs['validation_results']), "{$name}: {$label}[{$n}].validation_results keys");
                 }
                 $compared++;
             }
-            $labels = array_column($ours['assertions'], 'label');
+            $labels = spec020AssertionLabels($array, $label);
             foreach ($labels as $assertionLabel) {
                 expect(str_starts_with($assertionLabel, 'c2pa.ingredient') || str_starts_with($assertionLabel, 'c2pa.thumbnail.ingredient'))->toBeFalse("{$name}: {$label}: {$assertionLabel} still listed");
             }
-            expect(count($labels))->toBe(count($manifest['assertions']), "{$name}: {$label}: assertion count");
+            expect(count($labels))->toBe(count((array) $manifest['assertions']), "{$name}: {$label}: assertion count");
         }
     }
     expect($compared)->toBeGreaterThan(60);
@@ -134,7 +185,7 @@ it('AC9: scoped statuses land in ingredientDeltas, the flat list and the state f
     $a = "{$active}/c2pa.assertions/c2pa.ingredient.v3";
     $b = "{$active}/c2pa.assertions/c2pa.ingredient.v3__1";
     $validated = new ValidationStatus(StatusCode::ClaimSignatureValidated, "{$active}/c2pa.signature", 'ok');
-    $inside = new ValidationStatus(StatusCode::ClaimSignatureInsideValidity, "{$active}/c2pa.signature", 'ok');
+    $inside = new ValidationStatus(StatusCode::AssertionDataHashMatch, "{$active}/c2pa.assertions/c2pa.hash.data", 'ok');
     $trusted = new ValidationStatus(StatusCode::SigningCredentialTrusted, "{$active}/c2pa.signature", 'ok');
     $untrustedActive = new ValidationStatus(StatusCode::SigningCredentialUntrusted, "{$active}/c2pa.signature", 'no');
     $unknownA = new ValidationStatus(StatusCode::IngredientUnknownProvenance, $a, 'x: ingredient does not have provenance', $a);
@@ -143,18 +194,18 @@ it('AC9: scoped statuses land in ingredientDeltas, the flat list and the state f
 
     // no scoped status: no key
     $none = ValidationResult::fromStatuses([$validated, $inside, $trusted], ['signature'])->toArray();
-    expect(array_key_exists('ingredientDeltas', $none['validation_results']))->toBeFalse()
+    expect(spec020Deltas($none))->toBe([])
         ->and($none['validation_state'])->toBe('Trusted');
 
     // scoped: grouped by URI in first-seen order, kinds separated, active untouched
     $result = ValidationResult::fromStatuses([$validated, $inside, $trusted, $untrustedB, $unknownA, $missingB], ['signature']);
     $array = $result->toArray();
-    expect(array_column($array['validation_results']['activeManifest']['success'], 'code'))->toBe(['claimSignature.validated', 'claimSignature.insideValidity', 'signingCredential.trusted'])
-        ->and($array['validation_results']['ingredientDeltas'])->toBe([
+    expect(array_column(spec020Active($array, 'success'), 'code'))->toBe(['claimSignature.validated', 'assertion.dataHash.match', 'signingCredential.trusted'])
+        ->and(spec020Deltas($array))->toBe([
             ['ingredientAssertionURI' => $b, 'validationDeltas' => ['success' => [], 'informational' => [], 'failure' => [$untrustedB->toArray(), $missingB->toArray()]]],
             ['ingredientAssertionURI' => $a, 'validationDeltas' => ['success' => [], 'informational' => [$unknownA->toArray()], 'failure' => []]],
         ])
-        ->and($array['validation_status'])->toBe([$untrustedB->toArray(), $missingB->toArray()])
+        ->and(spec020Failures($array))->toBe([$untrustedB->toArray(), $missingB->toArray()])
         ->and($array['validation_state'])->toBe('Invalid');
 
     // the state rule: a scoped untrusted alone keeps Valid, and denies Trusted
@@ -164,7 +215,7 @@ it('AC9: scoped statuses land in ingredientDeltas, the flat list and the state f
         ->and(ValidationResult::fromStatuses([$validated, $inside, $trusted, $missingB], [])->state)->toBe(ValidationState::Invalid);
     // the flat list: active failures first, then the deltas' in order
     $mixed = ValidationResult::fromStatuses([$validated, $inside, $missingB, $untrustedActive], [])->toArray();
-    expect(array_column($mixed['validation_status'], 'code'))->toBe(['signingCredential.untrusted', 'ingredient.manifest.missing']);
+    expect(array_column(spec020Failures($mixed), 'code'))->toBe(['signingCredential.untrusted', 'ingredient.manifest.missing']);
     // ValidationStatus::toArray() stays three keys: the scope is where it renders, not what it says
     expect(array_keys($missingB->toArray()))->toBe(['code', 'url', 'explanation']);
 })->group('SPEC-020');

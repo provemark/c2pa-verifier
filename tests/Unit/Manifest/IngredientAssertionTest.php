@@ -67,11 +67,56 @@ function spec020Ingredients(ManifestStore $store, ?string $label = null): array
 /** @return array<string, mixed> the oracle's rendering of the manifest's ingredients, by index */
 function spec020RenderedIngredient(string $oracle, string $manifestLabel, int $index): array
 {
-    $json = spec020Oracle($oracle);
-    assert(is_array($json['manifests']) && is_array($json['manifests'][$manifestLabel]) && is_array($json['manifests'][$manifestLabel]['ingredients']));
+    $ingredients = spec020OracleManifest($oracle, $manifestLabel)['ingredients'];
+    assert(is_array($ingredients) && is_array($ingredients[$index]));
 
     /** @var array<string, mixed> */
-    return $json['manifests'][$manifestLabel]['ingredients'][$index];
+    return $ingredients[$index];
+}
+
+/**
+ * The ingredient deltas of a report or an oracle, typed: the shape c2patool prints.
+ *
+ * @param  array<string, mixed>  $array
+ * @return list<array{ingredientAssertionURI: string, validationDeltas: array{success: list<array<string, string>>, informational: list<array<string, string>>, failure: list<array<string, string>>}}>
+ */
+function spec020Deltas(array $array): array
+{
+    $results = $array['validation_results'] ?? [];
+    assert(is_array($results));
+    $deltas = $results['ingredientDeltas'] ?? [];
+    assert(is_array($deltas));
+
+    /** @var list<array{ingredientAssertionURI: string, validationDeltas: array{success: list<array<string, string>>, informational: list<array<string, string>>, failure: list<array<string, string>>}}> */
+    return array_values($deltas);
+}
+
+/**
+ * The report's flat failure list, typed.
+ *
+ * @param  array<string, mixed>  $array
+ * @return list<array<string, string>>
+ */
+function spec020Failures(array $array): array
+{
+    /** @var list<array<string, string>> */
+    return array_values((array) ($array['validation_status'] ?? []));
+}
+
+/**
+ * One manifest of an oracle, typed.
+ *
+ * @return array<string, mixed>
+ */
+function spec020OracleManifest(string $oracle, string $label): array
+{
+    $json = spec020Oracle($oracle);
+    assert(is_array($json['manifests']));
+    $manifest = $json['manifests'][$label];
+    assert(is_array($manifest));
+
+    /** @var array<string, mixed> */
+    return $manifest;
 }
 
 // AC1
@@ -99,7 +144,7 @@ it('AC1: a v1 ingredient decodes: relationship, title, format, ids, no manifest'
         ->and($i->validationResults)->toBeNull();
 })->group('SPEC-020');
 
-it('AC1: a v2 (Lightroom) and three v3 (Photoshop) ingredients decode in claim order', function (): void {
+it('AC1: a v2 (Lightroom), the v3 without a reference (c2pa-rs) and two v1 in claim order', function (): void {
     $lightroom = spec020Store('writers/adobe-20260425-lightroom-classic-church.jpg');
     [$v2] = spec020Ingredients($lightroom);
     $rendered = spec020RenderedIngredient('writers/adobe-20260425-lightroom-classic-church.json', $lightroom->active->label, 0);
@@ -110,15 +155,25 @@ it('AC1: a v2 (Lightroom) and three v3 (Photoshop) ingredients decode in claim o
         ->and($v2->format)->toBe($rendered['format'])
         ->and($v2->manifest)->toBeNull();
 
-    $photoshop = spec020Store('writers/adobe-20260304-photoshop-remote-manifest.jpg');
-    $three = spec020Ingredients($photoshop);
-    expect(array_map(static fn (IngredientAssertion $i): string => $i->label, $three))->toBe(['c2pa.ingredient.v3', 'c2pa.ingredient.v3__1', 'c2pa.ingredient.v3__2'])
-        ->and(array_map(static fn (IngredientAssertion $i): int => $i->version, $three))->toBe([3, 3, 3]);
-    foreach ($three as $n => $i) {
-        $rendered = spec020RenderedIngredient('writers/adobe-20260304-photoshop-remote-manifest.json', $photoshop->active->label, $n);
-        expect($i->relationship->value)->toBe($rendered['relationship'], $i->label)
-            ->and($i->title)->toBe($rendered['title'] ?? null, $i->label)
-            ->and($i->manifest)->toBeNull($i->label);
+    // SPEC-020 amendment 1: the Photoshop file the approved AC1 named declares its manifest by URL and
+    // carries no store; a v3 assertion without a reference comes from c2pa-rs's ingredient manifest instead
+    $caca = spec020Store('c2pa-rs/CACA.jpg');
+    $ingredientManifest = array_key_first($caca->manifests);
+    [$v3] = spec020Ingredients($caca, $ingredientManifest);
+    expect($v3->label)->toBe('c2pa.ingredient.v3')
+        ->and($v3->version)->toBe(3)
+        ->and($v3->relationship)->toBe(Relationship::ParentOf)
+        ->and($v3->manifest)->toBeNull()
+        ->and($v3->validationResults)->toBeNull()
+        ->and($v3->title)->toBe('A.jpg');
+
+    // two v1 assertions of one manifest, in claim order, as c2patool renders them
+    $two = spec020Store('public-testfiles/adobe-20220124-CAI.jpg');
+    $labels = array_map(static fn (IngredientAssertion $i): string => $i->label, spec020Ingredients($two));
+    expect($labels)->toBe(['c2pa.ingredient', 'c2pa.ingredient__1']);
+    foreach ($labels as $n => $label) {
+        $rendered = spec020RenderedIngredient('public-testfiles/adobe-20220124-CAI.json', $two->active->label, $n);
+        expect($rendered['label'])->toBe($label);
     }
 })->group('SPEC-020');
 
@@ -131,7 +186,7 @@ it('AC1: a v3 ingredient with a manifest carries both hashed URIs and the record
         ->and($i->relationship)->toBe(Relationship::ParentOf)
         ->and($i->manifest?->url)->toBe("self#jumbf=/c2pa/{$referenced}")
         ->and(strlen((string) $i->manifest?->hash->bytes))->toBe(32)
-        ->and($i->manifest?->alg)->toBeNull()
+        ->and($i->manifest?->alg)->toBe('sha256')   // measured: this writer names the algorithm (amendment 2)
         ->and($i->manifestLabel())->toBe($referenced)
         ->and($i->claimSignature?->url)->toBe("self#jumbf=/c2pa/{$referenced}/c2pa.signature")
         ->and(strlen((string) $i->claimSignature?->hash->bytes))->toBe(32)
@@ -158,8 +213,7 @@ it('AC2: nine malformed ingredient assertions throw assertion.ingredient.malform
     foreach (SPEC020_MALFORMED as $name => $needle) {
         $store = spec020Store("ingredient/{$name}.png");
         $label = $name === 'v4' ? 'c2pa.ingredient.v4' : ($name === 'v1-no-title' ? 'c2pa.ingredient' : 'c2pa.ingredient.v3');
-        $assertion = $store->active->assertions[$label] ?? null;
-        expect($assertion)->not->toBeNull($name);
+        $assertion = $store->active->assertions[$label] ?? throw new RuntimeException("{$name}: no {$label}");
         try {
             IngredientAssertion::fromAssertion($store->active->label, $assertion);
             expect(false)->toBeTrue("{$name}: no exception");
@@ -183,19 +237,17 @@ it('AC2: through the Verifier each malformed variant is Invalid with the failure
             ->and($malformed[0]->url)->toBe($url, $name)
             ->and($malformed[0]->ingredientUri)->toBe($url, $name);
         $array = $report->toArray();
-        /** @var list<array{ingredientAssertionURI: string, validationDeltas: array{failure: list<array{code: string, url: string}>}}> $deltas */
-        $deltas = $array['validation_results']['ingredientDeltas'];
+        $deltas = spec020Deltas($array);
         expect($deltas)->toHaveCount(1, $name)
             ->and($deltas[0]['ingredientAssertionURI'])->toBe($url, $name)
             ->and($deltas[0]['validationDeltas']['failure'][0]['code'])->toBe('assertion.ingredient.malformed', $name)
-            ->and(array_column($array['validation_status'], 'code'))->toContain('assertion.ingredient.malformed');
+            ->and(array_column(spec020Failures($array), 'code'))->toContain('assertion.ingredient.malformed');
         // a malformed reference is not followed: no ingredient.manifest.missing next to it (c2patool reports both on manifest-no-results)
         expect(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::IngredientManifestMissing))->toBe([], $name);
     }
     // the one variant c2patool judges with JSON: the same code and url in its delta
-    $oracle = spec020Oracle('ingredient/manifest-no-results.json');
-    $delta = $oracle['validation_results']['ingredientDeltas'][0];
-    $ours = spec020Verify('ingredient/manifest-no-results.png')->toArray()['validation_results']['ingredientDeltas'][0];
+    $delta = spec020Deltas(spec020Oracle('ingredient/manifest-no-results.json'))[0];
+    $ours = spec020Deltas(spec020Verify('ingredient/manifest-no-results.png')->toArray())[0];
     expect($ours['ingredientAssertionURI'])->toBe($delta['ingredientAssertionURI'])
         ->and($ours['validationDeltas']['failure'][0]['url'])->toBe($delta['validationDeltas']['failure'][0]['url'])
         ->and($delta['validationDeltas']['failure'][0]['code'])->toBe('assertion.ingredient.malformed');
@@ -209,13 +261,13 @@ it('AC4: an inputTo ingredient without a manifest is not unknown provenance', fu
 
     expect($report->result->state)->toBe(ValidationState::Valid)
         ->and(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::IngredientUnknownProvenance))->toBe([])
-        ->and(array_key_exists('ingredientDeltas', $array['validation_results']))->toBeFalse()
-        ->and(array_key_exists('ingredientDeltas', $oracle['validation_results']))->toBeFalse()
+        ->and(spec020Deltas($array))->toBe([])
+        ->and(spec020Deltas($oracle))->toBe([])
         ->and($oracle['validation_state'])->toBe('Valid');
 
     // the control: componentOf is unknown provenance, as c2patool says, with c2patool's explanation
     $control = spec020Verify('ingredient/componentof.png')->toArray();
-    $expected = spec020Oracle('ingredient/componentof.json')['validation_results']['ingredientDeltas'];
-    expect($control['validation_results']['ingredientDeltas'])->toBe($expected)
+    expect(spec020Deltas($control))->toBe(spec020Deltas(spec020Oracle('ingredient/componentof.json')))
+        ->and(spec020Deltas($control))->toHaveCount(1)
         ->and($control['validation_state'])->toBe('Valid');
 })->group('SPEC-020');

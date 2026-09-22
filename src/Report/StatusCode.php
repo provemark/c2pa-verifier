@@ -47,6 +47,9 @@ enum StatusCode: string
     case TimeStampMismatch = 'timeStamp.mismatch';
     case TimeStampOutsideValidity = 'timeStamp.outsideValidity';
     case TimeStampUntrusted = 'timeStamp.untrusted';
+    case IngredientManifestMissing = 'ingredient.manifest.missing';
+    case IngredientUnknownProvenance = 'ingredient.unknownProvenance';
+    case AssertionIngredientMalformed = 'assertion.ingredient.malformed';
     case GeneralError = 'general.error';
 
     public function isSuccess(): bool
@@ -59,6 +62,7 @@ enum StatusCode: string
     {
         // every timeStamp failure is informational: a broken timestamp costs the time, never the verdict (C2PA 2.4 §15; c2pa-rs; SPEC-017)
         return $this === self::AssertionDataHashAdditionalExclusionsPresent
+            || $this === self::IngredientUnknownProvenance                 // SPEC-020: an ingredient without a manifest (§15.11.3.3)
             || $this === self::TimeStampMalformed || $this === self::TimeStampMismatch || $this === self::TimeStampOutsideValidity || $this === self::TimeStampUntrusted;
     }
 

@@ -21,6 +21,7 @@ use Provemark\C2paVerifier\Jumbf\JumbfException;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\ActionsCheck;
 use Provemark\C2paVerifier\Manifest\ManifestException;
+use Provemark\C2paVerifier\Manifest\ManifestGraph;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationResult;
@@ -113,8 +114,18 @@ final readonly class Verifier
             ], []));
         }
 
+        // the ingredient graph: what the assertions say about the other manifests in the store, and
+        // what needs no cryptography to judge — unknown provenance, a malformed assertion, a
+        // reference to a manifest that is not here (SPEC-020). Validating those manifests is SPEC-021.
+        try {
+            $graph = ManifestGraph::fromStore($manifestStore);
+            $graphStatuses = $graph->statuses;
+        } catch (ManifestException $e) {
+            $graphStatuses = [new ValidationStatus($e->status, $e->url ?? self::STORE_URL, $e->getMessage())];
+        }
+
         $timestamp = $this->timestamp->check($manifestStore->active, $settings);
-        $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp);
+        $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp, $graphStatuses);
         // until M7 validates ingredient manifests, a store with more than one is refused: the
         // fault may sit in a manifest this verifier has not looked at (SPEC-013 amendment 5)
         $refusals = [];
@@ -178,8 +189,9 @@ final readonly class Verifier
      * URI failed (SPEC-013 amendment 10).
      *
      * @param  resource  $stream
+     * @param  list<ValidationStatus>  $graphStatuses  the ingredient graph's, each scoped (SPEC-020)
      */
-    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings, TimestampResult $timestamp): ValidationResult
+    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings, TimestampResult $timestamp, array $graphStatuses): ValidationResult
     {
         $manifest = $manifestStore->active;
         // the timestamp first, as c2patool lists it; informational only, but it supplies the time below (SPEC-017)
@@ -243,6 +255,8 @@ final readonly class Verifier
             $checks[] = 'dataHash';
         }
 
-        return ValidationResult::fromStatuses($statuses, $checks);
+        // the graph's statuses last: they are scoped to their ingredient assertions and render
+        // under `ingredientDeltas`, so their place in this list does not change the report
+        return ValidationResult::fromStatuses([...$statuses, ...$graphStatuses], $checks);
     }
 }

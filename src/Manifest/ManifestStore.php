@@ -55,7 +55,7 @@ final readonly class ManifestStore
     {
         $manifests = [];
         foreach ($this->manifests as $label => $manifest) {
-            $manifests[$label] = self::manifestArray($manifest);
+            $manifests[$label] = self::manifestArray($manifest, $this->manifests);
         }
 
         return ['active_manifest' => $this->active->label, 'manifests' => $manifests];
@@ -66,8 +66,11 @@ final readonly class ManifestStore
         return json_encode($this->toArray(), JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
     }
 
-    /** @return array<string, mixed> */
-    private static function manifestArray(Manifest $manifest): array
+    /**
+     * @param  array<string, Manifest>  $all  every manifest in the store, for the ingredients' references
+     * @return array<string, mixed>
+     */
+    private static function manifestArray(Manifest $manifest, array $all = []): array
     {
         $claim = $manifest->claim;
         $out = [];
@@ -89,8 +92,17 @@ final readonly class ManifestStore
         }
         $out['instance_id'] = $claim->instanceId;
 
+        $ingredients = self::ingredientsArray($manifest, $all);
+        if ($ingredients !== []) {
+            $out['ingredients'] = $ingredients;
+        }
+
         $assertions = [];
         foreach ($manifest->assertions as $label => $assertion) {
+            // the ingredients and their thumbnails are rendered above, as c2patool does, and left out here
+            if (IngredientAssertion::isIngredientLabel($label) || str_starts_with($label, 'c2pa.thumbnail.ingredient')) {
+                continue;
+            }
             if ($assertion->data instanceof EmbeddedFile && str_starts_with($label, 'c2pa.thumbnail.claim')) {
                 $out['thumbnail'] = [
                     'format' => $assertion->data->format,
@@ -107,6 +119,72 @@ final readonly class ManifestStore
         $out['assertions'] = $assertions;
         $out['label'] = $manifest->label;
         $out['claim_version'] = $claim->version;
+
+        return $out;
+    }
+
+    /**
+     * The manifest's ingredients as c2patool prints them (SPEC-020): in claim order, each with the
+     * fields it carries and, where it names one, the manifest it brought along. An assertion this
+     * verifier cannot read is left out of the rendering — the report says so as a failure instead.
+     *
+     * @param  array<string, Manifest>  $all  every manifest in the store
+     * @return list<array<string, mixed>>
+     */
+    private static function ingredientsArray(Manifest $manifest, array $all = []): array
+    {
+        $out = [];
+        foreach (ManifestGraph::assertionLabels($manifest) as $label) {
+            if (! IngredientAssertion::isIngredientLabel($label)) {
+                continue;
+            }
+            try {
+                $ingredient = IngredientAssertion::fromAssertion($manifest->label, $manifest->assertions[$label]);
+            } catch (ManifestException) {
+                continue;
+            }
+            $entry = [];
+            foreach (['title' => $ingredient->title, 'format' => $ingredient->format, 'document_id' => $ingredient->documentId, 'instance_id' => $ingredient->instanceId] as $key => $value) {
+                if ($value !== null) {
+                    $entry[$key] = $value;
+                }
+            }
+            if ($ingredient->thumbnail !== null) {
+                // the thumbnail may live in this manifest (a relative URI) or in the ingredient's own
+                // (an absolute one, as c2pa-rs writes since 2023) — c2patool prints it where it is
+                $identifier = str_starts_with($ingredient->thumbnail->url, 'self#jumbf=/')
+                    ? $ingredient->thumbnail->url
+                    : sprintf('self#jumbf=/c2pa/%s/%s', $manifest->label, substr($ingredient->thumbnail->url, strlen('self#jumbf=')));
+                $path = explode('/c2pa.assertions/', substr($identifier, strlen('self#jumbf=/c2pa/')), 2);
+                $owner = $all[$path[0]] ?? $manifest;
+                $data = $owner->assertions[$path[1] ?? '']->data ?? null;
+                $entry['thumbnail'] = [
+                    'format' => $data instanceof EmbeddedFile ? $data->format : 'application/octet-stream',
+                    'identifier' => $identifier,
+                ];
+            }
+            $entry['relationship'] = $ingredient->relationship->value;
+            $referenced = $ingredient->manifestLabel();
+            if ($referenced !== null) {
+                $entry['active_manifest'] = $referenced;
+            }
+            if ($ingredient->validationStatus !== null && $ingredient->validationStatus !== []) {
+                $entry['validation_status'] = self::plain($ingredient->validationStatus);
+            }
+            if ($ingredient->validationResults !== null) {
+                $entry['validation_results'] = self::plain($ingredient->validationResults);
+            }
+            if (isset($ingredient->data['metadata'])) {
+                $entry['metadata'] = self::plain($ingredient->data['metadata']);
+            }
+            // manifest_data names the manifest carried along; c2patool leaves it out when the label
+            // is not in the store at all (adobe-20220124-E-clm-CAICAI points at a manifest that is not)
+            if ($referenced !== null && array_key_exists($referenced, $all)) {
+                $entry['manifest_data'] = ['format' => 'application/c2pa', 'identifier' => $referenced];
+            }
+            $entry['label'] = $ingredient->label;
+            $out[] = $entry;
+        }
 
         return $out;
     }

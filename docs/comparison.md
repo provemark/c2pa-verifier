@@ -13,7 +13,7 @@ and never the other way round.
 
 | what | `c2patool` | this verifier | until |
 |---|---|---|---|
-| Ingredient manifests, manifest chains, update manifests | validates the whole tree | a store with more than one manifest is refused (`general.error`, `Invalid`) — `_MULTI` lists: 10 official files, 7 c2pa-rs, 1 writers | M7 |
+| Ingredient manifests, manifest chains, update manifests | validates the whole tree | the ingredient assertions are read and the graph walked (SPEC-020: provenance, missing and malformed reported under `ingredientDeltas`), but the manifests they name are not validated, so a store with more than one manifest is still refused (`general.error`, `Invalid`) — `_MULTI` lists: 10 official files, 7 c2pa-rs, 1 writers | SPEC-021 |
 | ISOBMFF (MP4, MOV, AVIF), GIF, TIFF, SVG, audio, PDF | yes | JPEG, PNG, WebP only (`unsupported file type`) | M8 and later |
 | CAWG identity assertions | validated (their own X.509 credential) | refused (`general.error` on the assertion) — `C_with_CAWG_data`, `cawg_ica` | a CAWG spec |
 | Remote manifests (`dcterms:provenance` URL) | fetched over the network | reported as `remote_manifest`, never fetched — `cloud.jpg`, the Photoshop file | never (by design) |

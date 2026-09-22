@@ -213,8 +213,8 @@ it('AC4: additional exclusions are honoured and reported', function (): void {
         ->and($statuses[1]->url)->toBe(SPEC012_PNG.'/c2pa.assertions/c2pa.hash.data')
         ->and($statuses[1]->explanation)->toContain('46500');
     foreach (StatusCode::cases() as $code) {
-        if (str_starts_with($code->value, 'timeStamp.')) {
-            continue;   // SPEC-017's: four informational of its own
+        if (str_starts_with($code->value, 'timeStamp.') || $code === StatusCode::IngredientUnknownProvenance) {
+            continue;   // SPEC-017's four informational of its own, and SPEC-020's one
         }
         expect($code->isInformational())->toBe($code === StatusCode::AssertionDataHashAdditionalExclusionsPresent, $code->value);
     }
@@ -356,8 +356,8 @@ it('AC10: the codes are verbatim, and informational is a third kind', function (
     }
     $successes = [StatusCode::ClaimSignatureValidated, StatusCode::AssertionHashedUriMatch, StatusCode::AssertionDataHashMatch];
     foreach (StatusCode::cases() as $code) {
-        if (in_array($code, [StatusCode::SigningCredentialTrusted, StatusCode::SigningCredentialUntrusted], true) || str_starts_with($code->value, 'timeStamp.')) {
-            continue;   // SPEC-014's and SPEC-017's
+        if (in_array($code, [StatusCode::SigningCredentialTrusted, StatusCode::SigningCredentialUntrusted], true) || str_starts_with($code->value, 'timeStamp.') || str_starts_with($code->value, 'ingredient.')) {
+            continue;   // SPEC-014's, SPEC-017's and SPEC-020's
         }
         $informational = $code === StatusCode::AssertionDataHashAdditionalExclusionsPresent;
         expect($code->isInformational())->toBe($informational, $code->value)

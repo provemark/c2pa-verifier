@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -413,7 +413,35 @@ dependency; `Report` is unchanged in its dependencies.
 
 ## Amendments
 
-(none yet)
+1. **2026-09-22, step 54b, measured** — the two corpus files that declare
+   their manifest by URL (`c2pa-rs/cloud`, the Photoshop file) carry **no
+   manifest store**; c2patool's JSON for them describes a manifest it
+   fetched over the network, so there is nothing in the file to compare.
+   AC3's list is fifteen files, not sixteen, and AC1's v3 examples come
+   from `c2pa-rs/CACA` (a v3 with both hashed URIs in the active manifest,
+   a v3 without a reference in its ingredient manifest) and `adobe-20220124-CAI`
+   (two v1 assertions in claim order) instead of the Photoshop file. No
+   rule of this spec changed.
+2. **2026-09-22, step 54b, measured** — three literals of the approved
+   text were wrong where the files disagree: (a) c2pa-rs's v3
+   `activeManifest` **does** carry `alg: sha256` (AC1 said no `alg`); (b)
+   the two `E-clm-CAICAI` copies keep one manifest the walk never reaches
+   — their reference names `contentbeef:…` — so `unreferenced` is not
+   empty for them (AC5); (c) c2patool renders `active_manifest` for such
+   a reference but **not** `manifest_data`, and an ingredient's
+   `thumbnail` identifier is printed where the thumbnail lives — in the
+   ingredient's own manifest when the assertion's URI is absolute, in the
+   referring manifest when it is relative (AC8). The rendering follows
+   the files.
+3. **2026-09-22, step 54b, measured** — AC5's "the ingredient assertions
+   come in c2patool's delta order" holds as a *subsequence*: c2patool
+   drops a status an ingredient assertion already recorded, and an
+   assertion whose every status was dropped leaves no delta at all
+   (`c2pa-rs ValidationResults::from_store`; the dropping is SPEC-021).
+   The walk is compared to the deltas as a subsequence, and where no
+   assertion recorded anything the two are equal. The walk itself is a
+   public field (`ManifestGraph::$walk`), which the API sketch did not
+   name.
 
 ## Traceability
 
@@ -422,4 +450,15 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
+| AC1 | tests/Unit/Manifest/IngredientAssertionTest.php :: AC1 (three tests) / SPEC-020 | src/Manifest/IngredientAssertion.php; src/Manifest/Relationship.php |
+| AC2 | tests/Unit/Manifest/IngredientAssertionTest.php :: AC2 (two tests) / SPEC-020 | src/Manifest/IngredientAssertion.php (`fromAssertion()`) |
+| AC3 | tests/Unit/Verifier/IngredientDeltasTest.php :: AC3 / SPEC-020 | src/Manifest/ManifestGraph.php (`descend()`); src/Report/ValidationResult.php |
+| AC4 | tests/Unit/Manifest/IngredientAssertionTest.php :: AC4 / SPEC-020 | src/Manifest/ManifestGraph.php (the `inputTo` rule) |
+| AC5 | tests/Unit/Manifest/ManifestGraphTest.php :: AC5 / SPEC-020 | src/Manifest/ManifestGraph.php (`fromStore()`, `fromIngredients()`, `assertionLabels()`) |
+| AC6 | tests/Unit/Verifier/IngredientDeltasTest.php :: AC6 / SPEC-020 | src/Manifest/ManifestGraph.php; src/Verifier/Verifier.php |
+| AC7 | tests/Unit/Manifest/ManifestGraphTest.php :: AC7 (two tests) / SPEC-020 | src/Manifest/ManifestGraph.php (`MAX_DEPTH`, `MAX_ASSERTIONS`, the cycle rule) |
+| AC8 | tests/Unit/Verifier/IngredientDeltasTest.php :: AC8 / SPEC-020 | src/Manifest/ManifestStore.php (`ingredientsArray()`, `manifestArray()`) |
+| AC9 | tests/Unit/Verifier/IngredientDeltasTest.php :: AC9 / SPEC-020 | src/Report/ValidationStatus.php (`$ingredientUri`); src/Report/ValidationResult.php (`toArray()`) |
+| AC10 | tests/Unit/Verifier/VerifierTest.php :: SPEC-013 AC10–AC13; tests/Unit/Cli/CommandTest.php :: AC11 / SPEC-019 | src/Verifier/Verifier.php |
+
+`src/Manifest/{Relationship,IngredientAssertion,ManifestGraph}.php` map to this spec; `StatusCode`'s three new cases and `ValidationStatus::$ingredientUri` are its. Measured 2026-09-22: 13 red → 13 green, `composer check` exit 0, 327 tests.

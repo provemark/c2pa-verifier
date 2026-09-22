@@ -105,3 +105,69 @@ Thirteen tests in group `SPEC-020`:
   for skipping (a subset of c2patool's codes, `Invalid` either way); the
   approved text says read. Left as approved; raised for 54b's amendment
   list.
+
+## 54b — the implementation
+
+*2026-09-22, same day.*
+
+- `src/Manifest/Relationship.php` (three cases) and
+  `src/Manifest/IngredientAssertion.php` — every field of the three
+  versions, and every malformed rule in `fromAssertion()`: the label's
+  version above 3, content that is not a map, a missing or unknown
+  `relationship`, the fields the CDDL requires per version, a reference
+  or `claimSignature` that is not a hashed URI, `activeManifest` beside
+  `digitalSourceType`, a v3 reference without `validationResults`. Each
+  throws `ManifestException` with `assertion.ingredient.malformed` and
+  the assertion's absolute url.
+- `src/Manifest/ManifestGraph.php` — `fromStore()` decodes (a malformed
+  assertion becomes a status, not an exception: the report says which
+  assertion and why) and `fromIngredients()` walks: depth-first from the
+  active manifest, each manifest entered once, malformed first then the
+  ingredients in claim order, the reference followed at once. The walk is
+  a private static method, not a closure — PHPStan does not read a
+  docblock on a closure, a gotcha this project has met before.
+- `Report\StatusCode` gains three cases (`ingredient.manifest.missing`,
+  `ingredient.unknownProvenance` informational, `assertion.ingredient.malformed`);
+  `Report\ValidationStatus` gains `$ingredientUri`, the scope;
+  `Report\ValidationResult::toArray()` groups scoped statuses into
+  `validation_results.ingredientDeltas[]` by URI in first-seen order and
+  appends their failures to `validation_status` after the active
+  manifest's. The three-state rule needed no change: a scoped status
+  counts like any other, which is exactly c2pa-rs's rule.
+- `Manifest\ManifestStore::toArray()` renders `ingredients` per manifest
+  and drops the ingredient and ingredient-thumbnail assertions from
+  `assertions`, as c2patool does; `Verifier` runs the graph between the
+  manifest read and the checks.
+
+### Measured
+
+- 13 red → **13 green**; `composer check` exit 0 with **327 tests**
+  (314 + 13). Five drift alarms had to grow for the three new codes
+  (`DataHashCheckTest` ×2, `HashedUriCheckTest`, `ReportTest`,
+  `CertificateProfileCheckTest`: the enum is 34 cases now) — the same
+  "enum growth" step every spec that adds a code has taken.
+- Four measurements corrected the approved text (SPEC-020 amendments
+  1–3): the two remote files carry no store at all, so they cannot be
+  compared; c2pa-rs writes `alg: sha256` on its ingredient references;
+  the `E-clm` files keep an unreferenced manifest; c2patool prints
+  `active_manifest` without `manifest_data` when the label is not in the
+  store, and an ingredient thumbnail where it lives (the ingredient's own
+  manifest when the URI is absolute). Each was found by a red test on a
+  real file, not by reasoning.
+- The one that took longest: AC5's walk order. c2patool's delta list is
+  *shorter* than the walk on `c2pa-rs/CACA` — the ingredient manifest's
+  own assertion produced only statuses the active assertion had already
+  recorded, and c2pa-rs drops those, leaving no delta. The criterion is
+  now a subsequence, and equality where nothing was recorded.
+- From the shell: `bin/c2pa-verify
+  tests/Fixtures/public-testfiles/adobe-20220124-CA.jpg` prints the
+  `ingredients` list and the `ingredientDeltas` entry with
+  `ingredient.unknownProvenance`, state `Valid` — the same JSON c2patool
+  prints for that file, on the keys this spec covers.
+
+### What is unchanged, deliberately
+
+No corpus verdict moved: the eighteen `_MULTI` files are still `Invalid`
+with the amendment-5 refusal, and the `ingredient.*` codes never turn a
+`Valid` into an `Invalid` on a file c2patool accepts. Validating the
+manifests the graph found is SPEC-021.

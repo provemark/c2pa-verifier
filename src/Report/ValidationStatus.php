@@ -16,6 +16,14 @@ final readonly class ValidationStatus
         public StatusCode $code,
         public string $url,
         public string $explanation,
+        /**
+         * The URI of the ingredient assertion this status was found under, when it was
+         * found while walking an ingredient (SPEC-020): the report groups such statuses
+         * under `validation_results.ingredientDeltas`, as c2patool does. Null for the
+         * active manifest's own statuses. It is the scope, not part of the status: the
+         * rendering below is unchanged.
+         */
+        public ?string $ingredientUri = null,
     ) {}
 
     /** @return array{code: string, url: string, explanation: string} */

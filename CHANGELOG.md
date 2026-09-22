@@ -8,6 +8,17 @@ public API is stable. Dates are the day the work was committed.
 
 ## Unreleased
 
+### M7 (in progress) — ingredient manifests (2026-09-22)
+- SPEC-020: the ingredient assertion (`c2pa.ingredient`, `.v2`, `.v3`)
+  and the graph it draws over the manifest store — the walk from the
+  active manifest with bounds and cycle detection,
+  `ingredient.unknownProvenance`, `ingredient.manifest.missing`,
+  `assertion.ingredient.malformed`; statuses scoped to their ingredient
+  assertion and rendered under `validation_results.ingredientDeltas`,
+  and `ingredients` per manifest, both as `c2patool` prints them.
+  No verdict changed: a store with more than one manifest is still
+  refused until SPEC-021 validates the manifests the graph found.
+
 ### The command line (2026-09-22)
 - SPEC-019: `bin/c2pa-verify <file> [--settings <path>]` — the report as
   `toJson()` on standard output, `Error: …` on standard error, exit status

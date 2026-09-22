@@ -3242,3 +3242,25 @@ README are where the disclosure lives.
   the union of specification and c2pa-rs; the read-vs-skip question on a
   mismatched ingredient assertion, raised for the maintainer.
 - Decided by Maurice: start 54a.
+
+## 2026-09-22 — Step 54b: the ingredient graph built; SPEC-020 implemented
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 54b".
+- Produced: `src/Manifest/{Relationship,IngredientAssertion,ManifestGraph}.php`;
+  three `StatusCode` cases, `ValidationStatus::$ingredientUri`,
+  `ingredientDeltas` in `ValidationResult::toArray()`, `ingredients` in
+  `ManifestStore::toArray()`, the graph in `Verifier`; SPEC-020 →
+  `implemented` with Traceability and amendments 1–3; the 54b half of
+  `notes/step-54-ingredient-assertion-and-graph.md`, CHANGELOG,
+  `docs/comparison.md`, the milestones and NOTES rows; this entry.
+- Measured: 13 red → green; `composer check` exit 0, 327 tests; five
+  enum drift alarms grown (34 codes). Four findings on real files
+  corrected the approved text: the two remote corpus files carry no
+  manifest store; c2pa-rs writes `alg: sha256` on its ingredient
+  reference; the `E-clm` files keep an unreferenced manifest; c2patool
+  omits `manifest_data` for a label not in the store and prints an
+  ingredient thumbnail where it lives. c2patool's delta list is a
+  subsequence of the walk (it drops statuses the ingredient assertion
+  recorded — SPEC-021's subject). Reasoned: the walk as a private static
+  method rather than a closure (PHPStan ignores docblocks on closures).
+- Decided by Maurice: go ahead with 54b.

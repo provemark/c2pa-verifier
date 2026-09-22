@@ -36,6 +36,9 @@ final readonly class ValidationResult
         // failure; Valid = at least one success and no failure other than
         // signingCredential.untrusted; Invalid otherwise — an empty report and
         // one of informational statuses alone included (SPEC-010/012 AC10).
+        // A status scoped to an ingredient counts here like any other, which is
+        // c2pa-rs's rule: Valid tolerates an untrusted ingredient signer, Trusted
+        // tolerates no failure in any delta (validation_results.rs validation_state).
         $succeeded = false;
         $trusted = false;
         $failed = false;
@@ -59,21 +62,38 @@ final readonly class ValidationResult
     /** @return array<string, mixed> */
     public function toArray(): array
     {
-        $success = $informational = $failure = [];
+        // a status found while walking an ingredient is grouped under that ingredient assertion's
+        // URI in `ingredientDeltas`, as c2patool does; the rest is the active manifest's (SPEC-020)
+        $active = ['success' => [], 'informational' => [], 'failure' => []];
+        /** @var array<string, array{success: list<array<string, mixed>>, informational: list<array<string, mixed>>, failure: list<array<string, mixed>>}> $deltas */
+        $deltas = [];
         foreach ($this->statuses as $status) {
-            if ($status->code->isSuccess()) {
-                $success[] = $status->toArray();
-            } elseif ($status->code->isInformational()) {
-                $informational[] = $status->toArray();
-            } else {
-                $failure[] = $status->toArray();
+            $kind = match (true) {
+                $status->code->isSuccess() => 'success',
+                $status->code->isInformational() => 'informational',
+                default => 'failure',
+            };
+            if ($status->ingredientUri === null) {
+                $active[$kind][] = $status->toArray();
+
+                continue;
             }
+            $deltas[$status->ingredientUri] ??= ['success' => [], 'informational' => [], 'failure' => []];
+            $deltas[$status->ingredientUri][$kind][] = $status->toArray();
+        }
+        // the flat list: the active manifest's failures first, then every delta's, in order (c2pa-rs validation_errors)
+        $failures = $active['failure'];
+        $ingredientDeltas = [];
+        foreach ($deltas as $uri => $kinds) {
+            $ingredientDeltas[] = ['ingredientAssertionURI' => $uri, 'validationDeltas' => $kinds];
+            $failures = [...$failures, ...$kinds['failure']];
         }
 
         // validation_status holds failures only and is absent when there are
         // none, as c2patool 0.27.22 (SPEC-010 amendment 2, SPEC-013 amendment 3)
-        return ($failure === [] ? [] : ['validation_status' => $failure]) + [
-            'validation_results' => ['activeManifest' => ['success' => $success, 'informational' => $informational, 'failure' => $failure]],
+        return ($failures === [] ? [] : ['validation_status' => $failures]) + [
+            'validation_results' => ['activeManifest' => $active]
+                + ($ingredientDeltas === [] ? [] : ['ingredientDeltas' => $ingredientDeltas]),
             'validation_state' => $this->state->value,
             'checks_performed' => $this->checksPerformed,
         ];
