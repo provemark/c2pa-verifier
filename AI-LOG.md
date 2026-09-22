@@ -3192,3 +3192,26 @@ README are where the disclosure lives.
   `validation_status.rs` (fetched at the tag). Reasoned: the three-spec
   split and the four proposals in the note's §4.
 - Decided by Maurice: none yet — the note ends with the proposals.
+
+## 2026-09-22 — SPEC-020 drafted: the ingredient assertion and the manifest graph
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, schrijf SPEC-020 als draft".
+- Produced: `specs/SPEC-020-ingredient-assertion-and-manifest-graph.md`
+  (draft, AC1–AC10), the milestones row; this entry.
+- Measured: the sixteen single-manifest oracle files with ingredient
+  assertions all carry `ingredient.unknownProvenance` under
+  `ingredientDeltas` (a python pass over `tests/Fixtures/c2patool/`);
+  c2patool's `ingredients[]` keys on three oracles (`manifest_data`,
+  `label`, `active_manifest`, `validation_status` omitted when empty,
+  thumbnail identifiers made absolute against the referring manifest);
+  c2patool leaves `c2pa.ingredient*` and `c2pa.thumbnail.ingredient.*`
+  out of `assertions[]` where this verifier lists them today. Read:
+  c2pa-rs 0.90.22 `assertions/ingredient.rs` (fetched at the tag) —
+  the required fields per version, `relationship` an enum, version > 3
+  refused, no `digitalSourceType` check. Reasoned: the scope field on
+  `ValidationStatus`, the bounds 32/256, following the specification
+  (not c2pa-rs) on `activeManifest` + `digitalSourceType`.
+- Decided by Maurice: SPEC-020 as a draft; the step-53 proposals
+  (three specs, attested failures copied with the guard, redactions
+  refused until a fixture, legacy hash accepted, bounds) taken as
+  agreed by "akkoord".
