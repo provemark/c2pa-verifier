@@ -4244,3 +4244,24 @@ README are where the disclosure lives.
   fragmented files rather than to the first path.
 - Decided by Maurice: to begin M8. Open for him: approving the two specs
   that follow, in that order.
+
+## 2026-09-22 — SPEC-026 drafted
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en schrijf daarna de eerste spec als draft".
+- Produced: pushed `efba895`; `specs/SPEC-026-isobmff-extraction.md`
+  (status `draft`, nine acceptance criteria), a line in
+  `docs/milestones.md`.
+- Measured: nothing new; the spec rests on step 73's measurements, cited
+  in it with the byte offsets. `php bin/spec-check.php`: OK, 27 specs,
+  SPEC-026 `draft`.
+- Reasoned: that a `merkle` purpose must be refused by name rather than
+  ignored, because ignoring it would make a fragmented file look like one
+  with no Content Credentials; and that the oracle here cannot be a
+  byte-exact store offset, since c2patool prints none for BMFF — so AC1
+  compares the manifest the store yields against c2patool's
+  `active_manifest` instead.
+- Decided by Maurice: to begin M8 and to have this spec written. Open for
+  him: approval; and four non-blocking questions — the `format` value
+  (`isobmff` proposed), which `ftyp` brands are accepted (any, proposed),
+  and the two literal amendments this forces in SPEC-024 AC1 and
+  SPEC-013 AC6, both of which say "three containers".
