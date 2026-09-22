@@ -4670,3 +4670,24 @@ README are where the disclosure lives.
   written. Open for him: approval, and the blocking question — how a
   caller offers an init segment and N fragments, which grows SPEC-025's
   recorded surface whichever shape is chosen.
+
+## 2026-09-22 — SPEC-028's blocking question answered
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "leg de afweging naast elkaar", then "akkoord, doe B met streams
+  per fragment".
+- Produced: the decision recorded in place in
+  `specs/SPEC-028-fragmented-bmff.md`, with the API sketch that was
+  deliberately absent now written; `docs/milestones.md`.
+- Measured: `php bin/spec-check.php` OK, 29 specs, SPEC-028 still
+  `draft`. Reasoned: nothing new beyond the weighing itself.
+- Decided by Maurice: a `FragmentedVerifier` of its own — a tenth class
+  in the contract — rather than a method on `Verifier` or a union on
+  `verify()`. `Verifier` is untouched, the new class holds one rather
+  than repeating it, and the report is the same `VerificationReport`.
+  Fragments arrive **one open stream at a time**, named, so fifty
+  fragments never mean fifty open handles; the verifier reads each to its
+  end before asking for the next and closes nothing it did not open. The
+  cost is written into the spec rather than waved away: a caller who
+  finds `Verifier` and not this class concludes fragmented streams are
+  unsupported, which the README's Public API table and
+  `docs/comparison.md` have to prevent. Still open: approval of the spec.

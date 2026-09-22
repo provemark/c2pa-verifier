@@ -72,7 +72,10 @@ sketch it is confident about.
 - `initHash`, the leaf hash, and the climb, by the three rules above.
 - The statuses for a fragmented stream, and what a caller is told when a
   fragment does not belong to the init it was offered with.
-- How a caller passes more than one stream (see Open questions 1).
+- How a caller passes more than one stream: a `FragmentedVerifier` taking
+  one fragment stream at a time (Open question 1, decided).
+- The tenth class the contract gains, and the SPEC-025 snapshot that must
+  grow with it — deliberately, as a diff somebody reads.
 
 **Out of scope** (each needs its own spec before it may be built)
 
@@ -88,6 +91,10 @@ sketch it is confident about.
 - The MPD, the DASH manifest, and anything about playback.
 
 ## Behavior
+
+Every criterion below reads "when the stream is verified", and since Open
+question 1 was decided that means `FragmentedVerifier::verify()` with the
+init segment and an iterable yielding one fragment stream at a time.
 
 - **AC1 — an init segment and its fragments verify** *(happy path; oracle: `c2patool` 0.27.22)*
   - Given `tests/Fixtures/bmff-fragmented/init.mp4` and its five
@@ -156,9 +163,33 @@ sketch it is confident about.
 
 ## API sketch
 
-Deliberately absent. The shape depends on Open question 1, and sketching
-one here would make a decision look like a detail. What is certain is the
-work behind it: the digest already exists, the tree does not.
+Settled by Open question 1. `Verifier` is untouched; this is a tenth class
+in the contract, and it holds a `Verifier` rather than repeating it.
+
+```php
+// namespace Provemark\C2paVerifier\Verifier;
+
+final readonly class FragmentedVerifier
+{
+    public function __construct(private Verifier $verifier = new Verifier) {}
+
+    /**
+     * An init segment and its fragments, as one verdict.
+     *
+     * @param  resource  $init  the init segment, readable and seekable
+     * @param  iterable<string, resource>  $fragments  a name and an open stream,
+     *         one at a time: each is read to its end before the next is asked
+     *         for, so fifty fragments never mean fifty open handles. The name
+     *         is what a status says when that fragment is the one that failed.
+     *         Nothing here closes a stream it did not open.
+     */
+    public function verify($init, iterable $fragments, ?TrustSettings $settings = null): VerificationReport;
+}
+```
+
+The report is the same `VerificationReport` a whole file yields, so
+everything downstream of it is unchanged. What differs is inside the
+statuses: a fragmented stream is many files, and each status says which.
 
 ## Open questions
 
@@ -173,9 +204,27 @@ work behind it: the digest already exists, the tree does not.
      surface, largest surprise, and `verify()` currently takes a resource.
 
    Whichever is chosen, SPEC-025's recorded surface grows and the snapshot
-   must be updated deliberately. **Blocker: every acceptance criterion
-   above is written as "when the stream is verified", and that sentence
-   has no subject until this is decided.**
+   must be updated deliberately. **Decided by Maurice van Loon,
+   2026-09-22: a `FragmentedVerifier` of its own, taking one fragment
+   stream at a time.**
+
+   Why that one, in his words and mine: the audience is hosts checking a
+   single image, and for them it is worth more that `verify()` does one
+   thing with one signature than that they see a method they will never
+   call. What this builds will grow — the `merkle` field is already a
+   list — and it grows in a class nothing else depends on. And it is the
+   only shape where the existing contract does not change: something is
+   added, nothing moves.
+
+   The cost is named rather than waved away: a caller who finds `Verifier`
+   and not this class concludes fragmented streams are unsupported. The
+   README's Public API table and `docs/comparison.md` both name it, which
+   SPEC-026 amendment 2's rule requires anyway.
+
+   **One fragment stream at a time** because fifty fragments must not mean
+   fifty open handles. The iterable yields a name and an open stream, the
+   verifier reads that fragment to the end before the next is asked for,
+   and it closes nothing it did not open.
 2. **What `uniqueId` and `localId` are for.** Both are 1 in both measured
    streams. AC6 refuses more than one map, so nothing depends on the
    answer yet — but the field is a list, and a spec that refuses the plural
