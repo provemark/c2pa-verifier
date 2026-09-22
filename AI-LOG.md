@@ -2668,3 +2668,10 @@ README are where the disclosure lives.
   in step 40; PSS and the SKI path (no corpus token).
 - Decided by Maurice: none yet (the draft awaits approval).
 
+## 2026-09-22 — SPEC-017 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: SPEC-017 status `approved`; the milestones row; this entry.
+- Measured: `bin/spec-check.php` OK. Reasoned: nothing new.
+- Decided by Maurice: SPEC-017 approved as drafted.
+
