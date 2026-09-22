@@ -4973,3 +4973,16 @@ README are where the disclosure lives.
 - Decided by Maurice: confirmation of all three amendments. Open for him:
   whether `bin/api-check.php` joins `composer check`; the version of a
   first tag; the visibility change; the announcement.
+
+## 2026-09-22 — CI on steps 87 and 88
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the push that carried step 87b and the confirmation of its three
+  amendments.
+- Produced: pushed `e2f1667` and `db33055` to `origin/main`.
+- Measured: CI runs 35776024432,35775903551: success on PHP 8.3, 8.4 and 8.5,
+  411 passed — the first CI run in which this verifier reads
+  `c2pa.hash.bmff.v2`, so every ISOBMFF hard binding c2pa-rs writes today
+  or wrote in 2022 is covered. Reasoned: nothing.
+- Decided by Maurice: push, and all three amendments confirmed. Open for
+  him: whether `bin/api-check.php` joins `composer check`; the version
+  number of a first tag; the visibility change; the announcement.
