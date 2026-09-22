@@ -3487,3 +3487,29 @@ README are where the disclosure lives.
   `all green` `success`. Reasoned: nothing.
 - Decided by Maurice: push. Open, and his alone: whether the repository
   goes public now that M7 is done, and whether M8 (ISOBMFF) comes first.
+
+## 2026-09-22 — Step 59: the coverage matrix
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "Ik wil eerst zeker weten dat deze lib werkt op alle bestanden
+  dat het aankan" — then "akkoord, begin met de matrix".
+- Produced: `bin/make-matrix-fixtures.php`, `tests/Fixtures/matrix/`
+  (23 signed files + the test-root settings + README),
+  `tests/Fixtures/c2patool/matrix/` (46 oracle JSONs + README),
+  `tests/Unit/Verifier/MatrixTest.php` (AC16–AC18, the fifth drift
+  alarm), SPEC-013 amendment 12, `notes/step-59-coverage-matrix.md`, the
+  milestones and NOTES rows; this entry.
+- Measured: first what the fixtures cover — over the four corpora, 50
+  files: jpeg 45 / png 4 / webp 1, Es256 11 / Es384 1 / Ps256 38, sha256
+  in all fifty; over every fixture directory, 165 files: Es512, Ps384,
+  Ps512 and Ed25519 in **no file at all**, sha512 in none. Then the
+  matrix: 21 files signed with c2patool 0.27.22 and c2pa-rs's test
+  certificates (pinned to `c2pa-v0.90.22`, keys deleted at the end of
+  the run), plus `es256-sha384.png` and `es256-sha512.png` made by
+  surgery because c2patool writes sha256 into the claim whatever the
+  signature algorithm is. All 23: `Trusted` with the roots, `Valid`
+  untrusted without settings, state, failure codes, `signature_info.alg`
+  and certificate serial equal to c2patool's. `composer check` exit 0,
+  348 tests. Reasoned: thumbnails off (100 KB → 15 KB per file); the
+  gaps that remain (one oracle, no timestamp and no claim v1 in the
+  matrix) named in the note rather than papered over.
+- Decided by Maurice: the matrix first, before the public decision.

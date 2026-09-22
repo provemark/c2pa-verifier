@@ -437,6 +437,18 @@ final class ManifestException extends \RuntimeException
     (SPEC-011's rule, kept by SPEC-021), and the graph's bounds
     (SPEC-020). AC11 and AC12 change with it.
 
+12. **2026-09-22, step 59, a fifth drift alarm** — the coverage matrix
+    (`tests/Fixtures/matrix/`) joins the four corpora: the three unsigned
+    fixtures signed with all seven signature algorithms in all three
+    formats, plus two files whose data hash is sha384 and sha512. It was
+    added because a measurement of what the corpora actually cover showed
+    Es512, Ps384, Ps512 and Ed25519 in **no file at all**, sha384 in one
+    variant and sha512 in none, and WebP in exactly one file — our own.
+    AC16 asserts the coverage itself (every algorithm, every format),
+    AC17 compares state, failure codes and `signature_info` with
+    c2patool's JSON with and without the test roots, AC18 the two trust
+    answers. No rule of this spec changed.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
