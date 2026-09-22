@@ -3427,3 +3427,15 @@ README are where the disclosure lives.
   `SPEC013_RS_CORPUS` itself — the CLI's file count (68 against 69)
   caught it.
 - Decided by Maurice: go ahead with 57b.
+
+## 2026-09-22 — CI green on step 57: M7 complete
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `4447f7f..de23fbf` (five commits: the CI record of
+  step 56, SPEC-022 draft/approve/red/green); this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`, no
+  PEM private-key header under the fixtures, visibility `PRIVATE`, tree
+  clean. Run `35727857709` on `de23fbf`: conclusion `success`;
+  `composer check` on PHP 8.3 / 8.4 / 8.5 each `success`, 345 passed;
+  `all green` `success`. Reasoned: nothing.
+- Decided by Maurice: push.
