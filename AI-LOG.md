@@ -4070,3 +4070,26 @@ README are where the disclosure lives.
   `approved`. Reasoned: nothing.
 - Decided by Maurice: approval of SPEC-025. Implementation may now begin,
   tests first.
+
+## 2026-09-22 — Step 70a, the SPEC-025 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 70a" — the red phase of SPEC-025.
+- Produced: `tests/Unit/ApiSurfaceTest.php` (7 tests, group SPEC-025),
+  `tests/Fixtures/api/public-surface.txt` (91 lines),
+  `notes/step-70-public-api.md`, `NOTES.md`, `docs/milestones.md`.
+- Measured: Pest 7 failed, 374 passed (7294 assertions), each failure
+  naming its own missing function except AC3 and AC5, which fail on the
+  missing `@internal` and the missing README section; PHPStan 27 errors,
+  all following from the four undefined functions; Pint and
+  `bin/spec-check.php` (26 specs, 31 test files) clean. The recorded
+  surface was generated from today's code: 91 symbols across the nine
+  contract classes, against the 600 the library exposes.
+- Reasoned: that the snapshot belongs in a file rather than in an array
+  inside the test, so that a change to a promise appears as a diff
+  somebody reads instead of an assertion somebody edits; and that a red
+  AC2 should assert on the count with three names in the message rather
+  than print sixty findings, because a wall of output teaches nothing.
+- Decided by Maurice: approval of SPEC-025, `$store` as `@internal`, and
+  the seven exceptions as `@internal` with `TrustException` in the
+  contract. Open for him: where the contract text lives, whether
+  `Cli\Command` belongs in it, and the version number of the first tag.
