@@ -3474,3 +3474,16 @@ README are where the disclosure lives.
   hash assertion in an update manifest stays **stricter than c2patool**
   (SPEC-022 #2), that an empty `claim_generator_info` is read
   (SPEC-022 #4), and that the drop set is store-wide (SPEC-021 #4).
+
+## 2026-09-22 — CI green on step 58; the amendment round closed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `de23fbf..660a4a9` (three commits: the CI record of
+  step 57, the amendment list, its confirmation); this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`, no
+  PEM private-key header under the fixtures, visibility `PRIVATE`, tree
+  clean. Run `35728766450` on `660a4a9`: conclusion `success`;
+  `composer check` on PHP 8.3 / 8.4 / 8.5 each `success`, 345 passed;
+  `all green` `success`. Reasoned: nothing.
+- Decided by Maurice: push. Open, and his alone: whether the repository
+  goes public now that M7 is done, and whether M8 (ISOBMFF) comes first.
