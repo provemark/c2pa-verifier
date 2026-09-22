@@ -4205,3 +4205,15 @@ README are where the disclosure lives.
   deliberate. A test asserting `M7` was how that survived.
 - Decided by Maurice: to look at the redaction question. Open for him:
   the same items as before, minus this one.
+
+## 2026-09-22 — CI on step 72
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar" — push the redaction-message step.
+- Produced: pushed `62b0787` to `origin/main`.
+- Measured: the pre-push checks — attribution 0, private-key patterns 0,
+  repository PRIVATE, tree clean. CI run 35754515668: success on PHP 8.3,
+  8.4 and 8.5, 381 passed. Reasoned: nothing.
+- Decided by Maurice: push. Open for him: confirmation of SPEC-025
+  amendment 1, the version number of a first tag, and the visibility
+  change — the technical list from "I want to be certain this is sound"
+  is now empty.
