@@ -3950,3 +3950,20 @@ README are where the disclosure lives.
 - Decided by Maurice: approval of SPEC-024, the 16 MiB bound and reading
   `memory_limit`. Open for him: confirmation of the three new amendments,
   which now stand at six awaiting a round.
+
+## 2026-09-22 — CI on step 67
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar" — push SPEC-024's approval, red tests and
+  implementation.
+- Produced: pushed `60d6196`, `39fbc52` and `ff7c3bf` to `origin/main`.
+- Measured: the pre-push checks — attribution 0, private-key patterns 0,
+  repository PRIVATE, tree clean. CI run 35751049349: success on PHP 8.3,
+  8.4 and 8.5, 374 passed. The subprocess probe works on the runners as
+  it does locally: `AC2: a store that does not fit the host is refused,
+  and the process survives` passes on all three, which is the test that
+  spawns a PHP process with `memory_limit=32M` and requires it to come
+  back with a report rather than die. Reasoned: nothing.
+- Decided by Maurice: push. Open for him: six amendments now await a
+  confirmation round (three from step 64, three from step 67b), the
+  cross-file test helpers that block `--parallel`, the PNG double copy,
+  the public API surface, and the visibility change.
