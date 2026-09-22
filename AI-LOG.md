@@ -4842,3 +4842,25 @@ README are where the disclosure lives.
   it and this project has only a fragmented v3 one.
 - Decided by Maurice: to investigate v2. Open for him: whether it becomes
   a spec.
+
+## 2026-09-22 — SPEC-029 drafted
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, schrijf de spec".
+- Produced: `specs/SPEC-029-bmff-v2-exclusions.md` (status `draft`, seven
+  acceptance criteria), a line in `docs/milestones.md`.
+- Measured: nothing new; the spec rests on steps 85 and 86, cited with
+  their ranges and offsets. `php bin/spec-check.php`: OK, 30 specs,
+  SPEC-029 `draft`.
+- Reasoned: that `flags` and `exact` stay out of scope even though
+  `video1.mp4` carries two of them, because both sit on `/moof/...` paths
+  and `moof` exists only in a fragmented file — so no test could reach
+  the branch, and this project has refused writing one three times
+  already. AC6 makes that precise in a way worth noting: the refusal must
+  come from *resolving a path that exists*, not from reading the list,
+  or this very fixture would fail on its own unreachable exclusions. And
+  that AC2 uses `php://memory` rather than a fixture: the file is 828 kB
+  and a copy to change one byte would cost that again in every clone.
+- Decided by Maurice: to have the spec written. Open for him: approval,
+  and the blocking question — whether SPEC-026's extractor grows a
+  depth-bounded child walk or this check does its own, which would be a
+  second truth about box parsing.
