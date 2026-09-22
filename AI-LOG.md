@@ -3035,3 +3035,22 @@ README are where the disclosure lives.
   `composer check` on PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 301
   passed`; `all green` `success`.
 - Decided by Maurice: push.
+
+## 2026-09-22 — Step 51: the amendment list
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "wat adviseer je nu te doen?" (answered: confirm the amendments,
+  then a CLI spec, then the market-scan note, then the public/private
+  decision, then M7) and "maak de amendment-lijst".
+- Produced: `notes/step-51-amendments-for-confirmation.md` (51 amendments
+  over 17 specs, by weight, with the ones Maurice decided at the time
+  marked and a confirmation column); SPEC-006 amendment 1 (floats)
+  written out — it had been a stub ("step 37 …") since step 37, and the
+  list's numbering (AC6/AC7 and two cross-references in SPEC-010 and
+  SPEC-013 spoke of amendments 2 and 3) brought in line with the two
+  entries that exist; rows in `NOTES.md` and `docs/milestones.md`; this
+  entry.
+- Measured: the Amendments sections of every spec extracted by script
+  (counts per spec in the note's total); `bin/spec-check.php` OK.
+  Reasoned: the weight classes and which amendments carry a decision.
+- Decided by Maurice: none yet — the page awaits his confirmation.
+

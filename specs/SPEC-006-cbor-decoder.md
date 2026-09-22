@@ -58,7 +58,7 @@ box payloads. Nothing here knows what a claim is (SPEC-007).
   needs it (tag 18, COSE_Sign1, in M3) decides what it means.
 - Errors, each with the byte offset: additional information 28–30
   (reserved), 31 (indefinite length — RFC 8949 §3.2.3, forbidden by
-  §4.2.1) — ~~an error~~ decoded since amendment 3, bounded, the `break`
+  §4.2.1) — ~~an error~~ decoded since amendment 2, bounded, the `break`
   code `0xff` outside an indefinite item still an error; ~~floats (major
   type 7 with additional information 25, 26, 27)~~ (decoded since
   amendment 2); simple values other than 20–22
@@ -157,7 +157,7 @@ questions). RFC 8949 Appendix A and Appendix F are quoted by their hex.
   - Then each throws `CborException` naming the offset (0) and that the
     integer does not fit a 64-bit signed integer
 
-- **AC6 — indefinite lengths decode, bounded like everything else** *(amendment 3,
+- **AC6 — indefinite lengths decode, bounded like everything else** *(amendment 2,
   2026-09-21: the original criterion refused them as RFC 8949 §4.2.1 does
   for deterministic encoding; nine of c2pa-rs's own test files carry
   them in the claim — see Amendments)*
@@ -183,7 +183,7 @@ questions). RFC 8949 Appendix A and Appendix F are quoted by their hex.
   - Then it decodes to the same map as the fixture's claim, `created_assertions`
     a one-element list
 
-- **AC7 — floats decode to PHP floats, all three widths** *(amendment 2,
+- **AC7 — floats decode to PHP floats, all three widths** *(amendment 1,
   2026-09-21: the original criterion refused floats; four of the C2PA's
   own test files carry them — see Amendments)*
   - Given the RFC 8949 Appendix A vectors `f90000` (0.0), `f93c00`
@@ -358,7 +358,7 @@ messages.
 
 ## Amendments
 
-1. **2026-09-21, step 37 …**
+1. **2026-09-21, step 37, decided by Maurice van Loon ("floats decode")** — floats decode (major type 7, additional information 25–27: half, single and double, the infinities and NaN, and inside a tag). The original AC7 refused every float because no C2PA field the sister library reads carries one; four of the C2PA's own test files do (`nikon-20221019-building.jpeg` and the three `truepic-20230212-*.jpg`, in camera assertions) and c2patool reads them. Half precision is decoded by hand, single and double by `unpack`; a float truncated inside its bytes is still an error naming the offset. AC7 rewritten as the RFC 8949 Appendix A float vectors, seen red then green; the Scope's exclusion struck. `notes/step-37-floats.md`. (Left as a stub in step 37 and written out in step 51; the notes of steps 37 and 39 number this and the next amendment 2 and 3 — the list here is the count.)
 2. **2026-09-21, step 39, decided by Maurice van Loon ("optie a")** — indefinite lengths decode. The original AC6 refused RFC 8949 §3.2.3's indefinite-length strings, arrays and maps because §4.2.1's deterministic encoding, which C2PA asks of a claim, forbids them. c2pa-rs's own test fixtures (`C.jpg`, `CA.jpg`, `CA_ct.jpg`, `CIE-sig-CA.jpg`, `E-sig-CA.jpg`, `XCA.jpg`, `no_alg.jpg`, `ocsp_with_assertion.jpg`, and `C_with_CAWG_data.jpg` with a 2.x `urn:c2pa:` label) carry them in the claim and c2patool reads every one: the oracle tolerates what the letter forbids, and files exist. The resource concern behind the refusal — an unterminated stream — is met by the bounds every container already has (`maxItems`, `maxDepth`) and by the end of input; decoding touches no hash. AC6 rewritten; the Scope's exclusion struck; the `claim-indefinite-array` variant of step 14 now decodes, so SPEC-010 AC6 and SPEC-013 AC7 lose it as a CBOR-fault example (their amendments).
 
 ## Traceability
