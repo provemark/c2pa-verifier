@@ -13,6 +13,9 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * trusted. `trustedTime()` is the one thing that reaches the verdict: the
  * epoch SPEC-015 judges the signer's validity at — only a validated
  * *and* trusted timestamp supplies it (C2PA 2.4 §14.6.1).
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class TimestampResult
 {

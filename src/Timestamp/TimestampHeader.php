@@ -11,6 +11,9 @@ use Provemark\C2paVerifier\Cbor\CborBytes;
  * it — `{tstTokens: [{val: bstr}, …]}` — read out of the decoded unprotected
  * header (SPEC-016 AC8). Which name a claim version may carry is SPEC-017's
  * rule; here both are read, and a header carrying both is refused.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class TimestampHeader
 {

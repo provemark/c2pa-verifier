@@ -14,6 +14,9 @@ use Provemark\C2paVerifier\Report\StatusCode;
  * algorithm, a missing extension. The key is checked against the
  * algorithm before any arithmetic: a secp256k1 or 1024-bit key verifies
  * mathematically and must be refused first. Nothing here signs.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class SignatureVerifier
 {

@@ -14,6 +14,9 @@ use Provemark\C2paVerifier\Support\Bytes;
  * either the OID or an Asn1Exception naming the offset and both tags.
  * Values are the reader's: an INTEGER is a decimal string, a time a UTC
  * epoch, an OID dotted decimal. Nothing here encodes.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class Der
 {

@@ -18,6 +18,9 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * is an anchor or is signed by one (c2pa-rs's PARTIAL_CHAIN). Everything
  * else is signingCredential.untrusted with the step that failed. Never by
  * name alone: two of the test roots share one subject and differ in key.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class ChainCheck
 {

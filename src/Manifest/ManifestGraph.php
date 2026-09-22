@@ -24,6 +24,9 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * Validating the manifests it found — their box hash, signature, chain,
  * timestamp and assertions — is SPEC-021; until then the Verifier still
  * refuses a store with more than one manifest (SPEC-013 amendment 5).
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class ManifestGraph
 {

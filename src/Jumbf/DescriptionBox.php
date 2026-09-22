@@ -9,6 +9,9 @@ namespace Provemark\C2paVerifier\Jumbf;
  * restates it): the superbox's type UUID, a toggles byte, and the fields
  * the toggles announce — a label, an id, a signature, a private box. In a
  * C2PA store the private box is the `c2sh` salt (§8.4.2.3).
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class DescriptionBox
 {

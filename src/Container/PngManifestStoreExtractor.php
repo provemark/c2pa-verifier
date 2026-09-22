@@ -17,6 +17,9 @@ use Provemark\C2paVerifier\Support\MemoryBudget;
  * walk continues past it so that a second `caBX` is seen and refused, as
  * c2patool does. The chunk data is the JUMBF box, whole; nothing is
  * interpreted.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class PngManifestStoreExtractor
 {

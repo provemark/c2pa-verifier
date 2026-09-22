@@ -24,6 +24,9 @@ namespace Provemark\C2paVerifier\Support;
  * 2026-09-22, on the condition that a refusal never reads as a judgement about
  * the file — hence the wording the extractors use, which says the file was not
  * examined.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class MemoryBudget
 {

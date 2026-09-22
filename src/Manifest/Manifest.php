@@ -19,6 +19,9 @@ use Provemark\C2paVerifier\Report\StatusCode;
  * manifest superbox; every reference the claim makes is resolved here and
  * refused if it points nowhere, outside the assertion store, or at an
  * unknown box.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class Manifest
 {

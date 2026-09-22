@@ -18,6 +18,9 @@ use Provemark\C2paVerifier\Support\MemoryBudget;
  * length; the pad byte is not part of the store. The walk continues past
  * it so that a second `C2PA` is seen and refused — c2patool takes the
  * first silently; this verifier does not choose.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class WebpManifestStoreExtractor
 {

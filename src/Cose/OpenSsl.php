@@ -9,6 +9,9 @@ namespace Provemark\C2paVerifier\Cose;
  * error queue. Here a failure is an answer, not noise: the warning is
  * swallowed for the duration of one call and the queue drained afterwards
  * so that no stale entry surfaces on a later, unrelated call.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final class OpenSsl
 {

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Asn1;
 
-/** The two class bits of a DER identifier octet (X.690 §8.1.2.2). */
+/** The two class bits of a DER identifier octet (X.690 §8.1.2.2).
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
+ */
 enum TagClass: int
 {
     case Universal = 0;

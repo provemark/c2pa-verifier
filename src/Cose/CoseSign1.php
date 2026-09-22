@@ -17,6 +17,9 @@ use Provemark\C2paVerifier\Report\StatusCode;
  * certificate chain under 33 (or the deprecated "x5chain") in either
  * bucket, the timestamp for M6 — and builds the Sig_structure, the bytes
  * that were signed. No cryptography here: that is SPEC-009.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class CoseSign1
 {

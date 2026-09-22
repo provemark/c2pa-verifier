@@ -10,5 +10,8 @@ namespace Provemark\C2paVerifier\Asn1;
  * the ten, a value that is not what its tag says (a time that is not a
  * date), and the limits. Every message names a byte offset within the
  * input. There is never a partial element.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final class Asn1Exception extends \RuntimeException {}

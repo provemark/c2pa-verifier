@@ -16,6 +16,9 @@ use Provemark\C2paVerifier\Asn1\TagClass;
  * either header — the first child tells them apart. The response must be
  * granted; the ContentInfo must be signedData; then SignedData and its
  * TSTInfo follow. Reads only: SPEC-017 verifies.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class TimeStampToken
 {

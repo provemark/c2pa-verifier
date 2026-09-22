@@ -14,6 +14,9 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * (SPEC-009), and one of claimSignature.validated, claimSignature.mismatch,
  * or the code the CoseException carries — always with the signature box's
  * absolute JUMBF URI and the reason.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class ClaimSignatureCheck
 {

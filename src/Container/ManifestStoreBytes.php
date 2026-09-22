@@ -12,6 +12,9 @@ namespace Provemark\C2paVerifier\Container;
  * (SPEC-001/002/003 amendment, for SPEC-012): one per piece, in file
  * order, contiguous pieces merged — what the data hash's exclusion for
  * the store must equal.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class ManifestStoreBytes
 {

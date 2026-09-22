@@ -10,6 +10,9 @@ namespace Provemark\C2paVerifier\Manifest;
  * link); `componentOf` — the asset is composed of it; `inputTo` — it was
  * fed to a process. Any other value is `assertion.ingredient.malformed`
  * (§15.11.3.2).
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 enum Relationship: string
 {

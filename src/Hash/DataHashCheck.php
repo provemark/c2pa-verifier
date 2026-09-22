@@ -21,6 +21,9 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * lie inside an exclusion, then the asset hashed in chunks
  * with the exclusions skipped — never the whole file in memory — and
  * compared. The first check that reads the asset rather than the store.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class DataHashCheck
 {

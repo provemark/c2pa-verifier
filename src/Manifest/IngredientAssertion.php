@@ -19,6 +19,9 @@ use Provemark\C2paVerifier\Report\StatusCode;
  * Every rule that makes an assertion malformed is in `fromAssertion()`:
  * the specification's (§15.11.3.2, §18.16.12.3, §15.11.3.3) and the
  * fields c2pa-rs requires per version. Unknown input is an error.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class IngredientAssertion
 {

@@ -17,6 +17,9 @@ use Provemark\C2paVerifier\Support\Bytes;
  * OpenSSL refuses is a TrustException. fromParsed() takes the parse data
  * as given — the seam the SPEC-015 tests use for rules no re-signed file
  * can show.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class Certificate
 {

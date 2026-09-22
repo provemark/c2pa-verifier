@@ -11,6 +11,9 @@ use Provemark\C2paVerifier\Report\StatusCode;
  * identifier of its SubjectPublicKeyInfo — not by PHP's key-type constants,
  * which do not name RSA-PSS and, before PHP 8.4, not Ed25519 either
  * (SPEC-009).
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class PublicKey
 {

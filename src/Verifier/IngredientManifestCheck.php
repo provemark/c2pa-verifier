@@ -38,6 +38,9 @@ use Provemark\C2paVerifier\Trust\TrustSettings;
  *
  * This lives in the Verifier layer, not in Manifest: it needs Cose, Trust,
  * Hash and Timestamp, and the parsers know nothing of cryptography.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class IngredientManifestCheck
 {

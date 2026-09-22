@@ -9,6 +9,9 @@ namespace Provemark\C2paVerifier\Container;
  * (SPEC-013): JPEG's SOI, PNG's signature, RIFF's header with the WEBP form
  * type. Anything else is null — an unknown format is an error for the
  * caller, never a guess. The stream is rewound afterwards.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class FormatDetector
 {

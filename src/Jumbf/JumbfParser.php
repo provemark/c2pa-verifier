@@ -17,6 +17,9 @@ use Provemark\C2paVerifier\Support\Bytes;
  * walked (§11.1.2). Compressed and update manifests are errors: a verifier
  * must not say anything about a manifest it cannot read. Nothing inside a
  * content box is interpreted.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class JumbfParser
 {

@@ -15,6 +15,9 @@ use Provemark\C2paVerifier\Asn1\TagClass;
  * made over — the same attributes with the `[0]` tag replaced by `SET`
  * (§5.4). `messageDigest` and `contentType` are required (§11.1, §11.2);
  * every other attribute is kept by OID and never refused.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class SignerInfo
 {

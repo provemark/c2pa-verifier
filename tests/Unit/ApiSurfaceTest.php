@@ -45,12 +45,32 @@ function spec025Contract(): array
     ];
 }
 
+/**
+ * A contract class by its short name, narrowed: `class_exists()` is what tells the
+ * analyser this really is a class-string, and it fails loudly if a name goes stale.
+ *
+ * @return class-string
+ */
+function spec025Class(string $short): string
+{
+    $name = 'Provemark\C2paVerifier\\'.$short;
+    if (! class_exists($name) && ! enum_exists($name) && ! interface_exists($name)) {
+        throw new RuntimeException("no such class: {$name}");
+    }
+
+    return $name;
+}
+
 function spec025Source(): string
 {
     return dirname(__DIR__, 2).'/src';
 }
 
-/** The recorded surface, as `Short\Class :: kind name` lines. @return list<string> */
+/**
+ * The recorded surface, as `Short\Class :: kind name` lines.
+ *
+ * @return list<string>
+ */
 function spec025Recorded(): array
 {
     $path = dirname(__DIR__).'/Fixtures/api/public-surface.txt';
@@ -59,13 +79,13 @@ function spec025Recorded(): array
         throw new RuntimeException("cannot read {$path}");
     }
 
-    return array_values($lines);
+    return $lines;
 }
 
 it('AC1: the recorded surface is exactly what the contract classes expose today', function (): void {
     $live = [];
     foreach (spec025Contract() as $short) {
-        foreach (apiSurface('Provemark\C2paVerifier\\'.$short) as $symbol) {
+        foreach (apiSurface(spec025Class($short)) as $symbol) {
             $live[] = $short.' :: '.$symbol;
         }
     }
@@ -78,7 +98,7 @@ it('AC1: no class of the contract is marked internal', function (): void {
     $classes = apiPublicClasses(spec025Source());
 
     foreach (spec025Contract() as $short) {
-        $name = 'Provemark\C2paVerifier\\'.$short;
+        $name = spec025Class($short);
         expect(array_key_exists($name, $classes))->toBeTrue($short)
             ->and($classes[$name])->toBeFalse($short.' carries @internal but is in the contract');
     }
@@ -126,7 +146,10 @@ it('AC3: the escape hatch is marked and unmentioned', function (): void {
         ->and($readme)->toContain('$report->result')
         ->and($readme)->toContain('$report->hasManifest')
         ->and($readme)->toContain('$report->remoteManifestUrl')
-        ->and(str_contains($readme, '$report->store'))->toBeFalse('the README documents the escape hatch');
+        // SPEC-025 amendment 1: the README may name the hatch, but only to say it is
+        // unsupported. Silence would leave a reader whose IDE offers it to guess.
+        ->and(str_contains($readme, '`$report->store` is the parsed manifest store, and it is `@internal`'))->toBeTrue()
+        ->and(str_contains($readme, 'not part of the promise'))->toBeTrue();
 })->group('SPEC-025');
 
 it('AC4: the snapshot catches a symbol nobody recorded', function (): void {
@@ -135,7 +158,12 @@ it('AC4: the snapshot catches a symbol nobody recorded', function (): void {
     $added = $recorded;
     $added[] = 'Verifier\Verifier :: method reset';
     sort($added);
-    $removed = array_values(array_filter($recorded, static fn (string $l): bool => $l !== 'Verifier\Verifier :: method verify'));
+    $removed = [];
+    foreach ($recorded as $line) {
+        if ($line !== 'Verifier\Verifier :: method verify') {
+            $removed[] = $line;
+        }
+    }
 
     expect(apiCompare($recorded, $added)->findings)->toBe([
         'Verifier\Verifier :: method reset: public but not recorded',
@@ -151,9 +179,11 @@ it('AC5: the README says what the contract is and what may change', function ():
         ->and($readme)->toContain('@internal')
         ->and($readme)->toContain('may change in any release');
 
-    // every contract class is named where a caller will look
+    // every contract class is named where a caller will look. Not toContain(): Pest
+    // reads its arguments as more needles, not as a message, and the failure then
+    // names the wrong thing.
     foreach (spec025Contract() as $short) {
         $class = substr($short, (int) strrpos($short, '\\') + 1);
-        expect($readme)->toContain($class, $short);
+        expect(str_contains($readme, $class))->toBeTrue("README does not name {$short}");
     }
 })->group('SPEC-025');

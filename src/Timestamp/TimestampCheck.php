@@ -31,6 +31,9 @@ use Provemark\C2paVerifier\Trust\TrustSettings;
  * informational; what a timestamp changes is the *time* SPEC-015 judges
  * the signer's validity at, and only a validated, trusted one does that.
  * Never throws: a fault in the token is a status, not an exception.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class TimestampCheck
 {

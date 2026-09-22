@@ -8,6 +8,9 @@ namespace Provemark\C2paVerifier\Support;
  * How bytes from a file reach a message: never raw. File contents are
  * untrusted terminal output until proven otherwise (SPEC-004 AC5, SPEC-005
  * AC12). A leaf layer every other layer may use.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final class Bytes
 {

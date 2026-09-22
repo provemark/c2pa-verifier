@@ -17,6 +17,9 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * `assertion.action.malformed` on the manifest's url (the opening) or the
  * assertion's (its shape), as c2pa-rs's `verify_actions`. The content
  * family (ingredient parameters, icons, templates) is not read here.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class ActionsCheck
 {

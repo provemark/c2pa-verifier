@@ -20,6 +20,9 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * no entry resolved to is reported undeclared, unknown boxes included, and
  * a claim that declares redactions is refused until M7. Every entry is
  * reported; nothing stops at the first mismatch.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class HashedUriCheck
 {

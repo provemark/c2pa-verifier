@@ -13,6 +13,9 @@ namespace Provemark\C2paVerifier\Container;
  * A note, not a verdict: the first `maxScan` bytes are searched for the
  * attribute, and only an http(s) URL of printable ASCII is reported;
  * anything else is left unreported rather than guessed at.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class RemoteManifestDetector
 {

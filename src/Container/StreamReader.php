@@ -11,6 +11,9 @@ namespace Provemark\C2paVerifier\Container;
  * decided by the file's end, not by probing: a file that ends inside the
  * skipped bytes is this reader's error, one that ends exactly after them
  * is the caller's next read to report.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class StreamReader
 {

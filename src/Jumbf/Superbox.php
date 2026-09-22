@@ -9,6 +9,9 @@ namespace Provemark\C2paVerifier\Jumbf;
  * superboxes or unknown boxes, in file order (SPEC-005). It keeps the whole
  * store (one shared, copy-on-write string) and its own byte range, so that
  * payload() — what C2PA 2.4 §8.4.2.3 hashes — is exact.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class Superbox
 {

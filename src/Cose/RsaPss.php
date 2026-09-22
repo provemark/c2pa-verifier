@@ -10,6 +10,9 @@ namespace Provemark\C2paVerifier\Cose;
  * is undone with a raw RSA operation and the encoded message checked with
  * EMSA-PSS-VERIFY (RFC 8017 §9.1.2), MGF1 over the same hash, salt length
  * = hash length (RFC 8230 §2). Read against cose-lib's PSSRSA.php.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final class RsaPss
 {

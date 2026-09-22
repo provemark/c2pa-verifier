@@ -25,6 +25,16 @@ final readonly class VerificationReport
     public function __construct(
         public string $format,
         public bool $hasManifest,
+        /**
+         * The parsed manifest store, or null when the file carries none.
+         *
+         * @internal SPEC-025: an escape hatch, not part of the public API. Reading it
+         * reaches the whole parse model — the manifests, their claims, their
+         * assertions — which may change, move or be removed in any release, and will,
+         * as this verifier gains formats. It stays public and it works; what it does
+         * not carry is a promise. The supported report is $result, $format,
+         * $hasManifest, $remoteManifestUrl, $signatureInfo, toArray() and toJson().
+         */
         public ?ManifestStore $store,
         public ValidationResult $result,
         public ?array $signatureInfo = null,

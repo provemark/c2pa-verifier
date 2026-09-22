@@ -85,6 +85,42 @@ line on standard error). Two deliberate differences from `c2patool`: it
 exits 0 on an `Invalid` report, and it silently ignores a `--settings`
 file that does not exist; both are fail-open (SPEC-019).
 
+## Public API
+
+Nine classes are the contract. Their public members are what this package
+promises; a release may add to them, and will not remove or rename them
+without saying so.
+
+| class | what it is for |
+|---|---|
+| `Verifier\Verifier` | the one call: `verify($stream, $settings)` |
+| `Verifier\VerificationReport` | what comes back: `$result`, `$format`, `$hasManifest`, `$remoteManifestUrl`, `$signatureInfo`, `toArray()`, `toJson()` |
+| `Report\ValidationResult` | the verdict and the statuses behind it |
+| `Report\ValidationStatus` | one status: its code, the JUMBF URI it concerns, a sentence |
+| `Report\ValidationState` | `Trusted`, `Valid`, `Invalid` |
+| `Report\StatusCode` | the C2PA 2.4 §15 vocabulary, verbatim |
+| `Trust\TrustSettings` | the trust file, through `fromJson()` |
+| `Trust\TrustException` | the one exception that reaches you: settings that are not settings |
+| `Cli\Command` | what `bin/c2pa-verify` runs |
+
+**Everything else in `src/` is marked `@internal`, and may change in any release**
+— the container extractors, the JUMBF and CBOR readers, the COSE
+and ASN.1 layers, the certificate and timestamp code, and the exception
+types those layers throw. They are public because each layer is tested on
+its own, not because they are supported. Your IDE and PHPStan will tell you
+which you are looking at: open the class, read the docblock.
+
+One of them is worth naming, because it is useful and easy to reach:
+`$report->store` is the parsed manifest store, and it is `@internal`. It
+works, it will keep working, and it is not part of the promise — reading it
+reaches the whole parse model, which will change as this verifier gains
+formats. If you need something from it that the report does not give you,
+that is worth an issue rather than a workaround.
+
+The surface is recorded in `tests/Fixtures/api/public-surface.txt` and
+checked on every run (`php bin/api-check.php`), so a symbol cannot join or
+leave the contract by accident.
+
 ## Design rules
 
 - **Read and verify only.** No signer, ever. No private key enters this

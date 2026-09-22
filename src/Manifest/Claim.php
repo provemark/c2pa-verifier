@@ -11,6 +11,9 @@ use Provemark\C2paVerifier\Report\StatusCode;
  * The claim, version 1 (`c2pa.claim`) or 2 (`c2pa.claim.v2`), typed from
  * its CBOR map per the CDDL of C2PA 2.4 §10.2.1 (SPEC-007). The version
  * comes from the box label; it is not in the CBOR.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class Claim
 {

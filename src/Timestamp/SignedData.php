@@ -15,6 +15,9 @@ use Provemark\C2paVerifier\Asn1\TagClass;
  * id-ct-TSTInfo and its content present), the certificates (the
  * `certificate` choice only), and exactly one `SignerInfo` (RFC 3161
  * §2.4.2). CRLs are ignored.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class SignedData
 {

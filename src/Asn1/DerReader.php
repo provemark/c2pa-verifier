@@ -13,6 +13,9 @@ namespace Provemark\C2paVerifier\Asn1;
  * refused — they are BER, and DER forbids them. Bounded: depth, element
  * count and input size, each checked before anything is allocated. Every
  * fault is an Asn1Exception naming the offset. Reads only.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class DerReader
 {

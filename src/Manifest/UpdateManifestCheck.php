@@ -20,6 +20,9 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  *
  * Where the asset's own bytes are bound is a question of the same shape:
  * `bindingManifest()` answers it by walking the `parentOf` chain (§15.12).
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class UpdateManifestCheck
 {

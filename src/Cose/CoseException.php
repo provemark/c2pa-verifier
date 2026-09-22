@@ -14,6 +14,9 @@ use Provemark\C2paVerifier\Report\StatusCode;
  * verify, signingCredential.invalid for a key or chain that is not
  * acceptable, general.error for a structural fault. A named fault — never
  * "the signature does not verify".
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final class CoseException extends \RuntimeException
 {

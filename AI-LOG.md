@@ -4093,3 +4093,29 @@ README are where the disclosure lives.
   the seven exceptions as `@internal` with `TrustException` in the
   contract. Open for him: where the contract text lives, whether
   `Cli\Command` belongs in it, and the version number of the first tag.
+
+## 2026-09-22 — Step 70b, SPEC-025 implemented
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 70b".
+- Produced: `bin/api-check.php`; `@internal` on 60 classes in `src/` and
+  on `VerificationReport::$store` with wording; a `## Public API` section
+  in the README; SPEC-025 amendment 1, Traceability filled, status
+  `implemented`; the second half of `notes/step-70-public-api.md`;
+  `NOTES.md`, `docs/milestones.md`.
+- Measured: `php bin/api-check.php` reports 69 public classes, 9 in the
+  contract, 60 marked, 91 symbols recorded, no findings. `composer check`
+  exit 0, 381 passed (7338 assertions). AC4 was shown rather than
+  asserted: a public `reset()` added to `Verifier` by hand made AC1 fail
+  and the checker name it (`Verifier\Verifier :: method reset: public but
+  not recorded`); reverted, seven green.
+- Reasoned: that AC3's "does not document `$store`" was the wrong rule —
+  a reader whose IDE offers the property needs to be told it is
+  unsupported, not left to infer it from silence. Amended in the spec
+  before the test was changed. Also recorded: Pest's `toContain()` is
+  variadic, so a second argument is another needle rather than a message
+  (the eighth time here), and a README sentence wrapped across two lines
+  is not the string a test asserts on.
+- Decided by Maurice: approval of SPEC-025, `$store` as `@internal`, and
+  the seven exceptions as `@internal`. Open for him: where the contract
+  text lives long-term, whether `Cli\Command` belongs in it, the version
+  number of a first tag, and confirmation of amendment 1.

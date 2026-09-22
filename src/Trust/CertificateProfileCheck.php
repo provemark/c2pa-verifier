@@ -21,6 +21,9 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * validity is signingCredential.expired. The rules are c2pa-rs's
  * certificate_profile.rs, read to the end in step 33, on what ext-openssl
  * reports; unknown critical extensions are the one rule it cannot see.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class CertificateProfileCheck
 {

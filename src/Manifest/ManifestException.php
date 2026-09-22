@@ -16,6 +16,9 @@ use Provemark\C2paVerifier\Report\StatusCode;
  * box is known the exception also carries its absolute JUMBF URI
  * (SPEC-007 amendment 3, defined in SPEC-013), so that the Verifier can
  * report the fault where c2patool would.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final class ManifestException extends \RuntimeException
 {

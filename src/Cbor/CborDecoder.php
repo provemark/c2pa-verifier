@@ -16,6 +16,9 @@ use Provemark\C2paVerifier\Support\Bytes;
  * values, reserved additional information, duplicate keys, truncation and
  * trailing bytes are errors naming the offset. Limits are checked before
  * anything is allocated. Decodes only; nothing here encodes.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class CborDecoder
 {

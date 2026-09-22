@@ -11,6 +11,9 @@ namespace Provemark\C2paVerifier\Cose;
  * leading zeros stripped, one added back when the high bit is set — and a
  * SEQUENCE above 127 bytes needs the long-form length (P-521; SPEC-009
  * step 19).
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final class EcdsaSignature
 {

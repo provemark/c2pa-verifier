@@ -8,6 +8,9 @@ namespace Provemark\C2paVerifier\Jumbf;
  * One parse's state: the bytes, the box counter, and the two checks every
  * box header goes through — that it fits inside its parent and that its
  * LBox is usable (SPEC-005 AC8, AC9, AC16). Internal to JumbfParser.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final class JumbfWalk
 {

@@ -15,6 +15,9 @@ use Provemark\C2paVerifier\Asn1\TagClass;
  * which policy, with which serial. Version must be 1; the imprint's digest
  * must fit its algorithm; a critical extension is a refusal; an element
  * the grammar does not name is a refusal.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class TstInfo
 {

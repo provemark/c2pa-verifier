@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -107,8 +107,10 @@ the project stops implying support it never gave.
   - Then the docblock carries `@internal` and says in words that the parse
     model may change in any release; the README documents `$result`,
     `$hasManifest`, `$remoteManifestUrl`, `$format`, `$signatureInfo`,
-    `toArray()` and `toJson()`, and does not document `$store`. The
-    property itself still works and is still public: nothing is taken away.
+    `toArray()` and `toJson()` as the report, and **where it names `$store`
+    it names it as unsupported** — never in the list of what the report
+    offers *(amended 2026-09-22, see Amendments 1)*. The property itself
+    still works and is still public: nothing is taken away.
 
 - **AC4 — the snapshot notices a change nobody meant**
   - Given the recorded public surface
@@ -196,15 +198,29 @@ reasoning that led to it stays readable.
    caller who wants the library calls `Verifier`. Including it promises a
    shape that has no second user. Non-blocker, but it is one of the eight.
 
+## Amendments
+
+1. **2026-09-22, step 70b, found while writing the README** — AC3 said the
+   README "does not document `$store`". Silence is the wrong rule. A reader
+   whose IDE offers `$report->store` will use it; what protects them is
+   being told plainly that it is unsupported, not being left to guess from
+   an omission. The criterion now forbids presenting it as part of the
+   report and requires that any mention of it says what it is, which is
+   what the README does: *"it works, it will keep working, and it is not
+   part of the promise"*. The test asserts on that shape instead of on
+   absence. Nothing about the property or its docblock changed.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
 least one test; every source file maps back to this spec.
 
-| Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
-|----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
+All tests are in `tests/Unit/ApiSurfaceTest.php`, group `SPEC-025`.
+
+| Acceptance criterion | Test (name) | Source (file/symbol) |
+|---|---|---|
+| AC1 | `AC1: the recorded surface is exactly what the contract classes expose today`; `AC1: no class of the contract is marked internal` | `bin/api-check.php :: apiSurface(), apiPublicClasses()`; `tests/Fixtures/api/public-surface.txt` (91 symbols, 9 classes) |
+| AC2 | `AC2: every public class outside the contract says it is internal`; `AC2: a class in neither set, and a contract class marked internal, are both findings` | `bin/api-check.php :: apiCheck(), ApiCheckResult`; the `@internal` docblock of 60 classes in `src/` |
+| AC3 | `AC3: the escape hatch is marked and unmentioned` | `src/Verifier/VerificationReport.php :: $store` (docblock); `README.md` (Public API) |
+| AC4 | `AC4: the snapshot catches a symbol nobody recorded` | `bin/api-check.php :: apiCompare()` |
+| AC5 | `AC5: the README says what the contract is and what may change` | `README.md :: ## Public API` |

@@ -16,6 +16,9 @@ use Provemark\C2paVerifier\Support\MemoryBudget;
  * the box: LBox and TBox once, then the data of every piece in order.
  * Segment bodies that are not needed are skipped unread; piece data is
  * read only after the header checks and the limits pass.
+ *
+ * @internal SPEC-025: not part of the public API. It may change, move or be
+ * removed in any release; the contract is the nine classes named in the README.
  */
 final readonly class JpegManifestStoreExtractor
 {
