@@ -4775,3 +4775,13 @@ README are where the disclosure lives.
   SPEC-024 #1 slipped past an alarm that only enumerated what it knew.
 - Decided by Maurice: the amendment confirmed. Open for him: the version
   number of a first tag, and the visibility change.
+
+## 2026-09-22 — CI on steps 83 and 84
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the push that carried step 83b and the confirmation.
+- Produced: pushed `8812853` and `301d093` to `origin/main`.
+- Measured: CI run 35772279106: success on PHP 8.3, 8.4 and 8.5, 404
+  passed — the first CI run in which this verifier checks a fragmented
+  stream, and the run that closes M8. Reasoned: nothing.
+- Decided by Maurice: push, and the amendment confirmed. Open for him:
+  the version number of a first tag, and the visibility change.
