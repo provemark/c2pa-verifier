@@ -157,6 +157,7 @@ because every later measurement is easier with it.
 | Step | What | Status |
 |---|---|---|
 | SPEC-019 | The command line: `bin/c2pa-verify <file> [--settings <path>]` — `VerificationReport::toJson()` plus one newline on stdout, `Error: …` on stderr, exit 0 (Trusted/Valid) / 1 (Invalid, report still printed) / 2 (no report: usage, unreadable file, unreadable or invalid settings); a thin `Cli\Command::run()` around the public API, the executable a shim; c2patool's exit status measured and departed from in two rows (Invalid exits 0 there; a missing settings file is ignored there) — both fail-open, so not copied | approved 2026-09-22 |
+| 52a | The twelve SPEC-019 tests (`tests/Unit/Cli/CommandTest.php`), seen red (`Class … Cli\Command not found` ×12): stdout byte-equal to the API on every corpus file, exit 0/1/2, the two departures from c2patool asserted (AC3, AC7), the directory case measured (`fopen` succeeds on a directory; the command refuses it) — `notes/step-52-command-line.md` | done 2026-09-22 |
 
 ## After M0
 

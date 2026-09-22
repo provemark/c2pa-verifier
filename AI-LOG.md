@@ -3112,3 +3112,20 @@ README are where the disclosure lives.
 - Decided by Maurice: SPEC-019 approved as drafted — the exit status
   carries the verdict (0 / 1 / 2) and an unreadable settings file is a
   refusal, both departures from c2patool.
+
+## 2026-09-22 — Step 52a: the SPEC-019 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 52a".
+- Produced: `tests/Unit/Cli/CommandTest.php` (12 tests, AC1–AC12),
+  `tests/Fixtures/trust/unknown-key.settings.json` (+ README row),
+  `notes/step-52-command-line.md`, the milestones and NOTES rows; this
+  entry.
+- Measured: `vendor/bin/pest --group=SPEC-019` — 12 failed, all
+  `Class "Provemark\C2paVerifier\Cli\Command" not found`; Pint passes;
+  PHPStan's three findings on the file are the missing class.
+  `fopen()` on a directory succeeds on macOS and the verifier then reads
+  nothing (a `fread` notice, "unsupported file type") — the command must
+  refuse directories itself (AC6's second case). Reasoned: AC11 uses the
+  library, not c2patool's JSON, as its oracle — the report's equality with
+  c2patool is SPEC-013's alarm.
+- Decided by Maurice: start 52a.
