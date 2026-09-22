@@ -3904,3 +3904,25 @@ README are where the disclosure lives.
   `approved`. Reasoned: nothing.
 - Decided by Maurice: approval of SPEC-024. Implementation may now begin,
   tests first.
+
+## 2026-09-22 — Step 67a, the SPEC-024 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 67a" — the red phase of SPEC-024.
+- Produced: `tests/Unit/Container/ResourceBoundsTest.php` (6 tests, group
+  SPEC-024), `tests/Support/verify-probe.php`,
+  `notes/step-67-resource-bounds.md`, `NOTES.md`, `docs/milestones.md`.
+- Measured: Pest 5 failed, 369 passed (7279 assertions); Pint, PHPStan
+  level max and `bin/spec-check.php` (25 specs, 30 test files) all clean,
+  because every symbol the tests name already exists and only holds the
+  wrong value. The harness had to be corrected once: a process killed by
+  `memory_limit` does not print nothing — PHP writes its fatal-error text
+  to stdout on the CLI, so two tests failed with `JsonException` instead
+  of their own assertion; "died" is now "no line that parses as JSON".
+- Reasoned: that the hostile stores should be generated rather than
+  committed (a block of `0x41` is not evidence, and the corpus already
+  weighs 63 MB), and that AC4 is green from birth — it is a regression
+  alarm whose job starts the day an ordinary file becomes expensive, and
+  that is written in the note rather than left to look like a pass.
+- Decided by Maurice: approval of SPEC-024 and both its blocking
+  questions. Open for him: the `DEFAULT_SHARE` of remaining memory, which
+  67b must measure rather than assume.
