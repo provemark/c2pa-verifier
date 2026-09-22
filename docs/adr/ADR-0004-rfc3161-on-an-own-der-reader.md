@@ -2,9 +2,9 @@
 
 | Field    | Value                          |
 |----------|--------------------------------|
-| Status   | draft                          |
+| Status   | accepted                       |
 | Date     | 2026-09-22                     |
-| Decided  | —                              |
+| Decided  | Maurice van Loon               |
 
 ## Context
 
@@ -70,7 +70,7 @@ The same reader would close the one gap SPEC-015 named: unknown
 critical extensions, which `openssl_x509_parse` does not flag and
 c2pa-rs's profile check rejects.
 
-## Decision (proposed)
+## Decision
 
 1. **The DER reader is written here**, as `src/Asn1/` — a new Deptrac
    layer below `Timestamp` and `Trust`, depending on `Support` only.

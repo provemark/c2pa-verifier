@@ -2541,3 +2541,15 @@ README are where the disclosure lives.
   over `phpseclib`, TSA trust only through configured anchors, and
   `genTime` over `signingTime` with a difference as `malformed`.
 
+## 2026-09-22 — ADR-0004 accepted
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op accepted".
+- Produced: ADR-0004 status `accepted`, decided by Maurice van Loon;
+  the milestones row; this entry.
+- Measured: nothing new. Reasoned: nothing new.
+- Decided by Maurice: ADR-0004 as drafted — an own DER reader
+  (`src/Asn1/`) over `phpseclib`; the CMS signature on `openssl_verify`;
+  the TSA judged with M5's code and trusted only through configured
+  anchors; `timeStamp.*` informational with the time as its one effect;
+  `genTime` over `signingTime`, a difference `malformed`.
+

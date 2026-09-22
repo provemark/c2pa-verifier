@@ -129,7 +129,7 @@ specifying is the tool that enforces exactly that.
 | Step | What | Status |
 |---|---|---|
 | 40 | The timestamp measured: five TSAs' tokens in bytes (`sigTst` = `TimeStampResp`, `sigTst2` = `TimeStampToken`), the countersigned bytes proven by hand on four tokens (`CounterSignature` Sig_structure: v1 over the claim, v2 over the signature bstr), c2patool's `timeStamp.*` over 41 oracle JSONs (informational, never `Invalid`), c2pa-rs's nine checks in order, `ext-openssl`'s reach (no `TSTInfo`; CMS signature by `openssl_verify` over re-tagged `signedAttrs`, no temp file; `openssl_cms_verify` unusable for a TSA chain), and one unresolved point (`timeStamp.trusted` without anchors) — `notes/step-40-timestamp-measured.md` | done 2026-09-22 |
-| ADR-0004 | RFC 3161 on a small own DER reader (`src/Asn1/`, ten tags, definite lengths, bounded), the CMS signature by `openssl_verify` over re-tagged `signedAttrs` (no temp file), the TSA judged with M5's profile and chain — trusted only through configured anchors (departs from c2patool's unexplained `trusted`), `timeStamp.*` informational, the time as the one effect; `phpseclib` rejected as measured, kept as fallback | draft 2026-09-22 |
+| ADR-0004 | RFC 3161 on a small own DER reader (`src/Asn1/`, ten tags, definite lengths, bounded), the CMS signature by `openssl_verify` over re-tagged `signedAttrs` (no temp file), the TSA judged with M5's profile and chain — trusted only through configured anchors (departs from c2patool's unexplained `trusted`), `timeStamp.*` informational, the time as the one effect; `phpseclib` rejected as measured, kept as fallback | accepted 2026-09-22 |
 
 ## After M0
 
