@@ -203,6 +203,9 @@ final readonly class BmffHashCheck
    reason this project rejects every silent answer: a list whose job is to
    say what was done must not name something that was not.
 
+   Confirmed by Maurice van Loon, 2026-09-22 (step 79).
+
+
 ## Open questions
 
 1. **A file whose first top-level box is included.** Both fixtures begin

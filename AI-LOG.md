@@ -4509,3 +4509,20 @@ README are where the disclosure lives.
 - Decided by Maurice: approval of SPEC-027. Open for him: confirmation of
   amendment 1 (weight B, the first since step 75), and what comes after
   M8.
+
+## 2026-09-22 — The SPEC-027 amendment confirmed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en bevestig het amendement".
+- Produced: pushed `06cf75a` and `a7ef9a5`;
+  `notes/step-79-amendment-since-75.md`; the confirmation stamped into
+  SPEC-027 #1; `NOTES.md`, `docs/milestones.md`.
+- Measured: the amendment count across every spec — 78, of which 77 were
+  confirmed by step 75, leaving the one now confirmed. Pre-push checks:
+  attribution 0, private-key patterns 0, repository PRIVATE, tree clean.
+- Reasoned: that this is the first group-B amendment in a while, and what
+  it costs a caller is worth writing down rather than leaving implicit —
+  a consumer keying off `dataHash` sees `bmffHash` on ISOBMFF files,
+  which before SPEC-026 were refused outright, and no image report
+  changes at all.
+- Decided by Maurice: the amendment confirmed. Open for him: what comes
+  after M8, the version number of a first tag, and the visibility change.
