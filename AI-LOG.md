@@ -4265,3 +4265,13 @@ README are where the disclosure lives.
   (`isobmff` proposed), which `ftyp` brands are accepted (any, proposed),
   and the two literal amendments this forces in SPEC-024 AC1 and
   SPEC-013 AC6, both of which say "three containers".
+
+## 2026-09-22 — SPEC-026 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: `specs/SPEC-026-isobmff-extraction.md` status `draft` →
+  `approved`, the Approved field filled; `docs/milestones.md` updated.
+- Measured: `php bin/spec-check.php` OK, 27 specs, SPEC-026 reported
+  `approved`. Reasoned: nothing.
+- Decided by Maurice: approval of SPEC-026. Implementation may now begin,
+  tests first.
