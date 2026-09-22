@@ -2747,3 +2747,23 @@ README are where the disclosure lives.
   `composer check` on PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 285
   passed` (3375 assertions on 8.3, 3377 on 8.4/8.5); `all green` `success`.
 - Decided by Maurice: none.
+
+## 2026-09-22 — Step 43: more fixtures, from other writers
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "Ik wil weten of de huidige code echt goed functioneert.
+  Misschien zijn er meer fixtures te vinden om tegen te testen?" and
+  "akkoord, begin met stap 43".
+- Produced: `tests/Fixtures/writers/` (five files, three licence files,
+  README), `tests/Fixtures/c2patool/writers/` (five JSONs, README),
+  `notes/step-43-more-fixtures.md`, rows in `NOTES.md` and
+  `docs/milestones.md`; this entry. No code.
+- Measured: the file trees of nine repositories through the GitHub API
+  (counts in the note); md5 of two duplicates; c2patool 0.27.22 on ten
+  candidate files and this verifier on the same (states, codes,
+  `signature_info.time`); `openssl ts -reply -text` on the three new
+  tokens (negative nonces, fractional genTime); the JPEG segment walk and
+  the XMP `dcterms:provenance` of the Photoshop file. Reasoned: the
+  fixes proposed for step 44 (signed nonce, kept fraction, a remote
+  manifest note) and the ranking of what is still unmeasured.
+- Decided by Maurice: start step 43.
+
