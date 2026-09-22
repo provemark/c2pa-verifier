@@ -242,6 +242,8 @@ final readonly class IsobmffManifestStoreExtractor
    binding here and is `Invalid` for that reason, which happens to cover
    this case too, for the wrong reason. Written down so that the next spec
    knows it inherits this.
+   Confirmed by Maurice van Loon, 2026-09-22 (step 75).
+
 
 ## Traceability
 

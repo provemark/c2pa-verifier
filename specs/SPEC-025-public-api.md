@@ -209,6 +209,8 @@ reasoning that led to it stays readable.
    what the README does: *"it works, it will keep working, and it is not
    part of the promise"*. The test asserts on that shape instead of on
    absence. Nothing about the property or its docblock changed.
+   Confirmed by Maurice van Loon, 2026-09-22 (step 75).
+
 
 ## Traceability
 

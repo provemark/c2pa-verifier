@@ -219,6 +219,8 @@ reasoning that led to them stays readable.
    fourth constant; nothing else moves. Named in SPEC-026's open questions
    before either was written, so that it arrived as a consequence rather
    than a surprise.
+   Confirmed by Maurice van Loon, 2026-09-22 (step 75).
+
 
 ## Traceability
 

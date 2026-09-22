@@ -4334,3 +4334,24 @@ README are where the disclosure lives.
 - Decided by Maurice: approval of SPEC-026. Open for him: confirmation of
   three amendments now (SPEC-025 #1, SPEC-026 #1, SPEC-024 #1), and the
   BMFF hash spec.
+
+## 2026-09-22 — CI on step 74, and the three amendments confirmed
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en bevestig alle drie de amendementen".
+- Produced: pushed `446b385` and `b358b84`;
+  `notes/step-75-amendments-since-68.md`; the confirmation stamped into
+  SPEC-024 #1, SPEC-025 #1 and SPEC-026 #1; `NOTES.md`,
+  `docs/milestones.md`.
+- Measured: every `## Amendments` section parsed — 77 in all, of which 74
+  were confirmed by step 68, leaving exactly the three now confirmed.
+  Pre-push checks: attribution 0, private-key patterns 0, repository
+  PRIVATE, tree clean.
+- Reasoned: that this is the first round with no group A and no group B —
+  not one of the three changes a verdict — and that SPEC-024 #1 is worth
+  the maintainer's eye anyway, because it exists only because a drift
+  alarm that enumerates three constants could not see a fourth container
+  arrive. PHPStan noticed instead, on an unhandled `match` arm. An alarm
+  that lists what it knows about is blind to arrivals.
+- Decided by Maurice: all three amendments confirmed. Open for him: the
+  BMFF hash spec, the version number of a first tag, and the visibility
+  change.
