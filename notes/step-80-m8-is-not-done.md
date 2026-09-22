@@ -76,3 +76,50 @@ that actually were.
    and the part the brief warned about.
 3. The four filters and nested paths, if and when a file exists that uses
    them.
+
+---
+
+# 80b — the claim made true
+
+MOV and HEIC are fixtures now, each signed with c2patool 0.27.22 and the
+test certificates, each with its recorded verdict beside it:
+
+| flavour | this verifier | `c2patool` 0.27.22 | where the file came from |
+|---|---|---|---|
+| mp4 | `Trusted` | `Valid` | the sister repository, unchanged |
+| mov | `Trusted` | `Valid` | the sister repository, unchanged |
+| avif | `Trusted` | `Valid` | the sister repository, unchanged |
+| heic | `Trusted` | `Valid` | made here from `fixture-unsigned.png` with macOS `sips`, so nothing third-party enters |
+
+397 tests pass, `composer check` exit 0. HEIC needed making because no
+repository this project can reach had one; that it works was not known
+until it was tried.
+
+## Two amendments, and the rule that was missing
+
+**SPEC-026 AC9** asked only for AVIF — the flavour that happened to be in
+hand when it was written. It now covers all three of AVIF, MOV and HEIC,
+and carries the sentence that should have been there from the start:
+
+> No ISOBMFF flavour may be named in the README, in `docs/comparison.md`
+> or in a milestone row unless a fixture here holds it.
+
+**SPEC-027 AC1** said "the two fixtures", which was true when written and
+stopped being true the moment MOV and HEIC were claimed elsewhere. It
+covers four now. No rule changed: the same digest over the same algorithm,
+on two more flavours of the same container.
+
+Both await confirmation.
+
+## What is left of M8
+
+| | stand |
+|---|---|
+| MP4, MOV, AVIF, HEIC | done — fixtures, oracles, tests |
+| Fragmented BMFF, Merkle trees | **not built**; refused by name. Named in M8's own description |
+| `subset`, `length`, `version`, `flags` filters | not built; refused by name |
+| Nested exclusion paths | not built; refused by name |
+
+M8 remains open, and the one thing standing between it and closed is the
+fragmented case — which is also the part the brief warned about, and the
+part where c2pa-rs was still fixing its own bugs when this project started.

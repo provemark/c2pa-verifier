@@ -143,14 +143,16 @@ SHA-256 this spec records once, measured.
     SPEC-024 requires of the other three containers, and the peak memory
     stays near the baseline.
 
-- **AC9 — AVIF is measured, not assumed**
-  - Given the sister repository's `fixture.avif`, signed with the same test
-    certificates
+- **AC9 — every ISOBMFF flavour this verifier claims is measured, not assumed**
+  *(amended 2026-09-22, see Amendments 2)*
+  - Given `fixture-signed.avif`, `fixture-signed.mov` and
+    `fixture-signed.heic`, each signed with the same test certificates
   - When it is extracted
-  - Then either it yields a store the existing stack reads — in which case
-    AVIF is supported by this spec and the fixture joins the repository —
-    or it does not, and what differs is written into this spec as an
-    amendment before any claim of AVIF support is made anywhere.
+  - Then each yields a store the existing stack reads, with its
+    `c2patool` verdict recorded beside it. **No ISOBMFF flavour may be
+    named in the README, in `docs/comparison.md` or in a milestone row
+    unless a fixture here holds it**, which is the rule step 80 had to be
+    written because it was not followed.
 
 ## References
 
@@ -243,6 +245,20 @@ final readonly class IsobmffManifestStoreExtractor
    this case too, for the wrong reason. Written down so that the next spec
    knows it inherits this.
    Confirmed by Maurice van Loon, 2026-09-22 (step 75).
+
+2. **2026-09-22, step 80b, after a claim outran its measurement** — AC9
+   asked only for AVIF, because AVIF was the flavour in hand. MOV and HEIC
+   were then named in the README, `docs/comparison.md` and a milestone row
+   on the strength of ISOBMFF covering them in principle, with no fixture,
+   no oracle and no test. Both do verify — measured afterwards, `Trusted`
+   here and `Valid` at `c2patool` — which is luck rather than method.
+
+   The criterion now covers all three and says the rule that was missing:
+   no ISOBMFF flavour may be named anywhere unless a fixture here holds it.
+   `fixture-signed.mov` (the sister repository's file) and
+   `fixture-signed.heic` (made from this repository's own
+   `fixture-unsigned.png` with macOS `sips`, so nothing third-party enters)
+   join AVIF, each with its recorded `c2patool` verdict.
 
 
 ## Traceability

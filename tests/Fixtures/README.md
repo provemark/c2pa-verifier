@@ -14,10 +14,15 @@ What may live here:
   files, not to this package's code); see the README there for attribution
   and what each file shows.
 
-- **ISOBMFF** — `fixture-unsigned.mp4` (the sister repository's file,
-  unchanged) and `fixture-signed.mp4`, signed with c2patool 0.27.22 and the
-  c2pa-rs ES256 test certificates in step 73, with `c2patool/mp4.json`
-  beside it. Measured, not yet read by this verifier: M8.
+- **ISOBMFF** — four flavours, each unsigned and signed with c2patool
+  0.27.22 and the c2pa-rs ES256 test certificates, each with its
+  `c2patool/*.json` beside it: **mp4** and **mov** (the sister
+  repository's files, unchanged), **avif** (likewise), and **heic** (made
+  from this repository's own `fixture-unsigned.png` with macOS `sips`, so
+  nothing third-party enters). MP4 and AVIF arrived in step 73; MOV and
+  HEIC in step 80b, after they had been claimed in the README without a
+  fixture — which is why SPEC-026 AC9 now says a flavour named anywhere
+  must be a fixture here.
 
 What never lives here, in any branch, under any name: a private key. This
 project verifies only; it has no use for one. `*.key` is gitignored

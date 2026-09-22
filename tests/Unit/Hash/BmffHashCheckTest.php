@@ -96,8 +96,10 @@ function spec027Codes(VerificationReport $report): array
     return array_map(static fn (ValidationStatus $s): string => $s->code->value, $report->result->statuses);
 }
 
-it('AC1: the two fixtures verify, and the refusal SPEC-026 left behind is gone', function (): void {
-    foreach (['fixture-signed.mp4' => 'mp4', 'fixture-signed.avif' => 'avif'] as $file => $oracle) {
+it('AC1: every ISOBMFF fixture verifies, and the refusal SPEC-026 left behind is gone', function (): void {
+    // four since step 80b: MOV and HEIC were named in the README before they were
+    // measured, and a flavour this verifier claims must be a fixture it holds
+    foreach (['fixture-signed.mp4', 'fixture-signed.avif', 'fixture-signed.mov', 'fixture-signed.heic'] as $file) {
         $report = spec027Verify($file);
 
         expect($report->result->state)->toBe(ValidationState::Trusted, $file)

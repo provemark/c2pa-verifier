@@ -87,13 +87,15 @@ range — none of which any fixture here exercises.
 
 ## Behavior
 
-- **AC1 — the two fixtures verify** *(happy path; oracle: `c2patool` 0.27.22)*
-  - Given `fixture-signed.mp4` and `fixture-signed.avif`
+- **AC1 — every ISOBMFF fixture verifies** *(happy path; oracle: `c2patool` 0.27.22)*
+  *(amended 2026-09-22, see Amendments 2)*
+  - Given `fixture-signed.mp4`, `fixture-signed.avif`, `fixture-signed.mov`
+    and `fixture-signed.heic`
   - When each is verified with the test trust settings
   - Then the report carries `assertion.bmffHash.match`, the state is
     `Trusted`, and the failure codes equal those in
-    `tests/Fixtures/c2patool/mp4.json` and `avif.json`. The refusal
-    SPEC-026 produced is gone.
+    the `c2patool` JSON recorded beside each. The refusal SPEC-026
+    produced is gone.
 
 - **AC2 — one changed byte in an included box is a mismatch** *(required: the error path)*
   - Given each fixture with one byte of `mdat` altered
@@ -204,6 +206,13 @@ final readonly class BmffHashCheck
    say what was done must not name something that was not.
 
    Confirmed by Maurice van Loon, 2026-09-22 (step 79).
+
+2. **2026-09-22, step 80b, with SPEC-026 amendment 2** — AC1 said "the two
+   fixtures", which was true when it was written and stopped being true the
+   moment MOV and HEIC were claimed elsewhere. Both are now fixtures with
+   their own recorded `c2patool` verdicts, and the criterion covers four
+   files rather than two. No rule changed: the same digest over the same
+   algorithm, on two more flavours of the same container.
 
 
 ## Open questions

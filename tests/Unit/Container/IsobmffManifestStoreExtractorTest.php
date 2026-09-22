@@ -155,14 +155,19 @@ it('AC8: the bounds of SPEC-024 apply here too', function (): void {
     }
 })->group('SPEC-026');
 
-it('AC9: AVIF is the same container, measured rather than assumed', function (): void {
-    $bytes = spec026Extract('fixture-signed.avif');
+it('AC9: every ISOBMFF flavour this verifier claims is a fixture it holds', function (): void {
+    // amendment 2: MOV and HEIC were named in the README, docs/comparison.md and a
+    // milestone row before anyone measured them. They do verify — which is luck, not
+    // method — and the rule now is that a flavour named anywhere is a fixture here.
+    foreach (['avif', 'mov', 'heic'] as $flavour) {
+        $bytes = spec026Extract("fixture-signed.{$flavour}");
 
-    expect($bytes)->not->toBeNull();
-    assert($bytes !== null);
+        expect($bytes)->not->toBeNull($flavour);
+        assert($bytes !== null);
 
-    $store = ManifestStore::fromTree((new JumbfParser)->parse($bytes));
-    expect($store->active->label)->toBe(spec026Oracle('avif')['active_manifest'])
-        ->and(array_keys($store->active->assertions))->toBe(['c2pa.actions.v2', 'c2pa.hash.bmff.v3'])
-        ->and(spec026Extract('fixture-unsigned.avif'))->toBeNull();
+        $store = ManifestStore::fromTree((new JumbfParser)->parse($bytes));
+        expect($store->active->label)->toBe(spec026Oracle($flavour)['active_manifest'], $flavour)
+            ->and(array_keys($store->active->assertions))->toBe(['c2pa.actions.v2', 'c2pa.hash.bmff.v3'], $flavour)
+            ->and(spec026Extract("fixture-unsigned.{$flavour}"))->toBeNull($flavour);
+    }
 })->group('SPEC-026');

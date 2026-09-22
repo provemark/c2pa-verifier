@@ -4563,3 +4563,27 @@ README are where the disclosure lives.
   measured (needing amendments to SPEC-026 AC9 and SPEC-027 AC1, whose
   literals say "the two fixtures"), then a fragmented fixture and the
   Merkle spec.
+
+## 2026-09-22 — Step 80b, MOV and HEIC made into fixtures
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar, en leg MOV en HEIC vast".
+- Produced: pushed `14a863d`; `fixture-{un,}signed.mov` and
+  `fixture-{un,}signed.heic` with `c2patool/mov.json` and `heic.json`;
+  SPEC-026 amendment 2 (AC9 covers AVIF, MOV and HEIC, and gains the rule
+  that a flavour named anywhere must be a fixture here) and SPEC-027
+  amendment 2 (AC1 covers four files); the two tests widened; the README,
+  `docs/comparison.md`, `tests/Fixtures/README.md`, `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: all four ISOBMFF flavours are `Trusted` here and `Valid` at
+  c2patool 0.27.22, with the hard binding checked in each.
+  `composer check` exit 0, 397 passed (7443 assertions). HEIC had to be
+  made — no repository this project can reach holds one — with macOS
+  `sips` from this repository's own `fixture-unsigned.png`, so nothing
+  third-party enters; that it works at all was not known until it was
+  tried.
+- Reasoned: that the rule missing from AC9 is the one worth writing down,
+  because the failure it prevents is not a bug in the verifier but a
+  sentence in the README that outruns the fixtures beside it.
+- Decided by Maurice: to record MOV and HEIC. Open for him: confirmation
+  of the two amendments, and the fragmented case, which is all that stands
+  between M8 and closed.
