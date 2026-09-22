@@ -4217,3 +4217,30 @@ README are where the disclosure lives.
   amendment 1, the version number of a first tag, and the visibility
   change — the technical list from "I want to be certain this is sound"
   is now empty.
+
+## 2026-09-22 — Step 73, ISOBMFF measured
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "begin met m8".
+- Produced: `tests/Fixtures/fixture-unsigned.mp4` and
+  `fixture-signed.mp4` with `tests/Fixtures/c2patool/mp4.json`;
+  `notes/step-73-isobmff-fixture.md`; entries in `tests/Fixtures/README.md`,
+  `NOTES.md` and `docs/milestones.md`. Nothing in `src/` changed.
+- Measured: the signed MP4 carries its manifest store in one top-level
+  `uuid` box (`d8fec3d6-1b0e-483c-9297-5828877ec481`) with twenty-one
+  bytes between the UUID and the JUMBF — four of version and flags, the
+  null-terminated purpose `manifest`, and an eight-byte `merkle_offset`
+  of zero. Peeling those off, `JumbfParser` and `ManifestStore` read it
+  **unchanged**: 1 manifest, claim v2, `c2pa.actions.v2` and
+  `c2pa.hash.bmff.v3`. That assertion's exclusions are box paths
+  (`/ftyp`, `/mfra`, `/free`, `/skip`) plus `/uuid` matched on its bytes
+  at offset 8 against the C2PA UUID — not byte ranges. c2patool 0.27.22
+  says `Valid` with `assertion.bmffHash.match`; this verifier says
+  `Invalid` with `unsupported file type`, naming the magic bytes.
+- Reasoned: M8's first slice is the same shape as SPEC-001/002/003 and
+  the smallest of the four, because every layer above the container
+  already works; the BMFF hash is a separate algorithm rather than a
+  variation of SPEC-012, and needs its own spec. Two corrections to the
+  brief: the label is `c2pa.hash.bmff.v3`, and Merkle belongs to
+  fragmented files rather than to the first path.
+- Decided by Maurice: to begin M8. Open for him: approving the two specs
+  that follow, in that order.

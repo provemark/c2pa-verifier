@@ -14,6 +14,11 @@ What may live here:
   files, not to this package's code); see the README there for attribution
   and what each file shows.
 
+- **ISOBMFF** — `fixture-unsigned.mp4` (the sister repository's file,
+  unchanged) and `fixture-signed.mp4`, signed with c2patool 0.27.22 and the
+  c2pa-rs ES256 test certificates in step 73, with `c2patool/mp4.json`
+  beside it. Measured, not yet read by this verifier: M8.
+
 What never lives here, in any branch, under any name: a private key. This
 project verifies only; it has no use for one. `*.key` is gitignored
 unconditionally as a second line of defence, not as the first.
