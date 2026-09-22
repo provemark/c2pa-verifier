@@ -8,7 +8,7 @@ namespace Provemark\C2paVerifier\Report;
  * The status codes of C2PA 2.4 §15.2.2 this verifier can emit, verbatim
  * (SPEC-010; SPEC-011 adds the three assertion.hashedURI / undeclared
  * codes, SPEC-012 the six of the data hash, SPEC-014 the two of the
- * signing credential's trust, SPEC-015 signingCredential.expired, SPEC-017 the six of the timestamp). No word of our own: a case enters here only
+ * signing credential's trust, SPEC-015 signingCredential.expired, SPEC-017 the six of the timestamp, SPEC-018 assertion.action.malformed). No word of our own: a case enters here only
  * through the spec that emits it. Success, informational and failure are
  * the table's three kinds: the successes are claimSignature.validated,
  * assertion.hashedURI.match, assertion.dataHash.match and
@@ -31,6 +31,7 @@ enum StatusCode: string
     case AssertionHashedUriMatch = 'assertion.hashedURI.match';
     case AssertionHashedUriMismatch = 'assertion.hashedURI.mismatch';
     case AssertionUndeclared = 'assertion.undeclared';
+    case AssertionActionMalformed = 'assertion.action.malformed';
     case AssertionDataHashMatch = 'assertion.dataHash.match';
     case AssertionDataHashMismatch = 'assertion.dataHash.mismatch';
     case AssertionDataHashMalformed = 'assertion.dataHash.malformed';

@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -244,6 +244,7 @@ final readonly class ActionsCheck
 ## Amendments
 
 1. **2026-09-22, step 49a, measured before the tests** — (a) c2patool does not put the empty-list fault on any url: `actions-empty.png` makes it exit 1 with "validation rule was violated: No Action array in Actions" and no report (`tests/Fixtures/c2patool/absence/actions-empty.stderr.txt`); AC3's second half keeps the assertion's url for this verifier's `assertion.action.malformed`, as the spec proposed, with the oracle's refusal as the equality. (b) No signed v1 fixture can be made from the v2 PNG fixture without rewriting its claim, so AC4's v1 half runs through a seam: `ActionsCheck::checkAssertions(string $manifestUrl, int $version, list<array{url: string, data: mixed}> $actions)` — the ordered actions assertions (created list first, then gathered) as `check()` collects them from a `Manifest`; `check()` is that collection plus this call. (c) `actions-first-edited.png` measured: c2patool `Invalid`, `assertion.action.malformed` on the manifest's url, "first action must be created or opened" — AC3's first half as written.
+2. **2026-09-22, step 49b, at implementation** — c2patool's url for the manifest-level faults of this rule is the **bare manifest label** (`urn:c2pa:488bf983-…`), not the JUMBF form its hard-binding faults carry (`self#jumbf=/c2pa/urn:c2pa:…`, SPEC-012) — measured in `no-actions.json` and `actions-first-edited.json`. This verifier prints the same for `assertion.action.malformed` on the manifest, so that code and url compare equal in the drift alarms; the assertion-level faults keep the assertion's JUMBF url. AC1, AC3 and AC4 read so. `checkAssertions()`'s first parameter is therefore the label. Also at implementation: two `toContain($needle, $message)` slips in the tests (Pest's variadic trap, the fifth and sixth time in this project) rewritten; the older tests that list `checks_performed` gained `actions` between `hashedUris` and `dataHash` (SPEC-013/014/017), and the enum count is 31 (SPEC-015 AC10).
 
 ## Traceability
 
@@ -252,9 +253,9 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1 | | |
-| AC2 | | |
-| AC3 | | |
-| AC4 | | |
-| AC5 | | |
-| AC6 | | |
+| AC1 | tests/Unit/Manifest/ActionsCheckTest.php :: SPEC-018 AC1: the audit's file — assertion.action.malformed on the manifest, Invalid, even when trusted / SPEC-018 | src/Manifest/ActionsCheck.php :: check(), checkAssertions() (rule 1); src/Verifier/Verifier.php :: check() (`actions` between `hashedUris` and `dataHash`); src/Report/StatusCode.php :: AssertionActionMalformed |
+| AC2 | tests/Unit/Manifest/ActionsCheckTest.php :: SPEC-018 AC2: every corpus verdict is unchanged, and actions is in checks_performed of every readable manifest / SPEC-018 (and SPEC-013 AC10–AC13 unchanged) | src/Manifest/ActionsCheck.php :: checkAssertions() (the v1 branch), isActionsLabel() |
+| AC3 | tests/Unit/Manifest/ActionsCheckTest.php :: SPEC-018 AC3: a first action that is not an opening, and an empty actions list / SPEC-018 | src/Manifest/ActionsCheck.php :: checkAssertions() (rules 1–2), firstAction(); tests/Fixtures/absence/actions-first-edited.png, actions-empty.png (bin/make-absence-variants.php) |
+| AC4 | tests/Unit/Manifest/ActionsCheckTest.php :: SPEC-018 AC4: a gathered actions assertion counts; two in a v1 claim do not / SPEC-018 | src/Manifest/ActionsCheck.php :: check() (created then gathered), checkAssertions() (rule 3) |
+| AC5 | tests/Unit/Manifest/ActionsCheckTest.php :: SPEC-018 AC5: an actions assertion the claim did not vouch for is not read / SPEC-018 | src/Verifier/Verifier.php :: check() ($unreadable); src/Manifest/ActionsCheck.php :: check() |
+| AC6 | tests/Unit/Manifest/ActionsCheckTest.php :: SPEC-018 AC6: malformed content is refused naming the field; as claim v1 the same six pass / SPEC-018 | src/Manifest/ActionsCheck.php :: checkData(), DEFAULT_MAX_ACTIONS |

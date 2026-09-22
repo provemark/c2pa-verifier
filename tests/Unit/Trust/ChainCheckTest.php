@@ -130,7 +130,7 @@ it('AC1: the four fixtures with the full settings: Trusted, and the words are c2
         $report = spec014Verify($fixture, $full);
         $credential = spec014Credential($report);
         // the Adobe file carries a timestamp: SPEC-017 puts `timestamp` first (amendment 2)
-        expect($report->result->checksPerformed)->toBe([...($name === 'adobe-20220124-C' ? ['timestamp'] : []), 'signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $name)
+        expect($report->result->checksPerformed)->toBe([...($name === 'adobe-20220124-C' ? ['timestamp'] : []), 'signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash'], $name)
             ->and($credential)->toHaveCount(1, $name)
             ->and($credential[0]->code)->toBe(StatusCode::SigningCredentialTrusted, $name)
             ->and($credential[0]->url)->toBe("self#jumbf=/c2pa/{$report->store?->active->label}/c2pa.signature", $name)
@@ -231,7 +231,7 @@ it('AC5: no trust by name', function (): void {
 it('AC6: verify_trust off: no credential code at all', function (): void {
     $off = spec014Verify('fixture-signed.png', spec014Settings('verify-off'));
     expect(spec014Credential($off))->toBe([])
-        ->and($off->result->checksPerformed)->toBe(['signature', 'certificate', 'hashedUris', 'dataHash'])
+        ->and($off->result->checksPerformed)->toBe(['signature', 'certificate', 'hashedUris', 'actions', 'dataHash'])
         ->and($off->result->state)->toBe(ValidationState::Valid)
         ->and(spec014Oracle('png-verify-off')['validation_state'])->toBe('Valid');
 

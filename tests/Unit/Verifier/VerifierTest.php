@@ -149,7 +149,7 @@ it('AC1: the four fixtures, front door: Valid, three checks, and the report is c
             ->and($report->result->state)->toBe(ValidationState::Valid, $name)
             // certificate and trust joined the list with SPEC-015/014: without settings the leaf is checked and found untrusted, as c2patool
             // the Adobe file carries a timestamp: SPEC-017 puts `timestamp` and its two informational-or-success entries first (amendment 8)
-            ->and($report->result->checksPerformed)->toBe([...($name === 'adobe-20220124-C' ? ['timestamp'] : []), 'signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $name)
+            ->and($report->result->checksPerformed)->toBe([...($name === 'adobe-20220124-C' ? ['timestamp'] : []), 'signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash'], $name)
             ->and(spec013Codes($report))->toBe([...($name === 'adobe-20220124-C' ? ['timeStamp.validated', 'timeStamp.untrusted'] : []), 'claimSignature.validated', 'signingCredential.untrusted', ...array_fill(0, $entries, 'assertion.hashedURI.match'), 'assertion.dataHash.match'], $name);
 
         $oracle = spec013C2patool($name);
@@ -173,7 +173,7 @@ it('AC2: one changed pixel byte, front door: Invalid with assertion.dataHash.mis
     foreach (['binding/pixel-changed.png', 'binding/pixel-changed.jpg'] as $variant) {
         $report = spec013Verify($variant);
         expect($report->result->state)->toBe(ValidationState::Invalid, $variant)
-            ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $variant)
+            ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash'], $variant)
             ->and(spec013Failures($report))->toBe(['assertion.dataHash.mismatch', 'signingCredential.untrusted'], $variant)
             ->and(ManifestStoreParser::fromJson($report->toJson())->validationStatusCodes())->toBe(['signingCredential.untrusted', 'assertion.dataHash.mismatch'], $variant);
     }
@@ -188,7 +188,7 @@ it('AC3: a broken signature does not stop the verifier', function (): void {
     foreach (['claim-title-changed', 'signature-changed'] as $variant) {
         $report = spec013Verify("cose/{$variant}.png");
         expect($report->result->state)->toBe(ValidationState::Invalid, $variant)
-            ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $variant)
+            ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash'], $variant)
             ->and(spec013Failures($report))->toBe(['claimSignature.mismatch', 'signingCredential.untrusted'], $variant)
             ->and(spec013Codes($report))->toContain('assertion.dataHash.match')
             ->and(array_values(array_diff(spec013OracleFailures(spec013C2patool("variants/{$variant}")), SPEC013_NOT_YET)))->toBe(['claimSignature.mismatch', 'signingCredential.untrusted'], $variant);
@@ -198,7 +198,7 @@ it('AC3: a broken signature does not stop the verifier', function (): void {
 it('AC4: the data hash is skipped when the claim does not vouch for it', function (): void {
     foreach (['pad-nonzero', 'exclusions-overlap', 'exclusion-past-end', 'alg-sha1'] as $variant) {
         $report = spec013Verify("binding/{$variant}.png");
-        expect($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris'], $variant)
+        expect($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'actions'], $variant)
             ->and(array_filter(spec013Codes($report), static fn (string $c): bool => str_starts_with($c, 'assertion.dataHash')))->toBe([], $variant)
             ->and(spec013Failures($report))->toBe(['assertion.hashedURI.mismatch', 'signingCredential.untrusted'], $variant)
             ->and($report->result->state)->toBe(ValidationState::Invalid, $variant);
@@ -328,7 +328,7 @@ it('AC9: end to end, the file is streamed', function (): void {
 
     expect($report->result->state)->toBe(ValidationState::Invalid)
         ->and(spec013Failures($report))->toBe(['assertion.dataHash.mismatch', 'signingCredential.untrusted'])
-        ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash'])
+        ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash'])
         ->and($grown)->toBeLessThan(4 * 1024 * 1024, sprintf('peak memory grew by %d bytes', $grown));
 })->group('SPEC-013');
 
@@ -366,7 +366,7 @@ it('AC10: the drift alarm: every recorded c2patool JSON, state and failures', fu
         $side = sprintf("%s\n  ours:   %s\n  theirs: %s", $name, implode(', ', $ours), implode(', ', $theirs));
         expect(array_diff($ours, $theirs))->toBe([], "not a subset — {$side}");
 
-        $complete = $report->result->checksPerformed === ['signature', 'certificate', 'trust', 'hashedUris', 'dataHash']
+        $complete = $report->result->checksPerformed === ['signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash']
             && ! in_array(StatusCode::GeneralError, array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $report->result->statuses), true)
             && ! in_array(StatusCode::AssertionUndeclared, array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $report->result->statuses), true);
         if ($ours !== $theirs) {
@@ -404,7 +404,7 @@ it('AC11: a store with more than one manifest is refused until M7', function ():
             ->and($errors[0]->url)->toBe('self#jumbf=/c2pa', $name)
             ->and($errors[0]->explanation)->toContain((string) $count)
             ->and($errors[0]->explanation)->toContain('M7')
-            ->and($report->result->checksPerformed)->toBe(['timestamp', 'signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $name)   // every file of this list carries a timestamp
+            ->and($report->result->checksPerformed)->toBe(['timestamp', 'signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash'], $name)   // every file of this list carries a timestamp
             ->and($report->result->state)->toBe(ValidationState::Invalid, $name);
     }
     $single = $verify('adobe-20220124-C');
@@ -522,7 +522,7 @@ it('AC15: a signed manifest with no hard binding is claim.hardBindings.missing a
     expect($bare->result->state)->toBe(ValidationState::Invalid)
         ->and(in_array('claim.hardBindings.missing', $codes, true))->toBeTrue()
         ->and(in_array('claimSignature.validated', $codes, true))->toBeTrue()   // the signature is fine: that is the point
-        ->and($bare->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash']);
+        ->and($bare->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash']);
     $missing = array_values(array_filter($bare->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::ClaimHardBindingsMissing));
     expect($missing)->toHaveCount(1)
         ->and($missing[0]->url)->toBe('self#jumbf=/c2pa/'.($bare->store?->active->label ?? ''))

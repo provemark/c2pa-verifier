@@ -19,6 +19,7 @@ use Provemark\C2paVerifier\Hash\DataHashCheck;
 use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfException;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
+use Provemark\C2paVerifier\Manifest\ActionsCheck;
 use Provemark\C2paVerifier\Manifest\ManifestException;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
 use Provemark\C2paVerifier\Report\StatusCode;
@@ -63,6 +64,7 @@ final readonly class Verifier
         private CertificateProfileCheck $certificate = new CertificateProfileCheck,
         private TimestampCheck $timestamp = new TimestampCheck,
         private RemoteManifestDetector $remote = new RemoteManifestDetector,
+        private ActionsCheck $actions = new ActionsCheck,
     ) {}
 
     /**
@@ -213,6 +215,17 @@ final readonly class Verifier
         $hashedUris = $this->hashedUris->check($manifest);
         $statuses = [...$statuses, ...$hashedUris];
         $checks[] = 'hashedUris';
+
+        // the actions assertion (SPEC-018): read only where the claim vouched for it — an assertion whose
+        // hashed URI mismatched is not what the signer saw, and the file is already refused
+        $unreadable = [];
+        foreach ($hashedUris as $status) {
+            if ($status->code === StatusCode::AssertionHashedUriMismatch) {
+                $unreadable[] = $status->url;
+            }
+        }
+        $statuses = [...$statuses, ...$this->actions->check($manifest, $unreadable)];
+        $checks[] = 'actions';
 
         // the data hash runs unless the claim declares a c2pa.hash.data whose hashed URI failed — then the
         // assertion is not what the signer saw and hashedURI.mismatch already refuses the file. With no

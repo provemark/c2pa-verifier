@@ -40,7 +40,10 @@ function spec018Oracle(string $name): array
     return json_decode((string) file_get_contents(Corpus::fixtures()."/c2patool/absence/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
 }
 
-/** @return list<array{code: string, url: string}> */
+/**
+ * @param  array<string, mixed>  $oracle
+ * @return list<array{code: string, url: string}>
+ */
 function spec018OracleFailures(array $oracle): array
 {
     $out = [];
@@ -54,13 +57,13 @@ function spec018OracleFailures(array $oracle): array
 
 test('SPEC-018 AC1: the audit\'s file — assertion.action.malformed on the manifest, Invalid, even when trusted', function (): void {
     $root = TrustSettings::fromJson((string) file_get_contents(Corpus::fixtures().'/absence/throw-away-root.settings.json'));
-    foreach ([null => 'no-actions', 'root' => 'no-actions-trusted'] as $mode => $oracleName) {
+    foreach (['bare' => 'no-actions', 'root' => 'no-actions-trusted'] as $mode => $oracleName) {
         $report = spec018Verify('absence/no-actions.png', $mode === 'root' ? $root : null);
         $label = $report->store?->active->label ?? '';
         expect($report->result->state->value)->toBe('Invalid', $oracleName);   // Valid until step 49b: the verdict is the red line
         $malformed = spec018Malformed($report);
         expect($malformed)->toHaveCount(1, $oracleName)
-            ->and($malformed[0]->url)->toBe("self#jumbf=/c2pa/{$label}")
+            ->and($malformed[0]->url)->toBe($label)   // c2patool's url for this rule is the bare manifest label (amendment 2)
             ->and($malformed[0]->explanation)->toContain('no actions assertion')
             ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'actions', 'dataHash']);
         $theirs = array_values(array_filter(spec018OracleFailures(spec018Oracle($oracleName)), static fn (array $f): bool => $f['code'] === 'assertion.action.malformed'));
@@ -81,7 +84,7 @@ test('SPEC-018 AC2: every corpus verdict is unchanged, and actions is in checks_
         $version = $report->store?->active->claim->version;
         expect($version)->toBe(in_array($relative, $v2, true) ? 2 : 1, $relative)
             ->and(spec018Malformed($report))->toBe([], $relative)
-            ->and($report->result->checksPerformed)->toContain('actions', $relative);
+            ->and(in_array('actions', $report->result->checksPerformed, true))->toBeTrue($relative);
     }
     // the drift alarms themselves (SPEC-013 AC10–AC13) run in their own group; here the two verdict-bearing facts they rest on
     expect(spec018Verify('fixture-signed.png')->result->state->value)->toBe('Valid')
@@ -94,7 +97,7 @@ test('SPEC-018 AC3: a first action that is not an opening, and an empty actions 
     $malformed = spec018Malformed($edited);
     expect($edited->result->state->value)->toBe('Invalid')
         ->and($malformed)->toHaveCount(1)
-        ->and($malformed[0]->url)->toBe("self#jumbf=/c2pa/{$label}")
+        ->and($malformed[0]->url)->toBe($label)
         ->and($malformed[0]->explanation)->toContain('c2pa.edited');
     $theirs = array_values(array_filter(spec018OracleFailures(spec018Oracle('actions-first-edited')), static fn (array $f): bool => $f['code'] === 'assertion.action.malformed'));
     expect($theirs)->toHaveCount(1)->and($theirs[0]['url'])->toBe($malformed[0]->url);
@@ -118,22 +121,22 @@ test('SPEC-018 AC4: a gathered actions assertion counts; two in a v1 claim do no
 
     // the v1 rule through the seam: no signed v1 fixture exists, so the lists are given as the check would read them
     $check = new ActionsCheck;
-    $url = 'self#jumbf=/c2pa/urn:uuid:v1';
+    $url = 'urn:uuid:v1';   // the manifest label, as c2patool's url for this rule
     $one = ['action' => 'c2pa.edited'];
     $statuses = $check->checkAssertions($url, 1, [
-        ['url' => $url.'/c2pa.assertions/c2pa.actions', 'data' => ['actions' => [$one]]],
-        ['url' => $url.'/c2pa.assertions/c2pa.actions__1', 'data' => ['actions' => [$one]]],
+        ['url' => 'self#jumbf=/c2pa/'.$url.'/c2pa.assertions/c2pa.actions', 'data' => ['actions' => [$one]]],
+        ['url' => 'self#jumbf=/c2pa/'.$url.'/c2pa.assertions/c2pa.actions__1', 'data' => ['actions' => [$one]]],
     ]);
     expect($statuses)->toHaveCount(1)
         ->and($statuses[0]->code)->toBe(StatusCode::AssertionActionMalformed)
         ->and($statuses[0]->url)->toBe($url)
         ->and($statuses[0]->explanation)->toContain('v1');
     // one v1 actions assertion opening with c2pa.edited: nothing (c2pa-rs's default, no strict_v1_validation)
-    expect($check->checkAssertions($url, 1, [['url' => $url.'/c2pa.assertions/c2pa.actions', 'data' => ['actions' => [$one]]]]))->toBe([]);
+    expect($check->checkAssertions($url, 1, [['url' => 'self#jumbf=/c2pa/'.$url.'/c2pa.assertions/c2pa.actions', 'data' => ['actions' => [$one]]]]))->toBe([]);
     // and none at all in a v1 claim: nothing
     expect($check->checkAssertions($url, 1, []))->toBe([]);
     // the same two as v2: the first does not open → the manifest's url
-    $v2 = $check->checkAssertions($url, 2, [['url' => $url.'/c2pa.assertions/c2pa.actions.v2', 'data' => ['actions' => [$one]]]]);
+    $v2 = $check->checkAssertions($url, 2, [['url' => 'self#jumbf=/c2pa/'.$url.'/c2pa.assertions/c2pa.actions.v2', 'data' => ['actions' => [$one]]]]);
     expect($v2)->toHaveCount(1)->and($v2[0]->url)->toBe($url);
 })->group('SPEC-018');
 
@@ -158,7 +161,7 @@ test('SPEC-018 AC6: malformed content is refused naming the field; as claim v1 t
     foreach ($cases as $name => [$data, $field]) {
         $faults = $check->checkData($data, 2);
         expect($faults)->not->toBe([], $name)
-            ->and(implode(' ', $faults))->toContain($field, $name)
+            ->and(str_contains(implode(' ', $faults), $field))->toBeTrue($name.': '.implode(' ', $faults))
             ->and($check->checkData($data, 1))->toBe([], $name);
     }
     expect($check->checkData(['actions' => [['action' => 'c2pa.opened']]], 2))->toBe([])

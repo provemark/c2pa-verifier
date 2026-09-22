@@ -1,4 +1,4 @@
-# Step 49a — The SPEC-018 tests, seen red: six tests, two more signed variants, and c2patool's two answers
+# Step 49 — The SPEC-018 tests seen red (49a), then `ActionsCheck` until they are green (49b)
 
 *2026-09-22.* SPEC-018 approved; the tests-first half of step 49. Nothing
 under `src/`.
@@ -59,3 +59,60 @@ fail on `StatusCode::AssertionActionMalformed` and
 - AC6 — six malformed shapes through `checkData()` as v2 name the field
   (`actions`, `actions[0]`, `action`); the same six as v1 return nothing;
   10 000 actions pass, 10 001 do not.
+
+---
+
+# 49b — Green: `ActionsCheck`, and the second wrong `Valid` closed
+
+*2026-09-22, the same day.* `composer check` green: 19 specs, Pint,
+PHPStan 0, Deptrac 0, `Tests: 301 passed (3618 assertions)`; a fuzz
+replay (seed 100 ×24, 2 334 runs) 0 faults.
+
+## What was written
+
+- `Manifest\ActionsCheck` — `check()` collects the actions assertions in
+  the claim's order (created list, then gathered; `c2pa.actions.v2`,
+  `c2pa.actions` and their `__n` duplicates), leaves out any whose
+  hashed URI mismatched or that is not in the store, and hands them to
+  `checkAssertions()`: v1 → at most one; v2 → every one well-formed
+  (`checkData()`: a map, `actions` a non-empty list of maps with a
+  non-empty text `action`, at most 10 000) and the first one opening
+  with `c2pa.created` or `c2pa.opened`. `assertion.action.malformed` on
+  the assertion's url for the shape, on the manifest for the opening.
+- `StatusCode::AssertionActionMalformed` (a failure).
+- `Verifier::check()`: `actions` between `hashedUris` and `dataHash`,
+  the mismatched hashed-URI urls passed as unreadable.
+
+## What the first green run showed (SPEC-018 amendment 2)
+
+- **The url.** c2patool prints the **bare manifest label** for this
+  rule's manifest-level fault — `urn:c2pa:488bf983-…` — where its
+  hard-binding faults carry `self#jumbf=/c2pa/urn:c2pa:…` (SPEC-012). The
+  drift alarms compare code *and* url, so this verifier prints the same
+  bare label here; the assertion-level faults keep the JUMBF form. A
+  c2pa-rs inconsistency, copied on purpose and written down.
+- Pest's variadic `toContain($needle, $message)` twice more (the fifth
+  and sixth time); a `null` array key in a test loop. Fixed in the
+  tests.
+- Nine older tests list `checks_performed`: `actions` inserted; the enum
+  count 31.
+
+## Measured, front door
+
+| file | before | after | c2patool |
+|---|---|---|---|
+| `absence/no-actions.png` | `Valid` (`Trusted` with its root) | `Invalid`, "the manifest has no actions assertion", url the label | `Invalid`, the same url |
+| `absence/actions-first-edited.png` | `Valid` | `Invalid`, "the first action is c2pa.edited" | `Invalid`, the same |
+| `absence/actions-empty.png` | `Valid` | `Invalid`, "actions is empty" on the assertion's url | exit 1, no report |
+| `fixture-signed.png`, the corpora | as before | unchanged — AC2 over the eight v2 and seven odd v1 manifests | unchanged |
+
+## Where this leaves the audit
+
+Two wrong `Valid`s in two days, both found by asking a question no
+corpus file asks — and both closed with a signed variant that showed
+them first. The remaining, named leniency is c2pa-rs's content family
+for actions (ingredient parameters, icons, templates) and the rules of
+`SPEC013_NOT_YET`; M7 is where they come up. The absence audit's method
+— a signed variant for every "X when Y" — is now tooling
+(`bin/make-absence-variants.php`) and a habit.
+

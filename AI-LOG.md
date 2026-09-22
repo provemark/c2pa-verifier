@@ -2977,3 +2977,20 @@ README are where the disclosure lives.
   why no signed v1 variant can come from the v2 fixture.
 - Decided by Maurice: start 49a.
 
+## 2026-09-22 — Step 49b: ActionsCheck, green
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 49b".
+- Produced: `src/Manifest/ActionsCheck.php`; `StatusCode::AssertionActionMalformed`;
+  the `actions` step in `src/Verifier/Verifier.php`; SPEC-018 amendment 2,
+  Traceability, status `implemented`; nine older tests' `checks_performed`
+  literals and the enum count; the 49b section of
+  `notes/step-49-actions-check.md`; rows in `NOTES.md` and
+  `docs/milestones.md`; this entry.
+- Measured: the first run with the class in place — 2 of 6 green; the
+  manifest url in c2patool's JSON (the bare label) and two variadic
+  `toContain` slips of mine; then `composer check` green with 301 tests;
+  the six absence variants and two corpus files by hand (the table in
+  the note); a fuzz replay, 0 faults. Reasoned: copying c2patool's
+  bare-label url for the drift alarms' sake.
+- Decided by Maurice: go on with 49b.
+
