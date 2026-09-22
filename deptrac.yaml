@@ -50,6 +50,10 @@ deptrac:
       collectors:
         - type: directory
           value: src/Verifier/.*
+    - name: Cli            # SPEC-019: the command line; a shell around the Verifier, nothing depends on it
+      collectors:
+        - type: directory
+          value: src/Cli/.*
     - name: Support        # SPEC-004 amendment 1: formatting bytes for messages; a leaf every layer may use
       collectors:
         - type: directory
@@ -95,6 +99,12 @@ deptrac:
       - Trust          # SPEC-017: the TSA through Certificate, CertificateProfileCheck, ChainCheck
       - Manifest       # SPEC-017: the active manifest's signature bytes
       - Report
+      - Support
+    # The command line sees the entry point, the settings and the state; nothing sees it.
+    Cli:
+      - Verifier
+      - Trust          # SPEC-019: TrustSettings::fromJson(), TrustException
+      - Report         # SPEC-019: ValidationState for the exit status
       - Support
     # Orchestration may use everything.
     Verifier:

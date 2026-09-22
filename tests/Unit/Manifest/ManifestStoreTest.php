@@ -304,3 +304,15 @@ it('AC14: a claim_generator_info without a name is an error', function (): void 
     expect(fn () => spec007Variant('generator-info-no-name'))
         ->toThrow(ManifestException::class, 'claim_generator_info is missing the required field name');
 })->group('SPEC-007');
+
+// amendment 5 (2026-09-22, found by SPEC-019 AC11): a claim_generator_info that carries CBOR bytes
+// (OpenAI's icon is a hashed URI with a byte-string hash) must render like every other value
+it('amendment 5: claim_generator_info with a byte string renders as JSON, the bytes as base64', function (): void {
+    $store = spec007Store('writers/openai-20260826-c2pa_2x.png');
+    /** @var array{manifests: array<string, array{claim_generator_info: list<array{icon: array{hash: string}}>}>} $array */
+    $array = $store->toArray();
+    $hash = $array['manifests'][$store->active->label]['claim_generator_info'][0]['icon']['hash'];
+
+    expect(strlen((string) base64_decode($hash, true)))->toBe(32) // strlen: toHaveLength() counts UTF-8 characters, not bytes
+        ->and(json_decode($store->toJson(), true, 512, JSON_THROW_ON_ERROR))->toBeArray();
+})->group('SPEC-007');

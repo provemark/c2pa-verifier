@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -314,7 +314,9 @@ foreach ([__DIR__.'/../vendor/autoload.php', __DIR__.'/../../../autoload.php'] a
 exit((new Command(new Verifier))->run(array_slice($argv, 1), STDOUT, STDERR));
 ```
 
-`composer.json` gains `"bin": ["bin/c2pa-verify"]`. `deptrac.yaml` gains the
+`composer.json` gains `"bin": ["bin/c2pa-verify"]` (Composer links a
+package's `bin` into a *consumer's* `vendor/bin/`, never the package's own —
+in this repository the command is `bin/c2pa-verify`). `deptrac.yaml` gains the
 `Cli` layer (`src/Cli/.*`) with the ruleset `Cli: [Verifier, Trust,
 Support]`; no other layer names `Cli`. The argument parser is a loop over
 `$arguments` with four cases (`--help`, `--settings`/`--settings=`, `--`,
@@ -345,7 +347,14 @@ files could disagree and the command would have to pick one.
 
 ## Amendments
 
-(none yet)
+1. **2026-09-22, step 52b, found by AC11** — the Deptrac ruleset for `Cli`
+   names `Report` as well (`ValidationState`, for the exit status); the
+   API sketch had `Verifier`, `Trust`, `Support`. And AC11 found a fault
+   in the library, not in the command: `toJson()` threw `JsonException`
+   ("Malformed UTF-8") on the OpenAI file, because a `claim_generator_info`
+   that carries a byte string (the generator's icon, a hashed URI) was
+   rendered raw — fixed in SPEC-007 (amendment 5), where the rendering
+   lives; the command is unchanged. No criterion of this spec changed.
 
 ## Traceability
 
@@ -354,4 +363,17 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
+| AC1 | tests/Unit/Cli/CommandTest.php :: a valid file: the report on stdout, exit 0, stderr empty / SPEC-019 | src/Cli/Command.php (`run()` step 4) |
+| AC2 | tests/Unit/Cli/CommandTest.php :: a trusted file: --settings reaches the verifier, in both spellings and either order / SPEC-019 | src/Cli/Command.php (`run()` steps 1–2) |
+| AC3 | tests/Unit/Cli/CommandTest.php :: an invalid file: the report on stdout, exit 1 / SPEC-019 | src/Cli/Command.php (`run()` step 4: `ValidationState::Invalid` → 1) |
+| AC4 | tests/Unit/Cli/CommandTest.php :: no manifest: a report with has_manifest false, exit 1 / SPEC-019 | src/Cli/Command.php (`run()` step 4) |
+| AC5 | tests/Unit/Cli/CommandTest.php :: not an image: the verifier's report, exit 1 / SPEC-019 | src/Cli/Command.php (`run()` step 4) |
+| AC6 | tests/Unit/Cli/CommandTest.php :: a file that cannot be opened: no report, exit 2, PHP's reason on stderr / SPEC-019 | src/Cli/Command.php (`run()` step 3, `open()`, `reason()`) |
+| AC7 | tests/Unit/Cli/CommandTest.php :: settings that cannot be read: no report, exit 2 / SPEC-019 | src/Cli/Command.php (`run()` step 2, `read()`) |
+| AC8 | tests/Unit/Cli/CommandTest.php :: settings that are not trust settings: no report, exit 2, SPEC-014's message verbatim / SPEC-019 | src/Cli/Command.php (`run()` step 2, `TrustException`) |
+| AC9 | tests/Unit/Cli/CommandTest.php :: usage faults: exit 2 with the fault and the usage on stderr; --help: exit 0 with the usage on stdout / SPEC-019 | src/Cli/Command.php (`run()` step 1, `usage()`, `USAGE`) |
+| AC10 | tests/Unit/Cli/CommandTest.php :: bin/c2pa-verify is the command: exit 0, 1, 2 and the same bytes / SPEC-019 | bin/c2pa-verify; composer.json `bin` |
+| AC11 | tests/Unit/Cli/CommandTest.php :: every corpus file, with and without settings: stdout equals the API, the exit status follows the state, stderr empty / SPEC-019 | src/Cli/Command.php; src/Manifest/ManifestStore.php (`manifestArray()`, SPEC-007 amendment 5) |
+| AC12 | tests/Unit/Cli/CommandTest.php :: nothing but one JSON document on stdout, and no control byte in it / SPEC-019 | src/Cli/Command.php; src/Verifier/VerificationReport.php (`toJson()`) |
+
+Every file under `src/Cli/` maps to this spec; `bin/c2pa-verify` is its shim; `deptrac.yaml`'s `Cli` layer (→ Verifier, Trust, Report, Support) and `composer.json`'s `bin` entry are its configuration. Measured 2026-09-22: 12 red → 12 green, `composer check` exit 0, 314 tests.

@@ -3129,3 +3129,24 @@ README are where the disclosure lives.
   library, not c2patool's JSON, as its oracle — the report's equality with
   c2patool is SPEC-013's alarm.
 - Decided by Maurice: start 52a.
+
+## 2026-09-22 — Step 52b: the command line built; SPEC-019 implemented
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 52b".
+- Produced: `src/Cli/Command.php`, `bin/c2pa-verify`, `composer.json`
+  `bin`, the `Cli` layer in `deptrac.yaml`; SPEC-019 → `implemented`
+  (Traceability, amendment 1); `src/Manifest/ManifestStore.php`
+  (`claim_generator_info` through `plain()`), SPEC-007 amendment 5 and
+  its test; README "From the shell", `docs/comparison.md` (two rows),
+  `CHANGELOG.md`; the 52b half of `notes/step-52-command-line.md`, the
+  milestones and NOTES rows; this entry.
+- Measured: 12 SPEC-019 tests red → green; on the way AC11 found the
+  corpus count wrong (two names shared across corpora; keyed by path
+  now, 69 files) and then `VerificationReport::toJson()` throwing
+  `JsonException` on `writers/openai-20260826-c2pa_2x.png` — a
+  `CborBytes` at `claim_generator_info/0/icon/hash`, located with a
+  walk over `toArray()`; regression test seen red, then green.
+  `composer check` exit 0, 314 tests. Shell runs: Trusted → 0, Invalid →
+  1, missing file / missing settings → 2 with `Error: …`. Reasoned:
+  `is_dir()` as a guard before `fopen()`; settings read before the file.
+- Decided by Maurice: go ahead with 52b.

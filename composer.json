@@ -32,6 +32,9 @@
     "suggest": {
         "ext-sodium": "EdDSA (Ed25519) claim signatures: required on PHP 8.3, where ext-openssl cannot verify Ed25519; optional on PHP 8.4+ (SPEC-009 AC8, measured on CI 2026-09-21)"
     },
+    "bin": [
+        "bin/c2pa-verify"
+    ],
     "autoload": {
         "psr-4": {
             "Provemark\\C2paVerifier\\": "src/"

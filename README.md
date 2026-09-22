@@ -68,6 +68,20 @@ Everything the verifier says about a file comes from the file. Values
 in the report (labels, explanations, URLs) are untrusted text until you
 escape them.
 
+### From the shell
+
+```sh
+bin/c2pa-verify photo.jpg --settings trust.settings.json   # vendor/bin/c2pa-verify once installed
+```
+
+The same report as `toJson()`, on standard output; the verdict in the exit
+status — **0** `Trusted` or `Valid`, **1** `Invalid` (the report is still
+printed), **2** no report (a usage fault, a file that cannot be opened,
+settings that cannot be read or are not trust settings — one `Error: …`
+line on standard error). Two deliberate differences from `c2patool`: it
+exits 0 on an `Invalid` report, and it silently ignores a `--settings`
+file that does not exist; both are fail-open (SPEC-019).
+
 ## Design rules
 
 - **Read and verify only.** No signer, ever. No private key enters this

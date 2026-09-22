@@ -71,13 +71,15 @@ final readonly class ManifestStore
     {
         $claim = $manifest->claim;
         $out = [];
+        // rendered through plain() like every value: a generator's icon is a hashed URI whose
+        // hash is a byte string (OpenAI), and raw bytes would make toJson() throw (amendment 5)
         if ($claim->version === 1) {
             $out['claim_generator'] = $claim->claimGenerator;
             if ($claim->claimGeneratorInfo !== null) {
-                $out['claim_generator_info'] = $claim->claimGeneratorInfo;
+                $out['claim_generator_info'] = self::plain($claim->claimGeneratorInfo);
             }
         } else {
-            $out['claim_generator_info'] = $claim->claimGeneratorInfo;
+            $out['claim_generator_info'] = self::plain($claim->claimGeneratorInfo);
         }
         if ($claim->title !== null) {
             $out['title'] = $claim->title;

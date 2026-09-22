@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// SPEC-019: the shim. No logic of its own — the autoloader (the project's, or the
+// consumer's when installed under vendor/bin), the verifier, Command::run(), exit.
+foreach ([__DIR__.'/../vendor/autoload.php', __DIR__.'/../../../autoload.php'] as $autoload) {
+    if (is_file($autoload)) {
+        require $autoload;
+        break;
+    }
+}
+
+exit((new Provemark\C2paVerifier\Cli\Command(new Provemark\C2paVerifier\Verifier\Verifier))->run(array_slice($argv, 1), STDOUT, STDERR));

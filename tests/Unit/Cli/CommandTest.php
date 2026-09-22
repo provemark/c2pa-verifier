@@ -61,23 +61,22 @@ function spec019State(string $json): mixed
 }
 
 /**
- * Every file of the four corpora as fixture-relative paths, keyed by name.
+ * Every file of the four corpora as fixture-relative paths, keyed by that path: the own
+ * corpus names `public-testfiles/adobe-20220124-C.jpg` as well, and the c2pa-rs corpus
+ * carries its own copy of `adobe-20220124-E-clm-CAICAI` under the same name.
  *
- * @return array<string, string>
+ * @return array<string, string> relative path => corpus name
  */
 function spec019Corpora(): array
 {
     $files = [];
     foreach (SPEC013_CORPUS as $name => $relative) {
-        $files[(string) $name] = $relative;
+        $files[$relative] = (string) $name;
     }
-    foreach (SPEC013_PUBLIC_CORPUS as $name) {
-        $files[$name] = "public-testfiles/{$name}.jpg";
-    }
-    foreach ([['c2pa-rs', SPEC013_RS_CORPUS], ['writers', SPEC013_WRITERS_CORPUS]] as [$dir, $names]) {
+    foreach ([['public-testfiles', SPEC013_PUBLIC_CORPUS], ['c2pa-rs', SPEC013_RS_CORPUS], ['writers', SPEC013_WRITERS_CORPUS]] as [$dir, $names]) {
         foreach ($names as $name) {
             $path = glob(spec019Fixture("{$dir}/{$name}.*"))[0] ?? throw new RuntimeException("no file for {$name}");
-            $files[$name] = "{$dir}/".basename($path);
+            $files["{$dir}/".basename($path)] = $name;
         }
     }
 
@@ -279,10 +278,10 @@ test('bin/c2pa-verify is the command: exit 0, 1, 2 and the same bytes', function
 // AC11 — the drift alarm for the command
 test('every corpus file, with and without settings: stdout equals the API, the exit status follows the state, stderr empty', function (): void {
     $files = spec019Corpora();
-    expect(count($files))->toBe(count(SPEC013_CORPUS) + count(SPEC013_PUBLIC_CORPUS) + count(SPEC013_RS_CORPUS) + count(SPEC013_WRITERS_CORPUS));
+    expect(count($files))->toBe(22 + 24 + 17 + 7 - 1); // one path named twice (adobe-20220124-C)
 
     $seen = ['Trusted' => 0, 'Valid' => 0, 'Invalid' => 0];
-    foreach ($files as $name => $relative) {
+    foreach ($files as $relative => $name) {
         foreach ([null, SPEC019_SETTINGS] as $settings) {
             $expected = spec019Expected($relative, $settings);
             $arguments = $settings === null ? [spec019Fixture($relative)] : [spec019Fixture($relative), '--settings', spec019Fixture($settings)];

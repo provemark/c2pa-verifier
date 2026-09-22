@@ -8,6 +8,18 @@ public API is stable. Dates are the day the work was committed.
 
 ## Unreleased
 
+### The command line (2026-09-22)
+- SPEC-019: `bin/c2pa-verify <file> [--settings <path>]` — the report as
+  `toJson()` on standard output, `Error: …` on standard error, exit status
+  0 (`Trusted`/`Valid`), 1 (`Invalid`, report printed), 2 (no report).
+  Registered as a Composer `bin`. `c2patool`'s exit status was measured
+  first and departed from where it is fail-open (exit 0 on `Invalid`; a
+  missing settings file ignored).
+- Fixed: `toJson()` threw `JsonException` on a manifest whose
+  `claim_generator_info` carries a byte string (OpenAI's generator icon);
+  bytes now render as base64 like every other value (SPEC-007
+  amendment 5, found by SPEC-019's corpus criterion).
+
 ### M6 — RFC 3161 timestamps (2026-09-22)
 - SPEC-016: an own DER reader (`src/Asn1/`) and the timestamp token as data
   (`src/Timestamp/`) — `TimeStampResp`/`TimeStampToken`, `SignedData`,

@@ -22,6 +22,7 @@ and never the other way round.
 | `c2pa.hash.data.part`, `c2pa.hash.multi-asset` (a second asset's hashes, e.g. Ultra HDR) | not validated either | not read | — |
 | Unknown critical X.509 extensions on the signer | refused | not seen (`openssl_x509_parse` does not flag them) — the one place this verifier is *more lenient* by omission, no corpus file shows it | an amendment with the DER reader |
 | JSON report | assertions rendered, thumbnails, ingredient tree | `c2patool`'s five keys, `format`, `has_manifest`, `remote_manifest`, `checks_performed`; assertions decoded but not rendered | — |
+| Command line | `c2patool <file>` with `--detailed`, `--info`, signing, trust sub-commands, fragments | `bin/c2pa-verify <file> [--settings <path>]`: the JSON report, nothing else (SPEC-019) | — |
 
 ## Where the verdicts are equal (measured, code for code)
 
@@ -48,6 +49,7 @@ own variant, the state and the failure codes with their URLs are
 | A parse fault stops this verifier where `c2patool` goes on (`json-broken`) | a report, not a guess | `SPEC013_SUBSET_ONLY` |
 | Some faults `c2patool` reports with a hard exit (no JSON) are a report here: `claim missing hard binding`, `No Action array in Actions`, undecodable assertions | the caller gets a verdict and a reason either way | SPEC-012, SPEC-018 |
 | `assertion.action.malformed` on the manifest carries the bare manifest label as its url — `c2patool`'s inconsistency, copied so that code and url compare | drift-alarm equality | SPEC-018 amendment 2 |
+| The command's exit status carries the verdict (0 `Trusted`/`Valid`, 1 `Invalid`, 2 no report); `c2patool` exits 0 on an `Invalid` report and 1 only when it prints no JSON. A `--settings` file that cannot be read is a refusal (exit 2); `c2patool` ignores it and reports without trust | fail closed: `c2pa-verify "$f" && publish "$f"` must not publish a tampered file, and a mistyped settings path must not turn `Trusted` into an unexamined `Valid` | SPEC-019 (exit status measured 2026-09-22) |
 
 ## Same verdict, different informational code
 

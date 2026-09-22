@@ -56,3 +56,81 @@ command can never say something the library does not.
 - AC11 does not consult c2patool's JSON: the report's equality with
   c2patool is SPEC-013's drift alarm, and repeating it here would make two
   tests fail for one cause.
+
+## 52b — the implementation
+
+*2026-09-22, same day.*
+
+- `src/Cli/Command.php` — `run(array $arguments, $stdout, $stderr): int` in
+  four steps: the argument loop (four cases: `--help`, `--`,
+  `--settings`/`--settings=`, anything else; a repeated `--settings`, a
+  second path, an unknown option or a dangling `--settings` is a usage
+  fault), the settings *before* the file (the caller asked for trust and
+  gets it or a refusal), the file as a stream (`is_dir()` first, then
+  `fopen()` under a temporary error handler that keeps PHP's reason —
+  "No such file or directory" — for the `Error:` line; no `@`), the
+  report and the exit status (`ValidationState::Invalid` → 1, else 0).
+  Standard output is written once, `toJson()."\n"`.
+- `bin/c2pa-verify` — the shim: the autoloader (the project's, or the
+  consumer's three levels up when installed under `vendor/bin`), `new
+  Command(new Verifier)`, `run(array_slice($argv, 1), STDOUT, STDERR)`,
+  `exit`. `composer.json` `bin`. Note: Composer links a package's `bin`
+  into a *consumer's* `vendor/bin/`, not into the package's own — in this
+  repository the command is `bin/c2pa-verify`.
+- `deptrac.yaml` — the `Cli` layer → Verifier, Trust, Report, Support
+  (`Report` for `ValidationState`, an addition to the API sketch; SPEC-019
+  amendment 1). Nothing depends on `Cli`.
+
+### Measured
+
+- `vendor/bin/pest --group=SPEC-019`: first run **11 passed, 1 failed** —
+  AC11 counted 68 files against 70 names: `adobe-20220124-C` is both an
+  own-corpus name and an official file (one path), and
+  `adobe-20220124-E-clm-CAICAI` is an official file *and* a c2pa-rs
+  fixture (two paths, same name). The corpora are now keyed by path, 69
+  files, both copies tested.
+- Second run: AC11 threw **`JsonException`: Malformed UTF-8 characters**
+  out of `VerificationReport::toJson()` on
+  `writers/openai-20260826-c2pa_2x.png`, with and without settings. The
+  cause, walked with a script over `toArray()`: a `Cbor\CborBytes` object
+  at `manifests/<label>/claim_generator_info/0/icon/hash` — OpenAI's
+  generator entry carries an `icon` that is a hashed URI (`url`, 32-byte
+  `hash`), and `ManifestStore::manifestArray()` passed
+  `claim_generator_info` through as decoded while every other value goes
+  through `plain()` (bytes → base64). **An exception escaping the public
+  API on a real writer's file**, unseen for four days because the writers
+  drift alarm compares states and codes, not the rendering. Fixed in
+  `ManifestStore` (SPEC-007 amendment 5) with a regression test in the
+  SPEC-007 file, seen red first ("Failed asserting that CborBytes Object
+  …"). Not a verdict fault — the state was `Valid` before and after — but
+  a library that throws on `toJson()` is one a CLI cannot be built on.
+- One test-writing gotcha on the way: Pest's `toHaveLength()` counts
+  UTF-8 *characters* on a string (`mb_strlen`), so a 32-byte binary hash
+  "has length 31"; `strlen()` and `toBe(32)` instead.
+- `composer check`: exit 0 — spec-check OK, Pint passed, PHPStan 0
+  errors, Deptrac 0 violations, **314 passed** (301 + 12 + 1).
+- From the shell: `bin/c2pa-verify fixture-signed.png --settings
+  full.settings.json` → `"validation_state": "Trusted"`, exit 0;
+  `pixel-changed.png` → exit 1; `/nope.png` → `Error: cannot open
+  /nope.png: No such file or directory`, exit 2; `--settings /nope.json`
+  → `Error: cannot read settings /nope.json: No such file or directory`,
+  exit 2; `--help` → the usage, exit 0; no arguments → `Error: no file
+  given` plus the usage, exit 2; `exp-test1.png` (5.6 MB) in 0.08 s.
+
+### Reasoned
+
+- `is_dir()` before `fopen()`: measured in 52a that `fopen()` on a
+  directory succeeds; the check is a guard, not a policy — a FIFO or a
+  device would open and be read like any stream, and the verifier's own
+  bounds apply.
+- The settings are read before the file is opened so that a usage-level
+  fault (a bad settings file) never leaves a stream open, and so that the
+  order of the two errors is fixed whatever the argument order.
+
+## Where this leaves the project
+
+SPEC-019 `implemented`. The CLI makes every later measurement (M7's
+ingredient files, a reader's own file) one command; the JSON-rendering
+hole it found is the first fault of that kind in the writers corpus and
+argues for a rendering drift alarm — `toJson()` on every corpus file —
+which AC11 now is, for as long as the command exists.

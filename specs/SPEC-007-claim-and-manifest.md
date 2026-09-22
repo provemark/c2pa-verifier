@@ -399,6 +399,19 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
    No criterion of this spec changed; every message is as it was.
 4. **2026-09-21, step 39, found by c2pa-rs's `ocsp.jpg`** *(confirmed by Maurice van Loon, 2026-09-22)* — a `claim_generator_info` whose value is CBOR `null` is treated as absent (c2pa-rs writes `null` in some v1 claims and reads it as none); before, `Claim::fromMap()` refused it as "not a non-empty list of maps". A v2 claim still requires the field (AC9). Test: ManifestStoreTest "AC5 (amendment 4)". No other criterion changed.
 
+5. **2026-09-22, step 52b, found by SPEC-019 AC11 on the OpenAI file** —
+   `claim_generator_info` is rendered through `ManifestStore::plain()` like
+   every other value (bytes as base64, tags as their content). It was
+   passed through as decoded, and OpenAI's generator entry carries an
+   `icon` that is a hashed URI with a 32-byte hash, so `toJson()` threw
+   `JsonException` ("Malformed UTF-8 characters") — an exception escaping
+   the public API on a real writer's file, unseen because the writers
+   drift alarm compares states and codes, not the rendering. No criterion
+   of this spec changed; test "amendment 5: claim_generator_info with a
+   byte string renders as JSON, the bytes as base64". (c2patool renders
+   that icon as `{format, identifier}`; the rendering of assertion and
+   generator *content* is not measured against c2patool — `docs/comparison.md`.)
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
