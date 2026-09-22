@@ -3293,3 +3293,25 @@ README are where the disclosure lives.
   manifests validated, what the ingredient assertion recorded dropped
   with the active-manifest guard, redactions refused until a fixture,
   SPEC-013 amendment 5 lifted.
+
+## 2026-09-22 — Step 56a: the SPEC-021 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 56a".
+- Produced: `bin/make-ingredient-manifest-variants.php`,
+  `tests/Fixtures/ingredient-manifest/` (3 variants + throw-away root +
+  settings + README), `tests/Fixtures/c2patool/ingredient-manifest/`
+  (3 JSON + README), `tests/Unit/Verifier/IngredientManifestCheckTest.php`
+  (9 tests), `notes/step-56-ingredient-validation.md`, the milestones and
+  NOTES rows; this entry.
+- Measured: c2patool on the three variants (the broken ingredient
+  signature is reported *next to* `ingredient.manifest.validated`; the
+  recorded `ingredient.unknownProvenance` naming the active manifest is
+  not dropped; the redacting claim is `assertion.selfRedacted`);
+  `pest --group=SPEC-021` 7 failed, 2 passed — the two were already true
+  (the redaction refusal lives in `HashedUriCheck` since SPEC-011, and
+  the data hash runs on the active manifest only). The JPEG rebuild was
+  wrong at first (the 4-byte packet sequence number skipped) and produced
+  a file c2patool read as "No claim found"; a byte-exact round-trip
+  assertion now guards it. Reasoned: the hash-mismatch case through the
+  seam (no writer ships one), AC5 tested at the seam and on the file.
+- Decided by Maurice: start 56a.
