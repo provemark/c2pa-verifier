@@ -2994,3 +2994,15 @@ README are where the disclosure lives.
   bare-label url for the drift alarms' sake.
 - Decided by Maurice: go on with 49b.
 
+
+## 2026-09-22 — CI green on steps 48–49
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: pushed `9dd90e2..cebd8b9` (six commits); this entry.
+- Measured: before the push, 0 attribution lines, no tracked `*.key`, no
+  PEM private-key header under the fixtures, visibility `PRIVATE`, tree
+  clean, Deptrac 0 violations. Run `35711271938` on `cebd8b9`:
+  conclusion `success`; `composer check` on PHP 8.3 / 8.4 / 8.5 each
+  `success` with `Tests: 301 passed` (3616 assertions on 8.3, 3618 on
+  8.4/8.5); `all green` `success`.
+- Decided by Maurice: push.
