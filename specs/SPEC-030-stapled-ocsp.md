@@ -131,34 +131,46 @@ be an error / malformed-input path. Unknown input is an error, never an
 assumption: this project fails closed.
 
 - **AC1 — a stapled `good` response is read and reported** *(happy path)*
+  *(amended 2026-09-22, see Amendments 1)*
   - Given `tests/Fixtures/c2pa-rs/ocsp.jpg`, whose signature carries one
-    2264-byte OCSP response for its own signing certificate
+    2264-byte OCSP response for its own signing certificate, **and
+    `tests/Fixtures/trust/full-plus-digicert-g4.settings.json`** — the
+    anchor that makes this file's Adobe timestamp trusted, so the judged
+    time is the attested 2025-08-13 and the response is fresh at it
   - When it is verified
   - Then `signingCredential.ocsp.notRevoked` is among the statuses, with an
-    explanation naming the responder and `producedAt`, **and the
-    `validation_state` is exactly what it was before this spec** — `Valid`
-    without trust settings, as `tests/Fixtures/c2patool/c2pa-rs/ocsp.json`
-    records. A stapled `good` changes no verdict.
+    explanation naming the responder, `producedAt`, and the fact that the
+    header carrying it is unsigned, **and the `validation_state` is exactly
+    what it was before this spec** — `Valid`. A stapled `good` changes no
+    verdict.
 
 - **AC2 — a response whose signature does not verify is skipped, not
   believed and not fatal** *(required: error / malformed input)*
-  - Given that file with one byte of the OCSP response's signature flipped
-    — the header is unprotected, so this is what an attacker can do
+  *(amended 2026-09-22, see Amendments 1)*
+  - Given that file with **one byte inside the stapled response** flipped —
+    the header is unprotected, so this is what an attacker can do, and
+    which byte hardly matters: a flip in `tbsResponseData` breaks the
+    message and a flip in `signature` breaks the signature
   - When it is verified
   - Then `signingCredential.ocsp.skipped` names the failure, no
     `notRevoked` is recorded, and the file's `validation_state` is
     unchanged from AC1. Editing an unsigned header must not be able to
     fail a valid asset.
 
-- **AC3 — a verified `revoked` response fails the file**
-  - Given a fixture whose stapled response says `revoked` with a
-    revocation reason other than `removeFromCRL` and a `revocationTime`
-    at or before the judged time, signed by a responder that chains to
-    the signer's issuer
-  - When it is verified
-  - Then `signingCredential.ocsp.revoked` is a **failure**, the state is
-    `Invalid`, and the explanation names the serial number, the
-    revocation time and the reason.
+- **AC3 — a verified `revoked` response is a failure**
+  *(amended 2026-09-22, see Amendments 1)*
+  - Given `tests/Fixtures/ocsp/revoked.der` and the chain it was issued
+    under (`ca.crt`, `signer.crt`, **public certificates only**) — a
+    response saying `revoked` with a reason other than `removeFromCRL` and
+    a `revocationTime` at or before the judged time, signed by the issuer
+  - When the check is asked about that chain **at its seam**, rather than
+    through a whole asset
+  - Then `signingCredential.ocsp.revoked` is a **failure** whose
+    `isFailure()` makes a report `Invalid`, and the explanation names the
+    serial number, the revocation time and the reason.
+  - And given the same response offered for the chain of `ocsp.jpg`, it is
+    `signingCredential.ocsp.skipped` (AC4's rule), which is what proves the
+    two fixtures are not accidentally interchangeable.
 
 - **AC4 — a response for another certificate is not applied**
   - Given a response whose `CertID` matches a different serial number or a
@@ -174,12 +186,16 @@ assumption: this project fails closed.
   - Then exactly one `signingCredential.ocsp.skipped` is recorded, and
     `checksPerformed` contains `revocation`. What was not done is visible.
 
-- **AC6 — a stale response is not evidence**
-  - Given a response whose `nextUpdate` lies before the judged time — as
-    `ocsp.jpg`'s does today, 2025-08-18 against now
+- **AC6 — a stale `good` is not evidence**
+  *(amended 2026-09-22, see Amendments 1)*
+  - Given the same `ocsp.jpg` **without trust settings**, so that no
+    timestamp is trusted, the judged time is *now*, and the response's
+    `nextUpdate` of 2025-08-18 lies behind it
   - When it is verified
-  - Then it is `signingCredential.ocsp.skipped` naming both dates, unless
-    Open question 1 is decided the other way.
+  - Then it is `signingCredential.ocsp.skipped` naming both dates, and no
+    `notRevoked` is recorded. The same file, asked at two different
+    moments, is AC1 and AC6: which one it gives depends on the anchor, not
+    on the bytes.
 
 - **AC7 — malformed input is skipped by name, never an exception**
   - Given, each in turn: `rVals` that is not a map; `ocspVals` that is not
@@ -290,6 +306,54 @@ final readonly class OcspResponse
 classes, so the recorded public surface grows by four lines and SPEC-025
 needs an amendment with this spec — the same shape as when
 `FragmentedVerifier` joined in step 83.
+
+## Amendments
+
+1. **2026-09-22, step 92a, before a test was written** — AC1 said the file
+   would be verified "without trust settings" and that its state would be
+   `Valid`. Measured, both halves are wrong, and for two different reasons
+   that meet in the same place.
+
+   Without an anchor for the Adobe TSA this verifier cannot trust the
+   timestamp, so it judges at *now*: `ocsp.jpg` is then `Invalid` with
+   `signingCredential.expired`, where c2patool says `Valid` because it
+   falls back to the operating system's trust store. That is the same
+   divergence step 87b measured on `video1.mp4`, on a second file now, and
+   it is design rather than fault — this verifier's trust comes from the
+   settings file and from nowhere else.
+
+   And the judged time is exactly what decides this spec's own question.
+   At *now*, the stapled response (`thisUpdate` 2025-08-11, `nextUpdate`
+   2025-08-18) is stale, so Open question 1's resolution gives `skipped` —
+   the opposite of what AC1 asked for. Under
+   `full-plus-digicert-g4.settings.json` the timestamp is trusted, the
+   judged time is the attested **2025-08-13**, and the response is fresh at
+   it. AC1 now names that settings file; AC6 keeps the same fixture with no
+   settings at all and asserts the other half. **The same file, asked at
+   two different moments, is both criteria.**
+
+   AC2's wording moved from "one byte of the response's signature" to "one
+   byte inside the response", because which byte is flipped changes nothing
+   about the outcome and pinning it would have required the parser this
+   step may not write yet.
+
+   AC3 changed shape, and this one costs something. It was written as a
+   whole asset carrying a `revoked` response; building that would mean
+   encoding a COSE unprotected header, which this verifier has no writer
+   for — it decodes CBOR and never emits it. AC3 is therefore measured **at
+   the check's seam**, against a DER response and the public certificates
+   it was issued under. **What is lost is end-to-end coverage of the
+   revoked path**: AC1, AC2, AC5 and AC6 prove the wiring from a file to
+   the check, and AC3 proves the rule, but no test in this repository
+   drives a whole asset to `Invalid` through revocation. That is stated
+   here so it is a known limit rather than an assumption, and it is the
+   reason AC3 also asserts `isFailure()` on the code itself.
+
+   **Weight C: no rule of this specification changed** — not the
+   asymmetry, not the codes, not the judged time. What changed is which
+   fixture and which settings each criterion names.
+
+   Confirmed by Maurice van Loon: pending.
 
 ## Open questions
 

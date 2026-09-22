@@ -5080,3 +5080,27 @@ README are where the disclosure lives.
 - Decided by Maurice: approval. Open for him: correcting any of those four
   resolutions before 92a begins; the version of a first tag; the
   visibility change; the announcement.
+
+## 2026-09-22 — Step 92a, the SPEC-030 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 92a".
+- Produced: `tests/Unit/Trust/OcspCheckTest.php` (ten criteria),
+  `bin/make-ocsp-variants.php` and the seven files it writes under
+  `tests/Fixtures/ocsp/`, SPEC-030 amendment 1 (AC1, AC2, AC3, AC6),
+  `notes/step-92-ocsp-tests.md`, `NOTES.md`, `docs/milestones.md`.
+- Measured: `ocsp.jpg` without settings is `Invalid` — `timeStamp.
+  untrusted`, `signingCredential.expired` — and `Valid` under
+  `full-plus-digicert-g4.settings.json`, where the timestamp is trusted
+  and attests 2025-08-13. The stapled response runs 2025-08-11 to
+  2025-08-18, so it is fresh at that attested time and stale at now. The
+  twelve baseline verdicts of AC9 were measured before any code. Pest: 9
+  failed, 412 passed; Pint and `bin/spec-check.php` (31 specs, 36 test
+  files) clean.
+- Reasoned: that the same file being both AC1 and AC6 is a better pair of
+  criteria than the spec originally asked for; that AC3 at the seam is
+  worth its cost because this verifier has no CBOR writer and building a
+  whole asset would need one — with the loss (no end-to-end revoked path,
+  and no second implementation to check against) written into the note in
+  those words rather than left as an assumption.
+- Decided by Maurice: none this step. Open for him: amendment 1, pending
+  confirmation.
