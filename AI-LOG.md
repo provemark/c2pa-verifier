@@ -4703,3 +4703,31 @@ README are where the disclosure lives.
   tests first — and the red phase owes one measurement before AC4 can be
   asserted: what c2patool says about a fragment of one stream offered
   inside another.
+
+## 2026-09-22 — Step 83a, the SPEC-028 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 83a".
+- Produced: `tests/Unit/Verifier/FragmentedVerifierTest.php` (7 tests,
+  group SPEC-028), `bin/make-fragmented-variants.php` with two broken
+  streams, `tests/Fixtures/bmff-fragmented/foreign-seg_3.m4s`, four
+  recorded c2patool answers under
+  `tests/Fixtures/c2patool/bmff-fragmented/`, two fixture READMEs,
+  `notes/step-83-fragmented-tests.md`, `NOTES.md`, `docs/milestones.md`.
+- Measured: c2patool 0.27.22 on the whole five-fragment stream with the
+  test trust settings is `Trusted` with no failures. On a changed init,
+  a changed fragment and a foreign fragment it answers
+  `assertion.bmffHash.mismatch` — in **text rather than JSON** ("Error
+  validating segments: … / 0 Init manifests validated"), with **the same
+  code for all three and no indication of which file failed**. Pest 6
+  failed / 398 passed; Pint and `bin/spec-check.php` (29 specs, 34 test
+  files) clean.
+- Reasoned: that our AC2, AC3 and AC4 each requiring the failing file to
+  be named makes this verifier more specific than its oracle, which
+  belongs in `docs/comparison.md` when the spec is implemented. And that
+  AC5 is the first criterion here whose input is the shape of the call
+  rather than the content of a file — a withheld or repeated fragment is
+  a different set, not a broken file, which is what taking an iterable
+  buys.
+- Decided by Maurice: approval of SPEC-028 and the `FragmentedVerifier`
+  shape. Open for him: nothing new; 83b implements, and the contract
+  snapshot grows from nine classes to ten by design.
