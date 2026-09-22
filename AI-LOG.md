@@ -3215,3 +3215,10 @@ README are where the disclosure lives.
   (three specs, attested failures copied with the guard, redactions
   refused until a fixture, legacy hash accepted, bounds) taken as
   agreed by "akkoord".
+
+## 2026-09-22 — SPEC-020 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: SPEC-020 status `approved`, the milestones row; this entry.
+- Measured: `bin/spec-check.php` OK. Reasoned: nothing.
+- Decided by Maurice: SPEC-020 approved as drafted.
