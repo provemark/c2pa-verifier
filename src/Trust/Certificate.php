@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Trust;
 
+use Provemark\C2paVerifier\Support\Bytes;
+
 /**
  * One X.509 certificate, DER, with what the chain walk (SPEC-014) and the
  * profile check (SPEC-015) need — everything as OpenSSL reports it through
@@ -253,28 +255,10 @@ final readonly class Certificate
         return array_map(static fn (string $name): string => self::EKU_NAMES[$name] ?? $name, self::names($list));
     }
 
-    /** Base 16 → base 10 on strings: no gmp, no bcmath, and a serial may be 20 bytes. */
+    /** Base 16 → base 10 on strings (SPEC-015); the routine lives in Support\Bytes since SPEC-016 shares it. */
     public static function hexToDecimal(string $hex): string
     {
-        $hex = ltrim(strtolower($hex), '0');
-        if ($hex === '') {
-            return '0';
-        }
-        $digits = [0];   // little-endian base-10 digits
-        foreach (str_split($hex) as $char) {
-            $carry = (int) hexdec($char);
-            foreach ($digits as $i => $d) {
-                $value = $d * 16 + $carry;
-                $digits[$i] = $value % 10;
-                $carry = intdiv($value, 10);
-            }
-            while ($carry > 0) {
-                $digits[] = $carry % 10;
-                $carry = intdiv($carry, 10);
-            }
-        }
-
-        return implode('', array_reverse($digits));
+        return Bytes::hexToDecimal($hex);
     }
 
     private static function opensslError(): string

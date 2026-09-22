@@ -2607,3 +2607,27 @@ README are where the disclosure lives.
   memory ran out). Reasoned: nothing beyond the spec.
 - Decided by Maurice: start 41a.
 
+## 2026-09-22 — Step 41b: the DER reader and the timestamp token, green
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 41b".
+- Produced: `src/Asn1/{TagClass,Der,DerReader,Asn1Exception}.php`,
+  `src/Timestamp/{TimestampHeader,TimeStampToken,SignedData,SignerInfo,
+  TstInfo,TstAccuracy,TimestampException}.php`; `Support\Bytes::hexToDecimal`
+  and `printableText` (the first moved from `Trust\Certificate`, which
+  delegates); the two test files retagged per test (no `describe()`),
+  `$this->fail()` removed, six literals corrected; SPEC-016 amendment 2,
+  status `implemented`, Traceability filled; the 41b section of
+  `notes/step-41-timestamp-tests.md`; rows in `NOTES.md` and
+  `docs/milestones.md`; this entry.
+- Measured: the first run with the classes in place — DerReader 25/27
+  (the OID vector's own length byte), token tests 30/37 (Truepic's
+  certificate order, `ocsp*.jpg` with two certificates, three literals,
+  the `[3]` patch); `openssl pkcs7 -print_certs` on the Truepic and
+  `ocsp.jpg` tokens (root first; "Adobe SHA256 ECC256 Timestamp
+  Responder 2025 1"); after the fixes `composer check` green: 17 specs,
+  Pint passed, PHPStan 0 errors, Deptrac 0 violations, `Tests: 270
+  passed (2889 assertions)`. Reasoned: the `subjectKeyIdentifier` sid
+  path (no corpus token uses it); the first-two-arcs OID rule and the
+  DER minimal-length rules from X.690.
+- Decided by Maurice: go on with 41b.
+

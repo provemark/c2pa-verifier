@@ -1,8 +1,8 @@
-# SPEC-016: The DER reader, and the timestamp token as data — `TimeStampResp`, `SignedData`, `SignerInfo`, `TSTInfo`
+    # SPEC-016: The DER reader, and the timestamp token as data — `TimeStampResp`, `SignedData`, `SignerInfo`, `TSTInfo`
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -502,6 +502,7 @@ final class TimestampException extends \RuntimeException {}
 ## Amendments
 
 1. **2026-09-22, step 41a, measured before the tests** — three literals corrected by the measurement: AC10 counts **38** timestamped files (35 `sigTst` and 2 `sigTst2` JPEGs plus `c2pa-rs/exp-test1.png`, the one PNG with a header), 37 parse; the bounds pinned in AC10 are `maxDepth` 20 and `maxElements` 512 (`openssl asn1parse` shows d=18 — nineteen levels — and 311 elements at most, on the Truepic tokens), not "below 16 / 2 048"; AC4's Truepic token carries `signingCertificateV2` next to `CMSAlgorithmProtection` (the test lists `[1.2.840.113549.1.9.52, …16.2.47]`). No file carries both headers (AC8's rule is measured, not assumed).
+2. **2026-09-22, step 41b, found by the first green run** — the signer is not "the first certificate": DigiCert's tokens put the signer first, Truepic's put its root first and the signer last (AC4 and AC5 failed on Truepic with `RootCA` and `openssl_verify` 0). `SignedData::signerCertificate()` now returns the certificate the `sid` names — by issuer Name DER and serial, or by subjectKeyIdentifier (read from the certificate's own extensions; no corpus token uses that choice, so it is reasoned, not measured) — and AC4, AC5 and AC10 use it. AC10's "three certificates" is "two or three, the signer among them": the two `ocsp*.jpg` tokens carry two (an ECDSA TSA, "Adobe SHA256 ECC256 Timestamp Responder 2025 1", under the 2025 DigiCert CA — the first ECDSA timestamp signature for SPEC-017). Five literals in the tests were mine, not the oracle's, and were corrected against the measurement: the OID vector's length byte (`06 09`, not `06 0a`); the `TimeStampResp` head (`…3003020100`, 9 bytes = 18 hex digits); the leaf CN `DigiCert Timestamp 2022 - 2`; `genTime` at offset **86** of `CA_ct.jpg`'s TSTInfo; and the AC7 extension patch, which first used `[3]` with an EXPLICIT wrapper where RFC 3161 says `extensions [1] IMPLICIT Extensions` (the reader refuses both — the `[3]` as an unexpected field, the `[1]` for its critical extension — but the test must break what it claims to break).
 
 ## Traceability
 
@@ -510,13 +511,13 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1 | | |
-| AC2 | | |
-| AC3 | | |
-| AC4 | | |
-| AC5 | | |
-| AC6 | | |
-| AC7 | | |
-| AC8 | | |
-| AC9 | | |
-| AC10 | | |
+| AC1 | tests/Unit/Asn1/DerReaderTest.php :: SPEC-016 AC1: the ten tags decode, and the values are X.690's — * (8 tests) / SPEC-016 | src/Asn1/DerReader.php :: read(), readAt(), element(); src/Asn1/Der.php :: integer(), integerBytes(), oid(), octets(), boolean(), null(), time(), sequence(), set(), tagged(), child(), encoded(), length(); src/Asn1/TagClass.php; src/Support/Bytes.php :: hexToDecimal() (moved from Trust\Certificate) |
+| AC2 | tests/Unit/Asn1/DerReaderTest.php :: SPEC-016 AC2: malformed DER is refused with the offset, never read past — * (16 vectors + depth, elements, maxBytes) / SPEC-016 | src/Asn1/DerReader.php :: element() (lengths, tags, limits); src/Asn1/Der.php :: the accessors' refusals; src/Asn1/Asn1Exception.php |
+| AC3 | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC3: the five tokens' TSTInfo, field by field as openssl ts prints it — * (5) / SPEC-016 | src/Timestamp/TstInfo.php :: fromDer(), read(), accuracy(); src/Timestamp/TstAccuracy.php; src/Timestamp/TimeStampToken.php :: fromHeaderValue() ($responseStatus) |
+| AC4 | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC4: the SignedData and the one SignerInfo — * (5) / SPEC-016 | src/Timestamp/SignedData.php :: fromDer(), signerCertificate(), identity(); src/Timestamp/SignerInfo.php :: fromDer(), single() |
+| AC5 | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC5: the cut is right — the re-tagged signed attributes verify — * (5) / SPEC-016 | src/Timestamp/SignerInfo.php :: signedAttributesForVerification(), $signature; src/Timestamp/SignedData.php :: signerCertificate() |
+| AC6 | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC6: both wrappers, either header — * (3) / SPEC-016 | src/Timestamp/TimeStampToken.php :: fromHeaderValue(), status(), STATUS_NAMES |
+| AC7 | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC7: the token's own rules are enforced, one refusal each — * (12) / SPEC-016 | src/Timestamp/SignedData.php :: fromDer() (eContentType, certificates choice, exactly one SignerInfo); src/Timestamp/SignerInfo.php :: fromDer() (signedAttrs, messageDigest, contentType); src/Timestamp/TstInfo.php :: read(), extensions() (version, imprint length, critical) |
+| AC8 | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC8: bounded — a token is at most maxBytes, a header at most maxTokens — * (5) / SPEC-016 | src/Timestamp/TimestampHeader.php :: fromUnprotected(); src/Asn1/DerReader.php :: readAt() (maxBytes); src/Timestamp/TimestampException.php |
+| AC9 | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC9: CA_ct.jpg is the corpus's malformed token, and the message says why — genTime 20240806216337Z: minute 63 at offset 86 of the TSTInfo / SPEC-016 | src/Asn1/Der.php :: time(); src/Timestamp/TstInfo.php :: read() (the genTime wrap) |
+| AC10 | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC10: every corpus token parses, and none takes the reader past its bounds — 38 timestamped files, 37 parse; … / SPEC-016 | src/Timestamp/TimestampHeader.php, src/Timestamp/TimeStampToken.php, src/Asn1/DerReader.php (the bounds) |
