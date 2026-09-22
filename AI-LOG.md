@@ -3533,3 +3533,13 @@ README are where the disclosure lives.
   SPEC-015 (M5) and no fixture could see it, because no file carried an
   Ed25519 signature until step 59.
 - Decided by Maurice: none.
+
+## 2026-09-22 — CI green again on step 59
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: (the fix above).
+- Produced: pushed `6ad9e55..c79ba64`; this entry.
+- Measured: run `35730903562` on `c79ba64`: conclusion `success`;
+  `composer check` on PHP 8.3 / 8.4 / 8.5 each `success`, 349 passed —
+  the first run where PHP 8.3 agrees with the other two on every
+  Ed25519 file. Reasoned: nothing.
+- Decided by Maurice: none.
