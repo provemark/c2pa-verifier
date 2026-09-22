@@ -3264,3 +3264,22 @@ README are where the disclosure lives.
   recorded — SPEC-021's subject). Reasoned: the walk as a private static
   method rather than a closure (PHPStan ignores docblocks on closures).
 - Decided by Maurice: go ahead with 54b.
+
+## 2026-09-22 — Step 55 and SPEC-021 drafted: validating the ingredient manifests
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "doe eerst validatie van de gevonden manifests".
+- Produced: `notes/step-55-ingredient-validation-measured.md`,
+  `specs/SPEC-021-ingredient-validation.md` (draft, AC1–AC10), the
+  milestones and NOTES rows; this entry. No code.
+- Measured: two scratch scripts over the seventeen readable
+  multi-manifest files — six references hash the manifest box payload,
+  eleven the claim's CBOR (legacy; c2patool stays silent there); this
+  verifier's existing checks on every referenced manifest, then the
+  dropping of what the ingredient assertion recorded, give c2patool's
+  delta failure codes on 14 of 17 and its `validation_state` on 16 of 18
+  (the two: `signingCredential.expired` from the named TSA leniency);
+  the delta contents of four oracles read code by code; `openssl verify`
+  on the cawg chain, which showed an apparent leniency to be a settings
+  artefact (the writers oracles were recorded without settings).
+- Decided by Maurice: validate the found manifests before pushing —
+  SPEC-021 first, the push after.
