@@ -4166,3 +4166,16 @@ README are where the disclosure lives.
 - Decided by Maurice: to run the suite. Open for him: mapping the 101
   applicable predicates against what this verifier checks, and the stale
   redaction message with the question it raises.
+
+## 2026-09-22 — CI on step 71
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar" — push the conformance-suite step.
+- Produced: pushed `03d6607` to `origin/main`.
+- Measured: the pre-push checks — attribution 0, private-key patterns 0,
+  repository PRIVATE, tree clean. CI run 35753874479: success on PHP 8.3,
+  8.4 and 8.5, 381 passed. Reasoned: nothing; the step changed no code.
+- Decided by Maurice: push. Open for him: mapping the 101 applicable
+  predicates against this verifier's checks, the stale redaction message
+  and the question it raises about `ManifestGraph::$redactedAssertions`,
+  confirmation of SPEC-025 amendment 1, the version number of a first
+  tag, and the visibility change.
