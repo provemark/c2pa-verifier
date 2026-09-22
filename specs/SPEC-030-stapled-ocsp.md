@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | — while draft                                     |
+| Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -293,45 +293,51 @@ needs an amendment with this spec — the same shape as when
 
 ## Open questions
 
-1. **What a stale response means** *(non-blocking, but it decides AC6)*.
-   `ocsp.jpg`'s response expired on 2025-08-18. RFC 5019 §3.2 requires the
-   judged time to fall within `thisUpdate`…`nextUpdate`, and the
-   specification's answer to a stale response is the online fallback
-   (`PRED-STRU-013`) that this verifier will never make. Two readings:
-   (a) stale is unusable, so `skipped` — the draft's choice, and the one
-   that never overstates what is known; (b) stale still carries a `revoked`
-   answer worth acting on, since a revocation does not expire. A third
-   possibility is (a) for `good` and (b) for `revoked`, which is
-   asymmetric in exactly the direction this spec is asymmetric everywhere
-   else. **Recommendation: (c).**
+All three were answered on approval (Maurice van Loon, 2026-09-22) by
+taking the draft's recommendations. They are kept here with their
+resolutions rather than deleted, because the reasoning is what the next
+reader needs.
 
-2. **The fixture for AC3** *(blocking for AC3 only)*. No public file
-   carries a `revoked` stapled response, and no oracle here answers one.
-   Building the fixture means generating a small CA, a signer, and an OCSP
-   response saying `revoked` — with `openssl ocsp -index`. The project's
-   rule is absolute: **keys never enter the repository, not even test
-   keys**; a `bin/make-ocsp-variants.php` may sign with throw-away keys it
-   deletes before it ends, as `bin/make-*-variants.php` already do. What
-   the fixture cannot have is a second implementation's verdict to check
-   against, so AC3 would be measured against `openssl ocsp` and the
-   specification text alone. Is that enough, or should AC3 wait for a real
-   file?
+1. **What a stale response means** — **decided: asymmetric.** A response
+   whose `nextUpdate` lies before the judged time is `skipped` when it says
+   `good`, and still counts when it says `revoked`. A revocation does not
+   expire; an assurance does. This is the same asymmetry as everywhere else
+   in this spec: the unsigned header may lower trust and never raise it.
+   RFC 5019 §3.2's freshness requirement is what makes a stale `good`
+   unusable, and the specification's own answer to that case is the online
+   fallback (`PRED-STRU-013`) this verifier will never make. AC6 asserts
+   the `good` half; a stale `revoked` belongs to AC3.
 
-3. **Whether `notRevoked` should be recorded at all** *(non-blocking)*.
-   It reads stronger than it is: a `good` answer in an unsigned header is
-   not evidence of anything an attacker could not have written. The
-   argument for recording it is that the catalogue names it
-   (`PRED-CRYP-021`) and that a caller reading `checksPerformed` should be
-   able to see the difference between "there was a response and it said
-   good" and "there was none". The argument against is that a status list
-   with a green line about revocation invites exactly the conclusion this
-   spec spends four paragraphs refusing. **Recommendation: record it, with
-   the caveat in the explanation text itself, not only here.**
+2. **The fixture for AC3** — **decided: construct it.** No public file
+   carries a `revoked` stapled response and c2patool emits no OCSP code of
+   its own on the two fixtures that carry one, so waiting for a real file
+   would leave the only failure path of this spec untested for an unknown
+   length of time. `bin/make-ocsp-variants.php` generates a small CA, a
+   signer and a `revoked` response with `openssl ocsp -index`, in the shape
+   the other `bin/make-*-variants.php` scripts already use: **keys never
+   enter the repository, not even test keys** — the script signs with
+   throw-away keys and deletes them before it ends, and only the resulting
+   asset is committed.
 
-4. **Where the check runs** *(non-blocking)*. Next to
-   `CertificateProfileCheck` in the trust layer, after the chain is built
-   (it needs the issuer) and after the timestamp (it needs the judged
-   time). That is the same seam SPEC-017 uses, so `Verifier` gains one
+   What this fixture cannot have is a second implementation's verdict.
+   AC3 is therefore measured against `openssl ocsp -resp_text` and the
+   specification text alone, and **the note for the step must say so in
+   those words**: it is the first acceptance criterion in this project with
+   no independent oracle behind it.
+
+3. **Whether `notRevoked` should be recorded** — **decided: record it,
+   with the caveat in the explanation itself.** The catalogue names the
+   code (`PRED-CRYP-021`) and a caller reading a status list should be able
+   to tell "there was a response and it said good" from "there was none".
+   The risk — that a green line about revocation invites exactly the
+   conclusion this spec spends four paragraphs refusing — is answered where
+   a reader will actually meet it: the explanation text says the response
+   came from an unsigned header and is not evidence that the certificate
+   was never revoked.
+
+4. **Where the check runs** — **decided: the trust layer**, next to
+   `CertificateProfileCheck`, after the chain (it needs the issuer) and
+   after the timestamp (it needs the judged time). `Verifier` gains one
    call and no new ordering rule.
 
 ## Traceability

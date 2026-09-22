@@ -5063,3 +5063,20 @@ README are where the disclosure lives.
   the spec (stale responses, the AC3 fixture, whether `notRevoked` should
   be recorded at all), then approval; the version of a first tag; the
   visibility change; the announcement.
+
+## 2026-09-22 — SPEC-030 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: SPEC-030 status `approved`, with all four open questions
+  resolved in place rather than deleted; `NOTES.md`, `docs/milestones.md`.
+- Measured: nothing new this step; `bin/spec-check.php` reads 31 specs.
+- Reasoned: the approval came without separate answers to the three open
+  questions, so the draft's recommendations are recorded as the decisions
+  — a stale `good` expires while a stale `revoked` does not; AC3's fixture
+  is constructed with throw-away keys the script deletes; `notRevoked` is
+  recorded with its caveat in the explanation a reader actually meets.
+  Written into the spec so that a different answer is one amendment away
+  rather than a memory.
+- Decided by Maurice: approval. Open for him: correcting any of those four
+  resolutions before 92a begins; the version of a first tag; the
+  visibility change; the announcement.
