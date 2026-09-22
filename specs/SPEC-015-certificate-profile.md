@@ -361,6 +361,7 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
    it the Adobe fixture's leaf was `.invalid` ("key of type other"). No
    criterion's outcome changed.
 3. **2026-09-21, step 37, found by the Truepic test files** — rule 4's list lacked `sha384WithRSAEncryption` and `sha512WithRSAEncryption`; c2pa-rs's `certificate_profile.rs:181–188` has both (my step-30 reading stopped at the first line of the condition), and the three `truepic-20230212-*.jpg` leaves are signed with SHA-384/RSA — `signingCredential.invalid` here, a clean profile at c2patool. Both added; AC6's test gains the Truepic leaf as a positive case. No other criterion changed.
+4. **2026-09-22, step 42b, with SPEC-017** — (a) `check()` and `checkLeaf()` take the epoch a trusted timestamp supplies (`$at`) and a `$reason`; the `.expired` explanation ends "checked at now (no timestamp)", "checked at now (the timestamp's TSA is not trusted)", "checked at now (the timestamp did not validate)" or "checked at the timestamp's time (from the trusted timestamp)" — the M6 placeholder text is gone. (b) `checkLeaf()` takes `?array $ekus`: non-null replaces the accepted EKU list (built-in + `trust_config`) — a TSA is judged with `timeStamping` alone. (c) AC7 compares the whole `signature_info` block again, `time` included (amendment 2's exclusion lifted). (d) AC10's enum count is 30. No rule of the profile changed.
 
 ## Traceability
 

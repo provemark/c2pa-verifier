@@ -2698,3 +2698,27 @@ README are where the disclosure lives.
   from git and redone. Reasoned: nothing beyond the spec.
 - Decided by Maurice: start 42a.
 
+## 2026-09-22 — Step 42b: the timestamp check, green; M6 complete
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 42b".
+- Produced: `src/Timestamp/{TimestampCheck,TimestampResult}.php`; six
+  cases in `src/Report/StatusCode.php`; `$ekus`/`$reason` in
+  `src/Trust/CertificateProfileCheck.php`; `checkCertificates()` in
+  `src/Trust/ChainCheck.php`; the Verifier wiring and `signature_info.time`
+  in `src/Verifier/Verifier.php`; SPEC-017 amendment 1, Traceability,
+  status `implemented`; SPEC-010 #5, SPEC-013 #8, SPEC-014 #2, SPEC-015 #4;
+  nine older tests and six literals of the new one adjusted (named in the
+  amendments); the 42b section of `notes/step-42-timestamp-check-tests.md`;
+  rows in `NOTES.md` and `docs/milestones.md` (M6 done); this entry. The
+  code and specs went into commit `acbd0bc`; a bookkeeping script of mine
+  stopped on a wrong anchor string before the note, rows and this entry
+  were written, so they follow in the amended commit.
+- Measured: the first run with the code in place — 9 of 15 green, six
+  literal faults; then 285/285 with `composer check` green (18 specs,
+  Pint, PHPStan 0, Deptrac 0, 3377 assertions); a hand run of the
+  Verifier on Truepic (with and without the root), `C.jpg` and Nikon
+  (states, codes, `time`, the `expired` explanations — in the note).
+  Reasoned: the PSS path and the SKI sid path (no corpus token); the
+  chain ordering rule from c2pa-rs's `order_certificates_leaf_to_root`.
+- Decided by Maurice: go on with 42b.
+

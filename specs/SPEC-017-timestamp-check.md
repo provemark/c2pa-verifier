@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -438,7 +438,7 @@ final readonly class TimestampCheck
 
 ## Amendments
 
-*(none yet)*
+1. **2026-09-22, step 42b, at implementation** — test literals corrected against the code and the fixtures, no criterion changed in substance: the Nikon file is `nikon-20221019-building.jpeg` and the three signed fixtures sit at the fixtures root; AC1's front-door run uses the `full` settings for both corpora, as SPEC-013 AC11/AC12 do (the public oracle JSONs were made that way — `adobe-20220124-C` is `Trusted` there); the "no trust anchors" wording is `ChainCheck`'s ("… is not on the allowed list and no trust anchors are configured"); the EKU fault names `ExtendedKeyUsage`, not "EKU". The five older test files that count or order codes were adjusted under SPEC-010 amendment 5, SPEC-013 amendment 8 and SPEC-015 amendment 4. One rule made explicit in code rather than assumed: the TSA chain is ordered from the token by issuer → subject links from the signer (c2pa-rs `order_certificates_leaf_to_root`), so Truepic's root-first token walks as well as DigiCert's signer-first one.
 
 ## Traceability
 
@@ -447,13 +447,13 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1 | | |
-| AC2 | | |
-| AC3 | | |
-| AC4 | | |
-| AC5 | | |
-| AC6 | | |
-| AC7 | | |
-| AC8 | | |
-| AC9 | | |
-| AC10 | | |
+| AC1 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC1: every corpus token c2patool validates, this verifier validates, and the time is c2patool's / SPEC-017 | src/Timestamp/TimestampCheck.php :: check(), checkHeader(), judge() (steps 2–6); src/Verifier/Verifier.php :: verify(), check() (`timestamp` first), signatureInfo() (`time`); src/Timestamp/TimestampResult.php |
+| AC2 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC2: E-sig-CA is a mismatch, CA_ct is malformed, and no verdict moves / SPEC-017 | src/Timestamp/TimestampCheck.php :: judge() (step 6), checkHeader() (the TimestampException → malformed); src/Report/StatusCode.php :: isInformational() |
+| AC3 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC3: the CMS signature — * (3) and SPEC-017 AC3: a signature algorithm outside the list is untrusted, naming the OID / SPEC-017 | src/Timestamp/TimestampCheck.php :: verifySignature(), SIGNATURE_ALGORITHMS, opensslVerify(); src/Cose/RsaPss.php (the PSS path, reasoned) |
+| AC4 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC4: messageDigest, sid and validity each give exactly one status; the control validates / SPEC-017 | src/Timestamp/TimestampCheck.php :: judge() (steps 2, 3, 5); src/Timestamp/SignedData.php :: signerCertificate() |
+| AC5 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC5: the countersigned bytes equal the four imprints, and the wrong payload is a mismatch / SPEC-017 | src/Timestamp/TimestampCheck.php :: countersignedBytes(), bstr() |
+| AC6 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC6: the Truepic root as anchor … and SPEC-017 AC6: the DigiCert cross-certificate as anchor … / SPEC-017 | src/Timestamp/TimestampCheck.php :: judge() (step 7), orderedChain(), tsaSettings(); src/Trust/ChainCheck.php :: checkCertificates(); src/Trust/CertificateProfileCheck.php :: check() ($at, $reason); src/Timestamp/TimestampResult.php :: trustedTime() |
+| AC7 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC7: the TSA profile accepts timeStamping alone, and tsaSettings() carries nothing else / SPEC-017 | src/Trust/CertificateProfileCheck.php :: checkLeaf() ($ekus), ekuFaults(); src/Timestamp/TimestampCheck.php :: tsaSettings(), OID_EKU_TIME_STAMPING |
+| AC8 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC8: no header … and SPEC-017 AC8: one token is judged; a doubled header … / SPEC-017 | src/Timestamp/TimestampCheck.php :: check(), checkHeader(); src/Timestamp/TimestampResult.php :: none(); src/Verifier/Verifier.php :: check() (the reason "no timestamp") |
+| AC9 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC9: the report — timeStamp entries first, signature_info with time equal to c2patool's, checks_performed / SPEC-017 | src/Verifier/Verifier.php :: check(), signatureInfo(); src/Report/ValidationResult.php :: toArray() (unchanged: informational is its own list) |
+| AC10 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC10: the NO_TIMESTAMP exceptions are gone; TSA_NOT_CONFIGURED names the files that stay expired, and an anchor un-expires them / SPEC-017 | tests/Pest.php :: SPEC013_PUBLIC_TSA_NOT_CONFIGURED, SPEC013_RS_TSA_NOT_CONFIGURED; tests/Unit/Verifier/VerifierTest.php :: AC11, AC12; src/Verifier/Verifier.php :: check() (the time handed to the profile) |

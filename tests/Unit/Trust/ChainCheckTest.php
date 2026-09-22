@@ -129,7 +129,8 @@ it('AC1: the four fixtures with the full settings: Trusted, and the words are c2
     foreach (['jpg' => 'fixture-signed.jpg', 'png' => 'fixture-signed.png', 'webp' => 'fixture-signed.webp', 'adobe-20220124-C' => 'public-testfiles/adobe-20220124-C.jpg'] as $name => $fixture) {
         $report = spec014Verify($fixture, $full);
         $credential = spec014Credential($report);
-        expect($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $name)
+        // the Adobe file carries a timestamp: SPEC-017 puts `timestamp` first (amendment 2)
+        expect($report->result->checksPerformed)->toBe([...($name === 'adobe-20220124-C' ? ['timestamp'] : []), 'signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $name)
             ->and($credential)->toHaveCount(1, $name)
             ->and($credential[0]->code)->toBe(StatusCode::SigningCredentialTrusted, $name)
             ->and($credential[0]->url)->toBe("self#jumbf=/c2pa/{$report->store?->active->label}/c2pa.signature", $name)

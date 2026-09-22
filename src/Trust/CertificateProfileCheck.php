@@ -36,10 +36,11 @@ final readonly class CertificateProfileCheck
     private const EKU_OCSP_SIGNING = '1.3.6.1.5.5.7.3.9';
 
     /**
-     * @param  int|null  $at  the epoch to judge validity at; null = now (no timestamp yet)
+     * @param  int|null  $at  the epoch to judge validity at — a trusted timestamp's time (SPEC-017); null = now
+     * @param  string|null  $reason  why $at is what it is, for the `.expired` message ("no timestamp", "the timestamp's TSA is not trusted", …)
      * @return list<ValidationStatus>
      */
-    public function check(Manifest $manifest, ?TrustSettings $settings = null, ?int $at = null): array
+    public function check(Manifest $manifest, ?TrustSettings $settings = null, ?int $at = null, ?string $reason = null): array
     {
         $url = sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label);
         try {
@@ -54,15 +55,17 @@ final readonly class CertificateProfileCheck
             return [new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, sprintf('the signing certificate could not be read: %s', $e->getMessage()))];
         }
 
-        return $this->checkLeaf($leaf, $settings, $at, $url);
+        return $this->checkLeaf($leaf, $settings, $at, $url, reason: $reason);
     }
 
     /**
      * The profile on one certificate — the seam for the rules no re-signed file can show (SPEC-015 AC4, AC6).
      *
+     * @param  list<string>|null  $ekus  non-null replaces the accepted EKU list (built-in + trust_config) — SPEC-017: a TSA needs timeStamping alone
+     * @param  string|null  $reason  why $at is what it is, for the `.expired` message
      * @return list<ValidationStatus>
      */
-    public function checkLeaf(Certificate $leaf, ?TrustSettings $settings, ?int $at, string $url): array
+    public function checkLeaf(Certificate $leaf, ?TrustSettings $settings, ?int $at, string $url, ?array $ekus = null, ?string $reason = null): array
     {
         $faults = [];
         $invalid = static fn (string $reason): ValidationStatus => new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, 'signing certificate invalid: '.$reason);
@@ -75,7 +78,7 @@ final readonly class CertificateProfileCheck
         if ($leaf->version !== 3) {
             $faults[] = $invalid(sprintf('X.509 version %d; a C2PA signing certificate is version 3', $leaf->version));
         }
-        // 3. validity at the signing time — now, until M6
+        // 3. validity at the signing time: a trusted timestamp's time, else now (C2PA 2.4 §14.6.1; SPEC-017)
         $time = $at ?? time();
         if ($time < $leaf->validFrom || $time > $leaf->validTo) {
             $faults[] = new ValidationStatus(StatusCode::SigningCredentialExpired, $url, sprintf(
@@ -84,8 +87,8 @@ final readonly class CertificateProfileCheck
                 gmdate('Y-m-d\TH:i:s\Z', $time),
                 gmdate('Y-m-d\TH:i:s\Z', $leaf->validFrom),
                 gmdate('Y-m-d\TH:i:s\Z', $leaf->validTo),
-                $at === null ? 'now' : 'the signing time',
-                $at === null ? 'no timestamp consulted yet; M6 will supply one' : 'from the timestamp',
+                $at === null ? 'now' : "the timestamp's time",
+                $reason ?? ($at === null ? 'no timestamp' : 'from a trusted timestamp'),
             ));
         }
         // 4. the signature algorithm
@@ -108,7 +111,7 @@ final readonly class CertificateProfileCheck
             }
         }
         // 7. ExtendedKeyUsage
-        $faults = [...$faults, ...array_map($invalid, $this->ekuFaults($leaf, $settings))];
+        $faults = [...$faults, ...array_map($invalid, $this->ekuFaults($leaf, $settings, $ekus))];
         // 8. AuthorityKeyIdentifier
         if (! $leaf->hasAuthorityKeyIdentifier) {
             $faults[] = $invalid('no AuthorityKeyIdentifier extension');
@@ -128,8 +131,11 @@ final readonly class CertificateProfileCheck
         };
     }
 
-    /** @return list<string> */
-    private function ekuFaults(Certificate $leaf, ?TrustSettings $settings): array
+    /**
+     * @param  list<string>|null  $override  the accepted list when given (SPEC-017: the TSA's)
+     * @return list<string>
+     */
+    private function ekuFaults(Certificate $leaf, ?TrustSettings $settings, ?array $override = null): array
     {
         $ekus = $leaf->extendedKeyUsage;
         if ($ekus === null) {
@@ -138,7 +144,7 @@ final readonly class CertificateProfileCheck
         if (in_array(Certificate::EKU_ANY, $ekus, true)) {
             return ['ExtendedKeyUsage carries anyExtendedKeyUsage, which C2PA 2.4 §14.5 forbids'];
         }
-        $accepted = [...self::BUILT_IN_EKUS, ...($settings === null ? [] : $settings->trustConfig)];
+        $accepted = $override ?? [...self::BUILT_IN_EKUS, ...($settings === null ? [] : $settings->trustConfig)];
         if (array_intersect($ekus, $accepted) === []) {
             return [sprintf('ExtendedKeyUsage (%s) holds none of the accepted values (%s)', implode(', ', $leaf->extendedKeyUsageNames()), implode(', ', $accepted))];
         }

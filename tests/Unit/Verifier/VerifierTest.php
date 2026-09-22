@@ -147,12 +147,16 @@ it('AC1: the four fixtures, front door: Valid, three checks, and the report is c
             ->and($report->hasManifest)->toBeTrue($name)
             ->and($report->result->state)->toBe(ValidationState::Valid, $name)
             // certificate and trust joined the list with SPEC-015/014: without settings the leaf is checked and found untrusted, as c2patool
-            ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $name)
-            ->and(spec013Codes($report))->toBe(['claimSignature.validated', 'signingCredential.untrusted', ...array_fill(0, $entries, 'assertion.hashedURI.match'), 'assertion.dataHash.match'], $name);
+            // the Adobe file carries a timestamp: SPEC-017 puts `timestamp` and its two informational-or-success entries first (amendment 8)
+            ->and($report->result->checksPerformed)->toBe([...($name === 'adobe-20220124-C' ? ['timestamp'] : []), 'signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $name)
+            ->and(spec013Codes($report))->toBe([...($name === 'adobe-20220124-C' ? ['timeStamp.validated', 'timeStamp.untrusted'] : []), 'claimSignature.validated', 'signingCredential.untrusted', ...array_fill(0, $entries, 'assertion.hashedURI.match'), 'assertion.dataHash.match'], $name);
 
         $oracle = spec013C2patool($name);
         expect($oracle['validation_state'])->toBe('Valid', $name);
         foreach ($report->result->statuses as $status) {
+            if ($status->code === StatusCode::TimeStampUntrusted) {
+                continue;   // the one divergence by design: c2patool says timeStamp.trusted without an anchor, this verifier does not (ADR-0004; SPEC-017)
+            }
             expect(spec013OracleHas($oracle, $status->code->value, $status->url))->toBeTrue("{$name}: {$status->code->value} {$status->url}");
         }
 
@@ -399,7 +403,7 @@ it('AC11: a store with more than one manifest is refused until M7', function ():
             ->and($errors[0]->url)->toBe('self#jumbf=/c2pa', $name)
             ->and($errors[0]->explanation)->toContain((string) $count)
             ->and($errors[0]->explanation)->toContain('M7')
-            ->and($report->result->checksPerformed)->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $name)
+            ->and($report->result->checksPerformed)->toBe(['timestamp', 'signature', 'certificate', 'trust', 'hashedUris', 'dataHash'], $name)   // every file of this list carries a timestamp
             ->and($report->result->state)->toBe(ValidationState::Invalid, $name);
     }
     $single = $verify('adobe-20220124-C');

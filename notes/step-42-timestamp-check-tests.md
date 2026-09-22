@@ -1,4 +1,4 @@
-# Step 42a — The SPEC-017 tests, seen red: 15 tests on the timestamp check, two TSA anchors cut from the tokens, and c2patool under them
+# Step 42 — The SPEC-017 tests seen red (42a), then the timestamp check until they are green (42b): M6 complete
 
 *2026-09-22.* SPEC-017 approved; this is the tests-first half of step
 42. One test file, `tests/Unit/Timestamp/TimestampCheckTest.php` (AC1–AC10,
@@ -120,6 +120,81 @@ under them (`tests/Fixtures/c2patool/timestamp/`, README alongside):
 - The SPEC-013 group stays at 12 passed; the whole suite 270 passed +
   15 red.
 
-Next: step 42b — `Timestamp\TimestampCheck`, `TimestampResult`, the six
-enum cases, the `$ekus` override in `checkLeaf`, `ChainCheck::checkCertificates`,
-and the Verifier wiring, until the 15 are green and the 270 stay green.
+---
+
+# 42b — Green: the timestamp check, and M6 closed
+
+*2026-09-22, the same day.* `composer check` green: 18 specs, Pint,
+PHPStan max 0 errors, Deptrac 0 violations, `Tests: 285 passed (3377
+assertions)` — the 15 red ones green and the 270 still green, after the
+adjustments the amendments name.
+
+## What was written
+
+- `Timestamp\TimestampCheck` — `check()` (the header off the manifest's
+  COSE_Sign1), `checkHeader()` (the first token; "1 of N tokens judged"
+  in the `validated` explanation when there are more), `judge()` (steps
+  2–7 in c2pa-rs's order, one status per fault, then `validated` and the
+  trust outcome), `countersignedBytes()` (the `CounterSignature`
+  Sig_structure; payload by header name), `tsaSettings()` (the operator's
+  anchors and allowed list, `trust_config` = `timeStamping`). The CMS
+  signature by `openssl_verify` for `rsaEncryption` and the
+  `shaNNNWithRSAEncryption` spellings and for `ecdsa-with-SHANNN` (the
+  DER signature as it is), by `Cose\RsaPss` for RSASSA-PSS on an
+  ordinary RSA key (no corpus token: reasoned). The TSA chain ordered
+  from the token by issuer → subject links from the signer, so Truepic's
+  root-first order walks like DigiCert's signer-first one; then M5's
+  `checkLeaf(…, ekus: [timeStamping])` and `ChainCheck::checkCertificates()`,
+  their `signingCredential.*` renamed `timeStamp.trusted` / `.untrusted`.
+- `Timestamp\TimestampResult` — `present`, `statuses`, `time`,
+  `trusted`, and `trustedTime()`: non-null only when validated *and*
+  trusted, the one thing that reaches the verdict.
+- `StatusCode`: six cases; `isSuccess()` for `validated` and `trusted`,
+  `isInformational()` for the other four. `ValidationResult` unchanged.
+- `CertificateProfileCheck`: `$ekus` override, `$reason` for the
+  `.expired` message; `ChainCheck::checkCertificates()`.
+- `Verifier`: the timestamp check first, `timestamp` heading
+  `checks_performed` when a header is present, the trusted time and a
+  reason to the profile check, `time` in `signature_info` when the token
+  validated.
+
+## Measured on the corpora, front door
+
+| file | settings | this verifier | c2patool |
+|---|---|---|---|
+| `truepic-20230212-camera.jpg` | `truepic-root` | `Trusted`; `validated`, `trusted`; `time` 2023-02-12T18:44:26+00:00; no `expired` | `Trusted`, the same codes |
+| the same | none | `Invalid`; `validated`, `untrusted`; `expired` "checked at now (the timestamp's TSA is not trusted)" | `Valid` (`trusted` without an anchor — the divergence ADR-0004 names) |
+| `C.jpg` | none | `Valid`; `validated`, `untrusted`; `time` 2024-08-06T21:53:37+00:00 | `Trusted` under `full`; `time` equal |
+| `nikon-20221019-building.jpeg` | none | `Invalid`; no timestamp entries; `expired` "checked at now (no timestamp)" | `Invalid`, `expired` |
+| `exp-test1.png` | `full-plus-digicert-g4` | `Invalid` (six manifests); no `expired` | `Invalid`; no `expired` |
+
+AC1 over the 35 validated corpus tokens: every `signature_info.time`
+equals c2patool's string byte for byte, every `timeStamp.validated` sits
+first with c2patool's url.
+
+## What the first green run corrected
+
+Six of 15 failed with the code in place; all six were test literals
+(SPEC-017 amendment 1): the Nikon file is `.jpeg`, the signed fixtures
+live at the fixtures root, the front-door part of AC1 must run under
+`full` as SPEC-013 does (the public oracle was made that way — Adobe is
+`Trusted` there), `ChainCheck`'s wording is "no trust anchors are
+configured", the EKU fault says `ExtendedKeyUsage` — and one more
+`toContain($needle, $message)` slip, Pest's variadic trap for the fourth
+time in this project, turned into `in_array` + `toBeTrue($message)`. Then
+nine older tests: the enum-count and success/informational loops of
+SPEC-010/011/012/015 (skip or count the six), `checks_performed` and the
+code order on the Adobe file in SPEC-013/014 (`timestamp` first), SPEC-015
+AC7 comparing the whole `signature_info` again, and SPEC-013 AC1's
+oracle-presence loop skipping `timeStamp.untrusted` — the one designed
+divergence, named there as in ADR-0004.
+
+## M6, done when
+
+"`hasTimestamp` and `timeStamp.*` codes equal c2patool on a timestamped
+fixture" — measured wider than that: 35 tokens across five TSAs, two
+tampered ones, three anchor settings. Equal everywhere but where
+ADR-0004 decided to differ, and that difference is informational, named
+in the alarms, and removed by configuring the anchor. M7 is next:
+ingredient manifests, which every `_MULTI` exception is waiting for.
+

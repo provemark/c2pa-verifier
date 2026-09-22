@@ -40,6 +40,20 @@ final readonly class ChainCheck
         if ($chain === []) {
             return [new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, 'x5chain holds no certificate')];
         }
+
+        return $this->checkCertificates($chain, $settings, $url);
+    }
+
+    /**
+     * The allowed list, then the walk, on a chain given as certificates, leaf
+     * first — the seam SPEC-017 uses for a TSA's certificates (SPEC-014
+     * amendment 2). `verify_trust` is the caller's to honour.
+     *
+     * @param  non-empty-list<Certificate>  $chain
+     * @return list<ValidationStatus>
+     */
+    public function checkCertificates(array $chain, TrustSettings $settings, string $url): array
+    {
         $leaf = $chain[0];
 
         // the allowed list first: a listed end-entity certificate needs no chain (c2pa-rs: EndEntity)

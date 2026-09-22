@@ -342,8 +342,8 @@ it('AC7: signature_info is c2patool\'s', function (): void {
         assert(is_array($oracle['manifests']) && is_string($oracle['active_manifest']));
         $theirs = $oracle['manifests'][$oracle['active_manifest']];
         assert(is_array($theirs) && is_array($theirs['signature_info']));
-        // c2patool adds `time` from the timestamp (the Adobe file has one): M6's field, not compared yet (amendment 2)
-        expect(spec015SignatureInfo($report))->toBe(array_intersect_key($theirs['signature_info'], array_flip(['alg', 'issuer', 'common_name', 'cert_serial_number'])), $name);
+        // `time` from the timestamp (the Adobe file has one) since SPEC-017: the whole block, byte for byte (amendment 2's exclusion lifted)
+        expect(spec015SignatureInfo($report))->toBe($theirs['signature_info'], $name);
     }
     $png = spec015Verify('fixture-signed.png', null);
     expect(spec015SignatureInfo($png))->toBe(['alg' => 'Es256', 'issuer' => 'C2PA Test Signing Cert', 'common_name' => 'C2PA Signer', 'cert_serial_number' => '640229841392226413189608867977836244731148734950']);
@@ -402,7 +402,7 @@ it('AC9: M5\'s "done when": with and without the trust file, the verdicts are c2
 
 it('AC10: the codes are verbatim, and the drift alarm grows', function (): void {
     $values = array_map(static fn (StatusCode $c): string => $c->value, StatusCode::cases());
-    expect($values)->toHaveCount(24)
+    expect($values)->toHaveCount(30)   // SPEC-017 added the six timeStamp codes
         ->and($values)->toContain('signingCredential.expired')
         ->and(StatusCode::SigningCredentialExpired->isFailure())->toBeTrue();
 

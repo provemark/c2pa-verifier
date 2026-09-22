@@ -24,6 +24,8 @@ use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationResult;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Support\Bytes;
+use Provemark\C2paVerifier\Timestamp\TimestampCheck;
+use Provemark\C2paVerifier\Timestamp\TimestampResult;
 use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\ChainCheck;
@@ -58,6 +60,7 @@ final readonly class Verifier
         private DataHashCheck $dataHash = new DataHashCheck,
         private ChainCheck $trust = new ChainCheck,
         private CertificateProfileCheck $certificate = new CertificateProfileCheck,
+        private TimestampCheck $timestamp = new TimestampCheck,
     ) {}
 
     /**
@@ -105,7 +108,8 @@ final readonly class Verifier
             ], []));
         }
 
-        $result = $this->check($manifestStore, $stream, $store, $settings);
+        $timestamp = $this->timestamp->check($manifestStore->active, $settings);
+        $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp);
         // until M7 validates ingredient manifests, a store with more than one is refused: the
         // fault may sit in a manifest this verifier has not looked at (SPEC-013 amendment 5)
         $refusals = [];
@@ -123,7 +127,7 @@ final readonly class Verifier
             $result = ValidationResult::fromStatuses([...$result->statuses, ...$refusals], $result->checksPerformed);
         }
 
-        return new VerificationReport($format, true, $manifestStore, $result, $this->signatureInfo($manifestStore));
+        return new VerificationReport($format, true, $manifestStore, $result, $this->signatureInfo($manifestStore, $timestamp));
     }
 
     /**
@@ -131,9 +135,12 @@ final readonly class Verifier
      * name, the leaf's O as "issuer", its CN, its serial in decimal
      * (SPEC-015). Null when the chain cannot be read — the checks say why.
      *
-     * @return array{alg: string, issuer: ?string, common_name: string, cert_serial_number: string}|null
+     * With `time` — the timestamp's genTime as c2patool renders it — when the
+     * token validated (SPEC-017).
+     *
+     * @return array{alg: string, issuer: ?string, common_name: string, cert_serial_number: string, time?: string}|null
      */
-    private function signatureInfo(ManifestStore $manifestStore): ?array
+    private function signatureInfo(ManifestStore $manifestStore, TimestampResult $timestamp): ?array
     {
         try {
             $cose = CoseSign1::fromBytes($manifestStore->active->signatureBytes());
@@ -151,7 +158,12 @@ final readonly class Verifier
             default => sprintf('alg %d', $cose->alg),
         };
 
-        return ['alg' => $alg, 'issuer' => $leaf->organization, 'common_name' => $leaf->subjectCn(), 'cert_serial_number' => $leaf->serialDecimal];
+        $info = ['alg' => $alg, 'issuer' => $leaf->organization, 'common_name' => $leaf->subjectCn(), 'cert_serial_number' => $leaf->serialDecimal];
+        if ($timestamp->time !== null) {
+            $info['time'] = gmdate('c', $timestamp->time);
+        }
+
+        return $info;
     }
 
     /**
@@ -160,14 +172,29 @@ final readonly class Verifier
      *
      * @param  resource  $stream
      */
-    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings): ValidationResult
+    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings, TimestampResult $timestamp): ValidationResult
     {
         $manifest = $manifestStore->active;
-        $statuses = $this->signature->check($manifest);
-        $checks = ['signature'];
+        // the timestamp first, as c2patool lists it; informational only, but it supplies the time below (SPEC-017)
+        $statuses = [];
+        $checks = [];
+        if ($timestamp->present) {
+            $statuses = $timestamp->statuses;
+            $checks[] = 'timestamp';
+        }
+        $statuses = [...$statuses, ...$this->signature->check($manifest)];
+        $checks[] = 'signature';
 
-        // the certificate's profile, always: it is the signature's, not the operator's (SPEC-015)
-        $statuses = [...$statuses, ...$this->certificate->check($manifest, $settings)];
+        // the certificate's profile, always: it is the signature's, not the operator's (SPEC-015);
+        // validity at a validated, trusted timestamp's time, else at now (C2PA 2.4 §14.6.1)
+        $at = $timestamp->trustedTime();
+        $reason = match (true) {
+            $at !== null => 'from the trusted timestamp',
+            ! $timestamp->present => 'no timestamp',
+            $timestamp->time === null => 'the timestamp did not validate',
+            default => "the timestamp's TSA is not trusted",
+        };
+        $statuses = [...$statuses, ...$this->certificate->check($manifest, $settings, $at, $reason)];
         $checks[] = 'certificate';
 
         // trust: without settings there are no anchors and the answer is untrusted, as c2patool's;

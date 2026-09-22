@@ -226,9 +226,9 @@ test('SPEC-017 AC1: every corpus token c2patool validates, this verifier validat
         assert($result->time !== null);
         $manifests = $oracle['manifests'];
         assert(is_array($manifests) && is_string($oracle['active_manifest']));
-        $info = $manifests[$oracle['active_manifest']]['signature_info'] ?? null;
-        assert(is_array($info));
-        expect(gmdate('c', $result->time))->toBe($info['time'], $relative);
+        $active = $manifests[$oracle['active_manifest']];
+        assert(is_array($active) && is_array($active['signature_info']));
+        expect(gmdate('c', $result->time))->toBe($active['signature_info']['time'], $relative);
         // without anchors the TSA is not trusted, and no time is handed on
         expect(spec017Codes($result))->toContain('timeStamp.untrusted')
             ->and($result->trustedTime())->toBeNull($relative);
@@ -242,8 +242,7 @@ test('SPEC-017 AC1: every corpus token c2patool validates, this verifier validat
         if (in_array($name, $multi, true)) {
             continue;
         }
-        $settings = str_starts_with($relative, 'c2pa-rs/') ? spec017Settings('full') : null;
-        $report = spec017Verify($relative, $settings);
+        $report = spec017Verify($relative, spec017Settings('full'));   // as SPEC-013 AC11/AC12 run the corpora
         $codes = spec017Codes($report);
         expect($codes[0])->toBe('timeStamp.validated', $relative)
             ->and($report->result->checksPerformed[0])->toBe('timestamp', $relative);
@@ -418,9 +417,9 @@ test('SPEC-017 AC6: the Truepic root as anchor: trusted, no longer expired, and 
         $report = spec017Verify("public-testfiles/{$name}.jpg", $settings);
         $codes = spec017Codes($report);
         $oracle = spec017Oracle("timestamp/{$name}-truepic-root");
-        expect($codes)->toContain('timeStamp.validated', $name)
-            ->and($codes)->toContain('timeStamp.trusted', $name)
-            ->and($codes)->not->toContain('signingCredential.expired', $name)
+        expect(in_array('timeStamp.validated', $codes, true))->toBeTrue($name)
+            ->and(in_array('timeStamp.trusted', $codes, true))->toBeTrue($name)
+            ->and(in_array('signingCredential.expired', $codes, true))->toBeFalse($name)
             ->and($report->result->state->value)->toBe($oracle['validation_state'], $name)
             ->and(spec017Failures($report))->toBe(spec017Sorted(spec017OracleCodes($oracle, 'failure')), $name);
         $trusted = spec017Status($report, StatusCode::TimeStampTrusted);
@@ -430,7 +429,7 @@ test('SPEC-017 AC6: the Truepic root as anchor: trusted, no longer expired, and 
         $bare = spec017Verify("public-testfiles/{$name}.jpg");
         $untrusted = spec017Status($bare, StatusCode::TimeStampUntrusted);
         $expired = spec017Status($bare, StatusCode::SigningCredentialExpired);
-        expect($untrusted?->explanation)->toContain('no trust anchors configured')
+        expect($untrusted?->explanation)->toContain('no trust anchors')
             ->and($expired)->not->toBeNull($name);
         assert($expired !== null);
         expect($expired->explanation)->toContain('now')->toContain('not trusted');
@@ -449,7 +448,7 @@ test('SPEC-017 AC6: the DigiCert cross-certificate as anchor: C.jpg\'s TSA chain
         ->and(spec017Failures($report))->toBe(spec017Sorted(spec017OracleCodes($oracle, 'failure')));
 
     $bare = spec017Verify('c2pa-rs/C.jpg');
-    expect(spec017Status($bare, StatusCode::TimeStampUntrusted)?->explanation)->toContain('no trust anchors configured')
+    expect(spec017Status($bare, StatusCode::TimeStampUntrusted)?->explanation)->toContain('no trust anchors')
         ->and(spec017Codes($bare))->not->toContain('timeStamp.trusted');
 })->group('SPEC-017');
 
@@ -480,12 +479,12 @@ test('SPEC-017 AC7: the TSA profile accepts timeStamping alone, and tsaSettings(
     // the counter-example: our own leaf (EKU emailProtection) is not a TSA
     $pems = (string) file_get_contents(Corpus::fixtures().'/trust/es256_certs.pem');
     preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pems, $m);
-    $leafDer = (string) base64_decode(preg_replace('/-----.*?-----|\s/', '', $m[0]) ?? '', true);
+    $leafDer = (string) base64_decode(preg_replace('/-----.*?-----|\s/', '', $m[0] ?? '') ?? '', true);
     $leaf = Certificate::fromDer($leafDer);
     $faults = $profile->checkLeaf($leaf, $settings, null, $url, ekus: [SPEC017_EKU_TIME_STAMPING]);
     $invalid = array_values(array_filter($faults, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialInvalid));
     expect($invalid)->toHaveCount(1)
-        ->and($invalid[0]->explanation)->toContain('EKU');
+        ->and($invalid[0]->explanation)->toContain('ExtendedKeyUsage');
     // and the same leaf under the ordinary list (no override) passes, as SPEC-015 measured
     expect($profile->checkLeaf($leaf, null, null, $url))->toBe([]);
 })->group('SPEC-017');
@@ -494,7 +493,7 @@ test('SPEC-017 AC7: the TSA profile accepts timeStamping alone, and tsaSettings(
 // AC8 — the header: absent, one token, more than one
 
 test('SPEC-017 AC8: no header: nothing reported, no time, Nikon stays expired at now', function (): void {
-    foreach (['public-testfiles/nikon-20221019-building.jpg', 'binding/fixture-signed.jpg', 'binding/fixture-signed.png', 'binding/fixture-signed.webp'] as $relative) {
+    foreach (['public-testfiles/nikon-20221019-building.jpeg', 'fixture-signed.jpg', 'fixture-signed.png', 'fixture-signed.webp'] as $relative) {
         $result = (new TimestampCheck)->check(spec017Manifest($relative), null);
         expect($result->present)->toBeFalse($relative)
             ->and($result->statuses)->toBe([])
@@ -504,7 +503,7 @@ test('SPEC-017 AC8: no header: nothing reported, no time, Nikon stays expired at
         expect($report->result->checksPerformed)->not->toContain('timestamp')
             ->and($report->signatureInfo)->not->toHaveKey('time');
     }
-    $nikon = spec017Verify('public-testfiles/nikon-20221019-building.jpg');
+    $nikon = spec017Verify('public-testfiles/nikon-20221019-building.jpeg');
     $expired = spec017Status($nikon, StatusCode::SigningCredentialExpired);
     expect($expired?->explanation)->toContain('now')->toContain('no timestamp');
 })->group('SPEC-017');
@@ -539,14 +538,17 @@ test('SPEC-017 AC9: the report — timeStamp entries first, signature_info with 
     $oracle = spec017Oracle('timestamp/C-digicert-g4');
     $manifests = $oracle['manifests'];
     assert(is_array($manifests) && is_string($oracle['active_manifest']));
-    $theirs = $manifests[$oracle['active_manifest']]['signature_info'];
+    $theirActive = $manifests[$oracle['active_manifest']];
+    assert(is_array($theirActive));
+    $theirs = $theirActive['signature_info'];
     assert(is_array($array['manifests']) && is_string($array['active_manifest']) && is_array($array['manifests'][$array['active_manifest']]));
     $ours = $array['manifests'][$array['active_manifest']]['signature_info'];
+    assert(is_array($ours));
     expect($ours)->toBe($theirs)   // byte for byte, keys in c2patool's order: alg, issuer, common_name, cert_serial_number, time
         ->and(array_keys($ours))->toBe(['alg', 'issuer', 'common_name', 'cert_serial_number', 'time'])
         ->and($array['checks_performed'])->toBe(['timestamp', 'signature', 'certificate', 'trust', 'hashedUris', 'dataHash']);
 
-    $plain = spec017Verify('binding/fixture-signed.jpg')->toArray();
+    $plain = spec017Verify('fixture-signed.jpg')->toArray();
     assert(is_array($plain['manifests']) && is_string($plain['active_manifest']) && is_array($plain['manifests'][$plain['active_manifest']]));
     expect($plain['manifests'][$plain['active_manifest']]['signature_info'])->not->toHaveKey('time')
         ->and($plain['checks_performed'])->toBe(['signature', 'certificate', 'trust', 'hashedUris', 'dataHash']);
