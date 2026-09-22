@@ -46,10 +46,17 @@ function packageDist(): PackageArchive
     return packageGitArchive(packageRoot(), true);
 }
 
-/** The same commit without `.gitattributes` — the repository as it was before step 62. */
-function packageDistUnfiltered(): PackageArchive
+/** The dist as it would have shipped before `.gitattributes` existed. */
+function packageDistBefore(): PackageArchive
 {
-    return packageGitArchive(packageRoot(), false);
+    return packageArchiveBeforeGitattributes(packageRoot())
+        ?? throw new RuntimeException('the commit before .gitattributes is not in this repository');
+}
+
+/** False on a shallow clone, where that commit is not there to archive. */
+function packageHasHistory(): bool
+{
+    return packageArchiveBeforeGitattributes(packageRoot()) !== null;
 }
 
 /** @param array<string, string> $files path => contents */
@@ -159,15 +166,17 @@ it('AC3: the dist holds no fixture and stays under the ceiling', function (): vo
         ->and(packageDistCheck($dist, PACKAGE_CEILING)->findings)->toBe([]);
 })->group('SPEC-023');
 
-it('AC3: the same commit without .gitattributes is exactly what this criterion exists to catch', function (): void {
-    // 62.9 MB of fixtures, measured in step 62; both findings must fire, on real data
-    $result = packageDistCheck(packageDistUnfiltered(), PACKAGE_CEILING);
+it('AC3: the dist as it would have shipped before .gitattributes is what this criterion exists to catch', function (): void {
+    // not constructed: the archive of the commit before the file was added, 62.9 MB
+    // of fixtures, measured in step 62. Both findings must fire on it.
+    $before = packageDistBefore();
+    $findings = implode("\n", packageDistCheck($before, PACKAGE_CEILING)->findings);
 
-    expect(packageDistUnfiltered()->size())->toBeGreaterThan(PACKAGE_CEILING);
-    $findings = implode("\n", $result->findings);
-    expect($findings)->toContain('tests/')
+    expect($before->size())->toBeGreaterThan(PACKAGE_CEILING)
+        ->and($findings)->toContain('tests/')
         ->and($findings)->toContain('over the ceiling');
-})->group('SPEC-023');
+    // not `static`: Pest binds a skip closure to the test case, and a static one cannot be bound
+})->skip(fn (): bool => ! packageHasHistory(), 'shallow clone: the commit before .gitattributes is not here')->group('SPEC-023');
 
 it('AC4: every relative link in the markdown the package ships resolves inside the package', function (): void {
     $result = packageDistCheck(packageDist(), PACKAGE_CEILING);
@@ -202,17 +211,21 @@ it('AC5: the disclosure travels with the package', function (): void {
         ->and(packageDistCheck(packageArchiveOf($noSection), PACKAGE_CEILING)->findings)->toContain('README.md: no "How this is built" section, so the package does not say how it was made');
 })->group('SPEC-023');
 
-it('AC6: the package, unpacked into an empty directory and alone, verifies a file', function (): void {
-    $dir = packageExtract(packageDist());
+it('AC6: the package, installed where Composer would put it and nothing else, verifies a file', function (): void {
+    // vendor/provemark/c2pa-verifier/ plus an autoloader built from the archive's own
+    // psr-4 map — the layout a consumer gets, and the only one the shim can work in
+    // (SPEC-023 amendment 1)
+    $root = packageInstall(packageDist());
+    $package = $root.'/vendor/provemark/c2pa-verifier';
 
-    // nothing of this repository is beside it: no vendor/, no tests/, no autoload but its own
-    expect(is_dir($dir.'/vendor'))->toBeFalse()
-        ->and(is_dir($dir.'/tests'))->toBeFalse()
-        ->and(is_file($dir.'/bin/c2pa-verify'))->toBeTrue();
+    expect(is_file($root.'/vendor/autoload.php'))->toBeTrue()
+        ->and(is_dir($package.'/tests'))->toBeFalse()
+        ->and(is_dir($package.'/vendor'))->toBeFalse()
+        ->and(is_file($package.'/bin/c2pa-verify'))->toBeTrue();
 
     $fixture = dirname(__DIR__).'/Fixtures/fixture-signed.jpg';
     $settings = dirname(__DIR__).'/Fixtures/trust/full.settings.json';
-    $run = packageRun($dir, [$fixture, '--settings', $settings]);
+    $run = packageRun($package, [$fixture, '--settings', $settings]);
 
     /** @var array<string, mixed> $report */
     $report = json_decode($run['stdout'], true, 512, JSON_THROW_ON_ERROR);

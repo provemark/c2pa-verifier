@@ -19,6 +19,11 @@ jobs:
         php: ['8.3', '8.4', '8.5']
     steps:
       - uses: actions/checkout@v4
+        with:
+          # SPEC-023 AC3 archives the commit before .gitattributes was added, to
+          # show the criterion fires on the 62.9 MB dist that really shipped then.
+          # A depth-1 checkout has no such commit and the test skips itself.
+          fetch-depth: 0
 
       - uses: shivammathur/setup-php@v2
         with:

@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-22                      |
 | Supersedes | —                                                 |
@@ -117,15 +117,19 @@ package.
     names how this software is built and points at that log. The package may
     not become a copy of the code with the provenance left behind.
 
-- **AC6 — the package runs unpacked, alone**
-  - Given the archive extracted into an empty directory, with no `vendor/`,
-    no development dependencies and nothing from this repository beside it
+- **AC6 — the package runs where Composer would put it, and nowhere else**
+  *(amended 2026-09-22, see Amendments 1)*
+  - Given the archive extracted into `vendor/provemark/c2pa-verifier/` of an
+    otherwise empty directory, with an autoloader at `vendor/autoload.php`
+    built from nothing but the `autoload.psr-4` map the archive's own
+    `composer.json` declares, no development dependencies, and nothing else
+    from this repository beside it
   - When `bin/c2pa-verify` there is run on a signed fixture with the test
     trust settings, both passed by absolute path from outside that directory
   - Then it exits 0 and its report has `validation_state` `Trusted`, the
     same verdict the repository's own suite gets for that file. A missing
-    file, a `src/` the autoloader cannot reach, or a `bin` entry that was
-    ignored fails here and nowhere else.
+    file, a namespace the declared map does not reach, or a `bin` entry that
+    was `export-ignore`d fails here and nowhere else.
 
 ## References
 
@@ -207,16 +211,40 @@ reasoning that led to them stays readable.
    travel with the code, and AC4 and AC5 stand as written. The cost is
    measured and small: under 2 MB in all, against 500 kB of source.
 
+## Amendments
+
+1. **2026-09-22, step 63b, before a line of the checker was written** —
+   AC6 said "extracted into an empty directory, with no `vendor/`". That
+   cannot pass, and not because the package is broken: `bin/c2pa-verify`
+   is a shim that requires an autoloader, looking first for the project's
+   `vendor/autoload.php` and then for `../../../autoload.php`, which is
+   where it sits once Composer has installed it under
+   `vendor/provemark/c2pa-verifier/bin/`. A PHP library without an
+   autoloader loads no classes; asking it to is asking for a failure that
+   says nothing about the package.
+
+   The criterion now describes the layout Composer actually creates, and
+   the autoloader is built from the `autoload.psr-4` map in the **archive's
+   own** `composer.json` — not from this repository's, and not from
+   Composer's generated files. That is deliberate: what AC6 has to prove is
+   that the declaration and the shipped files agree, so a `src/` file lost
+   to `export-ignore`, or a namespace the map does not cover, still fails
+   here. Reading the package's own declaration is not a second truth;
+   generating a rival autoloader would be.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
 least one test; every source file maps back to this spec.
 
-| Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
-|----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
+All tests are in `tests/Unit/PackageTest.php`, group `SPEC-023`; all source
+is `bin/package-check.php`, which is tooling and outside the Deptrac layers.
+
+| Acceptance criterion | Test (name) | Source (symbol) |
+|---|---|---|
+| AC1 | `AC1: a top-level path that is neither shipped nor export-ignore is a finding`; `AC1: a clean tree has no findings, and says what ships and what does not`; `AC1: a path that is both shipped and export-ignore is a finding, neither winning silently`; `AC1: a missing .gitattributes is a finding, not an empty ignore set`; `AC1: the repository itself classifies every top-level path it tracks` | `packageCheck()`, `packageExportIgnored()`, `packageTrackedTopLevel()`, `PACKAGE_SHIPPED`, `PackageCheckResult` |
+| AC2 | `AC2: the dist carries composer.json, LICENSE, README.md, src/ and every declared bin`; `AC2: a dist without src/ is a finding, and so is a bin composer.json declares but the archive lacks` | `packageDistCheck()`, `packageBinEntries()`, `packageUnder()`, `PACKAGE_REQUIRED` |
+| AC3 | `AC3: the dist holds no fixture and stays under the ceiling`; `AC3: the dist as it would have shipped before .gitattributes is what this criterion exists to catch` | `packageDistCheck()`, `packageArchiveBeforeGitattributes()`, `packageGitArchive()` |
+| AC4 | `AC4: every relative link in the markdown the package ships resolves inside the package`; `AC4: a scheme, an absolute path and a bare fragment are not this criterion's business` | `packageLinks()`, `packageResolves()` |
+| AC5 | `AC5: the disclosure travels with the package` | `packageDistCheck()`, `PACKAGE_DISCLOSURE_SECTION` |
+| AC6 | `AC6: the package, installed where Composer would put it and nothing else, verifies a file` | `packageInstall()`, `packageRun()`, `PackageTarArchive::extractTo()` |

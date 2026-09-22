@@ -87,3 +87,88 @@ places, both expected of a tests-first step:
   at PHPStan on the classes SPEC-001 had not yet created.
 
 Both go green in 63b, which writes `bin/package-check.php`.
+
+---
+
+# 63b — the checker, and three things it taught on the way
+
+`bin/package-check.php` makes all thirteen green: **366 passed** in all,
+`composer check` exit 0. Three of the discoveries are worth more than the
+code.
+
+## 1. AC6 could not pass as approved, and the criterion was wrong
+
+AC6 said "extracted into an empty directory, with no `vendor/`". It cannot
+pass — and not because the package is broken. `bin/c2pa-verify` is a shim
+that requires an autoloader, looking first for the project's
+`vendor/autoload.php` and then for `../../../autoload.php`, which is where
+it sits once Composer has installed it under
+`vendor/provemark/c2pa-verifier/bin/`. A PHP library without an autoloader
+loads no classes. Asking it to run without one measures nothing.
+
+Amended in the spec before the first line of the checker was written
+(SPEC-023 amendment 1): the criterion now describes the layout Composer
+creates, and the autoloader is built from the `autoload.psr-4` map in the
+**archive's own** `composer.json` — not this repository's, and not
+Composer's generated files. That distinction is the point. Reading the
+package's own declaration tests whether the declaration and the shipped
+files agree; generating a rival autoloader would be a second truth and
+would pass even if the map were wrong.
+
+The test now proves the real thing: extract, write the autoloader, run
+`bin/c2pa-verify` from inside `vendor/provemark/c2pa-verifier/` on a signed
+fixture passed by absolute path from outside. Exit 0, `Trusted`.
+
+## 2. `git archive` without `--worktree-attributes` is not "without .gitattributes"
+
+The first version of AC3's second test asked for the archive with the flag
+off, assuming that gives the unfiltered dist. It gave 1.9 MB. The flag adds
+the **working tree's** `.gitattributes` to the one already committed; git
+applies a committed `.gitattributes` either way. Since step 62 committed
+the file, both archives are filtered.
+
+So the test now names the historical fact instead of a flag: the commit
+that added `.gitattributes` is found with `git log --diff-filter=A`, and
+its parent is archived. That is the dist as it really would have shipped —
+**62.9 MB, 760 entries under `tests/`** — and both findings fire on it.
+The flag is passed as `false` there, because with it on, git would paste
+today's `.gitattributes` onto a commit that predates it and hand back
+1.9 MB again.
+
+This matters beyond the test. Anyone reasoning about "what would ship" by
+toggling that flag will reason wrongly.
+
+CI checks out at depth 1, where that parent commit does not exist, so
+`.github/workflows/ci.yml` now sets `fetch-depth: 0`. When the history is
+absent the test skips itself and says why, rather than passing quietly.
+
+## 3. Two small traps, recorded so they are not re-learned
+
+- **`phar://` paths are canonicalised.** Computing an entry's relative path
+  by stripping a prefix built from the tar's own filename fails on macOS,
+  where `/var` becomes `/private/var`; the paths came back as
+  `520.tar/AI-LOG.md`. The iterator's own `getSubPathname()` is the answer,
+  and `PharData[$path]` for reading — no string surgery at all.
+- **A Pest `skip()` closure may not be `static`.** Pest binds it to the
+  test case; a static closure cannot be bound, and the failure surfaces as
+  a `TypeError` inside the error renderer rather than anything that names
+  the cause.
+
+## What the checker refuses to guess
+
+"Shipped" is a declared list (`PACKAGE_SHIPPED`), not the complement of
+`export-ignore`. Under the complement reading a directory added next year
+ships by default and AC1 can raise no finding, which is the failure the
+criterion exists for. A path on both lists is its own finding: a
+contradiction may not be resolved silently in either direction.
+
+Run as a script it prints what it found:
+
+```
+$ php bin/package-check.php
+13 shipped, 9 export-ignore: every top-level path is classified
+dist: 192 files, 1.9 MB
+```
+
+It is not added to `composer check`: the thirteen tests already run there,
+and building the archive twice per check buys nothing.

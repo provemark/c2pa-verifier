@@ -3729,3 +3729,26 @@ README are where the disclosure lives.
 - Decided by Maurice: approval of SPEC-023 and both its blocking
   questions. Open for him: the AC3 ceiling (4 MB against 1.9 measured)
   and reading the tar with `PharData`, both carried into 63b as proposed.
+
+## 2026-09-22 — Step 63b, bin/package-check.php, green
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, ga door met 63b" — make the thirteen SPEC-023 tests
+  green.
+- Produced: `bin/package-check.php`; SPEC-023 amendment 1 with AC6
+  rewritten, the Traceability table filled and the status set to
+  `implemented`; `fetch-depth: 0` in `.github/workflows/ci.yml`; the
+  second half of `notes/step-63-published-package.md`; `NOTES.md`,
+  `docs/milestones.md`.
+- Measured: `composer check` exit 0, 366 passed (7220 assertions), Pint
+  and PHPStan level max clean; `php bin/package-check.php` prints "13
+  shipped, 9 export-ignore" and "dist: 192 files, 1.9 MB", exit 0; the
+  archive of the commit before `.gitattributes` is 62.9 MB with 760
+  entries under `tests/`, and both findings fire on it. Reasoned: that
+  AC6 as approved could not pass — the shim needs an autoloader, so the
+  criterion had to describe Composer's layout; and that building the
+  autoloader from the archive's own `autoload.psr-4` map tests the
+  declaration against the shipped files, where a generated rival
+  autoloader would pass even with a wrong map.
+- Decided by Maurice: approval of SPEC-023 and both its blocking
+  questions, earlier today. The AC6 amendment is written into the spec
+  and awaits his confirmation with the next amendment round.
