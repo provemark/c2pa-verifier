@@ -3605,3 +3605,23 @@ README are where the disclosure lives.
   a bug rather than a reading — the digest decides.
 - Decided by Maurice: run the second oracle. Open for him: whether to
   report the finding to that project.
+
+## 2026-09-22 — CI on step 61
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar" — push the second-oracle step and the CI record of
+  step 60.
+- Produced: pushed `c68420b` and `6a63026` to `origin/main`. Before the
+  push, `tools/go-oracle/` turned out to be untracked: `.gitignore`
+  ignored all of `tools/`, a rule written for the downloaded `c2patool`
+  binary, while `notes/step-61-second-oracle.md` and `docs/comparison.md`
+  already pointed at the directory. The rule is now `tools/*` with
+  `!tools/go-oracle/`, so the binary stays ignored and the four source
+  files (~4.5 KB) are in the step-61 commit where the note can reach
+  them.
+- Measured: the pre-push checks — attribution 0, repository PRIVATE,
+  tree clean; the private-key grep returned one hit, read and found to be
+  prose *about* the check (`AI-LOG.md` and a removed line of the writers
+  README), not key material. CI run 35738537014 on `6a63026`: success on
+  PHP 8.3, 8.4 and 8.5, 353 tests. Reasoned: nothing.
+- Decided by Maurice: push. Open for him: whether the second-oracle
+  finding goes to that project, and the public decision.
