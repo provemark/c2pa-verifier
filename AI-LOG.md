@@ -4894,3 +4894,30 @@ README are where the disclosure lives.
   tests first — AC3 first, because it carries the exact ranges the
   instrumented c2pa-rs printed and is therefore the sharpest test of the
   nested resolution.
+
+## 2026-09-22 — Step 87a, the SPEC-029 tests, seen red
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met 87a".
+- Produced: `tests/Unit/Hash/BmffV2ExclusionsTest.php` (7 tests, group
+  SPEC-029), `notes/step-87-bmff-v2-tests.md`, `NOTES.md`,
+  `docs/milestones.md`. No new fixture.
+- Measured: Pest 6 failed on the missing `IsobmffManifestStoreExtractor::boxTree()`
+  and `BmffHashCheck::plan()`, AC7 passes; 404 other tests unaffected;
+  Pint and `bin/spec-check.php` (30 specs, 35 test files) clean.
+- Reasoned: that AC3's expected value is a transcript of step 86's
+  instrumented run rather than a construction, so a misplaced box appears
+  as a number that moved; that the plan is a list of ranges with a
+  `marker` flag rather than a list of boxes, because a nested exclusion
+  splits one box into ranges that share one marker and SPEC-027's
+  `included()` could not say that; and that AC2 uses `php://memory`
+  because an 828 kB second copy in every clone is a real cost for one
+  flipped byte. AC6 pulls against itself on purpose: `flags` must be
+  refused while `video1.mp4`'s own `flags` exclusions on `/moof` paths
+  must not make it fail, so a mistake shows up as AC1 failing rather
+  than AC6 passing — the right way round.
+- Also recorded: the variadic `toContain($needle, $message)` trap, hit
+  for the **eleventh** time and for the first time disguising a green
+  test as a red one. Eleven is no longer bad luck and is worth a rule
+  rather than another comment.
+- Decided by Maurice: approval of SPEC-029 and both its questions. Open
+  for him: nothing new; 87b implements.
