@@ -2575,3 +2575,10 @@ README are where the disclosure lives.
   RFC 5652 §5.4; both wrappers from both headers as c2pa-rs.
 - Decided by Maurice: none yet (the draft awaits approval).
 
+## 2026-09-22 — SPEC-016 approved
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet hem op approved".
+- Produced: SPEC-016 status `approved`; the milestones row; this entry.
+- Measured: `bin/spec-check.php` OK. Reasoned: nothing new.
+- Decided by Maurice: SPEC-016 approved as drafted.
+
