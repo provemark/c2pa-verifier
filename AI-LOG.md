@@ -3770,3 +3770,17 @@ README are where the disclosure lives.
   and not investigated here.
 - Decided by Maurice: push. Open for him: confirmation of SPEC-023
   amendment 1 at the next amendment round, and the visibility change.
+
+## 2026-09-22 — Step 64, the amendment list since step 58
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "maak de amendment-lijst".
+- Produced: `notes/step-64-amendments-since-58.md`, `NOTES.md`,
+  `docs/milestones.md`.
+- Measured: every `## Amendments` section of every spec, parsed —
+  71 amendments in all, of which 51 were confirmed at step 51 and 17 at
+  step 58, leaving exactly 3 new ones (SPEC-013 #12, SPEC-015 #5,
+  SPEC-023 #1). The arithmetic is the check that none was missed; a
+  first parse had missed four whose heading wraps across two lines, and
+  the total would not have added up. Reasoned: the weight of each — one
+  group A (a verdict changed on PHP 8.3), none in B, two in C.
+- Decided by Maurice: nothing yet; the list awaits his confirmation.
