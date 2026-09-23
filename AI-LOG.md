@@ -5452,3 +5452,20 @@ README are where the disclosure lives.
   next cross-file helper will break it silently, exactly as this one did.
   A CI job costs 2.6 seconds. Left as a decision for the maintainer.
 - Decided by Maurice: to do this first.
+
+## 2026-09-23 — Step 106, the parallel run is in CI
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "zet die CI-job erbij".
+- Produced: a `composer test:parallel` step in `.github/workflows/ci.yml`,
+  after `composer check` on each of the three PHP versions; `NOTES.md`,
+  `docs/milestones.md`.
+- Reasoned: a step in the existing matrix rather than a job of its own, so
+  that `all green` covers it without new wiring, and on all three versions
+  rather than one — three seconds a version is not worth reasoning about
+  which version would be enough.
+- Honest about the falsification: the *property* was seen failing in step
+  105 (24 errors, then four after the functions moved and before the
+  constant did), so what this step catches is known to be catchable. The
+  CI step itself has not been seen red; it is the same command that was
+  red locally an hour ago.
+- Decided by Maurice: to add it.

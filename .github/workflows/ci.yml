@@ -53,6 +53,15 @@ jobs:
 
       - run: composer check
 
+      # The same suite again, in parallel workers. It is not about speed here:
+      # `composer check` runs serially, and a serial run loads every test file
+      # into one process, so a helper declared in one file and used from
+      # another works and the coupling never shows. A parallel worker gets a
+      # subset and dies on the declaration it never saw. That is how nine such
+      # declarations accumulated unnoticed until step 105, with the suite green
+      # on every push. Three seconds a version keeps the property.
+      - run: composer test:parallel
+
   # One job for a branch protection rule to hang on. It succeeds only when
   # every matrix leg succeeded; a skipped or cancelled leg is not success.
   all-green:
