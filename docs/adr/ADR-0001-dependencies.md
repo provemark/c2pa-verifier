@@ -54,7 +54,11 @@ Per layer:
   `cose-lib`'s ECDSA and PSS code is reference reading, never copied
   without saying so.
 - **ASN.1 / X.509 / RFC 3161: open until M5.** Probably `phpseclib`, but
-  deciding now would be an unmeasured claim.
+  deciding now would be an unmeasured claim. *(Closed since: X.509 on
+  `ext-openssl` in [ADR-0003](ADR-0003-x509-on-ext-openssl.md), and RFC
+  3161 on a DER reader written here in
+  [ADR-0004](ADR-0004-rfc3161-on-an-own-der-reader.md). The package list
+  is still `php`, `ext-openssl`, `ext-mbstring` and nothing else.)*
 
 Consequences for `composer.json` at M0: `require` holds `php`, `ext-openssl`
 and `ext-mbstring` and no packages. `ext-sodium` is a suggestion (Ed25519,

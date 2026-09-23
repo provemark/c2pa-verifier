@@ -36,12 +36,15 @@ There is no bug bounty.
 ## Scope of what is verified
 
 Verified: the manifest store's extraction (JPEG APP11, PNG `caBX`, WebP
-`C2PA`), JUMBF and CBOR structure with bounds, claim v1/v2 syntax, the
-COSE_Sign1 signature under the leaf certificate, the hashed URI of every
-assertion the claim names, the `c2pa.hash.data` binding over the asset,
-the leaf certificate's C2PA profile, the chain to a configured anchor,
-the RFC 3161 timestamp (signature, imprint, TSA chain) and the validity
-window it supplies, the actions assertion's opening rule, and the
+`C2PA`, and the ISOBMFF `uuid` box of MP4, MOV, AVIF and HEIC), JUMBF and
+CBOR structure with bounds, claim v1/v2 syntax, the COSE_Sign1 signature
+under the leaf certificate, the hashed URI of every assertion the claim
+names, the hard binding over the asset — `c2pa.hash.data` and, for
+ISOBMFF, `c2pa.hash.bmff.v2` and `.v3` including the Merkle tree of a
+fragmented stream — the leaf certificate's C2PA profile, the chain to a
+configured anchor, the RFC 3161 timestamp (signature, imprint, TSA chain)
+and the validity window it supplies, the OCSP responses a signer staples
+into its own signature, the actions assertion's opening rule, and the
 manifests an ingredient assertion names — each validated in its own
 right, update manifests included, with a fault reported against the
 ingredient that brought it in.
@@ -51,12 +54,20 @@ manifest no ingredient assertion reaches (ignored, as C2PA 2.4
 §15.11.3.3 directs, and rendered so the caller sees it is there), an
 ingredient naming a manifest the store does not hold
 (`ingredient.unknownProvenance`), CAWG identity assertions (refused),
-ISOBMFF/BMFF hashes (refused),
+`c2pa.hash.boxes` and `c2pa.hash.collection.data` (refused by name),
 `c2pa.hash.data.part` / `c2pa.hash.multi-asset` (a second asset's hashes —
 unread here as in `c2patool`), the content rules of assertions other than
-the actions opening rule, and OCSP / certificate revocation of any kind
-(no network). A remote manifest declared by URL is reported, never
-fetched.
+the actions opening rule, and **any revocation that needs the network** —
+an online OCSP query, an Authority Information Access fetch, a CRL. A
+stapled response that cannot be read, cannot be verified, or is about
+another certificate is reported as `signingCredential.ocsp.skipped`
+rather than believed, and a file carrying none says so too. A remote
+manifest declared by URL is reported, never fetched.
+
+The 111 obligations of C2PA 2.4 that apply to the formats this verifier
+reads are listed one by one in `docs/conformance.md`, with the 17 it does
+not meet named. None of those 17 can make it report `Valid` about a file
+whose bytes changed; that claim is set out there, per gap.
 
 ## Findings so far
 

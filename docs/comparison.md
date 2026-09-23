@@ -1,11 +1,13 @@
 # What this verifier does, does not do, and where it differs from `c2patool`
 
-Measured on 2026-09-22 against `c2patool` 0.27.22 (`c2pa/0.90.22`) over the
-four fixture corpora — 22 own variants, 24 files of
+Measured against `c2patool` 0.27.22 (`c2pa/0.90.22`), last reviewed
+2026-09-23, over the five fixture corpora — 22 own variants, 24 files of
 `c2pa-org/public-testfiles`, 17 of `c2pa-rs`'s own fixtures, 7 from other
-writers — plus the signed absence variants. The drift alarms in
-`tests/Pest.php` run all of it on every `composer check`; the exceptions
-below are the lists there, by name. "Stricter" means this verifier refuses
+writers and 23 of the algorithm matrix, 93 in all — plus the signed
+absence variants. The drift alarms run all of it on every `composer
+check`: four of them from the lists in `tests/Pest.php`, the fifth in
+`tests/Unit/Verifier/MatrixTest.php`. The exceptions below are those
+lists, by name. "Stricter" means this verifier refuses
 where `c2patool` accepts; the project allows that only for a named reason
 and never the other way round.
 

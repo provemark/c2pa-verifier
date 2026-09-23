@@ -8,6 +8,82 @@ public API is stable. Dates are the day the work was committed.
 
 ## Unreleased
 
+### Revocation without a network (2026-09-22)
+- SPEC-030: the OCSP responses a signer staples into its own signature
+  (`rVals.ocspVals`) are read, parsed per RFC 6960, matched to the
+  signer's certificate and verified under a responder tied to its own
+  issuer. A verified `revoked` makes the file `Invalid`
+  (`signingCredential.ocsp.revoked`); everything unreadable,
+  unverifiable, stale or about another certificate is
+  `signingCredential.ocsp.skipped` and costs no verdict.
+- The shape of that rule comes from one measurement: **`rVals` sits in
+  the COSE unprotected bucket**, so anyone holding the file can add,
+  alter or strip it. A stapled response may therefore lower trust and
+  never raise it, and may never fail a file it cannot prove anything
+  about — otherwise editing one unsigned byte would deny any valid asset.
+- **Every file now reports whether revocation was checked at all**, and
+  `checksPerformed` carries `revocation`. A skipped check that leaves no
+  trace is the shape of silence this project refuses elsewhere. This is a
+  second deliberate divergence from `c2patool`, which emits no OCSP code
+  of its own on the two fixtures that carry a stapled response.
+- Still out of scope, by rule rather than by milestone: any revocation
+  that needs the network — online OCSP, an AIA fetch, a CRL.
+- `StatusCode` grows by four cases; the recorded public surface goes from
+  95 symbols to 99 (SPEC-025 amendment 3).
+
+### Every obligation of the specification, listed (2026-09-22)
+- `docs/conformance.md`: the 111 predicates of
+  `encypherai/c2pa-conformance-suite` that apply to the formats this
+  verifier reads, laid one by one next to what it actually does — 54
+  enforced, 12 partial, 7 closed by refusing the feature, 21 out of scope
+  by design, **17 gaps**, each with what it would cost. The catalogue is
+  used as a checklist of named obligations, not as an oracle: that
+  suite's own JPEG path disagrees with `c2patool`, this verifier and the
+  Go implementation on files all three accept.
+- The table found the gap SPEC-030 then closed, and says plainly that it
+  is reasoned rather than measured except where an entry names a test.
+
+### M8 — ISOBMFF (2026-09-22)
+- SPEC-026: the ISOBMFF container. One top-level `uuid` box with the C2PA
+  UUID and a 21-byte preamble, read with a bounded box walk; a second
+  such box, a `purpose` this verifier does not read, or a header that
+  does not fit is an error naming it. MP4, MOV, AVIF and HEIC, each held
+  by a fixture here — a format is not named anywhere unless a file in
+  this repository carries it.
+- SPEC-027: `c2pa.hash.bmff.v3`. The digest was measured by instrumenting
+  `c2pa-rs` rather than guessed: for each top-level box no exclusion
+  matches, in file order, the eight-byte big-endian offset and then the
+  box's bytes.
+- SPEC-028: fragmented streams. A DASH init segment and its fragments as
+  one verdict — the init against `initHash`, every fragment against the
+  Merkle root, and the count as part of the promise: a withheld, repeated
+  or foreign fragment is `Invalid` and **named**, which `c2patool` 0.27.22
+  does not do (it answers in text, not JSON, and says only that something
+  failed). `FragmentedVerifier` is the tenth class of the public contract,
+  and takes the fragments one open stream at a time.
+- SPEC-029: `c2pa.hash.bmff.v2`, after `c2pa-rs`'s own `video1.mp4` turned
+  one up. The digest is identical to v3's; what differs is the exclusion
+  list, and v2's needs nested box paths and `subset` filters. A filter this
+  verifier cannot honour is refused only once its path resolves to a box
+  the file actually has.
+
+### Assurance: what a version number promises (2026-09-22)
+- SPEC-025: the public API is ten classes and 99 recorded symbols, every
+  other public class marked `@internal`. The surface is recorded in
+  `tests/Fixtures/api/public-surface.txt` so a change to the promise shows
+  up as a diff in review; `bin/api-check.php` is a step of `composer
+  check` and fails the build on drift.
+- SPEC-024: resource bounds. A manifest store that used to end a 128 MB
+  process fatally now returns `Invalid` in 6 MB and 2 ms. Every parser has
+  a limit and every limit has a message.
+- Mutation testing with Pest's `--mutate`: **98.06 %**.
+
+### The published package (2026-09-22)
+- SPEC-023: what a `composer require` actually installs — `.gitattributes`
+  keeps the fixtures, notes, specs and tooling out of the distributed
+  archive, and `bin/package-check.php` measures the archive rather than
+  trusting the list.
+
 ### Coverage and a fix (2026-09-22)
 - `tests/Fixtures/matrix/`: the three unsigned fixtures signed with all
   seven signature algorithms in all three containers, plus two files

@@ -208,8 +208,10 @@ alone.
 - **`c2patool`'s verdict, verbatim.** `validation_state` and the C2PA 2.4
   §15 status codes are the only vocabulary; where this verifier differs
   from `c2patool` it is stricter by a named rule, never more lenient, and
-  five fixture corpora (96 files from nine writers) are run as drift
-  alarms in every test run. A second, independent implementation — the
+  five fixture corpora — 93 files: this project's own signed variants,
+  `c2pa-org/public-testfiles`, `c2pa-rs`'s own fixtures, seven files from
+  other writers, and a matrix of every signature algorithm in every
+  container — are run as drift alarms in every test run. A second, independent implementation — the
   Go verifier `richardwooding/c2pa` — has been run over the same files,
   to catch what agreeing with one oracle can hide.
 - **No trust by name.** Only a chain that cryptographically reaches an

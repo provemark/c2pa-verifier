@@ -5202,3 +5202,37 @@ README are where the disclosure lives.
 - Decided by Maurice: that the disclosure may be explicit, provided it says
   the work was controlled. Open for him: the visibility change; the first
   tag (`0.1.0`); the announcement.
+
+## 2026-09-23 — Step 96, the pre-public audit
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "doe eerst die vier controles, en kijk of alle teksten die naar
+  buiten gaan kloppen" — after "akkoord, zet hem dan maar public", which
+  was then held ("wacht maar even").
+- Produced: `SECURITY.md` scope lists corrected; `CHANGELOG.md` extended
+  with SPEC-023, SPEC-024, SPEC-025, M8's four specs and SPEC-030;
+  `composer.json`'s description; the README's corpus figure; the corpus
+  paragraph in `docs/comparison.md`; a forward pointer in ADR-0001;
+  `notes/step-96-pre-public-audit.md`, `NOTES.md`, `docs/milestones.md`.
+- Measured: private keys in the whole history — `git log --all -S` over
+  276 commits, five PEM header variants, **0 commits**; the 29 tracked
+  certificate files hold `CERTIFICATE` blocks only. Attribution in every
+  commit message on every branch: empty. Local paths: one hit, the row in
+  step 62's note that names the pattern being searched for. The untracked
+  instruction file: `.gitignore` plus two notes recording this audit.
+  Counts against the repository: 31 specs, 87 amendments, 99 symbols, 111
+  obligations (54 met, 17 open), 421 tests, 93 corpus files in five
+  alarms. And mechanically, in `src/`: no network call, no process call,
+  no temporary file — the only writes are the CLI's stdout and stderr.
+- Reasoned: that a security document understating what is verified is
+  still wrong in the one file a reader opens to learn what is checked;
+  that "nine writers" should be replaced rather than recounted, because a
+  number nobody can verify is worse than none; and that the two remaining
+  mentions of the untracked instruction file are the record of this very
+  check and should stay, since removing them would make the record
+  unreadable. That last one is a judgement call and is flagged rather
+  than taken as settled.
+- Decided by Maurice: to run this audit before the visibility change, and
+  to hold the switch. Open for him: **the commit e-mail address**, which
+  publishing makes public for all 276 commits and which GitHub can only
+  mask beforehand; then visibility, branch protection, the `0.1.0` tag,
+  Packagist and the announcement, in that order.
