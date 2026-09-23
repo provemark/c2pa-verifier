@@ -47,7 +47,7 @@ spots now go through it too.
 
 ## Measured
 
-- Red: 19 tests on the missing classes (`e5840b6`).
+- Red: 19 tests on the missing classes (`47f9ded`).
 - After the parser: 18 passed, 1 failed (AC10, above).
 - After the fix and the `Support` move: `composer check` → exit 0:
   spec-check `OK: 6 spec(s), 6 test file(s)`, Pint passed, PHPStan `No

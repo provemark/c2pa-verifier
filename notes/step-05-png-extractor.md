@@ -33,7 +33,7 @@ costs eight bytes of reading (AC12 measures `ftell ≤ 41`).
 ## Measured
 
 - Before: `vendor/bin/pest --group=SPEC-002` → 15 failed, all on the
-  missing class (commit `2bc6643`).
+  missing class (commit `c514e5d`).
 - First run of the class: **14 passed, 1 failed** — AC14.
 - After the fix below: `composer check` → exit 0: spec-check `OK: 3
   spec(s), 3 test file(s)`, Pint passed, PHPStan `No errors`, Deptrac

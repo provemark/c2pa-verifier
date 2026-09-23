@@ -31,7 +31,7 @@ layer; the structural ones stay `general.error` by design.
 
 ## Measured
 
-- Red: 10 tests on the missing classes (`2b74ab9`).
+- Red: 10 tests on the missing classes (`a00c969`).
 - First run: **6 passed, 4 failed** — all four in the test file. Three
   were one Pest idiom: `toContain()` takes *several needles*, not a
   needle and a message, so `->toContain($message, $name)` had also looked

@@ -137,7 +137,7 @@ which AC11 now is, for as long as the command exists.
 
 ### CI, and one flaky comparison
 
-Run 35714422755 on `787c2c7`: PHP 8.3 and 8.4 green, **PHP 8.5 red** on
+Run 35714422755 on `ded2fcd`: PHP 8.3 and 8.4 green, **PHP 8.5 red** on
 AC11 — `truepic-20230212-camera` without settings: the expectation and
 the command's run straddled a second, and the `signingCredential.expired`
 message names the second of the check ("expired at 2026-09-22T10:10:09Z"

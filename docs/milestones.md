@@ -15,7 +15,7 @@ when" has not been measured is not done.
 
 | M | What | Done when |
 |---|---|---|
-| M0 | Repository skeleton: package, tool chain, spec template, traceability check, CI, notes, ADRs | `composer check` green on an empty `src/` — **done 2026-09-19**; first green CI run (all three PHP versions) on `bbb7299`, run `35444321627`, the same day |
+| M0 | Repository skeleton: package, tool chain, spec template, traceability check, CI, notes, ADRs | `composer check` green on an empty `src/` — **done 2026-09-19**; first green CI run (all three PHP versions) on `3438016`, run `35444321627`, the same day |
 | M1 | **Container → manifest store bytes.** JPEG APP11 (multi-segment, Box Instance Numbers), PNG `caBX`, WebP RIFF `C2PA`. Byte-exact extraction, nothing parsed. | SHA-256 of the extracted store equals what `c2patool --detailed` / a hexdump gives, for every fixture — **done 2026-09-20** (steps 02–07; the hashes in `notes/step-02`, `-04`, `-06`) |
 | M2 | **JUMBF + CBOR → manifest store as data.** Boxes, superboxes, description boxes, content-type UUIDs; a CBOR decoder for the subset C2PA uses; claim v1 and v2; assertions; `claim_generator_info`. | the sister library's `ManifestStoreParser::fromJson()` accepts the output and every accessor equals its `/v1/read` — **done 2026-09-21** (steps 09–15; SPEC-007 AC6: the five content accessors equal c2patool's JSON through the sister parser; the crypto accessors join in M3–M6) |
 | M3 | **COSE_Sign1.** Protected header, `x5chain`, Sig_structure, verify ES256/ES384/PS256/Ed25519. No trust yet. | `claimSignature.validated` equals c2patool on all fixtures; one altered byte in the claim → `claimSignature.mismatch` — **done 2026-09-21** (steps 16–22; SPEC-010 AC1/AC2 compare code and url with c2patool's JSON; ES256/384/512, PS256/384/512 and Ed25519 on `ext-openssl` + opt-in `sodium`, ADR-0001 amended) |
@@ -41,14 +41,14 @@ Each step is one commit, explained before it is built, with its own
 
 | Step | What | Status |
 |---|---|---|
-| M0.1 | `composer.json` (`provemark/c2pa-verifier`, MIT, `php ^8.3`, no packages in `require`), `LICENSE`, `src/`, `tests/Fixtures/README.md` | done, `53caa8d` |
-| M0.2 | Pint, PHPStan level max, Deptrac (one layer per milestone), Pest; `composer check` as the single definition of green | done, `b351e86` |
-| M0.3a | `specs/TEMPLATE.md`; SPEC-000 (the traceability checker) as draft, then approved | done, `60ec881`, `eff055e` |
+| M0.1 | `composer.json` (`provemark/c2pa-verifier`, MIT, `php ^8.3`, no packages in `require`), `LICENSE`, `src/`, `tests/Fixtures/README.md` | done, `abd13ed` |
+| M0.2 | Pint, PHPStan level max, Deptrac (one layer per milestone), Pest; `composer check` as the single definition of green | done, `18c4be3` |
+| M0.3a | `specs/TEMPLATE.md`; SPEC-000 (the traceability checker) as draft, then approved | done, `d44553e`, `28f5703` |
 | M0.3b | Red tests for SPEC-000, `->group('SPEC-000')`, fixture trees under `tests/Fixtures/spec-check/` | done, seen red (11 failed) |
 | M0.3c | `bin/spec-check.php`; first step of `composer check`; SPEC-000 → `implemented` with Traceability | done, 11 passed, AC10 measured by hand |
-| M0.4 | CI: `.github/workflows/ci.yml`, `composer check` on PHP 8.3 / 8.4 / 8.5 | M0.4b done 2026-09-19: private repo `provemark/c2pa-verifier`, first run read per job. Pest 5 needed PHP ^8.4, so the 8.3 leg could not install; fixed the same day with `pestphp/pest ^4.0` (as the sister library). CI red on purpose until step 03b; first green run on `bbb7299` (run `35444321627`): 8.3 / 8.4 / 8.5 each 27 passed |
+| M0.4 | CI: `.github/workflows/ci.yml`, `composer check` on PHP 8.3 / 8.4 / 8.5 | M0.4b done 2026-09-19: private repo `provemark/c2pa-verifier`, first run read per job. Pest 5 needed PHP ^8.4, so the 8.3 leg could not install; fixed the same day with `pestphp/pest ^4.0` (as the sister library). CI red on purpose until step 03b; first green run on `3438016` (run `35444321627`): 8.3 / 8.4 / 8.5 each 27 passed |
 | M0.5 | `README.md` (with the "How this is built" disclosure), `NOTES.md` + `notes/step-01-*.md`, ADR-0001 (dependencies), ADR-0002 (name, namespace, licence) | done |
-| M0.6 | Measurement: `composer check` green on an empty `src/`; M0 closed | done — exit 0, `src/` held only `.gitkeep`; the CI run closed with the first green run on `bbb7299` |
+| M0.6 | Measurement: `composer check` green on an empty `src/`; M0 closed | done — exit 0, `src/` held only `.gitkeep`; the CI run closed with the first green run on `3438016` |
 
 Why M0.3 exists at all: Pest exits 1 on an empty suite (measured in M0.2),
 which is the wanted behaviour — a suite that runs nothing must not be green.
@@ -249,3 +249,4 @@ with the signing command and tool version recorded.
 | 94 | A first-version notice above the fold in the README, plus *Trying it, and what to send back* — `notes/step-94-first-version-notice.md` | done 2026-09-23; no visibility change, no tag, no Packagist. First-tag advice corrected to `0.1.0`; the stale "22 gaps" corrected to 17 |
 | 95 | The README disclosure expanded from *that* it was built with Claude Code to *how*, with every control checkable in the repository — `notes/step-95-disclosure.md` | done 2026-09-23; numbers verified (31 specs, 87 amendments, 17 gaps), and the section says plainly that none of it is an independent audit |
 | 96 | The pre-public audit: four irreversible checks, then every outward text read for accuracy — `notes/step-96-pre-public-audit.md` | done 2026-09-23; checks clean, four texts corrected (SECURITY scope, the changelog's missing milestone, the package description, two stale counts). Repository still **private**; the commit e-mail address is the one thing to settle before the switch |
+| 97 | The author e-mail rewritten out of all 277 commits with `git filter-repo`, in an isolated clone, verified before the force-push; 199 commit references in the documentation translated through the commit-map — `notes/step-97-history-rewrite.md` | done 2026-09-23; tree of `HEAD` byte-identical, CI green on the rewritten history, repository still **private** |

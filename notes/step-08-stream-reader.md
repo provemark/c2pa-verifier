@@ -54,7 +54,7 @@ criterion, more precise message.
 
 - Red: 7 SPEC-004 tests (the class missing; AC1 also on the three copies
   still present), SPEC-001 AC16 (the old message), SPEC-001 AC14 (the old
-  message) — commit `302cfd0`.
+  message) — commit `36172c2`.
 - After the reader alone: SPEC-004 6 passed, AC1 still red (the copies).
 - After the move: `composer check` exit 0 — spec-check `OK: 5 spec(s), 5
   test file(s)`, Pint passed, PHPStan `No errors`, Deptrac 0 violations,

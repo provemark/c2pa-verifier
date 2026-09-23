@@ -362,7 +362,7 @@ README are where the disclosure lives.
   tracked `*.key`; 0 tracked files with a local path; the only tracked
   mention of the local brief is its own `.gitignore` line; maintainer is
   `admin` of the org; the name was free. After: `gh repo view --json
-  visibility` → `PRIVATE`. First run `35435586024` on `d7e83d0`: all four
+  visibility` → `PRIVATE`. First run `35435586024` on `4b3ff90`: all four
   jobs `failure`. Read per job, not by the aggregate: **8.4 and 8.5 fail at
   PHPStan** with `Class …Container\ContainerException not found` — the
   expected red of the fourteen SPEC-001 tests written before their
@@ -456,11 +456,11 @@ README are where the disclosure lives.
 ## 2026-09-19 — First green CI run
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "ja, push maar en lees de CI-run".
-- Produced: pushed `56e6dd4` and `bbb7299` to `origin/main`; three
+- Produced: pushed `926b2f0` and `3438016` to `origin/main`; three
   `docs/milestones.md` rows that still said the CI run was pending; this
   entry.
 - Measured: 0 attribution lines in the history before the push. Run
-  `35444321627` on `bbb7299`: conclusion `success`; per job, `composer
+  `35444321627` on `3438016`: conclusion `success`; per job, `composer
   check (PHP 8.3)`, `(PHP 8.4)`, `(PHP 8.5)` each `success` with `Tests:
   27 passed` in the log; `all green` `success`. The first green run of the
   project, and the first in which the 8.3 leg installed at all.
@@ -515,7 +515,7 @@ README are where the disclosure lives.
   maintainer had written `tests/Unit/Container/PngManifestStoreExtractorTest.php`
   (constants, three helpers, the AC1 test) himself; then "goedgekeurd, en
   pas jij de vijf punten aan".
-- Produced: SPEC-002 → `approved` (own commit `4825d4d`); five edits to the
+- Produced: SPEC-002 → `approved` (own commit `f920553`); five edits to the
   maintainer's file: the missing `use` for `PngManifestStoreExtractor`,
   `?ManifestStoreBytes` as the helper's return type (AC2 needs `null`),
   `/** @return resource */` on `spec002Stream()`, "byte extract" →
@@ -588,10 +588,10 @@ README are where the disclosure lives.
 ## 2026-09-20 — CI green on SPEC-002
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "ja, push maar en lees de CI-run".
-- Produced: pushed `21e2d1e`…`293cc10` (six commits) to `origin/main`; this
+- Produced: pushed `6a4bcb8`…`d5368aa` (six commits) to `origin/main`; this
   entry.
 - Measured: before the push, 0 attribution lines in the history and no
-  tracked file matching `key`. Run `35492160497` on `293cc10`: conclusion
+  tracked file matching `key`. Run `35492160497` on `d5368aa`: conclusion
   `success`; `composer check (PHP 8.3)`, `(PHP 8.4)`, `(PHP 8.5)` each
   `success` with `Tests: 42 passed`; `all green` `success`.
 - Decided by Maurice: push.
@@ -647,7 +647,7 @@ README are where the disclosure lives.
 ## 2026-09-20 — SPEC-003 approved; its tests, seen red
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "goedgekeurd, maak alle tests".
-- Produced: SPEC-003 → `approved` (own commit `2e77205`);
+- Produced: SPEC-003 → `approved` (own commit `559bf4a`);
   `tests/Unit/Container/WebpManifestStoreExtractorTest.php`, 21 tests for
   16 criteria (AC5 has four, AC11 and AC12 two each); `docs/milestones.md`
   row; this entry. No `src/` change.
@@ -687,10 +687,10 @@ README are where the disclosure lives.
 ## 2026-09-20 — CI green on M1
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "ja, push maar en lees de CI-run".
-- Produced: pushed `98e4abf`…`6b81862` (five commits) to `origin/main`;
+- Produced: pushed `3ed0111`…`e4da806` (five commits) to `origin/main`;
   this entry.
 - Measured: before the push, 0 attribution lines and no tracked file
-  matching `key`. Run `35493241785` on `6b81862`: conclusion `success`;
+  matching `key`. Run `35493241785` on `e4da806`: conclusion `success`;
   `composer check (PHP 8.3)`, `(PHP 8.4)`, `(PHP 8.5)` each `success` with
   `Tests: 63 passed`; `all green` `success`.
 - Decided by Maurice: push.
@@ -710,7 +710,7 @@ README are where the disclosure lives.
 - Measured: the new JPEG variant through `c2patool 0.27.22` → `Could not
   parse input JPEG`, and through the old extractor → `inside the segment at
   offset 2` (the imprecision); regenerating changed no other file. Red: 7 +
-  2 (commit `302cfd0`). After the class alone: 6 green, AC1 red on the
+  2 (commit `36172c2`). After the class alone: 6 green, AC1 red on the
   copies. After the move: `grep fread|fseek|ftell` over the three
   extractors → nothing; `composer check` exit 0, **71 passed (164
   assertions)**, spec-check `OK: 5 spec(s), 5 test file(s)`.
@@ -722,10 +722,10 @@ README are where the disclosure lives.
 ## 2026-09-20 — CI green on SPEC-004
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "ja, push maar en lees de CI-run".
-- Produced: pushed `346ac73`, `302cfd0`, `69d5a55` to `origin/main`; this
+- Produced: pushed `0139922`, `36172c2`, `ed81e84` to `origin/main`; this
   entry.
 - Measured: before the push, 0 attribution lines and no tracked file
-  matching `key`. Run `35493634964` on `69d5a55`: conclusion `success`;
+  matching `key`. Run `35493634964` on `ed81e84`: conclusion `success`;
   `composer check (PHP 8.3)`, `(PHP 8.4)`, `(PHP 8.5)` each `success` with
   `Tests: 71 passed`; `all green` `success`.
 - Decided by Maurice: push.
@@ -780,9 +780,9 @@ README are where the disclosure lives.
 ## 2026-09-20 — CI green after step 09 and the public fixture
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (same request) read the CI run.
-- Produced: pushed `6af34b1` and `abf9a62` to `origin/main`; this entry.
+- Produced: pushed `5a708d7` and `3c49882` to `origin/main`; this entry.
 - Measured: before the push, 0 attribution lines and no tracked file
-  matching `key`. Run `35496464128` on `abf9a62`: conclusion `success`;
+  matching `key`. Run `35496464128` on `3c49882`: conclusion `success`;
   PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 71 passed`; `all green`
   `success`.
 - Decided by Maurice: push.
@@ -843,7 +843,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "goedgekeurd, push maar en lees de CI-run".
 - Produced: SPEC-005 → `approved`; `docs/milestones.md` row; this entry;
-  pushed `7cc1a1c`, `a8a7efb` and this commit to `origin/main`.
+  pushed `54ad8c1`, `b620c37` and this commit to `origin/main`.
 - Measured: before the push, 0 attribution lines and no tracked file
   matching `key`; `spec-check` `OK: 6 spec(s), 5 test file(s)`. The CI
   run: see the next entry.
@@ -854,7 +854,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (same request) read the CI run.
 - Produced: this entry.
-- Measured: run `35571033890` on `900217ef`: conclusion `success`; PHP
+- Measured: run `35571033890` on `b9f8a28f`: conclusion `success`; PHP
   8.3 / 8.4 / 8.5 each `success` with `Tests: 71 passed`; `all green`
   `success`. The 46 new fixture files and the variants script pass PHPStan
   and Pint on all three versions.
@@ -911,9 +911,9 @@ README are where the disclosure lives.
 ## 2026-09-21 — CI green on SPEC-005
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "ja, push maar en lees de CI-run".
-- Produced: pushed `e5840b6` and `d433527` to `origin/main`; this entry.
+- Produced: pushed `47f9ded` and `731a79f` to `origin/main`; this entry.
 - Measured: before the push, 0 attribution lines and no tracked file
-  matching `key`. Run `35572440777` on `d433527`: conclusion `success`;
+  matching `key`. Run `35572440777` on `731a79f`: conclusion `success`;
   PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 90 passed`; `all green`
   `success`.
 - Decided by Maurice: push.
@@ -971,7 +971,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "goedgekeurd, push maar en lees de CI-run".
 - Produced: SPEC-006 → `approved`; `docs/milestones.md` row; this entry;
-  pushed `1059aaf`, `8d3ffbf` and this commit to `origin/main`.
+  pushed `7c8a34c`, `c72b896` and this commit to `origin/main`.
 - Measured: before the push, 0 attribution lines and no tracked file
   matching `key`; `spec-check` `OK: 7 spec(s), 6 test file(s)`. The CI
   run: see the next entry.
@@ -981,7 +981,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (same request) read the CI run.
 - Produced: this entry.
-- Measured: run `35573418733` on `b8e44adf`: conclusion `success`; PHP
+- Measured: run `35573418733` on `0dead7de`: conclusion `success`; PHP
   8.3 / 8.4 / 8.5 each `success` with `Tests: 90 passed`; `all green`
   `success`. The pre-push `git ls-files | grep -ci key` returned 2 for the
   first time — `tests/Fixtures/cbor/claim-duplicate-key.{cbor,png}`, a
@@ -1043,9 +1043,9 @@ README are where the disclosure lives.
 ## 2026-09-21 — CI green on SPEC-006
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "ja, push maar en lees de CI-run".
-- Produced: pushed `c9eec06` and `5251e72` to `origin/main`; this entry.
+- Produced: pushed `67a2d56` and `1cd449f` to `origin/main`; this entry.
 - Measured: before the push, 0 attribution lines and no tracked `*.key`.
-  Run `35574264542` on `5251e72`: conclusion `success`; PHP 8.3 / 8.4 /
+  Run `35574264542` on `1cd449f`: conclusion `success`; PHP 8.3 / 8.4 /
   8.5 each `success` with `Tests: 106 passed`; `all green` `success`.
 - Decided by Maurice: push.
 
@@ -1102,7 +1102,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "goedgekeurd, push maar en lees de CI-run".
 - Produced: SPEC-007 → `approved`; `docs/milestones.md` row; this entry;
-  pushed `9a88d9f`, `2599876` and this commit to `origin/main`.
+  pushed `e87176c`, `ea38990` and this commit to `origin/main`.
 - Measured: before the push, 0 attribution lines and no tracked `*.key`;
   `spec-check` `OK: 8 spec(s), 7 test file(s)`. The CI run: next entry.
 - Decided by Maurice: SPEC-007 approved as drafted after step 14.
@@ -1111,7 +1111,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (same request) read the CI run.
 - Produced: this entry.
-- Measured: run `35575268917` on `d8819b9e`: conclusion `success`; PHP
+- Measured: run `35575268917` on `9c4102ff`: conclusion `success`; PHP
   8.3 / 8.4 / 8.5 each `success` with `Tests: 106 passed`; `all green`
   `success`.
 - Decided by Maurice: push.
@@ -1167,9 +1167,9 @@ README are where the disclosure lives.
 ## 2026-09-21 — CI green on M2
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "ja, push maar en lees de CI-run".
-- Produced: pushed `a0ead45` and `11b6b6d` to `origin/main`; this entry.
+- Produced: pushed `d7551c9` and `908cccf` to `origin/main`; this entry.
 - Measured: before the push, 0 attribution lines and no tracked `*.key`.
-  Run `35576013965` on `11b6b6d`: conclusion `success`; PHP 8.3 / 8.4 /
+  Run `35576013965` on `908cccf`: conclusion `success`; PHP 8.3 / 8.4 /
   8.5 each `success` with `Tests: 120 passed`, each installing
   `provemark/content-credentials (v0.15.1)` from Packagist; `all green`
   `success`. The AC6 equivalence test runs on CI without Docker or a
@@ -1210,7 +1210,7 @@ README are where the disclosure lives.
   Amendments section with the original decision, the measurements of step
   16 and the amended decision; two consequences of the original closed
   (CBOR measured against cbor-php; `ext-mbstring` now has call sites);
-  `docs/milestones.md` row; this entry; pushed `0ba7887` and this commit.
+  `docs/milestones.md` row; this entry; pushed `ada82ee` and this commit.
 - Measured: `grep -rn "mb_" src` → 2 call sites; before the push, 0
   attribution lines and no tracked `*.key`. The CI run: next entry.
 - Decided by Maurice: ADR-0001 amended — COSE_Sign1 verification written
@@ -1220,7 +1220,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (same request) read the CI run.
 - Produced: this entry.
-- Measured: run `35577079598` on `8e3bac96`: conclusion `success`; PHP
+- Measured: run `35577079598` on `2388663e`: conclusion `success`; PHP
   8.3 / 8.4 / 8.5 each `success` with `Tests: 120 passed`; `all green`
   `success`.
 - Decided by Maurice: push.
@@ -1275,7 +1275,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "goedgekeurd, push maar en lees de CI-run".
 - Produced: SPEC-008 → `approved`; `docs/milestones.md` row; this entry;
-  pushed `63439f8`, `550d490` and this commit to `origin/main`.
+  pushed `b4adc36`, `81d90d5` and this commit to `origin/main`.
 - Measured: before the push, 0 attribution lines and no tracked `*.key`;
   `spec-check` `OK: 9 spec(s), 8 test file(s)`. The CI run: next entry.
 - Decided by Maurice: SPEC-008 approved as drafted after step 17.
@@ -1292,7 +1292,7 @@ README are where the disclosure lives.
   The oracle is trusted for verdicts, not for messages or for structural
   strictness.
 - Produced: this entry.
-- Measured: run `35578144778` on `7c64fc1f`: conclusion `success`; PHP
+- Measured: run `35578144778` on `f118edfb`: conclusion `success`; PHP
   8.3 / 8.4 / 8.5 each `success` with `Tests: 120 passed`; `all green`
   `success`.
 - Decided by Maurice: push.
@@ -1342,9 +1342,9 @@ README are where the disclosure lives.
 ## 2026-09-21 — CI green on SPEC-008
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "ja, push maar en lees de CI-run".
-- Produced: pushed `edad933` and `47e48e5` to `origin/main`; this entry.
+- Produced: pushed `452ddbc` and `e5e9873` to `origin/main`; this entry.
 - Measured: before the push, 0 attribution lines and no tracked `*.key`.
-  Run `35579159736` on `47e48e5`: conclusion `success`; PHP 8.3 / 8.4 /
+  Run `35579159736` on `e5e9873`: conclusion `success`; PHP 8.3 / 8.4 /
   8.5 each `success` with `Tests: 132 passed`; `all green` `success`.
 - Decided by Maurice: push.
 
@@ -1398,7 +1398,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "goedgekeurd, push maar en lees de CI-run".
 - Produced: SPEC-009 → `approved`; `docs/milestones.md` row; this entry;
-  pushed `f5a8d3a`, `ab26a17` and this commit to `origin/main`.
+  pushed `0b0183f`, `31cfaa2` and this commit to `origin/main`.
 - Measured: before the push, 0 attribution lines and no tracked `*.key`;
   `spec-check` `OK: 10 spec(s), 9 test file(s)`. The CI run: next entry.
 - Decided by Maurice: SPEC-009 approved as drafted after step 19.
@@ -1407,7 +1407,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (same request) read the CI run.
 - Produced: this entry.
-- Measured: run `35580128105` on `ebb50671`: conclusion `success`; PHP
+- Measured: run `35580128105` on `b7588cae`: conclusion `success`; PHP
   8.3 / 8.4 / 8.5 each `success` with `Tests: 132 passed`; `all green`
   `success`. The vector script passes PHPStan and Pint on all three.
 - Decided by Maurice: push.
@@ -1455,12 +1455,12 @@ README are where the disclosure lives.
 ## 2026-09-21 — CI on SPEC-009: PHP 8.3 cannot verify Ed25519 through ext-openssl
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "ja, push maar en lees de CI-run".
-- Produced: pushed `2d32724` and `1faba25`; after the run, AC8's test
+- Produced: pushed `2b645a6` and `e41686c`; after the run, AC8's test
   rewritten to encode the measured boundary, SPEC-009 amendment 1 (a
   measurement, no criterion changed), `composer.json` `suggest` for
   `ext-sodium` reworded, `notes/step-20` updated; this entry; pushed
   again.
-- Measured: run `35581104498` on `1faba25`: PHP 8.4 and 8.5 `success`,
+- Measured: run `35581104498` on `e41686c`: PHP 8.4 and 8.5 `success`,
   **PHP 8.3 `failure`** — `142 passed, 1 failed`: AC8's OpenSSL-only path
   threw `EdDSA cannot be verified: neither ext-sodium nor OpenSSL Ed25519
   support is available on this PHP`; the sodium path passed on 8.3. Locally
@@ -1475,7 +1475,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (same request) read the CI run.
 - Produced: this entry.
-- Measured: run `35581284766` on `8f53ee32`: conclusion `success`; PHP
+- Measured: run `35581284766` on `f383c0bf`: conclusion `success`; PHP
   8.3 / 8.4 / 8.5 each `success` with `Tests: 143 passed`; `all green`
   `success`.
 - Decided by Maurice: push.
@@ -1504,7 +1504,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (same request) read the CI run.
 - Produced: this entry.
-- Measured: run `35581674251` on `c9e4cf23`: conclusion `success`, PHP
+- Measured: run `35581674251` on `194b743f`: conclusion `success`, PHP
   8.3 / 8.4 / 8.5 each `143 passed`; per job `Cache not found for input
   keys: composer-Linux-php8.x-8a61b732…` then `Cache saved with key …` —
   the expected miss that fills the cache. The next run must restore it;
@@ -1515,7 +1515,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (same request) read the CI run.
 - Produced: this entry.
-- Measured: run 35581790139 on f55bfc15 (the push of the previous log entry):
+- Measured: run 35581790139 on a9e7d924 (the push of the previous log entry):
   conclusion `success`, 143 passed on each PHP; `Cache restored from
   key: composer-Linux-php8.x-8a61b732…` in all three jobs; the string
   `Downloading` appears in none of them — the sister library and every
@@ -1569,7 +1569,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "goedgekeurd, push maar en lees de CI-run".
 - Produced: SPEC-010 → `approved`; `docs/milestones.md` row; this entry;
-  pushed `07afc75`, `f28a758`, `6d2bbc6` and this commit to `origin/main`.
+  pushed `bae5bda`, `132df08`, `f50c801` and this commit to `origin/main`.
 - Measured: before the push, 0 attribution lines and no tracked `*.key`;
   `spec-check` `OK: 11 spec(s), 10 test file(s)`. The CI run: next entry.
 - Decided by Maurice: SPEC-010 approved as drafted after step 21.
@@ -1578,7 +1578,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (same request) read the CI run.
 - Produced: this entry.
-- Measured: run `35583334608` on `0d3ff9ee`: conclusion `success`; PHP
+- Measured: run `35583334608` on `70228815`: conclusion `success`; PHP
   8.3 / 8.4 / 8.5 each `success` with `Tests: 143 passed`, each with
   `Cache restored`; `all green` `success`.
 - Decided by Maurice: push.
@@ -1632,9 +1632,9 @@ README are where the disclosure lives.
   hier al mee kunnen?" — answered in conversation: a third reader that
   reads without judging, `validationState()` withheld until M4/M5; not
   before the repository is public).
-- Produced: pushed `2b74ab9` and `476e326` to `origin/main`; this entry.
+- Produced: pushed `a00c969` and `2ab1463` to `origin/main`; this entry.
 - Measured: before the push, 0 attribution lines and no tracked `*.key`.
-  Run `35584423141` on `476e326`: conclusion `success`; PHP 8.3 / 8.4 /
+  Run `35584423141` on `2ab1463`: conclusion `success`; PHP 8.3 / 8.4 /
   8.5 each `success` with `Tests: 153 passed`; `all green` `success`.
 - Decided by Maurice: push.
 
@@ -1664,9 +1664,9 @@ README are where the disclosure lives.
 ## 2026-09-21 — CI green on step 23
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar en lees de CI-run".
-- Produced: pushed `cfc0984` to `origin/main`; this entry.
+- Produced: pushed `e293b6c` to `origin/main`; this entry.
 - Measured: before the push, 0 attribution lines and no tracked `*.key`.
-  Run `35586595620` on `cfc0984`: conclusion `success`; PHP 8.3 / 8.4 /
+  Run `35586595620` on `e293b6c`: conclusion `success`; PHP 8.3 / 8.4 /
   8.5 each `success` with `Tests: 153 passed`, Composer cache restored
   on all three (no downloads); `all green` `success`.
 - Decided by Maurice: push.
@@ -1770,11 +1770,11 @@ README are where the disclosure lives.
 ## 2026-09-21 — CI green on SPEC-011
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `d5ba2aa..ffb9a31` (five commits) to `origin/main`;
+- Produced: pushed `921ce0f..0ea6db7` (five commits) to `origin/main`;
   this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`,
   `gh repo view --json visibility` → `PRIVATE`. Run `35621588330` on
-  `ffb9a31`: conclusion `success`; PHP 8.3 / 8.4 / 8.5 each `success`
+  `0ea6db7`: conclusion `success`; PHP 8.3 / 8.4 / 8.5 each `success`
   with `Tests: 163 passed` (1099 assertions on 8.3 — the two Ed25519
   assertions SPEC-009 amendment 1 skips there — 1101 on 8.4 and 8.5),
   Composer cache restored on all three; `all green` `success`.
@@ -1897,11 +1897,11 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar" (and, in the same breath, "en dan b" — the Verifier
   layer next; its explanation was given, SPEC-013 awaits "akkoord").
-- Produced: pushed `4c9a7c9..8397646` (six commits) to `origin/main`;
+- Produced: pushed `0644ba2..fb9b3a0` (six commits) to `origin/main`;
   this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`,
   `gh repo view --json visibility` → `PRIVATE`. Run `35624439126` on
-  `8397646`: conclusion `success`; PHP 8.3 / 8.4 / 8.5 each `success`
+  `fb9b3a0`: conclusion `success`; PHP 8.3 / 8.4 / 8.5 each `success`
   with `Tests: 173 passed` (1340 assertions on 8.3, 1342 on 8.4/8.5 —
   the Ed25519 pair, as before); `all green` `success`.
 - Decided by Maurice: push; the Verifier layer before M5.
@@ -1999,11 +1999,11 @@ README are where the disclosure lives.
 ## 2026-09-21 — CI green on SPEC-013
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `465743a..abadd04` (six commits) to `origin/main`;
+- Produced: pushed `7b2b55b..ef04cb0` (six commits) to `origin/main`;
   this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`,
   `gh repo view --json visibility` → `PRIVATE`. Run `35634988650` on
-  `abadd04`: conclusion `success`; PHP 8.3 / 8.4 / 8.5 each `success`
+  `ef04cb0`: conclusion `success`; PHP 8.3 / 8.4 / 8.5 each `success`
   with `Tests: 183 passed` (1640 assertions on 8.3, 1642 on 8.4/8.5);
   `all green` `success`.
 - Decided by Maurice: push; then the M5 measurement step.
@@ -2165,11 +2165,11 @@ README are where the disclosure lives.
 - Asked: "push maar"; then, put as an explicit question, whether a
   tooling script may re-sign the PNG fixture with throw-away keys to
   make SPEC-015's certificate-profile variants.
-- Produced: pushed `2ddfe18..9ebac39` (ten commits) to `origin/main`;
+- Produced: pushed `db369b3..206e1a0` (ten commits) to `origin/main`;
   this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`,
   no `PRIVATE KEY` in `tests/Fixtures/trust/`, visibility `PRIVATE`.
-  Run `35640449671` on `9ebac39`: conclusion `success`; PHP 8.3 / 8.4 /
+  Run `35640449671` on `206e1a0`: conclusion `success`; PHP 8.3 / 8.4 /
   8.5 each `success` with `Tests: 193 passed` (1827 assertions on 8.3,
   1829 on 8.4/8.5); `all green` `success`.
 - Decided by Maurice: push. And: a tooling script under `bin/` may
@@ -2319,11 +2319,11 @@ README are where the disclosure lives.
 ## 2026-09-21 — CI green on M5
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `a0518c1..1fba881` (nine commits) to `origin/main`;
+- Produced: pushed `3caf879..430528f` (nine commits) to `origin/main`;
   this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`,
   no `PRIVATE KEY` under `tests/Fixtures/trust/` or `tests/Fixtures/profile/`,
-  visibility `PRIVATE`. Run `35649014938` on `1fba881`: conclusion
+  visibility `PRIVATE`. Run `35649014938` on `430528f`: conclusion
   `success`; PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 203
   passed` (2069 assertions on 8.3, 2071 on 8.4/8.5) — the throw-away
   hierarchy's certificates and the OpenSSL-name EKU table hold on the
@@ -2424,11 +2424,11 @@ README are where the disclosure lives.
 ## 2026-09-21 — CI green on the official corpus
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `ce1d345..1695977` (six commits) to `origin/main`;
+- Produced: pushed `0fbad16..353b481` (six commits) to `origin/main`;
   this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`,
   no `PRIVATE KEY` under the trust and profile fixtures, visibility
-  `PRIVATE`. Run `35652036005` on `1695977`: conclusion `success`; PHP
+  `PRIVATE`. Run `35652036005` on `353b481`: conclusion `success`; PHP
   8.3 / 8.4 / 8.5 each `success` with `Tests: 204 passed` (2204
   assertions on 8.3, 2206 on 8.4/8.5) — the 26 official files and both
   drift alarms hold on the CI runner; `all green` `success`.
@@ -2475,11 +2475,11 @@ README are where the disclosure lives.
 ## 2026-09-21 — CI green on the c2pa-rs corpus
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `db3e45e..dcdb72f` (three commits) to `origin/main`;
+- Produced: pushed `922720b..94bd1c5` (three commits) to `origin/main`;
   this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`,
   no `PRIVATE KEY` under the trust, profile and c2pa-rs fixtures,
-  visibility `PRIVATE`. Run `35654841579` on `dcdb72f`: conclusion
+  visibility `PRIVATE`. Run `35654841579` on `94bd1c5`: conclusion
   `success`; PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 206
   passed` (2251 assertions on 8.3, 2253 on 8.4/8.5); `all green`
   `success`.
@@ -2635,12 +2635,12 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green on SPEC-016
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `dcdb72f..f3311a9` (eight commits: the CI record,
+- Produced: pushed `94bd1c5..6a89fe6` (eight commits: the CI record,
   step 40, ADR-0004 draft and accepted, SPEC-016 draft and approved,
   steps 41a and 41b) to `origin/main`; this entry.
 - Measured: before the push, 0 attribution lines in `git log`, no
   tracked `*.key`, no `PRIVATE KEY` under `tests/Fixtures`, visibility
-  `PRIVATE`, tree clean. Run `35701477192` on `f3311a9`: conclusion
+  `PRIVATE`, tree clean. Run `35701477192` on `6a89fe6`: conclusion
   `success`; `composer check` on PHP 8.3 / 8.4 / 8.5 each `success`
   with `Tests: 270 passed` (2887 assertions on 8.3, 2889 on 8.4/8.5);
   `all green` `success`.
@@ -2726,8 +2726,8 @@ README are where the disclosure lives.
 ## 2026-09-22 — Push of M6, CI red on Deptrac, fixed
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `f3311a9..61114aa` (five commits); run `35704251235`
-  on `61114aa` failed on all three PHP versions — Deptrac: `Timestamp`
+- Produced: pushed `6a89fe6..bce063a` (five commits); run `35704251235`
+  on `bce063a` failed on all three PHP versions — Deptrac: `Timestamp`
   may not depend on `Cose` and `Trust` (32 violations, all in
   `TimestampCheck`). SPEC-017's Scope had named exactly those two layers
   ("Cose and Trust join in SPEC-017") and I did not write the rule into
@@ -2743,7 +2743,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (the same "push maar").
 - Produced: this entry.
-- Measured: run `35704398866` on `c8f6a25`: conclusion `success`;
+- Measured: run `35704398866` on `4679bb7`: conclusion `success`;
   `composer check` on PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 285
   passed` (3375 assertions on 8.3, 3377 on 8.4/8.5); `all green` `success`.
 - Decided by Maurice: none.
@@ -2796,7 +2796,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green on steps 43–44
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `c8f6a25..c530655` (three commits) to `origin/main`;
+- Produced: pushed `4679bb7..9047bb4` (three commits) to `origin/main`;
   one wording change in `tests/Fixtures/writers/README.md` (below); this
   entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`,
@@ -2806,7 +2806,7 @@ README are where the disclosure lives.
   key: a search for the PEM header `-----BEGIN … PRIVATE KEY-----` finds
   nothing anywhere under `tests/Fixtures`. The README sentence is
   reworded so the plain grep stays a usable check. Run `35705987729` on
-  `c530655`: conclusion `success`; `composer check` on PHP 8.3 / 8.4 /
+  `9047bb4`: conclusion `success`; `composer check` on PHP 8.3 / 8.4 /
   8.5 each `success` with `Tests: 293 passed` (3470 assertions on 8.3,
   3472 on 8.4/8.5); `all green` `success`.
 - Decided by Maurice: push.
@@ -2836,10 +2836,10 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green on step 45
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `c530655..358b86f` (two commits); this entry.
+- Produced: pushed `9047bb4..6aece53` (two commits); this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`, no
   PEM private-key header under the fixtures, visibility `PRIVATE`, tree
-  clean, Deptrac 0 violations. Run `35706917105` on `358b86f`:
+  clean, Deptrac 0 violations. Run `35706917105` on `6aece53`:
   conclusion `success`; `composer check` on PHP 8.3 / 8.4 / 8.5 each
   `success` with `Tests: 293 passed` (3470 assertions on 8.3, 3472 on
   8.4/8.5); `all green` `success`.
@@ -2900,10 +2900,10 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green on steps 46–47
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `358b86f..9dd90e2` (three commits); this entry.
+- Produced: pushed `6aece53..97cab87` (three commits); this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`, no
   PEM private-key header under the fixtures, visibility `PRIVATE`, tree
-  clean, Deptrac 0 violations. Run `35708908130` on `9dd90e2`:
+  clean, Deptrac 0 violations. Run `35708908130` on `97cab87`:
   conclusion `success`; `composer check` on PHP 8.3 / 8.4 / 8.5 each
   `success` with `Tests: 295 passed` (3502 assertions on 8.3, 3504 on
   8.4/8.5); `all green` `success`.
@@ -2998,10 +2998,10 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green on steps 48–49
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `9dd90e2..cebd8b9` (six commits); this entry.
+- Produced: pushed `97cab87..c4c10c0` (six commits); this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`, no
   PEM private-key header under the fixtures, visibility `PRIVATE`, tree
-  clean, Deptrac 0 violations. Run `35711271938` on `cebd8b9`:
+  clean, Deptrac 0 violations. Run `35711271938` on `c4c10c0`:
   conclusion `success`; `composer check` on PHP 8.3 / 8.4 / 8.5 each
   `success` with `Tests: 301 passed` (3616 assertions on 8.3, 3618 on
   8.4/8.5); `all green` `success`.
@@ -3028,10 +3028,10 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green on step 50
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `cebd8b9..44708ec` (two commits); this entry.
+- Produced: pushed `c4c10c0..d12c5a7` (two commits); this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`, no
   PEM private-key header under the fixtures, visibility `PRIVATE`, tree
-  clean. Run `35711867418` on `44708ec`: conclusion `success`;
+  clean. Run `35711867418` on `d12c5a7`: conclusion `success`;
   `composer check` on PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 301
   passed`; `all green` `success`.
 - Decided by Maurice: push.
@@ -3072,10 +3072,10 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green on step 51; no NLnet application
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar", then "ik ga geen NLNet-aanvraag doen".
-- Produced: pushed `44708ec..5e7e33c` (three commits); this entry.
+- Produced: pushed `d12c5a7..9c367ed` (three commits); this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`, no
   PEM private-key header under the fixtures, visibility `PRIVATE`, tree
-  clean. Run `35712457950` on `5e7e33c`: conclusion `success`;
+  clean. Run `35712457950` on `9c367ed`: conclusion `success`;
   `composer check` on PHP 8.3 / 8.4 / 8.5 each `success` with `Tests: 301
   passed`; `all green` `success`.
 - Decided by Maurice: push; **no NLnet/Restack application** — the
@@ -3154,7 +3154,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — Push after step 52; CI red on PHP 8.5, a flaky second
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar", then "begin daarna met de m7 meting".
-- Produced: pushed `5e7e33c..787c2c7` (five commits); run 35714422755:
+- Produced: pushed `9c367ed..ded2fcd` (five commits); run 35714422755:
   8.3 and 8.4 `success`, 8.5 `failure` — SPEC-019 AC11 on
   `truepic-20230212-camera`: the `signingCredential.expired` message
   names "now" to the second and the two runs straddled one. AC11 masks
@@ -3169,8 +3169,8 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green on step 52
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (the push above).
-- Produced: pushed `787c2c7..4e46fa2`; this entry.
-- Measured: run 35714591867 on `4e46fa2`: conclusion `success`, `composer
+- Produced: pushed `ded2fcd..92b1825`; this entry.
+- Measured: run 35714591867 on `92b1825`: conclusion `success`, `composer
   check` on PHP 8.3 / 8.4 / 8.5 each `success`, 314 passed. Reasoned:
   nothing.
 - Decided by Maurice: none.
@@ -3338,12 +3338,12 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green on steps 53–56 (M7's first two specs)
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `4e46fa2..4447f7f` (ten commits: the CI record of step
+- Produced: pushed `92b1825..76ef774` (ten commits: the CI record of step
   52, step 53's measurement, SPEC-020 draft/approve/red/green, step 55's
   measurement, SPEC-021 draft/approve/red/green); this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`, no
   PEM private-key header under the fixtures, visibility `PRIVATE`, tree
-  clean. Run `35724724999` on `4447f7f`: conclusion `success`;
+  clean. Run `35724724999` on `76ef774`: conclusion `success`;
   `composer check` on PHP 8.3 / 8.4 / 8.5 each `success`, 336 passed;
   `all green` `success`. Reasoned: nothing.
 - Decided by Maurice: push.
@@ -3431,11 +3431,11 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green on step 57: M7 complete
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `4447f7f..de23fbf` (five commits: the CI record of
+- Produced: pushed `76ef774..3b69165` (five commits: the CI record of
   step 56, SPEC-022 draft/approve/red/green); this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`, no
   PEM private-key header under the fixtures, visibility `PRIVATE`, tree
-  clean. Run `35727857709` on `de23fbf`: conclusion `success`;
+  clean. Run `35727857709` on `3b69165`: conclusion `success`;
   `composer check` on PHP 8.3 / 8.4 / 8.5 each `success`, 345 passed;
   `all green` `success`. Reasoned: nothing.
 - Decided by Maurice: push.
@@ -3478,11 +3478,11 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green on step 58; the amendment round closed
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `de23fbf..660a4a9` (three commits: the CI record of
+- Produced: pushed `3b69165..c4b4ed8` (three commits: the CI record of
   step 57, the amendment list, its confirmation); this entry.
 - Measured: before the push, 0 attribution lines, no tracked `*.key`, no
   PEM private-key header under the fixtures, visibility `PRIVATE`, tree
-  clean. Run `35728766450` on `660a4a9`: conclusion `success`;
+  clean. Run `35728766450` on `c4b4ed8`: conclusion `success`;
   `composer check` on PHP 8.3 / 8.4 / 8.5 each `success`, 345 passed;
   `all green` `success`. Reasoned: nothing.
 - Decided by Maurice: push. Open, and his alone: whether the repository
@@ -3517,7 +3517,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — The matrix finds a verdict that depended on the PHP version
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (the push of step 59; CI answered).
-- Produced: pushed `660a4a9..6ad9e55`; CI run 35730308123 red on **PHP
+- Produced: pushed `c4b4ed8..a1d2a5e`; CI run 35730308123 red on **PHP
   8.3 only**; the cause found and fixed in `src/Trust/Certificate.php`
   (`keyFacts()` reads the Ed25519 OID out of the SPKI), SPEC-015
   amendment 5, a regression test (AC11 in
@@ -3537,8 +3537,8 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green again on step 59
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: (the fix above).
-- Produced: pushed `6ad9e55..c79ba64`; this entry.
-- Measured: run `35730903562` on `c79ba64`: conclusion `success`;
+- Produced: pushed `a1d2a5e..e14ccf4`; this entry.
+- Measured: run `35730903562` on `e14ccf4`: conclusion `success`;
   `composer check` on PHP 8.3 / 8.4 / 8.5 each `success`, 349 passed —
   the first run where PHP 8.3 agrees with the other two on every
   Ed25519 file. Reasoned: nothing.
@@ -3571,11 +3571,11 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI green on step 60
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar".
-- Produced: pushed `6718482..531c53c` (the absence audit for M7); this
+- Produced: pushed `5a89dc1..6268cbb` (the absence audit for M7); this
   entry.
 - Measured: before the push, 0 attribution lines, no tracked key or PEM
   private-key header, visibility `PRIVATE`, tree clean. Run
-  `35735714668` on `531c53c`: conclusion `success`; `composer check` on
+  `35735714668` on `6268cbb`: conclusion `success`; `composer check` on
   PHP 8.3 / 8.4 / 8.5 each `success`, 353 passed. Reasoned: nothing.
 - Decided by Maurice: push.
 
@@ -3610,7 +3610,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar" — push the second-oracle step and the CI record of
   step 60.
-- Produced: pushed `c68420b` and `6a63026` to `origin/main`. Before the
+- Produced: pushed `3dd5346` and `6018ecd` to `origin/main`. Before the
   push, `tools/go-oracle/` turned out to be untracked: `.gitignore`
   ignored all of `tools/`, a rule written for the downloaded `c2patool`
   binary, while `notes/step-61-second-oracle.md` and `docs/comparison.md`
@@ -3621,7 +3621,7 @@ README are where the disclosure lives.
 - Measured: the pre-push checks — attribution 0, repository PRIVATE,
   tree clean; the private-key grep returned one hit, read and found to be
   prose *about* the check (`AI-LOG.md` and a removed line of the writers
-  README), not key material. CI run 35738537014 on `6a63026`: success on
+  README), not key material. CI run 35738537014 on `6018ecd`: success on
   PHP 8.3, 8.4 and 8.5, 353 tests. Reasoned: nothing.
 - Decided by Maurice: push. Open for him: whether the second-oracle
   finding goes to that project, and the public decision.
@@ -3654,9 +3654,9 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI on step 62
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar" — push the public-readiness step.
-- Produced: pushed `9510a2e` to `origin/main`.
+- Produced: pushed `8d4d826` to `origin/main`.
 - Measured: the pre-push checks — attribution 0, private-key patterns 0,
-  repository PRIVATE, tree clean. CI run 35739984051 on `9510a2e`:
+  repository PRIVATE, tree clean. CI run 35739984051 on `8d4d826`:
   success on PHP 8.3, 8.4 and 8.5, 353 tests. Reasoned: nothing.
 - Decided by Maurice: push. Open for him: SPEC-023 (the published
   package), a code of conduct, and the visibility change.
@@ -3686,7 +3686,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en ja op allebei" — push the draft and answer both
   blocking open questions with yes.
-- Produced: pushed `dc298b9`; recorded both decisions in place in
+- Produced: pushed `ce28eb2`; recorded both decisions in place in
   `specs/SPEC-023-published-package.md` and in `docs/milestones.md`.
 - Measured: `php bin/spec-check.php` OK, 24 specs, SPEC-023 still
   `draft`. Reasoned: nothing — this entry records decisions, not
@@ -3757,9 +3757,9 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar" — push the SPEC-023 approval, the red tests and the
   implementation.
-- Produced: pushed `8c3b22a`, `04a109f` and `11a9c66` to `origin/main`.
+- Produced: pushed `3c05617`, `3320284` and `baea083` to `origin/main`.
 - Measured: the pre-push checks — attribution 0, private-key patterns 0,
-  repository PRIVATE, tree clean. CI run 35742362853 on `11a9c66`:
+  repository PRIVATE, tree clean. CI run 35742362853 on `baea083`:
   success on PHP 8.3, 8.4 and 8.5, 366 passed. The run was also the test
   of `fetch-depth: 0`: AC3's historical archive really ran there
   (`✓ it AC3: the dist as it would have shipped before .gitattributes`,
@@ -3819,7 +3819,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar" — push the amendment list and the mutation-testing
   step.
-- Produced: pushed `1a85b97` and `e85cabd` to `origin/main`.
+- Produced: pushed `d4fc838` and `5d3f3ad` to `origin/main`.
 - Measured: the pre-push checks — attribution 0, private-key patterns 0,
   repository PRIVATE, tree clean. CI run 35748494988: success on PHP
   8.3, 8.4 and 8.5, 368 passed. The 8.4 job is the point of this run: it
@@ -3879,7 +3879,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — SPEC-024's two blocking questions answered
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en ja op allebei".
-- Produced: pushed `1508fc0` and `73f1809`; both decisions recorded in
+- Produced: pushed `3b9d7de` and `88e941c`; both decisions recorded in
   place in `specs/SPEC-024-resource-bounds.md` and in
   `docs/milestones.md`.
 - Measured: `php bin/spec-check.php` OK, 25 specs, SPEC-024 still
@@ -3955,7 +3955,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar" — push SPEC-024's approval, red tests and
   implementation.
-- Produced: pushed `60d6196`, `39fbc52` and `ff7c3bf` to `origin/main`.
+- Produced: pushed `bebd14c`, `5541e40` and `4689dd0` to `origin/main`.
 - Measured: the pre-push checks — attribution 0, private-key patterns 0,
   repository PRIVATE, tree clean. CI run 35751049349: success on PHP 8.3,
   8.4 and 8.5, 374 passed. The subprocess probe works on the runners as
@@ -4046,7 +4046,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — SPEC-025's blocking question answered
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en ja op de zeven exceptions".
-- Produced: pushed `4cb2432` and `c0c47a1`; the decision recorded in
+- Produced: pushed `1606c4f` and `caf44c8`; the decision recorded in
   place in `specs/SPEC-025-public-api.md`, with AC1's list grown from
   eight classes to nine; `docs/milestones.md`.
 - Measured: `php bin/spec-check.php` OK, 26 specs, SPEC-025 still
@@ -4124,7 +4124,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar" — push SPEC-025's approval, red tests and
   implementation.
-- Produced: pushed `f2f24bb`, `19ce950` and `92f52a4` to `origin/main`.
+- Produced: pushed `3ef70d4`, `7ec0a38` and `7f81575` to `origin/main`.
 - Measured: the pre-push checks — attribution 0, private-key patterns 0,
   repository PRIVATE, tree clean. CI run 35752965247: success on PHP 8.3,
   8.4 and 8.5, 381 passed. Reasoned: nothing.
@@ -4170,7 +4170,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI on step 71
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar" — push the conformance-suite step.
-- Produced: pushed `03d6607` to `origin/main`.
+- Produced: pushed `81faefa` to `origin/main`.
 - Measured: the pre-push checks — attribution 0, private-key patterns 0,
   repository PRIVATE, tree clean. CI run 35753874479: success on PHP 8.3,
   8.4 and 8.5, 381 passed. Reasoned: nothing; the step changed no code.
@@ -4209,7 +4209,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI on step 72
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar" — push the redaction-message step.
-- Produced: pushed `62b0787` to `origin/main`.
+- Produced: pushed `37cc37c` to `origin/main`.
 - Measured: the pre-push checks — attribution 0, private-key patterns 0,
   repository PRIVATE, tree clean. CI run 35754515668: success on PHP 8.3,
   8.4 and 8.5, 381 passed. Reasoned: nothing.
@@ -4248,7 +4248,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — SPEC-026 drafted
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en schrijf daarna de eerste spec als draft".
-- Produced: pushed `efba895`; `specs/SPEC-026-isobmff-extraction.md`
+- Produced: pushed `1e84eef`; `specs/SPEC-026-isobmff-extraction.md`
   (status `draft`, nine acceptance criteria), a line in
   `docs/milestones.md`.
 - Measured: nothing new; the spec rests on step 73's measurements, cited
@@ -4338,7 +4338,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI on step 74, and the three amendments confirmed
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en bevestig alle drie de amendementen".
-- Produced: pushed `446b385` and `b358b84`;
+- Produced: pushed `aeb9525` and `ecf3cc9`;
   `notes/step-75-amendments-since-68.md`; the confirmation stamped into
   SPEC-024 #1, SPEC-025 #1 and SPEC-026 #1; `NOTES.md`,
   `docs/milestones.md`.
@@ -4359,7 +4359,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI on steps 74 and 75
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: the push that carried step 74 and the confirmations.
-- Produced: pushed `b358b84` and `25b497b` to `origin/main`.
+- Produced: pushed `ecf3cc9` and `0b493f8` to `origin/main`.
 - Measured: CI run 35763727228: success on PHP 8.3, 8.4 and 8.5, 390
   passed — the first CI run in which this verifier reads an ISOBMFF file.
   Reasoned: nothing.
@@ -4400,7 +4400,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — Step 77, the BMFF hash reproduced
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en doe de instrumentatie".
-- Produced: pushed `16a9c2f`; `notes/step-77-bmff-hash-reproduced.md`,
+- Produced: pushed `26eec33`; `notes/step-77-bmff-hash-reproduced.md`,
   `NOTES.md`, `docs/milestones.md`. Nothing in `src/` changed.
 - Measured: c2pa-rs v0.90.22 built in a container with two `eprintln!`
   lines patched into its hashing loop, run against this repository's own
@@ -4424,7 +4424,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — SPEC-027 drafted
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en schrijf de spec".
-- Produced: pushed `277c344`; `specs/SPEC-027-bmff-hash.md` (status
+- Produced: pushed `ea32750`; `specs/SPEC-027-bmff-hash.md` (status
   `draft`, seven acceptance criteria), a line in `docs/milestones.md`.
 - Measured: nothing new; the spec rests on step 77's reproduction and
   step 73's exclusion list, both cited with their numbers. `php
@@ -4513,7 +4513,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — The SPEC-027 amendment confirmed
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en bevestig het amendement".
-- Produced: pushed `06cf75a` and `a7ef9a5`;
+- Produced: pushed `76551da` and `45d480f`;
   `notes/step-79-amendment-since-75.md`; the confirmation stamped into
   SPEC-027 #1; `NOTES.md`, `docs/milestones.md`.
 - Measured: the amendment count across every spec — 78, of which 77 were
@@ -4530,7 +4530,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI on steps 78 and 79
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: the push that carried step 78 and the confirmation.
-- Produced: pushed `a7ef9a5` and `8623340` to `origin/main`.
+- Produced: pushed `45d480f` and `2cc98b6` to `origin/main`.
 - Measured: CI run 35767885230: success on PHP 8.3, 8.4 and 8.5, 397
   passed — the first CI run in which this verifier checks a hard binding
   on video. Reasoned: nothing.
@@ -4567,7 +4567,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — Step 80b, MOV and HEIC made into fixtures
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en leg MOV en HEIC vast".
-- Produced: pushed `14a863d`; `fixture-{un,}signed.mov` and
+- Produced: pushed `ad1e427`; `fixture-{un,}signed.mov` and
   `fixture-{un,}signed.heic` with `c2patool/mov.json` and `heic.json`;
   SPEC-026 amendment 2 (AC9 covers AVIF, MOV and HEIC, and gains the rule
   that a flavour named anywhere must be a fixture here) and SPEC-027
@@ -4591,7 +4591,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — The two amendments confirmed
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en bevestig de twee amendementen".
-- Produced: pushed `62e05fc`; `notes/step-81-amendments-since-79.md`; the
+- Produced: pushed `97b6985`; `notes/step-81-amendments-since-79.md`; the
   confirmation stamped into SPEC-026 #2 and SPEC-027 #2; `NOTES.md`,
   `docs/milestones.md`.
 - Measured: the amendment count across every spec — 80, of which 78 were
@@ -4609,7 +4609,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI on steps 80 and 81
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: the push that carried step 80b and the confirmations.
-- Produced: pushed `62e05fc` and `faaca1d` to `origin/main`.
+- Produced: pushed `97b6985` and `3621e18` to `origin/main`.
 - Measured: CI run 35769603105: success on PHP 8.3, 8.4 and 8.5, 397
   passed, now with four ISOBMFF flavours held by fixtures. Reasoned:
   nothing.
@@ -4651,7 +4651,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — SPEC-028 drafted
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en schrijf de spec".
-- Produced: pushed `3146ae5`; `specs/SPEC-028-fragmented-bmff.md`
+- Produced: pushed `d972969`; `specs/SPEC-028-fragmented-bmff.md`
   (status `draft`, seven acceptance criteria, no API sketch), a line in
   `docs/milestones.md`.
 - Measured: nothing new; the spec rests on step 82's reproduction and
@@ -4762,7 +4762,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — The SPEC-025 amendment confirmed
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en bevestig het amendement".
-- Produced: pushed `a540565` and `8812853`;
+- Produced: pushed `27bc9ed` and `02af041`;
   `notes/step-84-amendment-since-81.md`; the confirmation stamped into
   SPEC-025 #2; `NOTES.md`, `docs/milestones.md`.
 - Measured: 81 amendments across the specs, of which 80 were confirmed by
@@ -4779,7 +4779,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — CI on steps 83 and 84
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: the push that carried step 83b and the confirmation.
-- Produced: pushed `8812853` and `301d093` to `origin/main`.
+- Produced: pushed `02af041` and `e24d145` to `origin/main`.
 - Measured: CI run 35772279106: success on PHP 8.3, 8.4 and 8.5, 404
   passed — the first CI run in which this verifier checks a fragmented
   stream, and the run that closes M8. Reasoned: nothing.
@@ -4818,7 +4818,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — Step 86, bmff v2 measured
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en zoek v2 uit".
-- Produced: pushed `b9bd252`; `notes/step-86-bmff-v2.md`, `NOTES.md`,
+- Produced: pushed `eee4650`; `notes/step-86-bmff-v2.md`, `NOTES.md`,
   `docs/milestones.md`. Nothing in `src/` changed.
 - Measured: `video1.mp4`'s `c2pa.hash.bmff.v2` assertion holds eight
   exclusions, of which six use **nested** paths (`/meta/iloc`,
@@ -4959,7 +4959,7 @@ README are where the disclosure lives.
 ## 2026-09-22 — Step 88, the three amendments since step 84, confirmed
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: "push maar, en bevestig alle drie de amendementen".
-- Produced: step 87b pushed (`b9bd252..e2f1667`); SPEC-029 #1, SPEC-027 #3
+- Produced: step 87b pushed (`eee4650..9e2913c`); SPEC-029 #1, SPEC-027 #3
   and SPEC-012 #6 stamped confirmed; `notes/step-88-amendments-since-84.md`,
   `NOTES.md`, `docs/milestones.md`.
 - Measured: 84 numbered amendments across the specs, none outstanding;
@@ -4978,7 +4978,7 @@ README are where the disclosure lives.
 - Model: Claude Opus 5 (1M context), Claude Code CLI
 - Asked: the push that carried step 87b and the confirmation of its three
   amendments.
-- Produced: pushed `e2f1667` and `db33055` to `origin/main`.
+- Produced: pushed `9e2913c` and `36d8c90` to `origin/main`.
 - Measured: CI runs 35776024432,35775903551: success on PHP 8.3, 8.4 and 8.5,
   411 passed — the first CI run in which this verifier reads
   `c2pa.hash.bmff.v2`, so every ISOBMFF hard binding c2pa-rs writes today
@@ -5236,3 +5236,36 @@ README are where the disclosure lives.
   publishing makes public for all 276 commits and which GitHub can only
   mask beforehand; then visibility, branch protection, the `0.1.0` tag,
   Packagist and the announcement, in that order.
+
+## 2026-09-23 — Step 97, the author address rewritten out of the history
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: whether to make a public copy of the repository with less history
+  — advised against, and "akkoord, doe b", then "doe het zo veilig
+  mogelijk" and "push maar".
+- Produced: `git filter-repo 2.47.0` with a `mailmap`, run in a throwaway
+  clone; the force-push (run by the maintainer, twice blocked for me by
+  the permission classifier, correctly); the working repository reset to
+  the rewritten history; **199 commit references in 13 tracked documents
+  translated** through `filter-repo`'s commit-map;
+  `notes/step-97-history-rewrite.md`, `NOTES.md`, `docs/milestones.md`.
+  `user.email` set repository-locally to the noreply address, leaving the
+  global configuration alone.
+- Measured, before anything left the machine: 277 commits kept; the tree
+  of `HEAD` is `c48c331a…`, identical; all 277 commits compared on tree,
+  author date, commit date, name and subject — identical, line for line;
+  554 of 554 e-mail fields rewritten; 0 traces of the old address. After
+  the push: the same on the remote, and CI green on 8.3, 8.4 and 8.5.
+  Also measured, and it confirms what was said beforehand: the old
+  `4fdea57` is **still reachable through the GitHub API by full SHA**,
+  because unreachable objects linger until GitHub collects them.
+- Reasoned: that a scrubbed copy would trade the evidence for the
+  README's own claim against a problem with a targeted fix; that
+  translating 199 references is preserving a record rather than altering
+  it, since each points at the same commit with the same content, date and
+  message — but that editing a log meant to be faithful is worth saying
+  plainly, so the note says it; and that the lingering old objects do not
+  matter here only because the repository has never been public and no
+  document in the new history names an old SHA.
+- Decided by Maurice: no copy; rewrite; as safely as possible; push. Open
+  for him: the visibility change, then branch protection, then `0.1.0`,
+  then Packagist and the announcement.

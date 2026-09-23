@@ -26,7 +26,7 @@
 
 ## Measured
 
-- Red: 12 tests on the missing class (`edad933`).
+- Red: 12 tests on the missing class (`452ddbc`).
 - First run: 8 passed, 3 failed, 1 warning — all three failures on the
   test side or on a reading of the spec: AC5's expected prefix is 18
   bytes, the test cut 20; AC4/AC11 read together fix what `otherHeaders`

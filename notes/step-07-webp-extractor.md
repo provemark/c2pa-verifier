@@ -33,7 +33,7 @@ The walk, in the order the code does it:
 
 ## Measured
 
-- Before: 21 failed on the missing class (commit `baaeb13`).
+- Before: 21 failed on the missing class (commit `00425b2`).
 - First run of the class: 20 passed, 1 failed — AC16, `ftell` at 100,956
   because the file-end seek preceded the throw and nothing put the stream
   back. Fixed by repositioning before the comparison.

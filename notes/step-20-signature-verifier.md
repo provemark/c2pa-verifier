@@ -37,7 +37,7 @@ Five files in `src/Cose/`, nothing outside `ext-openssl` and, opt-in,
 
 ## Measured
 
-- Red: 11 tests on the missing classes (`2d32724`).
+- Red: 11 tests on the missing classes (`2b645a6`).
 - First run: **10 passed, 1 failed** — AC10, and the failure was the
   test's: for an `r` with its high bit set and an `s` of zero the DER
   body is 2 + 33 + 2 + 1 = 38 bytes (`30 26`), not 37. The converter was

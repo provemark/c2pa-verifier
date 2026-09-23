@@ -26,7 +26,7 @@ not 64 MiB.
 ## Measured
 
 - Before the code: `vendor/bin/pest` → 14 failed, 11 passed (the tests-first
-  commit `d7e83d0`, re-run after the Pest 4 pin).
+  commit `4b3ff90`, re-run after the Pest 4 pin).
 - After: `composer check` → exit 0: spec-check `OK: 2 spec(s), 2 test
   file(s)`, Pint passed, PHPStan `No errors`, Deptrac `Violations 0`, Pest
   **25 passed (58 assertions)**.

@@ -30,7 +30,7 @@ are shown as hex, at most 32 bytes.
 
 ## Measured
 
-- Red: 16 tests on the missing classes (`c9eec06`).
+- Red: 16 tests on the missing classes (`67a2d56`).
 - First run: 13 passed, 3 failed — all three in the *test file*: PHP had
   turned hex keys like `'17'` and `'81'` into ints (a cast in the loops),
   and the expected offset of the duplicate key in `a2 61 61 01 61 61 02`

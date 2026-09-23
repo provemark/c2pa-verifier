@@ -51,7 +51,7 @@ prefix, and AC6 shows the accessors agree.
 
 ## Measured
 
-- Red: 14 tests on the missing classes (`a0ead45`).
+- Red: 14 tests on the missing classes (`d7551c9`).
 - First run of the layer: **14 passed** — AC6 included.
 - PHPStan: three findings — a comparison it could prove always false
   (`gathered_assertions` guarded by version where the schema already
