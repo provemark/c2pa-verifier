@@ -5269,3 +5269,21 @@ README are where the disclosure lives.
 - Decided by Maurice: no copy; rewrite; as safely as possible; push. Open
   for him: the visibility change, then branch protection, then `0.1.0`,
   then Packagist and the announcement.
+
+## 2026-09-23 — Step 98, the repository is public
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "zet hem nu maar public".
+- Produced: `gh repo edit --visibility public`; `NOTES.md`,
+  `docs/milestones.md`. Nothing in `src/` or the texts changed.
+- Measured, immediately before: working tree clean, nothing unpushed,
+  local and remote both `ceb5aa9`, 0 occurrences of the old address
+  anywhere in the history, CI green on 8.3, 8.4 and 8.5. Immediately
+  after: visibility `PUBLIC` at
+  https://github.com/provemark/c2pa-verifier.
+- Reasoned: nothing. The judgement work was done in the two steps before
+  this one — the audit that found what could not be undone afterwards,
+  and the rewrite that removed the one thing it found.
+- Decided by Maurice: the visibility change. Open for him, in this order:
+  branch protection on `main`, a first tag (`0.1.0`), Packagist, and any
+  announcement — so that nothing can be installed before the protections
+  exist.
