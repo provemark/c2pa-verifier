@@ -5424,3 +5424,31 @@ README are where the disclosure lives.
   someone may already hold is not worth rewriting for a flaky test, and
   the record says what happened instead.
 - Decided by Maurice: none this step.
+
+## 2026-09-23 — Step 105, the suite runs in parallel
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "doe punt 1" — make `pest --parallel` work, the first of the five
+  open items on the code.
+- Produced: `tests/Shared.php` holding the nine declarations more than one
+  test file needs, required from `tests/Pest.php`; the nine removed from
+  the four files that held them; `composer test:parallel`;
+  `notes/step-105-parallel-tests.md`, `NOTES.md`, `docs/milestones.md`.
+- Measured: 190 functions are declared across the test suite and **eight**
+  were used from another file; 45 constants and **one** was. Parallel went
+  from 24 failures to green: 421 passed both ways, 7.35s serial against
+  2.62s parallel. `composer check` green.
+- Reasoned: that `composer check` stays serial. It is the definition of
+  green, the drift alarms print in order there, and five seconds does not
+  buy back the determinism; `composer test:parallel` is the fast loop
+  while working.
+- Two mistakes, both recorded in the note: the analysis that found the
+  eight was written to find *functions*, so the constant survived it and
+  four tests still failed — it answered the question it was asked rather
+  than the one that mattered. And the first cut took any comment lines
+  above a function with it, which walked into a file header and left a
+  dangling fragment in two files; restored from git and the rule narrowed
+  to a complete docblock or nothing.
+- Named rather than fixed: nothing runs `--parallel` automatically, so the
+  next cross-file helper will break it silently, exactly as this one did.
+  A CI job costs 2.6 seconds. Left as a decision for the maintainer.
+- Decided by Maurice: to do this first.

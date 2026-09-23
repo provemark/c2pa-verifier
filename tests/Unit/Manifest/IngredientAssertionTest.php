@@ -10,9 +10,6 @@ use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationState;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
-use Provemark\C2paVerifier\Trust\TrustSettings;
-use Provemark\C2paVerifier\Verifier\VerificationReport;
-use Provemark\C2paVerifier\Verifier\Verifier;
 
 /*
  * SPEC-020 AC1, AC2, AC4: the ingredient assertion as a value object and
@@ -25,24 +22,6 @@ use Provemark\C2paVerifier\Verifier\Verifier;
 function spec020Store(string $relative): ManifestStore
 {
     return Corpus::manifestStore($relative) ?? throw new RuntimeException("no store in {$relative}");
-}
-
-/** @return array<string, mixed> */
-function spec020Oracle(string $relative): array
-{
-    /** @var array<string, mixed> */
-    return json_decode((string) file_get_contents(Corpus::fixtures().'/c2patool/'.$relative), true, 512, JSON_THROW_ON_ERROR);
-}
-
-function spec020Verify(string $relative, ?string $settings = null): VerificationReport
-{
-    $stream = fopen(Corpus::fixtures().'/'.$relative, 'rb');
-    if ($stream === false) {
-        throw new RuntimeException("cannot open {$relative}");
-    }
-    $trust = $settings === null ? null : TrustSettings::fromJson((string) file_get_contents(Corpus::fixtures().'/'.$settings));
-
-    return (new Verifier)->verify($stream, $trust);
 }
 
 /**
@@ -72,51 +51,6 @@ function spec020RenderedIngredient(string $oracle, string $manifestLabel, int $i
 
     /** @var array<string, mixed> */
     return $ingredients[$index];
-}
-
-/**
- * The ingredient deltas of a report or an oracle, typed: the shape c2patool prints.
- *
- * @param  array<string, mixed>  $array
- * @return list<array{ingredientAssertionURI: string, validationDeltas: array{success: list<array<string, string>>, informational: list<array<string, string>>, failure: list<array<string, string>>}}>
- */
-function spec020Deltas(array $array): array
-{
-    $results = $array['validation_results'] ?? [];
-    assert(is_array($results));
-    $deltas = $results['ingredientDeltas'] ?? [];
-    assert(is_array($deltas));
-
-    /** @var list<array{ingredientAssertionURI: string, validationDeltas: array{success: list<array<string, string>>, informational: list<array<string, string>>, failure: list<array<string, string>>}}> */
-    return array_values($deltas);
-}
-
-/**
- * The report's flat failure list, typed.
- *
- * @param  array<string, mixed>  $array
- * @return list<array<string, string>>
- */
-function spec020Failures(array $array): array
-{
-    /** @var list<array<string, string>> */
-    return array_values((array) ($array['validation_status'] ?? []));
-}
-
-/**
- * One manifest of an oracle, typed.
- *
- * @return array<string, mixed>
- */
-function spec020OracleManifest(string $oracle, string $label): array
-{
-    $json = spec020Oracle($oracle);
-    assert(is_array($json['manifests']));
-    $manifest = $json['manifests'][$label];
-    assert(is_array($manifest));
-
-    /** @var array<string, mixed> */
-    return $manifest;
 }
 
 // AC1

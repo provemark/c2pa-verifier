@@ -62,6 +62,7 @@
         "analyse": "phpstan analyse --memory-limit=512M",
         "deptrac": "deptrac analyse --no-progress",
         "test": "pest",
+        "test:parallel": "pest --parallel",
         "check": [
             "@spec-check",
             "@api-check",
@@ -72,6 +73,7 @@
         ]
     },
     "scripts-descriptions": {
-        "check": "The single definition of green: spec-check, api-check, Pint (test mode), PHPStan level max, Deptrac, Pest."
+        "check": "The single definition of green: spec-check, api-check, Pint (test mode), PHPStan level max, Deptrac, Pest.",
+        "test:parallel": "The suite in parallel workers — the fast loop while working. `check` stays serial, where the drift alarms print in order."
     }
 }

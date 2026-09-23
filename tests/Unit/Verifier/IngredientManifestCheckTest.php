@@ -21,7 +21,6 @@ use Provemark\C2paVerifier\Verifier\VerificationReport;
  * (tests/Fixtures/ingredient-manifest/, with their throw-away settings).
  */
 
-const SPEC021_SETTINGS = 'trust/full.settings.json';
 const SPEC021_VARIANT_SETTINGS = 'ingredient-manifest/throw-away-root.settings.json';
 
 /** @return list<string> the failure codes of a report, unique and sorted */
@@ -32,21 +31,6 @@ function spec021Failures(VerificationReport $report): array
         if ($status->code->isFailure()) {
             $codes[$status->code->value] = true;
         }
-    }
-    $codes = array_keys($codes);
-    sort($codes);
-
-    return $codes;
-}
-
-/** @return list<string> the failure codes of an oracle's validation_status, unique and sorted */
-function spec021OracleFailures(string $relative): array
-{
-    $oracle = spec020Oracle($relative);
-    $codes = [];
-    foreach ((array) ($oracle['validation_status'] ?? []) as $status) {
-        assert(is_array($status) && is_string($status['code']));
-        $codes[$status['code']] = true;
     }
     $codes = array_keys($codes);
     sort($codes);

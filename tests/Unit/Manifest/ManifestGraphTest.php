@@ -19,23 +19,6 @@ use Provemark\C2paVerifier\Tests\Support\Corpus;
  * on synthetic graphs through the fromIngredients() seam.
  */
 
-/** @return array<string, string> corpus name => fixture-relative path, the seventeen `_MULTI` files this verifier's JUMBF parser reads */
-function spec020Multi(): array
-{
-    $files = [];
-    foreach ([['public-testfiles', SPEC013_PUBLIC_MULTI], ['c2pa-rs', SPEC013_RS_MULTI], ['writers', SPEC013_WRITERS_MULTI]] as [$dir, $names]) {
-        foreach ($names as $name) {
-            if ($name === 'update_manifest') {
-                continue;   // a c2um box: refused by SPEC-005 AC13 until SPEC-022
-            }
-            $path = glob(Corpus::fixtures()."/{$dir}/{$name}.*")[0] ?? throw new RuntimeException("no file for {$name}");
-            $files["{$dir}/{$name}"] = "{$dir}/".basename($path);
-        }
-    }
-
-    return $files;
-}
-
 function spec020Synthetic(string $manifestLabel, string $label, ?string $referenced, Relationship $relationship = Relationship::ComponentOf): IngredientAssertion
 {
     $manifest = $referenced === null ? null : new HashedUri("self#jumbf=/c2pa/{$referenced}", new CborBytes(str_repeat("\0", 32)), null);

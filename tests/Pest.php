@@ -9,6 +9,11 @@ declare(strict_types=1);
  * them.
  */
 
+// The helpers more than one test file uses. Pest loads this bootstrap for every
+// worker, which is what makes them reachable under `pest --parallel`; see the
+// header of that file for what went wrong without it.
+require_once __DIR__.'/Shared.php';
+
 /*
  * Every c2patool JSON recorded without trust settings (steps 14, 21, 23, 24,
  * 26) and the file it was recorded on — SPEC-013 AC10's drift alarm, re-run

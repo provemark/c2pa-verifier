@@ -14,11 +14,6 @@ use Provemark\C2paVerifier\Asn1\TagClass;
  * element); every value is X.690's reading of the octets.
  */
 
-function spec016Der(string $hex): Der
-{
-    return (new DerReader)->read((string) hex2bin(str_replace(' ', '', $hex)));
-}
-
 /** The offset a message of the reader names, or -1. */
 function spec016OffsetIn(string $message): int
 {
