@@ -1,6 +1,6 @@
 {
     "name": "provemark/c2pa-verifier",
-    "description": "Verifier for C2PA Content Credentials in pure PHP: reads the manifest store out of a JPEG, PNG, WebP or ISOBMFF file and checks the signature, the hash binding, the certificate chain, the timestamp and the revocation responses stapled into the signature, with c2patool's verdict semantics. Read and verify only; no signing, no keys, no network.",
+    "description": "Verifier for C2PA Content Credentials in pure PHP: JPEG, PNG, WebP and ISOBMFF, with c2patool's verdict. Read and verify only; no signing, no keys, no network.",
     "type": "library",
     "license": "MIT",
     "keywords": [
