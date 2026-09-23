@@ -5287,3 +5287,25 @@ README are where the disclosure lives.
   branch protection on `main`, a first tag (`0.1.0`), Packagist, and any
   announcement — so that nothing can be installed before the protections
   exist.
+
+## 2026-09-23 — Step 99, branch protection on `main`
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "akkoord" to the proposal that followed the visibility change.
+- Produced: branch protection on `main` — `allow_force_pushes: false`,
+  `allow_deletions: false`, `enforce_admins: true`; `NOTES.md`,
+  `docs/milestones.md`.
+- Measured: the API confirms all three; an ordinary push still reaches the
+  protected branch (tested, and the test is the empty commit `fe3e6d2`).
+- Reasoned, and it changed the proposal *before* it was applied: required
+  status checks block **direct pushes** as well as merges. This project
+  pushes straight to `main`, so enabling them would have rejected every
+  push until CI had run on that commit — a lock on the maintainer's own
+  door. Left off, and said so rather than quietly dropped.
+- Worth recording as a mistake: the push test used an empty commit, which
+  is now permanently in a public history that had just been curated with
+  care — and unremovable, because the protection it was testing forbids
+  the force-push that would take it out. A real commit would have tested
+  the same thing and left no litter. The protection worked exactly as
+  intended; the test did not.
+- Decided by Maurice: the protection. Open for him: a first tag
+  (`0.1.0`), Packagist, and any announcement.
