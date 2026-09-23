@@ -5400,3 +5400,27 @@ README are where the disclosure lives.
   rejection has been badly served.
 - Decided by Maurice: to open the issues. Open for him: the reply on
   WordPress/ai #459, the CAI listing, an article.
+
+## 2026-09-23 — Step 104, a red CI that should have been caught sooner
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "er faalt een pipeline".
+- Produced: `tests/Unit/Cli/CommandTest.php` masks both wall-clock
+  timestamps rather than one; `NOTES.md`, `docs/milestones.md`.
+- Measured: the failure is `every corpus file, with and without settings:
+  stdout equals the API`, on **PHP 8.4 only** while 8.3 and 8.5 passed —
+  the shape of a race, not a regression. The differing line is the
+  `signingCredential.ocsp.skipped` explanation on `ocsp.jpg`, which names
+  the judged time to the second. The same failure is in run on `785e1d3`
+  at 07:51, **the commit tag `v0.1.0` points at**. `composer check` green
+  locally after the fix: 421 passed.
+- Reasoned: that SPEC-030 introduced a second *now* into an explanation
+  and the existing guard covered only the first (`expired at …`, added
+  after CI run 35714422755). The mask now covers `the judged time is …`
+  too, and masks only the digits after a named phrase, so a real change to
+  the wording still fails the test.
+- The miss worth recording: CI was checked after every push on 2026-09-23
+  except the one that carried the release. The tag's commit has a red run
+  for this reason, and the tag is not being moved — a published tag that
+  someone may already hold is not worth rewriting for a flaky test, and
+  the record says what happened instead.
+- Decided by Maurice: none this step.

@@ -289,10 +289,17 @@ test('every corpus file, with and without settings: stdout equals the API, the e
             $label = $name.($settings === null ? '' : ' (settings)');
             $state = spec019State($out);
             $state = is_string($state) ? $state : 'Invalid';
-            // an expired signer "checked at now" names the second of the check; the expectation and the
-            // command run one after the other and may straddle a second (seen on CI, run 35714422755)
-            $now = '/expired at \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z: /';
-            expect(preg_replace($now, 'expired at <now>: ', $out))->toBe(preg_replace($now, 'expired at <now>: ', $expected), $label)
+            // Two places name *now* to the second: an expired signer "checked at now"
+            // (SPEC-015) and a revocation judged at now (SPEC-030). The expectation and
+            // the command run one after the other and may straddle a second — seen on CI
+            // twice, runs 35714422755 and 35838310907, the second on PHP 8.4 only while
+            // 8.3 and 8.5 passed, which is what a race looks like.
+            $mask = static fn (string $text): string => (string) preg_replace(
+                ['/expired at \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z: /', '/the judged time is \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/'],
+                ['expired at <now>: ', 'the judged time is <now>'],
+                $text,
+            );
+            expect($mask($out))->toBe($mask($expected), $label)
                 ->and($status)->toBe(in_array($state, ['Trusted', 'Valid'], true) ? 0 : 1, "{$label}: {$state}")
                 ->and($err)->toBe('', $label);
             $seen[$state]++;
