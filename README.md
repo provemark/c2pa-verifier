@@ -2,6 +2,28 @@
 
 A verifier for [C2PA](https://c2pa.org) Content Credentials in pure PHP.
 
+> **First version. Read this before you rely on it.**
+>
+> This code is thoroughly tested and has never been used. Those are two
+> different things and both are true. Every fixture in this repository is
+> measured against `c2patool`, its answers have been compared with a second
+> implementation in Go and a third in Python, and 111 named obligations of
+> the C2PA specification have been walked one by one — but it has never run
+> outside this repository:
+> nobody has yet pointed it at their own files, their own trust list or
+> their own hosting.
+>
+> So treat a verdict as something to check, not as an answer. If you are
+> going to use it, verify the same file with `c2patool` as well and open an
+> issue where the two differ. **That comparison is the single most useful
+> thing anyone can send back**, and it is the one thing this project cannot
+> do for itself.
+>
+> What is already known to be missing is written down rather than left to
+> be discovered: [`docs/conformance.md`](docs/conformance.md) lists 17
+> named gaps, and [`docs/comparison.md`](docs/comparison.md) every place
+> this verifier and `c2patool` answer differently, and why.
+
 It reads the manifest store out of a JPEG, PNG, WebP or ISOBMFF file
 (MP4, MOV, AVIF and HEIC, each held by a fixture here), checks the claim
 signature, the hash binding to the asset, the certificate chain against a
@@ -40,13 +62,14 @@ fetch, a CRL), which this verifier will not make, and the assertion-content
 rules beyond the actions and ingredient assertions.
 [`docs/conformance.md`](docs/conformance.md) is the honest version of that
 sentence: all 111 applicable obligations of C2PA 2.4, one by one, with what
-this verifier does about each and what the 22 gaps would cost.
+this verifier does about each and what the 17 gaps would cost.
 [`docs/milestones.md`](docs/milestones.md) has the plan and every step;
 [`NOTES.md`](NOTES.md) the record; [`docs/comparison.md`](docs/comparison.md)
 what it does, does not do, and where it differs from `c2patool`, measured.
 
-Nothing is published to Packagist yet and there is no tagged release.
-The public API below may still move.
+Nothing is published to Packagist yet and there is no tagged release, so
+there is no version number to pin: the public API below may still move, and
+the first tag will be a `0.x` that says so.
 
 ## Use
 
@@ -97,6 +120,32 @@ settings that cannot be read or are not trust settings — one `Error: …`
 line on standard error). Two deliberate differences from `c2patool`: it
 exits 0 on an `Invalid` report, and it silently ignores a `--settings`
 file that does not exist; both are fail-open (SPEC-019).
+
+## Trying it, and what to send back
+
+If you are reading this because you might use it, the most valuable thing
+you can do takes about a minute per file:
+
+1. **Run both.** Verify your file here and with
+   `c2patool <file> --settings <your trust settings>`, on the same file and
+   the same settings, and compare `validation_state` and the status codes.
+2. **Send the difference, not the file** — the format and where the file
+   came from (which tool signed it), the two verdicts side by side, and the
+   status codes each gave. A file you can share helps, but is not needed to
+   start, and never send anything you would not publish.
+3. **Say what your host is.** PHP version, whether `openssl` is available,
+   and how large the files are. This library exists for hosts nobody tests
+   on, so a report from cheap shared hosting is worth more than one from a
+   laptop.
+
+Known divergences are already recorded in
+[`docs/comparison.md`](docs/comparison.md) — if yours is on that list, it is
+expected and explained; if it is not, it is news, and worth an issue.
+
+Two divergences are deliberate and will not change: this verifier trusts a
+timestamp authority only when you configure an anchor for it (`c2patool`
+falls back to your operating system's trust store), and it reports on every
+file whether revocation was checked, which `c2patool` does not.
 
 ## Public API
 

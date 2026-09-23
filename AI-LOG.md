@@ -5153,3 +5153,29 @@ README are where the disclosure lives.
   red when it went, are the same lesson from the other side.
 - Decided by Maurice: both amendments confirmed. Open for him: the version
   of a first tag; the visibility change; the announcement.
+
+## 2026-09-23 — Step 94, the first-version notice
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "misschien wil ik het wel public maken maar nog heel even niet,
+  want ik wil heel duidelijk aangeven dat dit een eerste opzet is en nog
+  getest moet worden door mensen als ze ermee willen werken" — then
+  "akkoord, schrijf de README-tekst".
+- Produced: a notice directly under the README's one-line description; a
+  new section *Trying it, and what to send back*; the old caveat reworded
+  to say a first tag will be a `0.x`; the stale "22 gaps" corrected to 17
+  (SPEC-030 closed five in step 92b);
+  `notes/step-94-first-version-notice.md`, `NOTES.md`,
+  `docs/milestones.md`.
+- Measured: `composer check` green — 421 passed, PHPStan max, Deptrac 0,
+  the recorded surface matches. `ApiSurfaceTest` AC3/AC5, which read the
+  README, still pass.
+- Reasoned: that the notice has to hold two true things at once — the work
+  is thorough and the code has never been used — and that letting either
+  swallow the other misleads. Two wordings were tightened for accuracy
+  after a first draft: "checked against" a third implementation in Python
+  became "compared with", because step 71 measured that suite disagreeing
+  with three others on files all three accept; and "tell me" became "open
+  an issue", which is what the README says everywhere else.
+- Decided by Maurice: public later, not now; the notice first. Open for
+  him: the visibility change; the first tag, for which the advice is now
+  `0.1.0` rather than step 88's `0.2.0`; the announcement.
