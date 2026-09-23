@@ -5374,3 +5374,29 @@ README are where the disclosure lives.
   lesson of step 99, where a push test left litter in a public history.
 - Decided by Maurice: submitting to Packagist, and the webhook over the
   GitHub App. Open for him: the CAI listing, and an article.
+
+## 2026-09-23 — Step 103, the gaps become an on-ramp
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the maintainer wants to invite other developers to look at the
+  library and possibly build on it, before promoting it as complete —
+  "maak ze aan" for the issues that would give them somewhere to start.
+- Produced: twelve issues on `provemark/c2pa-verifier` covering the 17
+  gaps of `docs/conformance.md`, a `conformance` label, and Discussions
+  enabled; `NOTES.md`, `docs/milestones.md`.
+- Measured: the twelve issues carry no assistant attribution; the three
+  relative links each issue uses resolve from an issue URL to a file that
+  exists (`../blob/main/CONTRIBUTING.md` returns 200 from `/issues/1`);
+  the repository reports issues and discussions both open, twelve open.
+- Reasoned: that seventeen issues would have been noise, so related
+  predicates were grouped by feature — the three
+  `alternative-content-representation` rules into one, the three BMFF
+  shape checks into one, the two timestamp-assertion rules into one. That
+  each issue should say **what it costs that the rule is missing**, using
+  the three groups `docs/conformance.md` already sorts the gaps into, so
+  a reader can tell a laxer-than-the-specification rule from a stricter
+  one and choose accordingly. And that every issue needed the closing
+  paragraph about how a change lands here: this project cannot merge a
+  code-first pull request, and a contributor who learns that from a
+  rejection has been badly served.
+- Decided by Maurice: to open the issues. Open for him: the reply on
+  WordPress/ai #459, the CAI listing, an article.
