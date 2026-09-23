@@ -5355,3 +5355,22 @@ README are where the disclosure lives.
   here only because the tag's archive was verified rather than assumed.
 - Decided by Maurice: the push. Open for him: Packagist, then the
   announcement.
+
+## 2026-09-23 — Step 102, on Packagist
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: the maintainer submitted the package and set the webhook after
+  `github.com/apps/packagist` turned out not to be installable and
+  Packagist's "manual account sync" could not be found.
+- Produced: the README's `repositories` workaround replaced by
+  `composer require provemark/c2pa-verifier`, and the install line added
+  where a tester reads it; `NOTES.md`, `docs/milestones.md`.
+- Measured: the package holds `v0.1.0` and `dev-main`; the webhook on the
+  repository is `https://packagist.org/api/github?username=…`, JSON, push
+  only, SSL on, secret set, last delivery `OK` — the same shape as the one
+  on `content-credentials`, read from its configuration rather than
+  guessed. Packagist's last update before this push: 11:36:29 UTC.
+- Reasoned: nothing. This push is itself the test of the webhook, which is
+  why the change was made as a real one rather than an empty commit — the
+  lesson of step 99, where a push test left litter in a public history.
+- Decided by Maurice: submitting to Packagist, and the webhook over the
+  GitHub App. Open for him: the CAI listing, and an article.
