@@ -110,3 +110,32 @@ it('AC8: this repository itself is clean, with the fixture trees skipped', funct
         ->and($result->specs)->toHaveKey('SPEC-000')
         ->and($result->exitCode())->toBe(0);
 })->group('SPEC-000');
+
+/*
+ * A rule about how this suite is written, kept with the other checks on the
+ * way of working (SPEC-000).
+ *
+ * Pest's `toContain()` is variadic: every argument is another needle. Writing
+ * `->toContain($needle, $message)` therefore asserts that the haystack holds
+ * the message as well, and the message a failure was supposed to print is
+ * silently gone. This project hit that **thirteen** times — twice it hid a
+ * green test behind a red one, and once a live assertion lost the name of the
+ * fixture it was looping over.
+ *
+ * The fix each time was `str_contains(...)` or `in_array(...)` with
+ * `->toBeTrue($message)`, which takes a real message. For genuinely several
+ * needles, chain: `->toContain($a)->toContain($b)`.
+ */
+it('every toContain in the suite takes exactly one needle', function (): void {
+    $offenders = [];
+    foreach (spec000TestFiles() as $path) {
+        $source = (string) file_get_contents($path);
+        foreach (spec000ToContainCalls($source) as [$line, $arguments]) {
+            if ($arguments > 1) {
+                $offenders[] = sprintf('%s:%d passes %d needles', str_replace(dirname(__DIR__, 2).'/', '', $path), $line, $arguments);
+            }
+        }
+    }
+
+    expect($offenders)->toBe([], implode("\n", $offenders));
+})->group('SPEC-000');

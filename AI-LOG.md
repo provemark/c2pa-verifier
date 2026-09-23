@@ -5469,3 +5469,30 @@ README are where the disclosure lives.
   CI step itself has not been seen red; it is the same command that was
   red locally an hour ago.
 - Decided by Maurice: to add it.
+
+## 2026-09-23 — Step 106b, a rule for the thirteen-times mistake
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "doe punt 5" — a lint against the variadic `toContain` trap.
+- Produced: `it('every toContain in the suite takes exactly one needle')`
+  in `tests/Unit/SpecCheckTest.php` (SPEC-000), with
+  `spec000TestFiles()`, `spec000ToContainCalls()` in `tests/Shared.php`;
+  the one live violation fixed in `HashedUriCheckTest`;
+  `notes/step-106-tocontain-rule.md`, `NOTES.md`, `docs/milestones.md`.
+- Measured: 191 `toContain` calls in the suite; **one** passes more than
+  one needle. The rule was red on it when written. Then falsified on a
+  case it was not written against: a second needle added to
+  `ReportTest.php:160` made it report that file and line, and removing it
+  made it green again. 422 passed, serial and parallel.
+- Reasoned, and it changed the implementation: the first version searched
+  the text and reported five, of which three were the comments that warn
+  about this trap — two of them written by me — because they quote the
+  wrong form in order to show it. **A rule that flags its own
+  documentation is worse than no rule**: the next person deletes the
+  warnings to make the build pass. It now reads the file with
+  `token_get_all()`, which knows a comment from a call and a comma inside
+  `'OK: 1 spec(s), 1 test file(s)'` from an argument boundary.
+- The violation it found was harmless in verdict and not in use: a list of
+  `StatusCode` enums cannot contain a string, so the check still held —
+  what was lost was the name of the fixture a failing loop would have
+  printed.
+- Decided by Maurice: to do this fifth item.

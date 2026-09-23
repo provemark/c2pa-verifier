@@ -134,3 +134,71 @@ function spec021OracleFailures(string $relative): array
 
     return $codes;
 }
+
+/**
+ * Every PHP file under tests/, for the rules this suite keeps about itself.
+ *
+ * @return list<string>
+ */
+function spec000TestFiles(): array
+{
+    $files = [];
+    $walk = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__).'/tests', FilesystemIterator::SKIP_DOTS));
+    foreach ($walk as $file) {
+        if ($file instanceof SplFileInfo && $file->getExtension() === 'php') {
+            $files[] = $file->getPathname();
+        }
+    }
+    sort($files);
+
+    return $files;
+}
+
+/**
+ * Every `->toContain(…)` a test really calls, with its line and the number of
+ * arguments it passes.
+ *
+ * Read through PHP's own tokenizer rather than with a regular expression, for
+ * a reason this rule met immediately: the comments that warn about this very
+ * trap contain the word `->toContain($needle, $message)`, and a text search
+ * reports them as violations. The tokenizer knows a comment from a call.
+ *
+ * @return list<array{0: int, 1: int}> line, argument count
+ */
+function spec000ToContainCalls(string $source): array
+{
+    $tokens = token_get_all($source);
+    $calls = [];
+    foreach ($tokens as $index => $token) {
+        if (! is_array($token) || $token[0] !== T_STRING || $token[1] !== 'toContain') {
+            continue;
+        }
+        // a call, not a mention: `->toContain(` or `?->toContain(`
+        $before = $tokens[$index - 1] ?? null;
+        if (! is_array($before) || ($before[0] !== T_OBJECT_OPERATOR && $before[0] !== T_NULLSAFE_OBJECT_OPERATOR)) {
+            continue;
+        }
+        $depth = 0;
+        $arguments = 0;
+        $seen = false;
+        for ($i = $index + 1; $i < count($tokens); $i++) {
+            $next = $tokens[$i];
+            $text = is_array($next) ? $next[1] : $next;
+            if ($text === '(' || $text === '[') {
+                $depth++;
+            } elseif ($text === ')' || $text === ']') {
+                $depth--;
+                if ($depth === 0) {
+                    break;
+                }
+            } elseif ($text === ',' && $depth === 1) {
+                $arguments++;
+            } elseif ($depth === 1 && trim($text) !== '') {
+                $seen = true;
+            }
+        }
+        $calls[] = [$token[2], $seen ? $arguments + 1 : 0];
+    }
+
+    return $calls;
+}

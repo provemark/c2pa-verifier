@@ -286,7 +286,10 @@ it('AC8: redactions are refused until M7', function (): void {
 
     foreach (['fixture-signed.png', 'fixture-signed.jpg', 'fixture-signed.webp', 'public-testfiles/adobe-20220124-C.jpg'] as $fixture) {
         $codes = array_map(static fn (ValidationStatus $s): StatusCode => $s->code, (new HashedUriCheck)->check(spec011Manifest($fixture)));
-        expect($codes)->not->toContain(StatusCode::GeneralError, $fixture);
+        // not toContain($needle, $fixture): Pest reads the second argument as another
+        // needle, never a message — the thirteenth in this project, and the one the
+        // rule in SpecCheckTest was written on
+        expect(in_array(StatusCode::GeneralError, $codes, true))->toBeFalse($fixture);
     }
 })->group('SPEC-011');
 
