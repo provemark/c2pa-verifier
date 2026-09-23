@@ -2,11 +2,18 @@
 
 This project follows the milestones in `docs/milestones.md`; each entry
 below names the milestone, the specs that closed it and the day it was
-measured against `c2patool` 0.27.22. There is no tagged release yet and
-nothing on Packagist; the first tag comes when the maintainer decides the
-public API is stable. Dates are the day the work was committed.
+measured against `c2patool` 0.27.22. Dates are the day the work was
+committed.
 
-## Unreleased
+## 0.1.0 — 2026-09-23
+
+The first tag. A `0.x` on purpose: the public API is recorded and guarded
+(ten classes, 99 symbols, a snapshot that fails the build on drift), but
+nobody outside this project has used it yet, and a `1.0` would promise a
+stability that has not been earned. `^0.1` receives every 0.1.x fix; a
+change that breaks the API will be `0.2.0`.
+
+Everything below shipped in this tag.
 
 ### Revocation without a network (2026-09-22)
 - SPEC-030: the OCSP responses a signer staples into its own signature

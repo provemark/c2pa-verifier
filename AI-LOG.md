@@ -5309,3 +5309,27 @@ README are where the disclosure lives.
   intended; the test did not.
 - Decided by Maurice: the protection. Open for him: a first tag
   (`0.1.0`), Packagist, and any announcement.
+
+## 2026-09-23 — Step 100, the first release prepared
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "Ik wil zo min mogelijk taggen. Is tag 0.1.0 wel een goed begin
+  en niet 0.0.1 of zo?" — then "akkoord".
+- Produced: `CHANGELOG.md`'s `Unreleased` section becomes `0.1.0 —
+  2026-09-23` with a paragraph saying why it is a `0.x`; the README's
+  caveat replaced by the tag and a `repositories` snippet a tester can use
+  before Packagist exists; `NOTES.md`, `docs/milestones.md`. The annotated
+  tag itself is made but **not pushed**.
+- Measured: `composer check` green (421 passed), `bin/package-check.php`
+  reports 13 shipped paths, 9 export-ignored, 245 files and 2.5 MB in the
+  distributed archive. Both sister projects tag with a `v` prefix
+  (`v0.15.1`, `v0.3.0`), so this one does too.
+- Reasoned, and it decided the number: Composer reads `^0.0.1` as
+  `>=0.0.1 <0.0.2` — exactly that release. Under `0.0.x` every fix is a
+  breaking boundary that reaches nobody and forces every user to edit
+  their `composer.json`, which is the opposite of the maintainer's wish to
+  tag as little as possible. `^0.1` receives every 0.1.x fix, so a new tag
+  is only needed when the API breaks. `1.0.0` was rejected for a different
+  reason: the API contract is guarded, but stability is earned by use, and
+  nobody has used this yet.
+- Decided by Maurice: `0.1.0`. Open for him: pushing the tag, then
+  Packagist, then the announcement.

@@ -74,9 +74,18 @@ this verifier does about each and what the 17 gaps would cost.
 [`NOTES.md`](NOTES.md) the record; [`docs/comparison.md`](docs/comparison.md)
 what it does, does not do, and where it differs from `c2patool`, measured.
 
-Nothing is published to Packagist yet and there is no tagged release, so
-there is no version number to pin: the public API below may still move, and
-the first tag will be a `0.x` that says so.
+The first tag is **`v0.1.0`** — a `0.x` on purpose. `^0.1` receives every
+0.1.x fix; a change that breaks the API below will be `0.2.0`. Nothing is
+on Packagist yet, so until it is, a tester adds the repository by hand:
+
+```json
+{
+  "repositories": [
+    { "type": "vcs", "url": "https://github.com/provemark/c2pa-verifier" }
+  ],
+  "require": { "provemark/c2pa-verifier": "^0.1" }
+}
+```
 
 ## Use
 
