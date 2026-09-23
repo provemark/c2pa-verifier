@@ -86,10 +86,13 @@ Everything below shipped in this tag.
 - Mutation testing with Pest's `--mutate`: **98.06 %**.
 
 ### The published package (2026-09-22)
-- SPEC-023: what a `composer require` actually installs — `.gitattributes`
-  keeps the fixtures, notes, specs and tooling out of the distributed
-  archive, and `bin/package-check.php` measures the archive rather than
-  trusting the list.
+- SPEC-023: what a `composer require` actually installs. `.gitattributes`
+  keeps the 63 MB of fixtures, the tooling and the tool configuration out
+  of the distributed archive; the documentation stays in, because the
+  README and the log link to `notes/`, `specs/` and `docs/` and the spec
+  requires every relative link in shipped markdown to resolve to something
+  also shipped. `bin/package-check.php` measures the archive rather than
+  trusting the list: 245 files, 2.5 MB, every top-level path classified.
 
 ### Coverage and a fix (2026-09-22)
 - `tests/Fixtures/matrix/`: the three unsigned fixtures signed with all

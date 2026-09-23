@@ -5333,3 +5333,25 @@ README are where the disclosure lives.
   nobody has used this yet.
 - Decided by Maurice: `0.1.0`. Open for him: pushing the tag, then
   Packagist, then the announcement.
+
+## 2026-09-23 — Step 101, v0.1.0 pushed, and a line of my own corrected
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "push maar".
+- Produced: `main` at `785e1d3` and the annotated tag `v0.1.0` pushed; a
+  corrected CHANGELOG line about SPEC-023; `NOTES.md`,
+  `docs/milestones.md`.
+- Measured: GitHub reports the tag on `785e1d3`; its zipball holds **245
+  files**, exactly what `bin/package-check.php` measures locally, with the
+  same top-level paths — so what a user downloads is what the check
+  bounds. The archive ships `bin`, `docs`, `notes`, `specs`, `src` and the
+  seven root markdown files; `.gitattributes` keeps out `tests` (63 MB of
+  fixtures), `tools`, `.github` and the tool configuration.
+- The correction: the changelog said SPEC-023 "keeps the fixtures, notes,
+  specs and tooling out of the distributed archive". The notes and specs
+  are **in** it, on purpose — SPEC-023 requires every relative link in
+  shipped markdown to resolve to something also shipped, and the README
+  and the log link to them. That sentence was written in step 96, whose
+  whole purpose was checking the outward texts for accuracy; it was caught
+  here only because the tag's archive was verified rather than assumed.
+- Decided by Maurice: the push. Open for him: Packagist, then the
+  announcement.
