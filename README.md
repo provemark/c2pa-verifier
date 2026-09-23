@@ -23,6 +23,13 @@ A verifier for [C2PA](https://c2pa.org) Content Credentials in pure PHP.
 > be discovered: [`docs/conformance.md`](docs/conformance.md) lists 17
 > named gaps, and [`docs/comparison.md`](docs/comparison.md) every place
 > this verifier and `c2patool` answer differently, and why.
+>
+> It is written with Claude Code, under a method that is itself part of the
+> evidence: a specification before every feature, tests seen failing before
+> they pass, a traceability table the build enforces, and every change of
+> plan amended and confirmed rather than made quietly. See
+> [How this is built](#how-this-is-built) — and judge the method, not the
+> tool.
 
 It reads the manifest store out of a JPEG, PNG, WebP or ISOBMFF file
 (MP4, MOV, AVIF and HEIC, each held by a fixture here), checks the claim
@@ -245,11 +252,44 @@ from the library to the verifier, never the other way.
 ## How this is built
 
 This verifier is written with Claude Code (Anthropic), directed and reviewed
-by Maurice van Loon. Every contribution the assistant makes is recorded in
-[`AI-LOG.md`](AI-LOG.md): the model, what was asked, what was produced, what
-was measured and what was reasoned, and which decisions were taken by the
-maintainer. The assistant is not listed as an author in commit metadata; this
-section and the log are the disclosure.
+by Maurice van Loon. That is said here rather than left to be noticed, and
+what matters is not the tool but the method it was held to. Every rule below
+is checkable in this repository — that is the point of stating them.
+
+- **A specification before any code.** Each feature starts as a document in
+  [`specs/`](specs/) with a status; no implementation may be written while
+  it is `draft`, and only the maintainer moves it to `approved`. There are
+  31 of them.
+- **A traceability table per specification**, naming the test for every
+  acceptance criterion. `bin/spec-check.php` fails the build if a spec
+  claims to be `implemented` and a row is empty, so the link cannot rot.
+- **Tests written first and seen failing**, with the failing output quoted
+  in the step's note. A test that was never red does not count as evidence
+  that anything works.
+- **One concept per step, explained and approved before it is built.**
+  [`AI-LOG.md`](AI-LOG.md) records every session: the model, what was
+  asked, what was produced, what was measured *with the command*, what was
+  merely reasoned from reading, and which decisions the maintainer took.
+  The distinction between measured and reasoned is kept in every note.
+- **Changes of plan are written down, not made quietly.** When a
+  specification turned out to be wrong, it was amended, numbered, weighed
+  and confirmed by the maintainer before anything went green — 87 times so
+  far. [`NOTES.md`](NOTES.md) is the running record; each step has its own
+  note in [`notes/`](notes/), written for someone who was not there.
+- **Independent oracles, not self-agreement.** Every verdict is measured
+  against `c2patool` 0.27.22 on recorded fixtures, and compared with a
+  second implementation in Go and a third in Python.
+- **What is missing is published too**, in
+  [`docs/conformance.md`](docs/conformance.md): 111 obligations of the
+  specification, one by one, including the 17 this verifier does not yet
+  meet.
+
+What none of that is: an independent security audit. Nobody outside this
+project has reviewed the code, which is the other half of the notice at the
+top of this file.
+
+The assistant is not listed as an author in commit metadata; this section
+and the log are the disclosure.
 
 ## Licence
 

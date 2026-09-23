@@ -5179,3 +5179,26 @@ README are where the disclosure lives.
 - Decided by Maurice: public later, not now; the notice first. Open for
   him: the visibility change; the first tag, for which the advice is now
   `0.1.0` rather than step 88's `0.2.0`; the announcement.
+
+## 2026-09-23 — Step 95, the disclosure says how, not only that
+- Model: Claude Opus 5 (1M context), Claude Code CLI
+- Asked: "er mag wel duidelijk in staan dat het gemaakt is met Claude Code
+  maar op een [ge]controleerde manier".
+- Produced: the README's *How this is built* rewritten from a paragraph
+  into the controls themselves, each checkable in the repository; one line
+  in the top notice linking to it; `notes/step-95-disclosure.md`,
+  `NOTES.md`, `docs/milestones.md`.
+- Measured: the three numbers in the new text against the repository —
+  31 spec files, 87 numbered amendments, 17 rows marked as gaps in
+  `docs/conformance.md` (a first count said 19 and was wrong: it included
+  the legend and the tally rows). `composer check` green: 421 passed,
+  PHPStan max, Deptrac 0.
+- Reasoned: that "reviewed" is not information, and that a list of virtues
+  nobody can verify is worth less than none — so every control names the
+  file or the command that proves it. And that the section needed the
+  sentence it is easiest to leave out: none of this is an independent
+  security audit, nobody outside the project has reviewed the code. Without
+  it the section would have quietly contradicted step 94's notice.
+- Decided by Maurice: that the disclosure may be explicit, provided it says
+  the work was controlled. Open for him: the visibility change; the first
+  tag (`0.1.0`); the announcement.
