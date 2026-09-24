@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -159,6 +159,9 @@ if (str_contains($entry, $label)) {   // one of the four HARD_BINDINGS
 
 ## Open questions
 
+*Answered on approval, 2026-09-24:* question 2 by the maintainer (follow
+`c2pa-rs`). Questions 1 and 3 were settled by adopting their proposals.
+
 1. **What 0.27.22 reports.** It may still use the deprecated
    `assertion.dataHash.redacted`. Proposal: follow 0.28.0 and 2.4
    (`assertion.hardBinding.redacted`), and record 0.27.22's answer in
@@ -176,6 +179,18 @@ if (str_contains($entry, $label)) {   // one of the four HARD_BINDINGS
    in the entry, so a label such as `com.example.c2pa.hash.data.notes`
    would match too. Proposal: copy the substring rule. It can only refuse
    more, never pass more, and the codes then compare. *(not a blocker)*
+
+## Amendments
+
+1. **2026-09-24, step 130a, measured before the tests.** Open question 1
+   has its answer. On all five variants, `c2patool` 0.27.22 reports the
+   deprecated `assertion.dataHash.redacted`, where 0.28.0 reports
+   `assertion.hardBinding.redacted`, on the same url. On
+   `hash-data-absolute`, 0.27.22 also lacks `assertion.notRedacted`, as on
+   SPEC-035's `redacted.png`. Both versions call every variant `Invalid`.
+   The criteria name 0.28.0, as proposed. Nothing in them changes.
+
+   Weight C: a measurement recorded, no criterion changed.
 
 ## Traceability
 

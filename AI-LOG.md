@@ -6337,3 +6337,21 @@ README are where the disclosure lives.
   `bin/make-ingredient-manifest-variants.php`'s `redacted` for the
   fixtures.
 - Decided by Maurice: SPEC-036 as a draft.
+
+## 2026-09-24 — SPEC-036 approved; variants and tests seen red (step 130a)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, volg c2pa-rs bij vraag 2, SPEC-036 goedgekeurd" (follow
+  c2pa-rs on question 2; SPEC-036 approved).
+- Produced: SPEC-036 approved with the answers and amendment 1;
+  `bin/make-spec036-variants.php`; `tests/Fixtures/hard-binding-redacted/`
+  (five variants, the throwaway root and its settings); both c2patool
+  versions' reports under `tests/Fixtures/c2patool/hard-binding-redacted/`;
+  `tests/Unit/Hash/HardBindingRedactedTest.php`; `notes/step-130-spec036.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: the script (all five Invalid in both versions; 0.27.22 says
+  `assertion.dataHash.redacted`, 0.28.0 `assertion.hardBinding.redacted`,
+  on the entry as written); this verifier on all five (`general.error`
+  in that place, the rest equal); `vendor/bin/pest --group=SPEC-036`
+  (4 failed, 2 guards passed); `composer check` (all else green, 467).
+- Reasoned: nothing beyond the draft.
+- Decided by Maurice: SPEC-036 approved; question 2: follow c2pa-rs.
