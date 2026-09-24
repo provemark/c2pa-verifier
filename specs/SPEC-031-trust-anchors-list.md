@@ -365,6 +365,9 @@ final readonly class TrustSettings
    AC6's case (the DigiCert certificate as `"manifest"`) still gets it;
    AC7's twins do not. No criterion changed in outcome. The explanation
    became more exact.
+
+   Confirmed by Maurice van Loon, 2026-09-24 (step 120).
+
 2. **2026-09-24, step 111b, the API sketch** (illustrative, recorded so
    that nobody looks for what is not there):
    - the kind is three string constants on `TrustAnchorSet`, not an enum,
@@ -378,6 +381,8 @@ final readonly class TrustSettings
      than 256 certificates in all"*.
 
    Weight C.
+
+   Confirmed by Maurice van Loon, 2026-09-24 (step 120).
 
 ## Traceability
 

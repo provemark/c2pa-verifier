@@ -486,6 +486,9 @@ final readonly class TimestampCheck
 
    **Weight A, carried by SPEC-012 amendment 7:** the verdict changes, and
    the rule this criterion checks does not.
+
+   Confirmed by Maurice van Loon, 2026-09-24 (step 120).
+
 5. **2026-09-24, steps 114–115, decided by Maurice van Loon** — the
    allowed list no longer reaches the TSA check. `tsaSettings()` passed
    `$operator->allowedList` to the TSA chain (SPEC-014 amendment 2 reused
@@ -511,6 +514,8 @@ final readonly class TimestampCheck
 
    **Weight A for the rule, no verdict changed in the corpus.**
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 120).
+
 6. **2026-09-24, step 116, with SPEC-000 amendment 1** — AC12 is written
    down. The test has existed since step 46 (2026-09-22) as *"SPEC-017
    AC12"*. Step 46 added the Pixel 10 file and its expectation and never
@@ -519,6 +524,8 @@ final readonly class TimestampCheck
    changes. The checker's new AC11 is what would have caught it.
 
    **Weight C: the record catches up with a test that was already there.**
+
+   Confirmed by Maurice van Loon, 2026-09-24 (step 120).
 
 ## Traceability
 

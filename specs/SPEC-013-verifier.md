@@ -483,6 +483,8 @@ final class ManifestException extends \RuntimeException
     wrong was calling a manifest valid that the specification calls
     malformed.
 
+    Confirmed by Maurice van Loon, 2026-09-24 (step 120).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

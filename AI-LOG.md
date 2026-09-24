@@ -5928,3 +5928,15 @@ README are where the disclosure lives.
 - Reasoned: the weights as each amendment states them; SPEC-017 #4 is
   listed under A because its verdict change is carried by SPEC-012 #7.
 - Decided by Maurice: none yet; the page awaits his confirmation.
+
+## 2026-09-24 — Step 120b, the eleven amendments confirmed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, alle elf bevestigd".
+- Produced: a stamp "Confirmed by Maurice van Loon, 2026-09-24 (step 120)"
+  under each of the eleven amendments (SPEC-000 #1, SPEC-008 #2, SPEC-012
+  #7, SPEC-013 #13, SPEC-014 #3, SPEC-017 #4–6, SPEC-025 #4, SPEC-031 #1–2);
+  the step-120 note marked confirmed row by row; `README.md` (98, every
+  one confirmed); rows in `docs/milestones.md` and `NOTES.md`.
+- Measured: `bin/spec-check.php` OK after stamping; 11 stamps placed, 11
+  table rows updated.
+- Decided by Maurice: all eleven amendments confirmed.

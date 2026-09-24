@@ -371,6 +371,8 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
    That is deliberate. `c2patool` 0.28.0 ignores such a file silently,
    and the two tools would otherwise disagree about it without a word.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 120).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

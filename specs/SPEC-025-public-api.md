@@ -263,6 +263,7 @@ reasoning that led to it stays readable.
    @internal"* for the new class, then with *"public but not recorded"*
    for each of its twelve symbols.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 120).
 
 ## Traceability
 

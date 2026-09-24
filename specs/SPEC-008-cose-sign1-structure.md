@@ -333,6 +333,8 @@ final readonly class CoseSign1
    sense the RFC intends: the certificate is still the key the signature
    must verify under, and the chain still has to reach an anchor.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 120).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

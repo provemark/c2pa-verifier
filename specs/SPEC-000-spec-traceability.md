@@ -197,6 +197,8 @@ function specCheck(string $root): array;
 
    **Weight B: a rule about the record, no verdict involved.**
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 120).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

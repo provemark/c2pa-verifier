@@ -468,6 +468,7 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
    of the total length of all APP11 segments representing the C2PA
    Manifest"*.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 120).
 
 ## Traceability
 
