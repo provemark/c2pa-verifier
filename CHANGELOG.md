@@ -5,9 +5,9 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.2.1 — 2026-09-24
 
-Intended as **0.2.1**. Closer to `c2patool`, in eight specifications
+Closer to `c2patool`, in eight specifications
 (SPEC-033 to SPEC-040). Each was measured against `c2patool` 0.27.22 and
 0.28.0 on signed probes before any code was written. Where the two
 versions differ, this release follows 0.28.0 and names the difference in

@@ -6682,3 +6682,13 @@ README are where the disclosure lives.
   unchanged).
 - Decided by Maurice: none; the runner pin is proposed in this commit and
   is one line to revert.
+
+## 2026-09-24 — Prepare 0.2.1
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, 0.2.1, tag maar en zet de correctie in #4".
+- Produced: `CHANGELOG.md` (the Unreleased section becomes `0.2.1 —
+  2026-09-24`); `README.md` (the current tag, and what changes coming
+  from 0.2.0).
+- Measured: `composer check` before the commit; CI on the commit before
+  the tag.
+- Decided by Maurice: release 0.2.1, tag it; a correction on issue #4.

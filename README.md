@@ -78,11 +78,13 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.2.0`**, still a `0.x` on purpose. `^0.2` receives
+The current tag is **`v0.2.1`**, still a `0.x` on purpose. `^0.2` receives
 every 0.2.x fix, and a change that breaks the API below will be `0.3.0`.
-Coming from `0.1.0`: one thing broke. A top-level `trust.allowed_list` in
-the settings is refused now, and belongs inside a `trust.anchors` entry
-(see `CHANGELOG.md`).
+Coming from `0.2.0`: nothing that worked is refused, but some verdicts and
+reports now match `c2patool`'s where they did not, and `StatusCode` has 14
+more cases (see `CHANGELOG.md`). Coming from `0.1.0`: one thing broke. A
+top-level `trust.allowed_list` in the settings is refused now, and belongs
+inside a `trust.anchors` entry.
 
 ## Use
 
