@@ -251,6 +251,8 @@ proposals.
    is `ApiSurfaceTest`'s alone. AC7 now asserts that its symbol is
    recorded. Weight C.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 125).
+
 ## Traceability
 
 Filled when status becomes `implemented`.

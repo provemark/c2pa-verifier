@@ -280,6 +280,8 @@ final readonly class ActionsCheck
    and `c2pa.redacted`. Weight B: new faults, on files the oracles
    already refuse.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 125).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

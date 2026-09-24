@@ -6136,3 +6136,12 @@ README are where the disclosure lives.
   gaining one code with its verdict unchanged. Both c2patool versions
   refuse that file before reading its actions.
 - Decided by Maurice: none in this step beyond the approval.
+
+## 2026-09-24 — The five SPEC-033 amendments confirmed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, alle vijf bevestigd".
+- Produced: confirmation stamps under SPEC-033 #1–2, SPEC-032 #2,
+  SPEC-018 #5 and SPEC-025 #6; `README.md` (106 amendments, every one
+  confirmed).
+- Measured: `bin/spec-check.php` OK.
+- Decided by Maurice: all five amendments confirmed.

@@ -281,6 +281,8 @@ adopting their proposals.
    Weight C: a criterion's wording, following the oracle. No rule of this
    spec changed in outcome.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 125).
+
 2. **2026-09-24, step 125b, at implementation.**
    - AC9's test asserted the recorded surface's total (114). That total
      is `ApiSurfaceTest`'s alone. A spec's own test asserting it would
@@ -298,6 +300,8 @@ adopting their proposals.
      other verdict or code moved.
 
    Weight C: no criterion changed in outcome.
+
+   Confirmed by Maurice van Loon, 2026-09-24 (step 125).
 
 ## Traceability
 
