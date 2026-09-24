@@ -82,8 +82,12 @@ test('SPEC-018 AC2: every corpus verdict is unchanged, and actions is in checks_
     foreach ([...$v2, ...$v1Odd] as $relative) {
         $report = spec018Verify($relative);
         $version = $report->store?->active->claim->version;
+        // SPEC-018 amendment 4 (with SPEC-032 rule A): no_alg.jpg's c2pa.created carries no digitalSourceType.
+        // c2patool refuses the file for its algorithm before it reads the actions; the verdict stays Invalid here too.
+        $expected = $relative === 'c2pa-rs/no_alg.jpg' ? ['c2pa.created action must have a digitalSourceType'] : [];
+        $faults = array_map(static fn (ValidationStatus $s): string => (string) preg_replace('/:.*/s', '', $s->explanation), spec018Malformed($report));
         expect($version)->toBe(in_array($relative, $v2, true) ? 2 : 1, $relative)
-            ->and(spec018Malformed($report))->toBe([], $relative)
+            ->and($faults)->toBe($expected, $relative)
             ->and(in_array('actions', $report->result->checksPerformed, true))->toBeTrue($relative);
     }
     // the drift alarms themselves (SPEC-013 AC10–AC13) run in their own group; here the two verdict-bearing facts they rest on

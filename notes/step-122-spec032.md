@@ -43,3 +43,54 @@ oracles, and the test says so per probe.
   control stays `Trusted`. They must still be green after the change.
 
 Committed locally, not pushed, so that `main` does not go red.
+
+## 122b — built
+
+- **`ActionsCheck::checkAssertions()`** (rule A): in a v2 claim, for every
+  well-formed actions assertion, each `c2pa.created` without a string
+  `digitalSourceType` yields `assertion.action.malformed` on the
+  assertion's url. The url is the one `c2patool` 0.28.0 and 0.27.22
+  record. v1 claims return before the rule, as `c2pa-rs` does.
+- **`Manifest\ExternalReferenceCheck`** (rule B, new, `@internal`):
+  every `c2pa.external-reference` assertion the claim lists, created or
+  gathered, any instance, gets the structure checks. There are fourteen
+  forbidden labels, following `c2pa` 0.91.0. It runs from `Verifier`,
+  where `checks_performed` names `externalReferences` only when the claim
+  has such an assertion, and from `IngredientManifestCheck`. Its source
+  holds no network call, and AC6 reads it to be sure.
+- **`StatusCode::AssertionExternalReferenceMalformed`**: the surface goes
+  111 → 112.
+
+### What the red-to-green run found
+
+- AC1's first green attempt was a test that compared too much: without
+  settings the oracle also records `signingCredential.untrusted`. It now
+  compares the rule's own entries, and the url matched throughout.
+- Three older tests moved, each for a stated reason: SPEC-015 AC10's code
+  count, SPEC-025's surface count, and SPEC-018 AC2, which now expects
+  rule A's fault on `c2pa-rs/no_alg.jpg`.
+
+### Measured: what changed across the corpus
+
+903 runs (301 files × no settings, `full-plus-digicert-g4`,
+`truepic-root`), old code in a separate worktree with its own copied
+`vendor/` against new code. The first attempt symlinked `vendor/`, and
+the autoloader would then have loaded the new sources through the real
+path. That was caught before it counted.
+
+**Every difference is one of the new probes turning `Invalid` as its
+criterion asks, plus `c2pa-rs/no_alg.jpg` gaining
+`assertion.action.malformed` with its verdict unchanged.** No other file
+moved.
+
+`composer check`: 441 passed, clean.
+
+### The public record
+
+- `docs/conformance.md`: `PRED-ASSE-027` **yes**, `PRED-ASSE-025`
+  partial. The counts are now 55 / 13 / 7 / 21 / **15**.
+- `README.md`, `SECURITY.md`: 15 gaps.
+- `docs/comparison.md`: three rows (stricter than both oracles on a lone
+  `alg`/`hash`, the external-reference checks being 0.28.0's, rule A
+  being `c2patool`'s and not §15's).
+- `CHANGELOG.md`: *Added*.

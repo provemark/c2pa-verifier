@@ -87,6 +87,18 @@ final readonly class ActionsCheck
                 $statuses[] = $malformed($assertion['url'], 'actions assertion malformed: '.$fault);
             }
         }
+        // SPEC-032 rule A: every c2pa.created carries a digitalSourceType. c2patool's rule (c2pa-rs 2.b.v);
+        // C2PA 2.4 states it as the claim generator's duty (§18.15.2), and §15's validation steps are silent.
+        foreach ($actions as $assertion) {
+            if ($this->checkData($assertion['data'], $version) !== [] || ! is_array($assertion['data']) || ! is_array($assertion['data']['actions'] ?? null)) {
+                continue;   // its shape was reported above
+            }
+            foreach ($assertion['data']['actions'] as $i => $action) {
+                if (is_array($action) && ($action['action'] ?? null) === 'c2pa.created' && ! is_string($action['digitalSourceType'] ?? null)) {
+                    $statuses[] = $malformed($assertion['url'], sprintf('c2pa.created action must have a digitalSourceType: actions[%d] has none (c2patool\'s rule; C2PA 2.4 §18.15.2 states it for the claim generator)', $i));
+                }
+            }
+        }
         // rule 1: the first one opens with c2pa.created or c2pa.opened — an update manifest is exempt
         // (C2PA 2.4 §11.2.3 gives it four actions of its own, none of them an opening; measured on
         // update_manifest.jpg's variant, where c2patool reports only the update rule — SPEC-022)

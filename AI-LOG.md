@@ -5996,3 +5996,23 @@ README are where the disclosure lives.
   the text and is stricter than both oracles there.
 - Decided by Maurice: approve SPEC-032 and follow c2patool on rule A.
   Committed locally, not pushed.
+
+## 2026-09-24 — Step 122b, SPEC-032 implemented
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: continuing the approved SPEC-032 (tests seen red in 122a).
+- Produced: `src/Manifest/ExternalReferenceCheck.php` (new);
+  `src/Manifest/ActionsCheck.php` (rule A); `src/Report/StatusCode.php`
+  (one case); `src/Verifier/Verifier.php` and `IngredientManifestCheck.php`
+  (the call); `tests/Fixtures/api/public-surface.txt` (+1); test updates in
+  `AssertionRulesTest`, `ActionsCheckTest`, `ApiSurfaceTest`,
+  `CertificateProfileCheckTest`; SPEC-032 `implemented` with traceability
+  and amendment 1; SPEC-018 amendment 4; SPEC-025 amendment 5;
+  `docs/conformance.md`, `docs/comparison.md`, `README.md`, `SECURITY.md`,
+  `CHANGELOG.md`; the 122b half of the note; rows in `docs/milestones.md`
+  and `NOTES.md`.
+- Measured: `vendor/bin/pest --group=SPEC-032` gives 7 passed.
+  `composer check` gives 441 passed, clean. 903 runs with the old code in a
+  worktree (own vendor copy) against the new: only the probes change, and
+  `no_alg.jpg` gains one code with its verdict unchanged.
+- Reasoned: none new beyond the spec.
+- Decided by Maurice: none in this step beyond the approval.

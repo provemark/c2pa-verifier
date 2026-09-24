@@ -23,6 +23,7 @@ use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfException;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\ActionsCheck;
+use Provemark\C2paVerifier\Manifest\ExternalReferenceCheck;
 use Provemark\C2paVerifier\Manifest\HashedUri;
 use Provemark\C2paVerifier\Manifest\Manifest;
 use Provemark\C2paVerifier\Manifest\ManifestException;
@@ -264,6 +265,11 @@ final readonly class Verifier
         }
         $statuses = [...$statuses, ...$this->actions->check($manifest, $unreadable)];
         $checks[] = 'actions';
+        // SPEC-032 rule B: named only where the claim carries an external reference
+        if (ExternalReferenceCheck::present($manifest)) {
+            $statuses = [...$statuses, ...(new ExternalReferenceCheck)->check($manifest, $unreadable)];
+            $checks[] = 'externalReferences';
+        }
 
         // an update manifest lives under §11.2.3's rules, and a standard manifest under §15.11's
         // one-parent rule — both need the graph's ingredients (SPEC-022)

@@ -34,11 +34,11 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | verdict | predicates |
 |---|---|
-| **yes** | 54 |
-| partial | 12 |
+| **yes** | 55 |
+| partial | 13 |
 | closed | 7 |
 | by design | 21 |
-| **gap** | 17 |
+| **gap** | 15 |
 | **total** | 111 |
 
 ## Cross-format (6)
@@ -162,9 +162,9 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-ASSE-022` | shall | Content validation failure signalling | **yes** — every failure is reported and an ingredient never masks one in the active manifest (SPEC-021, CAI-12751) |
 | `PRED-ASSE-023` | shall | Inception action position validation | partial — `ActionsCheck` requires the first action to be `c2pa.created` or `c2pa.opened`; it does not require a `c2pa.created` appearing later to be first, nor that `created_assertions`' first actions reference resolves to `c2pa.actions.v2` |
 | `PRED-ASSE-024` | shall | reviewRatings absent when dataSource is human entry | **gap** — `reviewRatings` alongside a `humanEntry` `dataSource` is not rejected |
-| `PRED-ASSE-025` | shall | Mandatory digitalSourceType for editorial and created actions | **gap** — a mandatory `digitalSourceType` per non-exempt action is not required |
+| `PRED-ASSE-025` | shall | Mandatory digitalSourceType for editorial and created actions | partial — since 2026-09-24 (SPEC-032): a `c2pa.created` in a v2 claim without `digitalSourceType` is `assertion.action.malformed`, as both `c2patool` versions; other actions are not required to carry one, which no oracle enforces and §15 does not ask |
 | `PRED-ASSE-026` | shall | Alternative content representation choice exclusivity | **gap** — follows from ASSE-013 |
-| `PRED-ASSE-027` | shall | Forbidden labels in external references | **gap** — `c2pa.external-reference` forbidden labels are not checked |
+| `PRED-ASSE-027` | shall | Forbidden labels in external references | **yes** — since 2026-09-24 (SPEC-032): `ExternalReferenceCheck` refuses the forbidden labels, a `location` without `url`, and `alg` or `hash` alone, with `assertion.external-reference.malformed` (§15.10.3.2.2); nothing is fetched |
 
 ## Container and progressive content (7)
 
@@ -214,7 +214,7 @@ accept; its predicate list does not depend on its cryptography being right.
 
 ## What the 23 gaps mean, sorted by what they could cost
 
-Twenty-three gaps were recorded, and six of them have since been closed: section 0 and section 1.
+Twenty-three gaps were recorded. Seven have since been closed (section 0, section 1, and `PRED-ASSE-027` by SPEC-032), and one narrowed to partial (`PRED-ASSE-025`).
 
 A gap is only interesting through its consequence. The question this
 project asks of everything is the same one: **can it make this verifier say
@@ -285,8 +285,7 @@ signature and the chain all still hold; what fails is a rule about what a
 manifest may say.
 
 - `PRED-ASSE-024` — `reviewRatings` alongside a `humanEntry` `dataSource`
-- `PRED-ASSE-025` — a mandatory `digitalSourceType` on every non-exempt action
-- `PRED-ASSE-027` — forbidden labels in a `c2pa.external-reference`
+- `PRED-ASSE-025` (partial since SPEC-032) — a `digitalSourceType` on actions other than `c2pa.created`
 - `PRED-ASSE-023` (partial) — a `c2pa.created` that is not the first action
 - `PRED-ASSE-013`, `014`, `026` — `c2pa.alternative-content-representation`
 - `PRED-CRYP-024` — `c2pa.session-keys`: its `signerBinding` is not verified

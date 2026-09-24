@@ -77,7 +77,9 @@ it('AC1: a c2pa.created without digitalSourceType in a v2 claim is malformed', f
         foreach (['0.28.0', '0.27.22'] as $version) {
             $oracle = spec032Oracle('created-without-source-type', $version, $anchored);
             expect($oracle['validation_state'])->toBe('Invalid', $version)
-                ->and(spec032OracleFailures($oracle))->toBe([['code' => 'assertion.action.malformed', 'url' => spec032Url($report, $malformed[0])]], $version);
+                // only this rule's failures: without settings the oracle also records signingCredential.untrusted
+                ->and(array_values(array_filter(spec032OracleFailures($oracle), static fn (array $f): bool => $f['code'] === 'assertion.action.malformed')))
+                ->toBe([['code' => 'assertion.action.malformed', 'url' => spec032Url($report, $malformed[0])]], $version);
         }
     }
 })->group('SPEC-032');
@@ -163,11 +165,10 @@ it('AC6: a well-formed external reference passes, and nothing is fetched', funct
 })->group('SPEC-032');
 
 it('AC7: the vocabulary grows by one code, verbatim', function (): void {
-    $code = StatusCode::tryFrom('assertion.external-reference.malformed');
-    expect($code)->not->toBeNull();
-    assert($code !== null);
-    expect($code->name)->toBe('AssertionExternalReferenceMalformed')
-        ->and($code->isFailure())->toBeTrue();
+    $found = array_values(array_filter(StatusCode::cases(), static fn (StatusCode $c): bool => $c->value === 'assertion.external-reference.malformed'));
+    expect($found)->toHaveCount(1)
+        ->and(array_map(static fn (StatusCode $c): string => $c->name, $found))->toBe(['AssertionExternalReferenceMalformed'])
+        ->and(array_map(static fn (StatusCode $c): bool => $c->isFailure(), $found))->toBe([true]);
     $surface = (array) file(dirname(__DIR__, 2).'/Fixtures/api/public-surface.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     expect(in_array('Report\StatusCode :: const AssertionExternalReferenceMalformed', $surface, true))->toBeTrue()
         ->and($surface)->toHaveCount(112);

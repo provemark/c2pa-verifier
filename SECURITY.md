@@ -65,8 +65,8 @@ rather than believed, and a file carrying none says so too. A remote
 manifest declared by URL is reported, never fetched.
 
 The 111 obligations of C2PA 2.4 that apply to the formats this verifier
-reads are listed one by one in `docs/conformance.md`, with the 17 it does
-not meet named. None of those 17 can make it report `Valid` about a file
+reads are listed one by one in `docs/conformance.md`, with the 15 it does
+not meet named. None of those 15 can make it report `Valid` about a file
 whose bytes changed; that claim is set out there, per gap. It was made
 once before and was wrong: see `PRED-IMG-004` below.
 

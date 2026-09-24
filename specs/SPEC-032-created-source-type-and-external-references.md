@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
@@ -222,16 +222,38 @@ proposals.
    the whole corpus. Proposal: name it only when the manifest carries an
    external-reference assertion. *(not a blocker)*
 
+## Amendments
+
+1. **2026-09-24, step 122b, at implementation.**
+   - (a) AC5's two lone-field probes (`alg` without `hash`, `hash` without
+     `alg`) are `Trusted` in both oracles, because `c2pa-rs` reads them as
+     unhashed. AC5 follows §15.10.3.2.2, and its test records the
+     oracles' answer per probe. This was measured in 122a, before any
+     code.
+   - (b) AC1's test compared the oracle's whole failure list. Without
+     settings that list also holds `signingCredential.untrusted`, so the
+     test now compares this rule's entries only. The url matched from the
+     first run.
+   - (c) AC7 finds the code among `StatusCode::cases()` rather than through
+     `tryFrom()`, which PHPStan flags as always non-null once the case
+     exists.
+   - (d) Two older tests counted what this spec grows: SPEC-015 AC10 (45 →
+     46 codes) and SPEC-025's surface (111 → 112, SPEC-025 amendment 5).
+     SPEC-018 AC2 now expects `c2pa-rs/no_alg.jpg` to carry rule A's
+     fault (SPEC-018 amendment 4).
+
+   Weight C: no criterion changed in outcome.
+
 ## Traceability
 
 Filled when status becomes `implemented`.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
+| AC1 | tests/Unit/Manifest/AssertionRulesTest.php :: AC1: a c2pa.created without digitalSourceType in a v2 claim is malformed / SPEC-032 | src/Manifest/ActionsCheck.php :: checkAssertions() (rule A) |
+| AC2 | tests/Unit/Manifest/AssertionRulesTest.php :: AC2: v1 claims keep their verdicts / SPEC-032 | src/Manifest/ActionsCheck.php :: checkAssertions() (v1 returns before rule A) |
+| AC3 | tests/Unit/Manifest/AssertionRulesTest.php :: AC3: the probe's control stays Trusted / SPEC-032 | src/Manifest/ActionsCheck.php :: checkAssertions() |
+| AC4 | tests/Unit/Manifest/AssertionRulesTest.php :: AC4: a forbidden external-reference label is malformed / SPEC-032 | src/Manifest/ExternalReferenceCheck.php :: check(), fault(), FORBIDDEN_LABELS; src/Verifier/Verifier.php :: check() |
+| AC5 | tests/Unit/Manifest/AssertionRulesTest.php :: AC5: the location must hold a url, and a hash its algorithm / SPEC-032 | src/Manifest/ExternalReferenceCheck.php :: fault() |
+| AC6 | tests/Unit/Manifest/AssertionRulesTest.php :: AC6: a well-formed external reference passes, and nothing is fetched / SPEC-032 | src/Manifest/ExternalReferenceCheck.php :: present(); src/Verifier/Verifier.php :: check() (externalReferences); src/Verifier/IngredientManifestCheck.php |
+| AC7 | tests/Unit/Manifest/AssertionRulesTest.php :: AC7: the vocabulary grows by one code, verbatim / SPEC-032 | src/Report/StatusCode.php :: AssertionExternalReferenceMalformed |

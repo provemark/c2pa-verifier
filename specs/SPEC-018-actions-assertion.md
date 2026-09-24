@@ -84,8 +84,8 @@ were validated")
 - The content family of c2pa-rs's `verify_actions` 2.b–2.f: no second
   `created`/`opened`, `c2pa.opened` and `c2pa.placed` needing an
   ingredient parameter, `softwareAgent` indices, icons and templates,
-  `digitalSourceType` values — M7's, with ingredients, or a spec of their
-  own; until then a manifest that breaks one of them and nothing else is
+  `digitalSourceType` values (the `c2pa.created` case moved to SPEC-032,
+  amendment 4) — M7's, with ingredients, or a spec of their own; until then a manifest that breaks one of them and nothing else is
   `Valid` here and `Invalid` at c2patool, and the drift alarms name any
   corpus file that shows it (none does today).
 - `assertion.action.redacted` and `assertion.required.missing` stay on
@@ -255,6 +255,18 @@ final readonly class ActionsCheck
    one. Measured: without it, SPEC-022's `action-not-allowed` variant
    reports `assertion.action.malformed` where c2patool reports only
    `manifest.update.invalid`.
+
+4. **2026-09-24, step 122b, with SPEC-032** — the `digitalSourceType`
+   item leaves this spec's out-of-scope list. SPEC-032 rule A refuses a
+   `c2pa.created` without one in a v2 claim, as `c2patool` 0.27.22 and
+   0.28.0 do. AC2's corpus list keeps every verdict, and it now expects
+   exactly that fault on `c2pa-rs/no_alg.jpg`. That is a v2 claim whose
+   `c2pa.created` has no `digitalSourceType`, and whose verdict was and
+   stays `Invalid` for its unknown algorithm. `c2patool` refuses it for
+   the algorithm before it reads the actions. The rest of the content
+   family stays out of scope.
+
+   Weight B: one more status on one file whose verdict does not move.
 
 ## Traceability
 

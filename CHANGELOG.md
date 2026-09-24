@@ -12,6 +12,16 @@ committed.
 break, and `^0.1` must not pull it in silently.
 
 ### Added
+- SPEC-032: two rules the oracles enforce.
+  - A `c2pa.created` action without `digitalSourceType` in a v2 claim is
+    `assertion.action.malformed`, as in `c2patool` 0.27 and 0.28. v1
+    claims are untouched, as `c2pa-rs` leaves them.
+  - The `c2pa.external-reference` checks of C2PA 2.4 §15.10.3.2.2: a
+    `location` with a `url`, `alg` and `hash` together, and fourteen
+    forbidden labels. They report the new code
+    `assertion.external-reference.malformed`. Nothing is fetched.
+  - The contract's surface grows to 112 symbols. No corpus verdict
+    changed.
 - SPEC-031: `trust.anchors`, the settings shape of `c2patool` 0.28
   (`c2pa` 0.91). Each entry has its own `trust_kind`, `allowed_list` and
   `trust_config`. Every entry counts only for its own kind (C2PA 2.4

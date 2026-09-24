@@ -265,6 +265,16 @@ reasoning that led to it stays readable.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 120).
 
+
+5. **2026-09-24, step 122b, with SPEC-032's implementation** — `StatusCode`
+   grows by one case, `AssertionExternalReferenceMalformed =
+   'assertion.external-reference.malformed'` (C2PA 2.4 §15.10.3.2.2). The
+   recorded surface goes 111 → **112** symbols, and a caller matching
+   exhaustively on the enum has one more arm to cover. The API check
+   refused the run with *"public but not recorded"* until the snapshot
+   had the line.
+
+   **Weight B: the vocabulary grew, verbatim.**
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
