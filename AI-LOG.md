@@ -5800,3 +5800,18 @@ README are where the disclosure lives.
 - Measured: nothing new (step 113).
 - Decided by Maurice: route 1. Name the gap and build nothing; no new
   setting and no upstream question for now.
+
+## 2026-09-24 — Step 114, the allowed list and time-stamps measured
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, meet eerst punt 2" (SPEC-031 open question 6).
+- Produced: `notes/step-114-allowed-list-and-time-stamps.md`, rows in
+  `docs/milestones.md` and `NOTES.md`. No specification, test or code.
+- Measured: two throwaway scripts on the public API. Three files (C.jpg,
+  adobe C, truepic camera) were verified with and without their own TSA
+  leaf on the constructor's allowed list: the TSA goes from untrusted to
+  trusted, and on the Truepic file `signingCredential.expired` disappears.
+- Reasoned: C2PA 2.4 §14.4.3 and §14.5.1.2. `c2pa` 0.91.0
+  `time_stamp/verify.rs` sends the TSA chain to `check_certificate_trust()`,
+  which checks the end-entity set first. c2patool cannot serve as an
+  oracle here, because it trusts these TSAs with no anchor.
+- Decided by Maurice: to measure this first.
