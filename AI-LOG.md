@@ -5774,3 +5774,19 @@ README are where the disclosure lives.
   settings path; the exact code path was not pinned down). Not a wrong
   `Valid` here; a probable upstream regression.
 - Decided by Maurice: to examine this file first.
+
+## 2026-09-24 — Step 113, anchors tied to EKUs measured
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, meet eerst de koppeling tussen anchors en EKU's".
+- Produced: `notes/step-113-anchors-and-ekus.md`, rows in
+  `docs/milestones.md` and `NOTES.md`. No specification, test or code.
+- Measured: the official `C2PA-TRUST-LIST.pem` + `C2PA-TSA-TRUST-LIST.pem`
+  as one settings file over every signed corpus file (`bin/c2pa-verify`):
+  two reach an official anchor. The EKUs along both chains were read with
+  the own `Certificate` class. c2patool 0.28.0 gives the same verdict on
+  both. `good.png` (an emailProtection-only leaf) is Trusted in all three.
+- Reasoned: C2PA 2.4 §14.4.1, §14.5.1.2 and the change list; the C2PA
+  Certificate Policy's EKU rows (conformance-public `docs/v0.2`); `c2pa`
+  0.91.0's EKU and trust functions (step 110); the settings format cannot
+  express the association.
+- Decided by Maurice: to measure this before anything else.
