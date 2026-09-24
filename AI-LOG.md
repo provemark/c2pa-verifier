@@ -5940,3 +5940,24 @@ README are where the disclosure lives.
 - Measured: `bin/spec-check.php` OK after stamping; 11 stamps placed, 11
   table rows updated.
 - Decided by Maurice: all eleven amendments confirmed.
+
+## 2026-09-24 — Step 121, fuzzing and four gaps measured
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, begin met fuzzen en dan de meting".
+- Produced: `notes/step-121-fuzz-and-four-gaps.md`, rows in
+  `docs/milestones.md` and `NOTES.md`. No specification, test or code.
+- Measured:
+  - `php bin/fuzz.php 20260924 60 <out> <corpora + today's fixtures>`:
+    7,722 runs, 0 faults, 204 Valid survivors, all Valid in c2patool
+    0.27.22 and 0.28.0.
+  - A throwaway settings fuzzer (seed 20260924, 300 rounds × 35 files):
+    10,500 runs, 0 faults.
+  - Six probe manifests signed with c2patool 0.28.0 under step 110's
+    scratchpad CA, verified in three tools. The table is in the note.
+    One probe (#11) could not be built.
+  - The first three-tool loop reported NOREPORT for this verifier, because
+    zsh does not word-split a variable. It was rerun in Python and the
+    slip is recorded.
+- Reasoned: C2PA 2.4 §15.10.3.2.2, §15.10.3.2.3 and §18's actions and
+  metadata text; SPEC-018's named out-of-scope content family.
+- Decided by Maurice: to fuzz and then measure before tagging 0.2.0.
