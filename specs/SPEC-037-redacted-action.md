@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -178,6 +178,10 @@ public function check(Manifest $manifest, array $unreadable = [], array $storeLa
 ```
 
 ## Open questions
+
+*Answered on approval, 2026-09-24:* question 1 by the maintainer (follow
+`c2patool`: a bare `c2pa.redacted` passes). Questions 2, 3 and 4 were
+settled by adopting their proposals.
 
 1. **A bare `c2pa.redacted`.** 2.4 rejects an action without a `redacted`
    field. Both oracles accept it when `parameters` is absent altogether,

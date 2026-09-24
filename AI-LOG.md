@@ -6411,3 +6411,19 @@ README are where the disclosure lives.
   `src/Verifier/Verifier.php`, `src/Verifier/IngredientManifestCheck.php`);
   C2PA 2.4 §15.10.3.2.3 and `c2pa` rule 2.d as in step 131.
 - Decided by Maurice: SPEC-037 as a draft.
+
+## 2026-09-24 — SPEC-037 approved; fixtures and tests seen red (step 132a)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, volg c2patool bij vraag 1, SPEC-037 goedgekeurd".
+- Produced: SPEC-037 approved with the answers; `bin/make-spec037-variants.php`
+  (step 131's probe, now in the repository); `tests/Fixtures/redacted-action/`
+  and both c2patool versions' reports under
+  `tests/Fixtures/c2patool/redacted-action/`;
+  `tests/Unit/Manifest/RedactedActionTest.php`; `notes/step-132-spec037.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: the script (both versions as in step 131);
+  `vendor/bin/pest --group=SPEC-037` (6 failed, 2 guards passed); the
+  rest of `composer check` (spec-check, Pint, Deptrac clean, 473 other
+  tests pass; PHPStan one error, the seam's new argument).
+- Reasoned: nothing beyond the draft.
+- Decided by Maurice: SPEC-037 approved; question 1: follow c2patool.
