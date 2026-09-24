@@ -201,7 +201,7 @@ final readonly class DataHashCheck
             $covering[$covered][] = $piece;
         }
 
-        // ---- an exclusion holding part of the store holds nothing else (C2PA 2.4 VAL-ASSE-0043/0044; SPEC-012 amendment 7) ----
+        // ---- an exclusion holding part of the store holds nothing else (C2PA 2.4 §15.12.1.1, and §15.12.1.2 for JPEG; SPEC-012 amendment 7) ----
         // In JPEG, PNG and WebP the padding lives inside the store, so the range must be exactly the pieces it holds.
         foreach ($covering as $i => $pieces) {
             $range = $exclusions[$i];
@@ -211,7 +211,7 @@ final readonly class DataHashCheck
                 $before = $pieces[0]['start'] - $range['start'];
                 $after = $range['start'] + $range['length'] - ($last['start'] + $last['length']);
 
-                return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('the exclusion [%d, %d] (start, length) holds the manifest store and %d bytes that are not: %d before it, %d after it, %d between its pieces; the range holding the store may hold only the store and padding (C2PA 2.4, data hash validation)', $range['start'], $range['length'], $range['length'] - $held, $before, $after, $range['length'] - $held - $before - $after))];
+                return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('the exclusion [%d, %d] (start, length) holds the manifest store and %d bytes that are not: %d before it, %d after it, %d between its pieces; the range holding the store may hold only the store and padding (C2PA 2.4 §15.12.1.1)', $range['start'], $range['length'], $range['length'] - $held, $before, $after, $range['length'] - $held - $before - $after))];
             }
         }
         $others = [];

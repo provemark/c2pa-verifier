@@ -5690,3 +5690,23 @@ README are where the disclosure lives.
   reasoned, not measured.
 - Decided by Maurice: separate the kinds strictly, `"manifest"` not
   counting for TSAs; the legacy string counts for both.
+
+## 2026-09-24 — Step 110, SPEC-031's two pre-approval questions settled
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, zoek die twee eerst uit" (the §14.4.1 number against 2.4, and
+  per-entry `trust_config` with a leaf whose EKU is not built in).
+- Produced: `notes/step-110-trust-lists-in-2.4.md`. `SPEC-031`: the 2.4
+  references, AC6 (the `"tsa"` allowed list refused), a new AC8, the API
+  sketch (`TrustAnchorSet`), open question 2 answered, new open questions 5
+  and 6. SPEC-012 amendment 7 and `DataHashCheck` now cite §15.12.1.1/.2.
+  Rows in `docs/milestones.md` and `NOTES.md`.
+- Measured: the 2.4 HTML of `c2pa-org/specifications` at `4eb2c67`
+  (§14.4.1–3, §15.12.1.1–2, the x5chain text). A throwaway
+  root/intermediate/leaf (EKU 1.3.6.1.4.1.99999.1) made with `openssl` in
+  the scratchpad, `fixture-unsigned.jpg` signed with c2patool 0.28.0, and
+  nine settings E1–E9 run through c2patool 0.28.0 and, for the legacy
+  shape, `bin/c2pa-verify`. The table is in the note. Also a
+  one-certificate chain, which this verifier refuses and 0.28.0 trusts.
+- Reasoned: `TimestampCheck.php:223` passes the loose allowed list to the
+  TSA check, which §14.4.3 forbids. Not measured yet.
+- Decided by Maurice: to settle these two before approving SPEC-031.

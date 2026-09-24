@@ -44,11 +44,17 @@ Without this spec:
   wrong side for a verifier.
 
 The C2PA specification does not define a settings file. It defines what
-the lists are for: C2PA 2.4 §14.4, *Trust lists*. §14.4.1, *C2PA Signers*,
-is the number `c2pa-rs` quotes from 2.3 and still has to be checked
-against 2.4. It asks a validator to keep the C2PA trust list and a list of
-additional anchors for signers, separately from the list for time-stamping
-authorities.
+the lists are for, in C2PA 2.4 §14.4 *Trust Lists* (numbers checked against
+the 2.4 text on 2026-09-24, step 110):
+
+- **§14.4.1 *C2PA Signers*:** *"For each accepted EKU value, a list of
+  'trust anchor configurations'"*. Trust is per anchor and per EKU, not
+  one pool.
+- **§14.4.2 *Time Stamping Authorities*:** the TSA anchors *"shall be
+  separate from the lists for C2PA signers"*.
+- **§14.4.3 *Private Credential Storage*** (the allowed list): it *"shall
+  only apply to validating signed C2PA manifests, and shall not apply to
+  validating time-stamps"*.
 
 ## Scope
 
@@ -162,18 +168,21 @@ authorities.
 
 - **AC6 — every anchor counts only for its own kind** *(open question 1, answered 2026-09-24)*
   - Given, for the signer side, `trust.anchors` holding only the test
-    roots, once as `"tsa"` and once as `"cawg"`, and once holding only
-    `allowed_list.pem` as the `allowed_list` of a `"tsa"` entry. Given,
+    roots, once as `"tsa"` and once as `"cawg"`. Given,
     for the time-stamping side, the DigiCert cross-certificate
     (`digicert-trusted-root-g4.pem`) as the only entry, once as `"tsa"`
     and once as `"manifest"`.
-  - When `fixture-signed.jpg` is verified with the first three, and
+  - When `fixture-signed.jpg` is verified with the first two, and
     `c2pa-rs/C.jpg` with the last two
   - Then:
     - `fixture-signed.jpg` is `signingCredential.untrusted` and `Valid`
-      all three times. Only `"manifest"` entries (their anchors and their
+      both times. Only `"manifest"` entries (their anchors and their
       `allowed_list`) and the legacy `trust_anchors` can make a signer
       trusted.
+    - A `"tsa"` entry that carries an `allowed_list` is refused by
+      `fromJson()`, and the message cites §14.4.3: an allowed list never
+      applies to time-stamps. `c2patool` 0.28.0's handling of it was not
+      measured.
     - `C.jpg` reports `timeStamp.trusted` with the `"tsa"` entry, exactly
       as SPEC-017 AC6 does with the legacy settings. With the
       `"manifest"` entry it reports `timeStamp.untrusted`, and its
@@ -188,6 +197,22 @@ authorities.
       `timeStamp.trusted` for a `"manifest"` entry (probe T2). The
       difference is named in `docs/comparison.md`.
 
+- **AC8 — a `trust_config` counts for its own entry** *(open question 2, answered by measurement in step 110)*
+  - Given `eku-probe.jpg`. It is signed by a throwaway leaf whose only EKU
+    is `1.3.6.1.4.1.99999.1`, under a throwaway intermediate and root; it
+    is built by a `bin/make-*` script in the tests-first step, and the
+    keys are shredded before the script ends.
+  - When it is verified under each of the settings E1–E9 of step 110
+  - Then each verdict equals `c2patool` 0.28.0's under the same settings:
+    - the EKUs accepted for a certificate that chains to an entry's anchor
+      are the built-in list, plus the top-level `trust_config`, plus
+      **that entry's own** `trust_config`;
+    - one entry's `trust_config` never widens another's. E5 is `Invalid`
+      with `signingCredential.invalid` (*"missing required EKU"*), where a
+      union across entries would say `Trusted`;
+    - E1, E2, E2b and E9 (the legacy shape) are already this verifier's
+      verdicts today, measured.
+
 - **AC7 — the drift alarm learns the new shape**
   - Given the corpus runs that already use `full.settings.json` and
     `full-plus-digicert-g4.settings.json`
@@ -196,9 +221,9 @@ authorities.
 
 ## References
 
-- Specification: C2PA 2.4 §14.4 *Trust lists*. The section number of
-  §14.4.1 *C2PA Signers* comes from the 2.3 text `c2pa-rs` quotes and is to
-  be checked against 2.4 before approval.
+- Specification: C2PA 2.4 §14.4.1 *C2PA Signers*, §14.4.2 *Time Stamping
+  Authorities*, §14.4.3 *Private Credential Storage*. Read in the 2.4 HTML
+  of `c2pa-org/specifications` at `4eb2c67` (2026-09-16), step 110.
 - Oracle: `c2patool` 0.28.0 (`universal-apple-darwin` release asset, SBOM
   `c2pa` 0.91.0), `c2patool <file> --settings <path>`. The probes N1–N13 and
   T1–T4 were run in step 107's follow-up with constructed settings files
@@ -232,23 +257,24 @@ today keeps its meaning.
 final readonly class TrustSettings
 {
     /**
-     * @param  list<Certificate>  $trustAnchors    every certificate that may anchor a signer:
-     *                                             the legacy string plus every "manifest" entry
-     * @param  list<Certificate>  $allowedList     every "manifest" entry's allowed_list, together
-     * @param  list<string>       $trustConfig     top-level plus every entry's, together (open question 2)
-     * @param  list<Certificate>  $tsaAnchors      new: every "tsa" entry; a TSA is judged against
-     *                                             these plus the legacy string (AC6)
-     * @param  list<Certificate>  $tsaAllowedList  new: every "tsa" entry's allowed_list
+     * @param  list<Certificate>     $trustAnchors  the legacy string's anchors (unchanged meaning)
+     * @param  list<Certificate>     $allowedList   the legacy loose list: always [] now (AC4 refuses it);
+     *                                              kept so that the property does not disappear
+     * @param  list<string>          $trustConfig   the top-level EKUs (unchanged meaning)
+     * @param  list<TrustAnchorSet>  $anchorSets    new: one per trust.anchors entry, each with its kind,
+     *                                              its anchors, its allowed_list and its own EKUs (AC6, AC8)
      */
     public function __construct(
         public array $trustAnchors,
         public array $allowedList,
         public array $trustConfig = [],
         public bool $verifyTrust = true,
-        public array $tsaAnchors = [],
-        public array $tsaAllowedList = [],
+        public array $anchorSets = [],
     ) {}
 }
+
+// new, final readonly: kind (an enum: Manifest, Tsa, Cawg), list<Certificate> $anchors,
+// list<Certificate> $allowedList (Manifest only; AC6), list<string> $trustConfig, ?string $uri
 ```
 
 ## Open questions
@@ -289,12 +315,13 @@ final readonly class TrustSettings
      avoid that divergence at low risk, since a TSA also needs the
      `timeStamping` EKU. It was declined so that the rule stays one
      sentence and mirrors the official lists.
-2. **Per-entry `trust_config`.** *(not a blocker)* In `c2pa` 0.91.0 it is
-   documented to *"overlay the default top level trust_config"*. On the
-   test leaf no probe could separate the two, because that leaf's EKU is
-   already in the built-in list (N6, N7, N13 all `Trusted`). Proposal:
-   union, like the top level today (ADR-0003 item 4), and a fixture with a
-   leaf whose EKU is not built in before approval.
+2. **Per-entry `trust_config`.** **Answered by measurement, step 110
+   (AC8).** An entry's EKUs are the built-in list, plus the top level, plus
+   its own, and they never spill over to another entry. This is `c2patool`
+   0.28.0's behaviour, and it matches §14.4.1's model (anchor
+   configurations per EKU). The earlier proposal, one union across all
+   entries, was wrong: it would have called E5 `Trusted` where the oracle
+   and §14.4.1 say `Invalid`.
 3. **After 0.92.0.** *(not a blocker)* Keep reading `trust.trust_anchors`
    when `c2patool` no longer does? Proposal: yes. Refusing it would break
    every existing settings file, the sister repository's
@@ -304,7 +331,22 @@ final readonly class TrustSettings
    official list's JSON has 30 signer services, but a settings file bundles
    them into one PEM string, so a realistic file holds a handful of
    entries.
-5. **The sister repository's settings file** has no `allowed_list` (read
+5. **The legacy string counts for both sides, which §14.4.2 does not
+   want.** *(for the maintainer; not a blocker)* §14.4.2 says the TSA
+   anchors *"shall be separate"*. A single legacy `trust.trust_anchors`
+   string serves both today, here and in `c2patool`. Proposal: keep it,
+   as AC2 and AC6 say. Otherwise every existing settings file loses
+   `timeStamp.trusted`. Name it in `docs/comparison.md` as a departure
+   kept for compatibility; the new shape is the conformant way.
+6. **Today's code already lets the loose allowed list trust a TSA.**
+   *(for the maintainer; out of scope here, its own step)*
+   `TimestampCheck::tsaSettings()` passes `$operator->allowedList` to the
+   TSA chain check (`src/Timestamp/TimestampCheck.php:223`), which
+   §14.4.3 forbids. That is read from the code and not yet measured. AC4
+   makes it unreachable for settings files, because a loose `allowed_list`
+   is refused. A caller who builds `TrustSettings` in PHP could still
+   reach it.
+7. **The sister repository's settings file** has no `allowed_list` (read
    2026-09-24), so AC4 does not refuse it. Nothing to decide; recorded so
    that nobody has to look again.
 
@@ -321,3 +363,4 @@ Filled when status becomes `implemented`.
 | AC5                  | —                           | —                    |
 | AC6                  | —                           | —                    |
 | AC7                  | —                           | —                    |
+| AC8                  | —                           | —                    |

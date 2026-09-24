@@ -460,6 +460,14 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
    **Weight A: three verdicts change, from `Trusted`/`Valid` to
    `Invalid`, on files the C2PA published as test files.**
 
+   Section numbers, checked against the 2.4 text in step 110: the rule is
+   §15.12.1.1 (*"the data contained within the exclusion range containing
+   the C2PA Manifest Store consists of only the C2PA Manifest Store and any
+   appropriate padding"*). For JPEG, §15.12.1.2 is sharper still: *"a
+   validator shall match the total length of the exclusion range with that
+   of the total length of all APP11 segments representing the C2PA
+   Manifest"*.
+
 
 ## Traceability
 
