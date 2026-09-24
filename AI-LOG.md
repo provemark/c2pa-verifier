@@ -6070,3 +6070,15 @@ README are where the disclosure lives.
   269 files, 2.8 MB. CI on the release commit, and the GitHub archive
   of the tag against the local count, are recorded in the next entry.
 - Decided by Maurice: tag 0.2.0.
+
+## 2026-09-24 — v0.2.0 verified after the push
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: the check after tagging, as for 0.1.0 (step 101).
+- Produced: nothing in the repository beyond this entry and the rows below.
+- Measured: CI green on the release commit `4093bbb` before tagging. The
+  tag `v0.2.0` pushed. GitHub's zipball of the tag holds 269 files, equal
+  to `git archive v0.2.0` and to `bin/package-check.php`. Packagist lists
+  `v0.2.0` (the webhook fired). `composer require
+  provemark/c2pa-verifier:^0.2` in an empty project installs v0.2.0, and
+  its `vendor/bin/c2pa-verify` gives `Valid` on `fixture-signed.jpg`.
+- Decided by Maurice: tag 0.2.0.
