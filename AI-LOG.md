@@ -6196,3 +6196,13 @@ README are where the disclosure lives.
   `composer check` gives 456 passed, clean. 993 runs before and after: only
   the 15 lines of the failing icon probes differ.
 - Decided by Maurice: none in this step beyond the approvals.
+
+## 2026-09-24 — SPEC-034 amendments confirmed; issue #11 closed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, beide bevestigd en sluit #11, nog geen release".
+- Produced: confirmation stamps under SPEC-034 #1 and #2; `README.md` (108
+  amendments, every one confirmed); a closing comment on issue #11 (what
+  SPEC-034 checks, how it was measured, where the details are), and the
+  issue closed. No release.
+- Measured: `bin/spec-check.php` OK.
+- Decided by Maurice: both amendments confirmed; close #11; no release yet.

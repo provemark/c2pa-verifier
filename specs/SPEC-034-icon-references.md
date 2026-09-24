@@ -244,6 +244,8 @@ proposal: an icon naming a data box is `assertion.missing`). Questions 1,
    Weight A for AC5 (an outcome changed before any test existed); the
    rest records a decision.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 126).
+
 2. **2026-09-24, step 126a, measured on the probes before the tests.**
    - `c2patool` 0.28.0's builder leaves a `softwareAgents` icon as a
      resource reference (`{format, identifier}`) and embeds no `c2pa.icon`
@@ -265,6 +267,8 @@ proposal: an icon naming a data box is `assertion.missing`). Questions 1,
      byte for byte.
 
    Weight C: no rule changed; how AC4 is covered, and what is compared.
+
+   Confirmed by Maurice van Loon, 2026-09-24 (step 126).
 
 ## Traceability
 
