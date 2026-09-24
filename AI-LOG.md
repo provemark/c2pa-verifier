@@ -5752,3 +5752,25 @@ README are where the disclosure lives.
   0.2.0.
 - Decided by Maurice: none in this step beyond the approval of SPEC-031.
   Tagging stays his call ("nog even niet taggen").
+
+## 2026-09-24 — Step 112, eku-c2pa.png examined
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "onderzoek eku-c2pa.png eerst".
+- Produced: `notes/step-112-claim-signing-eku.md`, a `docs/comparison.md`
+  row, rows in `docs/milestones.md` and `NOTES.md`. No specification, test
+  or code.
+- Measured:
+  - `eku-c2pa.png`, `good.png`, `eku-mixed.png` and
+    `eku-outside-list.png` under 0.27.22, 0.28.0 and `bin/c2pa-verify`.
+  - `eku-c2pa.png` under five `trust_config`s.
+  - Three throwaway leaves (C2PA only, documentSigning only, C2PA +
+    emailProtection) under step 110's scratchpad CA, each under four
+    `trust_config`s and without settings.
+  - The leaf EKUs of 47 signed corpus files.
+  - The table is in the note.
+- Reasoned: from the C2PA 2.4 text (§14.4.1, the 2.4 change list,
+  §14.5.1) and `c2pa` 0.91.0 (`has_allowed_eku()` unchanged,
+  `valid_eku_oids.cfg` unchanged, the default not applied on the
+  settings path; the exact code path was not pinned down). Not a wrong
+  `Valid` here; a probable upstream regression.
+- Decided by Maurice: to examine this file first.
