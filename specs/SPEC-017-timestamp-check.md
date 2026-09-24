@@ -99,8 +99,9 @@ and is named in the drift alarms.
   with the accepted EKU list replaced by `1.3.6.1.5.5.7.3.8` (SPEC-015
   amendment: an `$ekus` override), validity judged at the token's time;
   `ChainCheck` on the token's certificates ordered leaf to root, the
-  operator's `trust_anchors` and `allowed_list` (`TimestampCheck::tsaSettings()`
-  keeps the operator's lists and replaces `trust_config`); a
+  operator's TSA anchors and never an allowed list (`TimestampCheck::tsaSettings()`
+  keeps the anchors, drops the allowed list — amendment 5, C2PA 2.4 §14.4.3 —
+  and replaces `trust_config`); a
   `signingCredential.*` outcome is renamed `timeStamp.trusted` /
   `timeStamp.untrusted`. Without settings: `untrusted`, "no trust anchors
   configured". `verify_trust: false` skips step 7 and reports neither.
@@ -318,6 +319,21 @@ to `tests/Support/` so both files share them.
     before); and there is still no file where this verifier is more
     lenient than c2patool.
 
+- **AC13 — the allowed list never reaches a TSA** *(amendment 5; C2PA 2.4 §14.4.3, §14.5.1.2)*
+  - Given `TrustSettings` built through its constructor with a TSA's own
+    leaf on the allowed list: `c2pa-rs/C.jpg`'s DigiCert Timestamp 2023
+    next to `full`'s anchors, and `truepic-20230212-camera.jpg`'s Truepic
+    TSA next to the Truepic root as a `"manifest"` entry
+  - When `TimestampCheck::tsaSettings()` is read, and when both files are
+    verified
+  - Then `tsaSettings()` carries an empty allowed list. `C.jpg` reports
+    `timeStamp.untrusted`. The Truepic file reports `timeStamp.untrusted`
+    **and** `signingCredential.expired`: its signer (valid until
+    2023-02-13) is judged at now, not excused by a TSA that only the
+    allowed list would trust. The same allowed list still trusts a
+    signer: `fixture-signed.jpg` with `allowed_list.pem` is
+    `signingCredential.trusted`.
+
 ## References
 
 - Specification: C2PA 2.4 §14.6 (time-stamps: `sigTst`/`sigTst2`, the
@@ -401,7 +417,7 @@ final readonly class TimestampCheck
     /** ["CounterSignature", protected, h'', payload] — payload per header name. */
     public static function countersignedBytes(CoseSign1 $cose, string $header, string $claimBytes): string;
 
-    /** The operator's anchors and allowed list, trust_config replaced by timeStamping alone, verify_trust kept. */
+    /** The operator's TSA anchors, no allowed list (amendment 5), trust_config replaced by timeStamping alone, verify_trust kept. */
     public static function tsaSettings(?TrustSettings $operator): TrustSettings;
 }
 
@@ -455,6 +471,30 @@ final readonly class TimestampCheck
 
    **Weight A, carried by SPEC-012 amendment 7:** the verdict changes, and
    the rule this criterion checks does not.
+5. **2026-09-24, steps 114–115, decided by Maurice van Loon** — the
+   allowed list no longer reaches the TSA check. `tsaSettings()` passed
+   `$operator->allowedList` to the TSA chain (SPEC-014 amendment 2 reused
+   `ChainCheck`, and this spec's scope said *"the operator's `trust_anchors`
+   and `allowed_list`"*). C2PA 2.4 §14.4.3 says the private credential store
+   *"shall not apply to validating time-stamps"*. Step 114 measured the
+   cost: a TSA leaf on the constructor's allowed list made
+   `timeStamp.trusted`, and the Truepic signer stopped being expired.
+   Since SPEC-031 only the PHP constructor can put anything there, so no
+   settings file and no corpus verdict changes.
+   - Scope (step 7) and the API sketch are corrected. **AC13** is added,
+     seen red on the seam (`tsaSettings()->allowedList` not `[]`) before
+     the one-argument fix.
+   - `c2pa-rs` 0.91.0 applies its end-entity set to time-stamps as well
+     (read in `time_stamp/verify.rs`). `c2patool` cannot show it, because
+     it trusts these TSAs without any anchor. This verifier is now
+     stricter than both on a *shall not*.
+   - Recorded while numbering: a test named *"SPEC-017 AC12"* (step 46, the
+     Pixel 10 file) has existed since 2026-09-22 with no AC12 in this spec
+     and no traceability row. `bin/spec-check.php` did not notice. The new
+     criterion is therefore AC13. The orphan is left as it is and named
+     here, pending the maintainer.
+
+   **Weight A for the rule, no verdict changed in the corpus.**
 
 ## Traceability
 
@@ -473,4 +513,5 @@ least one test; every source file maps back to this spec.
 | AC8 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC8: no header … and SPEC-017 AC8: one token is judged; a doubled header … / SPEC-017 | src/Timestamp/TimestampCheck.php :: check(), checkHeader(); src/Timestamp/TimestampResult.php :: none(); src/Verifier/Verifier.php :: check() (the reason "no timestamp") |
 | AC9 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC9: the report — timeStamp entries first, signature_info with time equal to c2patool's, checks_performed / SPEC-017 | src/Verifier/Verifier.php :: check(), signatureInfo(); src/Report/ValidationResult.php :: toArray() (unchanged: informational is its own list) |
 | AC10 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC10: the NO_TIMESTAMP exceptions are gone; TSA_NOT_CONFIGURED names the files that stay expired, and an anchor un-expires them / SPEC-017 | tests/Pest.php :: SPEC013_PUBLIC_TSA_NOT_CONFIGURED, SPEC013_RS_TSA_NOT_CONFIGURED; tests/Unit/Verifier/VerifierTest.php :: AC11, AC12; src/Verifier/Verifier.php :: check() (the time handed to the profile) |
+| AC13 (amendment 5) | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC13: a TSA certificate on the allowed list does not make the timestamp trusted / SPEC-017 | src/Timestamp/TimestampCheck.php :: tsaSettings() (no allowed list) |
 | AC11 (amendments 2–3) | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC11: on the writers corpus signature_info.time equals c2patool's, and the negative-nonce tokens validate / SPEC-017 | src/Timestamp/TimestampResult.php :: $timeFraction, timeIso(); src/Timestamp/SignerInfo.php :: signedAttributesForVerification() (the DER-canonical SET), $attributeEncodings; src/Timestamp/TimestampCheck.php :: ecdsaDer(), isDerEcdsaSignature(); src/Verifier/Verifier.php :: signatureInfo() |

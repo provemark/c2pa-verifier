@@ -15,6 +15,7 @@ use Provemark\C2paVerifier\Timestamp\TimeStampToken;
 use Provemark\C2paVerifier\Timestamp\TstInfo;
 use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
+use Provemark\C2paVerifier\Trust\TrustAnchorSet;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\VerificationReport;
 use Provemark\C2paVerifier\Verifier\Verifier;
@@ -641,4 +642,41 @@ test('SPEC-017 AC12: the Pixel 10 file is expired at now and Trusted under Googl
         ->and(spec017Failures($anchored))->toBe([])
         ->and(spec017Codes($anchored))->toContain('timeStamp.trusted')
         ->and(spec017Codes($anchored))->toContain('signingCredential.trusted');
+})->group('SPEC-017');
+
+// ---------------------------------------------------------------------------
+// AC13 (amendment 5) — the allowed list never reaches a TSA: C2PA 2.4 §14.4.3, §14.5.1.2
+
+test('SPEC-017 AC13: a TSA certificate on the allowed list does not make the timestamp trusted', function (): void {
+    // since SPEC-031 only the PHP constructor fills $allowedList; step 114 measured it reaching the TSA
+    $tsaLeaf = static function (string $relative): Certificate {
+        $der = TimeStampToken::fromHeaderValue(Corpus::headerValue($relative))->signedData->signerCertificate();
+        assert($der !== null);
+
+        return Certificate::fromDer($der);
+    };
+
+    // the seam: whatever the operator's allowed list holds, the TSA's settings carry none of it
+    $full = spec017Settings('full');
+    $withAllowed = new TrustSettings($full->trustAnchors, [$tsaLeaf('c2pa-rs/C.jpg')], $full->trustConfig, true);
+    expect(TimestampCheck::tsaSettings($withAllowed)->allowedList)->toBe([]);
+
+    // C.jpg: its own TSA leaf on the allowed list leaves the timestamp untrusted
+    $report = spec017Verify('c2pa-rs/C.jpg', $withAllowed);
+    expect(in_array('timeStamp.untrusted', spec017Codes($report), true))->toBeTrue()
+        ->and(in_array('timeStamp.trusted', spec017Codes($report), true))->toBeFalse();
+
+    // the consequence that matters: the Truepic signer (expired 2023-02-13) is not excused by a TSA
+    // that only the allowed list would trust — it stays judged at now, and expired
+    $root = spec017Settings('truepic-root');
+    $entry = new TrustAnchorSet('manifest', $root->trustAnchors);
+    $settings = new TrustSettings([], [$tsaLeaf('public-testfiles/truepic-20230212-camera.jpg')], $root->trustConfig, true, [$entry]);
+    $truepic = spec017Verify('public-testfiles/truepic-20230212-camera.jpg', $settings);
+    expect(in_array('timeStamp.untrusted', spec017Codes($truepic), true))->toBeTrue()
+        ->and(in_array('signingCredential.expired', spec017Codes($truepic), true))->toBeTrue();
+
+    // and the allowed list still counts for a signer (§14.4.3: signed C2PA manifests only)
+    $pems = TrustSettings::certificatesFromPem((string) file_get_contents(Corpus::fixtures().'/trust/allowed_list.pem'), 'allowed', 8);
+    $signer = spec017Verify('fixture-signed.jpg', new TrustSettings([], $pems, [], true));
+    expect(in_array('signingCredential.trusted', spec017Codes($signer), true))->toBeTrue();
 })->group('SPEC-017');

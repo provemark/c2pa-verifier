@@ -338,7 +338,10 @@ final readonly class TrustSettings
    as AC2 and AC6 say. Otherwise every existing settings file loses
    `timeStamp.trusted`. Name it in `docs/comparison.md` as a departure
    kept for compatibility; the new shape is the conformant way.
-6. **Today's code already lets the loose allowed list trust a TSA.**
+6. **Answered 2026-09-24 (steps 114–115): the allowed list no longer
+   reaches a TSA**, through settings or through the constructor. See
+   SPEC-017 amendment 5 and AC13. The text below is the question as it
+   stood. **Today's code already lets the loose allowed list trust a TSA.**
    *(for the maintainer; out of scope here, its own step)*
    `TimestampCheck::tsaSettings()` passes `$operator->allowedList` to the
    TSA chain check (`src/Timestamp/TimestampCheck.php:223`), which

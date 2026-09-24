@@ -217,11 +217,11 @@ final readonly class TimestampCheck
 
     /**
      * The operator's TSA anchors — the legacy list and every "tsa" entry,
-     * never a "manifest" one (C2PA 2.4 §14.4.2; SPEC-031 AC6) — and the
-     * legacy allowed list, with `trust_config` replaced by timeStamping
-     * alone; `verify_trust` kept. An entry's allowed list never reaches a
-     * TSA (§14.4.3). The legacy one still does, when a caller builds
-     * TrustSettings in PHP: SPEC-031 open question 6.
+     * never a "manifest" one (C2PA 2.4 §14.4.2; SPEC-031 AC6) — with
+     * `trust_config` replaced by timeStamping alone; `verify_trust` kept.
+     * **No allowed list**, neither an entry's nor the one a caller passes to
+     * the constructor: the private credential store *"shall not apply to
+     * validating time-stamps"* (§14.4.3, §14.5.1.2; SPEC-017 amendment 5).
      */
     public static function tsaSettings(?TrustSettings $operator): TrustSettings
     {
@@ -229,7 +229,7 @@ final readonly class TimestampCheck
             return new TrustSettings([], [], [self::OID_EKU_TIME_STAMPING], true);
         }
 
-        return new TrustSettings(ChainCheck::tsaAnchorsOf($operator), $operator->allowedList, [self::OID_EKU_TIME_STAMPING], $operator->verifyTrust);
+        return new TrustSettings(ChainCheck::tsaAnchorsOf($operator), [], [self::OID_EKU_TIME_STAMPING], $operator->verifyTrust);
     }
 
     /**

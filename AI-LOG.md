@@ -5815,3 +5815,20 @@ README are where the disclosure lives.
   which checks the end-entity set first. c2patool cannot serve as an
   oracle here, because it trusts these TSAs with no anchor.
 - Decided by Maurice: to measure this first.
+
+## 2026-09-24 — Step 115, the allowed list kept away from time-stamps
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, akkoord, doe het zo" (the one-argument fix from step 114).
+- Produced: `tests/Unit/Timestamp/TimestampCheckTest.php` (SPEC-017 AC13);
+  `src/Timestamp/TimestampCheck.php` (`tsaSettings()` passes no allowed
+  list); SPEC-017 amendment 5 (scope, API sketch, AC13, traceability, the
+  orphan AC12 recorded); SPEC-031 open question 6 marked answered;
+  `docs/comparison.md` row; `CHANGELOG.md` (`Unreleased`, Changed); the
+  step-114 note's addendum; rows in `docs/milestones.md` and `NOTES.md`.
+- Measured: `vendor/bin/pest --filter="SPEC-017 AC13"` gives 1 failed on
+  `tsaSettings()->allowedList`, then 1 passed after the fix.
+  `composer check` gives 431 passed, clean after Pint formatted the new
+  test.
+- Reasoned: none new; the evidence is step 114's.
+- Decided by Maurice: the fix as proposed. The orphan AC12 test is only
+  recorded, not changed.

@@ -22,6 +22,11 @@ break, and `^0.1` must not pull it in silently.
   symbols).
 
 ### Changed
+- **The allowed list never makes a timestamp authority trusted** (C2PA 2.4
+  §14.4.3). Through the PHP constructor it still could, and a trusted TSA
+  moves the moment a signer is judged at, so an expired signer could stop
+  being expired (step 114). SPEC-017 amendment 5. No settings file is
+  affected.
 - **A top-level `trust.allowed_list` is refused**, with a message saying
   where it belongs (`trust.anchors[].allowed_list`). `c2patool` 0.28
   moved it there and ignores a loose one without a word (step 107).

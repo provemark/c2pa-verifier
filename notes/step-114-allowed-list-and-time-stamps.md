@@ -74,3 +74,22 @@ amendment 2 and SPEC-017 (the TSA check reuses `ChainCheck`), so the
 change is an amendment to SPEC-017, with a test that is red first. It
 makes this verifier stricter than `c2pa-rs` on a *shall not*, in the
 fail-closed direction. Not done: it waits for the maintainer.
+
+## Step 115 — built, the same day
+
+The maintainer agreed to the fix as proposed.
+
+- **Red first.** `SPEC-017 AC13` failed on its first assertion,
+  `tsaSettings()->allowedList` = one certificate instead of `[]`. The
+  consequence it goes on to assert (the Truepic signer stays expired) is
+  what the table above measured.
+- **The fix.** `TimestampCheck::tsaSettings()` passes `[]` for the allowed
+  list. The docblock cites §14.4.3 and §14.5.1.2.
+- **Green.** `composer check`: 431 passed; PHPStan, Deptrac, Pint and the
+  API check clean. No other test moved. That fits step 114's reading that
+  no settings file and no corpus run reaches the property.
+- **Recorded while numbering.** The next free criterion should have been
+  AC12, but a test called *"SPEC-017 AC12"* (step 46, Pixel 10) already
+  exists with no AC12 in the spec and no traceability row, and
+  `bin/spec-check.php` passed it. The new criterion is AC13. The orphan is
+  named in SPEC-017 amendment 5 and waits for the maintainer.
