@@ -185,6 +185,8 @@ case ClaimSignatureInsideValidity = 'claimSignature.insideValidity';
 
    Weight C: a file name corrected and a measurement added.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 135).
+
 2. **2026-09-24, step 135b, measured.** AC1's *"every corpus file whose
    recorded report holds `claimSignature.validated`"* holds on 21 of
    `SPEC013_CORPUS`'s 22. The 22nd, `variants/json-broken`, stops this
@@ -195,6 +197,8 @@ case ClaimSignatureInsideValidity = 'claimSignature.insideValidity';
 
    Weight C: a named exception to a criterion's wording, no behaviour
    changed.
+
+   Confirmed by Maurice van Loon, 2026-09-24 (step 135).
 
 ## Traceability
 

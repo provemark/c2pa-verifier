@@ -6585,3 +6585,12 @@ README are where the disclosure lives.
   runs, no difference).
 - Reasoned: nothing new.
 - Decided by Maurice: none in this step.
+
+## 2026-09-24 — SPEC-039's six amendments confirmed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, alle zes bevestigd, nog geen release".
+- Produced: a confirmation line under SPEC-039 #1 and #2, SPEC-010 #6,
+  SPEC-011 #4, SPEC-012 #8 and SPEC-025 #11; README (129 amendments,
+  every one confirmed); the step-135 note and the milestones row.
+- Measured: `composer check`.
+- Decided by Maurice: the six amendments confirmed; no 0.3 release yet.

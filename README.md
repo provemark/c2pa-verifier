@@ -297,7 +297,7 @@ is checkable in this repository — that is the point of stating them.
 - **Changes of plan are written down, not made quietly.** When a
   specification turned out to be wrong, it was amended, numbered, weighed
   and confirmed by the maintainer before anything went green — 129 times so
-  far: 123 confirmed, 6 written with SPEC-039 and awaiting confirmation.
+  far, every one confirmed.
   [`NOTES.md`](NOTES.md) is the running record; each step has its own
   note in [`notes/`](notes/), written for someone who was not there.
 - **Independent oracles, not self-agreement.** Every verdict is measured

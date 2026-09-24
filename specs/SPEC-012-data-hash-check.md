@@ -474,6 +474,8 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
    grew by `claimSignature.insideValidity`, a success; AC10's test counts
    it among the successes. No criterion changed.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 135).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

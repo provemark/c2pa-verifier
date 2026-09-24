@@ -363,6 +363,8 @@ already); `Cose` may see `Manifest` (the arrow exists, unused until now).
    **Weight C: a success code added beside the one AC1 named; no verdict
    changed.**
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 135).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

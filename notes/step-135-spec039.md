@@ -55,7 +55,7 @@ and the tests hold them.
 
 `composer check`: exit 0, 492 tests.
 
-Six amendments await confirmation:
+Six amendments, all confirmed by the maintainer the same day:
 - SPEC-039 #1 and #2;
 - SPEC-010 #6, SPEC-011 #4, SPEC-012 #8;
 - SPEC-025, for the code.
