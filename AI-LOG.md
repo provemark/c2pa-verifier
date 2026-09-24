@@ -6381,3 +6381,20 @@ README are where the disclosure lives.
   note and the milestones row.
 - Measured: `composer check`.
 - Decided by Maurice: the three amendments confirmed; no 0.3 release yet.
+
+## 2026-09-24 — The c2pa.redacted action, measured (step 131)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, meet eerst de c2pa.redacted-actie" (measure the
+  c2pa.redacted action first).
+- Produced: `notes/step-131-redacted-action-measured.md`; a row in
+  `docs/comparison.md` and `NOTES.md`. No spec, test or code; the probes
+  stay in the scratchpad.
+- Measured: nine children built by c2patool 0.28.0 (`-p` and
+  `redactions`, one c2pa.redacted action each), judged by 0.27.22, 0.28.0
+  and this verifier: four are Invalid in both oracles and Trusted here
+  (`redactionMismatch` three times, `notRedacted` once, on the actions
+  assertion's url); the builder refuses a non-string `redacted`.
+- Reasoned: C2PA 2.4 §15.10.3.2.3, §18.15.4.2, §18.15.4.7 at `4eb2c67`;
+  `c2pa` `claim.rs` `verify_actions` rule 2.d at `6c92bc3` (v2 only, only
+  with `parameters`, the label looked up in the named manifest's claim).
+- Decided by Maurice: none in this step.
