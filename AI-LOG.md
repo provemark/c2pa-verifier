@@ -6016,3 +6016,11 @@ README are where the disclosure lives.
   `no_alg.jpg` gains one code with its verdict unchanged.
 - Reasoned: none new beyond the spec.
 - Decided by Maurice: none in this step beyond the approval.
+
+## 2026-09-24 — README amendment count corrected
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: nothing new; this is a correction found after step 122b.
+- Produced: `README.md` now says 101 amendments, 98 confirmed and three
+  (SPEC-032 #1, SPEC-018 #4, SPEC-025 #5) awaiting confirmation.
+- Measured: 101 numbered amendments counted across the specs.
+- Decided by Maurice: none.
