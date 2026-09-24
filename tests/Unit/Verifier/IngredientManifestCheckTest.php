@@ -71,30 +71,6 @@ it('AC1: the box hash — validated, legacy (silent), mismatch', function (): vo
         ->and($mismatch[0]->url)->toBe('self#jumbf=/c2pa/urn:c2pa:5259041e-8171-49c9-acc2-915f1a48e3a5:contentauth');
 })->group('SPEC-021');
 
-/**
- * The hash statuses for c2pa-rs/CACA with the reference's hash replaced by one that matches nothing:
- * the seam, since no corpus file has a mismatching reference.
- *
- * @return list<ValidationStatus>
- */
-function spec021Mismatch(): array
-{
-    $store = Corpus::manifestStore('c2pa-rs/CACA.jpg') ?? throw new RuntimeException('no store');
-    $graph = ManifestGraph::fromStore($store);
-    $ingredient = $graph->ingredients[$store->active->label][0];
-    $reference = $ingredient->manifest ?? throw new RuntimeException('no reference');
-    $broken = new IngredientAssertion(
-        $ingredient->label, $ingredient->url, $ingredient->version, $ingredient->relationship,
-        $ingredient->title, $ingredient->format, $ingredient->documentId, $ingredient->instanceId,
-        new HashedUri($reference->url, new CborBytes(str_repeat("\x00", 32)), $reference->alg),
-        $ingredient->claimSignature, $ingredient->thumbnail, $ingredient->validationStatus,
-        $ingredient->validationResults, $ingredient->digitalSourceType, $ingredient->data,
-    );
-    $label = $ingredient->manifestLabel() ?? throw new RuntimeException('no reference');
-
-    return (new IngredientManifestCheck)->hash($store->manifests[$label], $broken);
-}
-
 // AC2
 it('AC2: a matching box hash does not stand in for validating the manifest', function (): void {
     $report = spec020Verify('ingredient-manifest/ingredient-signature-broken.jpg', SPEC021_VARIANT_SETTINGS);
@@ -211,15 +187,14 @@ it('AC5: a recorded status never cancels the active manifest\'s own failure', fu
         ->and(array_column(spec020Deltas($oracle)[0]['validationDeltas']['informational'], 'code'))->toBe(['ingredient.unknownProvenance']);
 })->group('SPEC-021');
 
-// AC6
-it('AC6: a redaction is refused, and no ingredient is validated in that store', function (): void {
+// AC6, amendment 5 (SPEC-035): the refusal is lifted; the redaction's own faults are reported instead
+it('AC6: a redaction is judged by SPEC-035\'s rules, no longer refused', function (): void {
     $report = spec020Verify('ingredient-manifest/redacted.png', SPEC021_VARIANT_SETTINGS);
-    $refusals = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::GeneralError));
+    $codes = array_map(static fn (ValidationStatus $s): string => $s->code->value, $report->result->statuses);
 
     expect($report->result->state)->toBe(ValidationState::Invalid)
-        ->and($refusals)->toHaveCount(1)
-        ->and(str_contains($refusals[0]->explanation, 'redact'))->toBeTrue($refusals[0]->explanation)
-        ->and(spec021Scoped($report))->toBe([])
+        ->and(in_array('general.error', $codes, true))->toBeFalse()
+        ->and(in_array('assertion.selfRedacted', $codes, true))->toBeTrue()
         ->and(spec020Oracle('ingredient-manifest/redacted.json')['validation_state'])->toBe('Invalid');
 })->group('SPEC-021');
 

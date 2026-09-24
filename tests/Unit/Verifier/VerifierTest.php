@@ -33,7 +33,7 @@ const SPEC013_SUBSET_ONLY = [
 
 /** Codes this verifier does not emit yet: M5, and the assertion-content rules of later specs. */
 // signingCredential.untrusted left this list with SPEC-014/015: without settings this verifier says it too (SPEC-014 amendment 1)
-const SPEC013_NOT_YET = ['assertion.required.missing', 'assertion.action.redacted'];
+const SPEC013_NOT_YET = ['assertion.required.missing'];   // assertion.action.redacted left with SPEC-035
 
 /** @return resource */
 function spec013Stream(string $relative)

@@ -82,3 +82,81 @@ a `string` parameter. Otherwise PHPStan decides the comparison is always
 false. `composer check` is otherwise clean: 458 passed.
 
 Committed locally, not pushed.
+
+## 129b — built
+
+**The reader.** `ManifestStore::fromTree()` now reads every manifest
+before it checks any references. A claim may redact an assertion of any
+other manifest, and the union of every claim's list is what counts (open
+question 1).
+- Only **absolute** entries of `redacted_assertions` form that union. A
+  relative entry names no manifest, and `c2pa-rs` does not resolve one.
+- A reference among them that no longer resolves is skipped: a removed
+  box is a valid redaction.
+- A manifest that cannot be read is still reported where it stands in the
+  store.
+
+**The hashed-URI check** (`HashedUriCheck`) loses its refusal:
+- a redacted entry whose box is gone is skipped;
+- a redacted box still present with content that is not all zero bytes is
+  `assertion.notRedacted`;
+- the claim's own list is read entry by entry, as `c2pa-rs` reads it. The
+  claim's label inside an entry gives `assertion.selfRedacted`, and
+  `c2pa.actions` inside it gives `assertion.action.redacted`. Both carry
+  the entry verbatim as their url;
+- an entry naming a hard binding keeps a `general.error` refusal
+  (amendment 2).
+
+**The ingredient check** (`IngredientManifestCheck`): when the ingredient
+manifest has redactions and a v2 claim, the box hash is not tried. The
+hash the ingredient recorded over the signature box is compared instead.
+The result is `ingredient.claimSignature.validated` (informational),
+`.mismatch`, or `.missing` when the assertion records none.
+
+Read while building, and recorded as amendment 3:
+- `c2pa-rs` keys that route on the ingredient **claim's** version;
+- a redacted manifest with a v1 claim gets neither check there, and here
+  it stays with the box hash, which then fails;
+- `assertion.notRedacted` in an ingredient manifest lands under that
+  ingredient here, where `c2pa-rs` reports it at store level.
+
+Six new `StatusCode` cases; the recorded surface goes 114 → 120.
+
+`vendor/bin/pest --group=SPEC-035`: **9 passed.** The seven red tests of
+129a are green. Old tests that encoded the refusal were rewritten, each
+with an amendment:
+- SPEC-011 AC8 (amendment 3): `claim-redacted.bin` gives three matches
+  and `assertion.action.redacted`;
+- SPEC-021 AC6 (amendment 5): `redacted.png` holds no `general.error`;
+- SPEC-013 AC10 (amendment 14): `assertion.action.redacted` leaves
+  `SPEC013_NOT_YET`, so the drift alarm now compares it;
+- SPEC-025 (amendment 7): the six codes.
+
+Two counts moved: `CertificateProfileCheckTest` (48 → 54 codes) and
+`ApiSurfaceTest` (114 → 120). `spec021Mismatch()` moved to
+`tests/Shared.php`, because a parallel run does not load one test file's
+helpers into another.
+
+**Before and after, the whole corpus** under the three standard settings,
+with ingredient deltas in the comparison (1002 runs). Only the five
+redaction files moved:
+
+| file | before | after |
+|---|---|---|
+| `redactions/redacted-with-action.png`, `redacted-without-action.png` | `Invalid`, `assertion.missing` | `Valid` (`Trusted` with their root), `ingredient.claimSignature.validated` |
+| `redactions/claim-signature-changed.png` | `Invalid`, `assertion.missing` | `Invalid`, `ingredient.claimSignature.mismatch` |
+| `ingredient-manifest/redacted.png` | `Invalid`, `general.error` | `Invalid`, `assertion.selfRedacted`, `.action.redacted`, `.notRedacted` |
+| `binding/claim-redacted.png` | `Invalid`, `general.error` among others | `Invalid`, `assertion.action.redacted` among others |
+
+On the last two files every failure now equals `c2patool` 0.28.0's, code
+and url. The one exception is 0.28.0's duplicated
+`assertion.dataHash.mismatch`.
+
+`composer check`: exit 0, 465 tests.
+
+Conformance: `PRED-INGR-002`, `PRED-ASSE-003` and `PRED-ASSE-009` go from
+*closed* to *yes*. The count is now yes 59 and closed 4; gaps are
+unchanged at 14.
+
+Seven amendments await confirmation: SPEC-035 #1–#3, SPEC-011 #3,
+SPEC-021 #5, SPEC-013 #14 and SPEC-025 #7.

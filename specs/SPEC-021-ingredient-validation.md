@@ -409,6 +409,18 @@ instead, beside the orchestration that already holds those collaborators.
    `IngredientManifestCheck::recordedInStore()`; the active-manifest guard
    is unchanged.
 
+5. **2026-09-24, step 129b, with SPEC-035's implementation** — AC6's
+   refusal is lifted, as scope item *"Redactions refused"* foresaw
+   (*"when a redaction fixture exists"*). The fixture now exists (step 128),
+   and SPEC-035 validates it. `ingredient-manifest/redacted.png` is still
+   `Invalid`. Its reason is now `c2patool` 0.28.0's, code for code:
+   `assertion.selfRedacted`, `assertion.action.redacted` and
+   `assertion.notRedacted` instead of `general.error`. AC6's test asserts
+   that no `general.error` remains. A redacted hard binding keeps the
+   refusal (SPEC-035 amendment 2).
+
+   **Weight B: one fixture's failure codes change; its verdict does not.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -421,7 +433,7 @@ least one test; every source file maps back to this spec.
 | AC3 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC3 / SPEC-021; tests/Unit/Verifier/VerifierTest.php :: AC11, AC12 / SPEC-013 | src/Verifier/Verifier.php (the refusal of SPEC-013 amendment 5 removed) |
 | AC4 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC4 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`recorded()`, `drop()`) |
 | AC5 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC5 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`drop()`, the active-manifest guard) |
-| AC6 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC6 / SPEC-021 | src/Hash/HashedUriCheck.php (the redaction refusal, kept) |
+| AC6 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC6 / SPEC-021 | src/Hash/HashedUriCheck.php :: redactions(), notRedacted() (amendment 5: SPEC-035's rules) |
 | AC7 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC7 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`manifest()`: no data hash) |
 | AC8 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC8 / SPEC-021 | src/Verifier/Verifier.php (`checks_performed`); src/Report/ValidationResult.php |
 | AC9 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC9 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`check()`: the first assertion that named it) |

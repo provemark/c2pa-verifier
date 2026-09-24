@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Provemark\C2paVerifier\Manifest;
 
 use Provemark\C2paVerifier\Cbor\CborBytes;
+use Provemark\C2paVerifier\Cbor\CborException;
 use Provemark\C2paVerifier\Cbor\CborTag;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Jumbf\Superbox;
@@ -31,12 +32,28 @@ final readonly class ManifestStore
 
     public static function fromTree(Superbox $root): self
     {
-        $manifests = [];
+        // every manifest read first, because a claim may redact an assertion of any other (SPEC-035
+        // open question 1: the union of every claim's list); a manifest that cannot be read is
+        // reported where it stands in the store, after the references of the ones before it
+        $read = [];
         foreach ($root->superboxes() as $child) {
             if (in_array($child->description->uuid, [JumbfParser::UUID_MANIFEST, JumbfParser::UUID_UPDATE_MANIFEST], true)) {
-                $manifest = Manifest::fromBox($child);
-                $manifests[$manifest->label] = $manifest;
+                try {
+                    $read[] = Manifest::read($child);
+                } catch (ManifestException|CborException $e) {
+                    $read[] = $e;
+                    break;
+                }
             }
+        }
+        $redactions = Manifest::redactionsOf(array_values(array_filter($read, static fn (Manifest|ManifestException|CborException $m): bool => $m instanceof Manifest)));
+        $manifests = [];
+        foreach ($read as $manifest) {
+            if (! $manifest instanceof Manifest) {
+                throw $manifest;
+            }
+            $manifest = $manifest->withRedactions($redactions);
+            $manifests[$manifest->label] = $manifest;
         }
         if ($manifests === []) {
             throw new ManifestException('the store holds no manifest', StatusCode::ClaimMissing);

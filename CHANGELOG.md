@@ -27,6 +27,19 @@ committed.
   external url, or a data box of earlier versions, is `assertion.missing`.
   No new status code, and no corpus verdict changed. Closes the gap of
   issue #11.
+- SPEC-035: redactions (C2PA 2.4 §6.8, §15.10.3.1, §15.11.3.3.1).
+  - A child that redacts an assertion of its parent is read and judged,
+    no longer refused: `Trusted` where both `c2patool` versions say so.
+  - A v2 ingredient manifest with redacted assertions is bound by the
+    hash of its signature box: `ingredient.claimSignature.validated`
+    (informational), `.mismatch` or `.missing`.
+  - A redacted actions assertion, a self-redaction, and a redacted box
+    that still holds content are `assertion.action.redacted`,
+    `assertion.selfRedacted` and `assertion.notRedacted`.
+  - A redacted hard binding stays refused.
+  - Six new status codes. The surface is 120 symbols.
+  - Two existing files change their failure codes but stay `Invalid`:
+    `general.error` becomes the redaction codes `c2patool` 0.28.0 reports.
 
 ## 0.2.0 — 2026-09-24
 

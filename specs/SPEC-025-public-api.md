@@ -290,6 +290,19 @@ reasoning that led to it stays readable.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 125).
 
+7. **2026-09-24, step 129b, with SPEC-035's implementation** — `StatusCode`
+   grows by six cases (C2PA 2.4 §15.10.3.1, §15.11.3.3.1):
+   - `AssertionActionRedacted = 'assertion.action.redacted'`
+   - `AssertionNotRedacted = 'assertion.notRedacted'`
+   - `AssertionSelfRedacted = 'assertion.selfRedacted'`
+   - `IngredientClaimSignatureValidated = 'ingredient.claimSignature.validated'` (informational)
+   - `IngredientClaimSignatureMismatch = 'ingredient.claimSignature.mismatch'`
+   - `IngredientClaimSignatureMissing = 'ingredient.claimSignature.missing'`
+
+   The recorded surface goes 114 → **120**.
+
+   **Weight B: the vocabulary grew, verbatim.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

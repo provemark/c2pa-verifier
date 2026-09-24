@@ -6281,3 +6281,32 @@ README are where the disclosure lives.
   redacted hard binding gives `assertion.hardBinding.redacted`, outside
   this spec, so that case stays refused.
 - Decided by Maurice: SPEC-035 approved, open question 1 as proposed.
+
+## 2026-09-24 — SPEC-035 implemented (step 129b)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: the same approval as step 129a ("SPEC-035 goedgekeurd"); the
+  implementation follows the tests.
+- Produced: `src/Manifest/Manifest.php` (read(), redactionsOf(),
+  withRedactions(), absoluteUri(), isRedacted(), the `redacted` list);
+  `src/Manifest/ManifestStore.php` (every manifest read before references
+  are checked); `src/Hash/HashedUriCheck.php` (the refusal replaced by
+  the redaction rules, a hard binding still refused);
+  `src/Verifier/IngredientManifestCheck.php` (the claim-signature route);
+  `src/Report/StatusCode.php` (six cases); the recorded API surface;
+  tests rewritten for SPEC-011 AC8 and SPEC-021 AC6, the SPEC-013 not-yet
+  list, two counts, `spec021Mismatch()` moved to `tests/Shared.php`;
+  amendments SPEC-035 #3, SPEC-011 #3, SPEC-021 #5, SPEC-013 #14,
+  SPEC-025 #7; SPEC-035 implemented with Traceability; CHANGELOG,
+  conformance, comparison, README; the note, `NOTES.md`, milestones.
+- Measured: `vendor/bin/pest --group=SPEC-035` (9 passed);
+  `vendor/bin/pest --parallel` and `composer check` (465 passed, exit 0);
+  the corpus before and after under the three standard settings with
+  ingredient deltas (1002 runs, only the five redaction files moved);
+  our full failure lists against c2patool 0.28.0 on `redacted.png` and
+  `claim-redacted.png` (equal, but for 0.28.0's duplicated
+  `assertion.dataHash.mismatch`).
+- Reasoned: `c2pa` `store.rs` `ingredient_checks()` at `6c92bc3` (the
+  route keyed on the ingredient claim's version; `has_redactions` as an
+  entry naming the manifest; the signature box payload hashed under the
+  claim's algorithm); `calc_sig_box_hash()`.
+- Decided by Maurice: none in this step.

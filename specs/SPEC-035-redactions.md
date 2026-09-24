@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
@@ -300,17 +300,35 @@ Questions 2, 3 and 4 were settled by adopting their proposals.
    Weight B: one existing file changes its failure code, and one refusal
    stays.
 
+3. **2026-09-24, step 129b, read while building.** `c2pa`'s
+   `ingredient_checks()` takes the claim-signature route on the
+   ingredient **claim's** version (2 or later), not the ingredient
+   assertion's version. `has_redactions` means that an entry names that
+   manifest. When the manifest has redactions but a v1 claim, `c2pa-rs`
+   checks neither the box hash nor the claim signature, and says nothing.
+   Here that manifest stays with the box hash, which then fails
+   (`ingredient.manifest.mismatch`): a manifest that nothing binds is not
+   passed on trust. No file has one.
+
+   Also: `assertion.notRedacted` for a redacted box that is still present
+   in an **ingredient** manifest is reported under that ingredient's delta
+   here. `c2pa-rs` reports it at store level. The verdict is `Invalid`
+   either way, and no fixture holds the case; `redacted.png`'s own box
+   sits in the active manifest.
+
+   **Weight B: a divergence that fails closed, and a difference of scope.**
+
 ## Traceability
 
 Filled when status becomes `implemented`.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
+| AC1 | tests/Unit/Manifest/RedactionTest.php :: AC1: a redacted ingredient assertion is accepted / SPEC-035 | src/Manifest/Manifest.php :: redactionsOf(), withRedactions(), checkReferences(); src/Manifest/ManifestStore.php :: fromTree(); src/Hash/HashedUriCheck.php :: check() (a redacted entry that is gone); src/Verifier/IngredientManifestCheck.php :: hash(), claimSignature() |
+| AC2 | tests/Unit/Manifest/RedactionTest.php :: AC2: an ingredient's claim signature that does not match / SPEC-035 | src/Verifier/IngredientManifestCheck.php :: claimSignature() |
+| AC3 | tests/Unit/Manifest/RedactionTest.php :: AC3: a redaction of an actions assertion / SPEC-035; AC3–AC5 together / SPEC-035; tests/Unit/Hash/HashedUriCheckTest.php :: AC8 / SPEC-011 | src/Hash/HashedUriCheck.php :: redactions() |
+| AC4 | tests/Unit/Manifest/RedactionTest.php :: AC4: self-redaction / SPEC-035; AC3–AC5 together / SPEC-035 | src/Hash/HashedUriCheck.php :: redactions() |
+| AC5 | tests/Unit/Manifest/RedactionTest.php :: AC5: declared redacted but still there / SPEC-035; AC3–AC5 together / SPEC-035 | src/Hash/HashedUriCheck.php :: notRedacted() |
+| AC6 | tests/Unit/Manifest/RedactionTest.php :: AC6: a mismatch without a redaction stays a mismatch / SPEC-035 | src/Verifier/IngredientManifestCheck.php :: hash() (the route only when the manifest has redactions and a v2 claim) |
+| AC7 | tests/Unit/Manifest/RedactionTest.php :: AC7: nothing else moves / SPEC-035; the drift alarms (SPEC-013 AC10–AC13); the before/after run of step 129b | — |
+| AC8 | tests/Unit/Manifest/RedactionTest.php :: AC8: the vocabulary grows by six codes, verbatim / SPEC-035 | src/Report/StatusCode.php (six cases; isInformational()); tests/Fixtures/api/public-surface.txt |

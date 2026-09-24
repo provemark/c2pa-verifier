@@ -265,7 +265,9 @@ it('AC7: the algorithm: the entry\'s, else the claim\'s, else unsupported', func
     }
 })->group('SPEC-011');
 
-it('AC8: redactions are refused until M7', function (): void {
+it('AC8: a redaction is read by SPEC-035\'s rules', function (): void {
+    // amendment 3: SPEC-035 lifted the refusal; a relative entry naming the actions is
+    // assertion.action.redacted on the entry as written, and nothing else (SPEC-035 amendment 2)
     $manifest = spec011Variant('claim-redacted');
     expect($manifest->claim->other['redacted_assertions'])->toBe(['self#jumbf=c2pa.assertions/c2pa.actions.v2']);
 
@@ -274,23 +276,10 @@ it('AC8: redactions are refused until M7', function (): void {
         ['c2pa.hash.data', 'assertion.hashedURI.match'],
         ['c2pa.thumbnail.claim', 'assertion.hashedURI.match'],
         ['c2pa.actions.v2', 'assertion.hashedURI.match'],
-        ['c2pa.claim.v2', 'general.error'],
+        ['c2pa.actions.v2', 'assertion.action.redacted'],
     ])
-        ->and($statuses[3]->url)->toBe(SPEC011_PNG.'/c2pa.claim.v2')
-        ->and($statuses[3]->explanation)->toContain('redacted_assertions')
-        // the reason, not a milestone: step 72 found this pinned to "M7", which closed in
-        // step 57, so the message told a user to wait for something that had happened
-        ->and($statuses[3]->explanation)->toContain('15.11.3.3.1')
-        ->and($statuses[3]->explanation)->toContain('assertion.notRedacted')
+        ->and($statuses[3]->url)->toBe('self#jumbf=c2pa.assertions/c2pa.actions.v2')
         ->and(ValidationResult::fromStatuses($statuses, ['hashedUris'])->state)->toBe(ValidationState::Invalid);
-
-    foreach (['fixture-signed.png', 'fixture-signed.jpg', 'fixture-signed.webp', 'public-testfiles/adobe-20220124-C.jpg'] as $fixture) {
-        $codes = array_map(static fn (ValidationStatus $s): StatusCode => $s->code, (new HashedUriCheck)->check(spec011Manifest($fixture)));
-        // not toContain($needle, $fixture): Pest reads the second argument as another
-        // needle, never a message — the thirteenth in this project, and the one the
-        // rule in SpecCheckTest was written on
-        expect(in_array(StatusCode::GeneralError, $codes, true))->toBeFalse($fixture);
-    }
 })->group('SPEC-011');
 
 it('AC9: the codes are verbatim, and success is told apart', function (): void {

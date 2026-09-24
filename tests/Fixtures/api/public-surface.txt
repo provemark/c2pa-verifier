@@ -4,6 +4,7 @@ Cli\Command :: method run
 Report\StatusCode :: const AlgorithmUnsupported
 Report\StatusCode :: const AssertionActionIngredientMismatch
 Report\StatusCode :: const AssertionActionMalformed
+Report\StatusCode :: const AssertionActionRedacted
 Report\StatusCode :: const AssertionActionSoftBindingMissing
 Report\StatusCode :: const AssertionBmffHashMatch
 Report\StatusCode :: const AssertionBmffHashMismatch
@@ -18,6 +19,8 @@ Report\StatusCode :: const AssertionIngredientMalformed
 Report\StatusCode :: const AssertionJsonInvalid
 Report\StatusCode :: const AssertionMissing
 Report\StatusCode :: const AssertionMultipleHardBindings
+Report\StatusCode :: const AssertionNotRedacted
+Report\StatusCode :: const AssertionSelfRedacted
 Report\StatusCode :: const AssertionUndeclared
 Report\StatusCode :: const ClaimCborInvalid
 Report\StatusCode :: const ClaimHardBindingsMissing
@@ -28,6 +31,9 @@ Report\StatusCode :: const ClaimSignatureMismatch
 Report\StatusCode :: const ClaimSignatureMissing
 Report\StatusCode :: const ClaimSignatureValidated
 Report\StatusCode :: const GeneralError
+Report\StatusCode :: const IngredientClaimSignatureMismatch
+Report\StatusCode :: const IngredientClaimSignatureMissing
+Report\StatusCode :: const IngredientClaimSignatureValidated
 Report\StatusCode :: const IngredientManifestMismatch
 Report\StatusCode :: const IngredientManifestMissing
 Report\StatusCode :: const IngredientManifestValidated

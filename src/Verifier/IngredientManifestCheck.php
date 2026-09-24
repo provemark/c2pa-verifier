@@ -105,6 +105,9 @@ final readonly class IngredientManifestCheck
                 $ingredient->url,
             )];
         }
+        if ($manifest->redacted !== [] && $manifest->claim->version >= 2) {
+            return $this->claimSignature($manifest, $ingredient, $reference->url);
+        }
         $expected = $reference->hash->bytes;
         if (hash_equals(hash($alg, $manifest->box->payload(), true), $expected)) {
             return [new ValidationStatus(StatusCode::IngredientManifestValidated, $reference->url, 'ingredient hash matched', $ingredient->url)];
@@ -121,6 +124,32 @@ final readonly class IngredientManifestCheck
             sprintf('the ingredient manifest %s hashes to neither the value the assertion recorded over its box nor the one over its claim', $manifest->label),
             $ingredient->url,
         )];
+    }
+
+    /**
+     * A manifest the store has redacted from no longer hashes to what its ingredient recorded, and
+     * cannot: the box hash is not tried. A v2 claim is checked instead by the hash the ingredient
+     * recorded over its signature box (C2PA 2.4 §15.11.3.3.1; c2pa-rs `ingredient_checks`), which the
+     * signature binds to the claim and the claim to every assertion that is left. A v1 claim has no
+     * such route and stays with the box hash, which then fails (SPEC-035 amendment 3).
+     *
+     * @return list<ValidationStatus>
+     */
+    private function claimSignature(Manifest $manifest, IngredientAssertion $ingredient, string $url): array
+    {
+        $recorded = $ingredient->claimSignature;
+        if ($recorded === null) {
+            return [new ValidationStatus(StatusCode::IngredientClaimSignatureMissing, $url, sprintf('ingredient claimSignature missing: the manifest %s has redacted assertions, so only the claim-signature hash can bind it, and the ingredient assertion records none', $manifest->label), $ingredient->url)];
+        }
+        $alg = $manifest->claim->alg ?? 'sha256';
+        if (! in_array($alg, hash_algos(), true)) {
+            return [new ValidationStatus(StatusCode::AlgorithmUnsupported, $url, sprintf('the ingredient claim names the hash algorithm %s, which this verifier cannot compute', $alg), $ingredient->url)];
+        }
+        $actual = hash($alg, $manifest->resolve($manifest->claim->signatureUri)->payload(), true);
+
+        return hash_equals($recorded->hash->bytes, $actual)
+            ? [new ValidationStatus(StatusCode::IngredientClaimSignatureValidated, $url, 'ingredient claimSignature validated', $ingredient->url)]
+            : [new ValidationStatus(StatusCode::IngredientClaimSignatureMismatch, $url, sprintf('ingredient claimSignature mismatch: the signature box of %s hashes (%s) to %s, the ingredient recorded %s', $manifest->label, $alg, bin2hex($actual), bin2hex($recorded->hash->bytes)), $ingredient->url)];
     }
 
     /**

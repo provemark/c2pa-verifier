@@ -67,6 +67,14 @@ enum StatusCode: string
     case SigningCredentialOcspNotRevoked = 'signingCredential.ocsp.notRevoked';
     case SigningCredentialOcspUnknown = 'signingCredential.ocsp.unknown';
     case SigningCredentialOcspSkipped = 'signingCredential.ocsp.skipped';
+    // SPEC-035: redactions (C2PA 2.4 §6.8, §15.10.3.1) and the claim-signature method an ingredient
+    // whose manifest lost a redacted assertion is checked by instead of its box hash (§15.11.3.3.1)
+    case AssertionActionRedacted = 'assertion.action.redacted';
+    case AssertionNotRedacted = 'assertion.notRedacted';
+    case AssertionSelfRedacted = 'assertion.selfRedacted';
+    case IngredientClaimSignatureValidated = 'ingredient.claimSignature.validated';
+    case IngredientClaimSignatureMismatch = 'ingredient.claimSignature.mismatch';
+    case IngredientClaimSignatureMissing = 'ingredient.claimSignature.missing';
     case GeneralError = 'general.error';
 
     public function isSuccess(): bool
@@ -82,6 +90,7 @@ enum StatusCode: string
         // every timeStamp failure is informational: a broken timestamp costs the time, never the verdict (C2PA 2.4 §15; c2pa-rs; SPEC-017)
         return $this === self::AssertionDataHashAdditionalExclusionsPresent
             || $this === self::IngredientUnknownProvenance                 // SPEC-020: an ingredient without a manifest (§15.11.3.3)
+            || $this === self::IngredientClaimSignatureValidated           // SPEC-035: as c2patool 0.28.0 records it
             || $this === self::TimeStampMalformed || $this === self::TimeStampMismatch || $this === self::TimeStampOutsideValidity || $this === self::TimeStampUntrusted
             // SPEC-030: a response this verifier could not use costs nothing. The header is
             // unsigned, so failing a file over one would let an attacker deny any valid asset

@@ -40,9 +40,79 @@ final readonly class Manifest
         private Superbox $signatureBox,
         /** A c2um box: it adds assertions without touching the content, and its rules differ (SPEC-022, C2PA 2.4 §11.2.3). */
         public bool $isUpdateManifest = false,
+        /**
+         * The absolute URIs of this manifest's assertions that a claim in the store declares redacted
+         * (SPEC-035; C2PA 2.4 §6.8). A reference among them may name a box that is gone.
+         *
+         * @var list<string>
+         */
+        public array $redacted = [],
     ) {}
 
+    /** One manifest on its own: the redactions its own claim declares are the only ones it knows. */
     public static function fromBox(Superbox $box): self
+    {
+        $manifest = self::read($box);
+
+        return $manifest->withRedactions(self::redactionsOf([$manifest]));
+    }
+
+    /**
+     * Every absolute entry of the claims' `redacted_assertions`, in order and once each. A relative
+     * entry names no manifest; c2pa-rs neither resolves it nor lets it excuse a missing box
+     * (SPEC-035 amendment 2), and neither does this reader.
+     *
+     * @param  list<self>  $manifests
+     * @return list<string>
+     */
+    public static function redactionsOf(array $manifests): array
+    {
+        $redactions = [];
+        foreach ($manifests as $manifest) {
+            $entries = $manifest->claim->other['redacted_assertions'] ?? [];
+            foreach (is_array($entries) ? $entries : [] as $entry) {
+                if (is_string($entry) && str_starts_with($entry, self::URI_PREFIX.'/c2pa/')) {
+                    $redactions[] = $entry;
+                }
+            }
+        }
+
+        return array_values(array_unique($redactions));
+    }
+
+    /**
+     * This manifest with the store's redactions that name it, its references checked against them.
+     *
+     * @param  list<string>  $redactions  every absolute entry in the store (redactionsOf())
+     */
+    public function withRedactions(array $redactions): self
+    {
+        $prefix = sprintf('%s/c2pa/%s/', self::URI_PREFIX, $this->label);
+        $mine = array_values(array_filter($redactions, static fn (string $uri): bool => str_starts_with($uri, $prefix)));
+        $manifest = new self($this->label, $this->claim, $this->assertions, $this->box, $this->assertionStore, $this->claimBox, $this->signatureBox, $this->isUpdateManifest, $mine);
+        $manifest->checkReferences();
+
+        return $manifest;
+    }
+
+    /** A URI of this manifest in its absolute form: a relative one is read against this manifest (§14.2). */
+    public function absoluteUri(string $uri): string
+    {
+        if (! str_starts_with($uri, self::URI_PREFIX) || str_starts_with($uri, self::URI_PREFIX.'/')) {
+            return $uri;
+        }
+
+        return sprintf('%s/c2pa/%s/%s', self::URI_PREFIX, $this->label, substr($uri, strlen(self::URI_PREFIX)));
+    }
+
+    /** Whether a reference names an assertion the store declares redacted. */
+    public function isRedacted(string $uri): bool
+    {
+        return in_array($this->absoluteUri($uri), $this->redacted, true);
+    }
+
+    /** The manifest as read, its references not yet checked: ManifestStore needs every claim before it can check any. */
+    public static function read(Superbox $box): self
     {
         $label = $box->description->label;
         $manifestUrl = sprintf('self#jumbf=/c2pa/%s', $label);
@@ -88,10 +158,7 @@ final readonly class Manifest
             $assertions[$assertionLabel] = new Assertion($assertionLabel, $assertionBox, $data);
         }
 
-        $manifest = new self($label, $claim, $assertions, $box, $assertionStore, $claimBox, $signatureBox, $box->description->uuid === JumbfParser::UUID_UPDATE_MANIFEST);
-        $manifest->checkReferences();
-
-        return $manifest;
+        return new self($label, $claim, $assertions, $box, $assertionStore, $claimBox, $signatureBox, $box->description->uuid === JumbfParser::UUID_UPDATE_MANIFEST);
     }
 
     /** The bytes of the claim's cbor box: what the signature covers (M3). */
@@ -156,7 +223,14 @@ final readonly class Manifest
             throw new ManifestException(sprintf('manifest %s: signature URI %s does not name the signature box', $this->label, $this->claim->signatureUri), StatusCode::ClaimSignatureMissing);
         }
         foreach ([...$this->claim->createdAssertions, ...$this->claim->gatheredAssertions] as $reference) {
-            $target = $this->resolve($reference->url);
+            try {
+                $target = $this->resolve($reference->url);
+            } catch (ManifestException $e) {
+                if ($this->isRedacted($reference->url)) {
+                    continue;   // redacted and removed: a valid form of redaction (SPEC-035; §15.11.3.3.1)
+                }
+                throw $e;
+            }
             if (! in_array($target, $this->assertionStore->superboxes(), true)) {
                 throw new ManifestException(sprintf('URI %s is not in the assertion store', $reference->url), StatusCode::AssertionMissing);
             }

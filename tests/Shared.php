@@ -23,8 +23,14 @@ declare(strict_types=1);
 
 use Provemark\C2paVerifier\Asn1\Der;
 use Provemark\C2paVerifier\Asn1\DerReader;
+use Provemark\C2paVerifier\Cbor\CborBytes;
+use Provemark\C2paVerifier\Manifest\HashedUri;
+use Provemark\C2paVerifier\Manifest\IngredientAssertion;
+use Provemark\C2paVerifier\Manifest\ManifestGraph;
+use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
 use Provemark\C2paVerifier\Trust\TrustSettings;
+use Provemark\C2paVerifier\Verifier\IngredientManifestCheck;
 use Provemark\C2paVerifier\Verifier\VerificationReport;
 use Provemark\C2paVerifier\Verifier\Verifier;
 
@@ -201,4 +207,28 @@ function spec000ToContainCalls(string $source): array
     }
 
     return $calls;
+}
+
+/**
+ * The hash statuses for c2pa-rs/CACA with the reference's hash replaced by one that matches nothing:
+ * the seam, since no corpus file has a mismatching reference.
+ *
+ * @return list<ValidationStatus>
+ */
+function spec021Mismatch(): array
+{
+    $store = Corpus::manifestStore('c2pa-rs/CACA.jpg') ?? throw new RuntimeException('no store');
+    $graph = ManifestGraph::fromStore($store);
+    $ingredient = $graph->ingredients[$store->active->label][0];
+    $reference = $ingredient->manifest ?? throw new RuntimeException('no reference');
+    $broken = new IngredientAssertion(
+        $ingredient->label, $ingredient->url, $ingredient->version, $ingredient->relationship,
+        $ingredient->title, $ingredient->format, $ingredient->documentId, $ingredient->instanceId,
+        new HashedUri($reference->url, new CborBytes(str_repeat("\x00", 32)), $reference->alg),
+        $ingredient->claimSignature, $ingredient->thumbnail, $ingredient->validationStatus,
+        $ingredient->validationResults, $ingredient->digitalSourceType, $ingredient->data,
+    );
+    $label = $ingredient->manifestLabel() ?? throw new RuntimeException('no reference');
+
+    return (new IngredientManifestCheck)->hash($store->manifests[$label], $broken);
 }

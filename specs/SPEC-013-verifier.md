@@ -485,6 +485,15 @@ final class ManifestException extends \RuntimeException
 
     Confirmed by Maurice van Loon, 2026-09-24 (step 120).
 
+14. **2026-09-24, step 129b, with SPEC-035's implementation** — AC10's
+    list of *not yet emitted* codes loses `assertion.action.redacted`, as
+    the non-blocker foresaw. `SPEC013_NOT_YET` keeps only
+    `assertion.required.missing`. The drift alarm now compares
+    `assertion.action.redacted` too. It passes on
+    `variants/claim-redacted`, where both sides report it on the same URI.
+
+    **Weight C: the alarm got stricter; no verdict changed.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

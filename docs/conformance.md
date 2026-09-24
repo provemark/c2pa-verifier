@@ -34,9 +34,9 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | verdict | predicates |
 |---|---|
-| **yes** | 56 |
+| **yes** | 59 |
 | partial | 13 |
-| closed | 7 |
+| closed | 4 |
 | by design | 21 |
 | **gap** | 14 |
 | **total** | 111 |
@@ -72,7 +72,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | predicate | sev | rule | this verifier |
 |---|---|---|---|
 | `PRED-INGR-001` | shall | Display attribution warning for invalid manifest data | **yes** — `VerificationReport` carries every failure and `Cli\Command` prints them; nothing is attributed to a signer whose manifest failed |
-| `PRED-INGR-002` | shall | Gather and validate redacted assertions for each ingredient manifest | closed — `HashedUriCheck` refuses any claim that declares `redacted_assertions`; a redaction is never passed on trust |
+| `PRED-INGR-002` | shall | Gather and validate redacted assertions for each ingredient manifest | **yes** — since 2026-09-24 (SPEC-035): every claim's absolute `redacted_assertions` is gathered for the store; a redacted assertion that is gone is skipped, one still present with content is `assertion.notRedacted`, and a v2 ingredient manifest with redactions is bound by its claim signature (`ingredient.claimSignature.*`) |
 | `PRED-INGR-003` | shall | Validate hashed_uri and hashed_ext_uri references in standard assertions | **yes** — `HashedUriCheck` resolves and hashes every hashed URI of the claim; external retrieval is optional in the rule and declined here |
 | `PRED-INGR-004` | may | Ingredient nesting with associated manifests | **yes** — `ManifestGraph` walks nested ingredients and their manifests (SPEC-020) |
 | `PRED-INGR-005` | shall | Execute recursive ingredient validation algorithm | **yes** — `IngredientManifestCheck` runs the recursive algorithm over the graph (SPEC-021) |
@@ -140,13 +140,13 @@ accept; its predicate list does not depend on its cryptography being right.
 |---|---|---|---|
 | `PRED-ASSE-001` | shall | Ingredient validation and results recording | by design — an obligation on the claim *generator*, not on a verifier |
 | `PRED-ASSE-002` | shall | Multiple embedded manifest stores invalidation | **yes** — a second manifest store in one asset is `claim.multiple` (SPEC-005/013); in ISOBMFF a second C2PA box is a container error |
-| `PRED-ASSE-003` | shall | Redacted assertion label check | closed — redactions are refused wholesale, so a redacted actions assertion cannot be accepted |
+| `PRED-ASSE-003` | shall | Redacted assertion label check | **yes** — since 2026-09-24 (SPEC-035): a redacted actions assertion is `assertion.action.redacted`; a redacted hard binding is refused (`general.error`) |
 | `PRED-ASSE-004` | shall | Assertion URI must reference same manifest | partial — URIs are resolved inside the manifest only; one pointing elsewhere fails as `assertion.missing`, not `assertion.outsideManifest` |
 | `PRED-ASSE-005` | shall | Assertion URI must be resolvable | **yes** — `assertion.missing` when a claim's hashed URI names no assertion (SPEC-011) |
 | `PRED-ASSE-006` | shall | Assertion hashed-URI integrity check | **yes** — `HashedUriCheck`: `assertion.hashedURI.match` / `.mismatch` over every entry |
 | `PRED-ASSE-007` | shall | Standard assertion encoding validity | partial — JSON gets `assertion.json.invalid`; malformed **CBOR** is caught but reported as `general.error` — this verifier has no `assertion.cbor.invalid` code |
 | `PRED-ASSE-008` | shall | Undeclared assertion detection | **yes** — `assertion.undeclared` for a box in the store that no claim list references (SPEC-011) |
-| `PRED-ASSE-009` | shall | Self-redaction prohibition | closed — self-redaction cannot arise: any claim declaring redactions is refused |
+| `PRED-ASSE-009` | shall | Self-redaction prohibition | **yes** — since 2026-09-24 (SPEC-035): an entry naming the claim's own manifest is `assertion.selfRedacted` |
 | `PRED-ASSE-010` | shall | Assertion metadata field not validated | **yes** — assertion `metadata` fields are never validated |
 | `PRED-ASSE-011` | shall | Specific assertion type dispatch | **yes** — dispatch by label: actions, ingredient, the hard bindings (`Verifier`) |
 | `PRED-ASSE-012` | shall | Hashed-URI and hashed-ext-URI field validation in assertions | partial — hashed URIs inside ingredient assertions are validated (SPEC-020/021); hashed URIs inside other assertion types are not walked |

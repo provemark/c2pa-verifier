@@ -331,6 +331,17 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report` (already), plus `Jumbf`
 1. **2026-09-21, with SPEC-012's implementation** — `StatusCode` grew by SPEC-012's six codes; AC9's test now asserts that this spec's fifteen are present and leaves the exact twenty-one and the informational kind to SPEC-012 AC10. No criterion changed.
 2. **2026-09-21, with SPEC-014's implementation** — `StatusCode` grew by `signingCredential.trusted` (a success) and `.untrusted`; AC9's test skips them. No criterion changed.
 
+3. **2026-09-24, step 129b, with SPEC-035's implementation** — AC8's
+   refusal is lifted. A claim with `redacted_assertions` is read by
+   SPEC-035's rules instead. The variant `binding/claim-redacted.bin`
+   names its own actions by a relative URI, and now gives the three
+   `match`es and `assertion.action.redacted` on that URI as written. It is
+   still `Invalid`, as both `c2patool` versions measured it (step 21 for
+   0.27.22, step 129a for 0.28.0). A redacted hard binding keeps the
+   refusal (SPEC-035 amendment 2).
+
+   **Weight B: one variant's failure code changes; its verdict does not.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -345,6 +356,6 @@ least one test; every source file maps back to this spec.
 | AC5 | tests/Unit/Hash/HashedUriCheckTest.php :: AC5: a box the claim does not name: assertion.undeclared / SPEC-011 | src/Hash/HashedUriCheck.php :: check() (Superbox not in $resolved, identity); src/Manifest/Manifest.php :: $assertionStore (amendment 2) |
 | AC6 | tests/Unit/Hash/HashedUriCheckTest.php :: AC6: an unknown box in the store is undeclared too / SPEC-011 | src/Hash/HashedUriCheck.php :: check() (UnknownBox); deptrac.yaml (Hash → Jumbf) |
 | AC7 | tests/Unit/Hash/HashedUriCheckTest.php :: AC7: the algorithm: the entry's, else the claim's, else unsupported / SPEC-011 | src/Hash/HashedUriCheck.php :: entry() ($entry->alg ?? $claim->alg, ALGORITHMS) |
-| AC8 | tests/Unit/Hash/HashedUriCheckTest.php :: AC8: redactions are refused until M7 / SPEC-011 | src/Hash/HashedUriCheck.php :: check() (redacted_assertions → GeneralError) |
+| AC8 | tests/Unit/Hash/HashedUriCheckTest.php :: AC8: a redaction is read by SPEC-035's rules / SPEC-011 | src/Hash/HashedUriCheck.php :: redactions() (amendment 3) |
 | AC9 | tests/Unit/Hash/HashedUriCheckTest.php :: AC9: the codes are verbatim, and success is told apart / SPEC-011 | src/Report/StatusCode.php :: AssertionHashedUriMatch, AssertionHashedUriMismatch, AssertionUndeclared, isSuccess() |
 | AC10 | tests/Unit/Hash/HashedUriCheckTest.php :: AC10: a ManifestException inside the check becomes its status, never escapes / SPEC-011 | src/Hash/HashedUriCheck.php :: checkEntry(), entry() (catch ManifestException → $e->status) |

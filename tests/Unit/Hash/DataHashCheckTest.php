@@ -237,8 +237,8 @@ it('AC4: additional exclusions are honoured and reported', function (): void {
         ->and($statuses[1]->url)->toBe(SPEC012_PNG.'/c2pa.assertions/c2pa.hash.data')
         ->and($statuses[1]->explanation)->toContain('46500');
     foreach (StatusCode::cases() as $code) {
-        if (str_starts_with($code->value, 'timeStamp.') || $code === StatusCode::IngredientUnknownProvenance || str_starts_with($code->value, 'signingCredential.ocsp.')) {
-            continue;   // SPEC-017's four informational of its own, SPEC-020's one, and SPEC-030's two
+        if (str_starts_with($code->value, 'timeStamp.') || $code === StatusCode::IngredientUnknownProvenance || str_starts_with($code->value, 'signingCredential.ocsp.') || $code === StatusCode::IngredientClaimSignatureValidated) {
+            continue;   // SPEC-017's four informational of its own, SPEC-020's one, SPEC-030's two and SPEC-035's one
         }
         expect($code->isInformational())->toBe($code === StatusCode::AssertionDataHashAdditionalExclusionsPresent, $code->value);
     }
