@@ -6398,3 +6398,16 @@ README are where the disclosure lives.
   `c2pa` `claim.rs` `verify_actions` rule 2.d at `6c92bc3` (v2 only, only
   with `parameters`, the label looked up in the named manifest's claim).
 - Decided by Maurice: none in this step.
+
+## 2026-09-24 — SPEC-037 drafted: the c2pa.redacted action
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, schrijf SPEC-037 als draft".
+- Produced: `specs/SPEC-037-redacted-action.md` (draft, eight criteria,
+  four open questions); rows in `docs/milestones.md` and `NOTES.md`. No
+  test or code.
+- Measured: nothing new; the draft rests on step 131.
+- Reasoned: `ActionsCheck::check()` sees one manifest, so rule 2.d needs
+  the store's claims passed in (read in `src/Manifest/ActionsCheck.php`,
+  `src/Verifier/Verifier.php`, `src/Verifier/IngredientManifestCheck.php`);
+  C2PA 2.4 §15.10.3.2.3 and `c2pa` rule 2.d as in step 131.
+- Decided by Maurice: SPEC-037 as a draft.
