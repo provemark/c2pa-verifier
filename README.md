@@ -107,11 +107,24 @@ The verdict, as `c2patool` means it:
 - **`Invalid`** — something failed, and `validation_status` says what, with
   a §15 code, the JUMBF URI of the thing that failed, and a sentence.
 
-Trust settings are the JSON shape `c2patool --settings` reads:
-`trust.trust_anchors` (PEM, contents not paths), `trust.allowed_list`,
-`trust.trust_config` (EKU OIDs), `verify.verify_trust`. No list is
-bundled: which roots you trust is your decision, and a timestamp authority
-is trusted only through those same anchors.
+Trust settings are the JSON shape `c2patool --settings` reads, every value
+the *contents* of a file, never a path:
+
+- `trust.anchors`: the shape of `c2patool` 0.28 and later, a list of
+  entries. Each entry has `trust_anchors` (PEM), a `trust_kind` and,
+  optionally, its own `allowed_list` and `trust_config`. **Every entry
+  counts only for its own kind** (C2PA 2.4 §14.4): `"manifest"` anchors
+  signers, `"tsa"` anchors timestamp authorities, and `"cawg"` anchors
+  nothing here. An entry's `trust_config` widens the accepted EKUs only for
+  a chain that reaches that entry.
+- `trust.trust_anchors`: the older single PEM string, still read. It
+  anchors signers and timestamp authorities both.
+- `trust.trust_config` (EKU OIDs) and `verify.verify_trust`.
+
+A top-level `trust.allowed_list` is **refused**, with a message saying
+where it belongs. `c2patool` 0.28 moved it into the entries and ignores a
+loose one without a word. No list is bundled: which roots you trust is
+your decision.
 
 Everything the verifier says about a file comes from the file. Values
 in the report (labels, explanations, URLs) are untrusted text until you
@@ -160,7 +173,7 @@ file whether revocation was checked, which `c2patool` does not.
 
 ## Public API
 
-Ten classes are the contract. Their public members are what this package
+Eleven classes are the contract. Their public members are what this package
 promises; a release may add to them, and will not remove or rename them
 without saying so.
 
@@ -174,6 +187,7 @@ without saying so.
 | `Report\ValidationState` | `Trusted`, `Valid`, `Invalid` |
 | `Report\StatusCode` | the C2PA 2.4 §15 vocabulary, verbatim |
 | `Trust\TrustSettings` | the trust file, through `fromJson()` |
+| `Trust\TrustAnchorSet` | one `trust.anchors` entry, as `TrustSettings::$anchorSets` holds it |
 | `Trust\TrustException` | the one exception that reaches you: settings that are not settings |
 | `Cli\Command` | what `bin/c2pa-verify` runs |
 

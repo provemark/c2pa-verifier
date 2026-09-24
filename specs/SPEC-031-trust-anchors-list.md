@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
@@ -350,17 +350,43 @@ final readonly class TrustSettings
    2026-09-24), so AC4 does not refuse it. Nothing to decide; recorded so
    that nobody has to look again.
 
+## Amendments
+
+1. **2026-09-24, step 111b, found by AC7 at implementation** — AC6 asks
+   that an untrusted timestamp's explanation name the entry's kind. The
+   first implementation named *every* entry of another kind. That made
+   AC7's twins (the same PEM as `"manifest"` and as `"tsa"`) differ from
+   the legacy reports by one sentence about an entry that changed nothing.
+   The sentence now names only an entry of another kind that the chain
+   **would have reached**: `trust.anchors[i] ("kind")`, with §14.4.2.
+   AC6's case (the DigiCert certificate as `"manifest"`) still gets it;
+   AC7's twins do not. No criterion changed in outcome. The explanation
+   became more exact.
+2. **2026-09-24, step 111b, the API sketch** (illustrative, recorded so
+   that nobody looks for what is not there):
+   - the kind is three string constants on `TrustAnchorSet`, not an enum,
+     so that the contract grows by one class and not two;
+   - the helpers that combine the lists (`anchorsOf()`, `allowedListOf()`,
+     `tsaAnchorsOf()`, `kindNote()`) live as static methods on the
+     `@internal` `ChainCheck`, not on `TrustSettings`. Every public method
+     of a contract class is contract, and these are plumbing;
+   - `TrustSettings` grows by `$anchorSets` and `MAX_ANCHOR_ENTRIES` only.
+   - AC5's total-certificates message is *"the trust settings hold more
+     than 256 certificates in all"*.
+
+   Weight C.
+
 ## Traceability
 
 Filled when status becomes `implemented`.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
+| AC1 | tests/Unit/Trust/TrustAnchorsTest.php :: AC1: the new shape is read, and gives the same verdict as the old / SPEC-031 | src/Trust/TrustSettings.php :: fromArray(), anchorSets(); src/Trust/TrustAnchorSet.php; src/Trust/ChainCheck.php :: anchorsOf() |
+| AC2 | tests/Unit/Trust/TrustAnchorsTest.php :: AC2: the old shape still works, and both together add up / SPEC-031 | src/Trust/ChainCheck.php :: anchorsOf() (legacy + "manifest" entries) |
+| AC3 | tests/Unit/Trust/TrustAnchorsTest.php :: AC3: the allowed list lives in the anchor now / SPEC-031 | src/Trust/ChainCheck.php :: allowedListOf(), checkCertificates() |
+| AC4 | tests/Unit/Trust/TrustAnchorsTest.php :: AC4: a loose allowed_list is refused, and says where it went / SPEC-031 | src/Trust/TrustSettings.php :: fromArray() (the loose allowed_list); src/Cli/Command.php :: run() (exit 2, unchanged) |
+| AC5 | tests/Unit/Trust/TrustAnchorsTest.php :: AC5: malformed trust.anchors is refused whole / SPEC-031 | src/Trust/TrustSettings.php :: anchorSets(), MAX_ANCHOR_ENTRIES, fromArray() (the total); src/Trust/TrustAnchorSet.php :: __construct() |
+| AC6 | tests/Unit/Trust/TrustAnchorsTest.php :: AC6: every anchor counts only for its own kind / SPEC-031 | src/Trust/ChainCheck.php :: anchorsOf(), tsaAnchorsOf(), kindNote(), check(); src/Timestamp/TimestampCheck.php :: tsaSettings(), check() (the note); src/Trust/TrustAnchorSet.php :: __construct() (§14.4.3) |
+| AC7 | tests/Unit/Trust/TrustAnchorsTest.php :: AC7: the drift alarm learns the new shape / SPEC-031 | src/Trust/ChainCheck.php :: kindNote() (only an entry the chain would reach is named) |
+| AC8 | tests/Unit/Trust/TrustAnchorsTest.php :: AC8: a trust_config counts for its own entry / SPEC-031 | src/Trust/CertificateProfileCheck.php :: check(), acceptedEkus() |

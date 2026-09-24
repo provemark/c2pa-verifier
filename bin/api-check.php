@@ -176,6 +176,7 @@ function apiContract(): array
         'Report\ValidationResult',
         'Report\ValidationState',
         'Report\ValidationStatus',
+        'Trust\TrustAnchorSet',
         'Trust\TrustException',
         'Trust\TrustSettings',
         'Verifier\FragmentedVerifier',

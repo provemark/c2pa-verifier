@@ -7,6 +7,26 @@ committed.
 
 ## Unreleased
 
+**This will be `0.2.0`, not `0.1.1`:** a settings file with a top-level
+`trust.allowed_list` that worked in 0.1.0 is refused now. That is a
+break, and `^0.1` must not pull it in silently.
+
+### Added
+- SPEC-031: `trust.anchors`, the settings shape of `c2patool` 0.28
+  (`c2pa` 0.91). Each entry has its own `trust_kind`, `allowed_list` and
+  `trust_config`. Every entry counts only for its own kind (C2PA 2.4
+  §14.4.1–§14.4.3). An entry's EKUs widen only the chains that reach it.
+  The legacy `trust.trust_anchors` is still read. New contract class
+  `Trust\TrustAnchorSet`; `TrustSettings::$anchorSets` and
+  `MAX_ANCHOR_ENTRIES` (SPEC-025 amendment 4: eleven classes, 111
+  symbols).
+
+### Changed
+- **A top-level `trust.allowed_list` is refused**, with a message saying
+  where it belongs (`trust.anchors[].allowed_list`). `c2patool` 0.28
+  moved it there and ignores a loose one without a word (step 107).
+  SPEC-014 amendment 3.
+
 ### Security
 - **Fixed: an exclusion wider than the manifest store was accepted.**
   Up to and including 0.1.0, a `c2pa.hash.data` exclusion that held the

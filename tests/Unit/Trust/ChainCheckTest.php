@@ -177,9 +177,25 @@ it('AC2: the wrong root: untrusted, and the state is Valid, not Invalid', functi
     }
 })->group('SPEC-014');
 
+/**
+ * A step-30/31 settings file with its loose allowed list moved into a "manifest" entry, as
+ * SPEC-031 requires (SPEC-014 amendment 5): the same certificates, the shape c2patool 0.28 reads.
+ */
+function spec014AllowedInEntry(string $variant): TrustSettings
+{
+    $old = json_decode((string) file_get_contents(spec014Fixtures()."/trust/{$variant}.settings.json"), true, 8, JSON_THROW_ON_ERROR);
+    assert(is_array($old) && is_array($old['trust']));
+    $trust = $old['trust'];
+    $entry = ['trust_anchors' => $trust['trust_anchors'] ?? '', 'trust_kind' => 'manifest', 'allowed_list' => $trust['allowed_list']];
+
+    return TrustSettings::fromJson(json_encode(['verify' => $old['verify'] ?? [], 'trust' => ['anchors' => [$entry], 'trust_config' => $trust['trust_config'] ?? '']], JSON_THROW_ON_ERROR));
+}
+
 it('AC3: the allowed list: trusted without a chain', function (): void {
     foreach (['allowed-only', 'allowed-plus-wrong-root'] as $variant) {
-        $report = spec014Verify('fixture-signed.png', spec014Settings($variant));
+        // amendment 5: the loose file is refused now (SPEC-031 AC4); its certificates, moved into an entry, still trust
+        expect(static fn () => spec014Settings($variant))->toThrow(TrustException::class, 'trust.anchors[].allowed_list');
+        $report = spec014Verify('fixture-signed.png', spec014AllowedInEntry($variant));
         $credential = spec014Credential($report);
         expect($credential)->toHaveCount(1, $variant)
             ->and($credential[0]->code)->toBe(StatusCode::SigningCredentialTrusted, $variant)
@@ -188,10 +204,11 @@ it('AC3: the allowed list: trusted without a chain', function (): void {
             ->and(spec014Oracle("png-{$variant}")['validation_state'])->toBe('Trusted', $variant);
     }
     // the second: the RSA root alone would refuse the EC chain — the allowed list is tried first
-    $settings = spec014Settings('allowed-plus-wrong-root');
-    expect($settings->allowedList)->toHaveCount(3)
-        ->and($settings->trustAnchors)->toHaveCount(1)
-        ->and($settings->trustAnchors[0]->subjectCn())->toBe('Root CA');
+    $settings = spec014AllowedInEntry('allowed-plus-wrong-root');
+    expect($settings->anchorSets)->toHaveCount(1)
+        ->and($settings->anchorSets[0]->allowedList)->toHaveCount(3)
+        ->and($settings->anchorSets[0]->anchors)->toHaveCount(1)
+        ->and($settings->anchorSets[0]->anchors[0]->subjectCn())->toBe('Root CA');
 })->group('SPEC-014');
 
 it('AC4: the walk needs the intermediate the chain carries, and an intermediate may be the anchor', function (): void {

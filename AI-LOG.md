@@ -5728,3 +5728,27 @@ README are where the disclosure lives.
   tightened to `not a list` before commit.
 - Decided by Maurice: SPEC-031 approved. Committed locally, not pushed,
   so that `main` does not go red.
+
+## 2026-09-24 — Step 111b, SPEC-031 implemented
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, begin met 111b".
+- Produced: `src/Trust/TrustAnchorSet.php` (new); `src/Trust/TrustSettings.php`,
+  `src/Trust/ChainCheck.php`, `src/Trust/CertificateProfileCheck.php`,
+  `src/Timestamp/TimestampCheck.php`; `bin/api-check.php` (the eleventh
+  contract class); `tests/Fixtures/api/public-surface.txt` (+12);
+  `tests/Unit/ApiSurfaceTest.php` (111); `tests/Unit/Trust/ChainCheckTest.php`
+  (SPEC-014 AC3 on entries); SPEC-031 `implemented` with traceability and
+  amendments 1–2; SPEC-014 amendment 3; SPEC-025 amendment 4; `README.md`
+  (settings, contract table); `docs/comparison.md` (four rows);
+  `CHANGELOG.md` (`Unreleased`: Added/Changed, "this will be 0.2.0"); the
+  111b half of `notes/step-111-trust-anchors-tests.md`; rows in
+  `docs/milestones.md` and `NOTES.md`.
+- Measured: `vendor/bin/pest --group=SPEC-031` gives 8 passed.
+  `composer check` gives 430 passed, and PHPStan, Deptrac, Pint and the API
+  check are clean. `composer test:parallel` gives 430 passed.
+  `bin/spec-check.php`: 32 specs, 37 test files.
+- Reasoned: refusing a loose `allowed_list` breaks settings files that
+  worked in 0.1.0, so under the changelog's own rule the next tag is
+  0.2.0.
+- Decided by Maurice: none in this step beyond the approval of SPEC-031.
+  Tagging stays his call ("nog even niet taggen").

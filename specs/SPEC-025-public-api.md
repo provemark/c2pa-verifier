@@ -248,6 +248,21 @@ reasoning that led to it stays readable.
 
    Confirmed by Maurice van Loon, 2026-09-22 (step 93).
 
+4. **2026-09-24, step 111b, with SPEC-031's implementation** — the
+   contract grows to **eleven classes**: `Trust\TrustAnchorSet`, one
+   `trust.anchors` entry, which `TrustSettings::$anchorSets` holds.
+   `TrustSettings` gains that property and `MAX_ANCHOR_ENTRIES`. The
+   recorded surface goes from 99 symbols to **111**.
+   - Kept out on purpose: the four helpers that combine the lists live on
+     the `@internal` `ChainCheck`, because every public method of a
+     contract class is a promise.
+   - The README's table names the new class (AC5).
+
+   **Weight B for the API, nothing removed.** `bin/api-check.php` refused
+   the run on its own: first with *"in neither the contract nor marked
+   @internal"* for the new class, then with *"public but not recorded"*
+   for each of its twelve symbols.
+
 
 ## Traceability
 

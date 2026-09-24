@@ -44,7 +44,16 @@ final readonly class ChainCheck
             return [new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, 'x5chain holds no certificate')];
         }
 
-        return $this->checkCertificates($chain, $settings, $url);
+        $statuses = $this->checkCertificates($chain, $settings, $url);
+        $note = self::kindNote($settings, TrustAnchorSet::MANIFEST, $chain);
+        if ($note === '') {
+            return $statuses;
+        }
+
+        // an untrusted signer, with entries of another kind configured: say they were not used, and why (SPEC-031 AC6)
+        return array_map(static fn (ValidationStatus $s): ValidationStatus => $s->code === StatusCode::SigningCredentialUntrusted
+            ? new ValidationStatus($s->code, $s->url, $s->explanation.$note)
+            : $s, $statuses);
     }
 
     /**
@@ -60,19 +69,20 @@ final readonly class ChainCheck
         $leaf = $chain[0];
 
         // the allowed list first: a listed end-entity certificate needs no chain (c2pa-rs: EndEntity)
-        foreach ($settings->allowedList as $allowed) {
+        $anchors = self::anchorsOf($settings);
+        foreach (self::allowedListOf($settings) as $allowed) {
             if (hash_equals($allowed->sha256, $leaf->sha256)) {
                 return [new ValidationStatus(StatusCode::SigningCredentialTrusted, $url, sprintf('signing certificate trusted: %s is on the allowed list (sha256 %s)', $leaf->subjectCn(), bin2hex($leaf->sha256)))];
             }
         }
-        if ($settings->trustAnchors === []) {
+        if ($anchors === []) {
             return [new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s is not on the allowed list and no trust anchors are configured', $leaf->subjectCn()))];
         }
 
         // the walk, from the leaf, through the chain the signer supplied
         $current = $leaf;
         foreach ($chain as $depth => $_) {
-            foreach ($settings->trustAnchors as $anchor) {
+            foreach ($anchors as $anchor) {
                 // depth = links walked from the leaf to the anchor: the leaf itself an anchor is 0, the leaf signed by one is 1
                 if ($current->sameAs($anchor)) {
                     return [new ValidationStatus(StatusCode::SigningCredentialTrusted, $url, sprintf('signing certificate trusted: %s is itself a trust anchor (depth %d)', $current->subjectCn(), $depth))];
@@ -102,10 +112,73 @@ final readonly class ChainCheck
         return [new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %d certificates walked, none an anchor or signed by one', count($chain)))];
     }
 
+    /**
+     * The anchors a signer's chain may reach: the legacy list and every
+     * "manifest" entry's (SPEC-031 AC6).
+     *
+     * @return list<Certificate>
+     */
+    public static function anchorsOf(TrustSettings $settings): array
+    {
+        return [...$settings->trustAnchors, ...array_merge(...array_map(static fn (TrustAnchorSet $set): array => $set->kind === TrustAnchorSet::MANIFEST ? $set->anchors : [], $settings->anchorSets))];
+    }
+
+    /**
+     * The end-entity certificates trusted without a chain: the legacy list
+     * (reachable only through the constructor since SPEC-031) and every
+     * "manifest" entry's.
+     *
+     * @return list<Certificate>
+     */
+    public static function allowedListOf(TrustSettings $settings): array
+    {
+        return [...$settings->allowedList, ...array_merge(...array_map(static fn (TrustAnchorSet $set): array => $set->allowedList, $settings->anchorSets))];
+    }
+
+    /**
+     * The anchors a time-stamping authority's chain may reach: the legacy
+     * list and every "tsa" entry's (C2PA 2.4 §14.4.2; SPEC-031 AC6).
+     *
+     * @return list<Certificate>
+     */
+    public static function tsaAnchorsOf(TrustSettings $settings): array
+    {
+        return [...$settings->trustAnchors, ...array_merge(...array_map(static fn (TrustAnchorSet $set): array => $set->kind === TrustAnchorSet::TSA ? $set->anchors : [], $settings->anchorSets))];
+    }
+
+    /**
+     * For an untrusted outcome: a sentence naming the entries of another
+     * kind that this chain *would* have reached, which were deliberately not
+     * used — or '' when no such entry exists (SPEC-031 AC6).
+     *
+     * @param  non-empty-list<Certificate>  $chain  leaf first
+     */
+    public static function kindNote(TrustSettings $settings, string $kind, array $chain): string
+    {
+        $reached = [];
+        foreach ($settings->anchorSets as $i => $set) {
+            if ($set->kind === $kind) {
+                continue;
+            }
+            $outcome = (new ChainCheck)->checkCertificates($chain, new TrustSettings($set->anchors, $set->allowedList), '');
+            if (($outcome[0] ?? null)?->code === StatusCode::SigningCredentialTrusted) {
+                $reached[] = sprintf('trust.anchors[%d] ("%s")', $i, $set->kind);
+            }
+        }
+        if ($reached === []) {
+            return '';
+        }
+
+        return sprintf(
+            '; the chain reaches an anchor in %s, which is not used here: every entry counts only for its own trust_kind (C2PA 2.4 §14.4.2)',
+            implode(', ', $reached),
+        );
+    }
+
     /** @param  array<string, mixed>  $subject */
     private function anchorWithSubject(TrustSettings $settings, array $subject): ?Certificate
     {
-        foreach ($settings->trustAnchors as $anchor) {
+        foreach (self::anchorsOf($settings) as $anchor) {
             if ($anchor->subject === $subject) {
                 return $anchor;
             }

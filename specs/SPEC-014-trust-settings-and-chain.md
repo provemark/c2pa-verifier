@@ -354,6 +354,22 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
 
 1. **2026-09-21, step 35, found by SPEC-015 AC9** *(confirmed by Maurice van Loon, 2026-09-22)* — without settings the trust check runs with no anchors and no allowed list and says `signingCredential.untrusted` ("no trust anchors configured"), as c2patool does on every file without a trust file (`png.json` of step 14, `good-no-settings.json` of step 34a); only `verify_trust: false` keeps it silent. AC6's "the same call with no settings at all gives the same report" was wrong against the oracle and now reads: no settings → `untrusted` and `trust` in `checksPerformed`; `verify-off` → nothing. `checksPerformed` also carries SPEC-015's `certificate` before `trust` (AC1). The exact enum count in AC10's test is left to SPEC-015 AC10.
 2. **2026-09-22, step 42b, with SPEC-017** — `ChainCheck::checkCertificates(array $chain, TrustSettings $settings, string $url)`: the allowed list and the walk on a list of certificates, leaf first, without a `Manifest` — the seam the timestamp check uses for a TSA's certificates ordered from the token. `check()` calls it after reading `x5chain`; no outcome changed.
+3. **2026-09-24, step 111b, with SPEC-031** — two criteria change with it.
+   - **AC3** (the allowed list trusts without a chain) keeps its point, and
+     its files change shape. `allowed-only` and `allowed-plus-wrong-root`
+     are refused now (SPEC-031 AC4, the maintainer's decision). The test
+     moves their certificates into one `"manifest"` entry
+     (`spec014AllowedInEntry()`) and asserts the same outcome:
+     `signingCredential.trusted` on "allowed list", tried before the walk.
+     The recorded `c2patool` 0.27.22 JSON for those two files stays the
+     oracle for the certificates.
+   - **AC7** (the settings are whole or absent) grows. `trust.anchors` is
+     a known key, and a top-level `trust.allowed_list` is refused with a
+     message naming `trust.anchors[].allowed_list`.
+
+   **Weight A: a settings file that gave `Trusted` yesterday now exits 2.**
+   That is deliberate. `c2patool` 0.28.0 ignores such a file silently,
+   and the two tools would otherwise disagree about it without a word.
 
 ## Traceability
 

@@ -23,7 +23,7 @@ if (is_file($apiCheckScript)) {
 }
 
 /**
- * The ten classes a caller may build on (SPEC-025 AC1, amendment 2), read from
+ * The eleven classes a caller may build on (SPEC-025 AC1, amendment 2; the eleventh from SPEC-031), read from
  * `bin/api-check.php` rather than copied.
  *
  * This function held a second copy of the list until step 89, and the two drifted:
@@ -80,7 +80,7 @@ it('AC1: the recorded surface is exactly what the contract classes expose today'
     }
 
     expect($live)->toBe(spec025Recorded())
-        ->and($live)->toHaveCount(99);   // 91, then two bmffHash codes, then SPEC-028's tenth class, then SPEC-030's four ocsp codes
+        ->and($live)->toHaveCount(111);   // 91, then two bmffHash codes, then SPEC-028's tenth class, then SPEC-030's four ocsp codes, then SPEC-031's eleventh class (10) and two members of TrustSettings
 })->group('SPEC-025');
 
 it('AC1: no class of the contract is marked internal', function (): void {

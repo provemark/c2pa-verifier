@@ -51,14 +51,39 @@ final readonly class CertificateProfileCheck
             if ($chain === []) {
                 return [new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, 'x5chain holds no certificate')];
             }
-            $leaf = Certificate::fromDer($chain[0]->bytes);
+            $certificates = array_map(static fn ($c): Certificate => Certificate::fromDer($c->bytes), $chain);
+            $leaf = $certificates[0];
         } catch (CoseException $e) {
             return [new ValidationStatus($e->status, $url, $e->getMessage())];
         } catch (TrustException $e) {
             return [new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, sprintf('the signing certificate could not be read: %s', $e->getMessage()))];
         }
 
-        return $this->checkLeaf($leaf, $settings, $at, $url, reason: $reason);
+        return $this->checkLeaf($leaf, $settings, $at, $url, $this->acceptedEkus($certificates, $settings), $reason);
+    }
+
+    /**
+     * The EKUs accepted for this chain: the built-in list, the top-level
+     * `trust_config`, and the `trust_config` of every "manifest" entry the
+     * chain reaches — never another entry's (C2PA 2.4 §14.4.1; SPEC-031 AC8).
+     *
+     * @param  non-empty-list<Certificate>  $chain
+     * @return list<string>
+     */
+    private function acceptedEkus(array $chain, ?TrustSettings $settings): array
+    {
+        $accepted = [...self::BUILT_IN_EKUS, ...($settings === null ? [] : $settings->trustConfig)];
+        foreach ($settings === null ? [] : $settings->anchorSets as $set) {
+            if ($set->kind !== TrustAnchorSet::MANIFEST || $set->trustConfig === []) {
+                continue;
+            }
+            $reached = (new ChainCheck)->checkCertificates($chain, new TrustSettings($set->anchors, $set->allowedList), '');
+            if (($reached[0] ?? null)?->code === StatusCode::SigningCredentialTrusted) {
+                $accepted = [...$accepted, ...$set->trustConfig];
+            }
+        }
+
+        return array_values(array_unique($accepted));
     }
 
     /**

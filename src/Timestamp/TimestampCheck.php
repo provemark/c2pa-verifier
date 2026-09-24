@@ -18,6 +18,7 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\ChainCheck;
+use Provemark\C2paVerifier\Trust\TrustAnchorSet;
 use Provemark\C2paVerifier\Trust\TrustException;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 
@@ -193,7 +194,8 @@ final readonly class TimestampCheck
                 $statuses[] = $this->status(
                     $trusted ? StatusCode::TimeStampTrusted : StatusCode::TimeStampUntrusted,
                     $url,
-                    sprintf('timestamp cert %s: %s — %s', $trusted ? 'trusted' : 'untrusted', $tsaName, preg_replace('/^signing certificate (un)?trusted: /', '', $outcome->explanation) ?? $outcome->explanation),
+                    sprintf('timestamp cert %s: %s — %s', $trusted ? 'trusted' : 'untrusted', $tsaName, preg_replace('/^signing certificate (un)?trusted: /', '', $outcome->explanation) ?? $outcome->explanation)
+                        .($trusted || $settings === null ? '' : ChainCheck::kindNote($settings, TrustAnchorSet::TSA, $ordered)),
                 );
             }
         }
@@ -213,14 +215,21 @@ final readonly class TimestampCheck
         return "\x84"."\x70CounterSignature".self::bstr($cose->protectedBytes)."\x40".self::bstr($payload);
     }
 
-    /** The operator's anchors and allowed list with `trust_config` replaced by timeStamping alone; `verify_trust` kept. */
+    /**
+     * The operator's TSA anchors — the legacy list and every "tsa" entry,
+     * never a "manifest" one (C2PA 2.4 §14.4.2; SPEC-031 AC6) — and the
+     * legacy allowed list, with `trust_config` replaced by timeStamping
+     * alone; `verify_trust` kept. An entry's allowed list never reaches a
+     * TSA (§14.4.3). The legacy one still does, when a caller builds
+     * TrustSettings in PHP: SPEC-031 open question 6.
+     */
     public static function tsaSettings(?TrustSettings $operator): TrustSettings
     {
         if ($operator === null) {
             return new TrustSettings([], [], [self::OID_EKU_TIME_STAMPING], true);
         }
 
-        return new TrustSettings($operator->trustAnchors, $operator->allowedList, [self::OID_EKU_TIME_STAMPING], $operator->verifyTrust);
+        return new TrustSettings(ChainCheck::tsaAnchorsOf($operator), $operator->allowedList, [self::OID_EKU_TIME_STAMPING], $operator->verifyTrust);
     }
 
     /**

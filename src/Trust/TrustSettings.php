@@ -6,26 +6,36 @@ namespace Provemark\C2paVerifier\Trust;
 
 /**
  * The trust settings in the format c2patool, the sister library and this
- * verifier share (SPEC-014): `trust.trust_anchors`, `trust.allowed_list`,
+ * verifier share (SPEC-014, SPEC-031): `trust.trust_anchors` (the legacy
+ * string, which anchors signers and time-stamping authorities both),
+ * `trust.anchors` (a list of entries, each counting only for its own kind),
  * `trust.trust_config`, `verify.verify_trust` — every value the *contents*
- * of a file, never a path. Read whole or not at all: any field of the wrong
- * type, any unknown key, any PEM block OpenSSL refuses, any block that is
- * not a certificate, is a TrustException, and no partial object exists.
+ * of a file, never a path. A top-level `trust.allowed_list` is refused: it
+ * lives inside a "manifest" entry now, and c2pa 0.91.0 drops a loose one
+ * without a word. Read whole or not at all: any field of the wrong type,
+ * any unknown key, any PEM block OpenSSL refuses, any block that is not a
+ * certificate, is a TrustException, and no partial object exists.
  */
 final readonly class TrustSettings
 {
     public const DEFAULT_MAX_CERTIFICATES = 256;
 
+    public const MAX_ANCHOR_ENTRIES = 32;
+
+    private const ENTRY_KEYS = ['trust_anchors', 'trust_kind', 'trust_uri', 'trust_config', 'allowed_list', 'trusted_ica_issuers'];
+
     /**
      * @param  list<Certificate>  $trustAnchors
      * @param  list<Certificate>  $allowedList
      * @param  list<string>  $trustConfig  EKU OIDs, in addition to the built-in list (ADR-0003 item 4; used by SPEC-015)
+     * @param  list<TrustAnchorSet>  $anchorSets  the `trust.anchors` entries (SPEC-031)
      */
     public function __construct(
         public array $trustAnchors,
         public array $allowedList,
         public array $trustConfig = [],
         public bool $verifyTrust = true,
+        public array $anchorSets = [],
     ) {}
 
     public static function fromJson(string $json, int $maxCertificates = self::DEFAULT_MAX_CERTIFICATES): self
@@ -53,7 +63,11 @@ final readonly class TrustSettings
                 throw new TrustException(sprintf('unknown top-level key %s in the trust settings (known: trust, verify)', $key));
             }
         }
-        $trust = self::section($settings, 'trust', ['trust_anchors', 'allowed_list', 'trust_config']);
+        $trustSection = $settings['trust'] ?? [];
+        if (is_array($trustSection) && array_key_exists('allowed_list', $trustSection)) {
+            throw new TrustException('trust.allowed_list is not read at the top level: it belongs inside an entry, trust.anchors[].allowed_list, of kind "manifest" (c2pa 0.91.0 moved it there and drops a loose one without a word; this verifier refuses it instead — SPEC-031)');
+        }
+        $trust = self::section($settings, 'trust', ['trust_anchors', 'trust_config', 'anchors']);
         $verify = self::section($settings, 'verify', ['verify_trust']);
 
         $verifyTrust = $verify['verify_trust'] ?? true;
@@ -61,12 +75,78 @@ final readonly class TrustSettings
             throw new TrustException(sprintf('verify.verify_trust is %s, not a boolean', get_debug_type($verifyTrust)));
         }
 
-        return new self(
-            self::certificatesFromPem(self::text($trust, 'trust_anchors'), 'trust.trust_anchors', $maxCertificates),
-            self::certificatesFromPem(self::text($trust, 'allowed_list'), 'trust.allowed_list', $maxCertificates),
-            self::ekusFromConfig(self::text($trust, 'trust_config')),
-            $verifyTrust,
-        );
+        $anchors = self::certificatesFromPem(self::text($trust, 'trust_anchors'), 'trust.trust_anchors', $maxCertificates);
+        $sets = self::anchorSets($trust['anchors'] ?? [], $maxCertificates);
+        $total = count($anchors) + array_sum(array_map(static fn (TrustAnchorSet $set): int => count($set->anchors) + count($set->allowedList), $sets));
+        if ($total > $maxCertificates) {
+            throw new TrustException(sprintf('the trust settings hold more than %d certificates in all (%d)', $maxCertificates, $total));
+        }
+
+        return new self($anchors, [], self::ekusFromConfig(self::text($trust, 'trust_config')), $verifyTrust, $sets);
+    }
+
+    /**
+     * `trust.anchors`, entry by entry (SPEC-031 AC5): a list of at most
+     * MAX_ANCHOR_ENTRIES objects, each with `trust_anchors` and `trust_kind`
+     * and nothing but the keys c2pa 0.91.0 defines.
+     *
+     * @return list<TrustAnchorSet>
+     */
+    private static function anchorSets(mixed $anchors, int $maxCertificates): array
+    {
+        if (! is_array($anchors) || ! array_is_list($anchors)) {
+            throw new TrustException(sprintf('trust.anchors is %s, not a list', is_array($anchors) ? 'an object' : get_debug_type($anchors)));
+        }
+        if (count($anchors) > self::MAX_ANCHOR_ENTRIES) {
+            throw new TrustException(sprintf('trust.anchors holds more than %d entries (%d)', self::MAX_ANCHOR_ENTRIES, count($anchors)));
+        }
+        $sets = [];
+        foreach ($anchors as $i => $entry) {
+            $at = sprintf('trust.anchors[%d]', $i);
+            if (! is_array($entry) || (array_is_list($entry) && $entry !== [])) {
+                throw new TrustException(sprintf('%s is %s, not an object', $at, get_debug_type($entry)));
+            }
+            foreach (array_keys($entry) as $key) {
+                if (! in_array($key, self::ENTRY_KEYS, true)) {
+                    throw new TrustException(sprintf('%s: unknown key %s (known: %s)', $at, $key, implode(', ', self::ENTRY_KEYS)));
+                }
+            }
+            foreach (['trust_anchors', 'trust_kind'] as $required) {
+                if (! array_key_exists($required, $entry)) {
+                    throw new TrustException(sprintf('%s.%s is missing', $at, $required));
+                }
+            }
+            $text = static function (string $key) use ($entry, $at): string {
+                $value = $entry[$key] ?? '';
+                if (! is_string($value)) {
+                    throw new TrustException(sprintf('%s.%s is %s, not a string', $at, $key, get_debug_type($value)));
+                }
+
+                return $value;
+            };
+            $kind = $text('trust_kind');
+            if (! in_array($kind, TrustAnchorSet::KINDS, true)) {
+                throw new TrustException(sprintf('%s.trust_kind %s is not one of %s', $at, preg_replace('/[^\x20-\x7E]/', '?', $kind) ?? '', implode(', ', TrustAnchorSet::KINDS)));
+            }
+            $issuers = $entry['trusted_ica_issuers'] ?? [];
+            if (! is_array($issuers) || ! array_is_list($issuers) || array_filter($issuers, static fn (mixed $v): bool => ! is_string($v)) !== []) {
+                throw new TrustException(sprintf('%s.trusted_ica_issuers is not a list of strings', $at));
+            }
+            $uri = array_key_exists('trust_uri', $entry) ? $text('trust_uri') : null;
+            try {
+                $sets[] = new TrustAnchorSet(
+                    $kind,
+                    self::certificatesFromPem($text('trust_anchors'), "{$at}.trust_anchors", $maxCertificates),
+                    self::certificatesFromPem($text('allowed_list'), "{$at}.allowed_list", $maxCertificates),
+                    self::ekusFromConfig($text('trust_config'), "{$at}.trust_config"),
+                    $uri,
+                );
+            } catch (TrustException $e) {
+                throw str_starts_with($e->getMessage(), $at) ? $e : new TrustException(sprintf('%s: %s', $at, $e->getMessage()), 0, $e);
+            }
+        }
+
+        return $sets;
     }
 
     /**
@@ -112,7 +192,7 @@ final readonly class TrustSettings
      *
      * @return list<string>
      */
-    public static function ekusFromConfig(string $config): array
+    public static function ekusFromConfig(string $config, string $what = 'trust.trust_config'): array
     {
         $oids = [];
         foreach (preg_split('/\R/', $config) ?: [] as $n => $line) {
@@ -121,7 +201,7 @@ final readonly class TrustSettings
                 continue;
             }
             if (preg_match('/\A[0-2](\.\d+)+\z/', $line) !== 1) {
-                throw new TrustException(sprintf('trust.trust_config line %d is not an OID: %s', $n + 1, preg_replace('/[^\x20-\x7E]/', '?', $line) ?? ''));
+                throw new TrustException(sprintf('%s line %d is not an OID: %s', $what, $n + 1, preg_replace('/[^\x20-\x7E]/', '?', $line) ?? ''));
             }
             $oids[] = $line;
         }
