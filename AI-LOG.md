@@ -5961,3 +5961,20 @@ README are where the disclosure lives.
 - Reasoned: C2PA 2.4 §15.10.3.2.2, §15.10.3.2.3 and §18's actions and
   metadata text; SPEC-018's named out-of-scope content family.
 - Decided by Maurice: to fuzz and then measure before tagging 0.2.0.
+
+## 2026-09-24 — SPEC-032 drafted
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, schrijf SPEC-032 als draft".
+- Produced: `specs/SPEC-032-created-source-type-and-external-references.md`
+  (draft, seven criteria, four open questions); rows in
+  `docs/milestones.md` and `NOTES.md`. No test or code.
+- Measured: a corpus scan (throwaway script) found 151 `c2pa.created`
+  actions, 19 without `digitalSourceType`, 18 of them in v1 claims, and no
+  external-reference assertion. c2patool 0.27.22 and 0.28.0 on
+  `adobe-20220124-C.jpg` (Valid, no actions fault) and
+  `c2pa-rs/no_alg.jpg` (refused: unknown algorithm).
+- Reasoned: `c2pa` 0.91.0 `verify_actions()` (rule 2.b.v; v1 claims
+  skipped unless `strict_v1_validation`), `verify_external_reference()`
+  and `ExternalReference::validate()` (fourteen forbidden labels). C2PA
+  2.4 §15.10.3.2.2, §15.10.3.2.3, §18.15.2 and §18.24.
+- Decided by Maurice: SPEC-032 as a draft.
