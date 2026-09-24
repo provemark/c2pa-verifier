@@ -1,0 +1,93 @@
+{
+  "active_manifest": "urn:c2pa:ae257060-f3ff-461e-b7be-38306fb6ad89",
+  "manifests": {
+    "urn:c2pa:ae257060-f3ff-461e-b7be-38306fb6ad89": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier SPEC-031 probe",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.0"
+        }
+      ],
+      "title": "eku-probe.jpg",
+      "instance_id": "xmp.iid:d74a8e3b-1dd0-466b-9350-314e1fac71c8",
+      "thumbnail": {
+        "format": "image/jpeg",
+        "identifier": "self#jumbf=/c2pa/urn:c2pa:ae257060-f3ff-461e-b7be-38306fb6ad89/c2pa.assertions/c2pa.thumbnail.claim"
+      },
+      "assertions": [
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              }
+            ]
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "c2pa-verifier test",
+        "common_name": "SPEC-031 EKU Probe Signer",
+        "cert_serial_number": "722991558660422769408549404313592231379079666631"
+      },
+      "label": "urn:c2pa:ae257060-f3ff-461e-b7be-38306fb6ad89",
+      "claim_version": 2
+    }
+  },
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae257060-f3ff-461e-b7be-38306fb6ad89/c2pa.signature",
+          "explanation": "signing certificate trusted, found in [https://c2pa-rs/unknown_trust_list_e9cc379fef0d5583f87df96d6dd4dda48efc9c9338678b923ee18feaea6d48a0] trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae257060-f3ff-461e-b7be-38306fb6ad89/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae257060-f3ff-461e-b7be-38306fb6ad89/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae257060-f3ff-461e-b7be-38306fb6ad89/c2pa.assertions/c2pa.hash.data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae257060-f3ff-461e-b7be-38306fb6ad89/c2pa.assertions/c2pa.thumbnail.claim",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae257060-f3ff-461e-b7be-38306fb6ad89/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae257060-f3ff-461e-b7be-38306fb6ad89/c2pa.assertions/c2pa.hash.data",
+          "explanation": "data hash valid"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae257060-f3ff-461e-b7be-38306fb6ad89/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        }
+      ],
+      "failure": []
+    },
+    "specVersion": "2.4.0",
+    "trustListUri": "https://c2pa-rs/unknown_trust_list_e9cc379fef0d5583f87df96d6dd4dda48efc9c9338678b923ee18feaea6d48a0"
+  },
+  "validation_state": "Trusted"
+}

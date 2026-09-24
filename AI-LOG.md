@@ -5710,3 +5710,21 @@ README are where the disclosure lives.
 - Reasoned: `TimestampCheck.php:223` passes the loose allowed list to the
   TSA check, which §14.4.3 forbids. Not measured yet.
 - Decided by Maurice: to settle these two before approving SPEC-031.
+
+## 2026-09-24 — Step 111a, SPEC-031 approved and its tests seen red
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "SPEC-031 goedgekeurd, begin met de tests".
+- Produced: SPEC-031 status `approved`; `bin/make-anchors-variants.php`;
+  `tests/Fixtures/trust/anchors/` (20 settings, `eku-probe.jpg`,
+  `eku-probe-root.pem`); `tests/Fixtures/c2patool/anchors/` (25 c2patool
+  0.28.0 reports); `tests/Unit/Trust/TrustAnchorsTest.php` (AC1–AC8);
+  `notes/step-111-trust-anchors-tests.md`; rows in `docs/milestones.md`
+  and `NOTES.md`.
+- Measured: `vendor/bin/pest --group=SPEC-031` gives 8 failed, each reason
+  read (see the note). `composer check` gives 8 failed, 422 passed; PHPStan,
+  Deptrac and Pint clean. No `PRIVATE` PEM header in the new fixture
+  directories.
+- Reasoned: AC5's first needle matched today's unknown-key message and was
+  tightened to `not a list` before commit.
+- Decided by Maurice: SPEC-031 approved. Committed locally, not pushed,
+  so that `main` does not go red.
