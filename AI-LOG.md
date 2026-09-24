@@ -5871,3 +5871,15 @@ README are where the disclosure lives.
   corpus signatures read: only the new fixture has a byte-string x5chain.
 - Reasoned: RFC 9360 as quoted in C2PA 2.4 §14.5.
 - Decided by Maurice: take this in before the release.
+
+## 2026-09-24 — No security advisory for 0.1.0
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: to show a draft GitHub security advisory for the step-108 hole
+  in 0.1.0. After reading it: "Niemand gebruikt het nog dus zo'n advisory
+  hoeft niet".
+- Produced: a draft in the session scratchpad only; nothing was created on
+  GitHub. The finding stays public where it already is: `SECURITY.md`
+  (*Findings so far*), the `CHANGELOG.md` security entry, and notes 108
+  and 109.
+- Measured / Reasoned: none new.
+- Decided by Maurice: no advisory, because the package has no known users.
