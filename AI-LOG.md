@@ -6044,3 +6044,17 @@ README are where the disclosure lives.
   status code, what both oracles say, where the details are); the issue is
   closed. No tag.
 - Decided by Maurice: close #3; no tag.
+
+## 2026-09-24 — Step 123, the actions content family measured
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "eerst die meting, nog geen tag".
+- Produced: `notes/step-123-actions-content-family.md`, rows in
+  `docs/milestones.md` and `NOTES.md`. No specification, test or code; no
+  tag.
+- Measured: ten probe manifests signed with c2patool 0.28.0 under step
+  110's scratchpad CA (one could not be embedded), verified under the root
+  by c2patool 0.27.22, 0.28.0 and `bin/c2pa-verify`. The table is in the
+  note. `StatusCode` checked for the two codes involved.
+- Reasoned: `c2pa` 0.91.0 `verify_actions()` read for its rule list; the
+  size (one spec, about eight criteria, two codes) is an estimate.
+- Decided by Maurice: measure before tagging.
