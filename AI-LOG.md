@@ -6158,3 +6158,26 @@ README are where the disclosure lives.
 - Reasoned: `c2pa` 0.91.0 `verify_icons()` and its three call sites; C2PA
   2.4 §10.2.3.2, §15.6.2, §15.10.3.2.3, §15.10.3.3, §15.10.4 and §18.12.1.
 - Decided by Maurice: SPEC-034 as a draft.
+
+## 2026-09-24 — Step 126a, SPEC-034 approved, amended, and its tests seen red
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, volg het voorstel bij vraag 2, SPEC-034 goedgekeurd"; then,
+  after §10.2.3.2's *should* for data boxes was reported, "ja, kies A en
+  pas AC5 aan".
+- Produced: SPEC-034 `approved` and amendments 1–2 (AC5 → `assertion.missing`,
+  data boxes refused knowingly, the `softwareAgents` resource reference,
+  what is compared); `bin/make-spec034-variants.php`;
+  `tests/Fixtures/icons/` (9 PNG probes, root, settings);
+  `tests/Fixtures/c2patool/icons/` (18 reports);
+  `tests/Unit/Manifest/IconReferenceTest.php` (AC1–AC6);
+  `notes/step-126-spec034.md`.
+- Measured: c2patool 0.28.0's builder on icons in four places (it
+  converts three and leaves `softwareAgents` a resource reference). Both
+  versions on every probe (the table is in the note). Each patched probe's
+  signature was verified before it was written. `vendor/bin/pest
+  --group=SPEC-034` gives 5 failed, 1 passed (AC6 is a guard). No
+  `PRIVATE` PEM header in the new fixture directories.
+- Reasoned: C2PA 2.4 §10.2.3.2 (the icon must reference an embedded
+  `c2pa.icon`; the *should* on data boxes).
+- Decided by Maurice: SPEC-034 approved; option A on data boxes; AC5
+  changed. Committed locally.

@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -82,9 +82,10 @@ apply.
   - Not found: the result is `assertion.missing` on the icon's url
     (*could not resolve icon address*).
   - A missing `hash` field counts as a mismatch, as §15.10.3.3 says.
-- **Not checked**: an icon whose `url` points outside the manifest (a
-  hashed external URI). Its data is never fetched, as §15.10.4 allows and
-  this verifier's no-network rule requires.
+- **An icon whose `url` points outside the manifest** (a hashed external
+  URI) is `assertion.missing` (*could not resolve icon address*), as
+  `c2pa-rs` reports it and as §10.2.3.2 requires (amendment 1). Its data
+  is never fetched.
 - `checks_performed` names `icons` only where the manifest carries an
   icon, as `externalReferences` does (SPEC-032).
 - No new status code; the contract does not change.
@@ -143,13 +144,13 @@ it (open question 3).
     v1 claim (through the `ActionsCheck` seam, open question 4) nothing
     is reported for actions icons.
 
-- **AC5 — an external icon is not fetched**
-  - Given a probe whose icon is a hashed external URI
-    (`https://example.com/icon.png` with `alg` and `hash`), if the builder
-    writes one
+- **AC5 — an external icon resolves to nothing, and is not fetched** *(amendment 1)*
+  - Given a probe whose `claim_generator_info` icon is a hashed external
+    URI (`https://example.com/icon.png` with `alg` and `hash`), which the
+    builder writes
   - When verified
-  - Then no status from this rule, and no network. What `c2patool`
-    0.28.0 says is recorded.
+  - Then `assertion.missing` on that url and `Invalid`, as `c2patool`
+    0.28.0, with no network.
 
 - **AC6 — nothing else moves**
   - Given the whole corpus under the three standard settings, before and
@@ -186,6 +187,10 @@ public static function present(Manifest $manifest): bool;   // for checks_perfor
 
 ## Open questions
 
+*Answered on approval, 2026-09-24:* question 2 by the maintainer (the
+proposal: an icon naming a data box is `assertion.missing`). Questions 1,
+3 and 4 were settled by adopting their proposals.
+
 1. **Compare with the claim's recorded hash, or rehash the box?**
    `c2pa-rs` compares the icon's hash with the hash the claim records for
    the named assertion. §15.10.3.3 says to hash the box. SPEC-011 has
@@ -209,6 +214,57 @@ public static function present(Manifest $manifest): bool;   // for checks_perfor
    1). Proposal: test the v1 exemption through the existing
    `ActionsCheck` seam. `claim_generator_info` icons in v1 claims are
    checked like v2's, and no v1 corpus file carries one. *(not a blocker)*
+
+## Amendments
+
+1. **2026-09-24, step 126a, measured and read before the tests; decided by
+   Maurice van Loon.**
+   - **AC5 turns around.** The draft left an external icon unchecked.
+     `c2patool` 0.28.0, while signing that probe, already reports
+     `assertion.missing` (*"could not resolve icon address
+     (https://example.com/icon.png)"*). §10.2.3.2 says a claim generator's
+     icon *"shall be a hashed URI. This hashed URI shall be to an embedded
+     data assertion whose label is c2pa.icon"*. An external icon is
+     therefore not a valid icon. AC5 and the scope now say
+     `assertion.missing`, and nothing is fetched.
+   - **Data boxes: refused, knowingly against a *should*.** The same
+     paragraph of §10.2.3.2 goes on: *"Manifest Consumers should also
+     support the data box approach recommended by earlier versions of this
+     specification."* The maintainer weighed that against open question
+     2 and kept the refusal (option A): no fixture and no corpus file has
+     a data box, `c2pa-rs` accepts one without any hash check, and
+     supporting it properly would mean reading data boxes, which this
+     verifier does not. It is named as a departure from a *should* in
+     `docs/comparison.md`. A real file with one would be its own spec.
+   - The builder of `c2patool` 0.28.0 embeds an icon in all four places
+     (`claim_generator_info`, `softwareAgents`, an action's
+     `softwareAgent`, `templates`) as a hashed URI into a `c2pa.icon`
+     assertion. Only the failing shapes need rewriting.
+
+   Weight A for AC5 (an outcome changed before any test existed); the
+   rest records a decision.
+
+2. **2026-09-24, step 126a, measured on the probes before the tests.**
+   - `c2patool` 0.28.0's builder leaves a `softwareAgents` icon as a
+     resource reference (`{format, identifier}`) and embeds no `c2pa.icon`
+     for it. `templates` and an action's `softwareAgent` get a proper hashed
+     URI. `c2pa-rs` checks only hashed-URI icons, so the resource-reference
+     form is `Trusted` in both oracles. This verifier does the same: an icon
+     map without a `url` is not a reference and is not checked. A
+     mismatching `softwareAgents` icon cannot be built, so AC4 covers
+     `templates` and `softwareAgent` with failing probes, and
+     `softwareAgents` with the resource-reference form only. All three run
+     through the same code.
+   - After an icon that resolves to nothing (AC3, AC5), `c2pa-rs` adds a
+     second `assertion.missing` on the manifest itself (*"Failed to load
+     manifest"*), because its `failure(...)?` stops loading there. That is
+     how `c2pa-rs` aborts, not a rule. This verifier reports the icon's
+     fault only, and the tests compare the entries on icon urls.
+   - The probes are PNG, not JPEG: the store sits in one `caBX` chunk, so a
+     same-length patch plus a recomputed chunk CRC keeps everything else
+     byte for byte.
+
+   Weight C: no rule changed; how AC4 is covered, and what is compared.
 
 ## Traceability
 
