@@ -34,11 +34,11 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | verdict | predicates |
 |---|---|
-| **yes** | 59 |
+| **yes** | 62 |
 | partial | 13 |
 | closed | 4 |
 | by design | 21 |
-| **gap** | 14 |
+| **gap** | 11 |
 | **total** | 111 |
 
 ## Cross-format (6)
@@ -191,10 +191,10 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | predicate | sev | rule | this verifier |
 |---|---|---|---|
-| `PRED-BMFF-001` | shall | BMFF exclusions field presence | **gap** — an absent or empty `exclusions` list is accepted rather than refused as malformed — in practice the C2PA box is then hashed and the file fails as a mismatch |
-| `PRED-BMFF-002` | shall | BMFF subset range ordering and non-negativity | **gap** — `subset` ranges are applied in the order given; they are not checked for ordering or overlap |
+| `PRED-BMFF-001` | shall | BMFF exclusions field presence | **yes** — since 2026-09-24 (SPEC-038): an absent or empty `exclusions` list is `assertion.bmffHash.malformed`, before any hashing |
+| `PRED-BMFF-002` | shall | BMFF subset range ordering and non-negativity | **yes** — since 2026-09-24 (SPEC-038): unsorted or overlapping `subset` ranges are `assertion.bmffHash.malformed`, before any hashing |
 | `PRED-BMFF-003` | shall | BMFF Merkle tree validation | partial — the fragmented Merkle tree is validated in full (SPEC-028); `fixedBlockSize`/`variableBlockSizes` are not implemented |
-| `PRED-BMFF-004` | shall | BMFF additional exclusions informational | **gap** — no `assertion.bmffHash.additionalExclusionsPresent` informational code is emitted |
+| `PRED-BMFF-004` | shall | BMFF additional exclusions informational | **yes** — since 2026-09-24 (SPEC-038): `assertion.bmffHash.additionalExclusionsPresent` is reported, informational, as `c2patool` 0.28.0 reports it |
 
 ## ISOBMFF hash, advanced (4)
 
@@ -214,7 +214,7 @@ accept; its predicate list does not depend on its cryptography being right.
 
 ## What the 23 gaps mean, sorted by what they could cost
 
-Twenty-three gaps were recorded. Eight have since been closed (section 0, section 1, `PRED-ASSE-027` by SPEC-032, `PRED-STRU-009` by SPEC-034), and one narrowed to partial (`PRED-ASSE-025`).
+Twenty-three gaps were recorded. Eleven have since been closed (section 0, section 1, `PRED-ASSE-027` by SPEC-032, `PRED-STRU-009` by SPEC-034, `PRED-BMFF-001`, `-002` and `-004` by SPEC-038), and one narrowed to partial (`PRED-ASSE-025`).
 
 A gap is only interesting through its consequence. The question this
 project asks of everything is the same one: **can it make this verifier say
@@ -303,8 +303,6 @@ c2patool is never a surprise.
 
 - `PRED-ASSE-021`, `PRED-ABMF-001` — no `c2pa.hash.multi-asset` fallback: a
   failed hard binding stays failed, where the rule says to try another
-- `PRED-BMFF-001` — an empty `exclusions` list is accepted rather than
-  refused; the C2PA box is then hashed and the file fails as a mismatch
 - `PRED-TIME-002`, `PRED-TIME-003` — the `c2pa.time-stamp` assertion is not
   read, so such a file is judged at *now*: an expired certificate is called
   expired rather than excused
@@ -313,8 +311,9 @@ c2patool is never a surprise.
   (`assertion.missing` for `assertion.outsideManifest`, `general.error` for
   `assertion.cbor.invalid`, `assertion.missing` for `hashedURI.missing`,
   `signingCredential.expired` for `claimSignature.outsideValidity`)
-- `PRED-BMFF-002`, `PRED-BMFF-004`, `PRED-STRU-002` — ordering checks and
-  informational codes that change no verdict
+- `PRED-STRU-002` — a syntax check on custom codes an ingredient recorded,
+  which changes no verdict. (`PRED-BMFF-002` stood here too, as changing
+  no verdict. Step 133 measured that it did, and SPEC-038 closed it.)
 
 ## Outside the catalogue
 

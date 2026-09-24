@@ -99,6 +99,8 @@ files with the same trust anchors.
 | A `c2pa.redacted` action **without `parameters`** passes, as in both `c2patool` versions; C2PA 2.4 §15.10.3.2.3 would reject it with `assertion.action.redactionMismatch` | the maintainer's choice (SPEC-037 open question 1): verdicts equal to `c2patool`'s; no asset byte is involved | SPEC-037 |
 | A `c2pa.redacted` reference to a manifest's label it does not list is `assertion.notRedacted`, as `c2pa-rs` names it; 2.4 says `redactionMismatch` | the codes compare with `c2patool` | SPEC-037 open question 4 |
 | A `c2pa.redacted` reference to a data box is `assertion.notRedacted`; `c2pa-rs` lets it pass when the claim's own `redactions` lists it | no builder writes one, so the pass route cannot be measured | SPEC-037 open question 3 |
+| A BMFF hash assertion without an `exclusions` key is `assertion.bmffHash.malformed`; `c2patool` gives no report at all (*"missing field `exclusions`"*) | a report that says why | SPEC-038 open question 2 |
+| A `subset` entry of length 0 that is not the last is `malformed` (it runs to the end of the box, so it overlaps what follows); `c2pa-rs` does not check it | C2PA 2.4: only the last entry may run to the end | SPEC-038 open question 3 |
 | A relative entry in `redacted_assertions` excuses no missing assertion; `c2pa-rs` does not resolve it either, and reports it verbatim | measured on `binding/claim-redacted.png` | SPEC-035 amendment 2 |
 | A CAWG identity assertion is `Invalid` until validated | `Trusted` on a credential never examined (`C_with_CAWG_data`) | SPEC-013 amendment 7 |
 | A header with both `sigTst` and `sigTst2` is `malformed` (c2pa-rs takes `sigTst2`) | fail closed; no corpus file has both | SPEC-016 AC8 |

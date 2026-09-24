@@ -323,6 +323,14 @@ reasoning that led to it stays readable.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 132).
 
+10. **2026-09-24, step 134b, with SPEC-038's implementation** — `StatusCode`
+    grows by two cases (C2PA 2.4, the §15 table): `AssertionBmffHashMalformed =
+    'assertion.bmffHash.malformed'` and `AssertionBmffHashAdditionalExclusionsPresent =
+    'assertion.bmffHash.additionalExclusionsPresent'` (informational). The
+    recorded surface goes 122 → **124**.
+
+    **Weight B: the vocabulary grew, verbatim.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

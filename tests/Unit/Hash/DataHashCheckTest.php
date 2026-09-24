@@ -237,8 +237,8 @@ it('AC4: additional exclusions are honoured and reported', function (): void {
         ->and($statuses[1]->url)->toBe(SPEC012_PNG.'/c2pa.assertions/c2pa.hash.data')
         ->and($statuses[1]->explanation)->toContain('46500');
     foreach (StatusCode::cases() as $code) {
-        if (str_starts_with($code->value, 'timeStamp.') || $code === StatusCode::IngredientUnknownProvenance || str_starts_with($code->value, 'signingCredential.ocsp.') || $code === StatusCode::IngredientClaimSignatureValidated) {
-            continue;   // SPEC-017's four informational of its own, SPEC-020's one, SPEC-030's two and SPEC-035's one
+        if (str_starts_with($code->value, 'timeStamp.') || $code === StatusCode::IngredientUnknownProvenance || str_starts_with($code->value, 'signingCredential.ocsp.') || $code === StatusCode::IngredientClaimSignatureValidated || $code === StatusCode::AssertionBmffHashAdditionalExclusionsPresent) {
+            continue;   // SPEC-017's four informational of its own, SPEC-020's one, SPEC-030's two, SPEC-035's one and SPEC-038's one
         }
         expect($code->isInformational())->toBe($code === StatusCode::AssertionDataHashAdditionalExclusionsPresent, $code->value);
     }
@@ -388,7 +388,8 @@ it('AC10: the codes are verbatim, and informational is a third kind', function (
             || str_starts_with($code->value, 'signingCredential.ocsp.')) {
             continue;   // SPEC-014's, SPEC-017's, SPEC-020's and SPEC-030's
         }
-        $informational = $code === StatusCode::AssertionDataHashAdditionalExclusionsPresent;
+        // SPEC-038 added the BMFF twin of this spec's informational code
+        $informational = in_array($code, [StatusCode::AssertionDataHashAdditionalExclusionsPresent, StatusCode::AssertionBmffHashAdditionalExclusionsPresent], true);
         expect($code->isInformational())->toBe($informational, $code->value)
             ->and($code->isSuccess())->toBe(in_array($code, $successes, true), $code->value)
             ->and($code->isFailure())->toBe(! $informational && ! in_array($code, $successes, true), $code->value);

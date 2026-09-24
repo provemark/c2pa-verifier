@@ -59,3 +59,50 @@ none in 0.27.22.
 the new script after type guards.
 
 Committed locally, not pushed.
+
+## 134b — built
+
+`BmffHashCheck` gains three things:
+- `shapeFault()` runs before any hashing. An absent or empty `exclusions`
+  is `assertion.bmffHash.malformed`. So is a `subset` list whose entries
+  are not ordered or overlap, with an entry of length 0 counting as running
+  to the end.
+- `plan()` places offset markers as `c2pa-rs` does:
+  - every top-level box keeps a marker holding its own start offset, unless
+    an exclusion without `subset` takes it out;
+  - where the box's head is included, the marker rides on the first range,
+    as SPEC-029 had it, so that spec's pinned outputs are unchanged;
+  - where the head is not included, the marker stands alone, and only
+    strictly between the file's first and last included byte.
+- `hasAdditionalExclusions()` adds the informational code beside whatever
+  the hash says. It counts every exclusion other than `/ftyp`, `/mfra` and
+  the C2PA `uuid` box.
+
+**Found while building, as amendments:**
+1. `StatusCode` had no `assertion.bmffHash.malformed` either, so SPEC-038
+   adds two codes, not one. The surface goes 122 → 124.
+2. `isobmff/size-zero-not-last.mp4` carries the informational code in
+   0.28.0 but is refused here before any hash is read. That is a known
+   difference, named in the test.
+
+Also rewritten:
+- SPEC-029 gets amendment 2 for the marker rule.
+- Three tests that list the informational codes learned the new one.
+- `docs/conformance.md` had called `PRED-BMFF-002` a rule that *"changes
+  no verdict"*. Step 133 showed it does. The row is now closed, and the
+  note says it was wrong.
+
+`vendor/bin/pest --group=SPEC-038`: **7 passed.** `composer check`: exit
+0, 486 tests.
+
+**Before and after, the whole corpus** under the three standard settings,
+with ingredient deltas and now also the active manifest's informational
+codes compared (1086 runs):
+- 45 changed lines belong to the new fixtures; every other change is the
+  new informational code;
+- the code appears on 11 files: exactly those 0.28.0 reports it on, less
+  `size-zero-not-last`;
+- no verdict and no failure code changed outside `bmff-shape/`.
+
+Four amendments await confirmation: SPEC-038 #1 and #2, SPEC-029 #2 and
+SPEC-025 #10.

@@ -6508,3 +6508,23 @@ README are where the disclosure lives.
   markers are split into and added beside the included ranges) at
   `6c92bc3`.
 - Decided by Maurice: SPEC-038 approved; question 1: emit the code.
+
+## 2026-09-24 — SPEC-038 implemented (step 134b)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: the same approval as step 134a; the implementation follows the
+  tests.
+- Produced: `src/Hash/BmffHashCheck.php` (`shapeFault()`,
+  `hasAdditionalExclusions()`, the marker rule in `plan()`, the class
+  docblock); `src/Report/StatusCode.php` (two cases); the recorded
+  surface; counts and three code-kind tests; SPEC-038 implemented with
+  Traceability and amendments 1 and 2; amendments SPEC-029 #2 and
+  SPEC-025 #10; conformance (three rows closed, a wrong note corrected),
+  comparison, CHANGELOG, README, SECURITY; the note, `NOTES.md`,
+  milestones.
+- Measured: `vendor/bin/pest --group=SPEC-038` (7 passed); `composer
+  check` (486 passed, exit 0); the corpus before and after under the three
+  standard settings with ingredient deltas and active informational codes
+  (1086 runs; outside the new fixtures only the informational code, on
+  11 files, 0.28.0's 12 less the one refused before hashing).
+- Reasoned: nothing new.
+- Decided by Maurice: none in this step.

@@ -122,6 +122,12 @@ it('AC5: the informational code, as 0.28.0 reports it', function (): void {
         $stream = fopen(Corpus::fixtures().'/'.$relative, 'rb');
         assert($stream !== false);
         $ours = (new Verifier)->verify($stream, new TrustSettings([], []));
+        if ($relative === 'isobmff/size-zero-not-last.mp4') {
+            // amendment 2: refused before any hash is read (SPEC-026's box walk), where c2patool reads it anyway
+            expect(spec038Has($ours, 'general.error'))->toBeTrue($relative);
+
+            continue;
+        }
         expect(spec038Has($ours, 'assertion.bmffHash.additionalExclusionsPresent'))->toBe($reported, $relative);
     }
 })->group('SPEC-038');
@@ -134,12 +140,17 @@ it('AC6: nothing else moves', function (): void {
         ->and(spec038Codes($report))->toBe([]);
 })->group('SPEC-038');
 
-it('AC7: the vocabulary grows by one code, verbatim', function (): void {
+it('AC7: the vocabulary grows by two codes, verbatim (amendment 1)', function (): void {
     $case = spec038Case('assertion.bmffHash.additionalExclusionsPresent');
     expect($case?->name)->toBe('AssertionBmffHashAdditionalExclusionsPresent')
         ->and($case?->isInformational())->toBeTrue();
+    // amendment 1: the malformed code did not exist either
+    $malformed = spec038Case('assertion.bmffHash.malformed');
+    expect($malformed?->name)->toBe('AssertionBmffHashMalformed')
+        ->and($malformed?->isFailure())->toBeTrue();
     $surface = (array) file(dirname(__DIR__, 2).'/Fixtures/api/public-surface.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    expect(in_array('Report\StatusCode :: const AssertionBmffHashAdditionalExclusionsPresent', $surface, true))->toBeTrue();
+    expect(in_array('Report\StatusCode :: const AssertionBmffHashAdditionalExclusionsPresent', $surface, true))->toBeTrue()
+        ->and(in_array('Report\StatusCode :: const AssertionBmffHashMalformed', $surface, true))->toBeTrue();
 })->group('SPEC-038');
 
 /** The case with this value, or null: a string parameter, so the analyser cannot decide it before the case exists. */

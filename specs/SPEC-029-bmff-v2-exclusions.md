@@ -237,6 +237,25 @@ rather than a second parse.
 
    Confirmed by Maurice van Loon, 2026-09-22 (step 88).
 
+2. **2026-09-24, step 134b, with SPEC-038** — the offset marker. This
+   spec had one marker per top-level box, on its first included range, and
+   none for a box with nothing left. SPEC-038 measured `c2pa-rs`'s rule
+   (steps 133 and 134a, by a port of its hashing that both `c2patool`
+   versions accept):
+   - the marker holds the box's **start** offset, even when a `subset`
+     removes the box's head;
+   - a box with a `subset` keeps its marker, even when nothing of it is
+     left, as long as it lies strictly between the file's first and last
+     included byte;
+   - only an exclusion without `subset` takes the marker away.
+
+   `plan()` now does that. Where a box's head is included, its output is
+   what AC3 and AC4 pinned, and their tests are unchanged. `video1.mp4`
+   keeps its verdict.
+
+   **Weight B: the digest changes for subset shapes no corpus file
+   carries; no corpus verdict changed.**
+
 ## Open questions
 
 1. **Whether `LABELS` changes the dispatch in `Verifier`.** Today it reads

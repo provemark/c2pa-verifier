@@ -20,7 +20,7 @@ A verifier for [C2PA](https://c2pa.org) Content Credentials in pure PHP.
 > do for itself.
 >
 > What is already known to be missing is written down rather than left to
-> be discovered: [`docs/conformance.md`](docs/conformance.md) lists 14
+> be discovered: [`docs/conformance.md`](docs/conformance.md) lists 11
 > named gaps, and [`docs/comparison.md`](docs/comparison.md) every place
 > this verifier and `c2patool` answer differently, and why.
 >
@@ -69,7 +69,7 @@ fetch, a CRL), which this verifier will not make, and the assertion-content
 rules beyond the actions and ingredient assertions.
 [`docs/conformance.md`](docs/conformance.md) is the honest version of that
 sentence: all 111 applicable obligations of C2PA 2.4, one by one, with what
-this verifier does about each and what the 14 gaps would cost.
+this verifier does about each and what the 11 gaps would cost.
 [`docs/milestones.md`](docs/milestones.md) has the plan and every step;
 [`NOTES.md`](NOTES.md) the record; [`docs/comparison.md`](docs/comparison.md)
 what it does, does not do, and where it differs from `c2patool`, measured.
@@ -296,8 +296,8 @@ is checkable in this repository — that is the point of stating them.
   The distinction between measured and reasoned is kept in every note.
 - **Changes of plan are written down, not made quietly.** When a
   specification turned out to be wrong, it was amended, numbered, weighed
-  and confirmed by the maintainer before anything went green — 119 times so
-  far, every one confirmed.
+  and confirmed by the maintainer before anything went green — 123 times so
+  far: 119 confirmed, 4 written with SPEC-038 and awaiting confirmation.
   [`NOTES.md`](NOTES.md) is the running record; each step has its own
   note in [`notes/`](notes/), written for someone who was not there.
 - **Independent oracles, not self-agreement.** Every verdict is measured
@@ -306,7 +306,7 @@ is checkable in this repository — that is the point of stating them.
   named, and with a second implementation in Go and a third in Python.
 - **What is missing is published too**, in
   [`docs/conformance.md`](docs/conformance.md): 111 obligations of the
-  specification, one by one, including the 14 this verifier does not yet
+  specification, one by one, including the 11 this verifier does not yet
   meet.
 
 What none of that is: an independent security audit. Nobody outside this

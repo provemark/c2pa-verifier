@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
@@ -213,16 +213,37 @@ settled by adopting their proposals.
    and so overlaps any entry after it. Proposal: treat it that way, as
    overlapping, so no rule of its own. *(not a blocker)*
 
+## Amendments
+
+1. **2026-09-24, step 134b, found while building.** `StatusCode` had no
+   `assertion.bmffHash.malformed` either. The draft took it as existing, as
+   `assertion.dataHash.malformed` does. AC1 and AC2 need it, so it is
+   added: `AssertionBmffHashMalformed = 'assertion.bmffHash.malformed'`, a
+   failure, verbatim from the 2.4 table. AC7 grows to **two** codes, and
+   the surface goes 122 → **124**.
+
+   Weight B: one more code in the contract than approved.
+
+2. **2026-09-24, step 134b, measured.** AC5's *"exactly the files where
+   0.28.0 reports it"* holds on 11 of the 12. The twelfth,
+   `isobmff/size-zero-not-last.mp4`, is refused by this verifier before
+   any hash is read (SPEC-026: a box of size 0 that is not last).
+   `c2patool` reads it anyway, as `tests/Fixtures/isobmff/README.md`
+   already records. The test names that file and asserts the refusal.
+
+   Weight C: a named exception to a criterion's wording, no behaviour
+   changed.
+
 ## Traceability
 
 Filled when status becomes `implemented`.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
+| AC1 | tests/Unit/Hash/BmffShapeTest.php :: AC1: an empty or absent exclusions / SPEC-038 | src/Hash/BmffHashCheck.php :: shapeFault(), check() |
+| AC2 | tests/Unit/Hash/BmffShapeTest.php :: AC2: unsorted or overlapping subsets / SPEC-038 | src/Hash/BmffHashCheck.php :: shapeFault() |
+| AC3 | tests/Unit/Hash/BmffShapeTest.php :: AC3: a subset that covers the whole box keeps the box's offset / SPEC-038 | src/Hash/BmffHashCheck.php :: plan() (markers) |
+| AC4 | tests/Unit/Hash/BmffShapeTest.php :: AC4: the same subsets, with the digest recomputed, pass / SPEC-038 | src/Hash/BmffHashCheck.php :: plan(), digest(); bin/make-spec038-variants.php :: bmffDigest() (the independent port) |
+| AC5 | tests/Unit/Hash/BmffShapeTest.php :: AC5: the informational code, as 0.28.0 reports it / SPEC-038 | src/Hash/BmffHashCheck.php :: hasAdditionalExclusions(), check() |
+| AC6 | tests/Unit/Hash/BmffShapeTest.php :: AC6: nothing else moves / SPEC-038; tests/Unit/Hash/BmffV2ExclusionsTest.php (SPEC-029, unchanged); the drift alarms (SPEC-013 AC10–AC13); the before/after run of step 134b | — |
+| AC7 | tests/Unit/Hash/BmffShapeTest.php :: AC7: the vocabulary grows by two codes, verbatim (amendment 1) / SPEC-038 | src/Report/StatusCode.php :: AssertionBmffHashMalformed, AssertionBmffHashAdditionalExclusionsPresent; tests/Fixtures/api/public-surface.txt |

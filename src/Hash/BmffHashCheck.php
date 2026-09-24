@@ -31,9 +31,11 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * The exclusions are box paths, not byte ranges. The `data` form is how the
  * manifest excludes itself without naming an offset that would move: *the `uuid`
  * box whose bytes at offset 8 are the C2PA UUID*. Every other filter c2pa-rs
- * supports — `length`, `version`, `flags`, `subset`, and paths of more than one
- * segment — is refused by name, because no file this project holds exercises
- * them and ignoring one would hash the wrong bytes and call it a match.
+ * supports — `length`, `version` and `flags` — is refused by name, because no
+ * file this project holds exercises them and ignoring one would hash the wrong
+ * bytes and call it a match. Nested paths and `subset` are read (SPEC-029), and
+ * SPEC-038 added the shape c2pa-rs refuses before hashing and its offset-marker
+ * rule for boxes a `subset` touches.
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
  * removed in any release; the contract is the nine classes named in the README.
@@ -79,8 +81,13 @@ final readonly class BmffHashCheck
         $label = self::labelOf($manifest) ?? self::LABEL;
         $url = sprintf('self#jumbf=/c2pa/%s/c2pa.assertions/%s', $manifest->label, $label);
 
+        $data = $manifest->assertions[$label]->data ?? null;
+        $shape = self::shapeFault($data);
+        if ($shape !== null) {
+            return [new ValidationStatus(StatusCode::AssertionBmffHashMalformed, $url, $shape)];
+        }
         try {
-            $assertion = $this->assertionOf($manifest->assertions[$label]->data ?? null);
+            $assertion = $this->assertionOf($data);
             // the checks before this one have read the stream to its end; the box walk
             // reads forward from wherever it is told to start
             rewind($stream);
@@ -100,14 +107,18 @@ final readonly class BmffHashCheck
             return [new ValidationStatus(StatusCode::AssertionBmffHashMismatch, $url, $e->getMessage())];
         }
 
+        // SPEC-038: informational, beside whatever the hash says, as c2patool 0.28.0 reports it
+        $notes = self::hasAdditionalExclusions($assertion['exclusions'])
+            ? [new ValidationStatus(StatusCode::AssertionBmffHashAdditionalExclusionsPresent, $url, 'extra BMFF hash exclusion(s) found: beyond the C2PA uuid box, ftyp and mfra')]
+            : [];
         if ($assertion['merkle'] !== null) {
-            return $this->checkMerkle($url, $stream, $included, $assertion);
+            return [...$notes, ...$this->checkMerkle($url, $stream, $included, $assertion)];
         }
 
         $expected = $assertion['hash'];
         $computed = $this->digest($stream, $included, $assertion['alg']);
         if ($expected === null || ! hash_equals($expected, $computed)) {
-            return [new ValidationStatus(
+            return [...$notes, new ValidationStatus(
                 StatusCode::AssertionBmffHashMismatch,
                 $url,
                 sprintf(
@@ -120,7 +131,7 @@ final readonly class BmffHashCheck
             )];
         }
 
-        return [new ValidationStatus(
+        return [...$notes, new ValidationStatus(
             StatusCode::AssertionBmffHashMatch,
             $url,
             sprintf('the %s hash of %d top-level box(es) matches, each bound to its own offset', $assertion['alg'], count($included)),
@@ -317,6 +328,74 @@ final readonly class BmffHashCheck
     }
 
     /**
+     * SPEC-038: the shape c2pa-rs refuses before it hashes, as `assertion.bmffHash.malformed` —
+     * `exclusions` present and not empty, and every `subset` list ordered by offset without overlap
+     * (C2PA 2.4: *"shall be ordered by increasing offset value and shall not overlap"*). A length of 0
+     * runs to the end of the box, so only the last entry may carry it (open question 3). Anything
+     * else about the assertion is assertionOf()'s to judge.
+     */
+    public static function shapeFault(mixed $data): ?string
+    {
+        if (! is_array($data) || array_is_list($data)) {
+            return null;
+        }
+        $exclusions = $data['exclusions'] ?? null;
+        if ($exclusions === null) {
+            return self::LABEL.': the assertion has no exclusions; a BMFF hash must exclude at least the C2PA box';
+        }
+        if ($exclusions === []) {
+            return self::LABEL.': the exclusions list is empty; a BMFF hash must exclude at least the C2PA box';
+        }
+        foreach (is_array($exclusions) ? $exclusions : [] as $i => $exclusion) {
+            $subsets = is_array($exclusion) ? ($exclusion['subset'] ?? null) : null;
+            if (! is_array($subsets) || ! array_is_list($subsets)) {
+                continue;
+            }
+            $end = null;
+            foreach ($subsets as $k => $subset) {
+                $offset = is_array($subset) ? ($subset['offset'] ?? null) : null;
+                $length = is_array($subset) ? ($subset['length'] ?? null) : null;
+                if (! is_int($offset) || ! is_int($length) || $offset < 0 || $length < 0) {
+                    continue;   // not a range at all: ranges() refuses it
+                }
+                if ($end !== null && $offset < $end) {
+                    return sprintf('%s: exclusion %s: subset %d starts at %d, before the previous one ends at %d; subsets must be ordered by offset and must not overlap', self::LABEL, (string) $i, $k, $offset, $end);
+                }
+                $end = $length === 0 ? PHP_INT_MAX : $offset + $length;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * SPEC-038: whether an exclusion goes beyond the ones every writer needs — the C2PA `uuid` box
+     * (one data map, the C2PA UUID at offset 8), `ftyp` and `mfra` — as c2pa-rs's `verify_internal`
+     * decides it. `c2pa-rs`'s own writer adds `/free` and `/skip`, so nearly every file carries one.
+     *
+     * @param  list<array<string, mixed>>  $exclusions
+     */
+    public static function hasAdditionalExclusions(array $exclusions): bool
+    {
+        foreach ($exclusions as $exclusion) {
+            $xpath = $exclusion['xpath'] ?? null;
+            if ($xpath === '/ftyp' || $xpath === '/mfra') {
+                continue;
+            }
+            $data = $exclusion['data'] ?? null;
+            $map = is_array($data) && count($data) === 1 ? ($data[0] ?? null) : null;
+            $value = is_array($map) ? ($map['value'] ?? null) : null;
+            if ($xpath === '/uuid' && is_array($map) && ($map['offset'] ?? null) === 8 && $value instanceof CborBytes && $value->bytes === IsobmffManifestStoreExtractor::C2PA_UUID) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * The assertion, read whole before a byte of the asset is touched.
      *
      * @return array{alg: string, hash: string|null, merkle: mixed, exclusions: list<array<string, mixed>>}
@@ -405,15 +484,43 @@ final readonly class BmffHashCheck
             }
         }
 
-        $plan = [];
+        // SPEC-038: markers as c2pa-rs places them. Every top-level box keeps one, holding its own
+        // start offset, unless an exclusion without `subset` takes the box out — a box with a subset
+        // is not excluded "in its entirety", even when the subsets cover every byte. The marker comes
+        // first; where the box's head is included it rides on the first range, as SPEC-029 had it.
+        // Where the head is not, it stands alone, and c2pa-rs keeps it only strictly between the
+        // first and the last included byte of the file (hash_utils.rs, hash_stream_by_alg).
+        $boxes = [];
         foreach ($tree as $box) {
             if ($box['path'] !== '/'.$box['type']) {
                 continue;   // markers and ranges are per top-level box
             }
-            $first = true;
-            foreach (self::remaining($box, $excluded) as $span) {
-                $plan[] = ['offset' => $span['offset'], 'length' => $span['length'], 'marker' => $first];
-                $first = false;
+            $whole = false;
+            foreach ($exclusions as $exclusion) {
+                $whole = $whole || (! array_key_exists('subset', $exclusion) && self::matches($box, $exclusion, $readAt));
+            }
+            $boxes[] = [$box, $whole, self::remaining($box, $excluded)];
+        }
+        $first = null;
+        $last = null;
+        foreach ($boxes as [, , $spans]) {
+            foreach ($spans as $span) {
+                $first = $first === null ? $span['offset'] : min($first, $span['offset']);
+                $last = $last === null ? $span['offset'] + $span['length'] - 1 : max($last, $span['offset'] + $span['length'] - 1);
+            }
+        }
+
+        $plan = [];
+        foreach ($boxes as [$box, $whole, $spans]) {
+            if ($whole) {
+                continue;
+            }
+            $headIncluded = $spans !== [] && $spans[0]['offset'] === $box['offset'];
+            if (! $headIncluded && $first !== null && $last !== null && $box['offset'] > $first && $box['offset'] < $last) {
+                $plan[] = ['offset' => $box['offset'], 'length' => 0, 'marker' => true];
+            }
+            foreach ($spans as $k => $span) {
+                $plan[] = ['offset' => $span['offset'], 'length' => $span['length'], 'marker' => $headIncluded && $k === 0];
             }
         }
 

@@ -79,6 +79,10 @@ enum StatusCode: string
     case AssertionHardBindingRedacted = 'assertion.hardBinding.redacted';
     // SPEC-037: a c2pa.redacted action whose reference resolves to nothing (§15.10.3.2.3)
     case AssertionActionRedactionMismatch = 'assertion.action.redactionMismatch';
+    // SPEC-038 (amendment 1): the shape c2pa-rs refuses before it hashes (§15 table)
+    case AssertionBmffHashMalformed = 'assertion.bmffHash.malformed';
+    // SPEC-038: informational — exclusions beyond the C2PA box, ftyp and mfra (as c2patool 0.28.0 reports it)
+    case AssertionBmffHashAdditionalExclusionsPresent = 'assertion.bmffHash.additionalExclusionsPresent';
     case GeneralError = 'general.error';
 
     public function isSuccess(): bool
@@ -95,6 +99,7 @@ enum StatusCode: string
         return $this === self::AssertionDataHashAdditionalExclusionsPresent
             || $this === self::IngredientUnknownProvenance                 // SPEC-020: an ingredient without a manifest (§15.11.3.3)
             || $this === self::IngredientClaimSignatureValidated           // SPEC-035: as c2patool 0.28.0 records it
+            || $this === self::AssertionBmffHashAdditionalExclusionsPresent   // SPEC-038, as its data-hash twin
             || $this === self::TimeStampMalformed || $this === self::TimeStampMismatch || $this === self::TimeStampOutsideValidity || $this === self::TimeStampUntrusted
             // SPEC-030: a response this verifier could not use costs nothing. The header is
             // unsigned, so failing a file over one would let an attacker deny any valid asset

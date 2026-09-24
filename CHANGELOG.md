@@ -54,6 +54,18 @@ committed.
   `c2patool` versions call `Invalid` and this verifier called `Trusted`
   (step 131). A bare `c2pa.redacted` passes, as in `c2patool`. One new
   status code; the surface is 122 symbols.
+- SPEC-038: the BMFF hash's shape (issue #4), as `c2patool` checks it.
+  - An absent or empty `exclusions` list and unsorted or overlapping
+    `subset` ranges are `assertion.bmffHash.malformed`.
+  - A box that a `subset` touches keeps its offset in the hash, at the
+    box's start, as `c2pa-rs` hashes it. This closes five shapes both
+    `c2patool` versions judge differently from this verifier (step 133).
+  - `assertion.bmffHash.additionalExclusionsPresent` is reported,
+    informational, as `c2patool` 0.28.0 reports it: on nearly every BMFF
+    file, since `c2pa-rs`'s writer excludes `/free` and `/skip`. No
+    verdict changes.
+  - Two new status codes; the surface is 124 symbols. Conformance gaps
+    go from 14 to 11.
 
 ## 0.2.0 — 2026-09-24
 
