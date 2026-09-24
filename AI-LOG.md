@@ -6082,3 +6082,19 @@ README are where the disclosure lives.
   provemark/c2pa-verifier:^0.2` in an empty project installs v0.2.0, and
   its `vendor/bin/c2pa-verify` gives `Valid` on `fixture-signed.jpg`.
 - Decided by Maurice: tag 0.2.0.
+
+## 2026-09-24 — SPEC-033 drafted
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "schrijf SPEC-033 als draft voor de actie-regels".
+- Produced: `specs/SPEC-033-actions-content-rules.md` (draft, nine
+  criteria, four open questions); rows in `docs/milestones.md` and
+  `NOTES.md`. No test or code.
+- Measured: a corpus scan of v2 claims (throwaway script): only four
+  `c2pa.opened` actions (in `c2pa-rs/CACA.jpg` and
+  `ingredient-manifest/ingredient-signature-broken.jpg`), each naming one
+  ingredient; none of the other shapes.
+- Reasoned: `c2pa` 0.91.0 `verify_actions()` read in detail (the inception
+  count and its bare-label url, 2.a, 2.b.i–iv with resolution by label,
+  2.c, translated, 2.f, the soft-binding check); C2PA 2.4 §15.10.3.2.3 and
+  §18.15.4.7.
+- Decided by Maurice: SPEC-033 as a draft.
