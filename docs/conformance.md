@@ -1,7 +1,8 @@
 # Conformance: 111 named obligations, one by one
 
 *Measured 2026-09-22 (step 90); updated the same day after SPEC-030 closed
-five of its gaps (step 92).* This table puts every predicate of
+five of its gaps (step 92); corrected 2026-09-24 (step 108), when `PRED-IMG-004`
+turned out to be a gap that step 90 had marked enforced.* This table puts every predicate of
 [`encypherai/c2pa-conformance-suite`](https://github.com/encypherai/c2pa-conformance-suite)
 that applies to the containers this verifier reads next to what this
 verifier actually does. The suite's catalogue formalises **237 normative
@@ -32,11 +33,11 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | verdict | predicates |
 |---|---|
-| **yes** | 54 |
+| **yes** | 53 |
 | partial | 12 |
 | closed | 7 |
 | by design | 21 |
-| **gap** | 17 |
+| **gap** | 18 |
 | **total** | 111 |
 
 ## Cross-format (6)
@@ -183,7 +184,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-IMG-001` | shall | Exclusion range ordering and non-negativity | **yes** — `DataHashCheck` requires non-negative, sorted, non-overlapping ranges; overlap is `.malformed` where c2patool says `.mismatch` (recorded divergence) |
 | `PRED-IMG-002` | shall | Exclusion range within asset bounds | **yes** — a range past the end of the asset is refused (SPEC-012) |
 | `PRED-IMG-003` | shall | Data hash computation and match | **yes** — `assertion.dataHash.match` / `.mismatch` over the streamed bytes |
-| `PRED-IMG-004` | shall | Exclusion range content restrictions | **yes** — only the store and padding inside the exclusion; extra ranges are `assertion.dataHash.additionalExclusionsPresent` |
+| `PRED-IMG-004` | shall | Exclusion range content restrictions | **gap** — corrected 2026-09-24 (step 108): the code requires the store's exclusion to *cover* the store, not to hold only the store and padding, so an exclusion that also takes in the EXIF segment passes (the three `truepic-20230212-*` files); separate extra ranges are `assertion.dataHash.additionalExclusionsPresent` as the rule says. Being closed by SPEC-012 amendment 7 |
 
 ## ISOBMFF hash (4)
 
@@ -210,11 +211,31 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-STREAM-001` | shall | Progressive content validation before render | by design — an obligation on the player: this verifier answers per stream, not per rendered frame |
 | `PRED-STREAM-002` | shall | Streaming sequence validation | **yes** — the fragment count and each leaf's position are part of the verdict; a missing, repeated or foreign fragment is `Invalid` and named (SPEC-028 AC3–AC5) |
 
-## What the 22 gaps mean, sorted by what they could cost
+## What the 23 gaps mean, sorted by what they could cost
 
 A gap is only interesting through its consequence. The question this
 project asks of everything is the same one: **can it make this verifier say
 `Valid` about something that is not?** Sorted by that answer.
+
+### 0. Open, and it does let changed bytes through: `PRED-IMG-004`
+
+Step 90 marked this rule **yes**, and it was not. C2PA 2.4 (VAL-ASSE-0043/0044)
+says the exclusion range that contains the manifest store may hold **only**
+the store and padding; anything else in it is `assertion.dataHash.mismatch`.
+This verifier checks that the exclusion *covers* the store (SPEC-012
+amendment 5, 2026-09-21) and nothing about what else it holds.
+
+Measured on 2026-09-24 (`notes/step-108-exclusion-wider-than-store.md`): the
+three official `truepic-20230212-*` test files exclude the SOI marker and the
+whole EXIF segment together with the store. A copy with its EXIF capture
+date changed from 2023 to 2019 is still **`Trusted`** here, with the Truepic
+root as the anchor, and in `c2patool` 0.27.22. `c2patool` 0.28.0 (`c2pa`
+0.91.0) rejects both the original and the copy. Over the corpus, an
+exact-equality rule changes the verdict of these three files and no others.
+
+The fix is SPEC-012 amendment 7, which reverses amendment 5, tests first.
+Until it lands, this is the one gap on this page that can produce a wrong
+`Trusted`.
 
 ### 1. Closed since this table was written: stapled OCSP
 

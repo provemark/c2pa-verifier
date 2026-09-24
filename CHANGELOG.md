@@ -5,6 +5,18 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Security — known, not yet fixed
+- An exclusion in `c2pa.hash.data` that holds the manifest store *and*
+  other bytes (the three official `truepic-20230212-*` files exclude the
+  whole EXIF segment with it) is accepted, so a change to those bytes
+  stays `Trusted`. C2PA 2.4 requires `assertion.dataHash.mismatch`. The
+  hole is present in 0.1.0. Found 2026-09-24 (step 108); fixed by SPEC-012
+  amendment 7.
+- `docs/conformance.md` corrected: `PRED-IMG-004` is a gap, not enforced
+  (18 gaps, not 17). `README.md` and `SECURITY.md` follow.
+
 ## 0.1.0 — 2026-09-23
 
 The first tag. A `0.x` on purpose: the public API is recorded and guarded

@@ -5615,3 +5615,20 @@ README are where the disclosure lives.
   confirmed. SPEC-012 amendment 5 (step 38) is where the hole came in, and
   `docs/conformance.md`'s `PRED-IMG-004` row is wrong.
 - Decided by Maurice: to examine these files before SPEC-031 goes further.
+
+## 2026-09-24 — PRED-IMG-004 corrected in the public texts
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "akkoord met 1 en 2". Item 1: correct the false `PRED-IMG-004`
+  claim now. Item 2: SPEC-012 amendment 7, which follows separately.
+- Produced: `docs/conformance.md` (the row becomes **gap**, the counts go
+  from 54/17 to 53/18, a new section 0 explains that this gap can produce
+  a wrong `Trusted`, and the header records the correction); `README.md`
+  (17 → 18, plus a pointer to the open gap); `SECURITY.md` (the per-gap
+  claim corrected, a third finding added, marked open and present in
+  0.1.0); `CHANGELOG.md` (an `Unreleased` "known, not yet fixed" entry).
+- Measured: `composer check` gives 422 passed; every changed number
+  counted against `docs/conformance.md` after the edit.
+- Reasoned: the facts come from step 108. No code changed, so the hole is
+  still open, and the texts now say so.
+- Decided by Maurice: correct the public claim now; fix it under SPEC-012
+  amendment 7.
