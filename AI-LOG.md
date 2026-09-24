@@ -6355,3 +6355,19 @@ README are where the disclosure lives.
   (4 failed, 2 guards passed); `composer check` (all else green, 467).
 - Reasoned: nothing beyond the draft.
 - Decided by Maurice: SPEC-036 approved; question 2: follow c2pa-rs.
+
+## 2026-09-24 — SPEC-036 implemented (step 130b)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: the same approval as step 130a; the implementation follows the
+  tests.
+- Produced: `src/Report/StatusCode.php` (one case);
+  `src/Hash/HashedUriCheck.php` (the code where `general.error` stood);
+  the recorded API surface; two counts; SPEC-036 implemented with
+  Traceability; amendments SPEC-035 #4 and SPEC-025 #8; CHANGELOG,
+  conformance, comparison, README; the note, `NOTES.md`, milestones.
+- Measured: `vendor/bin/pest --group=SPEC-036` (6 passed); `composer
+  check` (471 passed, exit 0); the corpus before and after under the three
+  standard settings with ingredient deltas (1017 runs, only the five new
+  variants moved).
+- Reasoned: nothing new.
+- Decided by Maurice: none in this step.

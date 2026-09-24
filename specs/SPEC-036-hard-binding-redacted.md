@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
@@ -198,9 +198,9 @@ Filled when status becomes `implemented`.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
+| AC1 | tests/Unit/Hash/HardBindingRedactedTest.php :: AC1: a relative entry naming the hard binding / SPEC-036 | src/Hash/HashedUriCheck.php :: redactions() (HARD_BINDINGS) |
+| AC2 | tests/Unit/Hash/HardBindingRedactedTest.php :: AC2: an absolute entry naming the claim's own hard binding / SPEC-036 | src/Hash/HashedUriCheck.php :: redactions(), notRedacted() |
+| AC3 | tests/Unit/Hash/HardBindingRedactedTest.php :: AC3: the other three hard-binding labels / SPEC-036 | src/Hash/HashedUriCheck.php :: HARD_BINDINGS |
+| AC4 | tests/Unit/Hash/HardBindingRedactedTest.php :: AC4: an entry that names no hard binding gets no such code / SPEC-036 | src/Hash/HashedUriCheck.php :: redactions() |
+| AC5 | tests/Unit/Hash/HardBindingRedactedTest.php :: AC5: nothing else moves / SPEC-036; the drift alarms (SPEC-013 AC10–AC13); the before/after run of step 130b | — |
+| AC6 | tests/Unit/Hash/HardBindingRedactedTest.php :: AC6: the vocabulary grows by one code, verbatim / SPEC-036 | src/Report/StatusCode.php :: AssertionHardBindingRedacted; tests/Fixtures/api/public-surface.txt |

@@ -75,6 +75,8 @@ enum StatusCode: string
     case IngredientClaimSignatureValidated = 'ingredient.claimSignature.validated';
     case IngredientClaimSignatureMismatch = 'ingredient.claimSignature.mismatch';
     case IngredientClaimSignatureMissing = 'ingredient.claimSignature.missing';
+    // SPEC-036: a redacted hard binding (§6.8; the §15 table, which deprecates assertion.dataHash.redacted for it)
+    case AssertionHardBindingRedacted = 'assertion.hardBinding.redacted';
     case GeneralError = 'general.error';
 
     public function isSuccess(): bool

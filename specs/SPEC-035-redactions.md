@@ -324,6 +324,14 @@ Questions 2, 3 and 4 were settled by adopting their proposals.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 129).
 
+4. **2026-09-24, step 130b, with SPEC-036's implementation** — amendment
+   2's last paragraph is superseded. An entry naming a hard-binding label
+   is no longer refused with `general.error`. It is
+   `assertion.hardBinding.redacted`, as `c2pa-rs` reports it (SPEC-036).
+   The verdict stays `Invalid`.
+
+   **Weight C: a code where a refusal stood; no verdict changed.**
+
 ## Traceability
 
 Filled when status becomes `implemented`.

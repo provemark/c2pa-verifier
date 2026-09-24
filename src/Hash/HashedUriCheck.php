@@ -22,7 +22,8 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * Then the redactions (SPEC-035): an entry the store declares redacted
  * whose box is gone is skipped, a redacted box still holding content is
  * `assertion.notRedacted`, and the claim's own list is read for
- * self-redaction and redacted actions. Every entry is reported; nothing
+ * self-redaction, redacted actions and a redacted hard binding (SPEC-036).
+ * Every entry is reported; nothing
  * stops at the first mismatch.
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
@@ -97,9 +98,8 @@ final readonly class HashedUriCheck
     /**
      * The claim's own `redacted_assertions`, entry by entry, as c2pa-rs reads them: the entry verbatim
      * as the url, the claim's own label inside it a self-redaction, `c2pa.actions` inside it a
-     * redacted actions assertion (§15.10.3.1). A redacted hard binding (§6.8) is refused rather than
-     * given a code this verifier does not carry yet (SPEC-035 amendment 2), and so is an entry that is
-     * not a string.
+     * redacted actions assertion (§15.10.3.1), a hard-binding label inside it a redacted hard binding
+     * (§6.8; SPEC-036, any claim, as c2pa-rs). An entry that is not a string is refused.
      *
      * @return list<ValidationStatus>
      */
@@ -125,10 +125,7 @@ final readonly class HashedUriCheck
             }
             foreach (self::HARD_BINDINGS as $label) {
                 if (str_contains($entry, $label)) {
-                    $statuses[] = new ValidationStatus(StatusCode::GeneralError, $entry, sprintf(
-                        'the claim redacts the hard-binding assertion %s, which C2PA 2.4 §6.8 forbids; refused (c2pa-rs reports assertion.hardBinding.redacted, a code this verifier does not carry yet)',
-                        $label,
-                    ));
+                    $statuses[] = new ValidationStatus(StatusCode::AssertionHardBindingRedacted, $entry, sprintf('redaction of disallowed hash assertion %s (C2PA 2.4 §6.8)', $label));
 
                     break;
                 }

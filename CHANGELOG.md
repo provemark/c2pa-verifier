@@ -40,6 +40,12 @@ committed.
   - Six new status codes. The surface is 120 symbols.
   - Two existing files change their failure codes but stay `Invalid`:
     `general.error` becomes the redaction codes `c2patool` 0.28.0 reports.
+- SPEC-036: a redaction of a hard-binding assertion (`c2pa.hash.data`,
+  `.boxes`, `.bmff`, `.collection.data`) is reported as
+  `assertion.hardBinding.redacted`, as `c2patool` 0.28.0 reports it,
+  instead of `general.error`. It is still `Invalid`. `c2patool` 0.27.22
+  says the deprecated `assertion.dataHash.redacted`. One new status code;
+  the surface is 121 symbols.
 
 ## 0.2.0 — 2026-09-24
 

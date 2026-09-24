@@ -33,7 +33,6 @@ The settings shape 0.28.0 reads (`trust.anchors`) is read here too
 | what | `c2patool` | this verifier | until |
 |---|---|---|---|
 | Time-stamp manifests (`c2tm`), compressed manifests (`c2cm`) | `c2tm` ignored, `c2cm` decompressed | refused with a message of their own — deprecated (§11.2.5) and Brotli, which PHP does not carry | — |
-| A redacted hard-binding assertion | `assertion.hardBinding.redacted` | refused (`general.error`) with the same effect: `Invalid`. Read in `c2pa-rs`, not measured; no builder writes one | a spec (SPEC-035 open question 4) |
 | GIF, TIFF, SVG, audio, PDF | yes | JPEG, PNG, WebP and ISOBMFF only (`unsupported file type`) | later |
 | ISOBMFF | validated, hard binding included | **MP4, MOV, AVIF and HEIC** read and verified, hard binding included, each held by a fixture (SPEC-026, SPEC-027). **Fragmented streams verified too** (SPEC-028): the init segment against `initHash` and every fragment against the Merkle root. **`c2pa.hash.bmff.v2` is verified too** (SPEC-029), nested exclusion paths and `subset` filters included — `c2pa-rs`'s own `video1.mp4` carries one, and under the same trust anchors this verifier and `c2patool` agree status for status. The `length`/`version`/`flags`/`exact` filters and an assertion with more than one `merkle` map are refused by name | a stream with several renditions |
 | CAWG identity assertions | validated (their own X.509 credential) | refused (`general.error` on the assertion) — `C_with_CAWG_data`, `cawg_ica` | a CAWG spec |

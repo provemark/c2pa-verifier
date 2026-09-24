@@ -13,6 +13,7 @@ Report\StatusCode :: const AssertionDataHashMalformed
 Report\StatusCode :: const AssertionDataHashMatch
 Report\StatusCode :: const AssertionDataHashMismatch
 Report\StatusCode :: const AssertionExternalReferenceMalformed
+Report\StatusCode :: const AssertionHardBindingRedacted
 Report\StatusCode :: const AssertionHashedUriMatch
 Report\StatusCode :: const AssertionHashedUriMismatch
 Report\StatusCode :: const AssertionIngredientMalformed

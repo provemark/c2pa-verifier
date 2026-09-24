@@ -45,3 +45,26 @@ says `assertion.hardBinding.redacted` (SPEC-035's refusal).
 `composer check` is otherwise clean: 467 passed.
 
 Committed locally, not pushed.
+
+## 130b — built
+
+`StatusCode` gains `AssertionHardBindingRedacted`. In
+`HashedUriCheck::redactions()`, an entry that contains one of the four
+hard-binding labels now reports it on the entry as written, where
+`general.error` stood. The rest of SPEC-035's rules are unchanged, and
+apply alongside it.
+
+`vendor/bin/pest --group=SPEC-036`: **6 passed**; the four red tests of
+130a are green. Two counts moved: `CertificateProfileCheckTest` (54 → 55
+codes) and `ApiSurfaceTest` (120 → 121).
+
+**Before and after, the whole corpus** under the three standard settings,
+with ingredient deltas (1017 runs). Only the five new variants moved, from
+`general.error` to `assertion.hardBinding.redacted`, still `Invalid`.
+
+`composer check`: exit 0, 471 tests.
+
+Three amendments await confirmation:
+- SPEC-036 #1: 0.27.22's deprecated code, measured;
+- SPEC-035 #4: amendment 2's refusal of a hard binding is superseded;
+- SPEC-025 #8: the code, surface 121.

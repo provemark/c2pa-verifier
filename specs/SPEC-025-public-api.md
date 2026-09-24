@@ -305,6 +305,13 @@ reasoning that led to it stays readable.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 129).
 
+8. **2026-09-24, step 130b, with SPEC-036's implementation** — `StatusCode`
+   grows by one case, `AssertionHardBindingRedacted =
+   'assertion.hardBinding.redacted'` (C2PA 2.4, the §15 status-code
+   table). The recorded surface goes 120 → **121**.
+
+   **Weight B: the vocabulary grew, verbatim.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

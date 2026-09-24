@@ -140,7 +140,7 @@ accept; its predicate list does not depend on its cryptography being right.
 |---|---|---|---|
 | `PRED-ASSE-001` | shall | Ingredient validation and results recording | by design — an obligation on the claim *generator*, not on a verifier |
 | `PRED-ASSE-002` | shall | Multiple embedded manifest stores invalidation | **yes** — a second manifest store in one asset is `claim.multiple` (SPEC-005/013); in ISOBMFF a second C2PA box is a container error |
-| `PRED-ASSE-003` | shall | Redacted assertion label check | **yes** — since 2026-09-24 (SPEC-035): a redacted actions assertion is `assertion.action.redacted`; a redacted hard binding is refused (`general.error`) |
+| `PRED-ASSE-003` | shall | Redacted assertion label check | **yes** — since 2026-09-24 (SPEC-035): a redacted actions assertion is `assertion.action.redacted`; a redacted hard binding is `assertion.hardBinding.redacted` (SPEC-036) |
 | `PRED-ASSE-004` | shall | Assertion URI must reference same manifest | partial — URIs are resolved inside the manifest only; one pointing elsewhere fails as `assertion.missing`, not `assertion.outsideManifest` |
 | `PRED-ASSE-005` | shall | Assertion URI must be resolvable | **yes** — `assertion.missing` when a claim's hashed URI names no assertion (SPEC-011) |
 | `PRED-ASSE-006` | shall | Assertion hashed-URI integrity check | **yes** — `HashedUriCheck`: `assertion.hashedURI.match` / `.mismatch` over every entry |
