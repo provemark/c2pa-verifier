@@ -6320,3 +6320,20 @@ README are where the disclosure lives.
   every one confirmed); the step-129 note and the milestones row.
 - Measured: `composer check`.
 - Decided by Maurice: the seven amendments confirmed; no 0.3 release yet.
+
+## 2026-09-24 — SPEC-036 drafted: a redacted hard binding
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, schrijf punt 1 als draft" (write the hard-binding redaction
+  code as a draft spec).
+- Produced: `specs/SPEC-036-hard-binding-redacted.md` (draft, six
+  criteria, three open questions); rows in `docs/milestones.md` and
+  `NOTES.md`. No test or code.
+- Measured: nothing new; the draft rests on SPEC-035's measurements.
+- Reasoned: C2PA 2.4 §6.8 and the §15 status-code table
+  (`assertion.hardBinding.redacted`; `assertion.dataHash.redacted`
+  deprecated; no validation step names either), read at `4eb2c67`;
+  `c2pa` `claim.rs` `verify_internal` and `labels.rs` (`HASH_LABELS`,
+  `NON_REDACTABLE_LABELS`) at `6c92bc3`; the route of
+  `bin/make-ingredient-manifest-variants.php`'s `redacted` for the
+  fixtures.
+- Decided by Maurice: SPEC-036 as a draft.
