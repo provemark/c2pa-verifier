@@ -6371,3 +6371,13 @@ README are where the disclosure lives.
   variants moved).
 - Reasoned: nothing new.
 - Decided by Maurice: none in this step.
+
+## 2026-09-24 — SPEC-036's three amendments confirmed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, alle drie bevestigd, nog geen release" (all three
+  confirmed, no release yet).
+- Produced: a confirmation line under SPEC-036 #1, SPEC-035 #4 and
+  SPEC-025 #8; README (118 amendments, every one confirmed); the step-130
+  note and the milestones row.
+- Measured: `composer check`.
+- Decided by Maurice: the three amendments confirmed; no 0.3 release yet.

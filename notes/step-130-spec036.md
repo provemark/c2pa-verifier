@@ -64,7 +64,7 @@ with ingredient deltas (1017 runs). Only the five new variants moved, from
 
 `composer check`: exit 0, 471 tests.
 
-Three amendments await confirmation:
+Three amendments, all confirmed by the maintainer the same day:
 - SPEC-036 #1: 0.27.22's deprecated code, measured;
 - SPEC-035 #4: amendment 2's refusal of a hard binding is superseded;
 - SPEC-025 #8: the code, surface 121.

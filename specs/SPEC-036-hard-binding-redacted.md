@@ -192,6 +192,8 @@ if (str_contains($entry, $label)) {   // one of the four HARD_BINDINGS
 
    Weight C: a measurement recorded, no criterion changed.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 130).
+
 ## Traceability
 
 Filled when status becomes `implemented`.
