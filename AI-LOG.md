@@ -6145,3 +6145,16 @@ README are where the disclosure lives.
   confirmed).
 - Measured: `bin/spec-check.php` OK.
 - Decided by Maurice: all five amendments confirmed.
+
+## 2026-09-24 — SPEC-034 drafted
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "schrijf de icon-spec als draft".
+- Produced: `specs/SPEC-034-icon-references.md` (draft, six criteria, four
+  open questions); rows in `docs/milestones.md` and `NOTES.md`. No test or
+  code.
+- Measured: a corpus scan for icons (throwaway script) found one,
+  `writers/openai-20260826-c2pa_2x.png`'s `claim_generator_info.icon` →
+  `c2pa.icon`, and no icon in any actions assertion.
+- Reasoned: `c2pa` 0.91.0 `verify_icons()` and its three call sites; C2PA
+  2.4 §10.2.3.2, §15.6.2, §15.10.3.2.3, §15.10.3.3, §15.10.4 and §18.12.1.
+- Decided by Maurice: SPEC-034 as a draft.
