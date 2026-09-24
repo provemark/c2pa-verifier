@@ -6608,3 +6608,17 @@ README are where the disclosure lives.
   `claim.rs` `verify_internal`, the assertion loop, at `6c92bc3`;
   `Manifest::resolve()` and `checkReferences()` here.
 - Decided by Maurice: SPEC-040 as a draft.
+
+## 2026-09-24 — SPEC-040 approved; fixtures and tests seen red (step 137a)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, SPEC-040 goedgekeurd".
+- Produced: SPEC-040 approved; `bin/make-spec040-variants.php`;
+  `tests/Fixtures/outside-manifest/` and both c2patool versions' answers
+  under `tests/Fixtures/c2patool/outside-manifest/`;
+  `tests/Unit/Manifest/OutsideManifestTest.php`; `notes/step-137-spec040.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: the script (both versions as in step 136);
+  `vendor/bin/pest --group=SPEC-040` (3 failed, 3 guards passed);
+  `composer check` (all else green, 495).
+- Reasoned: nothing beyond the draft.
+- Decided by Maurice: SPEC-040 approved.

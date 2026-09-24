@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -147,6 +147,9 @@ if (preg_match('#\Aself\#jumbf=/c2pa/([^/]+)/#', $reference->url, $m) === 1 && $
 ```
 
 ## Open questions
+
+*Answered on approval, 2026-09-24:* both settled by adopting their
+proposals.
 
 1. **Only the claim's assertion list.** `c2pa-rs`'s rule runs over the
    claim's assertion list alone. Proposal: the same. The other

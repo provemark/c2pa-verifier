@@ -1,0 +1,71 @@
+{
+  "active_manifest": "urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0",
+  "manifests": {},
+  "validation_status": [
+    {
+      "code": "assertion.outsideManifest",
+      "url": "self#jumbf=/c2pa/urn:c2pa:00000000-0000-4000-8000-000000000000/c2pa.assertions/c2pa.actions.v2",
+      "explanation": "assertion reference to external assertion store: self#jumbf=/c2pa/urn:c2pa:00000000-0000-4000-8000-000000000000/c2pa.assertions/c2pa.actions.v2"
+    },
+    {
+      "code": "claim.missing",
+      "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0",
+      "explanation": "Failed to load manifest"
+    }
+  ],
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature",
+          "explanation": "signing certificate trusted, found in System trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.assertions/c2pa.hash.data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.assertions/c2pa.thumbnail.claim",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:00000000-0000-4000-8000-000000000000/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=/c2pa/urn:c2pa:00000000-0000-4000-8000-000000000000/c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.assertions/c2pa.hash.data",
+          "explanation": "data hash valid"
+        }
+      ],
+      "informational": [],
+      "failure": [
+        {
+          "code": "assertion.outsideManifest",
+          "url": "self#jumbf=/c2pa/urn:c2pa:00000000-0000-4000-8000-000000000000/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "assertion reference to external assertion store: self#jumbf=/c2pa/urn:c2pa:00000000-0000-4000-8000-000000000000/c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "claim.missing",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0",
+          "explanation": "Failed to load manifest"
+        }
+      ]
+    }
+  },
+  "validation_state": "Invalid"
+}
