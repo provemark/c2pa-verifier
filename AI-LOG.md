@@ -6446,3 +6446,12 @@ README are where the disclosure lives.
   only the four holes moved).
 - Reasoned: nothing new.
 - Decided by Maurice: none in this step.
+
+## 2026-09-24 — SPEC-025 amendment 9 confirmed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, bevestigd, nog geen release" (confirmed, no release yet).
+- Produced: a confirmation line under SPEC-025 #9; README (119
+  amendments, every one confirmed); the step-132 note and the milestones
+  row.
+- Measured: `composer check`.
+- Decided by Maurice: the amendment confirmed; no 0.3 release yet.

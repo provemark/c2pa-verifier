@@ -77,4 +77,5 @@ Each code is what both `c2patool` versions give.
 
 `composer check`: exit 0, 479 tests.
 
-One amendment awaits confirmation: SPEC-025 #9, the code.
+One amendment, SPEC-025 #9 (the code), confirmed by the maintainer the
+same day.
