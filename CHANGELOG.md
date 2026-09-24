@@ -20,6 +20,13 @@ committed.
   - Two new status codes: `assertion.action.ingredientMismatch` and
     `assertion.action.softBindingMissing`. The surface is 114 symbols.
   - No corpus verdict changed.
+- SPEC-034: icon references, checked as C2PA 2.4 §15.10.3.3 asks, in
+  `claim_generator_info` and, in v2 claims, in `softwareAgents`,
+  `templates` and an action's `softwareAgent`. A hashed-URI icon must name
+  an assertion the claim lists, with the hash the claim records. An
+  external url, or a data box of earlier versions, is `assertion.missing`.
+  No new status code, and no corpus verdict changed. Closes the gap of
+  issue #11.
 
 ## 0.2.0 — 2026-09-24
 

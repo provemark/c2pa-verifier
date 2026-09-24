@@ -8,6 +8,7 @@ use Provemark\C2paVerifier\Cose\ClaimSignatureCheck;
 use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Manifest\ActionsCheck;
 use Provemark\C2paVerifier\Manifest\ExternalReferenceCheck;
+use Provemark\C2paVerifier\Manifest\IconReferenceCheck;
 use Provemark\C2paVerifier\Manifest\IngredientAssertion;
 use Provemark\C2paVerifier\Manifest\Manifest;
 use Provemark\C2paVerifier\Manifest\ManifestGraph;
@@ -157,6 +158,7 @@ final readonly class IngredientManifestCheck
         }
         $statuses = [...$statuses, ...$this->actions->check($manifest, $unreadable)];
         $statuses = [...$statuses, ...(new ExternalReferenceCheck)->check($manifest, $unreadable)];   // SPEC-032 rule B
+        $statuses = [...$statuses, ...(new IconReferenceCheck)->check($manifest)];   // SPEC-034
 
         // the hard binding is not checked: it covers the ingredient's own asset, not this file (§15.11.3.3.1)
         return array_map(

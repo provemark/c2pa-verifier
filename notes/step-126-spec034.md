@@ -59,3 +59,43 @@ is the check not existing yet: no icon fault, and no `icons` in
 `checks_performed`. AC6 is a guard (OpenAI's verdict stays `Valid`).
 
 Committed locally, not pushed.
+
+## 126b — built
+
+- **`Manifest\IconReferenceCheck`** (new, `@internal`):
+  - it collects every icon, `claim_generator_info` for any claim version
+    and the three actions places for v2 (`actionsIcons()`, also the v1
+    seam);
+  - for each map with a `url`, it looks the label up among the claim's
+    own entries, and reports `assertion.missing` when the url names none
+    (external urls and data boxes included, per amendment 1 and option A)
+    and `assertion.hashedURI.mismatch` when the icon's hash differs from
+    the claim's;
+  - it runs from `Verifier` (`checks_performed` names `icons` only where
+    there is one) and from `IngredientManifestCheck`.
+- No new status code, and the API surface is unchanged.
+
+### Red to green
+
+- All six tests passed on the first run of the implementation, with every
+  fault equal to `c2patool` 0.28.0's, code and url.
+- PHPStan found two untyped spots in the fixture script. Both were
+  guarded, and the script was rerun, so the committed fixtures come from
+  the committed script.
+- `composer check`: 456 passed, clean.
+
+### Measured: what changed across the corpus
+
+993 lines (331 files × three settings), old code in a worktree with its
+own `vendor/`: **the 15 lines of the five failing icon probes, and nothing
+else**. The OpenAI file keeps its verdict, and gains `icons` in
+`checks_performed`.
+
+### The public record
+
+- `docs/conformance.md`: `PRED-STRU-009` **yes**; counts 56 / 13 / 7 / 21 /
+  **14**.
+- `README.md`, `SECURITY.md`: 14 gaps.
+- `docs/comparison.md`: two rows (data boxes against a *should*;
+  resource-reference icons unchecked, as in `c2pa-rs`).
+- `CHANGELOG.md`: *Added*.

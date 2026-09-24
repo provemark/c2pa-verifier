@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
@@ -272,9 +272,9 @@ Filled when status becomes `implemented`.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
+| AC1 | tests/Unit/Manifest/IconReferenceTest.php :: AC1: an icon that matches passes / SPEC-034 | src/Manifest/IconReferenceCheck.php :: check(), present(); src/Verifier/Verifier.php :: check() (icons) |
+| AC2 | tests/Unit/Manifest/IconReferenceTest.php :: AC2: a claim_generator_info icon whose hash differs / SPEC-034 | src/Manifest/IconReferenceCheck.php :: check() (the recorded hash) |
+| AC3 | tests/Unit/Manifest/IconReferenceTest.php :: AC3: an icon that resolves to nothing / SPEC-034 | src/Manifest/IconReferenceCheck.php :: check() (assertion.missing) |
+| AC4 | tests/Unit/Manifest/IconReferenceTest.php :: AC4: icons in the actions assertion / SPEC-034 | src/Manifest/IconReferenceCheck.php :: actionsIcons(), icons() |
+| AC5 | tests/Unit/Manifest/IconReferenceTest.php :: AC5: an external icon resolves to nothing, and is not fetched / SPEC-034 | src/Manifest/IconReferenceCheck.php :: check() (a url outside the manifest) |
+| AC6 | tests/Unit/Manifest/IconReferenceTest.php :: AC6: nothing else moves / SPEC-034 | src/Manifest/IconReferenceCheck.php; src/Verifier/IngredientManifestCheck.php |

@@ -25,6 +25,7 @@ use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\ActionsCheck;
 use Provemark\C2paVerifier\Manifest\ExternalReferenceCheck;
 use Provemark\C2paVerifier\Manifest\HashedUri;
+use Provemark\C2paVerifier\Manifest\IconReferenceCheck;
 use Provemark\C2paVerifier\Manifest\Manifest;
 use Provemark\C2paVerifier\Manifest\ManifestException;
 use Provemark\C2paVerifier\Manifest\ManifestGraph;
@@ -269,6 +270,11 @@ final readonly class Verifier
         if (ExternalReferenceCheck::present($manifest)) {
             $statuses = [...$statuses, ...(new ExternalReferenceCheck)->check($manifest, $unreadable)];
             $checks[] = 'externalReferences';
+        }
+        // SPEC-034: icon references, named only where the manifest carries an icon
+        if (IconReferenceCheck::present($manifest)) {
+            $statuses = [...$statuses, ...(new IconReferenceCheck)->check($manifest)];
+            $checks[] = 'icons';
         }
 
         // an update manifest lives under §11.2.3's rules, and a standard manifest under §15.11's

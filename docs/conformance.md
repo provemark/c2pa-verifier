@@ -34,11 +34,11 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | verdict | predicates |
 |---|---|
-| **yes** | 55 |
+| **yes** | 56 |
 | partial | 13 |
 | closed | 7 |
 | by design | 21 |
-| **gap** | 15 |
+| **gap** | 14 |
 | **total** | 111 |
 
 ## Cross-format (6)
@@ -92,7 +92,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-STRU-006` | should | HTTP Link header manifest discovery and childlabel exclusion | by design — HTTP Link header discovery needs the network |
 | `PRED-STRU-007` | may | Optional manifest-asset association verification | by design — optional manifest-asset association check; not done |
 | `PRED-STRU-008` | shall | Claim required fields and claim_generator_info name presence | **yes** — `Claim::fromMap()` requires every required field and a `name` in `claim_generator_info`, both `claim.malformed` (SPEC-007) |
-| `PRED-STRU-009` | shall | Generator-info icon field structural validation | **gap** — an `icon` inside `claim_generator_info` is not validated |
+| `PRED-STRU-009` | shall | Generator-info icon field structural validation | **yes** — since 2026-09-24 (SPEC-034): an `icon` that is a hashed URI must name an assertion the claim lists, with the hash the claim records, else `assertion.hashedURI.mismatch` / `assertion.missing` (§10.2.3.2, §15.10.3.3); the same for actions icons in v2 claims; an external url or a data box is `assertion.missing` |
 | `PRED-STRU-010` | should | CA certificate revocation via AIA OCSP | by design — revocation via AIA OCSP needs the network (SPEC-014 puts revocation out of scope) |
 | `PRED-STRU-011` | shall | Signer certificate revocation validation process | **yes** — `Trust\OcspCheck` reads `rVals.ocspVals` and applies `certStatus` (SPEC-030); a certificate with no revocation information is treated as not revoked, by saying `skipped` |
 | `PRED-STRU-012` | shall | Multiple OCSP responses: try each until one passes | **yes** — `Trust\OcspCheck::check()` tries each stapled response and stops at the first that proves something, a `revoked` winning over a `good` |
@@ -214,7 +214,7 @@ accept; its predicate list does not depend on its cryptography being right.
 
 ## What the 23 gaps mean, sorted by what they could cost
 
-Twenty-three gaps were recorded. Seven have since been closed (section 0, section 1, and `PRED-ASSE-027` by SPEC-032), and one narrowed to partial (`PRED-ASSE-025`).
+Twenty-three gaps were recorded. Eight have since been closed (section 0, section 1, `PRED-ASSE-027` by SPEC-032, `PRED-STRU-009` by SPEC-034), and one narrowed to partial (`PRED-ASSE-025`).
 
 A gap is only interesting through its consequence. The question this
 project asks of everything is the same one: **can it make this verifier say
@@ -290,7 +290,6 @@ manifest may say.
 - `PRED-ASSE-013`, `014`, `026` — `c2pa.alternative-content-representation`
 - `PRED-CRYP-024` — `c2pa.session-keys`: its `signerBinding` is not verified
 - `PRED-CRYP-006` — a trust anchor with `notBefore`/`notAfter` gating
-- `PRED-STRU-009` — an `icon` in `claim_generator_info`
 
 Each would make a strict validator reject a file this one accepts. None of
 them lets changed bytes through: they are conformance rules about a
@@ -323,8 +322,9 @@ The catalogue names 150 predicates, and none of them mentions EKUs or most
 of §15.10.3.2.3's actions rules. The actions rules are enforced since
 SPEC-033: ingredient references of the right relationship,
 `c2pa.translated`'s languages, `relatedAssertions`, and a watermark's soft
-binding. Icons in `softwareAgents`/`templates` and `c2pa.redacted` are not
-enforced yet. One
+binding. Since SPEC-034, icons in `softwareAgents`, `templates` and an
+action's `softwareAgent` are checked too. `c2pa.redacted` is not enforced
+yet. One
 obligation of C2PA 2.4 that this verifier does not meet has come up anyway,
 and is listed here so that a table built from the catalogue does not hide
 it.

@@ -143,7 +143,8 @@ foreach ($built as $name => [$info, $assertions]) {
 $cabx = static function (string $png) use ($fail): array {
     $p = 8;
     while ($p + 8 <= strlen($png)) {
-        $length = (int) unpack('N', substr($png, $p, 4))[1];
+        $unpacked = unpack('N', substr($png, $p, 4));
+        $length = is_array($unpacked) && is_int($unpacked[1] ?? null) ? $unpacked[1] : $fail('a PNG chunk length could not be read');
         if (substr($png, $p + 4, 4) === 'caBX') {
             return [$png, $p + 8, $length];
         }
@@ -180,6 +181,9 @@ $variant = static function (string $from, string $name, callable $edit) use ($ou
     [$png, $at, $length] = $cabx((string) file_get_contents("{$out}/{$from}.png"));
     $store = substr($png, $at, $length);
     $edited = $edit($store, $manifestOf($store));
+    if (! is_string($edited)) {
+        $fail("{$name}: the edit returned no store");
+    }
     if (strlen($edited) !== strlen($store)) {
         $fail("{$name}: the store changed length");
     }

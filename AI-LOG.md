@@ -6181,3 +6181,18 @@ README are where the disclosure lives.
   `c2pa.icon`; the *should* on data boxes).
 - Decided by Maurice: SPEC-034 approved; option A on data boxes; AC5
   changed. Committed locally.
+
+## 2026-09-24 — Step 126b, SPEC-034 implemented
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: continuing the approved SPEC-034 (tests seen red in 126a).
+- Produced: `src/Manifest/IconReferenceCheck.php` (new); the calls in
+  `Verifier` and `IngredientManifestCheck`; type guards in
+  `bin/make-spec034-variants.php` (script rerun, fixtures rebuilt);
+  SPEC-034 `implemented` with traceability; `docs/conformance.md`
+  (`PRED-STRU-009` yes, 14 gaps), `README.md`, `SECURITY.md`,
+  `docs/comparison.md`, `CHANGELOG.md`; the 126b half of the note; rows in
+  `docs/milestones.md` and `NOTES.md`.
+- Measured: `vendor/bin/pest --group=SPEC-034` gives 6 passed.
+  `composer check` gives 456 passed, clean. 993 runs before and after: only
+  the 15 lines of the failing icon probes differ.
+- Decided by Maurice: none in this step beyond the approvals.
