@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -219,6 +219,10 @@ case IngredientClaimSignatureMissing = 'ingredient.claimSignature.missing';
 
 ## Open questions
 
+*Answered on approval, 2026-09-24:* question 1 by the maintainer (the
+proposal: the union of every claim's `redacted_assertions` in the store).
+Questions 2, 3 and 4 were settled by adopting their proposals.
+
 1. **Where the redaction set comes from.** §15.10.3.1 speaks of *"the list
    of redacted assertions"* without saying whose. Proposal: the union of
    every claim's `redacted_assertions` in the store, because the redacting
@@ -235,6 +239,66 @@ case IngredientClaimSignatureMissing = 'ingredient.claimSignature.missing';
 4. **Hard-binding redaction.** §6.8 forbids redacting the hard binding in
    an update manifest, as a generator rule. Proposal: out of scope until a
    validation step or an oracle's behaviour is found. *(not a blocker)*
+
+## Amendments
+
+1. **2026-09-24, step 129a, measured before the tests.**
+   `c2patool` 0.28.0's builder refuses the shapes AC3 and AC4 asked for:
+   - a child redacting its parent's `c2pa.actions.v2`: *"assertion could
+     not be redacted"*;
+   - a child redacting its own assertion: *"could not find the assertion to
+     redact"*.
+
+   It also **removes** a redacted box rather than zeroing it, so AC5's
+   *still there* shape cannot be made from a builder file at the same
+   length. Surgery that inserts boxes is not done here (as SPEC-033 open
+   question 4).
+
+   All three rules are therefore covered by the combined criterion on
+   `ingredient-manifest/redacted.png`, where `c2patool` 0.28.0 records
+   `assertion.notRedacted`, `assertion.selfRedacted` and
+   `assertion.action.redacted` on the same url. The tests assert each of
+   the three codes there, one by one. AC3, AC4 and AC5 stand as the
+   rules; their evidence is that fixture.
+
+   Weight C: how the rules are evidenced, not what they say.
+
+2. **2026-09-24, step 129a, measured and read before the tests.**
+   A second existing fixture carries a redaction: SPEC-010's
+   `binding/claim-redacted.png`. Its claim names its own actions
+   assertion by a **relative** URI, `self#jumbf=c2pa.assertions/c2pa.actions.v2`.
+   Both `c2patool` versions record `assertion.action.redacted` on that
+   URI as written, and nothing else from these rules. 0.28.0 is
+   re-measured here and 0.27.22 is recorded in step 21. This verifier says
+   `general.error` today.
+
+   `c2pa` `claim.rs` and `store.rs` (read at `6c92bc3`) explain the
+   difference with `redacted.png`:
+   - the three claim-level codes carry the `redacted_assertions` entry
+     **verbatim** as their url;
+   - `assertion.selfRedacted` applies when the entry contains the claim's
+     own label, so a relative entry never gives it;
+   - `assertion.action.redacted` applies when the entry contains
+     `c2pa.actions`;
+   - `assertion.notRedacted` applies when the entry resolves to a box that
+     is still present and whose content is not all zero bytes. A relative
+     entry does not resolve.
+
+   The rules of AC3–AC5 are read that way. `claim-redacted.png` is AC3's
+   evidence on its own, and it is the one existing file outside the new
+   fixtures whose result AC7 lets move: `general.error` becomes
+   `assertion.action.redacted`, still `Invalid`.
+
+   The same code also refuses a redaction of a hard-binding assertion
+   (`c2pa.hash.data`, `.boxes`, `.bmff`, `.collection`) with
+   `assertion.hardBinding.redacted`. That is open question 4, left out of
+   scope. Fail closed: a claim whose `redacted_assertions` names a
+   hard-binding label keeps SPEC-021's refusal (`general.error`), so
+   lifting the refusal never lets that case through. Adding the seventh
+   code is a later choice.
+
+   Weight B: one existing file changes its failure code, and one refusal
+   stays.
 
 ## Traceability
 

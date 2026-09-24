@@ -6255,3 +6255,29 @@ README are where the disclosure lives.
   claim-signature route taken only when the hashes differ, the manifest
   has redactions, and the ingredient is v2+).
 - Decided by Maurice: SPEC-035 as a draft.
+
+## 2026-09-24 — SPEC-035 approved; probes and tests seen red (step 129a)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, volg het voorstel bij vraag 1, SPEC-035 goedgekeurd" (follow
+  the proposal on question 1; SPEC-035 approved).
+- Produced: SPEC-035 status approved with the answers, amendments 1 and 2;
+  `bin/make-spec035-variants.php`; `tests/Fixtures/redactions/` (three
+  probes, the throwaway root and its settings); both c2patool versions'
+  reports under `tests/Fixtures/c2patool/redactions/`, plus 0.28.0 on
+  `ingredient-manifest/redacted.png` and `binding/claim-redacted.png`;
+  `tests/Unit/Manifest/RedactionTest.php`; `notes/step-129-spec035.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: the script (both oracles Trusted on the two redacting
+  children with `ingredient.claimSignature.validated` informational;
+  Invalid with `ingredient.claimSignature.mismatch` on the patched one);
+  this verifier's answer on all three (Invalid, `assertion.missing`);
+  0.28.0 on `binding/claim-redacted.png` (only `assertion.action.redacted`,
+  on the relative URI as written); the builder refusing AC3's and AC4's
+  shapes; `vendor/bin/pest --group=SPEC-035` (7 failed, 2 guards passed);
+  `composer check` (all else green, 458 passed).
+- Reasoned: `c2pa` `claim.rs` and `store.rs` at `6c92bc3`: the redaction
+  codes carry the entry verbatim; `selfRedacted` needs the claim's own
+  label in it, `notRedacted` a present box with non-zero content; a
+  redacted hard binding gives `assertion.hardBinding.redacted`, outside
+  this spec, so that case stays refused.
+- Decided by Maurice: SPEC-035 approved, open question 1 as proposed.
