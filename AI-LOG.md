@@ -5853,3 +5853,21 @@ README are where the disclosure lives.
 - Reasoned: rows only (not a bold `**ACn`) is the standard, because the
   Traceability table is what a reader follows.
 - Decided by Maurice: to do the orphan and the spec-check rule first.
+
+## 2026-09-24 — Step 117, a one-certificate x5chain accepted
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "eerst punt 1, de x5chain meenemen vóór de release".
+- Produced: `bin/make-x5chain-variants.php`; `tests/Fixtures/cose/x5chain-single.jpg`,
+  `x5chain-single-root.pem`, `x5chain-single-root.settings.json`;
+  `tests/Fixtures/c2patool/x5chain/` (four reports);
+  `tests/Unit/Cose/CoseSign1Test.php` AC13; `src/Cose/CoseSign1.php`
+  (`chain()`); SPEC-008 scope, AC13, amendment 2 and its row;
+  `CHANGELOG.md` (Fixed); `notes/step-117-one-certificate-chain.md`; rows
+  in `docs/milestones.md` and `NOTES.md`.
+- Measured: c2patool 0.28.0 and 0.27.22 on the fixture give Valid (bare)
+  and Trusted (root). AC13 was red on the refusal, then green after the
+  fix; one message was corrected in between. spec-check refused the
+  commit until AC13 had its row. `composer check` gives 433 passed. 166
+  corpus signatures read: only the new fixture has a byte-string x5chain.
+- Reasoned: RFC 9360 as quoted in C2PA 2.4 §14.5.
+- Decided by Maurice: take this in before the release.

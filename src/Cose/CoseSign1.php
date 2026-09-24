@@ -179,14 +179,24 @@ final readonly class CoseSign1
 
     /**
      * The chain as a list of DER certificates, the leaf checked to parse as
-     * X.509; the limits before anything is looked at.
+     * X.509; the limits before anything is looked at. One certificate may
+     * come as a bare byte string instead of an array of one: RFC 9360, *"If
+     * a single certificate is conveyed, it is placed in a CBOR byte
+     * string"*, which c2pa-rs writes for a signer directly under a root
+     * (SPEC-008 amendment 2). It is held to the same rules as an element.
      *
      * @return list<CborBytes>
      */
     private static function chain(mixed $value, int $maxChain, int $maxCertificateBytes): array
     {
+        if ($value instanceof CborBytes) {
+            if ($value->bytes === '') {
+                throw new CoseException('x5chain is empty', StatusCode::SigningCredentialInvalid);
+            }
+            $value = [$value];
+        }
         if (! is_array($value) || ! array_is_list($value)) {
-            throw new CoseException(sprintf('x5chain is not an array but %s', self::kind($value)), StatusCode::SigningCredentialInvalid);
+            throw new CoseException(sprintf('x5chain is neither a byte string nor an array but %s', self::kind($value)), StatusCode::SigningCredentialInvalid);
         }
         if ($value === []) {
             throw new CoseException('x5chain is empty', StatusCode::SigningCredentialInvalid);

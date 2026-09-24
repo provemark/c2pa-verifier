@@ -12,6 +12,8 @@ use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\Manifest;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
+use Provemark\C2paVerifier\Trust\TrustSettings;
+use Provemark\C2paVerifier\Verifier\Verifier;
 
 /*
  * SPEC-008: COSE_Sign1, the structure and the headers, and the bytes that
@@ -243,4 +245,40 @@ it('AC12: limits are enforced before allocation', function (): void {
     expect(CoseSign1::DEFAULT_MAX_CHAIN)->toBe(16)
         ->and(CoseSign1::DEFAULT_MAX_CERTIFICATE_BYTES)->toBe(16384)
         ->and(CoseSign1::DEFAULT_MAX_PROTECTED_BYTES)->toBe(65536);
+})->group('SPEC-008');
+
+// AC13 (amendment 2): RFC 9360 — "If a single certificate is conveyed, it is placed in a CBOR byte string."
+it('AC13: a one-certificate x5chain as a bare byte string is read as a chain of one', function (): void {
+    $cose = spec008Parse(spec008Manifest('cose/x5chain-single.jpg'));
+    expect($cose->chain)->toHaveCount(1)
+        ->and(spec008Cn($cose->chain[0]))->toBe('SPEC-008 One-Certificate Signer')
+        ->and($cose->chainProtected)->toBeTrue();
+    // the header really holds a byte string, not an array: that is what the fixture is for
+    expect($cose->protected[33])->toBeInstanceOf(CborBytes::class);
+
+    // end to end, as both c2patool versions: Valid without settings, Trusted with the root as anchor
+    $fixtures = dirname(__DIR__, 2).'/Fixtures';
+    $settings = TrustSettings::fromJson((string) file_get_contents("{$fixtures}/cose/x5chain-single-root.settings.json"));
+    foreach (['bare' => null, 'root' => $settings] as $case => $trust) {
+        $stream = fopen("{$fixtures}/cose/x5chain-single.jpg", 'rb');
+        assert($stream !== false);
+        $report = (new Verifier)->verify($stream, $trust);
+        foreach (['0.28.0', '0.27.22'] as $version) {
+            $oracle = json_decode((string) file_get_contents("{$fixtures}/c2patool/x5chain/{$version}-{$case}.json"), true, 512, JSON_THROW_ON_ERROR);
+            assert(is_array($oracle));
+            expect($report->result->state->value)->toBe($oracle['validation_state'], "{$case} against {$version}");
+        }
+    }
+
+    // the byte-string form is held to the same rules as an array element
+    expect(fn () => CoseSign1::fromBytes(spec008Synthetic("\xa2\x01\x26\x18\x21\x40")))
+        ->toThrow(CoseException::class, 'x5chain is empty');
+    expect(fn () => CoseSign1::fromBytes(spec008Synthetic("\xa2\x01\x26\x18\x21\x43abc")))
+        ->toThrow(CoseException::class, 'the leaf certificate is not an X.509 certificate');
+    $bigCert = str_repeat("\x30", 20000);
+    expect(fn () => CoseSign1::fromBytes(spec008Synthetic("\xa2\x01\x26\x18\x21".spec008BstrHead(strlen($bigCert)).$bigCert)))
+        ->toThrow(CoseException::class, 'certificate of 20000 bytes exceeds the limit of 16384');
+    // anything else is still refused, and says what it was
+    expect(fn () => CoseSign1::fromBytes(spec008Synthetic("\xa2\x01\x26\x18\x21\x63abc")))
+        ->toThrow(CoseException::class, 'x5chain is neither a byte string nor an array but');
 })->group('SPEC-008');

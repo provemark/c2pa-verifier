@@ -21,6 +21,13 @@ break, and `^0.1` must not pull it in silently.
   `MAX_ANCHOR_ENTRIES` (SPEC-025 amendment 4: eleven classes, 111
   symbols).
 
+### Fixed
+- A one-certificate `x5chain` written as a bare byte string (RFC 9360; what
+  `c2pa-rs` writes for a signer directly under a root) was refused as
+  `signingCredential.invalid`. It is now read as a chain of one, under
+  the same rules as an array element (SPEC-008 amendment 2). No corpus
+  file has that shape, so no recorded verdict changed.
+
 ### Changed
 - **The allowed list never makes a timestamp authority trusted** (C2PA 2.4
   §14.4.3). Through the PHP constructor it still could, and a trusted TSA

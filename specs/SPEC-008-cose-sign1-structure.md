@@ -57,8 +57,10 @@ and three broken signatures through c2patool.
 - `x5chain`: looked up in this order — protected 33, protected
   `"x5chain"`, unprotected 33, unprotected `"x5chain"`; when both labels
   are present in one bucket, 33 wins (§14.5). Its value must be a
-  non-empty list of non-empty `CborBytes`; the first is the leaf and must
-  parse as an X.509 certificate (`openssl_x509_read`), else an error.
+  non-empty list of non-empty `CborBytes`, **or one non-empty `CborBytes`
+  standing for a chain of one** (RFC 9360; amendment 2); the first is the
+  leaf and must parse as an X.509 certificate (`openssl_x509_read`), else
+  an error.
   Absent everywhere → error: without a chain there is no key to verify
   against and nothing for M5. An unprotected chain is **accepted**, as
   c2patool accepts the 2022 corpus: the signature is verified *against*
@@ -216,6 +218,23 @@ fixtures (SPEC-007); the numbers are step 16's.
   - When parsed
   - Then each throws `CoseException` naming the limit
 
+- **AC13 — one certificate as a bare byte string is a chain of one** *(amendment 2; RFC 9360, quoted in C2PA 2.4 §14.5)*
+  - Given `cose/x5chain-single.jpg`, which is `fixture-unsigned.jpg` signed
+    by a throwaway leaf directly under a throwaway root. `c2patool` 0.28.0
+    wrote its protected label 33 as a byte string, not an array
+    (`bin/make-x5chain-variants.php`). Also given synthetic headers whose
+    33 is an empty byte string, a three-byte non-certificate, a
+    20,000-byte string, and a text string
+  - When parsed, and when verified without settings and with
+    `x5chain-single-root.settings.json`
+  - Then `chain` holds that one certificate (CN *SPEC-008 One-Certificate
+    Signer*), `chainProtected` is true, and the verdict is `Valid`
+    without settings and `Trusted` with the root, which is what `c2patool`
+    0.28.0 and 0.27.22 both recorded. The synthetic headers are refused
+    with the same messages an array element gets (`x5chain is empty`, *not
+    an X.509 certificate*, the 16,384-byte limit). A text string is
+    refused as *neither a byte string nor an array*.
+
 ## References
 
 - Specification: RFC 8152 §3 (header buckets; an empty protected bstr is
@@ -296,6 +315,24 @@ final readonly class CoseSign1
    of AC10 are `signingCredential.invalid`; the structural faults of
    AC7–AC9 stay `general.error`. No criterion changed.
 
+2. **2026-09-24, step 117, decided by Maurice van Loon** — a one-certificate
+   `x5chain` written as a bare byte string is accepted as a chain of one.
+   RFC 9360, which C2PA 2.4 §14.5 quotes: *"If a single certificate is
+   conveyed, it is placed in a CBOR byte string. If multiple certificates
+   are conveyed, a CBOR array of byte strings is used."* This spec
+   required an array, which was stricter than the RFC. Step 110 found it
+   when a probe signer directly under a root came out `Invalid` here and
+   `Trusted` in `c2patool` 0.28.0. The corpus has no such file, because
+   every real signer carries an intermediate. That is why it went unseen
+   since step 16. The byte string is held to exactly the rules of an
+   array element; only the container changes. The message for anything
+   else becomes *"x5chain is neither a byte string nor an array but …"*.
+
+   **Weight A for the rule** (a file that was `Invalid` is now `Valid` or
+   `Trusted`), **no corpus verdict changed**. It fails open only in the
+   sense the RFC intends: the certificate is still the key the signature
+   must verify under, and the chain still has to reach an anchor.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -313,5 +350,6 @@ least one test; every source file maps back to this spec.
 | AC8 | tests/Unit/Cose/CoseSign1Test.php :: AC8: a present payload is an error / SPEC-008 | src/Cose/CoseSign1.php :: fromBytes() (payload check) |
 | AC9 | tests/Unit/Cose/CoseSign1Test.php :: AC9: the protected header must be a map with an integer alg / SPEC-008 | src/Cose/CoseSign1.php :: fromBytes() (protected header and alg checks) |
 | AC10 | tests/Unit/Cose/CoseSign1Test.php :: AC10: a missing or malformed chain is an error / SPEC-008 | src/Cose/CoseSign1.php :: findChain(), chain(), isX509() |
+| AC13 (amendment 2) | tests/Unit/Cose/CoseSign1Test.php :: AC13: a one-certificate x5chain as a bare byte string is read as a chain of one / SPEC-008 | src/Cose/CoseSign1.php :: chain() |
 | AC11 | tests/Unit/Cose/CoseSign1Test.php :: AC11: 33 wins over the string label / SPEC-008 | src/Cose/CoseSign1.php :: findChain() (label order) |
 | AC12 | tests/Unit/Cose/CoseSign1Test.php :: AC12: limits are enforced before allocation / SPEC-008 | src/Cose/CoseSign1.php :: fromBytes() (protected limit), chain() (chain and certificate limits), DEFAULT_MAX_* |
