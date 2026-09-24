@@ -11,6 +11,23 @@ lists, by name. "Stricter" means this verifier refuses
 where `c2patool` accepts; the project allows that only for a named reason
 and never the other way round.
 
+**And against `c2patool` 0.28.0** (`c2pa` 0.91.0, released 2026-09-22),
+measured on 2026-09-24 over the whole corpus (steps 107–118). The pinned
+oracle, whose JSON the drift alarms compare with, is still 0.27.22.
+0.28.0's answers are recorded where a criterion rests on them, under
+`tests/Fixtures/c2patool/anchors/`, `x5chain/` and `absence/`. Of the 14
+files whose result 0.28.0 changed, every one has been examined:
+- two were holes here and are closed (step 108, an exclusion wider than
+  the store; step 118, a hard binding only gathered);
+- one was a refusal here that 0.28.0 now shares (`webp/length-differs`);
+- one is 0.28.0 dropping the claim-signing EKU, which this verifier keeps
+  (step 112);
+- the rest keep their state with other codes, or are places where this
+  verifier was already stricter by name.
+
+The settings shape 0.28.0 reads (`trust.anchors`) is read here too
+(SPEC-031). Each remaining difference is a row below.
+
 ## Where `c2patool` can do more
 
 | what | `c2patool` | this verifier | until |
@@ -91,10 +108,13 @@ without an anchor — 34 corpus files, informational, no verdict changes.
 
 ## What "works" rests on
 
-- One oracle (`c2patool` 0.27.22, pinned); no second independent
-  implementation has been run yet.
-- Test anchors and anchors cut from tokens; no file has been measured
-  under the production C2PA trust list (the project does not fetch it).
+- One pinned oracle (`c2patool` 0.27.22), and its successor 0.28.0
+  compared file by file (steps 107–118). A second independent
+  implementation (Go, `richardwooding/c2pa`) was run over 257 files in
+  step 61.
+- Test anchors and anchors cut from tokens. The production C2PA trust
+  lists were used once, as a measurement (step 113): two corpus files
+  reach an official anchor. The project does not bundle or fetch them.
 - 70 870 randomly mutated files without an escaping exception
   (`bin/fuzz.php`); the 312 mutations that stayed `Valid` were confirmed
   `Valid` by `c2patool` and land in bytes the format leaves uncovered.

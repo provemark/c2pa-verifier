@@ -363,5 +363,6 @@ implementations accept.
 
 What *is* measured, and lives elsewhere, is the comparison against c2patool
 0.27.22 on every fixture in this repository (`docs/comparison.md`, and the
-recorded oracles under `tests/Fixtures/c2patool/`), plus the Go verifier as
+recorded oracles under `tests/Fixtures/c2patool/`), the same corpus
+compared with 0.28.0 on 2026-09-24 (steps 107–118), and the Go verifier as
 a second independent reading.

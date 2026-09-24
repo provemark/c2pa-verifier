@@ -5902,3 +5902,18 @@ README are where the disclosure lives.
   3 lines.
 - Reasoned: C2PA 2.4 §10.2.2 and §15.10.1.2, read in the 2.4 HTML.
 - Decided by Maurice: fix before the release; do not tag.
+
+## 2026-09-24 — Step 119, the oracle texts before 0.2.0
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: the second item of the agreed order (the texts about the oracle),
+  still without tagging.
+- Produced: `docs/comparison.md` (a paragraph on c2patool 0.28.0; two
+  outdated bullets corrected); `README.md` (0.28.0 named; the amendment
+  count split into 87 confirmed and 11 awaiting confirmation);
+  `docs/conformance.md` (0.28.0 named); rows in `docs/milestones.md` and
+  `NOTES.md`.
+- Measured: 98 amendments counted across all specs, 87 of them confirmed
+  up to step 93. `composer check` gives 434 passed.
+- Reasoned: the two corrected bullets were contradicted by steps 61 and
+  113.
+- Decided by Maurice: no tag yet.

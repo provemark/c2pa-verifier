@@ -293,12 +293,14 @@ is checkable in this repository — that is the point of stating them.
   The distinction between measured and reasoned is kept in every note.
 - **Changes of plan are written down, not made quietly.** When a
   specification turned out to be wrong, it was amended, numbered, weighed
-  and confirmed by the maintainer before anything went green — 87 times so
-  far. [`NOTES.md`](NOTES.md) is the running record; each step has its own
+  and confirmed by the maintainer before anything went green — 87 times confirmed so
+  far, with eleven more written on 2026-09-24 and awaiting confirmation.
+  [`NOTES.md`](NOTES.md) is the running record; each step has its own
   note in [`notes/`](notes/), written for someone who was not there.
 - **Independent oracles, not self-agreement.** Every verdict is measured
-  against `c2patool` 0.27.22 on recorded fixtures, and compared with a
-  second implementation in Go and a third in Python.
+  against `c2patool` 0.27.22 on recorded fixtures, compared file by file
+  with its successor 0.28.0, where each difference has been examined and
+  named, and with a second implementation in Go and a third in Python.
 - **What is missing is published too**, in
   [`docs/conformance.md`](docs/conformance.md): 111 obligations of the
   specification, one by one, including the 17 this verifier does not yet
