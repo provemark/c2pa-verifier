@@ -6594,3 +6594,17 @@ README are where the disclosure lives.
   every one confirmed); the step-135 note and the milestones row.
 - Measured: `composer check`.
 - Decided by Maurice: the six amendments confirmed; no 0.3 release yet.
+
+## 2026-09-24 — SPEC-040 drafted: assertion.outsideManifest (step 136)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "schrijf outsideManifest als draft".
+- Produced: `specs/SPEC-040-assertion-outside-manifest.md` (draft, six
+  criteria, two open questions); rows in `docs/milestones.md` and
+  `NOTES.md`. No test or code; the variants stay in the scratchpad.
+- Measured: three variants of `fixture-signed.png` (one claim entry
+  rewritten, re-signed under a throwaway root, the COSE padded so the
+  store keeps its length), judged by 0.27.22, 0.28.0 and this verifier.
+- Reasoned: C2PA 2.4 §15.10.3.1 and the §15 table at `4eb2c67`; `c2pa`
+  `claim.rs` `verify_internal`, the assertion loop, at `6c92bc3`;
+  `Manifest::resolve()` and `checkReferences()` here.
+- Decided by Maurice: SPEC-040 as a draft.
