@@ -6725,3 +6725,16 @@ README are where the disclosure lives.
 - Reasoned: C2PA 2.4 §18.16.12.4 (a claim generator adding an ingredient
   shall validate it and record the results), read at `4eb2c67`.
 - Decided by Maurice: the text and posting it.
+
+## 2026-09-24 — Issues after 0.2.1: #11 annotated, #2 and #10 closed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "kunnen al wat issues gesloten worden nav v0.2.1?", then "ja,
+  zet de regel onder #11 en sluit #2 en #10".
+- Produced: a comment on #11 (shipped in 0.2.1); #2 and #10 closed as not
+  planned, each with a comment giving the reason and what would reopen
+  it. Nothing in this repository changes beyond this entry.
+- Measured: the open issues against the conformance rows 0.2.1 changed;
+  none of them was touched by it.
+- Decided by Maurice: the comment on #11; closing #2 (the general
+  `digitalSourceType` case, which no oracle enforces) and #10 (`iat`, a
+  *may* no writer or oracle uses).
