@@ -554,3 +554,29 @@ it('AC15: a signed manifest with no hard binding is claim.hardBindings.missing a
     expect(in_array('assertion.hashedURI.mismatch', spec013Codes($tampered), true))->toBeTrue()
         ->and($tampered->result->checksPerformed)->not->toContain('dataHash');
 })->group('SPEC-013');
+
+it('AC19: a hard binding listed only in gathered_assertions is claim.hardBindings.missing', function (): void {
+    // amendment 13: C2PA 2.4 §10.2.2 — created_assertions "shall contain, at minimum, a reference to an
+    // assertion that represents a hard binding". The step-48 variant moves c2pa.hash.data to gathered;
+    // c2patool 0.27.22 called it Valid/Trusted, 0.28.0 refuses it ("claim missing hard binding").
+    $root = TrustSettings::fromJson((string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/absence/throw-away-root.settings.json'));
+    foreach (['bare' => null, 'root' => $root] as $case => $settings) {
+        $report = (new Verifier)->verify(spec013Stream('absence/hash-data-gathered.png'), $settings);
+        $codes = spec013Codes($report);
+        expect($report->result->state)->toBe(ValidationState::Invalid, $case)
+            ->and(in_array('claim.hardBindings.missing', $codes, true))->toBeTrue($case)
+            ->and(in_array('claimSignature.validated', $codes, true))->toBeTrue($case)   // the signature is fine
+            ->and(in_array('assertion.dataHash.match', $codes, true))->toBeFalse($case);  // and the binding is not read
+        $missing = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::ClaimHardBindingsMissing));
+        expect($missing)->toHaveCount(1, $case)
+            ->and(str_contains($missing[0]->explanation, 'gathered_assertions'))->toBeTrue($case)
+            ->and(str_contains($missing[0]->explanation, '§10.2.2'))->toBeTrue($case);
+    }
+    // what the two oracles said, recorded: 0.27.22 Trusted under the root, 0.28.0 no report at all
+    expect(spec013C2patool('absence/hash-data-gathered-trusted')['validation_state'])->toBe('Trusted')
+        ->and(trim((string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/c2patool/absence/hash-data-gathered.0.28.0.stderr.txt')))->toBe('Error: claim missing hard binding');
+
+    // the control: the same fixture family with c2pa.hash.data in created_assertions is untouched
+    $control = (new Verifier)->verify(spec013Stream('absence/no-thumbnail.png'), $root);
+    expect($control->result->state)->toBe(ValidationState::Trusted);
+})->group('SPEC-013');

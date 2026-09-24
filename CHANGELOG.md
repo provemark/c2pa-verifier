@@ -29,6 +29,11 @@ break, and `^0.1` must not pull it in silently.
   file has that shape, so no recorded verdict changed.
 
 ### Changed
+- **A hard binding referenced only from `gathered_assertions` is
+  `claim.hardBindings.missing`**: C2PA 2.4 §10.2.2 requires
+  `created_assertions` to reference it. 0.1.0 accepted such a manifest,
+  as `c2patool` 0.27 did; `c2patool` 0.28 refuses it too. No real file
+  in the corpus has that shape (SPEC-013 amendment 13).
 - **The allowed list never makes a timestamp authority trusted** (C2PA 2.4
   §14.4.3). Through the PHP constructor it still could, and a trusted TSA
   moves the moment a signer is judged at, so an expired signer could stop

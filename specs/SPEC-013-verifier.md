@@ -314,6 +314,21 @@ a short one) are made in the tests.
     test prints file, ours and theirs side by side on failure, so that a
     future c2patool version's drift is legible
 
+- **AC19 — a hard binding listed only in `gathered_assertions` is none** *(amendment 13; C2PA 2.4 §10.2.2)*
+  - Given `absence/hash-data-gathered.png` (step 48): a signed manifest
+    whose `c2pa.hash.data` is referenced from `gathered_assertions` and
+    not from `created_assertions`. Verified without settings and with its
+    throwaway root as the anchor
+  - When `Verifier::verify()` runs
+  - Then both times: `Invalid`, exactly one `claim.hardBindings.missing`
+    whose explanation names `gathered_assertions` and §10.2.2,
+    `claimSignature.validated` (the signature is not the fault), and no
+    `assertion.dataHash.*` (the binding is not read). Recorded next to
+    it: `c2patool` 0.27.22 said `Trusted` under the root, and 0.28.0
+    exits with *"claim missing hard binding"*. The control
+    (`absence/no-thumbnail.png`, the same family with the binding in
+    `created_assertions`) stays `Trusted`.
+
 ## References
 
 - Specification: C2PA 2.4 §15.3 (the validation algorithm: locate the
@@ -449,6 +464,25 @@ final class ManifestException extends \RuntimeException
     c2patool's JSON with and without the test roots, AC18 the two trust
     answers. No rule of this spec changed.
 
+13. **2026-09-24, step 118, decided by Maurice van Loon** — a hard binding
+    referenced only from `gathered_assertions` is not the manifest's own.
+    C2PA 2.4 §10.2.2: `created_assertions` *"shall contain, at minimum, a
+    reference to an assertion that represents a hard binding"*. Step 48 had
+    built this file for the absence audit and accepted it, because `c2pa-rs`
+    0.90.22 did not look at where the binding sat (*"placement is
+    attribution, not validated"*). `c2pa` 0.91.0 does, and refuses the file
+    outright. This verifier now reports `claim.hardBindings.missing` for
+    it, the code §15.10.1.2 uses for a manifest without its own binding,
+    and does not read the gathered one. A v1 claim has one list, read as
+    created, so it is unaffected. So is the update-manifest path, which
+    looks the binding up in the parent it finds.
+
+    **Weight A: one variant goes from `Valid`/`Trusted` to `Invalid`.** No
+    real file in the corpus lists its binding as gathered. Bytes were never
+    at risk: the gathered binding was verified, and it matched. What was
+    wrong was calling a manifest valid that the specification calls
+    malformed.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -470,6 +504,7 @@ least one test; every source file maps back to this spec.
 | AC12 | tests/Unit/Verifier/VerifierTest.php :: AC12: the oracle's own fixtures are a third drift alarm, and a CAWG identity assertion is refused until it is validated / SPEC-013 | src/Verifier/Verifier.php :: verify() (`cawg.identity`); tests/Pest.php :: SPEC013_RS_* |
 | AC13 (amendment 9) | tests/Unit/Verifier/VerifierTest.php :: AC13: the writers corpus is a fourth drift alarm — c2patool's state unless stricter by name / SPEC-013 | tests/Pest.php :: SPEC013_WRITERS_CORPUS, _MULTI, _REMOTE, _TSA_NOT_CONFIGURED; src/Verifier/Verifier.php |
 | AC14 (amendment 9) | tests/Unit/Verifier/VerifierTest.php :: AC14: a remote manifest is reported by its URL, never fetched / SPEC-013 | src/Container/RemoteManifestDetector.php :: detect(); src/Verifier/VerificationReport.php :: $remoteManifestUrl, toArray() (`remote_manifest`); src/Verifier/Verifier.php :: verify() (the store-less branch) |
+| AC19 (amendment 13) | tests/Unit/Verifier/VerifierTest.php :: AC19: a hard binding listed only in gathered_assertions is claim.hardBindings.missing / SPEC-013 | src/Verifier/Verifier.php :: check(), hardBindingGatheredOnly() |
 | AC16 (amendment 12) | tests/Unit/Verifier/MatrixTest.php :: AC16: the matrix covers every algorithm this verifier implements, in every format it reads / SPEC-013 | tests/Fixtures/matrix/; bin/make-matrix-fixtures.php |
 | AC17 (amendment 12) | tests/Unit/Verifier/MatrixTest.php :: AC17: the matrix is the fifth drift alarm: c2patool's state and codes, with and without the test roots / SPEC-013 | src/Verifier/Verifier.php :: verify() |
 | AC18 (amendment 12) | tests/Unit/Verifier/MatrixTest.php :: AC18: every matrix file is Trusted with the roots and untrusted without them / SPEC-013 | src/Trust/ChainCheck.php :: check() |

@@ -5883,3 +5883,22 @@ README are where the disclosure lives.
   and 109.
 - Measured / Reasoned: none new.
 - Decided by Maurice: no advisory, because the package has no known users.
+
+## 2026-09-24 — Step 118, a hard binding only gathered is missing
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, akkoord met die volgorde maar nog niet taggen" (first the
+  hard-binding-in-gathered fix, then the oracle texts; no tag).
+- Produced: `tests/Unit/Verifier/VerifierTest.php` AC19;
+  `src/Verifier/Verifier.php` (`hardBindingGatheredOnly()` and the branch
+  that uses it); SPEC-013 AC19, amendment 13 and its row;
+  `tests/Fixtures/c2patool/absence/hash-data-gathered.0.28.0.stderr.txt`;
+  the absence README row; `CHANGELOG.md`; `docs/comparison.md`;
+  `notes/step-118-hard-binding-in-gathered.md`; rows in
+  `docs/milestones.md` and `NOTES.md`.
+- Measured: the eight remaining step-107 files, ours against 0.28.0 (only
+  this one was ours-Valid / theirs-not). AC19 was red (Valid), then green.
+  spec-check refused the build until the row existed. `composer check`
+  gives 434 passed. 870 runs before and after: only this file changes, on
+  3 lines.
+- Reasoned: C2PA 2.4 §10.2.2 and §15.10.1.2, read in the 2.4 HTML.
+- Decided by Maurice: fix before the release; do not tag.

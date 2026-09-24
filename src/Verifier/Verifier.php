@@ -23,6 +23,7 @@ use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfException;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\ActionsCheck;
+use Provemark\C2paVerifier\Manifest\HashedUri;
 use Provemark\C2paVerifier\Manifest\Manifest;
 use Provemark\C2paVerifier\Manifest\ManifestException;
 use Provemark\C2paVerifier\Manifest\ManifestGraph;
@@ -304,8 +305,13 @@ final readonly class Verifier
             $binding = $hasUpdate && $graph !== null
                 ? UpdateManifestCheck::bindingManifest($manifestStore, $graph->ingredients)
                 : $manifest;
+            $gatheredOnly = $binding === null ? null : self::hardBindingGatheredOnly($binding);
             if ($binding === null) {
                 $statuses[] = new ValidationStatus(StatusCode::ClaimHardBindingsMissing, sprintf('self#jumbf=/c2pa/%s/%s', $manifest->label, $manifest->claim->version === 2 ? 'c2pa.claim.v2' : 'c2pa.claim'), 'the active manifest is an update manifest and no manifest up its parentOf chain carries a hard binding (C2PA 2.4 §15.12)');
+            } elseif ($gatheredOnly !== null) {
+                // SPEC-013 amendment 13: a hard binding the signer lists only among gathered assertions is not
+                // one the claim makes (§10.2.2); c2pa 0.91.0 refuses such a file outright. It is not read.
+                $statuses[] = new ValidationStatus(StatusCode::ClaimHardBindingsMissing, sprintf('self#jumbf=/c2pa/%s', $binding->label), sprintf('the hard binding %s is listed only in gathered_assertions; created_assertions "shall contain, at minimum, a reference to an assertion that represents a hard binding" (C2PA 2.4 §10.2.2), so the manifest has none of its own', $gatheredOnly));
             } else {
                 // SPEC-027: ISOBMFF binds through c2pa.hash.bmff.v3, whose exclusions are
                 // box paths rather than byte ranges. Which check runs follows the assertion
@@ -334,6 +340,38 @@ final readonly class Verifier
         }
 
         return ValidationResult::fromStatuses($statuses, $checks);
+    }
+
+    /**
+     * The label of the manifest's hard binding when the claim references it
+     * only from `gathered_assertions` and never from `created_assertions`,
+     * else null (SPEC-013 amendment 13; C2PA 2.4 §10.2.2). A v1 claim has one
+     * list, read as created, so it never answers here.
+     */
+    private static function hardBindingGatheredOnly(Manifest $manifest): ?string
+    {
+        $isBinding = static fn (string $label): bool => $label === DataHashCheck::LABEL || in_array($label, BmffHashCheck::LABELS, true);
+        $labelOf = static function (HashedUri $reference) use ($manifest): ?string {
+            try {
+                return $manifest->resolve($reference->url)->description->label;
+            } catch (ManifestException) {
+                return null;   // an unresolvable reference has already failed as assertion.missing
+            }
+        };
+        foreach ($manifest->claim->createdAssertions as $reference) {
+            $label = $labelOf($reference);
+            if ($label !== null && $isBinding($label)) {
+                return null;
+            }
+        }
+        foreach ($manifest->claim->gatheredAssertions as $reference) {
+            $label = $labelOf($reference);
+            if ($label !== null && $isBinding($label)) {
+                return $label;
+            }
+        }
+
+        return null;
     }
 
     /**
