@@ -5593,3 +5593,25 @@ README are where the disclosure lives.
   2.4.
 - Decided by Maurice: SPEC-031 as a draft; a top-level `allowed_list` is
   refused, not ignored and not kept.
+
+## 2026-09-24 — Step 108, an exclusion wider than the store
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "B eerst, de vijf data-hash-bestanden onderzoeken".
+- Produced: `notes/step-108-exclusion-wider-than-store.md`, rows in
+  `NOTES.md` and `docs/milestones.md`. No specification, test or code.
+- Measured:
+  - The five files under this verifier: two already `Invalid`, and the
+    three Truepic files `Trusted` with `truepic-root.settings.json`.
+  - A JPEG segment walk of `truepic-20230212-camera.jpg`: the exclusion
+    `[0, 206316]` holds SOI + a 13613-byte EXIF APP1 + the store.
+  - A copy with the EXIF date changed (6 bytes, `cmp -l`): `Trusted` here
+    and in c2patool 0.27.22, `Invalid` in 0.28.0.
+  - All 165 corpus files with a store and `c2pa.hash.data`: 128 exact,
+    23 uncovered, 14 wider, of which 11 are own negative variants that
+    are already `Invalid`.
+- Reasoned: `c2pa` 0.91.0 `claim.rs` `data_hash_exclusions_match_manifest()`
+  (exact equality) read. C2PA 2.4 VAL-ASSE-0043/0044/0045/0077 read through
+  `encypherai/c2pa-knowledge-graph` 2.4; the section number is still to be
+  confirmed. SPEC-012 amendment 5 (step 38) is where the hole came in, and
+  `docs/conformance.md`'s `PRED-IMG-004` row is wrong.
+- Decided by Maurice: to examine these files before SPEC-031 goes further.
