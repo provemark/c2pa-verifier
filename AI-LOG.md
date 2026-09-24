@@ -5669,3 +5669,24 @@ README are where the disclosure lives.
   formats; none is in the corpus.
 - Decided by Maurice: reverse amendment 5. Release and advisory are not
   decided.
+
+## 2026-09-24 — SPEC-031 open question 1 answered: every anchor counts for its own kind
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "Kan je een advies geven over die open vraag", then "ja, pas
+  SPEC-031 zo aan".
+- Produced: `specs/SPEC-031-trust-anchors-list.md`. Open question 1
+  answered with its reasons and its cost. AC6 extended to the
+  time-stamping side (`c2pa-rs/C.jpg` with the DigiCert cross-certificate
+  as `"tsa"` and as `"manifest"`) and to a `"tsa"` entry's
+  `allowed_list`. The API sketch gains `$tsaAllowedList`. The
+  `docs/milestones.md` row is updated. No test or code.
+- Measured: nothing new; the answer rests on probes N3, N4 and T2 (step
+  107) and on the two official list files.
+- Reasoned: `c2pa` 0.91.0 `certificate_trust_policy.rs`: the per-kind
+  filters are used by `ocsp.rs` (signing) and by tests only, while the
+  chain check in `certificate_trust/openssl.rs` walks every anchor set.
+  The settings documentation names the Mozilla S/MIME root store as the
+  `"cawg"` list. That an S/MIME leaf would then be `Trusted` for C2PA is
+  reasoned, not measured.
+- Decided by Maurice: separate the kinds strictly, `"manifest"` not
+  counting for TSAs; the legacy string counts for both.

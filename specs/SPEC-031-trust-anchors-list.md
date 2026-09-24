@@ -160,15 +160,33 @@ authorities.
     error (probes N2, N10, N11, N12). The unknown key is where this verifier
     is stricter (probe N9), and the test says so.
 
-- **AC6 — what `trust_kind` means for a signer** *(depends on open question 1)*
-  - Given `trust.anchors` holding only the test roots, as `"tsa"`, and
-    separately as `"cawg"`
-  - When `fixture-signed.jpg` is verified
-  - Then, as proposed, `signingCredential.untrusted` and `Valid`: only
-    `"manifest"` entries and the legacy `trust_anchors` can make a signer
-    trusted. This is **stricter than `c2patool` 0.28.0**, which gives
-    `Trusted` for both (probes N3, N4). The difference is named in
-    `docs/comparison.md`.
+- **AC6 — every anchor counts only for its own kind** *(open question 1, answered 2026-09-24)*
+  - Given, for the signer side, `trust.anchors` holding only the test
+    roots, once as `"tsa"` and once as `"cawg"`, and once holding only
+    `allowed_list.pem` as the `allowed_list` of a `"tsa"` entry. Given,
+    for the time-stamping side, the DigiCert cross-certificate
+    (`digicert-trusted-root-g4.pem`) as the only entry, once as `"tsa"`
+    and once as `"manifest"`.
+  - When `fixture-signed.jpg` is verified with the first three, and
+    `c2pa-rs/C.jpg` with the last two
+  - Then:
+    - `fixture-signed.jpg` is `signingCredential.untrusted` and `Valid`
+      all three times. Only `"manifest"` entries (their anchors and their
+      `allowed_list`) and the legacy `trust_anchors` can make a signer
+      trusted.
+    - `C.jpg` reports `timeStamp.trusted` with the `"tsa"` entry, exactly
+      as SPEC-017 AC6 does with the legacy settings. With the
+      `"manifest"` entry it reports `timeStamp.untrusted`, and its
+      explanation names the entry's kind. Only `"tsa"` entries and the
+      legacy `trust_anchors` can make a time-stamping authority trusted.
+    - A `"cawg"` entry makes nothing trusted.
+    - The legacy `trust.trust_anchors` still counts for both sides:
+      `full.settings.json` and `digicert-trusted-root-g4.settings.json`
+      give today's reports byte for byte (AC2, AC7).
+    - Each of these is **stricter than `c2patool` 0.28.0**, which gives
+      `Trusted` for the signer in the first two cases (probes N3, N4) and
+      `timeStamp.trusted` for a `"manifest"` entry (probe T2). The
+      difference is named in `docs/comparison.md`.
 
 - **AC7 — the drift alarm learns the new shape**
   - Given the corpus runs that already use `full.settings.json` and
@@ -214,11 +232,13 @@ today keeps its meaning.
 final readonly class TrustSettings
 {
     /**
-     * @param  list<Certificate>  $trustAnchors  every certificate that may anchor a signer:
-     *                                           the legacy string plus every "manifest" entry
-     * @param  list<Certificate>  $allowedList   every entry's allowed_list, together
-     * @param  list<string>       $trustConfig   top-level plus every entry's, together (open question 2)
-     * @param  list<Certificate>  $tsaAnchors    new: every "tsa" entry (open question 1)
+     * @param  list<Certificate>  $trustAnchors    every certificate that may anchor a signer:
+     *                                             the legacy string plus every "manifest" entry
+     * @param  list<Certificate>  $allowedList     every "manifest" entry's allowed_list, together
+     * @param  list<string>       $trustConfig     top-level plus every entry's, together (open question 2)
+     * @param  list<Certificate>  $tsaAnchors      new: every "tsa" entry; a TSA is judged against
+     *                                             these plus the legacy string (AC6)
+     * @param  list<Certificate>  $tsaAllowedList  new: every "tsa" entry's allowed_list
      */
     public function __construct(
         public array $trustAnchors,
@@ -226,6 +246,7 @@ final readonly class TrustSettings
         public array $trustConfig = [],
         public bool $verifyTrust = true,
         public array $tsaAnchors = [],
+        public array $tsaAllowedList = [],
     ) {}
 }
 ```
@@ -233,17 +254,41 @@ final readonly class TrustSettings
 ## Open questions
 
 1. **Does `trust_kind` separate signers from time-stamping authorities?**
-   *(blocker)*
-   - Measured: `c2patool` 0.28.0 ignores it. A `"tsa"` or `"cawg"` entry
-     trusts a signer (N3, N4), and a `"manifest"` entry trusts a TSA (T2).
-   - Proposal: separate them as §14.4 describes. `"manifest"` entries and
-     the legacy string anchor signers. `"tsa"` entries, the legacy string
-     and `"manifest"` entries anchor TSAs; the last is today's behaviour,
-     kept so that no existing file loses `timeStamp.trusted`. `"cawg"`
-     entries anchor nothing.
-   - The alternative is to copy `c2patool`: every entry anchors everything.
-     That is simpler, but it puts a trust in the operator's hands that the
-     operator did not configure.
+   **Answered by Maurice van Loon, 2026-09-24: yes, every anchor counts
+   only for its own kind** (AC6).
+   - `"manifest"` entries anchor signers only.
+   - `"tsa"` entries anchor time-stamping authorities only.
+   - `"cawg"` entries anchor nothing.
+   - The legacy `trust.trust_anchors` anchors both, so every existing
+     settings file keeps its meaning.
+
+   Why:
+   - Measured: `c2patool` 0.28.0 ignores the kind. A `"tsa"` or `"cawg"`
+     entry trusts a signer (N3, N4), and a `"manifest"` entry trusts a TSA
+     (T2).
+   - Read: `c2pa` 0.91.0 documents the `"cawg"` list as the Mozilla root
+     store with the S/MIME trust bit. Copying `c2patool` would let an
+     ordinary S/MIME certificate from any of those CAs sign C2PA content as
+     `Trusted`, because E-mail Protection is an EKU the default list
+     accepts. That last step is reasoned, not measured.
+   - Measured: the C2PA publishes separate signer and TSA lists
+     (`C2PA-TRUST-LIST`, 30 services; `C2PA-TSA-TRUST-LIST`, 22; step 107).
+   - Read: C2PA 2.4 §14.4 describes separate lists.
+   - Read: `c2pa` 0.91.0 has per-kind filters (`signing_trust_anchors()`,
+     `tsa_trust_anchors()`, `cawg_trust_anchors()`), and its OCSP check
+     uses the signing one, but its chain check walks every anchor. That
+     reads as unfinished, not as a rule to copy.
+
+   What it costs:
+   - An operator who puts every root in a single `"manifest"` entry gets
+     `timeStamp.untrusted` here where `c2patool` says `timeStamp.trusted`.
+     The signer is then judged at *now*, and an old file can become
+     `Invalid` (expired) where `c2patool` says `Trusted`. That is the
+     fail-closed direction, and the explanation names the entry's kind.
+   - Declined: letting `"manifest"` entries anchor TSAs as well. It would
+     avoid that divergence at low risk, since a TSA also needs the
+     `timeStamping` EKU. It was declined so that the rule stays one
+     sentence and mirrors the official lists.
 2. **Per-entry `trust_config`.** *(not a blocker)* In `c2pa` 0.91.0 it is
    documented to *"overlay the default top level trust_config"*. On the
    test leaf no probe could separate the two, because that leaf's EKU is
