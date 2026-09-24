@@ -5832,3 +5832,24 @@ README are where the disclosure lives.
 - Reasoned: none new; the evidence is step 114's.
 - Decided by Maurice: the fix as proposed. The orphan AC12 test is only
   recorded, not changed.
+
+## 2026-09-24 — Step 116, spec-check reads named criteria
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, eerst de wees-AC12 en spec-check aanscherpen".
+- Produced: `bin/spec-check.php` (`specCheckNamedCriteria()`,
+  `specCheckTracedCriteria()`, the AC11 finding);
+  `tests/Fixtures/spec-check/orphan-criterion/`; `tests/Unit/SpecCheckTest.php`
+  AC11; SPEC-000 AC11, amendment 1 and its row; Traceability rows for
+  SPEC-013 AC16–AC18 and SPEC-015 AC11; SPEC-017 AC12 and amendment 6;
+  `notes/step-116-named-criteria.md`; rows in `docs/milestones.md` and
+  `NOTES.md`.
+- Measured: a throwaway tokenizer script over the suite gives 394
+  declarations, 376 naming a criterion, and 5 orphans. Its first run
+  miscounted braces on `"{$var}"`, which was corrected and is recorded.
+  AC11 was red on the fixture (no findings), then green. The repository
+  self-check then named 6 findings, and those were repaired.
+  `composer check` gives 432 passed. Falsified: without SPEC-017's AC12
+  row, spec-check reports `FAIL: 1 finding(s)` at line 627.
+- Reasoned: rows only (not a bold `**ACn`) is the standard, because the
+  Traceability table is what a reader follows.
+- Decided by Maurice: to do the orphan and the spec-check rule first.

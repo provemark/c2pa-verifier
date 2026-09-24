@@ -319,6 +319,21 @@ to `tests/Support/` so both files share them.
     before); and there is still no file where this verifier is more
     lenient than c2patool.
 
+- **AC12 — a camera: Pixel 10, a three-month signer and Google's own TSA** *(step 46; written down by amendment 6)*
+  - Given `writers/google-20250919-pixel10-npld-picnic-table.jpg`, whose
+    signer and time-stamping authority both sit under Google intermediates
+    that the file does not carry to a root, without settings and with
+    `google-pixel-intermediates.settings.json` (the two intermediates as
+    anchors)
+  - When `Verifier::verify()` runs
+  - Then, without settings: `signingCredential.expired` among the
+    failures, `timeStamp.validated`, `timeStamp.untrusted` naming *Google
+    Pixel Time Stamping Authority*, `signature_info.time`
+    `2025-09-19T21:57:51+00:00`, state `Invalid`, with the failure list
+    equal to c2patool's recorded JSON. With the intermediates as anchors:
+    `Trusted`, no failures, `timeStamp.trusted` and
+    `signingCredential.trusted`, as c2patool under the same settings.
+
 - **AC13 — the allowed list never reaches a TSA** *(amendment 5; C2PA 2.4 §14.4.3, §14.5.1.2)*
   - Given `TrustSettings` built through its constructor with a TSA's own
     leaf on the allowed list: `c2pa-rs/C.jpg`'s DigiCert Timestamp 2023
@@ -491,10 +506,19 @@ final readonly class TimestampCheck
    - Recorded while numbering: a test named *"SPEC-017 AC12"* (step 46, the
      Pixel 10 file) has existed since 2026-09-22 with no AC12 in this spec
      and no traceability row. `bin/spec-check.php` did not notice. The new
-     criterion is therefore AC13. The orphan is left as it is and named
-     here, pending the maintainer.
+     criterion is therefore AC13. The orphan was written down by amendment
+     6.
 
    **Weight A for the rule, no verdict changed in the corpus.**
+
+6. **2026-09-24, step 116, with SPEC-000 amendment 1** — AC12 is written
+   down. The test has existed since step 46 (2026-09-22) as *"SPEC-017
+   AC12"*. Step 46 added the Pixel 10 file and its expectation and never
+   put a criterion in this spec or a row in its table. The criterion above
+   is read off the test as it stands. Nothing in the test or the code
+   changes. The checker's new AC11 is what would have caught it.
+
+   **Weight C: the record catches up with a test that was already there.**
 
 ## Traceability
 
@@ -513,5 +537,6 @@ least one test; every source file maps back to this spec.
 | AC8 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC8: no header … and SPEC-017 AC8: one token is judged; a doubled header … / SPEC-017 | src/Timestamp/TimestampCheck.php :: check(), checkHeader(); src/Timestamp/TimestampResult.php :: none(); src/Verifier/Verifier.php :: check() (the reason "no timestamp") |
 | AC9 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC9: the report — timeStamp entries first, signature_info with time equal to c2patool's, checks_performed / SPEC-017 | src/Verifier/Verifier.php :: check(), signatureInfo(); src/Report/ValidationResult.php :: toArray() (unchanged: informational is its own list) |
 | AC10 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC10: the NO_TIMESTAMP exceptions are gone; TSA_NOT_CONFIGURED names the files that stay expired, and an anchor un-expires them / SPEC-017 | tests/Pest.php :: SPEC013_PUBLIC_TSA_NOT_CONFIGURED, SPEC013_RS_TSA_NOT_CONFIGURED; tests/Unit/Verifier/VerifierTest.php :: AC11, AC12; src/Verifier/Verifier.php :: check() (the time handed to the profile) |
+| AC12 (amendment 6) | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC12: the Pixel 10 file is expired at now and Trusted under Google's intermediates, as c2patool / SPEC-017 | src/Timestamp/TimestampCheck.php :: check(); src/Trust/ChainCheck.php :: checkCertificates() (an intermediate as anchor) |
 | AC13 (amendment 5) | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC13: a TSA certificate on the allowed list does not make the timestamp trusted / SPEC-017 | src/Timestamp/TimestampCheck.php :: tsaSettings() (no allowed list) |
 | AC11 (amendments 2–3) | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC11: on the writers corpus signature_info.time equals c2patool's, and the negative-nonce tokens validate / SPEC-017 | src/Timestamp/TimestampResult.php :: $timeFraction, timeIso(); src/Timestamp/SignerInfo.php :: signedAttributesForVerification() (the DER-canonical SET), $attributeEncodings; src/Timestamp/TimestampCheck.php :: ecdsaDer(), isDerEcdsaSignature(); src/Verifier/Verifier.php :: signatureInfo() |

@@ -103,6 +103,14 @@ it('AC9: a multi-argument group call counts for every spec it names', function (
         ->and($result->specs)->toBe(['SPEC-001' => 'approved', 'SPEC-004' => 'approved']);
 })->group('SPEC-000');
 
+it('AC11: a test naming a criterion its spec does not trace is a finding naming file, line and criterion', function (): void {
+    $result = specCheck(specCheckFixture('orphan-criterion'));
+    expect($result->findings)->toBe([
+        'SPEC-001: tests/Unit/FixtureTest.php:22 names AC3, which has no row in the spec\'s Traceability table',
+        'SPEC-001: tests/Unit/FixtureTest.php:26 names AC9, which has no row in the spec\'s Traceability table',
+    ])->and($result->exitCode())->toBe(1);
+})->group('SPEC-000');
+
 it('AC8: this repository itself is clean, with the fixture trees skipped', function (): void {
     $result = specCheck(dirname(__DIR__, 2));
 

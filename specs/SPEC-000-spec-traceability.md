@@ -133,6 +133,19 @@ assumption: this project fails closed.
   - Then `bin/spec-check.php` runs before Pint, and a non-zero exit stops the
     chain
 
+- **AC11 — a test that names a criterion finds it in its spec's Traceability** *(amendment 1)*
+  - Given a test file whose declarations are named `AC1: …`, `AC2: …` (both
+    with a Traceability row, one labelled `AC2 (amendment 1)`), a
+    declaration with no criterion in its name, `AC3: …` with no row, and
+    `test('SPEC-001 AC9: …')` with no row. All of them carry
+    `->group('SPEC-001')`, and one holds a `"{$var}"` string
+  - When the checker runs
+  - Then it reports exactly two findings, one per orphan, each naming the
+    spec, the file and line of the declaration, and the criterion. The
+    spec is the one in the test's own name if it names one, else the
+    groups of that declaration's own statement. The file is read with
+    PHP's tokenizer, so a comment or a string cannot fake a declaration.
+
 ## References
 
 - Specification: none — this spec governs the project's own process, which is
@@ -168,6 +181,22 @@ function specCheck(string $root): array;
   tests carrying their group (the tests would be stale). Proposed: allowed,
   no finding; revisit when the first spec is superseded.
 
+## Amendments
+
+1. **2026-09-24, step 116, decided by Maurice van Loon** — AC11 is added.
+   SPEC-017 amendment 5 found a test named *"SPEC-017 AC12"* (step 46)
+   with no AC12 in its spec and no Traceability row, and this checker had
+   passed it for two days. Measured before the rule was written: 394 Pest
+   declarations in the suite, 376 of which name a criterion, and five
+   orphans. SPEC-013 AC16–AC18 and SPEC-015 AC11 were defined in an
+   amendment's text but never given a row. SPEC-017 AC12 was never
+   written at all. A test that claims a criterion now has to find a row
+   for it. The five are repaired in the same step, and the check itself
+   was the alarm: it named them all, plus AC11 of this very spec before
+   its row existed.
+
+   **Weight B: a rule about the record, no verdict involved.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -184,4 +213,5 @@ least one test; every source file maps back to this spec.
 | AC7 | tests/Unit/SpecCheckTest.php :: AC7: a spec without a recognisable status is a finding and is not treated as any status / SPEC-000 | bin/spec-check.php :: specCheckStatus() |
 | AC8 | tests/Unit/SpecCheckTest.php :: AC8: a clean tree exits 0 and says OK with the counts; AC8: a tree with several problems reports one line per finding and exits 1; AC8: this repository itself is clean, with the fixture trees skipped / SPEC-000 | bin/spec-check.php :: SpecCheckResult::exitCode(), render(); specCheckTestFiles() skips tests/Fixtures/ |
 | AC9 | tests/Unit/SpecCheckTest.php :: AC9: a multi-argument group call counts for every spec it names / SPEC-000 | bin/spec-check.php :: specCheckGroups() |
+| AC11 (amendment 1) | tests/Unit/SpecCheckTest.php :: AC11: a test naming a criterion its spec does not trace is a finding naming file, line and criterion / SPEC-000 | bin/spec-check.php :: specCheckNamedCriteria(), specCheckTracedCriteria(), specCheck() |
 | AC10 | measured by hand, not a Pest test (a test calling `composer check` from inside `composer check` is a loop): on a copy with SPEC-000 set to `draft`, `composer check` stopped at spec-check with exit 1 and Pint never ran — AI-LOG.md 2026-09-19, M0.3c | composer.json :: scripts.check (spec-check first) |

@@ -9,7 +9,8 @@ declare(strict_types=1);
  * a test group naming no spec, a test file with no group, a draft that
  * already has tests, an implemented spec without tests or with an unfilled
  * Traceability row, a spec whose Status is missing or not one of the four
- * words. Every finding is an error; there are no warnings. Exit 0 only when
+ * words, a test whose name claims a criterion (`ACn: …`) that its spec's
+ * Traceability table has no row for (AC11). Every finding is an error; there are no warnings. Exit 0 only when
  * there is nothing to report.
  *
  * Tooling, not product code: outside the Deptrac layers, inside PHPStan and
@@ -157,6 +158,94 @@ function specCheckGroups(string $text): array
     return array_values(array_unique($groups));
 }
 
+/**
+ * The criteria a spec's Traceability table has a row for: `| AC3 |`, and
+ * also `| AC11 (amendments 2–3) |` — the number is what counts (AC11).
+ *
+ * @return list<string> e.g. ['AC1', 'AC11']
+ */
+function specCheckTracedCriteria(string $text): array
+{
+    $pos = strpos($text, '## Traceability');
+    if ($pos === false || preg_match_all('/^\|\s*(AC\d+)\b/m', substr($text, $pos), $rows) === 0) {
+        return [];
+    }
+
+    return array_values(array_unique($rows[1]));
+}
+
+/**
+ * Every Pest declaration in a test file whose name opens with a criterion —
+ * `it('AC3: …')` or `test('SPEC-017 AC12: …')` — with its line and the spec
+ * it answers to: the one in its own name, else the groups of its own
+ * statement (AC11). Read with PHP's tokenizer, not a regex over the text, so
+ * that comments and strings cannot fake a declaration and a `{$var}` inside
+ * a string cannot throw the statement boundaries off.
+ *
+ * @return list<array{line: int, criterion: string, specs: list<string>}>
+ */
+function specCheckNamedCriteria(string $source): array
+{
+    $tokens = token_get_all($source);
+    $count = count($tokens);
+    $skip = [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT];
+    $declarations = [];
+    for ($i = 0; $i < $count; $i++) {
+        $token = $tokens[$i];
+        if (! is_array($token) || $token[0] !== T_STRING || ! in_array($token[1], ['it', 'test'], true)) {
+            continue;
+        }
+        // a declaration starts a statement: what precedes it ends one
+        $before = $i - 1;
+        while ($before >= 0 && is_array($tokens[$before]) && in_array($tokens[$before][0], $skip, true)) {
+            $before--;
+        }
+        if ($before >= 0 && $tokens[$before] !== ';' && $tokens[$before] !== '}' && ! (is_array($tokens[$before]) && $tokens[$before][0] === T_OPEN_TAG)) {
+            continue;
+        }
+        $next = $i + 1;
+        while ($next < $count && is_array($tokens[$next]) && in_array($tokens[$next][0], $skip, true)) {
+            $next++;
+        }
+        if (($tokens[$next] ?? null) !== '(') {
+            continue;
+        }
+        $next++;
+        while ($next < $count && is_array($tokens[$next]) && in_array($tokens[$next][0], $skip, true)) {
+            $next++;
+        }
+        $name = $tokens[$next] ?? null;
+        if (! is_array($name) || $name[0] !== T_CONSTANT_ENCAPSED_STRING) {
+            continue;
+        }
+        if (preg_match('/^.(?:(SPEC-\d{3})\s+)?(AC\d+)\b/', $name[1], $claim) !== 1) {
+            continue;
+        }
+        // the groups of this statement, at its own depth
+        $groups = [];
+        $depth = 0;
+        for ($j = $i + 1; $j < $count; $j++) {
+            $t = $tokens[$j];
+            if ($t === '(' || $t === '[' || $t === '{' || (is_array($t) && in_array($t[0], [T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES], true))) {
+                $depth++;
+            } elseif ($t === ')' || $t === ']' || $t === '}') {
+                $depth--;
+            } elseif ($t === ';' && $depth === 0) {
+                break;
+            } elseif ($depth === 0 && is_array($t) && $t[0] === T_STRING && $t[1] === 'group') {
+                for ($k = $j + 1; $k < $count && $tokens[$k] !== ')'; $k++) {
+                    if (is_array($tokens[$k]) && $tokens[$k][0] === T_CONSTANT_ENCAPSED_STRING && preg_match('/^.(SPEC-\d{3}).$/', $tokens[$k][1], $group) === 1) {
+                        $groups[] = $group[1];
+                    }
+                }
+            }
+        }
+        $declarations[] = ['line' => $token[2], 'criterion' => $claim[2], 'specs' => $claim[1] !== '' ? [$claim[1]] : array_values(array_unique($groups))];
+    }
+
+    return $declarations;
+}
+
 function specCheck(string $root): SpecCheckResult
 {
     $root = rtrim($root, '/');
@@ -187,9 +276,13 @@ function specCheck(string $root): SpecCheckResult
     // --- tests: groups per file (AC3, AC9) ---
     /** @var array<string, list<string>> $carriedBy  spec ID => test files */
     $carriedBy = [];
+    /** @var array<string, list<array{line: int, criterion: string, specs: list<string>}>> $namedBy  test file => declarations */
+    $namedBy = [];
     $testFiles = specCheckTestFiles($root);
     foreach ($testFiles as $relative) {
-        $groups = specCheckGroups((string) file_get_contents($root.'/'.$relative));
+        $source = (string) file_get_contents($root.'/'.$relative);
+        $namedBy[$relative] = specCheckNamedCriteria($source);
+        $groups = specCheckGroups($source);
         if ($groups === []) {
             $findings[] = "{$relative}: no ->group('SPEC-###') call";
 
@@ -224,6 +317,17 @@ function specCheck(string $root): SpecCheckResult
             }
             foreach (specCheckUnfilledTraceability($specTexts[$id]) as $criterion) {
                 $findings[] = "{$id}: status implemented but Traceability row {$criterion} names no test";
+            }
+        }
+    }
+
+    // --- a test that claims a criterion its spec does not trace (AC11) ---
+    foreach ($namedBy as $relative => $declarations) {
+        foreach ($declarations as $declaration) {
+            foreach ($declaration['specs'] as $id) {
+                if (isset($specTexts[$id]) && ! in_array($declaration['criterion'], specCheckTracedCriteria($specTexts[$id]), true)) {
+                    $findings[] = sprintf("%s: %s:%d names %s, which has no row in the spec's Traceability table", $id, $relative, $declaration['line'], $declaration['criterion']);
+                }
             }
         }
     }
