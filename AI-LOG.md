@@ -5647,3 +5647,25 @@ README are where the disclosure lives.
   assertion. The tamper half runs after that point and is proven by step
   108's measurement, not by this run.
 - Decided by Maurice: reverse amendment 5 (item 2).
+
+## 2026-09-24 — Step 109, SPEC-012 amendment 7 implemented
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "akkoord met 1 en 2". This entry is item 2's second half.
+- Produced: `src/Hash/DataHashCheck.php` (an exclusion holding part of the
+  store holds nothing else); SPEC-017 amendment 4 with its AC6 test; the
+  AC3 test renamed after the new rule, with the traceability row to
+  match; the rewind fix in the in-memory tamper;
+  `notes/step-109-exclusion-holds-only-the-store.md`; `docs/conformance.md`,
+  `docs/comparison.md`, `README.md`, `SECURITY.md`, `CHANGELOG.md`,
+  `docs/milestones.md`, `NOTES.md`.
+- Measured: `composer check` gives 422 passed, clean. 864 runs of
+  `bin/c2pa-verify` (288 corpus files × no settings, full-plus-digicert-g4,
+  truepic-root) with the old and the new `DataHashCheck`: 9 lines differ,
+  all Truepic, and the verdict changes only under truepic-root
+  (`Trusted` → `Invalid`). The step-108 tampered copy is `Invalid`.
+- Reasoned: padding in JPEG/PNG/WebP lives inside the store, so the rule
+  is written per exclusion (length = the sum of the pieces held), not as
+  one span. Not measured: a writer that pads outside the store in these
+  formats; none is in the corpus.
+- Decided by Maurice: reverse amendment 5. Release and advisory are not
+  decided.

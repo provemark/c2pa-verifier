@@ -7,15 +7,20 @@ committed.
 
 ## Unreleased
 
-### Security — known, not yet fixed
-- An exclusion in `c2pa.hash.data` that holds the manifest store *and*
-  other bytes (the three official `truepic-20230212-*` files exclude the
-  whole EXIF segment with it) is accepted, so a change to those bytes
-  stays `Trusted`. C2PA 2.4 requires `assertion.dataHash.mismatch`. The
-  hole is present in 0.1.0. Found 2026-09-24 (step 108); fixed by SPEC-012
-  amendment 7.
-- `docs/conformance.md` corrected: `PRED-IMG-004` is a gap, not enforced
-  (18 gaps, not 17). `README.md` and `SECURITY.md` follow.
+### Security
+- **Fixed: an exclusion wider than the manifest store was accepted.**
+  Up to and including 0.1.0, a `c2pa.hash.data` exclusion that held the
+  manifest store *and* other bytes passed as long as it covered the store.
+  The three official `truepic-20230212-*` files exclude the whole EXIF
+  segment that way, and a copy with its EXIF capture date changed stayed
+  `Trusted`. C2PA 2.4 (VAL-ASSE-0043/0044) requires
+  `assertion.dataHash.mismatch`, and that is what this version gives
+  (SPEC-012 amendment 7, which reverses amendment 5; SPEC-017 amendment 4).
+  Found 2026-09-24 through `c2patool` 0.28.0 (step 108), fixed the same
+  day (step 109). Over 864 runs, it changed the verdict of those three
+  files and no others.
+- `docs/conformance.md`: `PRED-IMG-004` had been marked enforced since
+  step 90 while it was not. The table now says when it became true.
 
 ## 0.1.0 — 2026-09-23
 

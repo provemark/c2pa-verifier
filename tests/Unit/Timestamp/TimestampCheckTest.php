@@ -423,8 +423,12 @@ test('SPEC-017 AC6: the Truepic root as anchor: trusted, no longer expired, and 
         expect(in_array('timeStamp.validated', $codes, true))->toBeTrue($name)
             ->and(in_array('timeStamp.trusted', $codes, true))->toBeTrue($name)
             ->and(in_array('signingCredential.expired', $codes, true))->toBeFalse($name)
-            ->and($report->result->state->value)->toBe($oracle['validation_state'], $name)
-            ->and(spec017Failures($report))->toBe(spec017Sorted(spec017OracleCodes($oracle, 'failure')), $name);
+            // SPEC-017 amendment 4 (with SPEC-012 amendment 7): the timestamp and the signer are judged exactly as
+            // c2patool 0.27.22 judged them, and the file is Invalid for one reason it did not see: the data-hash
+            // exclusion also holds the EXIF segment. Recorded: Trusted, no failures; 0.28.0: Invalid, the same mismatch.
+            ->and($oracle['validation_state'])->toBe('Trusted', $name)
+            ->and($report->result->state->value)->toBe('Invalid', $name)
+            ->and(spec017Failures($report))->toBe(spec017Sorted([...spec017OracleCodes($oracle, 'failure'), 'assertion.dataHash.mismatch']), $name);
         $trusted = spec017Status($report, StatusCode::TimeStampTrusted);
         expect($trusted?->explanation)->toContain('Truepic Lens Time-Stamping Authority');
 

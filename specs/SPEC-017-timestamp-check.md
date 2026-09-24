@@ -251,9 +251,11 @@ to `tests/Support/` so both files share them.
   - When `Verifier::verify()` runs on the three Truepic files with the
     first, and on `c2pa-rs/C.jpg` with the second
   - Then the Truepic files report `timeStamp.validated` and
-    `timeStamp.trusted`, no `signingCredential.expired`, and a
-    `validation_state` and failure list equal to c2patool's under the same
-    settings file (`tests/Fixtures/c2patool/timestamp/truepic-*.json`,
+    `timeStamp.trusted`, no `signingCredential.expired`, and (amendment 4)
+    the failure list of c2patool's under the same settings file plus
+    `assertion.dataHash.mismatch`, state `Invalid` (SPEC-012 amendment 7);
+    before that amendment, the state and failure list equal to c2patool's
+    under the same settings file (`tests/Fixtures/c2patool/timestamp/truepic-*.json`,
     made in the tests-first step — `Valid` or `Trusted` depending on
     whether the signer's chain reaches the same root; the test compares,
     it does not assume); `C.jpg` reports `timeStamp.trusted` with the
@@ -441,6 +443,18 @@ final readonly class TimestampCheck
 1. **2026-09-22, step 42b, at implementation** — test literals corrected against the code and the fixtures, no criterion changed in substance: the Nikon file is `nikon-20221019-building.jpeg` and the three signed fixtures sit at the fixtures root; AC1's front-door run uses the `full` settings for both corpora, as SPEC-013 AC11/AC12 do (the public oracle JSONs were made that way — `adobe-20220124-C` is `Trusted` there); the "no trust anchors" wording is `ChainCheck`'s ("… is not on the allowed list and no trust anchors are configured"); the EKU fault names `ExtendedKeyUsage`, not "EKU". The five older test files that count or order codes were adjusted under SPEC-010 amendment 5, SPEC-013 amendment 8 and SPEC-015 amendment 4. One rule made explicit in code rather than assumed: the TSA chain is ordered from the token by issuer → subject links from the signer (c2pa-rs `order_certificates_leaf_to_root`), so Truepic's root-first token walks as well as DigiCert's signer-first one.
 2. **2026-09-22, step 44, found by the writers corpus (step 43)** *(confirmed by Maurice van Loon, 2026-09-22)* — `signature_info.time` renders the `genTime`'s fractional seconds as c2patool does (`2026-08-26T10:48:55.837381+00:00`; `TimestampResult::$timeFraction`); the epoch handed to SPEC-015 stays whole seconds. With SPEC-016 amendment 3 the Amazon Bedrock and `c2pa-ts` tokens validate (they were `malformed` on their negative nonces, which cost Amazon's file its time and, through `expired`, its verdict). AC11 added: on the five writers files `signature_info.time` equals c2patool's byte for byte where c2patool has one, Amazon's ES384 file validates and, with the DigiCert cross-certificate as anchor, is no longer `expired`; `c2pa-ts`'s v1 claim with `sigTst2` validates (the pairing unchecked, as decided).
 3. **2026-09-22, step 44, found by the `c2pa-ts` token** *(confirmed by Maurice van Loon, 2026-09-22)* — two things a non-c2pa-rs writer taught. (a) RFC 5652 §5.4 signs "the complete DER encoding of the SET OF signedAttrs", and DER orders a SET OF by its elements' encodings (X.690 §11.6); every TSA measured until step 43 wrote the attributes already sorted, so re-tagging `A0` → `31` was the DER encoding. `c2pa-ts` writes them unsorted and signs the sorted form — the re-tag alone verified `0`, the sorted SET `1` (measured by hand on all five plausible inputs). `SignerInfo::signedAttributesForVerification()` now returns the DER-canonical SET: the Attribute encodings sorted as X.690 §11.6 says, the length re-encoded; on the five older tokens it is byte-equal to the re-tag (SPEC-016 AC5 stays as it is and measures that). This is a correctness fix, not a leniency: c2pa-rs re-encodes with `rasn` and so sorts too. (b) `c2pa-ts` writes the ECDSA CMS signature as raw R‖S (64 bytes), where RFC 3279 §2.2.3 has DER `ECDSA-Sig-Value`; c2patool accepts it. So does this verifier, by the rule: bytes that are a well-formed DER SEQUENCE of two INTEGERs pass through; otherwise, when they are exactly two coordinates long, they are converted as SPEC-009 converts COSE's R‖S; anything else fails as before. Both in AC11's test (the `c2pa-ts` file validates).
+4. **2026-09-24, with SPEC-012 amendment 7 (step 109)** — AC6 compared
+   the Truepic files' state and failures with `c2patool` 0.27.22 under the
+   Truepic root, and 0.27.22 says `Trusted`. SPEC-012 amendment 7 makes
+   those files `Invalid` with `assertion.dataHash.mismatch`, because their
+   data-hash exclusion also holds the EXIF segment. What AC6 is about is
+   unchanged and still asserted: the timestamp is validated and trusted,
+   the signer is judged at the attested time, and nothing is expired. The
+   expected failure list is now the oracle's plus that one code, and the
+   state is `Invalid`. `c2patool` 0.28.0 gives the same mismatch.
+
+   **Weight A, carried by SPEC-012 amendment 7:** the verdict changes, and
+   the rule this criterion checks does not.
 
 ## Traceability
 

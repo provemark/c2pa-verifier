@@ -179,7 +179,7 @@ it('AC2: one changed pixel byte: assertion.dataHash.mismatch, as c2patool', func
     expect(spec012Pairs(...$statuses))->toBe(spec012OraclePairs(spec012C2patool('pixel-changed', true), 'validation_status', 'assertion.dataHash'));
 })->group('SPEC-012');
 
-it('AC3: an exclusion must cover the store', function (): void {
+it('AC3: the store\'s exclusion holds the store and nothing else', function (): void {
     foreach (['binding/bytes-inserted-before-store.png', 'binding/exclusion-shifted.png', 'binding/exclusion-past-end.png'] as $variant) {
         $statuses = spec012Check($variant);
         expect(spec012Codes($statuses))->toBe(['assertion.dataHash.mismatch'], $variant)
@@ -220,6 +220,7 @@ it('AC3: an exclusion must cover the store', function (): void {
     $changed = fopen('php://memory', 'w+b');
     assert($changed !== false);
     fwrite($changed, $bytes);
+    rewind($changed);
     $store = (new JpegManifestStoreExtractor)->extract($changed);
     assert($store !== null);
     $manifest = ManifestStore::fromTree((new JumbfParser)->parse($store->bytes))->active;

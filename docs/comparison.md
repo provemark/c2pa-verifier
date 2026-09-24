@@ -58,6 +58,7 @@ files with the same trust anchors.
 
 | difference | why | where named |
 |---|---|---|
+| A `c2pa.hash.data` exclusion that holds the store **and** other bytes is `assertion.dataHash.mismatch`; `c2patool` 0.27.22 accepts it and calls the three `truepic-20230212-*` files `Trusted` under their root | C2PA 2.4 VAL-ASSE-0043/0044, and a changed EXIF date stayed `Trusted` under 0.27.22's rule (step 108); `c2patool` 0.28.0 agrees with this verifier | SPEC-012 amendment 7 |
 | A timestamp authority is trusted **only** through the configured anchors; `c2patool` reports `timeStamp.trusted` for DigiCert and Truepic TSAs with no anchor configured and `untrusted` for a 2025 DigiCert responder — not derivable from the 0.90.22 source (step 40 §5) | C2PA 2.4 §14.6.1: a *trusted* timestamp; trust by observation is not trust | ADR-0004 decision 3; `_TSA_NOT_CONFIGURED` (Truepic ×3, `ocsp*`, `exp-test1`, Amazon, Pixel — `expired` at now here, `Valid` there; with the anchor configured they are equal, measured in SPEC-017 AC6/AC11/AC12) |
 | `timeStamp.*` is informational, as at `c2patool`; the timestamp's one effect is the time the signer's validity is judged at | c2pa-rs logs every timestamp fault informational | SPEC-017 |
 | A `signingTime` attribute that differs from `genTime` is `malformed` (c2pa-rs prefers `signingTime`) | fail closed; no corpus token has them differ | ADR-0004 decision 5 |

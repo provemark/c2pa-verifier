@@ -65,17 +65,16 @@ rather than believed, and a file carrying none says so too. A remote
 manifest declared by URL is reported, never fetched.
 
 The 111 obligations of C2PA 2.4 that apply to the formats this verifier
-reads are listed one by one in `docs/conformance.md`, with the 18 it does
-not meet named. **One of them can make it report `Trusted` about a file
-whose bytes changed**: `PRED-IMG-004`, below, open until SPEC-012
-amendment 7 lands. None of the other 17 can; that claim is set out there,
-per gap.
+reads are listed one by one in `docs/conformance.md`, with the 17 it does
+not meet named. None of those 17 can make it report `Valid` about a file
+whose bytes changed; that claim is set out there, per gap. It was made
+once before and was wrong: see `PRED-IMG-004` below.
 
 ## Findings so far
 
 The project keeps its own record. Three cases of a wrong `Valid` have been
 found in it, all by the maintainers; the first two before any release, the
-third after `0.1.0`, and that one is still open:
+third after `0.1.0`:
 
 - **2026-09-22, no hard binding** (`notes/step-47-no-hard-binding.md`).
   A correctly signed manifest with no `c2pa.hash.data` assertion — a
@@ -92,7 +91,7 @@ third after `0.1.0`, and that one is still open:
   assertion, or one that does not open with `c2pa.created` /
   `c2pa.opened`, was `Valid`; `c2patool` refuses it. Found by the same
   method applied to every gate; closed with SPEC-018.
-- **2026-09-24, an exclusion wider than the store — open**
+- **2026-09-24, an exclusion wider than the store — present in `0.1.0`, fixed after it**
   (`notes/step-108-exclusion-wider-than-store.md`). The three official
   `truepic-20230212-*` test files exclude the file head, including the
   whole EXIF segment, in the same range as the manifest store. C2PA 2.4
@@ -101,9 +100,10 @@ third after `0.1.0`, and that one is still open:
   so a copy with its EXIF capture date changed is still `Trusted` with
   the signer's root as an anchor. `c2patool` 0.27.22 agrees with this
   verifier; `c2patool` 0.28.0 rejects the file, and its new rule is how
-  this was found. It is present in `0.1.0`. The fix is SPEC-012 amendment
-  7: an exact-equality rule, which changes the verdict of these three
-  corpus files and no others.
+  this was found. It is present in `0.1.0`. Fixed the same day by SPEC-012
+  amendment 7 (step 109): an exclusion that holds any part of the store
+  must hold nothing else. Over 864 runs, that changed the verdict of
+  these three corpus files and no others.
 
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now

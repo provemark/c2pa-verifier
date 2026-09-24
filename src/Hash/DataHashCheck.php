@@ -198,7 +198,21 @@ final readonly class DataHashCheck
 
                 return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('no exclusion covers the manifest store%s at [%d, %d] of the file (start, length; ends at %d); %s', count($store->ranges) > 1 ? sprintf('\'s piece %s', implode(', ', array_map(static fn (array $r): string => sprintf('[%d, %d]', $r['start'], $r['length']), $store->ranges))) : '', $piece['start'], $piece['length'], $pieceEnd, $nearest === null ? 'the assertion has no exclusions' : sprintf('the nearest exclusion is [%d, %d], ending at %d', $nearest['start'], $nearest['length'], $nearest['start'] + $nearest['length'])))];
             }
-            $covering[$covered] = true;
+            $covering[$covered][] = $piece;
+        }
+
+        // ---- an exclusion holding part of the store holds nothing else (C2PA 2.4 VAL-ASSE-0043/0044; SPEC-012 amendment 7) ----
+        // In JPEG, PNG and WebP the padding lives inside the store, so the range must be exactly the pieces it holds.
+        foreach ($covering as $i => $pieces) {
+            $range = $exclusions[$i];
+            $held = array_sum(array_column($pieces, 'length'));
+            if ($range['length'] !== $held) {
+                $last = $pieces[count($pieces) - 1];
+                $before = $pieces[0]['start'] - $range['start'];
+                $after = $range['start'] + $range['length'] - ($last['start'] + $last['length']);
+
+                return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('the exclusion [%d, %d] (start, length) holds the manifest store and %d bytes that are not: %d before it, %d after it, %d between its pieces; the range holding the store may hold only the store and padding (C2PA 2.4, data hash validation)', $range['start'], $range['length'], $range['length'] - $held, $before, $after, $range['length'] - $held - $before - $after))];
+            }
         }
         $others = [];
         foreach ($exclusions as $i => $range) {
