@@ -270,6 +270,16 @@ final readonly class ActionsCheck
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 122).
 
+5. **2026-09-24, step 125b, with SPEC-033** — the out-of-scope content
+   family shrinks again. SPEC-033 takes one opening, the ingredient
+   references of opened, placed, removed, transcoded and repackaged,
+   `c2pa.translated`'s languages, `relatedAssertions` and the watermark's
+   soft binding. Once this spec's opening rule has refused a manifest,
+   no content rule runs (SPEC-033 amendment 1, as `c2pa-rs` returns
+   there). Still out of scope: icons in `softwareAgents` and `templates`,
+   and `c2pa.redacted`. Weight B: new faults, on files the oracles
+   already refuse.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

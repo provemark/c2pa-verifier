@@ -246,6 +246,11 @@ proposals.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 122).
 
+2. **2026-09-24, step 125b, with SPEC-033** — AC7's test asserted the
+   recorded surface's total (112), which SPEC-033 grew to 114. The total
+   is `ApiSurfaceTest`'s alone. AC7 now asserts that its symbol is
+   recorded. Weight C.
+
 ## Traceability
 
 Filled when status becomes `implemented`.

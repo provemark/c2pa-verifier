@@ -32,6 +32,8 @@ enum StatusCode: string
     case AssertionHashedUriMismatch = 'assertion.hashedURI.mismatch';
     case AssertionUndeclared = 'assertion.undeclared';
     case AssertionActionMalformed = 'assertion.action.malformed';
+    case AssertionActionIngredientMismatch = 'assertion.action.ingredientMismatch';   // SPEC-033
+    case AssertionActionSoftBindingMissing = 'assertion.action.softBindingMissing';   // SPEC-033
     case AssertionExternalReferenceMalformed = 'assertion.external-reference.malformed';   // SPEC-032
     case AssertionDataHashMatch = 'assertion.dataHash.match';
     case AssertionDataHashMismatch = 'assertion.dataHash.mismatch';

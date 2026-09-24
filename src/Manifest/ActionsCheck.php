@@ -57,8 +57,20 @@ final readonly class ActionsCheck
             $actions[] = ['url' => $url, 'data' => $manifest->assertions[$label]->data];
         }
 
+        // the claim's own assertions, for SPEC-033's references: every label it lists, and each ingredient's relationship
+        $labels = [];
+        $ingredients = [];
+        foreach ([...$manifest->claim->createdAssertions, ...$manifest->claim->gatheredAssertions] as $entry) {
+            $label = substr($entry->url, strrpos($entry->url, '/') + 1);
+            $labels[] = $label;
+            $data = $manifest->assertions[$label]->data ?? null;
+            if (self::base($label) === 'c2pa.ingredient' && is_array($data) && is_string($data['relationship'] ?? null)) {
+                $ingredients[$label] = $data['relationship'];
+            }
+        }
+
         // c2patool's url for the manifest-level faults of this rule is the bare manifest label (measured, SPEC-018 amendment 2)
-        return $this->checkAssertions($manifest->label, $manifest->claim->version, $actions, $manifest->isUpdateManifest);
+        return $this->checkAssertions($manifest->label, $manifest->claim->version, $actions, $manifest->isUpdateManifest, $labels, $ingredients);
     }
 
     /**
@@ -68,9 +80,11 @@ final readonly class ActionsCheck
      * form; measured in step 49b).
      *
      * @param  list<array{url: string, data: mixed}>  $actions
+     * @param  list<string>  $labels  the labels of every assertion the claim lists (SPEC-033: relatedAssertions)
+     * @param  array<string, string>  $ingredients  ingredient assertion label => its relationship (SPEC-033: references)
      * @return list<ValidationStatus>
      */
-    public function checkAssertions(string $manifestLabel, int $version, array $actions, bool $isUpdateManifest = false): array
+    public function checkAssertions(string $manifestLabel, int $version, array $actions, bool $isUpdateManifest = false, array $labels = [], array $ingredients = []): array
     {
         $malformed = static fn (string $url, string $why): ValidationStatus => new ValidationStatus(StatusCode::AssertionActionMalformed, $url, $why);
         if ($version < 2) {
@@ -103,8 +117,9 @@ final readonly class ActionsCheck
         // (C2PA 2.4 §11.2.3 gives it four actions of its own, none of them an opening; measured on
         // update_manifest.jpg's variant, where c2patool reports only the update rule — SPEC-022)
         if ($isUpdateManifest) {
-            return $statuses;
+            return [...$statuses, ...$this->contentRules($manifestLabel, $actions, $labels, $ingredients)];
         }
+        $before = count($statuses);
         if ($actions === []) {
             $statuses[] = $malformed($manifestLabel, 'first action must be created or opened: the manifest has no actions assertion (C2PA 2.4 §18, a 2.x manifest opens with c2pa.created or c2pa.opened)');
         } else {
@@ -118,8 +133,143 @@ final readonly class ActionsCheck
                 $statuses[] = $malformed($manifestLabel, sprintf('first action must be created or opened: the first action is %s (%s)', $first, $actions[0]['url']));
             }
         }
+        // SPEC-033 amendment 1: once the opening rule has refused the manifest, c2pa-rs reads no further
+        if (count($statuses) > $before) {
+            return $statuses;
+        }
+
+        return [...$statuses, ...$this->contentRules($manifestLabel, $actions, $labels, $ingredients)];
+    }
+
+    /**
+     * SPEC-033: the actions content rules of C2PA 2.4 §15.10.3.2.3 and
+     * §18.15.4.7, as c2pa 0.91.0's verify_actions() applies them — one
+     * opening; ingredient references for opened, placed, removed,
+     * transcoded and repackaged, resolved by label in this claim (open
+     * question 2); c2pa.translated's languages; relatedAssertions; a
+     * watermark's soft binding. Only well-formed assertions are read; rule
+     * 2 has reported the others.
+     *
+     * @param  list<array{url: string, data: mixed}>  $actions
+     * @param  list<string>  $labels
+     * @param  array<string, string>  $ingredients
+     * @return list<ValidationStatus>
+     */
+    private function contentRules(string $manifestLabel, array $actions, array $labels, array $ingredients): array
+    {
+        $statuses = [];
+        $malformed = static fn (string $url, string $why): ValidationStatus => new ValidationStatus(StatusCode::AssertionActionMalformed, $url, $why);
+        $mismatch = static fn (string $url, string $why): ValidationStatus => new ValidationStatus(StatusCode::AssertionActionIngredientMismatch, $url, $why);
+        $readable = [];
+        foreach ($actions as $assertion) {
+            if ($this->checkData($assertion['data'], 2) === [] && is_array($assertion['data']) && is_array($assertion['data']['actions'] ?? null)) {
+                $readable[] = ['url' => $assertion['url'], 'actions' => $assertion['data']['actions']];
+            }
+        }
+
+        // one opening across all actions assertions (c2pa-rs: the inception count), on the claim's bare label
+        $openings = 0;
+        foreach ($readable as $assertion) {
+            foreach ($assertion['actions'] as $action) {
+                $openings += is_array($action) && in_array($action['action'] ?? null, self::OPENING_ACTIONS, true) ? 1 : 0;
+            }
+        }
+        if ($openings > 1) {
+            $statuses[] = $malformed($manifestLabel, sprintf('cannot have more than one c2pa.created or c2pa.opened action: the claim has %d', $openings));
+        }
+
+        $softBinding = array_filter($labels, static fn (string $label): bool => self::base($label) === 'c2pa.soft-binding') !== [];
+        $resolves = static function (mixed $reference, string $relationship) use ($ingredients): bool {
+            $url = is_array($reference) && is_string($reference['url'] ?? null) ? $reference['url'] : null;
+            if ($url === null) {
+                return false;
+            }
+            $label = substr($url, strrpos($url, '/') + 1);
+
+            return ($ingredients[$label] ?? null) === $relationship;
+        };
+        foreach ($readable as $assertion) {
+            $url = $assertion['url'];
+            foreach ($assertion['actions'] as $i => $action) {
+                if (! is_array($action)) {
+                    continue;
+                }
+                $name = $action['action'] ?? '';
+                $parameters = $action['parameters'] ?? null;
+                $parameters = is_array($parameters) && ! array_is_list($parameters) ? $parameters : null;
+
+                // opened, placed, removed: references of the right relationship (§15.10.3.2.3; c2pa-rs 2.b)
+                if (in_array($name, ['c2pa.opened', 'c2pa.placed', 'c2pa.removed'], true)) {
+                    if ($parameters === null || (! array_key_exists('ingredients', $parameters) && ! array_key_exists('ingredient', $parameters))) {
+                        $statuses[] = $mismatch($url, 'opened, placed and removed items must have ingredient(s) parameters');
+
+                        continue;
+                    }
+                    $references = array_key_exists('ingredient', $parameters) ? [$parameters['ingredient']] : $parameters['ingredients'];
+                    if (! is_array($references) || ! array_is_list($references) || $references === []) {
+                        $statuses[] = $mismatch($url, 'opened, placed and removed items must have ingredients parameter must be non empty array');
+                        $references = [];
+                    }
+                    $relationship = $name === 'c2pa.opened' ? 'parentOf' : 'componentOf';
+                    $good = count(array_filter($references, static fn (mixed $r): bool => $resolves($r, $relationship)));
+                    if ($name === 'c2pa.opened' ? $good !== 1 : $good === 0) {
+                        $statuses[] = $mismatch($url, sprintf("action[%d] ('%s') must have valid ingredient with %s relationship", $i, $name, $relationship));
+                    }
+                }
+
+                // transcoded, repackaged: a reference, if given, is a parentOf (§15.10.3.2.3; c2pa-rs 2.c)
+                if (in_array($name, ['c2pa.transcoded', 'c2pa.repackaged'], true) && $parameters !== null) {
+                    $references = array_key_exists('ingredient', $parameters) ? [$parameters['ingredient']] : (is_array($parameters['ingredients'] ?? null) ? $parameters['ingredients'] : []);
+                    if ($references !== [] && array_filter($references, static fn (mixed $r): bool => $resolves($r, 'parentOf')) === []) {
+                        $statuses[] = $mismatch($url, sprintf("action[%d] ('%s') must have valid ingredient with parentOf relationship", $i, $name));
+                    }
+                }
+
+                // c2pa.translated: both languages (§18.15.4.7, as c2pa-rs reads it)
+                if ($name === 'c2pa.translated') {
+                    $source = $parameters['sourceLanguage'] ?? null;
+                    $target = $parameters['targetLanguage'] ?? null;
+                    if (! is_string($source) || $source === '' || ! is_string($target) || $target === '') {
+                        $statuses[] = $malformed($url, 'c2pa.translated action must have sourceLanguage and targetLanguage parameters');
+                    }
+                }
+
+                // relatedAssertions (§15.10.3.2.3; c2pa-rs 2.f): non-empty, resolvable here, never actions or ingredients
+                if ($parameters !== null && array_key_exists('relatedAssertions', $parameters)) {
+                    $related = $parameters['relatedAssertions'];
+                    if (! is_array($related) || ! array_is_list($related) || $related === []) {
+                        $statuses[] = $malformed($url, 'relatedAssertions must contain at least one entry');
+                        $related = [];
+                    }
+                    foreach ($related as $reference) {
+                        $target = is_array($reference) && is_string($reference['url'] ?? null) ? $reference['url'] : '';
+                        $label = substr($target, strrpos($target, '/') + 1);
+                        $elsewhere = str_starts_with($target, 'self#jumbf=/c2pa/') && ! str_starts_with($target, "self#jumbf=/c2pa/{$manifestLabel}/");
+                        if ($target === '' || $elsewhere || ! in_array($label, $labels, true)) {
+                            $statuses[] = $malformed($target === '' ? $url : $target, sprintf('relatedAssertions reference could not be resolved within the current manifest: %s', $target));
+                        }
+                        if (in_array(self::base($label), ['c2pa.actions', 'c2pa.ingredient'], true)) {
+                            $statuses[] = $malformed($target, sprintf('relatedAssertions must not reference an actions or ingredient assertion: %s', $target));
+                        }
+                    }
+                }
+
+                // a watermark needs a soft binding in the claim (§15.10.3.2.3)
+                if (in_array($name, ['c2pa.watermarked', 'c2pa.watermarked.bound'], true) && ! $softBinding) {
+                    $statuses[] = new ValidationStatus(StatusCode::AssertionActionSoftBindingMissing, $url, 'watermark action missing soft binding assertion');
+                }
+            }
+        }
 
         return $statuses;
+    }
+
+    /** A label without its `__n` instance and its `.vN` version: c2pa.actions.v2__1 → c2pa.actions. */
+    private static function base(string $label): string
+    {
+        $label = preg_replace('/__\d+\z/', '', $label) ?? $label;
+
+        return preg_replace('/\.v\d+\z/', '', $label) ?? $label;
     }
 
     /**

@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
@@ -281,18 +281,36 @@ adopting their proposals.
    Weight C: a criterion's wording, following the oracle. No rule of this
    spec changed in outcome.
 
+2. **2026-09-24, step 125b, at implementation.**
+   - AC9's test asserted the recorded surface's total (114). That total
+     is `ApiSurfaceTest`'s alone. A spec's own test asserting it would
+     break with every later spec. AC9 now asserts that its two symbols
+     are recorded, and `ApiSurfaceTest` holds 114.
+   - AC8's corpus run (966 lines, before and after) moved one file
+     outside the probes. `update-manifest/ingredient-inputto.jpg`
+     (SPEC-022's variant, `parentOf` turned into `inputTo`) gains
+     `assertion.action.ingredientMismatch`: its update manifest's opening
+     action now names an ingredient of the wrong relationship. Its
+     verdict was and stays `Invalid`. Both `c2patool` versions refuse the
+     file before reading its actions (*"claim missing hard binding"*),
+     so the extra code has no oracle. `c2pa-rs` would apply rule 2.b to
+     an update manifest too, since only the opening rule is exempt. No
+     other verdict or code moved.
+
+   Weight C: no criterion changed in outcome.
+
 ## Traceability
 
 Filled when status becomes `implemented`.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
+| AC1 | tests/Unit/Manifest/ActionsContentTest.php :: AC1: one opening / SPEC-033 | src/Manifest/ActionsCheck.php :: contentRules() (the opening count), checkAssertions() (stops after the opening fault) |
+| AC2 | tests/Unit/Manifest/ActionsContentTest.php :: AC2: opened, placed, removed without references / SPEC-033 | src/Manifest/ActionsCheck.php :: contentRules() (2.b) |
+| AC3 | tests/Unit/Manifest/ActionsContentTest.php :: AC3: references of the wrong relationship / SPEC-033 | src/Manifest/ActionsCheck.php :: check() (the ingredient relationships), contentRules() |
+| AC4 | tests/Unit/Manifest/ActionsContentTest.php :: AC4: transcoded and repackaged / SPEC-033 | src/Manifest/ActionsCheck.php :: contentRules() (2.c) |
+| AC5 | tests/Unit/Manifest/ActionsContentTest.php :: AC5: translation / SPEC-033 | src/Manifest/ActionsCheck.php :: contentRules() (c2pa.translated) |
+| AC6 | tests/Unit/Manifest/ActionsContentTest.php :: AC6: related assertions / SPEC-033 | src/Manifest/ActionsCheck.php :: contentRules() (relatedAssertions), base() |
+| AC7 | tests/Unit/Manifest/ActionsContentTest.php :: AC7: watermarks / SPEC-033 | src/Manifest/ActionsCheck.php :: contentRules() (soft binding); src/Report/StatusCode.php :: AssertionActionSoftBindingMissing |
+| AC8 | tests/Unit/Manifest/ActionsContentTest.php :: AC8: nothing else moves / SPEC-033 | src/Manifest/ActionsCheck.php :: contentRules() |
+| AC9 | tests/Unit/Manifest/ActionsContentTest.php :: AC9: the vocabulary grows by two codes, verbatim / SPEC-033 | src/Report/StatusCode.php :: AssertionActionIngredientMismatch, AssertionActionSoftBindingMissing |

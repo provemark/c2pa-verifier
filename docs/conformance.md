@@ -160,7 +160,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-ASSE-020` | shall | Hard binding assertion required for validation | **yes** — same as CROSS-002 |
 | `PRED-ASSE-021` | shall | Multi-asset hash fallback after standard hard binding failure | **gap** — no `c2pa.hash.multi-asset` fallback; a failed hard binding stays failed — stricter than the rule, not laxer |
 | `PRED-ASSE-022` | shall | Content validation failure signalling | **yes** — every failure is reported and an ingredient never masks one in the active manifest (SPEC-021, CAI-12751) |
-| `PRED-ASSE-023` | shall | Inception action position validation | partial — `ActionsCheck` requires the first action to be `c2pa.created` or `c2pa.opened`; it does not require a `c2pa.created` appearing later to be first, nor that `created_assertions`' first actions reference resolves to `c2pa.actions.v2` |
+| `PRED-ASSE-023` | shall | Inception action position validation | partial — `ActionsCheck` requires the first action to be `c2pa.created` or `c2pa.opened`, and since SPEC-033 refuses a second opening anywhere in the claim (a later `c2pa.created` included); it does not require `created_assertions`' first actions reference to resolve to `c2pa.actions.v2` |
 | `PRED-ASSE-024` | shall | reviewRatings absent when dataSource is human entry | **gap** — `reviewRatings` alongside a `humanEntry` `dataSource` is not rejected |
 | `PRED-ASSE-025` | shall | Mandatory digitalSourceType for editorial and created actions | partial — since 2026-09-24 (SPEC-032): a `c2pa.created` in a v2 claim without `digitalSourceType` is `assertion.action.malformed`, as both `c2patool` versions; other actions are not required to carry one, which no oracle enforces and §15 does not ask |
 | `PRED-ASSE-026` | shall | Alternative content representation choice exclusivity | **gap** — follows from ASSE-013 |
@@ -286,7 +286,7 @@ manifest may say.
 
 - `PRED-ASSE-024` — `reviewRatings` alongside a `humanEntry` `dataSource`
 - `PRED-ASSE-025` (partial since SPEC-032) — a `digitalSourceType` on actions other than `c2pa.created`
-- `PRED-ASSE-023` (partial) — a `c2pa.created` that is not the first action
+- `PRED-ASSE-023` (partial) — `created_assertions`' first actions reference resolving to `c2pa.actions.v2`
 - `PRED-ASSE-013`, `014`, `026` — `c2pa.alternative-content-representation`
 - `PRED-CRYP-024` — `c2pa.session-keys`: its `signerBinding` is not verified
 - `PRED-CRYP-006` — a trust anchor with `notBefore`/`notAfter` gating
@@ -319,7 +319,12 @@ c2patool is never a surprise.
 
 ## Outside the catalogue
 
-The catalogue names 150 predicates, and none of them mentions EKUs. One
+The catalogue names 150 predicates, and none of them mentions EKUs or most
+of §15.10.3.2.3's actions rules. The actions rules are enforced since
+SPEC-033: ingredient references of the right relationship,
+`c2pa.translated`'s languages, `relatedAssertions`, and a watermark's soft
+binding. Icons in `softwareAgents`/`templates` and `c2pa.redacted` are not
+enforced yet. One
 obligation of C2PA 2.4 that this verifier does not meet has come up anyway,
 and is listed here so that a table built from the catalogue does not hide
 it.

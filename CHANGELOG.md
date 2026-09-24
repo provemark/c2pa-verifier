@@ -5,6 +5,22 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Added
+- SPEC-033: the actions content rules `c2patool` enforces, for v2 claims.
+  - Only one opening action.
+  - `c2pa.opened`, `c2pa.placed` and `c2pa.removed` need ingredient
+    references of the right relationship, and `c2pa.transcoded` and
+    `c2pa.repackaged` need a `parentOf` when they name one.
+  - `c2pa.translated` needs both languages.
+  - `relatedAssertions` must be non-empty and resolvable, and must not
+    name actions or ingredients.
+  - A watermark action needs a soft binding.
+  - Two new status codes: `assertion.action.ingredientMismatch` and
+    `assertion.action.softBindingMissing`. The surface is 114 symbols.
+  - No corpus verdict changed.
+
 ## 0.2.0 — 2026-09-24
 
 Safety fixes, and the first measurement against `c2patool` 0.28.0. Every

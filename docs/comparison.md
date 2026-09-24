@@ -39,7 +39,7 @@ The settings shape 0.28.0 reads (`trust.anchors`) is read here too
 | CAWG identity assertions | validated (their own X.509 credential) | refused (`general.error` on the assertion) — `C_with_CAWG_data`, `cawg_ica` | a CAWG spec |
 | Remote manifests (`dcterms:provenance` URL) | fetched over the network | reported as `remote_manifest`, never fetched — `cloud.jpg`, the Photoshop file | never (by design) |
 | OCSP staples, certificate revocation | checked (with network) | **the responses stapled into the signature are checked** (SPEC-030): a verified `revoked` makes the file `Invalid`, and every file reports whether revocation was checked at all. c2patool 0.27.22 emits no OCSP code of its own on the two fixtures that carry a stapled response, so this verifier says more here, not less | an online OCSP query, an AIA fetch or a CRL — never in the verification path |
-| Assertion content beyond the actions opening rule and `c2pa.created`'s `digitalSourceType` (SPEC-032) — the rest of c2pa-rs `verify_actions` 2.b–2.f, `assertion.required.missing`, `assertion.action.redacted` | validated | not read (`SPEC013_NOT_YET`) — no corpus file shows a difference | M7 / a spec |
+| Assertion content beyond the actions rules of SPEC-018, SPEC-032 and SPEC-033 — icons in `softwareAgents`/`templates` (c2pa-rs 2.e/2.f/2.h), `assertion.required.missing`, `assertion.action.redacted` | validated | not read (`SPEC013_NOT_YET`) — no corpus file shows a difference | M7 / a spec |
 | `c2pa.hash.data.part`, `c2pa.hash.multi-asset` (a second asset's hashes, e.g. Ultra HDR) | not validated either | not read | — |
 | Unknown critical X.509 extensions on the signer | refused | not seen (`openssl_x509_parse` does not flag them) — the one place this verifier is *more lenient* by omission, no corpus file shows it | an amendment with the DER reader |
 | JSON report | assertions rendered, thumbnails, ingredient tree | `c2patool`'s five keys, `format`, `has_manifest`, `remote_manifest`, `checks_performed`; assertions decoded but not rendered | — |
@@ -75,6 +75,8 @@ files with the same trust anchors.
 
 | difference | why | where named |
 |---|---|---|
+| `relatedAssertions` and the watermark's soft binding are checked; `c2patool` 0.27.22 did not check them (0.28.0 does) | C2PA 2.4 §15.10.3.2.3 | SPEC-033 AC6–AC7 |
+| An action's ingredient reference is resolved by its label, as `c2pa-rs` does, not by its hash; a `c2pa.removed` reference is looked up in the current claim, as `c2pa-rs` does, where §15.10.3.2.3 says *another manifest* | maintainer's decision (open question 2); no fixture shows either reading | SPEC-033 open questions 2–3 |
 | An external reference whose `location` carries `alg` without `hash`, or `hash` without `alg`, is `assertion.external-reference.malformed`; both `c2patool` versions read it as unhashed and accept it | C2PA 2.4 §15.10.3.2.2: *"one of alg or hash but not both"* shall be rejected (step 122) | SPEC-032 AC5 |
 | The external-reference checks themselves (a `location` with a `url`, the forbidden labels) are `c2patool` 0.28.0's; 0.27.22 accepted all of them | §15.10.3.2.2 | SPEC-032 AC4–AC5 |
 | `c2pa.created` without `digitalSourceType` is refused in v2 claims only, as `c2pa-rs` does; C2PA 2.4 states it for the claim generator (§18.15.2), not among §15's validation steps | the verdict follows `c2patool` (maintainer's decision) | SPEC-032 AC1–AC2 |

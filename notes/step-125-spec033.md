@@ -50,3 +50,54 @@ guard: the corpus's four `c2pa.opened` actions must not gain an
 `ingredientMismatch`.
 
 Committed locally, not pushed.
+
+## 125b — built
+
+- **`ActionsCheck::contentRules()`**, called from `checkAssertions()` for
+  v2 claims once the opening rule has passed (amendment 1), and for
+  update manifests, which are exempt from the opening rule only. It
+  holds six rules:
+  - one opening across the claim, on its bare label;
+  - opened, placed and removed need references (both of `c2pa-rs`'s
+    faults for an empty list), resolving by label to `parentOf` (opened,
+    exactly one) or `componentOf` (placed, removed, at least one);
+  - transcoded and repackaged need a `parentOf` when they name any;
+  - `c2pa.translated` needs both languages;
+  - `relatedAssertions` must be non-empty and resolve in this manifest,
+    faults on the reference's own url, and must not name actions or
+    ingredients;
+  - a watermark action needs a `c2pa.soft-binding`.
+- `check()` now passes the claim's labels and its ingredients'
+  relationships.
+- Two `StatusCode` cases, and the surface goes 112 → 114.
+
+### What the red-to-green run found
+
+- Every probe's `assertion.action.*` faults equal `c2patool` 0.28.0's,
+  code and url, on the first green run.
+- **Two specs' tests asserted the surface's total.** SPEC-032 AC7 said 112
+  and this spec's AC9 said 114, so every later spec would break an older
+  test. The total now lives only in `ApiSurfaceTest`, and the specs'
+  tests assert their own symbols (SPEC-032 amendment 2, SPEC-033
+  amendment 2).
+- SPEC-015 AC10's code count goes 46 → 48.
+- `composer check`: 450 passed, clean.
+
+### Measured: what changed across the corpus
+
+966 lines (322 files × three settings), old code in a worktree with its
+own `vendor/`: the 42 probe lines moved as their criteria ask, and
+**one other file**. `update-manifest/ingredient-inputto.jpg` gains
+`assertion.action.ingredientMismatch`, and its verdict stays `Invalid`.
+Its update manifest opens with an ingredient whose relationship SPEC-022's
+variant turned into `inputTo`. Both `c2patool` versions refuse the file
+before they read the actions, so this code has no oracle (amendment 2).
+
+### The public record
+
+- `docs/conformance.md`: `PRED-ASSE-023` narrowed (a second opening is
+  refused), and *Outside the catalogue* names the actions rules now
+  enforced and the icons and `c2pa.redacted` that are not.
+- `docs/comparison.md`: two rows (0.28.0-only rules; resolution by label,
+  and `c2pa.removed` in the current claim).
+- `CHANGELOG.md`: a new `Unreleased` section.

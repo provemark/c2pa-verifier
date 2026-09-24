@@ -163,5 +163,7 @@ it('AC9: the vocabulary grows by two codes, verbatim', function (): void {
         'assertion.action.softBindingMissing' => ['AssertionActionSoftBindingMissing', true],
     ]);
     $surface = (array) file(dirname(__DIR__, 2).'/Fixtures/api/public-surface.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    expect($surface)->toHaveCount(114);
+    // SPEC-033 amendment 2: this spec's two symbols are recorded; the surface's size is ApiSurfaceTest's alone
+    expect(in_array('Report\StatusCode :: const AssertionActionIngredientMismatch', $surface, true))->toBeTrue()
+        ->and(in_array('Report\StatusCode :: const AssertionActionSoftBindingMissing', $surface, true))->toBeTrue();
 })->group('SPEC-033');

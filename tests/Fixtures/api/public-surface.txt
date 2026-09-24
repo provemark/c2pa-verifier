@@ -2,7 +2,9 @@ Cli\Command :: const USAGE
 Cli\Command :: method __construct
 Cli\Command :: method run
 Report\StatusCode :: const AlgorithmUnsupported
+Report\StatusCode :: const AssertionActionIngredientMismatch
 Report\StatusCode :: const AssertionActionMalformed
+Report\StatusCode :: const AssertionActionSoftBindingMissing
 Report\StatusCode :: const AssertionBmffHashMatch
 Report\StatusCode :: const AssertionBmffHashMismatch
 Report\StatusCode :: const AssertionDataHashAdditionalExclusionsPresent

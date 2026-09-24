@@ -6117,3 +6117,22 @@ README are where the disclosure lives.
 - Reasoned: `c2pa-rs` returns after the opening fault, hence amendment 1.
 - Decided by Maurice: approve SPEC-033 and follow c2pa-rs on question 2.
   Committed locally, not pushed.
+
+## 2026-09-24 — Step 125b, SPEC-033 implemented
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: continuing the approved SPEC-033 (tests seen red in 125a).
+- Produced: `src/Manifest/ActionsCheck.php` (`contentRules()`, `base()`, the
+  context from `check()`); `src/Report/StatusCode.php` (two cases);
+  `tests/Fixtures/api/public-surface.txt` (+2); test updates
+  (`ActionsContentTest` AC9, `AssertionRulesTest` AC7, `ApiSurfaceTest`,
+  `CertificateProfileCheckTest`); SPEC-033 `implemented` with traceability
+  and amendment 2; SPEC-032 amendment 2; SPEC-018 amendment 5; SPEC-025
+  amendment 6; `docs/conformance.md`, `docs/comparison.md`, `CHANGELOG.md`
+  (`Unreleased`), `README.md` (the amendment count); the 125b half of the
+  note; rows in `docs/milestones.md` and `NOTES.md`.
+- Measured: `vendor/bin/pest --group=SPEC-033` gives 9 passed.
+  `composer check` gives 450 passed, clean. 966 runs before and after (own
+  vendor copy in the worktree): the probes, plus `ingredient-inputto.jpg`
+  gaining one code with its verdict unchanged. Both c2patool versions
+  refuse that file before reading its actions.
+- Decided by Maurice: none in this step beyond the approval.

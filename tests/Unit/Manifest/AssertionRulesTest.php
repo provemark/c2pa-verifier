@@ -170,6 +170,6 @@ it('AC7: the vocabulary grows by one code, verbatim', function (): void {
         ->and(array_map(static fn (StatusCode $c): string => $c->name, $found))->toBe(['AssertionExternalReferenceMalformed'])
         ->and(array_map(static fn (StatusCode $c): bool => $c->isFailure(), $found))->toBe([true]);
     $surface = (array) file(dirname(__DIR__, 2).'/Fixtures/api/public-surface.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    expect(in_array('Report\StatusCode :: const AssertionExternalReferenceMalformed', $surface, true))->toBeTrue()
-        ->and($surface)->toHaveCount(112);
+    // SPEC-032 amendment 2: this spec's symbol is recorded; the surface's size is ApiSurfaceTest's alone
+    expect(in_array('Report\StatusCode :: const AssertionExternalReferenceMalformed', $surface, true))->toBeTrue();
 })->group('SPEC-032');

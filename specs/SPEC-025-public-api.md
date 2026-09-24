@@ -278,6 +278,16 @@ reasoning that led to it stays readable.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 122).
 
+6. **2026-09-24, step 125b, with SPEC-033's implementation** — `StatusCode`
+   grows by two cases, `AssertionActionIngredientMismatch =
+   'assertion.action.ingredientMismatch'` and
+   `AssertionActionSoftBindingMissing = 'assertion.action.softBindingMissing'`
+   (C2PA 2.4 §15.10.3.2.3). The recorded surface goes 112 → **114**. Specs'
+   own tests no longer assert the total (SPEC-032 amendment 2, SPEC-033
+   amendment 2); `ApiSurfaceTest` does.
+
+   **Weight B: the vocabulary grew, verbatim.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
