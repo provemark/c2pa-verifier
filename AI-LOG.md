@@ -6239,3 +6239,19 @@ README are where the disclosure lives.
   (`Manifest::checkReferences()`); the size of a redaction spec is an
   estimate.
 - Decided by Maurice: look for more before any release.
+
+## 2026-09-24 — SPEC-035 drafted
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, schrijf SPEC-035 als draft".
+- Produced: `specs/SPEC-035-redactions.md` (draft, eight criteria plus a
+  combined one, four open questions); rows in `docs/milestones.md` and
+  `NOTES.md`. No test or code.
+- Measured: c2patool 0.28.0's codes on step 128's redacting child (active
+  clean; the ingredient delta holds `ingredient.claimSignature.validated`,
+  informational). Which of the six codes `StatusCode` lacks: all six. Both
+  c2patool versions on `ingredient-manifest/redacted.png`.
+- Reasoned: C2PA 2.4 §6.6, §6.8, §10.2.2, §10.3.2.1, §15.10.3.1,
+  §15.11.3.3, §15.11.3.3.1; `c2pa` 0.91.0 `ingredient_checks()` (the
+  claim-signature route taken only when the hashes differ, the manifest
+  has redactions, and the ingredient is v2+).
+- Decided by Maurice: SPEC-035 as a draft.
