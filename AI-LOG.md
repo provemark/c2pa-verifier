@@ -6487,3 +6487,24 @@ README are where the disclosure lives.
   remaining range); C2PA 2.4 and `c2pa` as in step 133.
 - Decided by Maurice: SPEC-038 as a draft; the measurement not yet in the
   issue.
+
+## 2026-09-24 — SPEC-038 approved; fixtures and tests seen red (step 134a)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, volg het voorstel bij vraag 1, SPEC-038 goedgekeurd".
+- Produced: SPEC-038 approved with the answers; `bin/make-spec038-variants.php`
+  (step 133's route, plus `bmffDigest()`, a port of c2pa-rs's BMFF hashing
+  used only to give positive variants their digest);
+  `tests/Fixtures/bmff-shape/` and both c2patool versions' reports and
+  corpus records under `tests/Fixtures/c2patool/bmff-shape/`;
+  `tests/Unit/Hash/BmffShapeTest.php`; `notes/step-134-spec038.md`; rows
+  in `NOTES.md` and `docs/milestones.md`.
+- Measured: the port reproduces the fixture's signed digest; both
+  versions on all fifteen variants (the five rehashed subset shapes
+  Trusted, among them the head-removing one this verifier gets wrong);
+  the informational code over the corpus's 24 BMFF files (0.28.0: 12,
+  0.27.22: 0); `vendor/bin/pest --group=SPEC-038` (6 failed, 1 guard
+  passed); `composer check` (all else green, 480).
+- Reasoned: `c2pa` `hash_utils.rs` `hash_stream_by_alg` (how offset
+  markers are split into and added beside the included ranges) at
+  `6c92bc3`.
+- Decided by Maurice: SPEC-038 approved; question 1: emit the code.

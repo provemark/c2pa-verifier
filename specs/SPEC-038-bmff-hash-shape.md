@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -192,6 +192,10 @@ public static function plan(array $tree, array $exclusions, callable $readAt): a
 ```
 
 ## Open questions
+
+*Answered on approval, 2026-09-24:* question 1 by the maintainer (the
+proposal: emit the informational code, as 0.28.0). Questions 2 and 3 were
+settled by adopting their proposals.
 
 1. **The informational code on nearly every BMFF file.** Only 0.28.0
    reports it, and it would appear on every signed MP4, MOV, AVIF and HEIC

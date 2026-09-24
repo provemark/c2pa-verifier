@@ -1,0 +1,4 @@
+Error: could not decode assertion c2pa.hash.bmff.v3 (version 3, content type application/cbor): missing field `exclusions`
+
+Caused by:
+    missing field `exclusions`
