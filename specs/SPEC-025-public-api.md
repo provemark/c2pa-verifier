@@ -348,6 +348,8 @@ reasoning that led to it stays readable.
 
     **Weight B: the vocabulary grew, verbatim.**
 
+    Confirmed by Maurice van Loon, 2026-09-24 (step 137).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

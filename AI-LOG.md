@@ -6636,3 +6636,12 @@ README are where the disclosure lives.
   only the one variant moved).
 - Reasoned: nothing new.
 - Decided by Maurice: none in this step.
+
+## 2026-09-24 — SPEC-040's amendment confirmed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, bevestigd, nog geen release".
+- Produced: a confirmation line under the SPEC-025 amendment for
+  SPEC-040; README (130 amendments, every one confirmed); the step-137
+  note and the milestones row.
+- Measured: `composer check`.
+- Decided by Maurice: the amendment confirmed; no 0.3 release yet.

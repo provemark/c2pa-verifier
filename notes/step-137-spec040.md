@@ -52,4 +52,5 @@ entry, still `Invalid`.
 `composer check`: exit 0, 498 tests. `docs/conformance.md`:
 `PRED-ASSE-004` goes from *partial* to *yes*.
 
-One amendment awaits confirmation: SPEC-025, the code.
+One amendment, SPEC-025's for the code, confirmed by the maintainer the
+same day.
