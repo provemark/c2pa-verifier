@@ -6779,3 +6779,22 @@ README are where the disclosure lives.
 - Decided by Maurice: an article rather than an announcement, the
   sentence about Claude Code, the EXIF story; publish now; no request to
   the CAI community-resources page until it is right.
+
+## 2026-09-24 — A proposal to Pixelfed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: that the library deserves more attention; a draft for Pixelfed,
+  put in Maurice's style; then "plaats het issue maar bij Pixelfed".
+- Produced: https://github.com/pixelfed/pixelfed/issues/7453,
+  "[Enhancement]: Detect AI-generated images from their C2PA Content
+  Credentials on upload", in the fields of their enhancement form.
+  Nothing in this repository changes beyond this entry.
+- Measured: Pixelfed requires PHP ^8.3; it optimises uploads
+  (`jpegoptim --strip-exif`, `optipng -strip all`, intervention/image);
+  issue #5911 (an AI label) closed as a duplicate, with a request to hide
+  AI content; dansup and shleeable answer issues this month. On the
+  corpus: `writers/openai-20260826-c2pa_2x.png` is Valid with `c2pa.created`
+  and `trainedAlgorithmicMedia`; Amazon Titan carries the marking but is
+  Invalid (an old certificate); the Google Pixel file is
+  `computationalCapture`, so it was left out of the text, as was Firefly
+  (not in the corpus).
+- Decided by Maurice: the text and posting it.
