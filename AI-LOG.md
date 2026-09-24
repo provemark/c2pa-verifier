@@ -6036,3 +6036,11 @@ README are where the disclosure lives.
 - Measured: `bin/spec-check.php` OK.
 - Decided by Maurice: the three amendments confirmed; no tag yet; reply
   on #2 only.
+
+## 2026-09-24 — Issue #3 closed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, sluit #3 met een korte toelichting, geen tag".
+- Produced: a closing comment on issue #3 (what SPEC-032 checks, the new
+  status code, what both oracles say, where the details are); the issue is
+  closed. No tag.
+- Decided by Maurice: close #3; no tag.
