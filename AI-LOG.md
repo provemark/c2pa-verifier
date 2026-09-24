@@ -5917,3 +5917,14 @@ README are where the disclosure lives.
 - Reasoned: the two corrected bullets were contradicted by steps 61 and
   113.
 - Decided by Maurice: no tag yet.
+
+## 2026-09-24 — Step 120, the eleven amendments for confirmation
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, zet ze op één pagina".
+- Produced: `notes/step-120-amendments-since-93.md` (the eleven by weight,
+  each with what, why and which verdicts moved); rows in
+  `docs/milestones.md` and `NOTES.md`.
+- Measured: 98 amendments across the specs, 87 confirmed through step 93.
+- Reasoned: the weights as each amendment states them; SPEC-017 #4 is
+  listed under A because its verdict change is carried by SPEC-012 #7.
+- Decided by Maurice: none yet; the page awaits his confirmation.
