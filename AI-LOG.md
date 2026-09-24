@@ -6538,3 +6538,19 @@ README are where the disclosure lives.
 - Measured: `composer check`.
 - Decided by Maurice: the four amendments confirmed; issue #4 closed; no
   0.3 release yet.
+
+## 2026-09-24 — SPEC-039 drafted: claimSignature.insideValidity
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "wat kan er nog meer in 0.3?", then "ja, schrijf punt 1 als
+  draft".
+- Produced: `specs/SPEC-039-claim-signature-inside-validity.md` (draft,
+  six criteria, two open questions); rows in `docs/milestones.md` and
+  `NOTES.md`. No test or code.
+- Measured: the status codes `c2pa` uses outside its tests against
+  `StatusCode` (22 missing); over every recorded c2patool report, where
+  `claimSignature.insideValidity` appears (exactly beside
+  `claimSignature.validated`, in 366 active manifests and 39 ingredient
+  deltas, before it, also beside `signingCredential.expired` in six).
+- Reasoned: C2PA 2.4 §15.8 and the §15 table at `4eb2c67`; `c2pa`
+  `claim.rs` `verify_internal` at `6c92bc3`.
+- Decided by Maurice: SPEC-039 as a draft.
