@@ -5530,3 +5530,28 @@ README are where the disclosure lives.
   label carries `iat` (text `"iat"` or CWT claim 6) is left open and is
   named in the issue as the first question.
 - Decided by Maurice: park the issue (option A) rather than draft a spec.
+
+## 2026-09-24 — Issue #9 (time-gated anchors) measured and parked
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "#9 oppakken"; after the measurements, "akkoord met allebei"
+  (park #9, then measure the settings format of c2patool 0.28.0).
+- Produced: a comment on issue #9 with the measurements; a new label
+  `waiting upstream`, applied to #9. No specification, test or code.
+- Measured: `c2pa-org/conformance-public` `trust-list/` at `99927ca`
+  (2026-08-14). The PEM carries no dates. The two ETSI TS 119 602 JSON lists
+  hold 30 + 22 services, all `trusted`, each with only a
+  `StatusStartingTime` (2025-05-08 … 2026-08-10); no `untrusted`, no
+  `ServiceHistory`, no `notBefore`/`notAfter`. `contentauth/c2pa-rs`
+  0.91.0: no date field on either `TrustAnchor`.
+- Reasoned: VAL-CRYP-0010/0011 are conditional on an anchor configuration
+  carrying a date. Neither this verifier's settings nor c2patool's can
+  carry one, so nothing is ignored today. Reading `StatusStartingTime` as a
+  `notBefore` would be an interpretation of our own that disagrees with
+  c2patool. The issue's claim that the official list is time-gated was half
+  right, and the comment corrects it.
+- Found on the way: c2pa-rs 0.91.0 (2026-09-21) deprecates
+  `trust.trust_anchors` in favour of `trust.anchors`, with removal
+  announced for 0.92.0 (mid-November 2026); c2patool 0.28.0 was released
+  2026-09-22. That is the next step.
+- Decided by Maurice: park #9 and leave `docs/conformance.md` as it is;
+  measure the settings format next.
