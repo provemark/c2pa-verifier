@@ -5,11 +5,17 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.2.0 — 2026-09-24
 
-**This will be `0.2.0`, not `0.1.1`:** a settings file with a top-level
+Safety fixes, and the first measurement against `c2patool` 0.28.0. Every
+file whose result 0.28.0 changed was examined. Two were holes here and
+are closed; the rest are aligned or named in `docs/comparison.md`.
+
+**A `0.2`, not a `0.1.1`:** a settings file with a top-level
 `trust.allowed_list` that worked in 0.1.0 is refused now. That is a
-break, and `^0.1` must not pull it in silently.
+break, and `^0.1` does not pull it in. Everything else a 0.1.0 caller
+wrote keeps working. The public API grew (eleven classes, 112 symbols)
+and lost nothing.
 
 ### Added
 - SPEC-032: two rules the oracles enforce.

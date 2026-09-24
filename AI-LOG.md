@@ -6058,3 +6058,15 @@ README are where the disclosure lives.
 - Reasoned: `c2pa` 0.91.0 `verify_actions()` read for its rule list; the
   size (one spec, about eight criteria, two codes) is an estimate.
 - Decided by Maurice: measure before tagging.
+
+## 2026-09-24 — Release 0.2.0 prepared and tagged
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, tag 0.2.0".
+- Produced: `CHANGELOG.md` (`Unreleased` becomes `0.2.0 — 2026-09-24`, with
+  a release paragraph); `README.md` (the current tag, and what broke
+  coming from 0.1.0); an annotated tag `v0.2.0` on the release commit,
+  pushed after CI was green on that exact commit.
+- Measured: `composer check` gives 441 passed; `bin/package-check.php` gives
+  269 files, 2.8 MB. CI on the release commit, and the GitHub archive
+  of the tag against the local count, are recorded in the next entry.
+- Decided by Maurice: tag 0.2.0.
