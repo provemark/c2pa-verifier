@@ -6222,3 +6222,20 @@ README are where the disclosure lives.
   the no-network rule. That Adobe's Content Authenticity app writes CAWG
   is unverified.
 - Decided by Maurice: measure CAWG before deciding 0.3.
+
+## 2026-09-24 — Step 128, more candidates for 0.3 measured
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "nog geen 0.3 maar kijk wat er nog meer in kan".
+- Produced: `notes/step-128-more-for-0.3.md`, rows in `docs/milestones.md`
+  and `NOTES.md`. No specification, test or code.
+- Measured:
+  - c2patool 0.28.0 with `prefer_box_hash` still writes `c2pa.hash.data`.
+  - A redacting child built with `-p` and `redactions` (with and without a
+    `c2pa.redacted` action) is Trusted in c2patool 0.27.22 and 0.28.0 and
+    Invalid here (`assertion.missing`).
+  - Where `c2pa-rs` reads the time-stamp assertion; `c2patool`'s command
+    line cannot write one.
+- Reasoned: the cause of the redaction refusal is read from the message
+  (`Manifest::checkReferences()`); the size of a redaction spec is an
+  estimate.
+- Decided by Maurice: look for more before any release.
