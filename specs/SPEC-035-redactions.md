@@ -263,6 +263,8 @@ Questions 2, 3 and 4 were settled by adopting their proposals.
 
    Weight C: how the rules are evidenced, not what they say.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 129).
+
 2. **2026-09-24, step 129a, measured and read before the tests.**
    A second existing fixture carries a redaction: SPEC-010's
    `binding/claim-redacted.png`. Its claim names its own actions
@@ -300,6 +302,8 @@ Questions 2, 3 and 4 were settled by adopting their proposals.
    Weight B: one existing file changes its failure code, and one refusal
    stays.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 129).
+
 3. **2026-09-24, step 129b, read while building.** `c2pa`'s
    `ingredient_checks()` takes the claim-signature route on the
    ingredient **claim's** version (2 or later), not the ingredient
@@ -317,6 +321,8 @@ Questions 2, 3 and 4 were settled by adopting their proposals.
    sits in the active manifest.
 
    **Weight B: a divergence that fails closed, and a difference of scope.**
+
+   Confirmed by Maurice van Loon, 2026-09-24 (step 129).
 
 ## Traceability
 

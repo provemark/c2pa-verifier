@@ -421,6 +421,8 @@ instead, beside the orchestration that already holds those collaborators.
 
    **Weight B: one fixture's failure codes change; its verdict does not.**
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 129).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

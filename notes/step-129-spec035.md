@@ -158,5 +158,5 @@ Conformance: `PRED-INGR-002`, `PRED-ASSE-003` and `PRED-ASSE-009` go from
 *closed* to *yes*. The count is now yes 59 and closed 4; gaps are
 unchanged at 14.
 
-Seven amendments await confirmation: SPEC-035 #1–#3, SPEC-011 #3,
-SPEC-021 #5, SPEC-013 #14 and SPEC-025 #7.
+Seven amendments: SPEC-035 #1–#3, SPEC-011 #3, SPEC-021 #5, SPEC-013 #14
+and SPEC-025 #7. All seven confirmed by the maintainer the same day.

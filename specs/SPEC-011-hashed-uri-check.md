@@ -342,6 +342,8 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report` (already), plus `Jumbf`
 
    **Weight B: one variant's failure code changes; its verdict does not.**
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 129).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

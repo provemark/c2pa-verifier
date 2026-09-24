@@ -494,6 +494,8 @@ final class ManifestException extends \RuntimeException
 
     **Weight C: the alarm got stricter; no verdict changed.**
 
+    Confirmed by Maurice van Loon, 2026-09-24 (step 129).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

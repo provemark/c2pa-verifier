@@ -6310,3 +6310,13 @@ README are where the disclosure lives.
   entry naming the manifest; the signature box payload hashed under the
   claim's algorithm); `calc_sig_box_hash()`.
 - Decided by Maurice: none in this step.
+
+## 2026-09-24 — SPEC-035's seven amendments confirmed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, alle zeven bevestigd, nog geen release" (all seven
+  confirmed, no release yet).
+- Produced: a confirmation line under SPEC-035 #1–#3, SPEC-011 #3,
+  SPEC-021 #5, SPEC-013 #14 and SPEC-025 #7; README (115 amendments,
+  every one confirmed); the step-129 note and the milestones row.
+- Measured: `composer check`.
+- Decided by Maurice: the seven amendments confirmed; no 0.3 release yet.
