@@ -50,7 +50,7 @@ the exclusion that starts where the store starts "shall be treated as the
 current length of the entire C2PA Manifest Store". The writer hashed it
 that way, `c2pa-rs` reads it that way, and SPEC-022 implements it. The Go
 verifier appears not to, and reports a mismatch on a file that is whole.
-Reporting it to that project is the maintainer's call.
+Reporting it to that project was the maintainer's call; it was reported on 2026-09-24 as richardwooding/c2pa#72.
 
 ### 2. Thirteen files this verifier refuses and the Go verifier accepts
 

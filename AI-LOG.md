@@ -6738,3 +6738,23 @@ README are where the disclosure lives.
 - Decided by Maurice: the comment on #11; closing #2 (the general
   `digitalSourceType` case, which no oracle enforces) and #10 (`iat`, a
   *may* no writer or oracle uses).
+
+## 2026-09-24 — Step 61's finding reported to richardwooding/c2pa
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: suggestions for where else to post; "ja, schrijf een concept
+  voor de bugmelding", then "plaats de bugmelding maar bij
+  richardwooding/c2pa".
+- Produced: https://github.com/richardwooding/c2pa/issues/72, "Data hash
+  mismatch on a file with an update manifest (§15.12.1.1 exclusion
+  adjustment)". Nothing in this repository changes beyond this entry.
+- Measured: their `main` equals v0.22.0 (`3ad7258`); the Go verifier at
+  that commit, built in a container from `tools/go-oracle/`, still gives
+  `assertion.dataHash.mismatch` and binding `failed` on
+  `c2pa-rs/update_manifest.jpg`; c2patool 0.27.22 and 0.28.0 give
+  `assertion.dataHash.match`; our copy of the file is c2pa-rs's
+  `sdk/tests/fixtures/update_manifest.jpg` (same git blob); the two-way
+  hash is step 61's.
+- Reasoned: their `hashbinding.go` `verifyDataHash()` uses the recorded
+  exclusions without the §15.12.1.1 adjustment; C2PA 2.4 §15.12.1.1 read
+  at `4eb2c67`.
+- Decided by Maurice: the text and posting it.
