@@ -1,7 +1,7 @@
 # What this verifier does, does not do, and where it differs from `c2patool`
 
 Measured against `c2patool` 0.27.22 (`c2pa/0.90.22`), last reviewed
-2026-09-23, over the five fixture corpora — 22 own variants, 24 files of
+2026-09-24, over the five fixture corpora — 22 own variants, 24 files of
 `c2pa-org/public-testfiles`, 17 of `c2pa-rs`'s own fixtures, 7 from other
 writers and 23 of the algorithm matrix, 93 in all — plus the signed
 absence variants. The drift alarms run all of it on every `composer
@@ -27,6 +27,28 @@ files whose result 0.28.0 changed, every one has been examined:
 
 The settings shape 0.28.0 reads (`trust.anchors`) is read here too
 (SPEC-031). Each remaining difference is a row below.
+
+**Since 0.2.0** (SPEC-033 to SPEC-040), every new rule was measured on
+signed probes under **both** versions before it was built. Their answers
+are recorded beside the probes, under `tests/Fixtures/c2patool/`:
+`actions-rules/`, `icons/`, `redactions/`, `hard-binding-redacted/`,
+`redacted-action/`, `bmff-shape/`, `outside-manifest/` and
+`inside-validity/`.
+
+Where the two versions differ, this verifier follows 0.28.0:
+- it checks `relatedAssertions` and a watermark's soft binding (SPEC-033),
+  which 0.27.22 did not;
+- it reports a redacted hard binding as `assertion.hardBinding.redacted`
+  (SPEC-036), where 0.27.22 says the deprecated
+  `assertion.dataHash.redacted`;
+- it reports `assertion.bmffHash.additionalExclusionsPresent` (SPEC-038),
+  which 0.27.22 never emits;
+- it reports `assertion.notRedacted` beside the other two codes on a
+  self-redacted actions assertion (SPEC-035), where 0.27.22 reports only
+  those two.
+
+The drift alarms still compare with 0.27.22's recorded JSON, so none of
+these rows moves an alarm.
 
 ## Where `c2patool` can do more
 

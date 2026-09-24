@@ -7,76 +7,98 @@ committed.
 
 ## Unreleased
 
-### Added
-- SPEC-033: the actions content rules `c2patool` enforces, for v2 claims.
-  - Only one opening action.
-  - `c2pa.opened`, `c2pa.placed` and `c2pa.removed` need ingredient
-    references of the right relationship, and `c2pa.transcoded` and
-    `c2pa.repackaged` need a `parentOf` when they name one.
-  - `c2pa.translated` needs both languages.
-  - `relatedAssertions` must be non-empty and resolvable, and must not
-    name actions or ingredients.
-  - A watermark action needs a soft binding.
-  - Two new status codes: `assertion.action.ingredientMismatch` and
-    `assertion.action.softBindingMissing`. The surface is 114 symbols.
-  - No corpus verdict changed.
-- SPEC-034: icon references, checked as C2PA 2.4 §15.10.3.3 asks, in
-  `claim_generator_info` and, in v2 claims, in `softwareAgents`,
-  `templates` and an action's `softwareAgent`. A hashed-URI icon must name
-  an assertion the claim lists, with the hash the claim records. An
-  external url, or a data box of earlier versions, is `assertion.missing`.
-  No new status code, and no corpus verdict changed. Closes the gap of
-  issue #11.
-- SPEC-035: redactions (C2PA 2.4 §6.8, §15.10.3.1, §15.11.3.3.1).
-  - A child that redacts an assertion of its parent is read and judged,
-    no longer refused: `Trusted` where both `c2patool` versions say so.
-  - A v2 ingredient manifest with redacted assertions is bound by the
-    hash of its signature box: `ingredient.claimSignature.validated`
-    (informational), `.mismatch` or `.missing`.
+Intended as **0.2.1**. Closer to `c2patool`, in eight specifications
+(SPEC-033 to SPEC-040). Each was measured against `c2patool` 0.27.22 and
+0.28.0 on signed probes before any code was written. Where the two
+versions differ, this release follows 0.28.0 and names the difference in
+`docs/comparison.md`.
+
+**A `0.2.1`, not a `0.3`:** nothing that worked in 0.2.0 is refused by the
+API. No settings shape, class, method or member changes, and the public
+API only grows (112 → 126 symbols, all of them new status codes), as
+0.2.0's did. What changes is:
+- verdicts, on shapes that both `c2patool` versions already judged
+  differently, listed under *Fixed*;
+- the codes and success lines of some reports, listed under *Changed*.
+
+A caller that matches exhaustively on `StatusCode` without a default arm
+has 14 more cases to cover.
+
+### Fixed
+The verdict is now the one both `c2patool` versions give. No byte of an
+image or video could be changed unnoticed through any of these. Each is
+about what a manifest says of itself.
+- **Actions content rules (SPEC-033), for v2 claims.** Only one opening
+  action is allowed. `c2pa.opened`, `c2pa.placed` and `c2pa.removed` need
+  ingredient references of the right relationship, and `c2pa.transcoded`
+  and `c2pa.repackaged` need a `parentOf` when they name one.
+  `c2pa.translated` needs both languages. `relatedAssertions` must be
+  non-empty and resolvable, and must not name actions or ingredients. A
+  watermark action needs a soft binding. Shapes that broke these rules
+  were `Trusted` here (step 123).
+- **Icon references (SPEC-034)**, in `claim_generator_info` and, in v2
+  claims, in `softwareAgents`, `templates` and an action's
+  `softwareAgent`. An icon whose hash differs, that does not resolve, or
+  that points outside the manifest was `Trusted` here. Issue #11.
+- **Redactions (SPEC-035).** A child that redacts an assertion of its
+  parent, as `c2patool` 0.28.0's builder writes it, was `Invalid` here.
+  It is now read and judged, and is `Trusted` where both `c2patool`
+  versions say so. A v2 ingredient manifest with redacted assertions is
+  bound by the hash of its signature box
+  (`ingredient.claimSignature.validated`, informational, or `.mismatch`,
+  `.missing`).
+- **The `c2pa.redacted` action (SPEC-037).** In v2 claims, an action with
+  `parameters` must name in `redacted` an assertion that the named
+  manifest lists. A missing, relative or foreign reference is
+  `assertion.action.redactionMismatch`, and an unlisted label is
+  `assertion.notRedacted`. Four such shapes were `Trusted` here (step
+  131). A bare `c2pa.redacted` still passes, as in `c2patool`.
+- **The BMFF hash (SPEC-038).** Unsorted or overlapping `subset` ranges
+  are `assertion.bmffHash.malformed`. A top-level box that a `subset`
+  touches keeps its offset in the hash, at the box's start, as `c2pa-rs`
+  hashes it. Before, shapes with a `subset` covering a whole box were
+  `Trusted` here, and a correctly signed `subset` removing a box's head
+  was `Invalid` here (steps 133 and 134). Issue #4.
+
+### Changed
+Same verdict, but the report differs:
+- **The codes `c2patool` uses, where a refusal or an older code stood.**
   - A redacted actions assertion, a self-redaction, and a redacted box
-    that still holds content are `assertion.action.redacted`,
-    `assertion.selfRedacted` and `assertion.notRedacted`.
-  - A redacted hard binding stays refused.
-  - Six new status codes. The surface is 120 symbols.
-  - Two existing files change their failure codes but stay `Invalid`:
-    `general.error` becomes the redaction codes `c2patool` 0.28.0 reports.
-- SPEC-036: a redaction of a hard-binding assertion (`c2pa.hash.data`,
-  `.boxes`, `.bmff`, `.collection.data`) is reported as
-  `assertion.hardBinding.redacted`, as `c2patool` 0.28.0 reports it,
-  instead of `general.error`. It is still `Invalid`. `c2patool` 0.27.22
-  says the deprecated `assertion.dataHash.redacted`. One new status code;
-  the surface is 121 symbols.
-- SPEC-037: a `c2pa.redacted` action with `parameters` must name, in
-  `redacted`, an assertion that the named manifest's claim lists
-  (C2PA 2.4 §15.10.3.2.3, as `c2patool` reads it). A missing, relative
-  or foreign reference is `assertion.action.redactionMismatch`, and an
-  unlisted label is `assertion.notRedacted`. This closes four shapes both
-  `c2patool` versions call `Invalid` and this verifier called `Trusted`
-  (step 131). A bare `c2pa.redacted` passes, as in `c2patool`. One new
-  status code; the surface is 122 symbols.
-- SPEC-038: the BMFF hash's shape (issue #4), as `c2patool` checks it.
-  - An absent or empty `exclusions` list and unsorted or overlapping
-    `subset` ranges are `assertion.bmffHash.malformed`.
-  - A box that a `subset` touches keeps its offset in the hash, at the
-    box's start, as `c2pa-rs` hashes it. This closes five shapes both
-    `c2patool` versions judge differently from this verifier (step 133).
-  - `assertion.bmffHash.additionalExclusionsPresent` is reported,
-    informational, as `c2patool` 0.28.0 reports it: on nearly every BMFF
-    file, since `c2pa-rs`'s writer excludes `/free` and `/skip`. No
-    verdict changes.
-  - Two new status codes; the surface is 124 symbols. Conformance gaps
-    go from 14 to 11.
-- SPEC-039: `claimSignature.insideValidity`, the success both `c2patool`
-  versions list directly before `claimSignature.validated`, now appears
-  in the same place, for the active manifest and for ingredients. As in
-  `c2patool`, it accompanies every verified signature, an expired
-  signer's included. No verdict changes. One new status code; the surface
-  is 125 symbols.
-- SPEC-040: a claim entry that names another manifest's assertion is
-  refused with `assertion.outsideManifest` on the entry as written, as
-  C2PA 2.4 §15.10.3.1 and both `c2patool` versions name it, where this
-  verifier said `assertion.missing`. Still `Invalid`. One new status code;
-  the surface is 126 symbols.
+    still holding content are `assertion.action.redacted`,
+    `assertion.selfRedacted` and `assertion.notRedacted` (SPEC-035). Two
+    existing test files move from `general.error` to these codes.
+  - A redacted hard binding is `assertion.hardBinding.redacted`
+    (SPEC-036). 0.27.22 says the deprecated `assertion.dataHash.redacted`.
+  - An empty or absent BMFF `exclusions` list is
+    `assertion.bmffHash.malformed`, where it was
+    `assertion.bmffHash.mismatch` (SPEC-038).
+  - A claim entry naming another manifest's assertion is
+    `assertion.outsideManifest` on that entry (SPEC-040), where it was
+    `assertion.missing` on the store.
+- **Every verified signature now carries `claimSignature.insideValidity`**
+  (a success), directly before `claimSignature.validated`, for the active
+  manifest and for ingredients (SPEC-039). As in `c2patool`, this includes
+  an expired signer. The expiry itself stays `signingCredential.expired`.
+- **Nearly every BMFF file now carries
+  `assertion.bmffHash.additionalExclusionsPresent`** (informational), as
+  0.28.0 reports it. `c2pa-rs`'s writer excludes `/free` and `/skip`, which
+  count as additional (SPEC-038). 0.27.22 does not emit it.
+
+### Added
+- 14 status codes, verbatim from C2PA 2.4 §15:
+  - `assertion.action.ingredientMismatch`,
+    `assertion.action.softBindingMissing`,
+    `assertion.action.redacted` and
+    `assertion.action.redactionMismatch`;
+  - `assertion.selfRedacted`, `assertion.notRedacted` and
+    `assertion.hardBinding.redacted`;
+  - `assertion.bmffHash.malformed` and
+    `assertion.bmffHash.additionalExclusionsPresent`;
+  - `assertion.outsideManifest`;
+  - `ingredient.claimSignature.validated`, `.mismatch` and `.missing`;
+  - `claimSignature.insideValidity`.
+- `docs/conformance.md`: gaps go from 15 to 11, and 63 obligations are now
+  met in full (55 at 0.2.0).
 
 ## 0.2.0 — 2026-09-24
 

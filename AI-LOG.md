@@ -6645,3 +6645,22 @@ README are where the disclosure lives.
   note and the milestones row.
 - Measured: `composer check`.
 - Decided by Maurice: the amendment confirmed; no 0.3 release yet.
+
+## 2026-09-24 — The check before the release; 0.2.1 (step 138)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "Controleer nog goed of er niets is dat nog mee zou moeten in
+  0.3", then "ja, doe 1 t/m 3, liever 0.2.1 als dat logisch ook is".
+- Produced: `CHANGELOG.md` (the Unreleased section rewritten for 0.2.1:
+  introduction, Fixed, Changed, Added; the stale SPEC-035 line gone);
+  `docs/comparison.md` (its opening brought up to date);
+  `notes/step-138-pre-release-check.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: spec statuses, open amendments and pull requests;
+  `composer check` (498); `php bin/fuzz.php 20260925 60` over the corpora
+  and the fixture folders of SPEC-033 to SPEC-040 (9,021 runs, 0 faults,
+  41 surviving `Valid` all `Valid` in both c2patool versions); the status
+  codes and surface at `v0.2.0` against now (46 → 60 codes, 112 → 126
+  symbols; the 13 and 114 given in conversation were wrong).
+- Reasoned: the README's versioning rule and the 0.2.0 entry's reading of
+  it; 0.2.1 breaks nothing that worked.
+- Decided by Maurice: the three text fixes; the release to be 0.2.1.
