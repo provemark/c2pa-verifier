@@ -5,6 +5,7 @@ Report\StatusCode :: const AlgorithmUnsupported
 Report\StatusCode :: const AssertionActionIngredientMismatch
 Report\StatusCode :: const AssertionActionMalformed
 Report\StatusCode :: const AssertionActionRedacted
+Report\StatusCode :: const AssertionActionRedactionMismatch
 Report\StatusCode :: const AssertionActionSoftBindingMissing
 Report\StatusCode :: const AssertionBmffHashMatch
 Report\StatusCode :: const AssertionBmffHashMismatch

@@ -38,3 +38,43 @@ missing classes. Spec-check, Pint and Deptrac are clean, and the other
 473 tests pass.
 
 Committed locally, not pushed: CI sees this only together with 132b.
+
+## 132b — built
+
+`ActionsCheck` applies rule 2.d in its content rules (v2 claims only), to
+every `c2pa.redacted` action that has `parameters`:
+- `redactionFault()` returns `assertion.action.redactionMismatch` when
+  `redacted` is not a string, not an absolute `self#jumbf=/c2pa/<label>`
+  URI, or names a manifest not in the store;
+- it returns `assertion.notRedacted` when the named claim lists no
+  assertion whose url contains the label after `c2pa.assertions/`, or
+  when the URI names no assertion (a data box included);
+- the fault sits on the actions assertion's url.
+
+`ActionsCheck::claimLabels()` gives every manifest's listed labels. The
+Verifier and `IngredientManifestCheck` pass them in as a new optional
+argument. `ActionsCheck` is `@internal`, so the surface gains only the
+code, 121 → 122.
+
+One change to a test while it was still red: the seam's actions assertion
+now opens with the `c2pa.opened` that the builder adds for the parent.
+Without it, the opening rule stops before the content rules (SPEC-033
+amendment 1), and the seam could not have gone green for the right reason.
+
+`vendor/bin/pest --group=SPEC-037`: **8 passed.** The six red tests of
+132a are green. PHPStan is clean again. Two counts moved:
+`CertificateProfileCheckTest` (55 → 56 codes) and `ApiSurfaceTest`
+(121 → 122).
+
+**Before and after, the whole corpus** under the three standard settings,
+with ingredient deltas (1041 runs). Only step 131's four holes moved, from
+`Valid` (`Trusted` with their root) to `Invalid`:
+- `parameters-without-redacted`, `relative` and `foreign-manifest` now
+  give `assertion.action.redactionMismatch`;
+- `unknown-label` now gives `assertion.notRedacted`.
+
+Each code is what both `c2patool` versions give.
+
+`composer check`: exit 0, 479 tests.
+
+One amendment awaits confirmation: SPEC-025 #9, the code.

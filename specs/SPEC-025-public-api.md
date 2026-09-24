@@ -314,6 +314,13 @@ reasoning that led to it stays readable.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 130).
 
+9. **2026-09-24, step 132b, with SPEC-037's implementation** — `StatusCode`
+   grows by one case, `AssertionActionRedactionMismatch =
+   'assertion.action.redactionMismatch'` (C2PA 2.4 §15.10.3.2.3). The
+   recorded surface goes 121 → **122**.
+
+   **Weight B: the vocabulary grew, verbatim.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

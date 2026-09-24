@@ -87,7 +87,11 @@ function spec037Seam(array $parameters, int $version = 2): array
     $statuses = (new ActionsCheck)->checkAssertions(
         'urn:c2pa:child',
         $version,
-        [['url' => "self#jumbf=/c2pa/urn:c2pa:child/c2pa.assertions/{$label}", 'data' => ['actions' => [['action' => 'c2pa.redacted', 'reason' => 'c2pa.PII.present', 'parameters' => $parameters]]]]],
+        [['url' => "self#jumbf=/c2pa/urn:c2pa:child/c2pa.assertions/{$label}", 'data' => ['actions' => [
+            // the opening the builder adds for the parent; without it the opening rule stops before the content rules (SPEC-033 amendment 1)
+            ['action' => 'c2pa.opened', 'parameters' => ['ingredients' => [['url' => 'self#jumbf=c2pa.assertions/c2pa.ingredient.v3']]]],
+            ['action' => 'c2pa.redacted', 'reason' => 'c2pa.PII.present', 'parameters' => $parameters],
+        ]]]],
         false,
         [$label, 'c2pa.ingredient.v3', 'c2pa.hash.data'],
         ['c2pa.ingredient.v3' => 'parentOf'],

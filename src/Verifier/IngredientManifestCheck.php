@@ -76,7 +76,7 @@ final readonly class IngredientManifestCheck
             }
             $manifest = $store->manifests[$label];
             $mine = $this->hash($manifest, $ingredient);
-            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings)];
+            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests))];
             $statuses = [...$statuses, ...$mine];
         }
 
@@ -155,9 +155,10 @@ final readonly class IngredientManifestCheck
     /**
      * The ingredient manifest itself: everything the active manifest gets except the data hash.
      *
+     * @param  array<string, list<string>>  $storeLabels  the store's claims, for SPEC-037's c2pa.redacted rule
      * @return list<ValidationStatus>
      */
-    private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings): array
+    private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings, array $storeLabels): array
     {
         $timestamp = $this->timestamp->check($manifest, $settings);
         $statuses = $timestamp->present ? $timestamp->statuses : [];
@@ -185,7 +186,7 @@ final readonly class IngredientManifestCheck
                 $unreadable[] = $status->url;
             }
         }
-        $statuses = [...$statuses, ...$this->actions->check($manifest, $unreadable)];
+        $statuses = [...$statuses, ...$this->actions->check($manifest, $unreadable, $storeLabels)];
         $statuses = [...$statuses, ...(new ExternalReferenceCheck)->check($manifest, $unreadable)];   // SPEC-032 rule B
         $statuses = [...$statuses, ...(new IconReferenceCheck)->check($manifest)];   // SPEC-034
 

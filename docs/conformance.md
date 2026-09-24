@@ -323,8 +323,9 @@ of §15.10.3.2.3's actions rules. The actions rules are enforced since
 SPEC-033: ingredient references of the right relationship,
 `c2pa.translated`'s languages, `relatedAssertions`, and a watermark's soft
 binding. Since SPEC-034, icons in `softwareAgents`, `templates` and an
-action's `softwareAgent` are checked too. `c2pa.redacted` is not enforced
-yet. One
+action's `softwareAgent` are checked too, and since SPEC-037 a
+`c2pa.redacted` action's reference must resolve (as `c2patool` reads the
+rule: only an action with `parameters`). One
 obligation of C2PA 2.4 that this verifier does not meet has come up anyway,
 and is listed here so that a table built from the catalogue does not hide
 it.

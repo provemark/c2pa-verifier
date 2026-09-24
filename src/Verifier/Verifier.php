@@ -264,7 +264,7 @@ final readonly class Verifier
                 $unreadable[] = $status->url;
             }
         }
-        $statuses = [...$statuses, ...$this->actions->check($manifest, $unreadable)];
+        $statuses = [...$statuses, ...$this->actions->check($manifest, $unreadable, ActionsCheck::claimLabels($manifestStore->manifests))];
         $checks[] = 'actions';
         // SPEC-032 rule B: named only where the claim carries an external reference
         if (ExternalReferenceCheck::present($manifest)) {

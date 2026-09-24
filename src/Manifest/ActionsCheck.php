@@ -39,9 +39,10 @@ final readonly class ActionsCheck
      * URIs that did not match) are left unread.
      *
      * @param  list<string>  $unreadable  assertion urls whose hashed URI failed
+     * @param  array<string, list<string>>  $storeLabels  every manifest in the store => the assertion labels its claim lists (SPEC-037, claimLabels())
      * @return list<ValidationStatus>
      */
-    public function check(Manifest $manifest, array $unreadable = []): array
+    public function check(Manifest $manifest, array $unreadable = [], array $storeLabels = []): array
     {
         $manifestUrl = sprintf('self#jumbf=/c2pa/%s', $manifest->label);
         $actions = [];
@@ -70,7 +71,7 @@ final readonly class ActionsCheck
         }
 
         // c2patool's url for the manifest-level faults of this rule is the bare manifest label (measured, SPEC-018 amendment 2)
-        return $this->checkAssertions($manifest->label, $manifest->claim->version, $actions, $manifest->isUpdateManifest, $labels, $ingredients);
+        return $this->checkAssertions($manifest->label, $manifest->claim->version, $actions, $manifest->isUpdateManifest, $labels, $ingredients, $storeLabels);
     }
 
     /**
@@ -82,9 +83,10 @@ final readonly class ActionsCheck
      * @param  list<array{url: string, data: mixed}>  $actions
      * @param  list<string>  $labels  the labels of every assertion the claim lists (SPEC-033: relatedAssertions)
      * @param  array<string, string>  $ingredients  ingredient assertion label => its relationship (SPEC-033: references)
+     * @param  array<string, list<string>>  $storeLabels  every manifest in the store => the assertion labels its claim lists (SPEC-037)
      * @return list<ValidationStatus>
      */
-    public function checkAssertions(string $manifestLabel, int $version, array $actions, bool $isUpdateManifest = false, array $labels = [], array $ingredients = []): array
+    public function checkAssertions(string $manifestLabel, int $version, array $actions, bool $isUpdateManifest = false, array $labels = [], array $ingredients = [], array $storeLabels = []): array
     {
         $malformed = static fn (string $url, string $why): ValidationStatus => new ValidationStatus(StatusCode::AssertionActionMalformed, $url, $why);
         if ($version < 2) {
@@ -117,7 +119,7 @@ final readonly class ActionsCheck
         // (C2PA 2.4 §11.2.3 gives it four actions of its own, none of them an opening; measured on
         // update_manifest.jpg's variant, where c2patool reports only the update rule — SPEC-022)
         if ($isUpdateManifest) {
-            return [...$statuses, ...$this->contentRules($manifestLabel, $actions, $labels, $ingredients)];
+            return [...$statuses, ...$this->contentRules($manifestLabel, $actions, $labels, $ingredients, $storeLabels)];
         }
         $before = count($statuses);
         if ($actions === []) {
@@ -138,7 +140,7 @@ final readonly class ActionsCheck
             return $statuses;
         }
 
-        return [...$statuses, ...$this->contentRules($manifestLabel, $actions, $labels, $ingredients)];
+        return [...$statuses, ...$this->contentRules($manifestLabel, $actions, $labels, $ingredients, $storeLabels)];
     }
 
     /**
@@ -153,9 +155,10 @@ final readonly class ActionsCheck
      * @param  list<array{url: string, data: mixed}>  $actions
      * @param  list<string>  $labels
      * @param  array<string, string>  $ingredients
+     * @param  array<string, list<string>>  $storeLabels
      * @return list<ValidationStatus>
      */
-    private function contentRules(string $manifestLabel, array $actions, array $labels, array $ingredients): array
+    private function contentRules(string $manifestLabel, array $actions, array $labels, array $ingredients, array $storeLabels): array
     {
         $statuses = [];
         $malformed = static fn (string $url, string $why): ValidationStatus => new ValidationStatus(StatusCode::AssertionActionMalformed, $url, $why);
@@ -254,6 +257,15 @@ final readonly class ActionsCheck
                     }
                 }
 
+                // c2pa.redacted: its reference names an assertion the named manifest's claim lists (§15.10.3.2.3;
+                // c2pa-rs 2.d, SPEC-037). As c2patool, only an action that has parameters is read: a bare one passes.
+                if ($name === 'c2pa.redacted' && array_key_exists('parameters', $action)) {
+                    $fault = self::redactionFault($parameters['redacted'] ?? null, $storeLabels);
+                    if ($fault !== null) {
+                        $statuses[] = new ValidationStatus($fault, $url, $fault === StatusCode::AssertionNotRedacted ? 'The assertion was not redacted' : 'redaction uri must be a valid reference');
+                    }
+                }
+
                 // a watermark needs a soft binding in the claim (§15.10.3.2.3)
                 if (in_array($name, ['c2pa.watermarked', 'c2pa.watermarked.bound'], true) && ! $softBinding) {
                     $statuses[] = new ValidationStatus(StatusCode::AssertionActionSoftBindingMissing, $url, 'watermark action missing soft binding assertion');
@@ -262,6 +274,48 @@ final readonly class ActionsCheck
         }
 
         return $statuses;
+    }
+
+    /**
+     * SPEC-037: what is wrong with a c2pa.redacted action's `redacted`, as c2pa-rs's rule 2.d reads it.
+     * Not an absolute URI into a manifest of this store: `assertion.action.redactionMismatch`. A manifest
+     * whose claim lists no assertion with that label, or a URI naming no assertion (a data box
+     * included, open question 3): `assertion.notRedacted`. The label is matched by substring against
+     * the listed urls, as c2pa-rs matches it.
+     *
+     * @param  array<string, list<string>>  $storeLabels
+     */
+    private static function redactionFault(mixed $redacted, array $storeLabels): ?StatusCode
+    {
+        if (! is_string($redacted) || preg_match('#\Aself\#jumbf=/c2pa/([^/]+)#', $redacted, $m) !== 1 || ! array_key_exists($m[1], $storeLabels)) {
+            return StatusCode::AssertionActionRedactionMismatch;
+        }
+        $at = strpos($redacted, '/c2pa.assertions/');
+        $label = $at === false ? '' : substr($redacted, $at + strlen('/c2pa.assertions/'));
+        foreach ($storeLabels[$m[1]] as $listed) {
+            if ($label !== '' && str_contains("self#jumbf=c2pa.assertions/{$listed}", $label)) {
+                return null;
+            }
+        }
+
+        return StatusCode::AssertionNotRedacted;
+    }
+
+    /**
+     * Every manifest of the store with the assertion labels its claim lists, created and gathered: what
+     * rule 2.d resolves a c2pa.redacted reference against (SPEC-037).
+     *
+     * @param  array<string, Manifest>  $manifests
+     * @return array<string, list<string>>
+     */
+    public static function claimLabels(array $manifests): array
+    {
+        $labels = [];
+        foreach ($manifests as $label => $manifest) {
+            $labels[$label] = array_map(static fn (HashedUri $entry): string => substr($entry->url, strrpos($entry->url, '/') + 1), [...$manifest->claim->createdAssertions, ...$manifest->claim->gatheredAssertions]);
+        }
+
+        return $labels;
     }
 
     /** A label without its `__n` instance and its `.vN` version: c2pa.actions.v2__1 → c2pa.actions. */

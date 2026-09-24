@@ -46,6 +46,14 @@ committed.
   instead of `general.error`. It is still `Invalid`. `c2patool` 0.27.22
   says the deprecated `assertion.dataHash.redacted`. One new status code;
   the surface is 121 symbols.
+- SPEC-037: a `c2pa.redacted` action with `parameters` must name, in
+  `redacted`, an assertion that the named manifest's claim lists
+  (C2PA 2.4 §15.10.3.2.3, as `c2patool` reads it). A missing, relative
+  or foreign reference is `assertion.action.redactionMismatch`, and an
+  unlisted label is `assertion.notRedacted`. This closes four shapes both
+  `c2patool` versions call `Invalid` and this verifier called `Trusted`
+  (step 131). A bare `c2pa.redacted` passes, as in `c2patool`. One new
+  status code; the surface is 122 symbols.
 
 ## 0.2.0 — 2026-09-24
 

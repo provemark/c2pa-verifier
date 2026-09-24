@@ -77,6 +77,8 @@ enum StatusCode: string
     case IngredientClaimSignatureMissing = 'ingredient.claimSignature.missing';
     // SPEC-036: a redacted hard binding (§6.8; the §15 table, which deprecates assertion.dataHash.redacted for it)
     case AssertionHardBindingRedacted = 'assertion.hardBinding.redacted';
+    // SPEC-037: a c2pa.redacted action whose reference resolves to nothing (§15.10.3.2.3)
+    case AssertionActionRedactionMismatch = 'assertion.action.redactionMismatch';
     case GeneralError = 'general.error';
 
     public function isSuccess(): bool

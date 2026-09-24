@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
@@ -210,11 +210,11 @@ Filled when status becomes `implemented`.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
+| AC1 | tests/Unit/Manifest/RedactedActionTest.php :: AC1: the shapes both oracles accept stay Trusted / SPEC-037 | src/Manifest/ActionsCheck.php :: contentRules() (only an action with parameters), redactionFault() |
+| AC2 | tests/Unit/Manifest/RedactedActionTest.php :: AC2: parameters without redacted / SPEC-037 | src/Manifest/ActionsCheck.php :: redactionFault() |
+| AC3 | tests/Unit/Manifest/RedactedActionTest.php :: AC3: a reference that names no manifest here / SPEC-037 | src/Manifest/ActionsCheck.php :: redactionFault(), claimLabels(); src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |
+| AC4 | tests/Unit/Manifest/RedactedActionTest.php :: AC4: a label the named manifest does not list / SPEC-037 | src/Manifest/ActionsCheck.php :: redactionFault() (the label matched by substring) |
+| AC5 | tests/Unit/Manifest/RedactedActionTest.php :: AC5: a redacted that is not a string / SPEC-037 | src/Manifest/ActionsCheck.php :: redactionFault() |
+| AC6 | tests/Unit/Manifest/RedactedActionTest.php :: AC6: v1 claims are not checked / SPEC-037 | src/Manifest/ActionsCheck.php :: checkAssertions() (v1 returns before the content rules) |
+| AC7 | tests/Unit/Manifest/RedactedActionTest.php :: AC7: nothing else moves / SPEC-037; the drift alarms (SPEC-013 AC10–AC13); the before/after run of step 132b | — |
+| AC8 | tests/Unit/Manifest/RedactedActionTest.php :: AC8: the vocabulary grows by one code, verbatim / SPEC-037 | src/Report/StatusCode.php :: AssertionActionRedactionMismatch; tests/Fixtures/api/public-surface.txt |

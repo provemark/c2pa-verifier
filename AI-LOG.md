@@ -6427,3 +6427,22 @@ README are where the disclosure lives.
   tests pass; PHPStan one error, the seam's new argument).
 - Reasoned: nothing beyond the draft.
 - Decided by Maurice: SPEC-037 approved; question 1: follow c2patool.
+
+## 2026-09-24 — SPEC-037 implemented (step 132b)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: the same approval as step 132a; the implementation follows the
+  tests.
+- Produced: `src/Manifest/ActionsCheck.php` (rule 2.d in the content
+  rules, `redactionFault()`, `claimLabels()`, the store's claims as an
+  optional argument); `src/Verifier/Verifier.php` and
+  `src/Verifier/IngredientManifestCheck.php` (pass them); `src/Report/StatusCode.php`
+  (one case); the recorded surface; two counts; the seam's opening action
+  in the still-red test; SPEC-037 implemented with Traceability;
+  amendment SPEC-025 #9; CHANGELOG, conformance, comparison, README; the
+  note, `NOTES.md`, milestones.
+- Measured: `vendor/bin/pest --group=SPEC-037` (8 passed); `composer
+  check` (479 passed, PHPStan clean, exit 0); the corpus before and after
+  under the three standard settings with ingredient deltas (1041 runs,
+  only the four holes moved).
+- Reasoned: nothing new.
+- Decided by Maurice: none in this step.
