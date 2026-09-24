@@ -6024,3 +6024,15 @@ README are where the disclosure lives.
   (SPEC-032 #1, SPEC-018 #4, SPEC-025 #5) awaiting confirmation.
 - Measured: 101 numbered amendments counted across the specs.
 - Decided by Maurice: none.
+
+## 2026-09-24 — The three SPEC-032 amendments confirmed; issue #2 answered
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, alle drie bevestigd, en nog geen tag en reageer op #2".
+- Produced: confirmation stamps under SPEC-032 #1, SPEC-018 #4 and
+  SPEC-025 #5; `README.md` (101 amendments, every one confirmed); a
+  comment on issue #2 saying the `c2pa.created` case is enforced and the
+  general case stays open, with the measurement and the 2.4 reading. Issue
+  #3 was not touched, and no tag was made.
+- Measured: `bin/spec-check.php` OK.
+- Decided by Maurice: the three amendments confirmed; no tag yet; reply
+  on #2 only.

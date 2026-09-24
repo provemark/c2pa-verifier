@@ -244,6 +244,8 @@ proposals.
 
    Weight C: no criterion changed in outcome.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 122).
+
 ## Traceability
 
 Filled when status becomes `implemented`.

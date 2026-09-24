@@ -268,6 +268,8 @@ final readonly class ActionsCheck
 
    Weight B: one more status on one file whose verdict does not move.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 122).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
