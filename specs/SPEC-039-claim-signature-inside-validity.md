@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -95,7 +95,7 @@ subject to open question 1.
     directly before `claimSignature.validated`.
 
 - **AC2 — an expired signer still gets it, as c2patool**
-  - Given `profile/expired.jpg` (a signer outside its validity period, no
+  - Given `profile/expired.png` (a signer outside its validity period, no
     timestamp)
   - When verified
   - Then `claimSignature.insideValidity` and `signingCredential.expired`
@@ -152,6 +152,9 @@ case ClaimSignatureInsideValidity = 'claimSignature.insideValidity';
 
 ## Open questions
 
+*Answered on approval, 2026-09-24:* question 1 by the maintainer (copy
+`c2patool`). Question 2 was settled by adopting its proposal.
+
 1. **A code whose name says more than it means.** `c2patool` reports
    `claimSignature.insideValidity` beside `signingCredential.expired`, so a
    report can say both *"inside validity"* and *"expired"* about the same
@@ -169,6 +172,18 @@ case ClaimSignatureInsideValidity = 'claimSignature.insideValidity';
    before `claimSignature.validated`. Proposal: the same order. Tests that
    pick the first status of `ClaimSignatureCheck` are amended with this
    spec. *(not a blocker)*
+
+## Amendments
+
+1. **2026-09-24, step 135a, measured before the tests.** AC2's fixture is
+   `profile/expired.png`; the draft wrote `.jpg`. Both `c2patool` versions
+   were run on it, where the draft had only 0.27.22's recorded reports.
+   Both report `claimSignature.insideValidity` directly before
+   `claimSignature.validated`, beside `signingCredential.expired`, and
+   `Invalid`. The reports are recorded under
+   `tests/Fixtures/c2patool/inside-validity/`.
+
+   Weight C: a file name corrected and a measurement added.
 
 ## Traceability
 

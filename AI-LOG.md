@@ -6554,3 +6554,17 @@ README are where the disclosure lives.
 - Reasoned: C2PA 2.4 §15.8 and the §15 table at `4eb2c67`; `c2pa`
   `claim.rs` `verify_internal` at `6c92bc3`.
 - Decided by Maurice: SPEC-039 as a draft.
+
+## 2026-09-24 — SPEC-039 approved; tests seen red (step 135a)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, volg c2patool bij vraag 1, SPEC-039 goedgekeurd".
+- Produced: SPEC-039 approved with the answers and amendment 1; both
+  c2patool versions' reports on `profile/expired.png` under
+  `tests/Fixtures/c2patool/inside-validity/`;
+  `tests/Unit/Cose/InsideValidityTest.php`; `notes/step-135-spec039.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: both versions on `profile/expired.png` (the code beside
+  `signingCredential.expired`); `vendor/bin/pest --group=SPEC-039` (5
+  failed, 1 guard passed); `composer check` (all else green, 487).
+- Reasoned: nothing beyond the draft.
+- Decided by Maurice: SPEC-039 approved; question 1: copy c2patool.
