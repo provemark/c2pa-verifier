@@ -6473,3 +6473,17 @@ README are where the disclosure lives.
   and a box with `subset` keeping its offset) and `claim.rs` (the
   additional-exclusions rule) at `6c92bc3`.
 - Decided by Maurice: none in this step.
+
+## 2026-09-24 — SPEC-038 drafted: the BMFF hash's shape
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, schrijf SPEC-038 als draft, nog niet in het issue" (draft
+  SPEC-038; nothing in issue #4 yet).
+- Produced: `specs/SPEC-038-bmff-hash-shape.md` (draft, seven criteria,
+  three open questions); rows in `docs/milestones.md` and `NOTES.md`. No
+  test or code; nothing posted to issue #4.
+- Measured: nothing new; the draft rests on step 133.
+- Reasoned: `src/Hash/BmffHashCheck.php` `plan()` and `digest()` (the
+  marker dropped when nothing of a box remains, and placed at the first
+  remaining range); C2PA 2.4 and `c2pa` as in step 133.
+- Decided by Maurice: SPEC-038 as a draft; the measurement not yet in the
+  issue.
