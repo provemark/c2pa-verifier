@@ -5508,3 +5508,25 @@ README are where the disclosure lives.
   re-measured. Every other milestone row carried its stamp; this one was
   missed when M8 followed the same day.
 - Decided by Maurice: to update the row.
+
+## 2026-09-24 — Issue #10 (`iat`) measured and parked
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "daarna issue #10 oppakken"; after the measurements below, "A,
+  parkeren met de metingen in het issue".
+- Produced: a comment on issue #10 with the measurements and what would
+  reopen it; a new label `waiting for a file`, applied to #10. No
+  specification, test or code.
+- Measured: the COSE headers of the active manifest in all 164 signed
+  JPEG/PNG/WebP fixtures (a throwaway script over `Corpus::cose()`): 0
+  carry `iat` or a CWT Claims header (label 15). `contentauth/c2pa-rs` at
+  `6c92bc3` (2026-09-23): `CertificateInfo::iat` is only ever `None`,
+  `timeOfSigning.insideValidity` is defined and never emitted,
+  `timeOfSigning.outsideValidity` is not defined. So `c2patool` gives no
+  oracle.
+- Reasoned: C2PA 2.4 §13.2.4 and VAL-CRYP-0029…0031 (via
+  `encypherai/c2pa-knowledge-graph`, 2.4) make the check a *may* with
+  informational codes only. Without a writer or a second implementation,
+  a spec would rest on a fixture signed here and on nothing else. Which
+  label carries `iat` (text `"iat"` or CWT claim 6) is left open and is
+  named in the issue as the first question.
+- Decided by Maurice: park the issue (option A) rather than draft a spec.
