@@ -5575,3 +5575,21 @@ README are where the disclosure lives.
   shared-file rule will probably break silently in the same way. Not
   measured.
 - Decided by Maurice: none yet. What to do about it is his call.
+
+## 2026-09-24 — SPEC-031 drafted: `trust.anchors`, and a loose `allowed_list` refused
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "SPEC-031 als draft, met weigeren voor allowed_list".
+- Produced: `specs/SPEC-031-trust-anchors-list.md` (draft, seven criteria,
+  five open questions); an addendum to `notes/step-107-c2patool-0.28.md`;
+  rows in `docs/milestones.md` and `NOTES.md`. No test or code.
+- Measured: 13 constructed `trust.anchors` settings (N1–N13) and four on a
+  Truepic file (T1–T4) against c2patool 0.28.0; the table is in the note.
+  Also 281 signed corpus files, 0.27.22 against 0.28.0 without settings:
+  14 changed, 6 `Valid` → `Invalid`. The file list is in the note.
+- Reasoned: from `c2pa` 0.91.0 `settings/mod.rs` and
+  `certificate_trust_policy.rs`: the entry fields, `TrustListKind`'s
+  lowercase names, the legacy merge. §14.4.1's number comes from the 2.3
+  text quoted in c2pa-rs and is flagged in the spec to be checked against
+  2.4.
+- Decided by Maurice: SPEC-031 as a draft; a top-level `allowed_list` is
+  refused, not ignored and not kept.

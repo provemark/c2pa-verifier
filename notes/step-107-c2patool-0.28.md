@@ -94,3 +94,71 @@ more lenient of the two.
   no longer current.
 
 Deciding what to do is the maintainer's call and is not part of this step.
+
+## Addendum, the same day: the new shape probed, and the corpus
+
+Both were run after the maintainer asked for SPEC-031 as a draft. The
+throwaway scripts live outside the repository; what they ran is below.
+
+### The `trust.anchors` probes (`c2patool` 0.28.0)
+
+Settings were built from `tests/Fixtures/trust/` (`trust_anchors.pem`,
+`store.cfg`, `allowed_list.pem`, `truepic-root.pem`) and run on
+`fixture-signed.jpg`. The four T probes used
+`public-testfiles/truepic-20230212-camera.jpg`.
+
+| probe | settings | 0.28.0 |
+|---|---|---|
+| N1 | one entry, `trust_kind: "manifest"`, top-level `trust_config` | `Trusted` |
+| N2 | an entry without `trust_kind` | exit 1, `missing field trust_kind` |
+| N3 | the test roots as `"tsa"` only | `Trusted` |
+| N4 | the test roots as `"cawg"` only | `Trusted` |
+| N5 | empty `trust_anchors`, `allowed_list` inside the entry | `Trusted` |
+| N6 | `trust_config` only inside the entry | `Trusted` |
+| N7 | no `trust_config` anywhere | `Trusted` |
+| N8 | legacy `trust_anchors` and an `anchors` entry together | `Trusted` |
+| N9 | an unknown key `foo` inside an entry | `Trusted` (ignored) |
+| N10 | `trust_kind: "signer"` | exit 1, `unknown variant signer` |
+| N11 | `anchors` as an object | exit 1, `expected a sequence` |
+| N12 | an entry without `trust_anchors` | exit 1, `missing field trust_anchors` |
+| N13 | a wrong EKU inside the entry, the right one at the top | `Trusted` |
+| T1–T4 | the Truepic root as legacy, `"manifest"`, `"manifest"` + `"tsa"`, `"tsa"` only | all `Invalid`, all with `signingCredential.trusted`, `timeStamp.trusted`, `timeStamp.validated` |
+
+What the probes show:
+- `trust_kind` separates nothing in `c2patool` 0.28.0 (N3, N4, T2, T4).
+- A wrong EKU on the entry changes nothing when the top level is right
+  (N13). N6 and N7 cannot separate the per-entry and the top-level
+  `trust_config`, because the test leaf's EKU is already in the built-in
+  list.
+- The Truepic file is `Invalid` for another reason, below. With the same
+  settings, 0.27.22 said `Trusted`.
+
+### The corpus, 0.27.22 against 0.28.0, no settings
+
+281 signed files under `tests/Fixtures/`, compared on state and failure
+codes (`signingCredential.untrusted` left out): 14 changed.
+
+- **`Valid` → `Invalid`, six files.**
+  - Five with `assertion.dataHash.mismatch`, *"data hash exclusion does not
+    match the manifest location in the asset"*: the three
+    `truepic-20230212-*` files,
+    `writers/adobe-20260304-photoshop-remote-manifest.jpg` and
+    `webp/length-differs.webp`.
+  - One with `signingCredential.invalid`: `profile/eku-c2pa.png`.
+- **`Invalid` → `Valid`, one file:** `update-manifest/two-parents.png`
+  (`manifest.multipleParents` gone).
+- **No JSON from 0.28.0, two files:** `absence/created-empty.png`,
+  `absence/hash-data-gathered.png`.
+- **Same state with new failure codes, four files:**
+  - `cose/alg-eddsa-with-ec-key.png`: `signingCredential.invalid`;
+  - `ingredient-manifest/redacted.png`: `assertion.notRedacted`;
+  - `ingredient/manifest-and-dst.png`: `assertion.ingredient.malformed`;
+  - `profile/curve-secp256k1.png`: `claimSignature.mismatch`.
+- **Still `Valid`, one new failure code:** `c2pa-rs/C_with_CAWG_data.jpg`
+  gains `cawg.x509.credential.untrusted`.
+
+This verifier's verdicts on these files were compared with 0.27.22 until
+now. Each of the 14 needs its own look before 0.28.0 can become the oracle.
+The first, for the five data-hash files, is whether 0.28.0 is right that
+the exclusion does not cover the store, or whether it has become too
+strict. That is a separate step; SPEC-031 keeps it out of scope.
