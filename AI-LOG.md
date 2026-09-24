@@ -6206,3 +6206,19 @@ README are where the disclosure lives.
   issue closed. No release.
 - Measured: `bin/spec-check.php` OK.
 - Decided by Maurice: both amendments confirmed; close #11; no release yet.
+
+## 2026-09-24 — Step 127, CAWG measured
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, eerst de CAWG-meting".
+- Produced: `notes/step-127-cawg-measured.md`, rows in `docs/milestones.md`
+  and `NOTES.md`. No specification, test or code.
+- Measured: a corpus scan for `cawg.*` labels (2 files, both from c2pa-rs);
+  the structure of both identity assertions (`sig_type`, sizes);
+  c2patool 0.27.22, 0.28.0 and `bin/c2pa-verify` on both, without settings
+  and with `full-plus-digicert-g4`; the path listing of
+  `c2pa-org/public-testfiles` (115 media files, none CAWG).
+- Reasoned: the refusal's origin (SPEC-013 amendment 7); what a middle step
+  and full validation would take; that `did:web` resolution conflicts with
+  the no-network rule. That Adobe's Content Authenticity app writes CAWG
+  is unverified.
+- Decided by Maurice: measure CAWG before deciding 0.3.
