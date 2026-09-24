@@ -6758,3 +6758,24 @@ README are where the disclosure lives.
   exclusions without the §15.12.1.1 adjustment; C2PA 2.4 §15.12.1.1 read
   at `4eb2c67`.
 - Decided by Maurice: the text and posting it.
+
+## 2026-09-24 — An article on provemark.github.io
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: an outline for an article on the site; then "ja, artikel, zin
+  over Claude erin, EXIF-verhaal"; then "Zet het artikel op de site. Op
+  CAI wil ik het pas laten zetten als het goed is".
+- Produced: https://provemark.github.io/articles/measuring-a-verifier/
+  ("How do you know a C2PA verifier is right?", 872 words), listed first
+  under Writing on the home page and in `sitemap.xml`; commit `eabb603` in
+  `provemark/provemark.github.io`. The home page already had a card for
+  this library (added 2026-09-23), so it was left as it was. The article
+  says it was built with Claude Code and points to this log. Nothing in
+  this repository changes beyond this entry.
+- Measured: the Pages build of `eabb603` (built); the live article (HTTP
+  200), its link on the home page and its sitemap entry. WordPress's PHP
+  support looked up (7.4 minimum since 7.0, 8.3 recommended). Every figure
+  in the article taken from `CHANGELOG.md`, `SECURITY.md` and the step
+  notes (257 files, 864 runs, 111 obligations, 11 gaps).
+- Decided by Maurice: an article rather than an announcement, the
+  sentence about Claude Code, the EXIF story; publish now; no request to
+  the CAI community-resources page until it is right.
