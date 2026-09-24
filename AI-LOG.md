@@ -6708,3 +6708,20 @@ README are where the disclosure lives.
   `fixture-signed.jpg`, with `claimSignature.insideValidity` first among
   the successes.
 - Decided by Maurice: tag 0.2.1; the correction on #4.
+
+## 2026-09-24 — An issue in WordPress/ai: credentials for sub-sizes
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: where to post about the library; a draft for core Trac #65952,
+  turned into an issue for WordPress/ai (Maurice has no WordPress.org
+  login), shortened and put in his style; then "plaats het issue maar in
+  WordPress/ai".
+- Produced: https://github.com/WordPress/ai/issues/1058, "C2PA: new
+  Content Credentials for generated sub-sizes", in the fields of the
+  repository's feature-request form. Nothing in this repository changes
+  beyond this entry.
+- Measured: the ticket's full text (read in a browser; nothing after
+  comment 6); no existing WordPress/ai issue on sub-sizes; adamsilverstein
+  active in WordPress/ai; no reply yet to Maurice's comment on #954.
+- Reasoned: C2PA 2.4 §18.16.12.4 (a claim generator adding an ingredient
+  shall validate it and record the results), read at `4eb2c67`.
+- Decided by Maurice: the text and posting it.
