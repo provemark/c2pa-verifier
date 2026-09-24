@@ -6455,3 +6455,21 @@ README are where the disclosure lives.
   row.
 - Measured: `composer check`.
 - Decided by Maurice: the amendment confirmed; no 0.3 release yet.
+
+## 2026-09-24 — Issue #4, the BMFF hash's shape rules, measured (step 133)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, meet eerst #4" (measure issue #4 first).
+- Produced: `notes/step-133-bmff-shape-measured.md`; a row in `NOTES.md`.
+  No spec, test or code; the variants and their script stay in the
+  scratchpad.
+- Measured: eleven variants of `fixture-signed.mp4` (the bmff.v3
+  assertion edited, the claim re-signed under a throwaway root, the COSE
+  padded so no box moves), judged by 0.27.22, 0.28.0 and this verifier;
+  the informational code over the corpus's 24 BMFF files under both
+  versions and here.
+- Reasoned: C2PA 2.4 on BMFF exclusions and subsets (ordered, not
+  overlapping; `offset || data` for root boxes not excluded in their
+  entirety) at `4eb2c67`; `c2pa` `bmff_hash.rs` (the structure checks,
+  and a box with `subset` keeping its offset) and `claim.rs` (the
+  additional-exclusions rule) at `6c92bc3`.
+- Decided by Maurice: none in this step.
