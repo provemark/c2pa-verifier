@@ -6528,3 +6528,13 @@ README are where the disclosure lives.
   11 files, 0.28.0's 12 less the one refused before hashing).
 - Reasoned: nothing new.
 - Decided by Maurice: none in this step.
+
+## 2026-09-24 — SPEC-038's four amendments confirmed; issue #4 closed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, alle vier bevestigd en sluit #4, nog geen release".
+- Produced: a confirmation line under SPEC-038 #1 and #2, SPEC-029 #2
+  and SPEC-025 #10; README (123 amendments, every one confirmed); the
+  step-134 note and the milestones row; a closing comment on issue #4.
+- Measured: `composer check`.
+- Decided by Maurice: the four amendments confirmed; issue #4 closed; no
+  0.3 release yet.

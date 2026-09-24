@@ -256,6 +256,8 @@ rather than a second parse.
    **Weight B: the digest changes for subset shapes no corpus file
    carries; no corpus verdict changed.**
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 134).
+
 ## Open questions
 
 1. **Whether `LABELS` changes the dispatch in `Verifier`.** Today it reads

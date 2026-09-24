@@ -104,5 +104,6 @@ codes compared (1086 runs):
   `size-zero-not-last`;
 - no verdict and no failure code changed outside `bmff-shape/`.
 
-Four amendments await confirmation: SPEC-038 #1 and #2, SPEC-029 #2 and
+Four amendments, all confirmed by the maintainer the same day: SPEC-038
+#1 and #2, SPEC-029 #2 and
 SPEC-025 #10.

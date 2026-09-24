@@ -224,6 +224,8 @@ settled by adopting their proposals.
 
    Weight B: one more code in the contract than approved.
 
+   Confirmed by Maurice van Loon, 2026-09-24 (step 134).
+
 2. **2026-09-24, step 134b, measured.** AC5's *"exactly the files where
    0.28.0 reports it"* holds on 11 of the 12. The twelfth,
    `isobmff/size-zero-not-last.mp4`, is refused by this verifier before
@@ -233,6 +235,8 @@ settled by adopting their proposals.
 
    Weight C: a named exception to a criterion's wording, no behaviour
    changed.
+
+   Confirmed by Maurice van Loon, 2026-09-24 (step 134).
 
 ## Traceability
 
