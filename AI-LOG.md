@@ -6692,3 +6692,19 @@ README are where the disclosure lives.
 - Measured: `composer check` before the commit; CI on the commit before
   the tag.
 - Decided by Maurice: release 0.2.1, tag it; a correction on issue #4.
+
+## 2026-09-24 — v0.2.1 verified after the push
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: the check after tagging, as for 0.2.0 (step 124), and the
+  correction on issue #4.
+- Produced: the annotated tag `v0.2.1` on `b40b0fa`; a comment on issue
+  #4 correcting "it will ship with 0.3" to 0.2.1; this entry and the rows
+  below.
+- Measured: CI green on `b40b0fa` before tagging. GitHub's zipball of the
+  tag holds 298 files, equal to `git archive v0.2.1` and to
+  `bin/package-check.php` (3.2 MB). Packagist lists `v0.2.1`.
+  `composer require provemark/c2pa-verifier:^0.2` in an empty project
+  installs v0.2.1, and its `vendor/bin/c2pa-verify` gives `Valid` on
+  `fixture-signed.jpg`, with `claimSignature.insideValidity` first among
+  the successes.
+- Decided by Maurice: tag 0.2.1; the correction on #4.
