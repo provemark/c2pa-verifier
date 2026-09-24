@@ -199,11 +199,34 @@ it('AC3: an exclusion must cover the store', function (): void {
         ->and($statuses[0]->explanation)->toContain('64050')
         ->and($statuses[0]->explanation)->not->toMatch(SPEC012_HEX64);
 
-    // amendment 5: Truepic excludes the whole file head with the store; the store is covered, the hash matches (c2patool: match)
-    $statuses = spec012Check('public-testfiles/truepic-20230212-camera.jpg');
-    expect(spec012Codes($statuses))->toBe(['assertion.dataHash.match']);
+    // amendment 7 (reverses 5): Truepic excludes SOI and the EXIF segment in the same range as the store.
+    // C2PA 2.4 VAL-ASSE-0043/0044: that range may hold only the store and padding, so this is a mismatch,
+    // and the file is not hashed. c2patool 0.27.22 recorded a match here; 0.28.0 gives the mismatch (step 108).
+    $truepic = 'public-testfiles/truepic-20230212-camera.jpg';
+    $statuses = spec012Check($truepic);
+    expect(spec012Codes($statuses))->toBe(['assertion.dataHash.mismatch'])
+        ->and($statuses[0]->explanation)->toContain('13617')
+        ->and($statuses[0]->explanation)->not->toMatch(SPEC012_HEX64)
+        ->and(ValidationResult::fromStatuses($statuses, ['dataHash'])->state)->toBe(ValidationState::Invalid);
     $oracle = spec012C2patool('public-testfiles/truepic-20230212-camera');
     expect(spec012OraclePairs($oracle, 'success', 'assertion.dataHash'))->toHaveCount(1);
+
+    // the step-108 tamper, rebuilt in memory: the EXIF capture date 2023 → 2019, six bytes, nothing on disk
+    $bytes = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/'.$truepic);
+    foreach ([202, 616, 636] as $offset) {
+        expect(substr($bytes, $offset, 4))->toBe('2023');
+        $bytes = substr_replace($bytes, '2019', $offset, 4);
+    }
+    $changed = fopen('php://memory', 'w+b');
+    assert($changed !== false);
+    fwrite($changed, $bytes);
+    $store = (new JpegManifestStoreExtractor)->extract($changed);
+    assert($store !== null);
+    $manifest = ManifestStore::fromTree((new JumbfParser)->parse($store->bytes))->active;
+    $statuses = (new DataHashCheck)->check($manifest, $changed, $store);
+    expect(spec012Codes($statuses))->toBe(['assertion.dataHash.mismatch'])
+        ->and($statuses[0]->explanation)->toContain('13617')
+        ->and(ValidationResult::fromStatuses($statuses, ['dataHash'])->state)->toBe(ValidationState::Invalid);
 })->group('SPEC-012');
 
 it('AC4: additional exclusions are honoured and reported', function (): void {

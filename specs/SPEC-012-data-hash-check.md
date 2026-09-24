@@ -83,16 +83,18 @@ compare, not assume.
      kept); a range that ends past the file's end →
      `assertion.dataHash.mismatch` (§15.12.1) naming the range and the
      file length.
-  5. **The store's exclusion** (amendment 5): every range of the store
-     (`ManifestStoreBytes::$ranges`) must lie inside an exclusion —
-     start at or after the exclusion's start, end at or before its end
-     — else `assertion.dataHash.mismatch` naming the uncovered piece and
-     the nearest exclusion. An exclusion may cover more than the store
-     (Truepic excludes the whole file head): it is signed intent, inside
-     the claim's hashed URI, and hides bytes only from the signer's own
-     binding. Every exclusion that covers no piece of the store is
-     honoured and reported once as the informational
-     `assertion.dataHash.additionalExclusionsPresent`.
+  5. **The store's exclusion** (amendment 7, which reverses amendment 5):
+     every range of the store (`ManifestStoreBytes::$ranges`) must lie
+     inside an exclusion, else `assertion.dataHash.mismatch` naming the
+     uncovered piece and the nearest exclusion. **An exclusion that holds
+     any part of the store must hold nothing else**: its length must
+     equal the sum of the store pieces it holds (C2PA 2.4 VAL-ASSE-0043/0044:
+     only the store and padding, and in JPEG, PNG and WebP the padding is
+     inside the store). Otherwise the result is `assertion.dataHash.mismatch`
+     naming how many bytes before and after the store the exclusion takes
+     in, and the file is not hashed. Every exclusion that holds no part of
+     the store is honoured and reported once as the informational
+     `assertion.dataHash.additionalExclusionsPresent` (VAL-ASSE-0045).
   6. **The hash, streamed**: `hash_init($alg)`, the file read through
      `StreamReader` from offset 0 in chunks of `chunkSize` (default
      64 KiB), each exclusion skipped with `skip()`, bytes after the last
@@ -174,7 +176,7 @@ recorded in the READMEs (Open questions).
     and url equal the `assertion.dataHash.mismatch` entry in c2patool's
     recorded `validation_status`
 
-- **AC3 — an exclusion must cover the store** *(§15.12.1; amendment 5: "cover", not "equal")*
+- **AC3 — the store's exclusion holds the store and nothing else** *(C2PA 2.4 VAL-ASSE-0043/0044; amendment 7 reverses amendment 5)*
   - Given `binding/bytes-inserted-before-store.png` (the store moved 16
     bytes, the exclusion not), `binding/exclusion-shifted.png` (`start`
     33 → 32), `binding/exclusion-past-end.png` (`length` → 65,535) and
@@ -182,16 +184,21 @@ recorded in the READMEs (Open questions).
     pieces: `ranges` has two entries, the second ending past the
     exclusion), and `public-testfiles/truepic-20230212-camera.jpg`
     (the exclusion `[0, 206316]` covers the store at `[13617, 192699]`
-    and everything before it)
+    and everything before it: SOI and a 13,613-byte EXIF segment), and
+    that file with its EXIF capture date changed in memory (2023 → 2019
+    at offsets 202, 616 and 636; nothing is written to disk)
   - When checked
   - Then the first four give `assertion.dataHash.mismatch` whose
     explanation names the store's range (or pieces) and the exclusion
     that leaves part of it uncovered, the file is not hashed for the
     first three (the explanation carries no digest), and `Invalid`;
     c2patool's recorded verdict for each is `assertion.dataHash.mismatch`
-    too (steps 02 and 23); the Truepic file is hashed with its exclusion
-    as written and gives `assertion.dataHash.match`, as c2patool's
-    recorded JSON
+    too (steps 02 and 23); the Truepic file and its changed copy each
+    give exactly one `assertion.dataHash.mismatch` whose explanation
+    names the 13,617 bytes the exclusion takes in before the store and
+    carries no digest (not hashed), and `Invalid`. `c2patool` 0.27.22's
+    recorded `assertion.dataHash.match` for this file is a named
+    divergence; `c2patool` 0.28.0 gives the mismatch (step 108)
 
 - **AC4 — additional exclusions are honoured and reported** *(informational)*
   - Given the new `binding/exclusion-extra.png` (a second range over 64
@@ -428,6 +435,30 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
    being true on the day M8 closed.
 
    Confirmed by Maurice van Loon, 2026-09-22 (step 88).
+
+7. **2026-09-24, step 108, decided by Maurice van Loon: amendment 5 is
+   reversed.** Amendment 5 let the store's exclusion *cover* more than the
+   store, on two grounds: `c2patool` 0.27.22 accepted the Truepic files,
+   and the signer vouched for its own exclusion. The second ground is what
+   C2PA 2.4 forbids. VAL-ASSE-0043 says the exclusion range containing the
+   store holds only the store and padding. VAL-ASSE-0044 makes anything
+   else `assertion.dataHash.mismatch`. VAL-ASSE-0077 names the attack.
+   Measured in step 108: a copy of `truepic-20230212-camera.jpg` with its
+   EXIF capture date changed stayed `Trusted` with the Truepic root as the
+   anchor. `c2patool` 0.28.0 (`c2pa` 0.91.0) rejects it with an
+   exact-equality rule. Over the 165 corpus files with a store and a data
+   hash, the new rule changes the verdict of the three Truepic files and
+   of no other file; 11 negative variants that are already `Invalid` may
+   report this failure where they reported another, and each is
+   recorded when its test is read.
+
+   Scope item 5 and AC3 changed. The rule is written as "an exclusion
+   holding part of the store holds nothing else" rather than "equals the
+   store's span", so that a multi-piece store is judged piece by piece
+   and a gap between pieces can never be excluded along with them.
+
+   **Weight A: three verdicts change, from `Trusted`/`Valid` to
+   `Invalid`, on files the C2PA published as test files.**
 
 
 ## Traceability

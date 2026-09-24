@@ -5632,3 +5632,18 @@ README are where the disclosure lives.
   still open, and the texts now say so.
 - Decided by Maurice: correct the public claim now; fix it under SPEC-012
   amendment 7.
+
+## 2026-09-24 — SPEC-012 amendment 7, the test seen red
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "akkoord met 1 en 2". This entry is item 2's first half.
+- Produced: SPEC-012 amendment 7 (scope item 5 and AC3 rewritten: an
+  exclusion holding part of the store holds nothing else);
+  `tests/Unit/Hash/DataHashCheckTest.php` AC3, where the Truepic file now
+  expects `assertion.dataHash.mismatch` naming 13617 and no digest, plus
+  the step-108 tamper rebuilt in `php://memory`.
+- Measured: `vendor/bin/pest --filter="AC3: an exclusion must cover the
+  store"` gives 1 failed: `assertion.dataHash.match` where
+  `assertion.dataHash.mismatch` is expected, at the first Truepic
+  assertion. The tamper half runs after that point and is proven by step
+  108's measurement, not by this run.
+- Decided by Maurice: reverse amendment 5 (item 2).
