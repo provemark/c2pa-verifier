@@ -5555,3 +5555,23 @@ README are where the disclosure lives.
   2026-09-22. That is the next step.
 - Decided by Maurice: park #9 and leave `docs/conformance.md` as it is;
   measure the settings format next.
+
+## 2026-09-24 — Step 107, c2patool 0.28.0 and the shared settings file
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "akkoord met allebei", which included measuring whether c2patool
+  0.28.0 still reads this project's settings files.
+- Produced: `notes/step-107-c2patool-0.28.md`, a `NOTES.md` row. No
+  specification, test or code.
+- Measured: c2patool 0.28.0 (SBOM: `c2pa` 0.91.0) and 0.27.22 against each
+  other, and against `bin/c2pa-verify`, on `fixture-signed.jpg` and
+  `fixture-signed.mp4` with no settings and with each of the 15
+  `tests/Fixtures/trust/*.settings.json` (throwaway comparison scripts in
+  the session scratchpad). Anchors: every verdict unchanged.
+  `allowed_list`: Trusted → Valid in 0.28.0 on both files, while this
+  verifier stays Trusted. The cause was read in `c2pa` 0.91.0
+  `settings/mod.rs`: `allowed_list` moved into `TrustAnchor`, and the
+  top-level field is dropped without error.
+- Reasoned: when 0.92.0 removes `trust_anchors`, the anchor half of the
+  shared-file rule will probably break silently in the same way. Not
+  measured.
+- Decided by Maurice: none yet. What to do about it is his call.
