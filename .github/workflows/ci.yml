@@ -11,14 +11,17 @@ on:
 jobs:
   check:
     name: composer check (PHP ${{ matrix.php }})
-    runs-on: ubuntu-latest
+    # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19,
+    # and a runner change should be a commit of its own, measured, not a
+    # surprise in the middle of a release. PHP itself comes from setup-php.
+    runs-on: ubuntu-24.04
     strategy:
       # Let every version finish: one red version must not hide another.
       fail-fast: false
       matrix:
         php: ['8.3', '8.4', '8.5']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # SPEC-023 AC3 archives the commit before .gitattributes was added, to
           # show the criterion fires on the 62.9 MB dist that really shipped then.
@@ -41,7 +44,7 @@ jobs:
       # holds archives only; `composer install` below still resolves fresh.
       - id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: composer-${{ runner.os }}-php${{ matrix.php }}-${{ hashFiles('composer.json') }}
@@ -68,7 +71,7 @@ jobs:
     name: all green
     needs: check
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - run: |
           test "${{ needs.check.result }}" = "success" || { echo "check: ${{ needs.check.result }}"; exit 1; }

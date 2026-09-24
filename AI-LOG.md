@@ -6664,3 +6664,21 @@ README are where the disclosure lives.
 - Reasoned: the README's versioning rule and the 0.2.0 entry's reading of
   it; 0.2.1 breaks nothing that worked.
 - Decided by Maurice: the three text fixes; the release to be 0.2.1.
+
+## 2026-09-24 — CI: Node 24 actions, and the runner pinned
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: Maurice pasted the run's annotations: Node.js 20 deprecated for
+  `actions/checkout@v4` and `actions/cache@v4`, and `ubuntu-latest`
+  moving to Ubuntu 26 from 2026-10-19.
+- Produced: `.github/workflows/ci.yml`: `actions/checkout@v7` and
+  `actions/cache@v6` (both `node24`), and both jobs on `ubuntu-24.04`
+  instead of `ubuntu-latest`, with the reason in a comment.
+- Measured: the latest releases and their `action.yml` runtimes through
+  the GitHub API (checkout v7.0.1, cache v6.1.0, both `using: node24`);
+  the CI run on the commit, with its annotations.
+- Reasoned: the major versions' notes (checkout v6: credentials in a
+  separate file; v7: fork checkouts blocked for `pull_request_target` and
+  `workflow_run`, which this workflow does not use; cache v6: ESM, inputs
+  unchanged).
+- Decided by Maurice: none; the runner pin is proposed in this commit and
+  is one line to revert.
