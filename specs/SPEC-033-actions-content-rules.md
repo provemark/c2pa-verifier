@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -139,9 +139,9 @@ does so. Both `c2patool` versions' reports are recorded.
   - When verified with the root
   - Then the first gives `assertion.action.malformed` naming *more than
     one* (and whatever `ingredientMismatch` its opened action earns under
-    AC2). The second gives *must be first action* next to SPEC-018's
-    existing fault. Both are `Invalid`, with the codes and urls
-    `c2patool` 0.28.0 records.
+    AC2). The second gives SPEC-018's existing fault **and nothing more**
+    (amendment 1). Both are `Invalid`, with the codes and urls `c2patool`
+    0.28.0 records.
 
 - **AC2 — opened, placed, removed without references** *(error paths)*
   - Given probes with `c2pa.placed` without `parameters`, with
@@ -232,6 +232,10 @@ case AssertionActionSoftBindingMissing = 'assertion.action.softBindingMissing';
 
 ## Open questions
 
+*Answered on approval, 2026-09-24:* question 2 by the maintainer (follow
+`c2pa-rs`: resolution by label). Questions 1, 3 and 4 were settled by
+adopting their proposals.
+
 1. **The urls and words.** `c2pa-rs` puts the *more than one* fault on the
    bare claim label and the per-action faults on the actions assertion's
    url. Proposal: copy both, measured per probe in the tests-first step,
@@ -252,6 +256,30 @@ case AssertionActionSoftBindingMissing = 'assertion.action.softBindingMissing';
    actions assertion. Proposal: where `c2patool` will not write a shape,
    leave it to the seam `ActionsCheck::checkAssertions()` (SPEC-018
    amendment 1), and do not build it by surgery. *(not a blocker)*
+
+## Amendments
+
+1. **2026-09-24, step 125a, measured before the tests.**
+   - AC1's second probe (`c2pa.edited` then `c2pa.created`) gets exactly
+     one failure in both oracles: `assertion.action.malformed`, *"first
+     action must be created or opened"*, on the bare claim label. That is
+     SPEC-018's rule. `c2pa-rs` returns after that failure, so its per-action
+     *"created or opened must be first action"* never runs for it.
+     Criterion and rule 1 follow the oracle: when the opening rule has
+     already refused the manifest, the position of a later opening is not
+     reported a second time. The position rule still applies to a
+     manifest whose first action *is* an opening.
+   - The watermark control needed a soft-binding assertion `c2pa-rs` can
+     decode. Its block `value` is a byte string, and the first build gave
+     text, which 0.28.0 called `claim.malformed`. Rebuilt, it is `Trusted`
+     in both oracles.
+   - The url `c2patool` gives a `relatedAssertions` fault is the reference
+     itself (`self#jumbf=c2pa.assertions/<label>`), not the actions
+     assertion. Open question 1 said to copy the urls as measured, so the
+     test compares them.
+
+   Weight C: a criterion's wording, following the oracle. No rule of this
+   spec changed in outcome.
 
 ## Traceability
 

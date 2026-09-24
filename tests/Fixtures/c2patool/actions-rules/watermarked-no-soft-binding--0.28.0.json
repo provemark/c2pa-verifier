@@ -1,0 +1,109 @@
+{
+  "active_manifest": "urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc",
+  "manifests": {
+    "urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier SPEC-033 probe",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.0"
+        }
+      ],
+      "title": "watermarked-no-soft-binding.jpg",
+      "instance_id": "xmp.iid:b2de355f-1b65-4b64-aa6b-20145c69880b",
+      "thumbnail": {
+        "format": "image/jpeg",
+        "identifier": "self#jumbf=/c2pa/urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc/c2pa.assertions/c2pa.thumbnail.claim"
+      },
+      "assertions": [
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              },
+              {
+                "action": "c2pa.watermarked.bound"
+              }
+            ]
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "c2pa-verifier test",
+        "common_name": "SPEC-033 Probe Signer",
+        "cert_serial_number": "198602895465939349704858622888905093814291214851"
+      },
+      "label": "urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc",
+      "claim_version": 2
+    }
+  },
+  "validation_status": [
+    {
+      "code": "assertion.action.softBindingMissing",
+      "url": "self#jumbf=/c2pa/urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc/c2pa.assertions/c2pa.actions.v2",
+      "explanation": "watermark action missing soft binding assertion"
+    }
+  ],
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc/c2pa.signature",
+          "explanation": "signing certificate trusted, found in [system_anchors] trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc/c2pa.assertions/c2pa.hash.data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc/c2pa.assertions/c2pa.thumbnail.claim",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc/c2pa.assertions/c2pa.hash.data",
+          "explanation": "data hash valid"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        }
+      ],
+      "failure": [
+        {
+          "code": "assertion.action.softBindingMissing",
+          "url": "self#jumbf=/c2pa/urn:c2pa:d2a7118c-af2c-4b92-af9f-f5cbeb1da2bc/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "watermark action missing soft binding assertion"
+        }
+      ]
+    },
+    "specVersion": "2.4.0",
+    "trustListUri": "system_anchors"
+  },
+  "validation_state": "Invalid"
+}

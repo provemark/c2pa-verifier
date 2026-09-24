@@ -1,0 +1,147 @@
+{
+  "active_manifest": "urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620",
+  "manifests": {
+    "urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier SPEC-033 probe",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.0"
+        }
+      ],
+      "title": "transcoded-component.jpg",
+      "instance_id": "xmp.iid:e750c106-9020-42ad-9b90-6abc48d4b175",
+      "thumbnail": {
+        "format": "image/jpeg",
+        "identifier": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.assertions/c2pa.thumbnail.claim"
+      },
+      "ingredients": [
+        {
+          "title": "c1.jpg",
+          "format": "image/jpeg",
+          "instance_id": "xmp:iid:c1",
+          "relationship": "componentOf",
+          "label": "c2pa.ingredient.v3"
+        }
+      ],
+      "assertions": [
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              },
+              {
+                "action": "c2pa.transcoded",
+                "parameters": {
+                  "ingredients": [
+                    {
+                      "url": "self#jumbf=c2pa.assertions/c2pa.ingredient.v3",
+                      "hash": "iEH7R+/x22yMavbsRzGhihGWXiqg92C+eLfFwJDmpTY="
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "c2pa-verifier test",
+        "common_name": "SPEC-033 Probe Signer",
+        "cert_serial_number": "198602895465939349704858622888905093814291214851"
+      },
+      "label": "urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620",
+      "claim_version": 2
+    }
+  },
+  "validation_status": [
+    {
+      "code": "assertion.action.ingredientMismatch",
+      "url": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.assertions/c2pa.actions.v2",
+      "explanation": "action[1] ('c2pa.transcoded') must have valid ingredient with parentOf relationship; ingredient(s): ['self#jumbf=c2pa.assertions/c2pa.ingredient.v3' (title='c1.jpg', relationship='componentOf')]"
+    }
+  ],
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.signature",
+          "explanation": "signing certificate trusted, found in [system_anchors] trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.assertions/c2pa.hash.data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.assertions/c2pa.thumbnail.claim",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.assertions/c2pa.ingredient.v3",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.ingredient.v3"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.assertions/c2pa.hash.data",
+          "explanation": "data hash valid"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        }
+      ],
+      "failure": [
+        {
+          "code": "assertion.action.ingredientMismatch",
+          "url": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "action[1] ('c2pa.transcoded') must have valid ingredient with parentOf relationship; ingredient(s): ['self#jumbf=c2pa.assertions/c2pa.ingredient.v3' (title='c1.jpg', relationship='componentOf')]"
+        }
+      ]
+    },
+    "ingredientDeltas": [
+      {
+        "ingredientAssertionURI": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.assertions/c2pa.ingredient.v3",
+        "validationDeltas": {
+          "success": [],
+          "informational": [
+            {
+              "code": "ingredient.unknownProvenance",
+              "url": "self#jumbf=/c2pa/urn:c2pa:baa2a413-df72-4881-b039-23c5e9ebf620/c2pa.assertions/c2pa.ingredient.v3",
+              "explanation": "c1.jpg: ingredient does not have provenance"
+            }
+          ],
+          "failure": []
+        }
+      }
+    ],
+    "specVersion": "2.4.0",
+    "trustListUri": "system_anchors"
+  },
+  "validation_state": "Invalid"
+}

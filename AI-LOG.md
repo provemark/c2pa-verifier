@@ -6098,3 +6098,22 @@ README are where the disclosure lives.
   2.c, translated, 2.f, the soft-binding check); C2PA 2.4 §15.10.3.2.3 and
   §18.15.4.7.
 - Decided by Maurice: SPEC-033 as a draft.
+
+## 2026-09-24 — Step 125a, SPEC-033 approved and its tests seen red
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, volg c2pa-rs bij vraag 2, SPEC-033 goedgekeurd".
+- Produced: SPEC-033 `approved` (answers recorded) and amendment 1 (written
+  before the tests); `bin/make-spec033-variants.php`;
+  `tests/Fixtures/actions-rules/` (21 probes, root, settings);
+  `tests/Fixtures/c2patool/actions-rules/` (42 reports);
+  `tests/Unit/Manifest/ActionsContentTest.php` (AC1–AC9);
+  `notes/step-125-spec033.md`.
+- Measured: how c2patool's builder links an action to an ingredient
+  (`ingredientIds`). Both c2patool versions on every probe (the table is
+  in the note). The first soft-binding control was malformed (`value` as
+  text), and was rebuilt with bytes. `vendor/bin/pest --group=SPEC-033`
+  gives 8 failed, 1 passed (AC8 is a guard). No `PRIVATE` PEM header in
+  the new fixture directories.
+- Reasoned: `c2pa-rs` returns after the opening fault, hence amendment 1.
+- Decided by Maurice: approve SPEC-033 and follow c2pa-rs on question 2.
+  Committed locally, not pushed.

@@ -1,0 +1,109 @@
+{
+  "active_manifest": "urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689",
+  "manifests": {
+    "urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier SPEC-033 probe",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.0"
+        }
+      ],
+      "title": "translated-no-parameters.jpg",
+      "instance_id": "xmp.iid:09757048-4e2b-48c0-be9b-8568170d3ba6",
+      "thumbnail": {
+        "format": "image/jpeg",
+        "identifier": "self#jumbf=/c2pa/urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689/c2pa.assertions/c2pa.thumbnail.claim"
+      },
+      "assertions": [
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              },
+              {
+                "action": "c2pa.translated"
+              }
+            ]
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "c2pa-verifier test",
+        "common_name": "SPEC-033 Probe Signer",
+        "cert_serial_number": "198602895465939349704858622888905093814291214851"
+      },
+      "label": "urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689",
+      "claim_version": 2
+    }
+  },
+  "validation_status": [
+    {
+      "code": "assertion.action.malformed",
+      "url": "self#jumbf=/c2pa/urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689/c2pa.assertions/c2pa.actions.v2",
+      "explanation": "c2pa.translated action must have sourceLanguage and targetLanguage parameters"
+    }
+  ],
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689/c2pa.signature",
+          "explanation": "signing certificate trusted, found in [system_anchors] trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689/c2pa.assertions/c2pa.hash.data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689/c2pa.assertions/c2pa.thumbnail.claim",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689/c2pa.assertions/c2pa.hash.data",
+          "explanation": "data hash valid"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        }
+      ],
+      "failure": [
+        {
+          "code": "assertion.action.malformed",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f14602ce-a912-404d-90fa-45475c62d689/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "c2pa.translated action must have sourceLanguage and targetLanguage parameters"
+        }
+      ]
+    },
+    "specVersion": "2.4.0",
+    "trustListUri": "system_anchors"
+  },
+  "validation_state": "Invalid"
+}
