@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
@@ -166,9 +166,9 @@ Filled when status becomes `implemented`.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
+| AC1 | tests/Unit/Manifest/OutsideManifestTest.php :: AC1: an entry naming another manifest / SPEC-040 | src/Manifest/Manifest.php :: checkReferences(); src/Verifier/Verifier.php :: verify() (the exception's url) |
+| AC2 | tests/Unit/Manifest/OutsideManifestTest.php :: AC2: an absolute entry naming the claim's own manifest passes / SPEC-040 | src/Manifest/Manifest.php :: checkReferences(), resolve() |
+| AC3 | tests/Unit/Manifest/OutsideManifestTest.php :: AC3: an entry with no manifest label keeps its code / SPEC-040 | src/Manifest/Manifest.php :: resolve() (unchanged) |
+| AC4 | tests/Unit/Manifest/OutsideManifestTest.php :: AC4: a label that exists in the store is still outside / SPEC-040 | src/Manifest/Manifest.php :: checkReferences() |
+| AC5 | tests/Unit/Manifest/OutsideManifestTest.php :: AC5: nothing else moves / SPEC-040; the drift alarms (SPEC-013 AC10–AC13); the before/after run of step 137b | — |
+| AC6 | tests/Unit/Manifest/OutsideManifestTest.php :: AC6: the vocabulary grows by one code, verbatim / SPEC-040 | src/Report/StatusCode.php :: AssertionOutsideManifest; tests/Fixtures/api/public-surface.txt |

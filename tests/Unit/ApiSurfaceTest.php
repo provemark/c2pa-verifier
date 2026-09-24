@@ -80,7 +80,7 @@ it('AC1: the recorded surface is exactly what the contract classes expose today'
     }
 
     expect($live)->toBe(spec025Recorded())
-        ->and($live)->toHaveCount(125);   // 91, then two bmffHash codes, then SPEC-028's tenth class, then SPEC-030's four ocsp codes, then SPEC-031's eleventh class (10) and two members of TrustSettings, then SPEC-032's code, then SPEC-033's two, then SPEC-035's six, then SPEC-036's one, then SPEC-037's one, then SPEC-038's two, then SPEC-039's one
+        ->and($live)->toHaveCount(126);   // 91, then two bmffHash codes, then SPEC-028's tenth class, then SPEC-030's four ocsp codes, then SPEC-031's eleventh class (10) and two members of TrustSettings, then SPEC-032's code, then SPEC-033's two, then SPEC-035's six, then SPEC-036's one, then SPEC-037's one, then SPEC-038's two, then SPEC-039's one, then SPEC-040's one
 })->group('SPEC-025');
 
 it('AC1: no class of the contract is marked internal', function (): void {

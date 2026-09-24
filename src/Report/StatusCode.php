@@ -30,6 +30,8 @@ enum StatusCode: string
     case ClaimMalformed = 'claim.malformed';
     case AssertionJsonInvalid = 'assertion.json.invalid';
     case AssertionMissing = 'assertion.missing';
+    // SPEC-040: a claim entry naming another manifest (§15.10.3.1)
+    case AssertionOutsideManifest = 'assertion.outsideManifest';
     case AssertionHashedUriMatch = 'assertion.hashedURI.match';
     case AssertionHashedUriMismatch = 'assertion.hashedURI.mismatch';
     case AssertionUndeclared = 'assertion.undeclared';

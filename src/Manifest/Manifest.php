@@ -223,6 +223,11 @@ final readonly class Manifest
             throw new ManifestException(sprintf('manifest %s: signature URI %s does not name the signature box', $this->label, $this->claim->signatureUri), StatusCode::ClaimSignatureMissing);
         }
         foreach ([...$this->claim->createdAssertions, ...$this->claim->gatheredAssertions] as $reference) {
+            // SPEC-040: an entry naming another manifest's assertion store (C2PA 2.4 §15.10.3.1), whether
+            // or not that manifest is in the store, on the entry as written — as c2pa-rs's assertion loop
+            if (preg_match('#\A'.preg_quote(self::URI_PREFIX, '#').'/c2pa/([^/]+)/#', $reference->url, $m) === 1 && $m[1] !== $this->label) {
+                throw new ManifestException(sprintf('assertion reference to external assertion store: %s', $reference->url), StatusCode::AssertionOutsideManifest, null, $reference->url);
+            }
             try {
                 $target = $this->resolve($reference->url);
             } catch (ManifestException $e) {

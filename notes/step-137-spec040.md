@@ -32,3 +32,24 @@ are shredded. Both versions answered as in step 136.
 `composer check` is otherwise clean: 495 passed.
 
 Committed locally, not pushed.
+
+## 137b — built
+
+`Manifest::checkReferences()` checks every entry of the claim's assertion
+list before resolving it. If the entry is absolute and names a manifest
+label other than the claim's own, it throws `assertion.outsideManifest`
+with the entry as its url. The label is compared whether or not that
+manifest is in the store. `StatusCode` gains the case.
+
+`vendor/bin/pest --group=SPEC-040`: **6 passed.** The counts moved: 59 → 60
+codes, 125 → 126 symbols.
+
+**Before and after, the whole corpus** under the three standard settings
+(1095 runs): only `outside-manifest/other-manifest.png` moved, from
+`assertion.missing` on the store to `assertion.outsideManifest` on the
+entry, still `Invalid`.
+
+`composer check`: exit 0, 498 tests. `docs/conformance.md`:
+`PRED-ASSE-004` goes from *partial* to *yes*.
+
+One amendment awaits confirmation: SPEC-025, the code.

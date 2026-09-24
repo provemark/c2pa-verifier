@@ -24,6 +24,7 @@ Report\StatusCode :: const AssertionJsonInvalid
 Report\StatusCode :: const AssertionMissing
 Report\StatusCode :: const AssertionMultipleHardBindings
 Report\StatusCode :: const AssertionNotRedacted
+Report\StatusCode :: const AssertionOutsideManifest
 Report\StatusCode :: const AssertionSelfRedacted
 Report\StatusCode :: const AssertionUndeclared
 Report\StatusCode :: const ClaimCborInvalid

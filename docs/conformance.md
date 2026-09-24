@@ -34,8 +34,8 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | verdict | predicates |
 |---|---|
-| **yes** | 62 |
-| partial | 13 |
+| **yes** | 63 |
+| partial | 12 |
 | closed | 4 |
 | by design | 21 |
 | **gap** | 11 |
@@ -141,7 +141,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-ASSE-001` | shall | Ingredient validation and results recording | by design — an obligation on the claim *generator*, not on a verifier |
 | `PRED-ASSE-002` | shall | Multiple embedded manifest stores invalidation | **yes** — a second manifest store in one asset is `claim.multiple` (SPEC-005/013); in ISOBMFF a second C2PA box is a container error |
 | `PRED-ASSE-003` | shall | Redacted assertion label check | **yes** — since 2026-09-24 (SPEC-035): a redacted actions assertion is `assertion.action.redacted`; a redacted hard binding is `assertion.hardBinding.redacted` (SPEC-036) |
-| `PRED-ASSE-004` | shall | Assertion URI must reference same manifest | partial — URIs are resolved inside the manifest only; one pointing elsewhere fails as `assertion.missing`, not `assertion.outsideManifest` |
+| `PRED-ASSE-004` | shall | Assertion URI must reference same manifest | **yes** — since 2026-09-24 (SPEC-040): a claim entry naming another manifest is `assertion.outsideManifest`, on the entry as written |
 | `PRED-ASSE-005` | shall | Assertion URI must be resolvable | **yes** — `assertion.missing` when a claim's hashed URI names no assertion (SPEC-011) |
 | `PRED-ASSE-006` | shall | Assertion hashed-URI integrity check | **yes** — `HashedUriCheck`: `assertion.hashedURI.match` / `.mismatch` over every entry |
 | `PRED-ASSE-007` | shall | Standard assertion encoding validity | partial — JSON gets `assertion.json.invalid`; malformed **CBOR** is caught but reported as `general.error` — this verifier has no `assertion.cbor.invalid` code |
@@ -306,9 +306,9 @@ c2patool is never a surprise.
 - `PRED-TIME-002`, `PRED-TIME-003` — the `c2pa.time-stamp` assertion is not
   read, so such a file is judged at *now*: an expired certificate is called
   expired rather than excused
-- `PRED-ASSE-004`, `PRED-ASSE-007`, `PRED-STRU-018`, `PRED-CRYP-016`,
+- `PRED-ASSE-007`, `PRED-STRU-018`, `PRED-CRYP-016`,
   `PRED-CRYP-019` — the check happens, the status code differs
-  (`assertion.missing` for `assertion.outsideManifest`, `general.error` for
+  (`general.error` for
   `assertion.cbor.invalid`, `assertion.missing` for `hashedURI.missing`,
   `signingCredential.expired` for `claimSignature.outsideValidity`)
 - `PRED-STRU-002` — a syntax check on custom codes an ingredient recorded,

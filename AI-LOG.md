@@ -6622,3 +6622,17 @@ README are where the disclosure lives.
   `composer check` (all else green, 495).
 - Reasoned: nothing beyond the draft.
 - Decided by Maurice: SPEC-040 approved.
+
+## 2026-09-24 — SPEC-040 implemented (step 137b)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: the same approval as step 137a; the implementation follows the
+  tests.
+- Produced: `src/Manifest/Manifest.php` (`checkReferences()`);
+  `src/Report/StatusCode.php` (one case); the recorded surface; two
+  counts; SPEC-040 implemented with Traceability; a SPEC-025 amendment;
+  conformance, CHANGELOG, README; the note, `NOTES.md`, milestones.
+- Measured: `vendor/bin/pest --group=SPEC-040` (6 passed); `composer
+  check` (498 passed, exit 0); the corpus before and after (1095 runs,
+  only the one variant moved).
+- Reasoned: nothing new.
+- Decided by Maurice: none in this step.

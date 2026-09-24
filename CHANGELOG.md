@@ -72,6 +72,11 @@ committed.
   `c2patool`, it accompanies every verified signature, an expired
   signer's included. No verdict changes. One new status code; the surface
   is 125 symbols.
+- SPEC-040: a claim entry that names another manifest's assertion is
+  refused with `assertion.outsideManifest` on the entry as written, as
+  C2PA 2.4 §15.10.3.1 and both `c2patool` versions name it, where this
+  verifier said `assertion.missing`. Still `Invalid`. One new status code;
+  the surface is 126 symbols.
 
 ## 0.2.0 — 2026-09-24
 

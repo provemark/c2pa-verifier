@@ -342,6 +342,12 @@ reasoning that led to it stays readable.
 
     Confirmed by Maurice van Loon, 2026-09-24 (step 135).
 
+12. **2026-09-24, step 137b, with SPEC-040's implementation** — `StatusCode`
+    grows by one case, `AssertionOutsideManifest = 'assertion.outsideManifest'`
+    (C2PA 2.4 §15.10.3.1). The recorded surface goes 125 → **126**.
+
+    **Weight B: the vocabulary grew, verbatim.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
