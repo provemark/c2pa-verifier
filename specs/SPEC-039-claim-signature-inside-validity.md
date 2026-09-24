@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
@@ -185,15 +185,26 @@ case ClaimSignatureInsideValidity = 'claimSignature.insideValidity';
 
    Weight C: a file name corrected and a measurement added.
 
+2. **2026-09-24, step 135b, measured.** AC1's *"every corpus file whose
+   recorded report holds `claimSignature.validated`"* holds on 21 of
+   `SPEC013_CORPUS`'s 22. The 22nd, `variants/json-broken`, stops this
+   verifier at a parse fault before the signature is read, where
+   `c2patool` goes on (`SPEC013_SUBSET_ONLY`, SPEC-013). It gets no
+   `claimSignature.validated` here, and so no `insideValidity` either. The
+   test names it and asserts that.
+
+   Weight C: a named exception to a criterion's wording, no behaviour
+   changed.
+
 ## Traceability
 
 Filled when status becomes `implemented`.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
+| AC1 | tests/Unit/Cose/InsideValidityTest.php :: AC1: beside every verified signature, as c2patool / SPEC-039; tests/Unit/Report/ReportTest.php :: AC1 / SPEC-010 | src/Cose/ClaimSignatureCheck.php :: checkBytes() |
+| AC2 | tests/Unit/Cose/InsideValidityTest.php :: AC2: an expired signer still gets it, as c2patool / SPEC-039 | src/Cose/ClaimSignatureCheck.php :: checkBytes() (no validity condition, open question 1) |
+| AC3 | tests/Unit/Cose/InsideValidityTest.php :: AC3: no verified signature, no code / SPEC-039 | src/Cose/ClaimSignatureCheck.php :: checkBytes() (the mismatch branch) |
+| AC4 | tests/Unit/Cose/InsideValidityTest.php :: AC4: ingredient manifests alike / SPEC-039 | src/Verifier/IngredientManifestCheck.php :: manifest() (through ClaimSignatureCheck) |
+| AC5 | tests/Unit/Cose/InsideValidityTest.php :: AC5: nothing else moves / SPEC-039; the drift alarms (SPEC-013 AC10–AC13); the before/after run of step 135b | — |
+| AC6 | tests/Unit/Cose/InsideValidityTest.php :: AC6: the vocabulary grows by one code, verbatim / SPEC-039 | src/Report/StatusCode.php :: ClaimSignatureInsideValidity, isSuccess(); tests/Fixtures/api/public-surface.txt |

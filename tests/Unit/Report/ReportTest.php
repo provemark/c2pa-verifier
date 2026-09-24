@@ -123,13 +123,17 @@ it('AC1: the four fixtures: claimSignature.validated, and the words are c2patool
         $manifest = spec010Manifest($fixture);
         $statuses = (new ClaimSignatureCheck)->check($manifest);
 
-        expect($statuses)->toHaveCount(1, $name)
-            ->and($statuses[0]->code)->toBe(StatusCode::ClaimSignatureValidated, $name)
-            ->and($statuses[0]->url)->toBe("self#jumbf=/c2pa/{$manifest->label}/c2pa.signature", $name);
+        // SPEC-010 amendment 6 (SPEC-039): insideValidity, then validated, as c2patool lists them
+        expect($statuses)->toHaveCount(2, $name)
+            ->and($statuses[0]->code)->toBe(StatusCode::ClaimSignatureInsideValidity, $name)
+            ->and($statuses[1]->code)->toBe(StatusCode::ClaimSignatureValidated, $name)
+            ->and($statuses[0]->url)->toBe("self#jumbf=/c2pa/{$manifest->label}/c2pa.signature", $name)
+            ->and($statuses[1]->url)->toBe("self#jumbf=/c2pa/{$manifest->label}/c2pa.signature", $name);
 
         $oracle = spec010C2patool($name);
-        $validated = array_values(array_filter(spec010Pairs(spec010ActiveManifest($oracle)['success']), static fn (array $p): bool => $p['code'] === 'claimSignature.validated'));
-        expect($validated)->toBe([['code' => $statuses[0]->code->value, 'url' => $statuses[0]->url]], $name);
+        // the two signature successes, in c2patool's order, code and url
+        $signature = array_values(array_filter(spec010Pairs(spec010ActiveManifest($oracle)['success']), static fn (array $p): bool => str_starts_with($p['code'], 'claimSignature.')));
+        expect($signature)->toBe(array_map(static fn (ValidationStatus $s): array => ['code' => $s->code->value, 'url' => $s->url], $statuses), $name);
 
         $result = ValidationResult::fromStatuses($statuses, ['signature']);
         expect($result->state)->toBe(ValidationState::Valid, $name)
@@ -293,13 +297,16 @@ it('AC9: the array shape is c2patool\'s, plus the checks performed', function ()
     $png = spec010Manifest('fixture-signed.png');
     $valid = ValidationResult::fromStatuses((new ClaimSignatureCheck)->check($png), ['signature'])->toArray();
     $success = spec010ActiveManifest($valid)['success'];
-    assert(is_array($success) && is_array($success[0]) && is_string($success[0]['explanation']));
-    $explanation = $success[0]['explanation'];
+    assert(is_array($success) && is_array($success[1]) && is_string($success[1]['explanation']));
+    $explanation = $success[1]['explanation'];
 
     expect($explanation)->not->toBe('')
         ->and($valid)->toBe([   // no validation_status key: none when there is no failure (SPEC-013 amendment 3, measured in step 30)
             'validation_results' => ['activeManifest' => [
-                'success' => [['code' => 'claimSignature.validated', 'url' => SPEC010_PNG_SIGNATURE_URL, 'explanation' => $explanation]],
+                'success' => [
+                    ['code' => 'claimSignature.insideValidity', 'url' => SPEC010_PNG_SIGNATURE_URL, 'explanation' => 'claim signature valid'],   // SPEC-039
+                    ['code' => 'claimSignature.validated', 'url' => SPEC010_PNG_SIGNATURE_URL, 'explanation' => $explanation],
+                ],
                 'informational' => [],
                 'failure' => [],
             ]],
@@ -340,8 +347,9 @@ it('AC10: every code is verbatim, and success and failure are told apart', funct
         if ((str_starts_with($code->value, 'assertion.') && ! in_array($code->value, ['assertion.json.invalid', 'assertion.missing'], true)) || in_array($code->value, ['signingCredential.trusted', 'signingCredential.untrusted'], true) || str_starts_with($code->value, 'timeStamp.') || str_starts_with($code->value, 'ingredient.') || str_starts_with($code->value, 'signingCredential.ocsp.')) {
             continue;   // SPEC-011's, SPEC-012's, SPEC-014's, SPEC-017's, SPEC-020's and SPEC-030's, with their own successes and the informational
         }
-        expect($code->isSuccess())->toBe($code === StatusCode::ClaimSignatureValidated, $code->value)
-            ->and($code->isFailure())->toBe($code !== StatusCode::ClaimSignatureValidated, $code->value);
+        $success = in_array($code, [StatusCode::ClaimSignatureValidated, StatusCode::ClaimSignatureInsideValidity], true);   // the second SPEC-039's
+        expect($code->isSuccess())->toBe($success, $code->value)
+            ->and($code->isFailure())->toBe(! $success, $code->value);
     }
 
     $ok = new ValidationStatus(StatusCode::ClaimSignatureValidated, 'self#jumbf=/c2pa/x/c2pa.signature', 'ok');

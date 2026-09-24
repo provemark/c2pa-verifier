@@ -49,9 +49,16 @@ final readonly class ClaimSignatureCheck
             return [new ValidationStatus($e->status, $url, $e->getMessage())];
         }
 
-        return [$verifies
-            ? new ValidationStatus(StatusCode::ClaimSignatureValidated, $url, sprintf('the claim signature verifies under the leaf certificate (alg %d, %d certificates in x5chain)', $cose->alg, count($cose->chain)))
-            : new ValidationStatus(StatusCode::ClaimSignatureMismatch, $url, sprintf('the claim signature does not verify under the leaf certificate (alg %d)', $cose->alg)),
+        if (! $verifies) {
+            return [new ValidationStatus(StatusCode::ClaimSignatureMismatch, $url, sprintf('the claim signature does not verify under the leaf certificate (alg %d)', $cose->alg))];
+        }
+
+        // SPEC-039: c2patool reports insideValidity wherever the signature verifies, directly before
+        // claimSignature.validated — an expired signer included (open question 1); the certificate's
+        // own period is judged elsewhere, as signingCredential.expired
+        return [
+            new ValidationStatus(StatusCode::ClaimSignatureInsideValidity, $url, 'claim signature valid'),
+            new ValidationStatus(StatusCode::ClaimSignatureValidated, $url, sprintf('the claim signature verifies under the leaf certificate (alg %d, %d certificates in x5chain)', $cose->alg, count($cose->chain))),
         ];
     }
 }

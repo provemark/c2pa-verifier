@@ -353,6 +353,16 @@ already); `Cose` may see `Manifest` (the arrow exists, unused until now).
 4. **2026-09-21, step 39, with SPEC-006 amendment 2 (indefinite lengths)** — `claim-indefinite-array` decodes now (indefinite lengths accepted), so AC6's test keeps `claim-duplicate-key` as the one claim whose CBOR SPEC-006 refuses; the criterion's list of `claim.cbor.invalid` examples shrinks by that name. No outcome changed.
 5. **2026-09-22, step 42b, with SPEC-017** — the enum gains the six `timeStamp.*` codes of C2PA 2.4 §15: `validated` and `trusted` as successes, `malformed`, `mismatch`, `outsideValidity` and `untrusted` as informational (c2pa-rs logs every timestamp fault informational; a timestamp never changes the state). AC10's test skips the six, as it skips SPEC-014's two. No outcome of this spec changed.
 
+6. **2026-09-24, step 135b, with SPEC-039's implementation** — AC1's
+   *"exactly one status"* becomes two: `claimSignature.insideValidity`,
+   then `claimSignature.validated`, on the same url. The test now compares
+   both, code and url and order, with the `claimSignature.*` successes of
+   `c2patool`'s recorded report. AC9's array shape holds both, and AC10's
+   successes are those two.
+
+   **Weight C: a success code added beside the one AC1 named; no verdict
+   changed.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

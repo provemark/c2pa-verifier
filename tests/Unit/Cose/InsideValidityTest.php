@@ -70,6 +70,13 @@ it('AC1: beside every verified signature, as c2patool', function (): void {
         $oracle = spec020Oracle($name.'.json');
         $theirs = spec039OracleCodes($oracle, 'success');
         $report = spec020Verify($carrier);
+        if ($name === 'variants/json-broken') {
+            // amendment 2: a parse fault stops this verifier before the signature, where c2patool goes on
+            // (SPEC013_SUBSET_ONLY) — no validated here, so no insideValidity either
+            expect(spec039Paired($report, $name))->toBeFalse();
+
+            continue;
+        }
         $ours = spec039Paired($report, $name);
         expect($ours)->toBe(in_array(SPEC039_INSIDE, $theirs, true), $name);
         $withIt += $ours ? 1 : 0;

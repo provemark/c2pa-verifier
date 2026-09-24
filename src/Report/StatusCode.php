@@ -18,6 +18,8 @@ namespace Provemark\C2paVerifier\Report;
 enum StatusCode: string
 {
     case ClaimSignatureValidated = 'claimSignature.validated';
+    // SPEC-039: a success, beside every verified signature, as c2patool reports it (C2PA 2.4 §15.8 names it)
+    case ClaimSignatureInsideValidity = 'claimSignature.insideValidity';
     case ClaimSignatureMismatch = 'claimSignature.mismatch';
     case ClaimSignatureMissing = 'claimSignature.missing';
     case AlgorithmUnsupported = 'algorithm.unsupported';
@@ -87,7 +89,7 @@ enum StatusCode: string
 
     public function isSuccess(): bool
     {
-        return $this === self::ClaimSignatureValidated || $this === self::AssertionHashedUriMatch || $this === self::AssertionDataHashMatch || $this === self::AssertionBmffHashMatch || $this === self::SigningCredentialTrusted
+        return $this === self::ClaimSignatureValidated || $this === self::ClaimSignatureInsideValidity || $this === self::AssertionHashedUriMatch || $this === self::AssertionDataHashMatch || $this === self::AssertionBmffHashMatch || $this === self::SigningCredentialTrusted
             || $this === self::TimeStampValidated || $this === self::TimeStampTrusted
             || $this === self::IngredientManifestValidated   // SPEC-021: the ingredient's manifest box hashed as recorded
             || $this === self::SigningCredentialOcspNotRevoked;   // SPEC-030 — and its explanation says how little that proves

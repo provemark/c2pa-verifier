@@ -333,6 +333,13 @@ reasoning that led to it stays readable.
 
     Confirmed by Maurice van Loon, 2026-09-24 (step 134).
 
+11. **2026-09-24, step 135b, with SPEC-039's implementation** — `StatusCode`
+    grows by one case, `ClaimSignatureInsideValidity =
+    'claimSignature.insideValidity'` (a success; C2PA 2.4 §15.8). The
+    recorded surface goes 124 → **125**.
+
+    **Weight B: the vocabulary grew, verbatim.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

@@ -150,7 +150,7 @@ it('AC1: the four fixtures, front door: Valid, three checks, and the report is c
             // certificate and trust joined the list with SPEC-015/014: without settings the leaf is checked and found untrusted, as c2patool
             // the Adobe file carries a timestamp: SPEC-017 puts `timestamp` and its two informational-or-success entries first (amendment 8)
             ->and($report->result->checksPerformed)->toBe([...($name === 'adobe-20220124-C' ? ['timestamp'] : []), 'signature', 'certificate', 'trust', 'revocation', 'hashedUris', 'actions', 'dataHash'], $name)
-            ->and(spec013Codes($report))->toBe([...($name === 'adobe-20220124-C' ? ['timeStamp.validated', 'timeStamp.untrusted'] : []), 'claimSignature.validated', 'signingCredential.untrusted', 'signingCredential.ocsp.skipped', ...array_fill(0, $entries, 'assertion.hashedURI.match'), 'assertion.dataHash.match'], $name);
+            ->and(spec013Codes($report))->toBe([...($name === 'adobe-20220124-C' ? ['timeStamp.validated', 'timeStamp.untrusted'] : []), 'claimSignature.insideValidity', 'claimSignature.validated', 'signingCredential.untrusted', 'signingCredential.ocsp.skipped', ...array_fill(0, $entries, 'assertion.hashedURI.match'), 'assertion.dataHash.match'], $name);
 
         $oracle = spec013C2patool($name);
         expect($oracle['validation_state'])->toBe('Valid', $name);

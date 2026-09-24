@@ -541,7 +541,7 @@ test('SPEC-017 AC9: the report — timeStamp entries first, signature_info with 
     assert(is_array($array['validation_results']) && is_array($array['validation_results']['activeManifest']) && is_array($array['validation_results']['activeManifest']['success']));
     $success = array_map(static fn (mixed $e): mixed => is_array($e) ? $e['code'] : null, $array['validation_results']['activeManifest']['success']);
     expect(array_slice($success, 0, 2))->toBe(['timeStamp.validated', 'timeStamp.trusted'])
-        ->and($success[2])->toBe('claimSignature.validated');
+        ->and(array_slice($success, 2, 2))->toBe(['claimSignature.insideValidity', 'claimSignature.validated']);   // SPEC-039
 
     $oracle = spec017Oracle('timestamp/C-digicert-g4');
     $manifests = $oracle['manifests'];

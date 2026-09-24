@@ -31,6 +31,7 @@ Report\StatusCode :: const ClaimHardBindingsMissing
 Report\StatusCode :: const ClaimMalformed
 Report\StatusCode :: const ClaimMissing
 Report\StatusCode :: const ClaimMultiple
+Report\StatusCode :: const ClaimSignatureInsideValidity
 Report\StatusCode :: const ClaimSignatureMismatch
 Report\StatusCode :: const ClaimSignatureMissing
 Report\StatusCode :: const ClaimSignatureValidated

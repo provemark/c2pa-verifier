@@ -6568,3 +6568,20 @@ README are where the disclosure lives.
   failed, 1 guard passed); `composer check` (all else green, 487).
 - Reasoned: nothing beyond the draft.
 - Decided by Maurice: SPEC-039 approved; question 1: copy c2patool.
+
+## 2026-09-24 — SPEC-039 implemented (step 135b)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: the same approval as step 135a; the implementation follows the
+  tests.
+- Produced: `src/Cose/ClaimSignatureCheck.php` (the code before
+  `claimSignature.validated`); `src/Report/StatusCode.php` (one success
+  case); the recorded surface; updated tests of SPEC-010, -011, -012, -013
+  and -017 and two counts; SPEC-039 implemented with Traceability and
+  amendment 2; amendments SPEC-010, SPEC-011, SPEC-012, SPEC-025;
+  comparison, CHANGELOG, README; the note, `NOTES.md`, milestones.
+- Measured: `vendor/bin/pest --group=SPEC-039` (6 passed); `composer
+  check` (492 passed, exit 0); the corpus before and after with
+  verdicts, failures, informational codes and ingredient deltas (1086
+  runs, no difference).
+- Reasoned: nothing new.
+- Decided by Maurice: none in this step.

@@ -66,6 +66,12 @@ committed.
     verdict changes.
   - Two new status codes; the surface is 124 symbols. Conformance gaps
     go from 14 to 11.
+- SPEC-039: `claimSignature.insideValidity`, the success both `c2patool`
+  versions list directly before `claimSignature.validated`, now appears
+  in the same place, for the active manifest and for ingredients. As in
+  `c2patool`, it accompanies every verified signature, an expired
+  signer's included. No verdict changes. One new status code; the surface
+  is 125 symbols.
 
 ## 0.2.0 — 2026-09-24
 

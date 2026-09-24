@@ -26,3 +26,36 @@ reports are the oracle.
 `composer check` is otherwise clean: 487 passed.
 
 Committed locally, not pushed.
+
+## 135b — built
+
+`ClaimSignatureCheck` returns `claimSignature.insideValidity` (*"claim
+signature valid"*) directly before `claimSignature.validated`, on the same
+url, whenever the signature verifies. It adds no validity condition, as
+the maintainer chose. Through the same check, ingredient manifests get it
+too. `StatusCode` gains the case as a success.
+
+`vendor/bin/pest --group=SPEC-039`: **6 passed.** Tests of other specs
+that pinned the old success list were updated:
+- SPEC-010 AC1, AC9 and AC10: AC1 said *"exactly one status"*, and now
+  compares both successes with `c2patool`'s, code, url and order;
+- SPEC-011 AC9, SPEC-012 AC10 and SPEC-013 AC1;
+- SPEC-017 AC9;
+- the two counts (58 → 59 codes, 124 → 125 symbols).
+
+Amendments were written where a criterion's words changed: SPEC-010 #6,
+SPEC-011 #4, SPEC-012 #8, and SPEC-025 for the code. SPEC-039 amendment 2
+names `variants/json-broken`: this verifier stops at its parse fault before
+the signature is read, so it gets neither code there.
+
+**Before and after, the whole corpus** under the three standard settings,
+comparing verdicts, failures, informational codes and ingredient deltas
+(1086 runs): **no difference**. The success lists are the only change,
+and the tests hold them.
+
+`composer check`: exit 0, 492 tests.
+
+Six amendments await confirmation:
+- SPEC-039 #1 and #2;
+- SPEC-010 #6, SPEC-011 #4, SPEC-012 #8;
+- SPEC-025, for the code.
