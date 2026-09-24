@@ -5496,3 +5496,15 @@ README are where the disclosure lives.
   what was lost was the name of the fixture a failing loop would have
   printed.
 - Decided by Maurice: to do this fifth item.
+
+## 2026-09-24 — The M7 row marked done
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "M7-rij bijwerken, daarna issue #10 oppakken" — after a status
+  overview showed the milestone table still left M7 without its stamp.
+- Produced: the M7 row of `docs/milestones.md`.
+- Reasoned: M7 closed at step 57b on 2026-09-22 (`notes/step-57-update-manifests.md`,
+  "M7 is complete"); the row's figures are copied from
+  `notes/step-56-ingredient-validation.md` ("What this closes"), not
+  re-measured. Every other milestone row carried its stamp; this one was
+  missed when M8 followed the same day.
+- Decided by Maurice: to update the row.
