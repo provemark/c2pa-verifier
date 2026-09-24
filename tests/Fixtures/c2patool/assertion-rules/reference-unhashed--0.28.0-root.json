@@ -1,0 +1,106 @@
+{
+  "active_manifest": "urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67",
+  "manifests": {
+    "urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier SPEC-032 probe",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.0"
+        }
+      ],
+      "title": "reference-unhashed.jpg",
+      "instance_id": "xmp.iid:bd7380f4-1995-4a83-ada9-092b83e14e87",
+      "thumbnail": {
+        "format": "image/jpeg",
+        "identifier": "self#jumbf=/c2pa/urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67/c2pa.assertions/c2pa.thumbnail.claim"
+      },
+      "assertions": [
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              }
+            ]
+          }
+        },
+        {
+          "label": "c2pa.external-reference",
+          "data": {
+            "location": {
+              "url": "https://example.com/referenced"
+            }
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "c2pa-verifier test",
+        "common_name": "SPEC-032 Probe Signer",
+        "cert_serial_number": "96036181077347113617238140323042168191884427762"
+      },
+      "label": "urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67",
+      "claim_version": 2
+    }
+  },
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67/c2pa.signature",
+          "explanation": "signing certificate trusted, found in [system_anchors] trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67/c2pa.assertions/c2pa.hash.data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67/c2pa.assertions/c2pa.thumbnail.claim",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67/c2pa.assertions/c2pa.external-reference",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.external-reference"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67/c2pa.assertions/c2pa.hash.data",
+          "explanation": "data hash valid"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:8d352440-c032-4d56-8979-5cf281135f67/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        }
+      ],
+      "failure": []
+    },
+    "specVersion": "2.4.0",
+    "trustListUri": "system_anchors"
+  },
+  "validation_state": "Trusted"
+}

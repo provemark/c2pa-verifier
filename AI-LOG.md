@@ -5978,3 +5978,21 @@ README are where the disclosure lives.
   and `ExternalReference::validate()` (fourteen forbidden labels). C2PA
   2.4 §15.10.3.2.2, §15.10.3.2.3, §18.15.2 and §18.24.
 - Decided by Maurice: SPEC-032 as a draft.
+
+## 2026-09-24 — Step 122a, SPEC-032 approved and its tests seen red
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, volg c2patool bij vraag 2, SPEC-032 goedgekeurd".
+- Produced: SPEC-032 `approved` (the answers recorded);
+  `bin/make-spec032-variants.php`; `tests/Fixtures/assertion-rules/` (11
+  probes, the root, its settings); `tests/Fixtures/c2patool/assertion-rules/`
+  (44 reports); `tests/Unit/Manifest/AssertionRulesTest.php` (AC1–AC7);
+  `notes/step-122-spec032.md`.
+- Measured: both c2patool versions on every probe (the table is in the
+  note). c2patool's builder wrote every malformed shape. `alg` or `hash`
+  alone is Trusted in both oracles. `vendor/bin/pest --group=SPEC-032`
+  gives 5 failed, 2 passed; the two passes are guards (AC2, AC3). No
+  `PRIVATE` PEM header in the new fixture directories.
+- Reasoned: C2PA 2.4 §15.10.3.2.2 on a lone `alg`/`hash`; AC5 follows
+  the text and is stricter than both oracles there.
+- Decided by Maurice: approve SPEC-032 and follow c2patool on rule A.
+  Committed locally, not pushed.

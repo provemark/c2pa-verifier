@@ -1,0 +1,123 @@
+{
+  "active_manifest": "urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a",
+  "manifests": {
+    "urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier SPEC-032 probe",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.0"
+        }
+      ],
+      "title": "reference-not-a-map.jpg",
+      "instance_id": "xmp.iid:8b221c23-071b-4946-b6eb-1c4d9359ddfa",
+      "thumbnail": {
+        "format": "image/jpeg",
+        "identifier": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.assertions/c2pa.thumbnail.claim"
+      },
+      "assertions": [
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              }
+            ]
+          }
+        },
+        {
+          "label": "c2pa.external-reference",
+          "data": [
+            "not",
+            "a",
+            "map"
+          ]
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "c2pa-verifier test",
+        "common_name": "SPEC-032 Probe Signer",
+        "cert_serial_number": "96036181077347113617238140323042168191884427762"
+      },
+      "label": "urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a",
+      "claim_version": 2
+    }
+  },
+  "validation_status": [
+    {
+      "code": "signingCredential.untrusted",
+      "url": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.signature",
+      "explanation": "signing certificate untrusted"
+    },
+    {
+      "code": "assertion.external-reference.malformed",
+      "url": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.assertions/c2pa.external-reference",
+      "explanation": "external-reference assertion could not be decoded"
+    }
+  ],
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.assertions/c2pa.hash.data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.assertions/c2pa.thumbnail.claim",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.assertions/c2pa.external-reference",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.external-reference"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.assertions/c2pa.hash.data",
+          "explanation": "data hash valid"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        }
+      ],
+      "failure": [
+        {
+          "code": "signingCredential.untrusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.signature",
+          "explanation": "signing certificate untrusted"
+        },
+        {
+          "code": "assertion.external-reference.malformed",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4b8a39c9-374c-4b0b-9cad-1c082404824a/c2pa.assertions/c2pa.external-reference",
+          "explanation": "external-reference assertion could not be decoded"
+        }
+      ]
+    },
+    "specVersion": "2.4.0"
+  },
+  "validation_state": "Invalid"
+}

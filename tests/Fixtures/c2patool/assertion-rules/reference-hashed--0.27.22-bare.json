@@ -1,0 +1,109 @@
+{
+  "active_manifest": "urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484",
+  "manifests": {
+    "urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier SPEC-032 probe",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.0"
+        }
+      ],
+      "title": "reference-hashed.jpg",
+      "instance_id": "xmp.iid:5da7d968-6a89-4498-9606-b081d0f8f94b",
+      "thumbnail": {
+        "format": "image/jpeg",
+        "identifier": "self#jumbf=/c2pa/urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484/c2pa.assertions/c2pa.thumbnail.claim"
+      },
+      "assertions": [
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              }
+            ]
+          }
+        },
+        {
+          "label": "c2pa.external-reference",
+          "data": {
+            "label": "stds.schema-org.CreativeWork",
+            "location": {
+              "alg": "sha256",
+              "hash": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+              "url": "https://example.com/referenced"
+            }
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "c2pa-verifier test",
+        "common_name": "SPEC-032 Probe Signer",
+        "cert_serial_number": "96036181077347113617238140323042168191884427762"
+      },
+      "label": "urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484",
+      "claim_version": 2
+    }
+  },
+  "validation_status": [
+    {
+      "code": "signingCredential.untrusted",
+      "url": "self#jumbf=/c2pa/urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484/c2pa.signature",
+      "explanation": "signing certificate untrusted"
+    }
+  ],
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484/c2pa.assertions/c2pa.hash.data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484/c2pa.assertions/c2pa.thumbnail.claim",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484/c2pa.assertions/c2pa.external-reference",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.external-reference"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484/c2pa.assertions/c2pa.hash.data",
+          "explanation": "data hash valid"
+        }
+      ],
+      "informational": [],
+      "failure": [
+        {
+          "code": "signingCredential.untrusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:ae9c9d1e-c301-46e2-bfac-7aa08b1ea484/c2pa.signature",
+          "explanation": "signing certificate untrusted"
+        }
+      ]
+    }
+  },
+  "validation_state": "Valid"
+}

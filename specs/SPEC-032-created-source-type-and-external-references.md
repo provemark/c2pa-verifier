@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-24                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -194,6 +194,10 @@ public function check(Manifest $manifest): array;
 ```
 
 ## Open questions
+
+*Answered on approval, 2026-09-24:* question 2 by the maintainer (follow
+`c2patool`). Questions 1, 3 and 4 were settled by adopting their
+proposals.
 
 1. **Thirteen labels or fourteen?** §15.10.3.2.2 lists thirteen. `c2pa-rs`
    forbids fourteen, adding `c2pa.action`, which is not a C2PA label.
