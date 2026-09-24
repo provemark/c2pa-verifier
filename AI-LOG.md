@@ -5790,3 +5790,13 @@ README are where the disclosure lives.
   0.91.0's EKU and trust functions (step 110); the settings format cannot
   express the association.
 - Decided by Maurice: to measure this before anything else.
+
+## 2026-09-24 — §14.5.1 named, not built
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "route 1, benoemen en stoppen".
+- Produced: `docs/conformance.md` gains a section *Outside the catalogue*
+  with §14.5.1.2 as a gap by decision; a `docs/comparison.md` row; the
+  step-113 note and the milestone row record the decision.
+- Measured: nothing new (step 113).
+- Decided by Maurice: route 1. Name the gap and build nothing; no new
+  setting and no upstream question for now.

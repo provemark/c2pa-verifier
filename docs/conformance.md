@@ -318,6 +318,41 @@ c2patool is never a surprise.
 - `PRED-BMFF-002`, `PRED-BMFF-004`, `PRED-STRU-002` — ordering checks and
   informational codes that change no verdict
 
+## Outside the catalogue
+
+The catalogue names 150 predicates, and none of them mentions EKUs. One
+obligation of C2PA 2.4 that this verifier does not meet has come up anyway,
+and is listed here so that a table built from the catalogue does not hide
+it.
+
+### §14.5.1.2: trust anchors tied to EKUs — gap, by decision
+
+> the validator shall use only the trust anchors it associates with EKUs
+> present in the certificate
+
+§14.4.1 builds the signer trust model as a list of anchors *per EKU*. The
+2.4 change list restricts the C2PA Trust List to certificates carrying
+`c2pa-kp-claimSigning`. This verifier keeps one list of accepted EKUs and
+one set of anchors, and checks them independently. So does `c2patool`,
+0.27.22 and 0.28.0. A certificate without the claim-signing EKU that
+chains to a C2PA Trust List anchor would be `Trusted` here, where strict
+2.4 would not trust it through that list.
+
+Measured on 2026-09-24 (`notes/step-113-anchors-and-ekus.md`): under the
+official list, two corpus files reach an anchor (Pixel 10, OpenAI). Both
+carry the claim-signing EKU on the leaf and on the issuing CA, as the C2PA
+Certificate Policy requires of every CA on the list. The case therefore
+needs a listed CA to issue outside its own policy first, and no file is
+known to show it.
+
+**Named, not built** (the maintainer's decision, 2026-09-24). The settings
+format this verifier shares with `c2patool` has no way to say which
+anchors belong to which EKU. `trust.anchors[].trust_config` means *widen*
+in `c2pa` 0.91.0 (SPEC-031 AC8), and the official list's JSON carries no
+EKU. Enforcing the rule would take a setting of this project's own, or a
+bundled list, and the design rules out both. It will be revisited when
+the shared format can express the association.
+
 ## What this does not tell you
 
 The table is a reading of 111 rules against this code, made by the same

@@ -83,6 +83,11 @@ list is exempt from the profile. This verifier runs the profile on it
 anyway (SPEC-015), which is stricter, never laxer. Recorded; nothing to
 fix for safety.
 
-## For the maintainer
+## Decided
 
-Three ways forward, each in the note's reply. Nothing is decided here.
+The maintainer chose route 1 of three: **name it and stop**. The
+alternatives were a setting of this project's own, which would break the
+shared-file rule, and asking upstream first. It is recorded in
+`docs/conformance.md` under *Outside the catalogue* and in
+`docs/comparison.md`. It will be revisited when the shared settings
+format can say which anchors belong to which EKU.
