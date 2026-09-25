@@ -72,10 +72,11 @@ once before and was wrong: see `PRED-IMG-004` below.
 
 ## Findings so far
 
-The project keeps its own record. Eight cases of a wrong `Valid` or
+The project keeps its own record. Nine cases of a wrong `Valid` or
 `Trusted` have been found in it, all by the maintainers: two before any
-release, one after `0.1.0`, and five, with eight ways to crash the
-verifier, in the security review of 2026-09-25, fixed in `0.2.2`:
+release, one after `0.1.0`, five, with eight ways to crash the verifier,
+in the security review of 2026-09-25, fixed in `0.2.2`, and one fixed in
+`0.2.3`:
 
 - **2026-09-22, no hard binding** (`notes/step-47-no-hard-binding.md`).
   A correctly signed manifest with no `c2pa.hash.data` assertion — a
@@ -131,6 +132,17 @@ verifier, in the security review of 2026-09-25, fixed in `0.2.2`:
   cannot seek, and PHP stream wrappers in the command (step 155,
   SPEC-043). Each is described in its note under `notes/`, with the test
   that was red before the fix.
+
+- **2026-09-25, a certificate time with a fraction — present in `0.1.0`
+  to `0.2.2`, fixed in `0.2.3`** (`notes/step-156-certificate-validity.md`).
+  The validity window came from PHP's `openssl_x509_parse()`, which
+  misreads a time with a fraction of a second: a notAfter of
+  `20250101000000.5Z` became 2500-12-31, so a certificate that expired
+  on 2025-01-01 was `Trusted`. Both `c2patool` versions call it expired.
+  RFC 5280 forbids the fraction, so only a CA that breaks it can issue
+  one. Found while measuring the verifier under php-wasm, where the same
+  function also shifts the time by the host's timezone. Closed by
+  SPEC-044: the validity is read from the certificate's own DER.
 
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now

@@ -78,7 +78,7 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.2.1`**, still a `0.x` on purpose. `^0.2` receives
+The current tag is **`v0.2.3`**, still a `0.x` on purpose. `^0.2` receives
 every 0.2.x fix, and a change that breaks the API below will be `0.3.0`.
 Coming from `0.2.0`: nothing that worked is refused, but some verdicts and
 reports now match `c2patool`'s where they did not, and `StatusCode` has 14

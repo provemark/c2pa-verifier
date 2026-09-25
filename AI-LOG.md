@@ -7355,3 +7355,13 @@ README are where the disclosure lives.
   a warning and `Der::time()` refuses it. Locally AC2 still compares 73
   certificates; `composer check`, exit 0, 530 tests.
 - Decided by Maurice: the push.
+
+## 2026-09-25 — 0.2.3 prepared; no advisory
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "akkoord, maak release 0.2.3, geen advisory".
+- Produced: the Unreleased changelog section becomes 0.2.3, a security
+  release; README's current tag (it still said `v0.2.1`) becomes
+  `v0.2.3`; SECURITY.md records the ninth wrong verdict.
+- Measured: `composer check` before the commit; CI on the commit before
+  the tag.
+- Decided by Maurice: release 0.2.3; no GitHub advisory, as for 0.2.2.

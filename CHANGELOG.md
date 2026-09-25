@@ -5,7 +5,11 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.2.3 — 2026-09-25
+
+A security release for one wrong `Trusted`, found while measuring the
+verifier in PHP compiled to WebAssembly. No class, method, member, status
+code or settings shape changed. Every user should upgrade.
 
 ### Security
 - **An expired certificate whose notAfter carries a fraction of a second
