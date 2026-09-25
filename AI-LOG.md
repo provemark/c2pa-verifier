@@ -6798,3 +6798,22 @@ README are where the disclosure lives.
   `computationalCapture`, so it was left out of the text, as was Firefly
   (not in the corpus).
 - Decided by Maurice: the text and posting it.
+
+## 2026-09-25 — The open gaps, counted
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: whether the outreach posts had replies (none); what to do now;
+  "ja, doe eerst die telling" (count which open conformance gaps real
+  files reach); then "ja, maak de note en commit".
+- Produced: `notes/step-140-gaps-counted.md`, a row in `NOTES.md`.
+  No specification, test or code changed.
+- Measured: a fresh clone of `contentauth/c2pa-rs` (`ada3e4a`,
+  `sdk/tests/fixtures`) and `encypherai/c2pa-conformance-suite`
+  (`e2feae1`); a byte search per gap marker over those fixtures and
+  `tests/Fixtures/{c2pa-rs,public-testfiles,writers}`; `bin/c2pa-verify`
+  on every file and `c2patool` 0.27.22 on every file in a readable
+  format. #6 and #7 occur once each, #1, #5 and #8 never; every verdict
+  difference is already documented; the refusals are formats.
+- Reasoned: none of the open issues changes a verdict on a measured
+  file; files from current writers are the stronger next measurement.
+- Decided by Maurice: to measure before choosing an issue, and to record
+  it as a note.
