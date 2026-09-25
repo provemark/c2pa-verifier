@@ -7293,3 +7293,29 @@ README are where the disclosure lives.
 - Decided by Maurice: SPEC-044 approved as drafted, with the ADR-0003
   amendment in its scope. Its three open questions stay open, to be
   measured in the test step.
+
+## 2026-09-25 — SPEC-044 amendment 1 and the tests, seen red
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "akkoord, begin met de tests"; after the finding below,
+  "akkoord, laat de fractie wegvallen"; and whether the fault is in PHP.
+- Produced: `bin/make-spec044-variants.php`; six variants under
+  `tests/Fixtures/validity/` and both `c2patool` versions' answers under
+  `tests/Fixtures/c2patool/validity/`, with READMEs; SPEC-044 amendment 1
+  (AC4 rewritten, AC6 added, open questions answered);
+  `tests/Unit/Trust/CertificateValidityTest.php`; the milestones row.
+- Measured: `php bin/make-spec044-variants.php <scratch> <c2patool-0.28.0>
+  <c2patool-0.27.22>` (the verdicts in the fixture README);
+  `bin/c2pa-verify` on the variants: `expired-fraction` is `Trusted` here
+  and `Invalid` with `signingCredential.expired` in both `c2patool`
+  versions; `openssl_x509_parse()` on PHP 8.5.8 reads notAfter
+  `20250101000000.5Z` as 2500-12-31 and `.123Z` as -1; OpenSSL 3.6
+  refuses a UTCTime without seconds; `vendor/bin/pest --group=SPEC-044`:
+  AC1 and AC6 red, AC2, AC3 and AC4 green.
+- Reasoned: from PHP's source (`php_openssl_asn1_time_to_time_t()` in
+  `ext/openssl/openssl_backend_common.c`, branch PHP-8.5): it reads the
+  fields at fixed places counted back from the end of the string, so a
+  fraction shifts every field; it converts with `mktime()` and corrects
+  by `tm_gmtoff`, which is where php-wasm's host timezone can leak in.
+  Read, not traced. php/php-src#21545 (open) reports another wrong
+  `validTo_time_t`, for far-future dates.
+- Decided by Maurice: amendment 1; the fraction is dropped, not refused.

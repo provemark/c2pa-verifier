@@ -122,14 +122,16 @@ check, stays with OpenSSL. ADR-0003 gets an amendment that says so.
   - When it is read
   - Then `validTo` is 253402300799.
 
-- **AC4 — a validity that is not DER time is refused** *(error path)*
-  - Given a certificate whose notBefore is a UTCTime without seconds
-    (`2206101846Z`), valid BER that DER and RFC 5280 §4.1.2.5.1 forbid,
-    re-signed so that OpenSSL reads it
-  - When it is read
-  - Then `Certificate` throws `TrustException`, and a file signed with it
-    is `Invalid` with the code the chain or profile check gives an
-    unreadable certificate today. It is never `Valid`.
+- **AC4 — a validity that is not DER time is refused** *(error path; amendment 1)*
+  - Given `tests/Fixtures/validity/no-seconds.png`, signed with a leaf
+    whose notBefore is a UTCTime without seconds (`2401010000Z`), valid BER
+    that DER and RFC 5280 §4.1.2.5.1 forbid
+  - When it is verified with `validity/throw-away-root.settings.json`
+  - Then it is `Invalid` with `signingCredential.invalid`, and never
+    `Valid` or `Trusted`. OpenSSL 3.6 already refuses the certificate
+    ("utctime is too short"), so this test is green before the change and
+    must stay green. The criterion covers an OpenSSL that reads it
+    (1.1.1, in php-wasm): `Der::time()` then refuses it.
 
 - **AC5 — the report is the same in php-wasm** *(measured, not in CI)*
   - Given the three `public-testfiles/truepic-20230212-*` files and the
@@ -138,6 +140,16 @@ check, stays with OpenSSL. ADR-0003 gets an amendment that says so.
   - When `bin/c2pa-verify` runs in php-wasm and in native PHP
   - Then the reports are byte-identical. Over the 107 runs, only the six
     Ed25519 runs still differ.
+
+- **AC6 — an expired certificate with a fraction is expired** *(error path; amendment 1)*
+  - Given `tests/Fixtures/validity/expired-fraction.png`, signed with a leaf
+    whose notAfter is `20250101000000.5Z`, and its control
+    `validity/expired.png` with notAfter `250101000000Z`
+  - When both are verified with `validity/throw-away-root.settings.json`
+  - Then both are `Invalid` with `signingCredential.expired`, and the leaf's
+    `validTo` is 1735689600 (2025-01-01T00:00:00Z) for both. The fraction
+    is dropped, not refused: `fraction.png` (notAfter
+    `20500101000000.5Z`) stays `Trusted`.
 
 ## References
 
@@ -178,17 +190,50 @@ parsed by hand. It gets one exception, named with its reason.
 
 ## Open questions
 
-- **GeneralizedTime with fractions.** `Der::time()` accepts
-  `…46.5Z` because RFC 3161 allows it. RFC 5280 §4.1.2.5.2 forbids it in a
-  certificate. Should a certificate with a fraction be refused (stricter
-  than OpenSSL)? Proposal: refuse, since this is a certificate and RFC 5280
-  is clear. Measure `c2patool` first. Not a blocker.
+- **GeneralizedTime with fractions.** Decided in amendment 1: the fraction
+  is dropped, as `Der::time()` already does for RFC 3161.
 - **UTCTime / GeneralizedTime split** (2049/2050). Enforcing it would be
   stricter than OpenSSL. Proposal: do not enforce. It protects against no
   wrong `Valid`, and ADR-0005 then says to follow `c2pa-rs`. Not a blocker.
-- **AC4's expected code.** Which code `c2patool` gives for a signer
-  certificate that fails to parse is to be measured in the test step. The
-  AC fixes only that it is not `Valid`.
+- **AC4's expected code.** Measured in amendment 1: this verifier says
+  `signingCredential.invalid`; `c2patool` reads the certificate and says
+  `Valid` with `signingCredential.untrusted`.
+
+## Amendments
+
+1. **2026-09-25, the test step** *(confirmed by Maurice van Loon,
+   2026-09-25: drop the fraction)* — the variants of
+   `bin/make-spec044-variants.php` (`tests/Fixtures/validity/`, both
+   `c2patool` versions' answers under `tests/Fixtures/c2patool/validity/`)
+   found a wrong `Trusted` in 0.1.0–0.2.2 **on native PHP**. PHP's
+   `openssl_x509_parse()` misreads a GeneralizedTime with a fraction.
+   Measured on PHP 8.5.8 with OpenSSL 3.6.3:
+
+   | notAfter | `validTo_time_t` as UTC |
+   |---|---|
+   | `20250101000000Z` | 2025-01-01T00:00:00Z |
+   | `20250101000000.5Z` | 2500-12-31T00:00:00Z |
+   | `20240101000000.99Z` | 4010-09-30T00:01:39Z |
+   | `20251231235959.999Z` | 1969-12-31T23:59:59Z |
+
+   | variant | c2patool 0.28.0 | c2patool 0.27.22 | this verifier, 0.2.2 |
+   |---|---|---|---|
+   | `resigned` (control) | `Trusted` | `Trusted` | `Trusted` |
+   | `not-after-9999` | `Trusted` | `Trusted` | `Trusted` |
+   | `no-seconds` | `Valid`, `untrusted` | `Valid`, `untrusted` | `Invalid`, `signingCredential.invalid` |
+   | `fraction` (2050) | `Valid`, `untrusted` | `Trusted` | `Trusted` |
+   | `expired` | `Invalid`, `expired` | `Invalid`, `expired` | `Invalid`, `expired` |
+   | `expired-fraction` | `Invalid`, `expired` | `Invalid`, `expired` | **`Trusted`** |
+
+   RFC 5280 §4.1.2.5.2 forbids the fraction, so only a CA that breaks the
+   RFC can issue such a certificate. The verdict is still wrong. AC6 is
+   added. AC4 is rewritten to what was measured: OpenSSL 3.6 already
+   refuses a UTCTime without seconds, and `c2patool` does not. The fraction
+   is dropped, not refused. That follows 0.27.22 and is no stricter than
+   needed (ADR-0005). 0.28.0 does not trust the 2050 variant; why was not
+   measured.
+
+   **Weight A: one variant goes from `Trusted` to `Invalid`.**
 
 ## Traceability
 
@@ -201,3 +246,4 @@ Filled when status becomes `implemented`.
 | AC3                  | —                           | —                    |
 | AC4                  | —                           | —                    |
 | AC5                  | —                           | —                    |
+| AC6                  | —                           | —                    |
