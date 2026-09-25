@@ -347,8 +347,18 @@ final readonly class Verifier
         // what the store's ingredient assertions recorded: a fault a writer acknowledged is not
         // re-reported, unless it names the active manifest (SPEC-021, CAI-12751)
         $statuses = [...$statuses, ...$graphStatuses];
+        // what the active manifest and the manifests the graph reaches recorded, never an unreached
+        // manifest, and never a failure of the manifest that binds an update manifest's asset
+        // (SPEC-021 amendment 6)
         if ($graph !== null) {
-            $statuses = $this->ingredients->drop($statuses, IngredientManifestCheck::recordedInStore($graph->ingredients), $manifestStore->active->label);
+            $bindingLabel = null;
+            foreach ($manifestStore->manifests as $other) {
+                if ($other->isUpdateManifest) {
+                    $bindingLabel = UpdateManifestCheck::bindingManifest($manifestStore, $graph->ingredients)?->label;
+                    break;
+                }
+            }
+            $statuses = $this->ingredients->drop($statuses, IngredientManifestCheck::recordedInStore($graph), $manifestStore->active->label, $bindingLabel);
         }
 
         return ValidationResult::fromStatuses($statuses, $checks);

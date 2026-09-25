@@ -7028,3 +7028,27 @@ README are where the disclosure lives.
   is committed yet.
 - Decided by Maurice: amendment 4 confirmed; no push until the security
   release.
+
+## 2026-09-25 — Step 149: SPEC-021 amendment 6
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "Ga verder met step 149 (lek 2 uit de security-review)"; the
+  amendment itself had been written and confirmed in the previous session,
+  which could not finish the step.
+- Produced: SPEC-021 amendment 6 and AC11 (renumbered from a second AC9;
+  the rule unchanged), its Traceability row; two AC11 tests in
+  `tests/Unit/Verifier/IngredientManifestCheckTest.php`;
+  `IngredientManifestCheck::recordedInStore()` over the graph's reached
+  manifests, `drop()` with the binding manifest; the call in `Verifier`;
+  `notes/step-149-recorded-set-from-the-graph.md`; CHANGELOG, NOTES and
+  milestones rows. Committed locally, not pushed.
+- Measured: the review's probe reproduced (`Valid` with the stray
+  manifest, `Invalid` without); the tests red (one on a `TypeError`, then
+  on the behaviour with the old call; one on the dropped fault), then
+  green; `vendor/bin/pest --group=SPEC-021` (15 passed); `composer check`
+  (512 passed); 18,850 runs before and after (50 moved, all the probe,
+  all to `Invalid`).
+- Reasoned: only failures of the binding manifest are guarded, not its
+  informational lines, so `update_manifest.jpg` keeps `c2patool`'s report
+  (confirmed by the unchanged sweep).
+- Decided by Maurice: none in this session (amendment 6 was confirmed in
+  the previous one).

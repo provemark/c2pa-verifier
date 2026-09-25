@@ -174,7 +174,7 @@ it('AC5: a recorded status never cancels the active manifest\'s own failure', fu
         new ValidationStatus(StatusCode::ClaimSignatureMismatch, "self#jumbf=/c2pa/{$active}/c2pa.signature", 'x', $ingredient->url),
         new ValidationStatus(StatusCode::AssertionHashedUriMismatch, 'self#jumbf=/c2pa/urn:c2pa:ingredient/c2pa.assertions/c2pa.actions', 'x', $ingredient->url),
     ];
-    $kept = (new IngredientManifestCheck)->drop($mine, $keys, $active);
+    $kept = (new IngredientManifestCheck)->drop($mine, $keys, $active, null);
     expect(array_map(static fn (ValidationStatus $s): string => $s->code->value, $kept))->toBe(['claimSignature.mismatch']);
 
     // and on the file: both recorded statuses name the active manifest, so neither is dropped
@@ -249,4 +249,59 @@ it('AC9: a manifest named by more than one assertion is validated once', functio
     }
     expect($report->result->state->value)->toBe(spec020Oracle('public-testfiles/adobe-20220124-CAIAIIICAICIICAIICICA.json')['validation_state'])
         ->and(spec021Failures($report))->toBe([]);
+})->group('SPEC-021');
+
+// AC11, amendment 6 (step 149): the recorded set comes from the manifests the graph validates
+/** @param  list<array<string, string>>  $recorded  the v1 validationStatus the assertion carries */
+function spec021Recording(string $manifestLabel, string $label, string $referenced, Relationship $relationship, array $recorded): IngredientAssertion
+{
+    return new IngredientAssertion(
+        $label, "self#jumbf=/c2pa/{$manifestLabel}/c2pa.assertions/{$label}", 1,
+        $relationship, 'x', 'image/jpeg', null, 'xmp:iid:1',
+        new HashedUri("self#jumbf=/c2pa/{$referenced}", new CborBytes(str_repeat("\x00", 32)), null),
+        null, null, $recorded, null, null, [],
+    );
+}
+
+it('AC11: an ingredient assertion of a manifest the graph never reaches records nothing', function (): void {
+    // A (active) is parentOf B; S names B too, but nothing names S, so the walk never reaches it
+    $fault = ['code' => 'assertion.hashedURI.mismatch', 'url' => 'self#jumbf=/c2pa/B/c2pa.assertions/c2pa.hash.data', 'explanation' => 'x'];
+    $noted = ['code' => 'ingredient.unknownProvenance', 'url' => 'self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient', 'explanation' => 'x'];
+    $graph = ManifestGraph::fromIngredients('A', [
+        'A' => [spec021Recording('A', 'c2pa.ingredient', 'B', Relationship::ParentOf, [$noted])],
+        'B' => [],
+        'S' => [spec021Recording('S', 'c2pa.ingredient', 'B', Relationship::ComponentOf, [$fault])],
+    ], []);
+
+    expect($graph->unreferenced)->toBe(['S'])
+        ->and(IngredientManifestCheck::recordedInStore($graph))->toBe(['ingredient.unknownProvenance self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient']);
+})->group('SPEC-021');
+
+/**
+ * @param  list<ValidationStatus>  $statuses
+ * @return list<string> "code url" per status
+ */
+function spec021Keys(array $statuses): array
+{
+    return array_map(static fn (ValidationStatus $s): string => $s->code->value.' '.$s->url, $statuses);
+}
+
+it('AC11: a fault of the update manifest\'s binding manifest is never dropped; another manifest\'s still is', function (): void {
+    $by = 'self#jumbf=/c2pa/A/c2pa.assertions/c2pa.ingredient';
+    $statuses = [
+        new ValidationStatus(StatusCode::AssertionHashedUriMismatch, 'self#jumbf=/c2pa/B/c2pa.assertions/c2pa.hash.data', 'x', $by),
+        new ValidationStatus(StatusCode::IngredientUnknownProvenance, 'self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient', 'x', $by),
+        new ValidationStatus(StatusCode::AssertionHashedUriMismatch, 'self#jumbf=/c2pa/C/c2pa.assertions/c2pa.hash.data', 'x', $by),
+    ];
+    $recorded = [
+        'assertion.hashedURI.mismatch self#jumbf=/c2pa/B/c2pa.assertions/c2pa.hash.data',
+        'ingredient.unknownProvenance self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient',
+        'assertion.hashedURI.mismatch self#jumbf=/c2pa/C/c2pa.assertions/c2pa.hash.data',
+    ];
+    $check = new IngredientManifestCheck;
+
+    // B binds: its failure stays, its informational line and C's failure go as before
+    expect(spec021Keys($check->drop($statuses, $recorded, 'A', 'B')))->toBe(['assertion.hashedURI.mismatch self#jumbf=/c2pa/B/c2pa.assertions/c2pa.hash.data'])
+        // without an update manifest there is no binding manifest to guard, and all three go
+        ->and($check->drop($statuses, $recorded, 'A', null))->toBe([]);
 })->group('SPEC-021');

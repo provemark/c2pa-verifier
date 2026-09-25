@@ -276,6 +276,16 @@ multi-manifest files.
     c2pa-rs alarms hold with the shrunken exception lists; and no
     exception escapes the verifier on a mutated multi-manifest file.
 
+- **AC11 — only a validated manifest on the graph may acknowledge a fault** *(amendment 6; required: error path)*
+  - Given a store whose ingredient graph reaches some manifests and not
+    others, where an unreached manifest's ingredient assertion records a
+    fault that a reached manifest really has
+  - When the recorded set is built and the statuses are weighed against it
+  - Then only the active manifest's and the reached manifests' ingredient
+    assertions contribute to the set, and the fault stays in the report.
+    A fault of the manifest that supplies an update manifest's hard binding
+    is never dropped, whoever recorded it.
+
 ## References
 
 - Specification: C2PA 2.4 §15.11.2 (validate each ingredient, whatever its
@@ -423,6 +433,21 @@ instead, beside the orchestration that already holds those collaborators.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 129).
 
+6. **2026-09-25, step 149, found by the security review.** Amendment 4
+   built the set of acknowledged faults from every ingredient assertion in
+   the store, including manifests the graph never reaches and never
+   validates. Such a manifest could therefore cancel a real fault of a
+   manifest that is validated, including the fault that shows an update
+   manifest's asset no longer matches its binding. The set now comes only
+   from the active manifest and from the manifests the graph reaches. A
+   fault of the binding manifest of an update manifest is never dropped.
+   New criterion AC11.
+
+   **Weight A.** Files that were wrongly `Valid` or `Trusted` become
+   `Invalid`.
+
+   Confirmed by Maurice van Loon, 2026-09-25 (step 149).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -440,5 +465,6 @@ least one test; every source file maps back to this spec.
 | AC8 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC8 / SPEC-021 | src/Verifier/Verifier.php (`checks_performed`); src/Report/ValidationResult.php |
 | AC9 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC9 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`check()`: the first assertion that named it) |
 | AC10 | tests/Unit/Verifier/VerifierTest.php :: AC10–AC13 / SPEC-013; tests/Unit/Cli/CommandTest.php :: AC11 / SPEC-019; bin/fuzz.php | the whole verification path |
+| AC11 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC11 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`recordedInStore()`, `drop()`); src/Verifier/Verifier.php (the binding manifest passed to `drop()`) |
 
 `src/Verifier/IngredientManifestCheck.php` maps to this spec; `StatusCode`'s two new cases are its. Measured 2026-09-22: 7 red (2 already true) → 9 green, `composer check` exit 0, 336 tests, 312 fuzz runs with no fault.

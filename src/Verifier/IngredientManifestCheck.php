@@ -198,20 +198,21 @@ final readonly class IngredientManifestCheck
     }
 
     /**
-     * Everything the store's ingredient assertions recorded, as one set of keys: c2pa-rs compares a
-     * scoped status against all of them, not only against the assertion it was found under, because a
-     * v3 assertion records the whole tree it validated (`update_manifest.jpg`: the active assertion's
-     * `validationResults` carries the parent's two `ingredient.unknownProvenance` entries, and
-     * c2patool drops both).
+     * Everything the validated manifests' ingredient assertions recorded, as one set of keys: c2pa-rs
+     * compares a scoped status against all of them, not only against the assertion it was found under,
+     * because a v3 assertion records the whole tree it validated (`update_manifest.jpg`: the active
+     * assertion's `validationResults` carries the parent's two `ingredient.unknownProvenance` entries,
+     * and c2patool drops both). Only the active manifest and the manifests the graph reaches count
+     * (amendment 6): a manifest nothing names is never validated, so what it recorded vouches for
+     * nothing.
      *
-     * @param  array<string, list<IngredientAssertion>>  $ingredients  per manifest label, from the graph
      * @return list<string>
      */
-    public static function recordedInStore(array $ingredients): array
+    public static function recordedInStore(ManifestGraph $graph): array
     {
         $keys = [];
-        foreach ($ingredients as $list) {
-            foreach ($list as $ingredient) {
+        foreach ([$graph->active, ...array_map('strval', array_keys($graph->referenced))] as $label) {
+            foreach ($graph->ingredients[$label] ?? [] as $ingredient) {
                 $keys = [...$keys, ...self::recorded($ingredient)];
             }
         }
@@ -279,22 +280,29 @@ final readonly class IngredientManifestCheck
     }
 
     /**
-     * Statuses minus the ones the assertion recorded — never one whose url names the active manifest.
+     * Statuses minus the ones the assertion recorded — never one whose url names the active manifest,
+     * and never a failure of the manifest whose hard binding an update manifest borrows (amendment 6):
+     * that binding is what ties the asset to the credential, so no record may excuse its fault.
      *
      * @param  list<ValidationStatus>  $statuses
      * @param  list<string>  $recorded  the keys of self::recorded()
+     * @param  string|null  $bindingLabel  the binding manifest of an update manifest, null without one
      * @return list<ValidationStatus>
      */
-    public function drop(array $statuses, array $recorded, string $activeLabel): array
+    public function drop(array $statuses, array $recorded, string $activeLabel, ?string $bindingLabel): array
     {
         $active = sprintf('self#jumbf=/c2pa/%s', $activeLabel);
+        $binding = $bindingLabel === null ? null : sprintf('self#jumbf=/c2pa/%s', $bindingLabel);
 
-        return array_values(array_filter($statuses, static function (ValidationStatus $status) use ($recorded, $active): bool {
+        return array_values(array_filter($statuses, static function (ValidationStatus $status) use ($recorded, $active, $binding): bool {
             if ($status->ingredientUri === null) {
                 return true;   // the active manifest's own line, never dropped
             }
             if ($status->url === $active || str_starts_with($status->url, $active.'/')) {
                 return true;   // the guard: no ingredient assertion speaks for the manifest being verified
+            }
+            if ($binding !== null && $status->code->isFailure() && ($status->url === $binding || str_starts_with($status->url, $binding.'/'))) {
+                return true;   // nor for the manifest that binds the asset in its stead
             }
 
             return ! in_array($status->code->value.' '.$status->url, $recorded, true);

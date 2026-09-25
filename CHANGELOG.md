@@ -19,6 +19,14 @@ patch release.
   `CA:TRUE`, `keyCertSign` when keyUsage is present, and a `pathlen` that
   allows the chain; an intermediate must be valid when the leaf is judged.
   Present in 0.1.0 to 0.2.1.
+- **Security: only a manifest that is validated may acknowledge a fault
+  (SPEC-021 amendment 6).** The faults an ingredient assertion recorded
+  were taken from every manifest in the store, including manifests that
+  are never validated. Such a manifest could cancel a real fault of one
+  that is, and a changed asset could stay `Valid` or `Trusted`. The set
+  now comes only from the active manifest and the manifests its
+  ingredients reach, and a failure of the manifest that binds an update
+  manifest's asset is never dropped. Present in 0.1.0 to 0.2.1.
 - **A JPEG whose first APP11 piece carries packet sequence number 0 is
   read (SPEC-041).** Microsoft Bing Image Creator writes every store this
   way, and both `c2patool` versions read it. Every later piece must still
