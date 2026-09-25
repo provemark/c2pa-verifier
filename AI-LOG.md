@@ -6839,3 +6839,24 @@ README are where the disclosure lives.
   refusal is narrow and worth a spec after reading ISO/IEC 19566-5.
 - Decided by Maurice: to measure current writers, to include c2patool
   0.28.0, and to record this as a note with the comparison corrected.
+
+## 2026-09-25 — SPEC-041 drafted: a first APP11 piece with Z = 0
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, zoek uit wat de norm over Z zegt"; then "ja, schrijf de
+  draft maar".
+- Produced: `specs/SPEC-041-jpeg-first-piece-sequence.md` (draft); rows
+  for steps 140 and 141 and SPEC-041 in `docs/milestones.md` (140 and
+  141 had been left out there); a row in `NOTES.md`. No test or code
+  changed.
+- Measured: eleven variants of `fixture-signed.jpg` and
+  `public-testfiles/adobe-20220124-C.jpg` with only their Z fields
+  rewritten, through `c2patool` 0.27.22 and 0.28.0 and this verifier;
+  the Bing file's `claimSignature.validated` in both versions; the
+  Microsoft leaf's EKU and validity with `openssl x509`; the Commons
+  licence of the Bing files (public domain) through the MediaWiki API.
+- Reasoned: from source, `c2pa-rs` `jpeg_io.rs` (`ada3e4a`),
+  `thorfdbg/libjpeg` `boxes/box.cpp` and `io/decoderstream.cpp`
+  (`702114c`), `TrustNXT/c2pa-ts` `src/asset/JPEG.ts`,
+  `richardwooding/c2pa` `c2pa.go`; ISO/IEC 18477-3 not found free, and
+  19566-5:2023's public sample shows Annex D is informative.
+- Decided by Maurice: to draft the spec; its open questions await him.
