@@ -7365,3 +7365,21 @@ README are where the disclosure lives.
 - Measured: `composer check` before the commit; CI on the commit before
   the tag.
 - Decided by Maurice: release 0.2.3; no GitHub advisory, as for 0.2.2.
+
+## 2026-09-25 — A browser demo, and a link to it
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: a demo page on GitHub Pages; whether php-wasm has OpenSSL; then
+  "kan je de vindbaarheid iets vergroten van die pagina".
+- Produced: this README's link to <https://provemark.github.io/demo/>.
+  The demo itself lives in the site repository (`provemark.github.io`,
+  commits 5a08385 and 61e1787): php-wasm 3.1.55 (GPL-2.0-or-later, notices
+  in `demo/NOTICES.md`) running this library's `v0.2.3` sources, unchanged.
+- Measured: in Chrome 152 (Europe/Amsterdam), 106 of 113 fixture runs
+  byte-identical to native PHP 8.5.8, apart from timestamps within 15
+  minutes of the run; the other seven are the six Ed25519 runs (no
+  `sodium`) and `validity/no-seconds` (same verdict and code, another
+  explanation). The live page gave the expected verdict for every sample
+  and trust choice. Safari and Firefox (the asyncify build) not tested.
+- Decided by Maurice: publish in the site repository; the Google Pixel
+  photo instead of the OpenAI file, with a third trust choice for Google's
+  Pixel CAs; link the demo for findability.

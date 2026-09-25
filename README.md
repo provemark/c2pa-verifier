@@ -2,6 +2,9 @@
 
 A verifier for [C2PA](https://c2pa.org) Content Credentials in pure PHP.
 
+**Try it in your browser: <https://provemark.github.io/demo/>.** The same
+PHP, compiled to WebAssembly; your file never leaves your device.
+
 > **First version. Read this before you rely on it.**
 >
 > This code is thoroughly tested and has never been used. Those are two
