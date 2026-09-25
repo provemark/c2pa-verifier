@@ -7264,3 +7264,23 @@ README are where the disclosure lives.
   Security section, SECURITY.md's findings and the notes of steps 148 to
   155 are the disclosure. A draft is kept outside the repository in case
   a user turns up.
+
+## 2026-09-25 — SPEC-044 drafted: certificate validity from DER
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: whether there are reactions to the library, how to draw attention
+  to it, whether php-wasm (for a demo page on GitHub Pages) has OpenSSL,
+  and then a draft spec for what that measurement found.
+- Produced: `specs/SPEC-044-certificate-validity-from-der.md` (draft), a
+  milestones row. No code.
+- Measured: `@php-wasm/node` 3.1.55 (PHP 8.3.33, OpenSSL 1.1.1t) has
+  `openssl` and `mbstring`, not `sodium`; `bin/c2pa-verify` over 107
+  fixture runs, php-wasm against native PHP 8.5.8: 98 byte-identical, 6
+  Ed25519 runs `algorithm.unsupported`, 3 Truepic runs with validity
+  times one hour early; `openssl_x509_parse()`'s `validFrom_time_t` in
+  php-wasm follows the host timezone (`TZ=` UTC, Europe/Amsterdam,
+  America/New_York), while `gmmktime()`, `gmdate()` and `time()` do not
+  (four timezones); `PHP_INT_SIZE` 8 in php-wasm; `bin/spec-check.php`
+  OK. The harness lives outside the repository.
+- Reasoned: the shift comes from `mktime()` under Emscripten in PHP's
+  `ASN1_TIME` conversion; read, not traced.
+- Decided by Maurice: none yet; the spec awaits approval.
