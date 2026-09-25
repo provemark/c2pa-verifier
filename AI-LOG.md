@@ -6958,3 +6958,20 @@ README are where the disclosure lives.
 - Decided by Maurice: the four proposals of the review (keep A with its
   protection named; B and row 20 to the gaps, no second ground in
   ADR-0005; keep row 12; the ADR-0005 addendum for row 10).
+
+## 2026-09-25 — Current writers under the official trust lists
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "wat is je advies over de box-hash?"; then "ja, doe die meting
+  maar" (the 78 files under the official C2PA trust lists first).
+- Produced: `notes/step-146-official-trust-lists.md`; the TSA row of
+  `docs/comparison.md` (the `c2pa-rs` source line and the protection);
+  rows in `NOTES.md` and `docs/milestones.md`. No code or test changed.
+- Measured: the official lists from `c2pa-org/conformance-public`
+  (`5a94626`) as legacy and as split settings; 78 files through
+  `bin/c2pa-verify`, `c2patool` 0.27.22 and 0.28.0 with each; Firefly
+  again with DigiCert Trusted Root G4 as a `"tsa"` anchor (7 `Valid`);
+  the claim versions and TSA names of the Firefly and Bing files.
+- Reasoned: `c2pa-rs` `claim.rs` at `ada3e4a` turns TSA trust off for
+  claim v1; ADR-0004's rule stays under ADR-0005.
+- Decided by Maurice: to measure under the official lists before
+  deciding on box hashes.
