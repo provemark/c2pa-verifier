@@ -5,6 +5,24 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Security
+- **An expired certificate whose notAfter carries a fraction of a second
+  is expired (SPEC-044).** PHP's `openssl_x509_parse()` misreads such a
+  time: `20250101000000.5Z` became 2500-12-31, so a certificate that
+  expired on 2025-01-01 was `Trusted`. RFC 5280 forbids the fraction, so
+  only a CA that breaks it can issue one. Present in 0.1.0 to 0.2.2. Both
+  `c2patool` versions say `signingCredential.expired`, and so does this
+  verifier now.
+
+### Fixed
+- **A certificate's validity no longer depends on the runtime (SPEC-044).**
+  Under PHP compiled to WebAssembly (php-wasm), the same PHP function
+  shifted the validity by the host's timezone, up to hours. The validity
+  is now read from the certificate's own DER, as the timestamp's and
+  OCSP's times already were (ADR-0003 amendment 1).
+
 ## 0.2.2 — 2026-09-25
 
 A security release. A review of the whole code base on 2026-09-25 found

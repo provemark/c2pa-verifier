@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Trust;
 
+use Provemark\C2paVerifier\Asn1\Asn1Exception;
+use Provemark\C2paVerifier\Asn1\DerReader;
+use Provemark\C2paVerifier\Asn1\TagClass;
 use Provemark\C2paVerifier\Support\Bytes;
 
 /**
@@ -13,10 +16,12 @@ use Provemark\C2paVerifier\Support\Bytes;
  * hand: subject and issuer (compared whole), the SHA-256 for the allowed
  * list, version, validity, signature algorithm, key type/size/curve, KU,
  * EKU as OIDs, the two key identifiers, the O and CN, the serial in
- * decimal. signedBy() is openssl_x509_verify() on the issuer's key. What
- * OpenSSL refuses is a TrustException. fromParsed() takes the parse data
- * as given — the seam the SPEC-015 tests use for rules no re-signed file
- * can show.
+ * decimal. One exception: the validity is read from the DER by Der::time()
+ * (SPEC-044), because PHP's epoch for it shifts with the host's timezone
+ * under php-wasm and misreads a fraction everywhere. signedBy() is
+ * openssl_x509_verify() on the issuer's key. What OpenSSL refuses is a
+ * TrustException. fromParsed() takes the parse data as given — the seam
+ * the SPEC-015 tests use for rules no re-signed file can show.
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
  * removed in any release; the contract is the nine classes named in the README.
@@ -135,8 +140,7 @@ final readonly class Certificate
         $this->isCa = is_string($extensions['basicConstraints'] ?? null) && str_contains($extensions['basicConstraints'], 'CA:TRUE');
         $this->pathLen = $this->isCa && is_string($extensions['basicConstraints'] ?? null) && preg_match('/pathlen:(\d+)/', $extensions['basicConstraints'], $m) === 1 ? (int) $m[1] : null;
         $this->version = (is_int($parsed['version'] ?? null) ? $parsed['version'] : 0) + 1;
-        $this->validFrom = is_int($parsed['validFrom_time_t'] ?? null) ? $parsed['validFrom_time_t'] : 0;
-        $this->validTo = is_int($parsed['validTo_time_t'] ?? null) ? $parsed['validTo_time_t'] : 0;
+        [$this->validFrom, $this->validTo] = self::validity($der);
         $this->signatureAlgorithm = is_string($parsed['signatureTypeLN'] ?? null) ? $parsed['signatureTypeLN'] : '(unknown)';
         [$this->keyType, $this->keyBits, $this->curve] = self::keyFacts($key);
         $this->extendedKeyUsage = is_string($extensions['extendedKeyUsage'] ?? null) ? self::ekuOids($extensions['extendedKeyUsage']) : null;
@@ -151,6 +155,26 @@ final readonly class Certificate
             throw new TrustException(sprintf('a certificate serial number of %d octets; this verifier reads at most %d (RFC 5280 allows 20)', Bytes::decimalOctets($serialHex), Bytes::MAX_DECIMAL_OCTETS));
         }
         $this->serialDecimal = self::hexToDecimal($serialHex);
+    }
+
+    /**
+     * tbsCertificate.validity (RFC 5280 §4.1.2.5) as UTC epochs, by Der::time(), not by
+     * openssl_x509_parse()'s *_time_t (SPEC-044): a fraction is dropped, a time that is not DER
+     * is a TrustException.
+     *
+     * @return array{int, int}
+     */
+    private static function validity(string $der): array
+    {
+        try {
+            // TBSCertificate ::= SEQUENCE { [0] version OPTIONAL, serialNumber, signature, issuer, validity, … }
+            $tbs = (new DerReader)->read($der)->element(0);
+            $validity = $tbs->element($tbs->element(0)->is(TagClass::ContextSpecific, 0) ? 4 : 3);
+
+            return [$validity->element(0)->time(), $validity->element(1)->time()];
+        } catch (Asn1Exception $e) {
+            throw new TrustException(sprintf('the validity of a certificate of %d bytes could not be read: %s', strlen($der), $e->getMessage()));
+        }
     }
 
     public static function fromDer(string $der): self

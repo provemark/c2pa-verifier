@@ -115,16 +115,20 @@ function derToRs(string $der, int $curveBytes): string
     return $rs;
 }
 
-/** A DER TLV, definite length. */
+/**
+ * A DER TLV, definite length.
+ *
+ * @param  int<0, 255>  $tag
+ */
 function tlv(int $tag, string $contents): string
 {
     $n = strlen($contents);
     if ($n < 128) {
-        return chr($tag).chr($n).$contents;
+        return pack('CC', $tag, $n).$contents;
     }
     $length = ltrim(pack('N', $n), "\0");
 
-    return chr($tag).chr(0x80 | strlen($length)).$length.$contents;
+    return pack('CC', $tag, 0x80 | strlen($length)).$length.$contents;
 }
 
 /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
 use Provemark\C2paVerifier\Trust\Certificate;
+use Provemark\C2paVerifier\Trust\TrustException;
 use Provemark\C2paVerifier\Verifier\VerificationReport;
 
 /*
@@ -100,7 +101,7 @@ it('AC2: the same values as OpenSSL on native PHP, for every fixture certificate
     foreach ($ders as $name => $der) {
         $parsed = @openssl_x509_parse(spec044Pem($der));
         // the reference only where OpenSSL's reading is right: no fraction (amendment 1), a readable time
-        if (! is_array($parsed) || ! is_int($parsed['validFrom_time_t'] ?? null) || str_contains((string) ($parsed['validTo'] ?? ''), '.')) {
+        if (! is_array($parsed) || ! is_int($parsed['validFrom_time_t'] ?? null) || ! is_string($parsed['validTo'] ?? null) || str_contains($parsed['validTo'], '.')) {
             continue;
         }
         $certificate = Certificate::fromDer($der);
@@ -125,7 +126,7 @@ it('AC4: a validity that is not DER time is refused', function (): void {
     // green before the change on OpenSSL 3.6 (amendment 1); it must stay so
     expect($report->result->state->value)->toBe('Invalid')
         ->and(spec044Codes($report))->toContain(StatusCode::SigningCredentialInvalid);
-    expect(static fn () => spec044Leaf('no-seconds'))->toThrow(Provemark\C2paVerifier\Trust\TrustException::class);
+    expect(static fn () => spec044Leaf('no-seconds'))->toThrow(TrustException::class);
 })->group('SPEC-044');
 
 it('AC6: an expired certificate with a fraction is expired', function (): void {

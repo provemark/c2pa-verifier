@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-25                      |
 | Supersedes | —                                                 |
@@ -241,9 +241,9 @@ Filled when status becomes `implemented`.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
+| AC1 | tests/Unit/Trust/CertificateValidityTest.php :: AC1 / SPEC-044 | src/Trust/Certificate.php (`validity()`) |
+| AC2 | tests/Unit/Trust/CertificateValidityTest.php :: AC2 / SPEC-044 (73 certificates: every PEM fixture and every matrix x5chain) | src/Trust/Certificate.php (`validity()`) |
+| AC3 | tests/Unit/Trust/CertificateValidityTest.php :: AC3 / SPEC-044 | src/Asn1/Der.php (`time()`, unchanged) |
+| AC4 | tests/Unit/Trust/CertificateValidityTest.php :: AC4 / SPEC-044 | src/Trust/Certificate.php (`validity()`: an `Asn1Exception` becomes a `TrustException`) |
+| AC5 | measured by hand, `notes/step-156-certificate-validity.md` | — |
+| AC6 | tests/Unit/Trust/CertificateValidityTest.php :: AC6 / SPEC-044 | src/Trust/Certificate.php (`validity()`); src/Asn1/Der.php (`time()`: the fraction dropped) |

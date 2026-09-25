@@ -89,7 +89,7 @@ deptrac:
       - Manifest
       - Report
       - Cose           # SPEC-014: the x5chain from CoseSign1
-      - Asn1           # SPEC-030: OcspCheck reads an RFC 6960 response, which is DER
+      - Asn1           # SPEC-030: OcspCheck reads an RFC 6960 response, which is DER; SPEC-044: Certificate reads its validity
       - Cbor           # SPEC-030: the stapled responses arrive as CBOR byte strings
       - Support
     Asn1:

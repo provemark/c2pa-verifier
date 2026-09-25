@@ -141,3 +141,28 @@ divergence from the oracle on a *configured* file).
   certificate that has since expired is `signingCredential.expired` here
   and, once the timestamp is read, may become `Trusted` — the report
   must say which time it used.
+
+## Amendments
+
+### Amendment 1 — 2026-09-25: the validity is read from the DER
+
+Decided by Maurice van Loon with SPEC-044 (`notes/step-156-certificate-validity.md`).
+
+**Original decision:** every field of a certificate comes from
+`openssl_x509_parse()`, because "nothing must be" parsed by hand. That was
+measured on native PHP only.
+
+**What was measured (2026-09-25):** PHP's `validFrom_time_t` and
+`validTo_time_t` are wrong in two ways. Under php-wasm (PHP 8.3.33,
+OpenSSL 1.1.1t) they shift with the host's timezone: two hours early under
+`Europe/Amsterdam` in June, four hours late under `America/New_York`. On
+every PHP measured (native 8.5.8 and php-wasm 8.3.33), a GeneralizedTime
+with a fraction is misread: notAfter `20250101000000.5Z` becomes
+2500-12-31, so an expired certificate was `Trusted`. The time string
+itself, which OpenSSL passes through as `validFrom` / `validTo`, is right.
+
+**Amended decision:** the validity is the one X.509 field read by the own
+DER reader of ADR-0004 (`Der::time()`, which already reads the timestamp's
+`genTime` and every OCSP time). Every other field, every signature check
+and every refusal stays with OpenSSL.
+

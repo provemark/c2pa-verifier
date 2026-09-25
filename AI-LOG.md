@@ -7319,3 +7319,25 @@ README are where the disclosure lives.
   Read, not traced. php/php-src#21545 (open) reports another wrong
   `validTo_time_t`, for far-future dates.
 - Decided by Maurice: amendment 1; the fraction is dropped, not refused.
+
+## 2026-09-25 — Step 156: SPEC-044 implemented
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "akkoord, bouw eerst de oplossing"; before that, whether the
+  fault is only in php-wasm, whether to report it to PHP, and whether
+  `php_openssl_asn1_time_to_time_t` is a PHP function.
+- Produced: `Certificate::validity()` in `src/Trust/Certificate.php`;
+  ADR-0003 amendment 1; two rows in `docs/comparison.md`; SPEC-044
+  `implemented` with Traceability; `notes/step-156-certificate-validity.md`;
+  NOTES, CHANGELOG (Unreleased), milestones; the Deptrac comment; Pint and
+  PHPStan fixes in the step's test and script.
+- Measured: `vendor/bin/pest --group=SPEC-044`, 5 passed; AC2 compares
+  73 certificates; `composer check`, exit 0, 530 tests; the 107-run
+  php-wasm comparison under `TZ=UTC`, `Europe/Amsterdam` and
+  `America/New_York`, 101 identical each (the six others Ed25519); the
+  six validity variants in php-wasm, same verdicts as native; OpenSSL
+  1.1.1t in php-wasm reads the `no-seconds` certificate, and the verifier
+  refuses it; the fraction misread on php-wasm too (2500-12-31).
+- Reasoned: the fraction fault is in PHP's C code, not in OpenSSL, which
+  passes the time string through intact; read from the source, not traced.
+- Decided by Maurice: build the fix first; the reports to PHP and to
+  php-wasm wait until after that.
