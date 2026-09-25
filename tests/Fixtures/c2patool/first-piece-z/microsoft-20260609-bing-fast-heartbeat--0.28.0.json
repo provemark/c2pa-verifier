@@ -1,0 +1,114 @@
+{
+  "active_manifest": "urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6",
+  "manifests": {
+    "urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6": {
+      "claim_generator": "Microsoft_Responsible_AI/1.0",
+      "claim_generator_info": [
+        {
+          "name": "Microsoft Responsible AI Image Provenance",
+          "version": "1.0"
+        }
+      ],
+      "format": "image/jpeg",
+      "instance_id": "1.0",
+      "assertions": [
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "when": "2026-06-09T12:34:59Z",
+                "softwareAgent": "Image Creator from Designer",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+              }
+            ]
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Ps256",
+        "issuer": "Microsoft Corporation",
+        "common_name": "Microsoft Corporation",
+        "cert_serial_number": "1137338005775302586412968651039333017830031485",
+        "time": "2026-06-09T12:34:58+00:00"
+      },
+      "label": "urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6",
+      "claim_version": 1
+    }
+  },
+  "validation_status": [
+    {
+      "code": "signingCredential.untrusted",
+      "url": "self#jumbf=/c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.signature",
+      "explanation": "signing certificate untrusted"
+    },
+    {
+      "code": "signingCredential.invalid",
+      "url": "self#jumbf=/c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.signature",
+      "explanation": "certificate missing required EKU"
+    }
+  ],
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "timeStamp.validated",
+          "url": "self#jumbf=/c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.signature",
+          "explanation": "timestamp message digest matched: DigiCert SHA256 RSA4096 Timestamp Responder 2025 1"
+        },
+        {
+          "code": "timeStamp.trusted",
+          "url": "self#jumbf=/c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.signature",
+          "explanation": "legacy timestamp cert trusted: DigiCert SHA256 RSA4096 Timestamp Responder 2025 1"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.assertions/c2pa.hash.boxes",
+          "explanation": "hashed uri matched: self#jumbf=c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.assertions/c2pa.hash.boxes"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.assertions/c2pa.actions",
+          "explanation": "hashed uri matched: self#jumbf=c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.assertions/c2pa.actions"
+        },
+        {
+          "code": "assertion.boxesHash.match",
+          "url": "self#jumbf=/c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.assertions/c2pa.hash.boxes",
+          "explanation": "boxes hash valid"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        }
+      ],
+      "failure": [
+        {
+          "code": "signingCredential.untrusted",
+          "url": "self#jumbf=/c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.signature",
+          "explanation": "signing certificate untrusted"
+        },
+        {
+          "code": "signingCredential.invalid",
+          "url": "self#jumbf=/c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.signature",
+          "explanation": "certificate missing required EKU"
+        }
+      ]
+    },
+    "specVersion": "2.4.0"
+  },
+  "validation_state": "Invalid"
+}

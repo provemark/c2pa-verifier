@@ -6869,3 +6869,21 @@ README are where the disclosure lives.
 - Measured: `php bin/spec-check.php`.
 - Decided by Maurice: SPEC-041 approved; open question 1 answered
   narrow (only a first Z = 0 is accepted); push.
+
+## 2026-09-25 — SPEC-041, the tests seen red
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, akkoord, bouw maar" (step 142a: the fixture, the
+  variants, the tests red).
+- Produced: `tests/Fixtures/writers/microsoft-20260609-bing-fast-heartbeat.jpg`
+  and its README row; `bin/make-spec041-variants.php`;
+  `tests/Fixtures/first-piece-z/` (four variants, README);
+  `tests/Fixtures/c2patool/first-piece-z/` and
+  `c2patool/writers/microsoft-20260609-bing-fast-heartbeat.json`;
+  `tests/Unit/Container/FirstPieceSequenceTest.php`;
+  `notes/step-142-spec041.md`; a row in `NOTES.md`.
+- Measured: the Bing file's sha1 against the MediaWiki API; the script
+  run twice (same bytes); `vendor/bin/pest --group=SPEC-041`: 3 failed,
+  2 passed; `composer check`: 500 passed, only those 3 failing.
+- Reasoned: AC3 is red because the first piece is refused before the
+  second is reached — the right file refused for the wrong reason.
+- Decided by Maurice: go-ahead for step 142a.
