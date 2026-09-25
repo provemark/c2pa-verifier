@@ -69,7 +69,7 @@ reader accepts.
   - Then it returns the store: 13 081 bytes, equal to the piece's data
     after CI, En and Z. When the file is verified, the report carries no
     `general.error` *(amendment 1: `claimSignature.validated` left this
-    spec; amendment 2: no spec takes it up)*.
+    spec; amendment 3: SPEC-042 takes it up, deferred)*.
 
 - **AC2 — two pieces numbered 0, 2 are read**
   - Given `fixture-signed.jpg` with its first piece's Z rewritten from 1
@@ -210,6 +210,18 @@ questions 2 and 3 as proposed.
    Weight C: a pointer in a criterion withdrawn, no behaviour changed.
 
    Confirmed by Maurice van Loon, 2026-09-25 (step 143).
+
+3. **2026-09-25, step 144, decided.** Amendment 2 revised by ADR-0005:
+   stricter than `c2patool` only where the strictness prevents a wrong
+   `Valid` or unchecked trust. The strict reading of the Bing URI protects
+   nothing, so it is a gap, not a design. SPEC-042 is deferred, not
+   declined: it is the first step if `c2pa.hash.boxes` is ever built,
+   because only then does it move a verdict. `docs/comparison.md` lists it
+   under *"Where `c2patool` can do more"*.
+
+   Weight C: the status of a pointer changed, no behaviour changed.
+
+   Confirmed by Maurice van Loon, 2026-09-25 (step 144).
 
 ## Traceability
 

@@ -6925,3 +6925,20 @@ README are where the disclosure lives.
   `labels.rs` and `claim.rs` at `ada3e4a`.
 - Decided by Maurice: Bing's URI is not adapted to; SPEC-042 is not
   written; SPEC-041 amendment 2 confirmed.
+
+## 2026-09-25 — ADR-0005: when to be stricter than c2patool
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, push maar, maar wat is je eerlijke advies, moeten we
+  c2patool hierin toch volgen of niet?"; then "ja, doe punt 1 en 2 maar"
+  (write the rule down; move the Bing row from by-design to deferred).
+- Produced: `docs/adr/ADR-0005-when-to-be-stricter-than-c2patool.md`;
+  `docs/comparison.md` (introduction, the Bing URI row moved);
+  SPEC-041 amendment 3; the comment in `FirstPieceSequenceTest.php`;
+  `notes/step-144-adr-0005.md`; rows in `NOTES.md` and
+  `docs/milestones.md`. Pushed `b7c5d05`.
+- Measured: `composer check`; the by-design rows counted (38).
+- Reasoned: the existing by-design differences each prevent a wrong
+  `Valid` or unchecked trust; the Bing URI does not. The advice given in
+  step 143 was revised, and the note says so.
+- Decided by Maurice: ADR-0005 accepted; the Bing URI deferred, not
+  declined; SPEC-041 amendment 3 confirmed.
