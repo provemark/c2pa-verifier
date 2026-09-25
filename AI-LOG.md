@@ -6942,3 +6942,19 @@ README are where the disclosure lives.
   step 143 was revised, and the note says so.
 - Decided by Maurice: ADR-0005 accepted; the Bing URI deferred, not
   declined; SPEC-041 amendment 3 confirmed.
+
+## 2026-09-25 — The differences by design, reviewed
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, bereid de toets van de 38 regels voor"; then "ja, doe het
+  zoals je voorstelt".
+- Produced: `notes/step-145-by-design-review.md` (the sorting and the
+  decisions); `docs/comparison.md` (three *why* cells completed, row 12's
+  argument, row 10's pointer, five rows moved to the gaps); an addendum
+  to ADR-0005; rows in `NOTES.md` and `docs/milestones.md`. No code or
+  test changed.
+- Measured: `composer check`; the rows counted before (38) and after (33).
+- Reasoned: each row's protection from the row itself and the spec or
+  note it names; row 26's protection is reasoned, not measured.
+- Decided by Maurice: the four proposals of the review (keep A with its
+  protection named; B and row 20 to the gaps, no second ground in
+  ADR-0005; keep row 12; the ADR-0005 addendum for row 10).

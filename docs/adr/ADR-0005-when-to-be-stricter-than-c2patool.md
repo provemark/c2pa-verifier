@@ -92,3 +92,30 @@ verdict depends on goes unchecked.
   exist. Several `c2pa-rs` leniencies do protect nothing, and this
   verifier refuses them on purpose. ADR-0004 already said it: *"copying
   an unexplained leniency is trust by observation"*.
+
+## Addendum, 2026-09-25 (step 145)
+
+The decision above speaks about being stricter than `c2patool`, and
+about being more lenient than the spec's text where `c2pa-rs` is. It did
+not cover the third case: **this verifier more lenient than the current
+`c2pa-rs`, where the spec is on its side.** The case is real. `c2patool`
+0.28.0 calls a signer whose only EKUs are C2PA claim-signing and
+documentSigning `signingCredential.invalid`. C2PA 2.4 §14.4.1 makes
+claim-signing *the* C2PA signer EKU, and six OpenAI images from September
+2026 carry such a signer (step 141).
+
+**Being more lenient than `c2pa-rs` is allowed where the spec's normative
+text is clearly on this verifier's side.** It is then recorded in
+`docs/comparison.md` as a difference by design, naming the section. It is
+never allowed on the strength of the spec's examples or of an older
+`c2pa-rs` alone.
+
+The review of step 145 held the 38 differences by design against this
+ADR. Nine name what they prevent and stay. Twenty-two are not stricter
+than the current `c2patool`. Five moved to the gaps: four protected
+nothing (an external reference with half a hash, `signingTime` against
+`genTime`, a redacted data box, both `sigTst` and `sigTst2`), and one
+differs only in what the report says (an unreadable ISOBMFF `uuid` box).
+Their behaviour is unchanged until a file carries one of them. The
+settings row stays with its argument written down, and the EKU row stays
+under this addendum.
