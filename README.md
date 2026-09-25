@@ -129,7 +129,8 @@ the *contents* of a file, never a path:
 A top-level `trust.allowed_list` is **refused**, with a message saying
 where it belongs. `c2patool` 0.28 moved it into the entries and ignores a
 loose one without a word. No list is bundled: which roots you trust is
-your decision.
+your decision. [`docs/trust-settings.md`](docs/trust-settings.md) shows how
+to build a settings file from the C2PA's own published lists.
 
 Everything the verifier says about a file comes from the file. Values
 in the report (labels, explanations, URLs) are untrusted text until you
@@ -173,7 +174,8 @@ expected and explained; if it is not, it is news, and worth an issue.
 
 Two divergences are deliberate and will not change: this verifier trusts a
 timestamp authority only when you configure an anchor for it (`c2patool`
-falls back to your operating system's trust store), and it reports on every
+accepts authorities you did not configure; for a claim of version 1 it does
+not check their trust at all), and it reports on every
 file whether revocation was checked, which `c2patool` does not.
 
 ## Public API

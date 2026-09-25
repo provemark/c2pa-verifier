@@ -6975,3 +6975,19 @@ README are where the disclosure lives.
   claim v1; ADR-0004's rule stays under ADR-0005.
 - Decided by Maurice: to measure under the official lists before
   deciding on box hashes.
+
+## 2026-09-25 — A recipe for trust settings
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, push maar en bereid dat instellingenbestand voor"; then
+  "ja, met DigiCert G4, leg vast en push maar".
+- Produced: `docs/trust-settings.md`; two changes in `README.md` (the
+  pointer, the corrected TSA sentence); `notes/step-147-trust-settings-recipe.md`;
+  rows in `NOTES.md` and `docs/milestones.md`. Pushed `15e2115`.
+- Measured: DigiCert's root downloaded and fingerprinted; the 78 files
+  through all three tools under the recipe (63 agree in all, every file
+  with at least one `c2patool`); the snippet's output compared with the
+  measured settings; `bin/package-check.php`; `composer check`.
+- Reasoned: a bundled list would break the README's promise and go stale;
+  two unmeasured claims were taken out of the draft before it was shown.
+- Decided by Maurice: a recipe, not a bundled file; DigiCert Trusted
+  Root G4 recommended as a TSA anchor.
