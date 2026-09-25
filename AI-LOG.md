@@ -7284,3 +7284,12 @@ README are where the disclosure lives.
 - Reasoned: the shift comes from `mktime()` under Emscripten in PHP's
   `ASN1_TIME` conversion; read, not traced.
 - Decided by Maurice: none yet; the spec awaits approval.
+
+## 2026-09-25 — SPEC-044 approved
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "akkoord, zet SPEC-044 op approved".
+- Produced: SPEC-044's status and approval line; the milestones row.
+- Measured: `bin/spec-check.php`.
+- Decided by Maurice: SPEC-044 approved as drafted, with the ADR-0003
+  amendment in its scope. Its three open questions stay open, to be
+  measured in the test step.
