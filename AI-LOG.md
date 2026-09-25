@@ -7236,3 +7236,18 @@ README are where the disclosure lives.
   SPEC-043 and SPEC-019 green, a FIFO and four wrapper paths through the
   command; `composer check`.
 - Decided by Maurice: none (the tag is his decision, on green CI).
+
+## 2026-09-25 — Step 155c: AC5 on a FIFO (SPEC-043 amendment 1)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "doe 2": change the test to a FIFO rather than measure on Linux.
+- Produced: SPEC-043 amendment 1 and AC5's new Given; AC5's test with a
+  `mkfifo` node and a writer process that is always stopped; the step-155
+  note. Committed locally, then pushed.
+- Measured: CI run 36119036051 red on AC5 as the two before (piped
+  `/dev/stdin` refused as *No such file* on Linux); the FIFO test red
+  with the seekable check disabled (exit 255), then green; `composer
+  check`.
+- Reasoned: why Linux PHP does not open `/dev/stdin` behind `file://` is
+  not known; it was not measured.
+- Decided by Maurice: option 2, the FIFO; the Linux message is recorded as
+  a known limit.

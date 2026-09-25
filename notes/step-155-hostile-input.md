@@ -96,8 +96,20 @@ link as `realpath()` does, and `open()` does not. `local()` now only puts
 `file://` before the absolute path and leaves existence to `fopen()`,
 whose own reason is *No such file or directory*. A path longer than
 `PHP_MAXPATHLEN` cannot name a file and is *No such file* at once; `fopen()`
-would say *Invalid argument* for a `data:` URL of an image. `/dev/stdin`
-and a FIFO now reach the seekable check. Measured on
+would say *Invalid argument* for a `data:` URL of an image. On macOS
+`/dev/stdin` and a FIFO now reach the seekable check.
+
+That third version failed on CI in the same way. Three explanations had
+been guessed and none was measured, so the guessing stopped there. By the
+maintainer's choice (option 2), AC5 now uses a FIFO made with `mkfifo`
+and filled by a second process: the real case of input that cannot seek,
+the same on both systems (SPEC-043 amendment 1). It was red with the
+seekable check disabled (exit 255) and green with it.
+
+On Linux, piped `/dev/stdin` is still refused, with exit 2 and nothing
+on standard output, but as *No such file or directory*. That is a known
+limit of the message, recorded in the amendment; nothing is read or
+verified. Measured on
 macOS: SPEC-043 6 passed and SPEC-019 12 passed. A FIFO gives *cannot
 seek*; `data:`, `php://`, `http://`, `phar://`, a missing file and a
 `--settings data:` each give *No such file*, with no request made. Linux

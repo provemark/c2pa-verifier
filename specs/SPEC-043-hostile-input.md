@@ -121,8 +121,9 @@ Measured on 2026-09-25, before any change:
     `signingCredential.invalid` naming the warning. Both `c2patool` versions
     refuse the certificate too.
 
-- **AC5 — a stream that cannot seek is refused** *(required: error path)*
-  - Given `bin/c2pa-verify /dev/stdin` with a signed file piped in
+- **AC5 — a stream that cannot seek is refused** *(required: error path; amendment 1)*
+  - Given `bin/c2pa-verify <fifo>`, a FIFO made with `mkfifo` that a
+    second process fills with a signed file
   - When the command runs
   - Then it exits 2, standard output is empty, and standard error says the
     input cannot seek and must be a file.
@@ -173,6 +174,24 @@ final class CborBudget            // mutable on purpose: shared by several decod
 - None blocking. The budget of 65,536 items is twelve times the largest
   measured, as the per-container limit already is.
 
+## Amendments
+
+1. **2026-09-25, step 155c, found by CI on Linux** *(confirmed by Maurice van Loon, 2026-09-25: option 2)* —
+   AC5 names a FIFO instead of `/dev/stdin` with a piped file. On Linux,
+   `/dev/stdin` leads through `/proc/self/fd/0` to `pipe:[…]`, and PHP
+   did not open it through a `file://` path: three CI runs (36117335050,
+   36118261688, 36119036051) refused it as *No such file or directory*,
+   with `realpath()`, with `file_exists()` and with `fopen()` alone. Why
+   was not measured, because no Linux was at hand. The input is still
+   refused there, with exit 2 and nothing on standard output, but under
+   the wrong reason. A FIFO is what the criterion is about: a real node
+   that cannot seek, the same on Linux and macOS. The test was seen red
+   with the seekable check disabled (exit 255) and green with it.
+
+   **Weight C for the verdict, a known limit for the message:** no report
+   changes. On Linux, `bin/c2pa-verify /dev/stdin` with piped input says
+   *No such file or directory* where *cannot seek* would be right.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -184,7 +203,7 @@ least one test; every source file maps back to this spec.
 | AC2 | tests/Unit/Verifier/HostileInputTest.php :: AC2 / SPEC-043 | src/Container/IsobmffManifestStoreExtractor.php (`MAX_PURPOSE_LENGTH`, `merklePayload()`, `readStore()`) |
 | AC3 | tests/Unit/Verifier/HostileInputTest.php :: AC3 / SPEC-043 | src/Manifest/Manifest.php (`mediaType()`); bin/make-hostile-input-variants.php |
 | AC4 | tests/Unit/Verifier/HostileInputTest.php :: AC4 / SPEC-043 | src/Trust/Certificate.php (`withoutWarnings()`, the constructor, `signedBy()`); bin/make-hostile-input-variants.php |
-| AC5 | tests/Unit/Verifier/HostileInputTest.php :: AC5 / SPEC-043 | src/Cli/Command.php (`open()`: the seekable check) |
+| AC5 | tests/Unit/Verifier/HostileInputTest.php :: AC5 / SPEC-043 (a FIFO, amendment 1) | src/Cli/Command.php (`open()`: the seekable check) |
 | AC6 | tests/Unit/Verifier/HostileInputTest.php :: AC6 / SPEC-043 | src/Cli/Command.php (`local()`: an absolute path behind `file://`, symlinks not resolved, so AC5 holds on Linux too; `open()`, `read()`) |
 
 Measured 2026-09-25: 6 red (and the three parts a first failure hid, run apart) → 6 green, `composer check` exit 0, 525 tests; 19,788 runs over every signed fixture and settings file, the only change `hostile/certificate-time-nul.jpg` (still `Invalid`, now `signingCredential.invalid`); `php bin/fuzz.php 20260925 60`: 0 faults, the same 34 suspects.

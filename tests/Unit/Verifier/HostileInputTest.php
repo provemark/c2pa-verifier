@@ -202,22 +202,31 @@ it('AC4: no OpenSSL warning escapes, and a certificate that warns is unreadable'
 })->group('SPEC-043');
 
 it('AC5: a stream that cannot seek is refused with exit 2', function (): void {
-    $bin = dirname(__DIR__, 3).'/bin/c2pa-verify';
-    $process = proc_open([PHP_BINARY, $bin, '/dev/stdin'], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
-    assert(is_resource($process));
-    // the command refuses before it reads, so the write may meet a closed pipe: that is the point
-    set_error_handler(static fn (): bool => true);
+    // a FIFO (amendment 1): a real filesystem node that cannot seek, on Linux and macOS alike; a writer
+    // process fills it, and is stopped afterwards whatever the command did, so the test cannot hang
+    $dir = sys_get_temp_dir().'/spec043-'.bin2hex(random_bytes(4));
+    mkdir($dir);
+    $fifo = $dir.'/input.jpg';
+    $made = proc_open(['mkfifo', $fifo], [], $none);
+    assert(is_resource($made));
+    expect(proc_close($made))->toBe(0);
+    $writer = proc_open(['sh', '-c', 'cat "$0" > "$1"', Corpus::fixtures().'/fixture-signed.jpg', $fifo], [], $none);
+    assert(is_resource($writer));
     try {
-        fwrite($pipes[0], (string) file_get_contents(Corpus::fixtures().'/fixture-signed.jpg'));
+        $bin = dirname(__DIR__, 3).'/bin/c2pa-verify';
+        $process = proc_open([PHP_BINARY, $bin, $fifo], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        assert(is_resource($process));
+        $out = (string) stream_get_contents($pipes[1]);
+        $err = (string) stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $status = proc_close($process);
     } finally {
-        restore_error_handler();
+        proc_terminate($writer);
+        proc_close($writer);
+        @unlink($fifo);
+        rmdir($dir);
     }
-    fclose($pipes[0]);
-    $out = (string) stream_get_contents($pipes[1]);
-    $err = (string) stream_get_contents($pipes[2]);
-    fclose($pipes[1]);
-    fclose($pipes[2]);
-    $status = proc_close($process);
 
     expect($status)->toBe(2)
         ->and($out)->toBe('')
