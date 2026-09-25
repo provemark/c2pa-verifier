@@ -68,8 +68,8 @@ reader accepts.
   - When the JPEG extractor runs
   - Then it returns the store: 13 081 bytes, equal to the piece's data
     after CI, En and Z. When the file is verified, the report carries no
-    `general.error` *(amendment 1: `claimSignature.validated` moved to
-    SPEC-042)*.
+    `general.error` *(amendment 1: `claimSignature.validated` left this
+    spec; amendment 2: no spec takes it up)*.
 
 - **AC2 — two pieces numbered 0, 2 are read**
   - Given `fixture-signed.jpg` with its first piece's Z rewritten from 1
@@ -195,6 +195,21 @@ questions 2 and 3 as proposed.
    changed.
 
    Confirmed by Maurice van Loon, 2026-09-25 (step 142).
+
+2. **2026-09-25, step 143, read and decided.** SPEC-042 will not be
+   written. C2PA 2.4 §8.4.2.1 reads a `self#jumbf` URI without a leading
+   slash as relative to the current manifest, §10.2.2 wants the signature
+   URI absolute, and §15.7 makes an unresolvable one
+   `claimSignature.missing`, which is what this verifier reports for the
+   Bing file. The Bing URIs follow the spec's own examples of 1.0 to 2.1,
+   not its normative text. The files also carry `c2pa.hash.boxes`, a hard
+   binding refused by name, so reading the URI would change no verdict.
+   The difference is recorded in `docs/comparison.md` as one by design.
+   Amendment 1's pointer to SPEC-042 is withdrawn.
+
+   Weight C: a pointer in a criterion withdrawn, no behaviour changed.
+
+   Confirmed by Maurice van Loon, 2026-09-25 (step 143).
 
 ## Traceability
 

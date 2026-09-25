@@ -43,8 +43,8 @@ it('AC1: a single piece with Z = 0 is read', function (): void {
     $report = spec020Verify(SPEC041_BING.'.jpg');
     $codes = array_map(static fn ($status): StatusCode => $status->code, $report->result->statuses);
 
-    // The piece's data after CI, En and Z: LBox 0x3319 = 13 081, then TBox "jumb". Amendment 1:
-    // claimSignature.validated belongs to SPEC-042 (the signature's URI), not to the container.
+    // The piece's data after CI, En and Z: LBox 0x3319 = 13 081, then TBox "jumb". Amendments 1 and 2:
+    // the file's signature URI is not this spec's concern, and stays claimSignature.missing by design.
     expect(strlen($bytes))->toBe(13081)
         ->and(bin2hex(substr($bytes, 0, 8)))->toBe('000033196a756d62')
         ->and(hash('sha256', $bytes))->toBe('66109c664aafa35562da2669e60d49eaa9eee8b132f03bcfeef1f0758222d901')

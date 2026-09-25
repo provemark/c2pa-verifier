@@ -6907,3 +6907,21 @@ README are where the disclosure lives.
   it gets its own spec.
 - Decided by Maurice: amendment 1 to SPEC-041 (confirmed); SPEC-042 as
   the next draft.
+
+## 2026-09-25 — The Bing signature URI, by design
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, push maar en begin aan SPEC-042"; then, after the
+  findings, "Maar is Bing nu gewoon niet fout, waarom moeten wij
+  aanpassen?"; then "ja, doe dat maar" (record it as a difference by
+  design).
+- Produced: `notes/step-143-bing-uri-by-design.md`; `docs/comparison.md`
+  (the SPEC-042 row replaced by a by-design row); SPEC-041 amendment 2;
+  the comment in `FirstPieceSequenceTest.php`; rows in `NOTES.md` and
+  `docs/milestones.md`. Pushed `ecba8f8` and `24069c1` (CI green).
+- Measured: the Bing file's URIs from `c2patool --detailed`; its
+  `assertion.boxesHash.match` in both `c2patool` versions.
+- Reasoned: C2PA 1.0–2.4 read from `c2pa-org/specifications` at
+  `4eb2c67` (§8.4.2.1, §10.2.2, §15.7, and the examples); `c2pa-rs`
+  `labels.rs` and `claim.rs` at `ada3e4a`.
+- Decided by Maurice: Bing's URI is not adapted to; SPEC-042 is not
+  written; SPEC-041 amendment 2 confirmed.
