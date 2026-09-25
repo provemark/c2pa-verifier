@@ -7098,3 +7098,27 @@ README are where the disclosure lives.
 - Reasoned: a missing `count` reads as 0, so every fragment is refused
   rather than placed.
 - Decided by Maurice: amendment 1 confirmed.
+
+## 2026-09-25 — Step 152: SPEC-027 amendment 4
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, bereid lek 5 voor"; then "ja ga verder, bevestigd".
+- Produced: SPEC-027 amendment 4, AC8 and its Traceability row;
+  `bin/make-bmff-tail-variants.php`; four files and a README in
+  `tests/Fixtures/bmff-tail/`, `broken/seg_3-tail.m4s`; c2patool 0.27.22
+  and 0.28.0 answers in `tests/Fixtures/c2patool/bmff-tail/` and
+  `.../bmff-fragmented/seg_3-tail*.txt`; the AC8 test in
+  `tests/Unit/Hash/BmffHashCheckTest.php`; `BmffHashCheck::withTail()`
+  in `check()` and `checkFragment()`; `notes/step-152-bmff-tail.md`;
+  CHANGELOG, NOTES and milestones rows. Committed locally, not pushed.
+- Measured: the review's probe reproduced (`Trusted`); both `c2patool`
+  versions on 1-, 4-, 7- and 8-byte tails, on files each version signed
+  with a tail (also after an excluded `free`), and on a fragment with a
+  tail; the digest formula against `c2patool`'s written hash (the tail
+  last with no marker matched, the alternatives did not); AC8 red, then
+  green; `vendor/bin/pest --group=SPEC-027` and `--group=SPEC-028` (8
+  each); `composer check` (515 passed); 19,150 runs before and after (150
+  moved, the three new files); 16,807 fragment sets unchanged.
+- Reasoned: refusing a tail was dropped because it would keep rejecting
+  genuine files; the init segment's digest gets the tail too, since it
+  is the same digest.
+- Decided by Maurice: amendment 4 confirmed.

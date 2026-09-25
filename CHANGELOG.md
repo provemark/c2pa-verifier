@@ -42,6 +42,14 @@ patch release.
   be at least 0 and less than the declared `count`, else
   `assertion.bmffHash.mismatch` naming the fragment, as both `c2patool`
   versions refuse such a stream. Present in 0.1.0 to 0.2.1.
+- **Security: the bytes after the last ISOBMFF box are hashed (SPEC-027
+  amendment 4).** Fewer than eight bytes after the last top-level box were
+  never hashed, so bytes appended or changed there after signing left an
+  MP4, MOV, AVIF or HEIC file, or a fragment, `Trusted`. They are now
+  hashed as `c2pa-rs` hashes them: last, with no offset marker. The same
+  change makes a genuine file that `c2pa-rs` signed with such a tail
+  `Trusted` here, as in both `c2patool` versions; it was `Invalid`.
+  Present in 0.1.0 to 0.2.1.
 - **A JPEG whose first APP11 piece carries packet sequence number 0 is
   read (SPEC-041).** Microsoft Bing Image Creator writes every store this
   way, and both `c2patool` versions read it. Every later piece must still

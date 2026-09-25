@@ -103,6 +103,7 @@ final readonly class BmffHashCheck
 
                 return $bytes === false ? '' : $bytes;
             });
+            $included = self::withTail($included, array_values(array_filter($boxes, static fn (array $box): bool => substr_count($box['path'], '/') === 1)), $stream);
         } catch (HashException|ContainerException $e) {
             return [new ValidationStatus(StatusCode::AssertionBmffHashMismatch, $url, $e->getMessage())];
         }
@@ -205,6 +206,34 @@ final readonly class BmffHashCheck
     }
 
     /**
+     * The ranges to hash, with whatever follows the last top-level box appended (SPEC-027 amendment 4).
+     * Fewer than eight bytes make no box header, so the walk never lists them. Measured against the
+     * hash c2pa-rs writes: they come last, after every included range, with no offset marker of their
+     * own, and they count even when the last box is excluded.
+     *
+     * @param  list<array{offset: int, length: int, marker?: bool}>  $included
+     * @param  list<array{offset: int, length: int, type: string, path?: string}>  $topLevel
+     * @param  resource  $stream
+     * @return list<array{offset: int, length: int, marker?: bool}>
+     *
+     * @throws HashException when the stream's size cannot be read
+     */
+    private static function withTail(array $included, array $topLevel, $stream): array
+    {
+        $end = 0;
+        foreach ($topLevel as $box) {
+            $end = max($end, $box['offset'] + $box['length']);
+        }
+        $stat = fstat($stream);
+        if ($stat === false) {
+            throw new HashException('cannot read the size of the stream to find the bytes after its last box');
+        }
+        $tail = $stat['size'] - $end;
+
+        return $tail > 0 ? [...$included, ['offset' => $end, 'length' => $tail, 'marker' => false]] : $included;
+    }
+
+    /**
      * One fragment against the root, or a sentence saying why not.
      *
      * @param  resource  $fragment
@@ -220,14 +249,15 @@ final readonly class BmffHashCheck
             }
             $proof = (new CborDecoder)->decode($payload);
             rewind($fragment);
-            $leaf = $this->digest($fragment, self::included($this->boxes->topLevelBoxes($fragment), $exclusions, function (int $at, int $length) use ($fragment): string {
+            $top = $this->boxes->topLevelBoxes($fragment);
+            $leaf = $this->digest($fragment, self::withTail(self::included($top, $exclusions, function (int $at, int $length) use ($fragment): string {
                 if ($length < 1 || fseek($fragment, $at) !== 0) {
                     return '';
                 }
                 $bytes = fread($fragment, $length);
 
                 return $bytes === false ? '' : $bytes;
-            }), $alg);
+            }), $top, $fragment), $alg);
         } catch (HashException|CborException|ContainerException $e) {
             return sprintf('%s: %s', $name, $e->getMessage());
         }

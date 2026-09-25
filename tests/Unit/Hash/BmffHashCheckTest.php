@@ -9,6 +9,7 @@ use Provemark\C2paVerifier\Report\ValidationState;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
 use Provemark\C2paVerifier\Trust\TrustSettings;
+use Provemark\C2paVerifier\Verifier\FragmentedVerifier;
 use Provemark\C2paVerifier\Verifier\VerificationReport;
 use Provemark\C2paVerifier\Verifier\Verifier;
 
@@ -207,4 +208,42 @@ it('AC7: no image fixture changes its answer because ISOBMFF gained a hard bindi
             ->and(spec027Failures($report))->toBe([], $file)
             ->and(in_array(StatusCode::AssertionBmffHashMatch->value, spec027Codes($report), true))->toBeFalse($file);
     }
+})->group('SPEC-027');
+
+// AC8, amendment 4 (step 152)
+it('AC8: the bytes after the last top-level box are hashed, as c2pa-rs hashes them', function (): void {
+    // fewer than eight bytes after the last box are no box, and the walk used to stop before them
+    $expected = [
+        'bmff-tail/appended.mp4' => ValidationState::Invalid,             // appended after signing
+        'bmff-tail/signed-tail.mp4' => ValidationState::Trusted,          // signed with the tail after mdat
+        'bmff-tail/signed-free-tail.mp4' => ValidationState::Trusted,     // after an excluded free box
+        'bmff-tail/signed-free-tail-changed.mp4' => ValidationState::Invalid,
+    ];
+    foreach ($expected as $file => $state) {
+        $report = spec027Verify($file);
+        $name = substr($file, 0, -4);
+
+        expect($report->result->state)->toBe($state, $file)
+            ->and(spec027Failures($report))->toBe(spec027OracleFailures($name), $file)
+            ->and(spec027Failures($report))->toBe(spec027OracleFailures("{$name}--0.28.0"), $file);
+    }
+
+    // a fragment's leaf is the same digest over another file (SPEC-028): its tail counts too
+    $dir = Corpus::fixtures().'/bmff-fragmented';
+    $fragments = (static function () use ($dir): Generator {
+        foreach (['seg_1.m4s', 'seg_2.m4s', 'broken/seg_3-tail.m4s', 'seg_4.m4s', 'seg_5.m4s'] as $fragment) {
+            $stream = fopen("{$dir}/{$fragment}", 'rb');
+            assert($stream !== false);
+            yield basename($fragment) => $stream;
+            fclose($stream);
+        }
+    })();
+    $init = fopen("{$dir}/init.mp4", 'rb');
+    assert($init !== false);
+    $report = (new FragmentedVerifier)->verify($init, $fragments, TrustSettings::fromJson((string) file_get_contents(Corpus::fixtures().'/trust/full.settings.json')));
+    $recorded = (string) file_get_contents(Corpus::fixtures().'/c2patool/bmff-fragmented/seg_3-tail--0.28.0.txt');
+
+    expect($report->result->state)->toBe(ValidationState::Invalid)
+        ->and(spec027Codes($report))->toContain(StatusCode::AssertionBmffHashMismatch->value)
+        ->and(str_contains($recorded, 'code: "assertion.bmffHash.mismatch"'))->toBeTrue();
 })->group('SPEC-027');

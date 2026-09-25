@@ -30,3 +30,7 @@ whose merkle box names a `location` outside the five-leaf tree, with nothing
 else changed. `c2patool` 0.27.22 and 0.28.0 refuse both sets of AC8 with
 `assertion.bmffHash.mismatch`; their answers are in
 `../c2patool/bmff-fragmented/location-*.txt`.
+
+`broken/seg_3-tail.m4s` (step 152, SPEC-027 amendment 4) is `seg_3` with 7
+bytes appended. It is written by `bin/make-bmff-tail-variants.php`; see
+`../bmff-tail/README.md`.

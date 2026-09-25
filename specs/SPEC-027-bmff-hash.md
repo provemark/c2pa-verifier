@@ -149,6 +149,18 @@ range — none of which any fixture here exercises.
     spec: no JPEG, PNG or WebP file changes its answer because ISOBMFF
     gained a hard binding.
 
+- **AC8 — the bytes after the last top-level box are hashed** *(amendment 4; required: error path)*
+  - Given `bmff-tail/appended.mp4` (7 bytes appended after signing),
+    `signed-tail.mp4` and `signed-free-tail.mp4` (signed by `c2patool`
+    0.28.0 with a 7-byte tail, the second after an excluded `free`
+    box), `signed-free-tail-changed.mp4` (its tail changed), and the
+    fragmented stream with `broken/seg_3-tail.m4s` in place of `seg_3`
+  - When each is verified with the test trust settings
+  - Then the state and the failure codes equal both `c2patool` versions':
+    the appended and the changed file `Invalid` with
+    `assertion.bmffHash.mismatch`, the two signed files `Trusted`, and
+    the fragmented stream `Invalid` with `assertion.bmffHash.mismatch`.
+
 ## References
 
 - Specification: C2PA 2.4 §11.3 and the BMFF hash section; ISO/IEC
@@ -244,6 +256,29 @@ final readonly class BmffHashCheck
 
    Confirmed by Maurice van Loon, 2026-09-22 (step 88).
 
+4. **2026-09-25, step 152, found by the security review; measured** *(confirmed by Maurice van Loon, 2026-09-25)* —
+   the bytes after the last top-level box are part of the digest. The
+   box walk stops when fewer than eight bytes remain, too few for a box
+   header, and those bytes were never hashed. A file with 1 to 7 bytes
+   appended after signing therefore stayed `Trusted`. For the same
+   reason, a file `c2pa-rs` signed with such a tail was `Invalid` here.
+
+   Measured against the hash `c2patool` 0.27.22 and 0.28.0 write, on
+   files each signed with a 7-byte tail:
+
+   - the tail is hashed **after every included range, with no offset
+     marker of its own**. A marker or no tail both give another digest;
+   - it is hashed even when the last box is one the assertion excludes
+     (`free`);
+   - both versions answer an appended or changed tail with
+     `assertion.bmffHash.mismatch`, in a whole file and in a fragment.
+
+   So the tail is appended to the digest the same way here, for a whole
+   file and for a fragment's leaf. **Weight A**: a file that was wrongly
+   `Trusted` becomes `Invalid`; and a genuine file that was wrongly
+   `Invalid` becomes `Trusted`, which is a correction toward `c2patool`,
+   not a leniency. New criterion AC8.
+
 ## Open questions
 
 1. **A file whose first top-level box is included.** Both fixtures begin
@@ -283,3 +318,4 @@ the source is `src/Hash/BmffHashCheck.php` unless another file is named.
 | AC5 | `AC5: an exclusion this verifier cannot honour is refused, not ignored` | `matches()`, `UNSUPPORTED_FILTERS`, `src/Hash/HashException.php` |
 | AC6 | `AC6: the assertion's own shape is checked before a digest is computed` | `assertionOf()` |
 | AC7 | `AC7: no image fixture changes its answer because ISOBMFF gained a hard binding` | `src/Verifier/Verifier.php` (the dispatch), `DataHashCheck` unchanged |
+| AC8 | tests/Unit/Hash/BmffHashCheckTest.php :: AC8 / SPEC-027 | src/Hash/BmffHashCheck.php (`withTail()`, in `check()` and `checkFragment()`); bin/make-bmff-tail-variants.php |
