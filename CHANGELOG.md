@@ -5,6 +5,38 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+Measured on files from current writers, and one container fix. No API
+change, no new status code. Under this project's rule this would be a
+patch release.
+
+### Fixed
+- **A JPEG whose first APP11 piece carries packet sequence number 0 is
+  read (SPEC-041).** Microsoft Bing Image Creator writes every store this
+  way, and both `c2patool` versions read it. Every later piece must still
+  carry its own number, and any other first number is still refused. The
+  Bing files stay `Invalid`, now with `claimSignature.missing` instead of
+  `general.error`. Their signature URI and their box hash are gaps, not
+  yet built (`docs/comparison.md`).
+
+### Added
+- `docs/trust-settings.md`: how to build trust settings from the C2PA's
+  own trust and TSA lists, with DigiCert Trusted Root G4 recommended as a
+  timestamp-authority anchor, and what that choice means. No list is
+  bundled. Under it, each of 78 files from current writers on Wikimedia
+  Commons gets the verdict of at least one `c2patool` version, and 63 get
+  the verdict of both.
+- ADR-0005: this verifier is stricter than `c2patool` only where the
+  strictness prevents a wrong `Valid` or trust in something unchecked.
+  `docs/comparison.md` was held against it: 33 differences by design
+  remain, and five moved to the gaps. No behaviour changed.
+
+### Changed
+- The README no longer says `c2patool` falls back to the operating
+  system's trust store for timestamp authorities. For a claim of version
+  1, `c2pa-rs` does not check the authority's trust at all.
+
 ## 0.2.1 — 2026-09-24
 
 Closer to `c2patool`, in eight specifications

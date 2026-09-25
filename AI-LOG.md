@@ -6991,3 +6991,15 @@ README are where the disclosure lives.
   two unmeasured claims were taken out of the draft before it was shown.
 - Decided by Maurice: a recipe, not a bundled file; DigiCert Trusted
   Root G4 recommended as a TSA anchor.
+
+## 2026-09-25 — CHANGELOG: an Unreleased section
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "moet er een nieuwe tag dan komen nu?"; advised no tag yet (one
+  code change since 0.2.1, no verdict on a real file moved); then "ja,
+  voeg die toe en push maar".
+- Produced: `## Unreleased` in `CHANGELOG.md` (SPEC-041 under Fixed; the
+  trust-settings recipe and ADR-0005 under Added; the README's TSA
+  sentence under Changed).
+- Measured: `git diff --stat v0.2.1..HEAD -- src` (one file);
+  `composer check`.
+- Decided by Maurice: no tag now; the Unreleased section; push.
