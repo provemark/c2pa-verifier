@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-25                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -152,6 +152,9 @@ if ($fields['z'] !== $expected && ! ($pieceNumber === 1 && $fields['z'] === 0)) 
 The error message stays as it is: SPEC-001 AC3's test pins it.
 
 ## Open questions
+
+*Answered on approval, 2026-09-25:* question 1 narrow, as proposed;
+questions 2 and 3 as proposed.
 
 1. **Narrow or `c2pa-rs`'s rule?** The proposal accepts exactly what a
    writer has been seen to produce (a first Z = 0) and keeps SPEC-001's

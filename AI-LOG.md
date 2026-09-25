@@ -6860,3 +6860,12 @@ README are where the disclosure lives.
   `richardwooding/c2pa` `c2pa.go`; ISO/IEC 18477-3 not found free, and
   19566-5:2023's public sample shows Annex D is informative.
 - Decided by Maurice: to draft the spec; its open questions await him.
+
+## 2026-09-25 — SPEC-041 approved
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, smal, spec goedgekeurd, en push maar".
+- Produced: SPEC-041 status `approved`, its open questions marked
+  answered; the milestones row updated.
+- Measured: `php bin/spec-check.php`.
+- Decided by Maurice: SPEC-041 approved; open question 1 answered
+  narrow (only a first Z = 0 is accepted); push.
