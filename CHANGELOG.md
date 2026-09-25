@@ -56,6 +56,16 @@ patch release.
   fatal PHP error: no report, exit status 255. Such a token is now
   `timeStamp.malformed`, and such a response `signingCredential.ocsp.skipped`.
   No key is needed to write such a file. Present in 0.1.0 to 0.2.1.
+- **Security: a very long INTEGER no longer takes minutes (SPEC-016
+  amendment 5, SPEC-015 amendment 6).** Converting an INTEGER to decimal
+  was quadratic, so a file with a long INTEGER in a timestamp token, an
+  OCSP response or a certificate serial kept the verifier busy for tens
+  of seconds or more. The conversion is now about 60 times faster, with
+  the same results, and an INTEGER longer than 256 octets is refused:
+  `timeStamp.malformed`, `signingCredential.ocsp.skipped`, or, for a
+  certificate serial, `signingCredential.invalid`. The last is a stated
+  difference: `c2patool` reads such a certificate. RFC 5280 allows 20
+  octets, and no file measured carries more. Present in 0.1.0 to 0.2.1.
 - **A JPEG whose first APP11 piece carries packet sequence number 0 is
   read (SPEC-041).** Microsoft Bing Image Creator writes every store this
   way, and both `c2patool` versions read it. Every later piece must still

@@ -328,6 +328,15 @@ scratch script did. Byte vectors for AC1–AC2 are literals in the test.
     reports as `timeStamp.malformed`. No warning, no `Error`, no other
     exception escapes.
 
+- **AC12 — an INTEGER read as a number has at most 256 octets** *(amendment 5; limits)*
+  - Given INTEGERs of 256 and 257 octets, and the security review's
+    token whose SignedData version is an INTEGER of 8,000 octets
+  - When each is read as a decimal number
+  - Then the first is converted exactly (617 digits), and the other two
+    are refused with an exception naming the bound, the token as a
+    `TimestampException` in well under a second. Known values
+    (2^64, 2^256 − 1) are converted exactly.
+
 ## References
 
 - Specification: X.690 (2021) §8.1 (identifier and length octets),
@@ -542,6 +551,32 @@ final class TimestampException extends \RuntimeException {}
    becomes a status; no verdict that was reached before changes. New
    criterion AC11.
 
+5. **2026-09-25, step 154, found by the security review; measured** *(confirmed by Maurice van Loon, 2026-09-25)* —
+   `Bytes::hexToDecimal` converted one hex digit at a time over every
+   decimal digit so far: quadratic in the length. An INTEGER of 2,000
+   octets took 0.54 s, 4,000 took 2.1 s and 8,000 took 8.6 s. The
+   review's 52 KB file kept `bin/c2pa-verify` busy for 35.8 s, where
+   `c2patool` answers `timeStamp.malformed` in 0.01 s. A token may be
+   1 MiB and a header may hold eight, so the cost had no practical end.
+
+   Two changes:
+
+   - **The conversion** now works in chunks of seven hex digits over
+     limbs of 10^9. It gives the same result on 3,008 comparisons with
+     the old one, including leading zeros and powers of two, and is about
+     60 times faster: 256 octets in about 0.1 ms.
+   - **A bound:** an INTEGER read as a number has at most 256 octets of
+     magnitude (`Bytes::MAX_DECIMAL_OCTETS`); a longer one is an
+     `Asn1Exception` before any conversion.
+
+   Measured: every INTEGER converted over all signed fixtures (150,540
+   conversions) and the 78 files of current writers (1,414) is at most
+   20 octets, RFC 5280's limit for a serial number. A timestamp token or
+   OCSP response with a longer INTEGER becomes `timeStamp.malformed` or
+   `signingCredential.ocsp.skipped`, which is what `c2patool` answers on
+   the review's token. **Weight B**: a denial of service becomes a
+   status. New criterion AC12.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -561,3 +596,4 @@ least one test; every source file maps back to this spec.
 | AC10 | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC10: every corpus token parses, and none takes the reader past its bounds — 38 timestamped files, 37 parse; … / SPEC-016 | src/Timestamp/TimestampHeader.php, src/Timestamp/TimeStampToken.php, src/Asn1/DerReader.php (the bounds) |
 | AC11 | tests/Unit/Asn1/MissingElementTest.php :: AC11 / SPEC-016 | src/Asn1/Der.php (`element()`); src/Timestamp/SignedData.php, SignerInfo.php, TstInfo.php (the six reads by position); tests/Support/DerPatch.php (`constructed()`) |
 | AC11 (amendment 3) | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC11: a negative INTEGER reads signed on request …; … GeneralizedTime fractions are kept …; … the writer token parses — * (3) / SPEC-016 | src/Asn1/Der.php :: integer(bool $signed), timeFraction(); src/Timestamp/TstInfo.php :: read() (nonce signed, $genTimeFraction) |
+| AC12 | tests/Unit/Asn1/IntegerBoundTest.php :: AC12 / SPEC-016 | src/Support/Bytes.php (`hexToDecimal()`, `MAX_DECIMAL_OCTETS`, `decimalOctets()`); src/Asn1/Der.php (`integer()`) |

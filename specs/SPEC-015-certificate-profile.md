@@ -255,6 +255,17 @@ are still to be taken before the tests (Open questions).
     oracle's — no normalisation needed for `signingCredential.*`; the
     subset rule of SPEC-013 AC10 holds for the rest
 
+- **AC11 — a certificate serial of up to 256 octets reads as `c2patool` reads it; a longer one is a bound** *(amendment 6; limits)*
+  - Given `integer-bound/serial-200.jpg`, `serial-256.jpg` and
+    `serial-257.jpg`, signed by `c2patool` 0.28.0 with leaves of a
+    throw-away hierarchy whose serial numbers have 200, 256 and 257
+    octets, verified with `root.settings.json`
+  - When the Verifier runs
+  - Then the first two are `Trusted` with `cert_serial_number` equal to
+    `c2patool`'s. The third is `Invalid` with `signingCredential.invalid`
+    naming the bound, where both `c2patool` versions say `Trusted`: a
+    resource bound, recorded in `docs/comparison.md`.
+
 ## References
 
 - Specification: C2PA 2.4 §14.5 (the certificate profile: v3,
@@ -379,6 +390,20 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
    Confirmed by Maurice van Loon, 2026-09-22 (step 68).
 
 
+6. **2026-09-25, step 154, with SPEC-016 amendment 5** *(confirmed by Maurice van Loon, 2026-09-25)* —
+   `serialDecimal` goes through the same conversion and the same bound.
+   A certificate from an `x5chain` or from a timestamp token's
+   `certificates` is converted when it is read, before any signature is
+   checked, so a long serial was the same denial of service without a
+   key. RFC 5280 §4.1.2.2 forbids serials over 20 octets, but both
+   `c2patool` versions accept a 200-octet serial as `Trusted`. The bound
+   is therefore set at 256 octets rather than 20 or 64, and a 257-octet
+   serial is `signingCredential.invalid` here where `c2patool` reads it:
+   a stated difference, like the 16 MiB store bound of SPEC-024. No real
+   file comes near it (at most 20 octets, measured over the fixtures and
+   the 78 current-writer files). Decided by Maurice van Loon: 256 with
+   the faster conversion. New criterion AC11.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -397,3 +422,4 @@ least one test; every source file maps back to this spec.
 | AC9 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC9: M5's "done when": with and without the trust file, the verdicts are c2patool's / SPEC-015 | src/Verifier/Verifier.php :: check(); src/Trust/ChainCheck.php; src/Trust/CertificateProfileCheck.php |
 | AC11 (amendment 5) | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC11: an Ed25519 signer is recognised on every PHP, from the SPKI algorithm OID / SPEC-015 | src/Trust/Certificate.php :: keyFacts() (the SPKI algorithm OID) |
 | AC10 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC10: the codes are verbatim, and the drift alarm grows / SPEC-015 | src/Report/StatusCode.php :: SigningCredentialExpired; tests/Pest.php :: SPEC013_CORPUS |
+| AC11 | tests/Unit/Asn1/IntegerBoundTest.php :: AC11 / SPEC-015 | src/Trust/Certificate.php (the serial bound); bin/make-integer-bound-variants.php; docs/comparison.md |

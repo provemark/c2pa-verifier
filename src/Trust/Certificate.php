@@ -137,7 +137,12 @@ final readonly class Certificate
         $this->hasSubjectKeyIdentifier = array_key_exists('subjectKeyIdentifier', $extensions);
         $o = $this->subject['O'] ?? null;
         $this->organization = is_string($o) ? $o : null;
-        $this->serialDecimal = self::hexToDecimal(is_string($parsed['serialNumberHex'] ?? null) ? $parsed['serialNumberHex'] : '0');
+        $serialHex = is_string($parsed['serialNumberHex'] ?? null) ? $parsed['serialNumberHex'] : '0';
+        if (Bytes::decimalOctets($serialHex) > Bytes::MAX_DECIMAL_OCTETS) {
+            // SPEC-015 amendment 6: a resource bound, not a profile rule — c2patool reads longer serials
+            throw new TrustException(sprintf('a certificate serial number of %d octets; this verifier reads at most %d (RFC 5280 allows 20)', Bytes::decimalOctets($serialHex), Bytes::MAX_DECIMAL_OCTETS));
+        }
+        $this->serialDecimal = self::hexToDecimal($serialHex);
     }
 
     public static function fromDer(string $der): self

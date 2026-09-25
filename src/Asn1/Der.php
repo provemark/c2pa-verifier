@@ -131,6 +131,9 @@ final readonly class Der
     public function integer(bool $signed = false): string
     {
         $bytes = $this->integerBytes();
+        if (strlen(ltrim($bytes, "\0")) > Bytes::MAX_DECIMAL_OCTETS) {
+            throw new Asn1Exception(sprintf('INTEGER at offset %d has %d octets; at most %d are read as a number (SPEC-016 amendment 5)', $this->offset, strlen($bytes), Bytes::MAX_DECIMAL_OCTETS));
+        }
         if (ord($bytes[0]) < 0x80) {
             return Bytes::hexToDecimal(bin2hex($bytes));
         }

@@ -7143,3 +7143,29 @@ README are where the disclosure lives.
   not depend on the reader it exercises; the scratch probe used the
   reader and was not carried over.
 - Decided by Maurice: both amendments confirmed.
+
+## 2026-09-25 — Step 154: SPEC-016 amendment 5, SPEC-015 amendment 6
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, bereid punt 1 voor"; then "ja ga verder, bevestigd".
+- Produced: SPEC-016 amendment 5 (AC12) and SPEC-015 amendment 6 (AC11),
+  their Traceability rows; `bin/make-integer-bound-variants.php`;
+  `tests/Fixtures/integer-bound/` (three signed files, the public root,
+  settings, README) and c2patool 0.27.22 and 0.28.0 JSON in
+  `tests/Fixtures/c2patool/integer-bound/`; `tests/Unit/Asn1/IntegerBoundTest.php`;
+  the limb conversion and `MAX_DECIMAL_OCTETS` in `Bytes`, the bound in
+  `Der::integer()` and `Certificate`; a row in `docs/comparison.md`;
+  `notes/step-154-integer-bound.md`; CHANGELOG, NOTES and milestones
+  rows. Committed locally, not pushed.
+- Measured: the review's probe reproduced (35.8 s); the quadratic cost
+  (0.54 / 2.1 / 8.6 s at 2,000 / 4,000 / 8,000 octets); every INTEGER
+  converted over the fixtures (150,540) and the 78 current-writer files
+  (1,414), at most 20 octets; both `c2patool` versions on leaves with
+  20- to 257-octet serials (all `Trusted`); the limb conversion against
+  the old one (3,008 comparisons, no difference, about 60× faster); the
+  tests red, then green; `composer check` (519 passed); 19,686 runs (51
+  moved, all `serial-257.jpg`); the fuzzer (0 faults, the same 34
+  suspects); the cost at the bound (1,000 certificates in 0.22 s).
+- Reasoned: ADR-0005 puts the bound under *Where `c2patool` can do more*,
+  since it protects resources, not a verdict.
+- Decided by Maurice: the bound of 256 octets with the faster
+  conversion (over 64 alone, or 1,024); both amendments confirmed.
