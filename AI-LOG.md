@@ -7169,3 +7169,34 @@ README are where the disclosure lives.
   since it protects resources, not a verdict.
 - Decided by Maurice: the bound of 256 octets with the faster
   conversion (over 64 alone, or 1,024); both amendments confirmed.
+
+## 2026-09-25 — Step 155: SPEC-043, hostile input
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, bereid de CBOR-geheugenexplosie voor, alle dingen in de
+  lijst mogen in 1 spec om wat meer tempo te maken, als dat kan"; then
+  "ja ga verder, bevestigd".
+- Produced: `specs/SPEC-043-hostile-input.md` (draft, then approved, then
+  implemented); `bin/make-hostile-input-variants.php`;
+  `tests/Fixtures/hostile/` (two one-byte variants, README) and the answers
+  of c2patool 0.27.22 and 0.28.0 in `tests/Fixtures/c2patool/hostile/`;
+  `tests/Unit/Verifier/HostileInputTest.php`; `Cbor\CborBudget` and its use
+  in `CborDecoder`, `Manifest` and `ManifestStore`; bounds in
+  `IsobmffManifestStoreExtractor`; `Manifest::mediaType()`;
+  `Certificate::withoutWarnings()`; `Command::local()` and the seekable
+  check; the SPEC-006 AC6 test given a wider total budget;
+  `notes/step-155-hostile-input.md`; CHANGELOG, NOTES and milestones rows.
+  Committed locally, not pushed.
+- Measured: every review probe before and after, under a 128 MB limit; the
+  CBOR item totals of 282,702 decodes over the fixtures and the 78
+  current-writer files (at most 5,285 per file); the reduction of the
+  fuzzer's OpenSSL case to one byte; both `c2patool` versions on the two
+  new files; the tests red (6 of 6, and the three hidden parts run apart),
+  then green; `composer check` (525 passed); 19,788 runs compared by key
+  (one status list changed); the fuzzer (0 faults, the same 34 suspects).
+- Reasoned: that `http://` would fetch, from `fopen()` and
+  `allow_url_fopen`, not run so that no request left the machine;
+  refusing a pipe rather than copying it, since a copy needs its own bound.
+- Decided by Maurice: the six findings in one spec; SPEC-043 approved.
+- Note on order: the tests were written while SPEC-043 was a draft, and
+  `bin/spec-check.php` said so ("tests precede approval"). Nothing was
+  committed before the approval.

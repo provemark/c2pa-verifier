@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Manifest;
 
+use Provemark\C2paVerifier\Cbor\CborBudget;
 use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cbor\CborDecoder;
 use Provemark\C2paVerifier\Cbor\CborException;
@@ -112,8 +113,9 @@ final readonly class Manifest
     }
 
     /** The manifest as read, its references not yet checked: ManifestStore needs every claim before it can check any. */
-    public static function read(Superbox $box): self
+    public static function read(Superbox $box, ?CborBudget $budget = null): self
     {
+        $budget ??= new CborBudget;
         $label = $box->description->label;
         $manifestUrl = sprintf('self#jumbf=/c2pa/%s', $label);
         $assertionStore = self::theOne($box, JumbfParser::UUID_ASSERTION_STORE, 'c2pa.assertions', 'assertion store', $label, StatusCode::ClaimMalformed, $manifestUrl);
@@ -131,7 +133,7 @@ final readonly class Manifest
         $signatureUrl = sprintf('%s/c2pa.signature', $manifestUrl);
         $signatureBox = self::theOne($box, JumbfParser::UUID_CLAIM_SIGNATURE, 'c2pa.signature', 'signature box', $label, StatusCode::ClaimSignatureMissing, $signatureUrl);
 
-        $claim = self::at($claimUrl, static function () use ($claimBox, $label): Claim {
+        $claim = self::at($claimUrl, static function () use ($claimBox, $label, $budget): Claim {
             $version = match ($claimBox->description->label) {
                 'c2pa.claim' => 1,
                 'c2pa.claim.v2' => 2,
@@ -142,7 +144,7 @@ final readonly class Manifest
                 ), StatusCode::ClaimMalformed),
             };
             $claimData = self::singleCbor($claimBox, 'claim box', $label, StatusCode::ClaimMalformed);
-            $claimMap = self::decodeCbor($claimData, sprintf('manifest %s: the claim', $label), StatusCode::ClaimCborInvalid);
+            $claimMap = self::decodeCbor($claimData, sprintf('manifest %s: the claim', $label), $budget, StatusCode::ClaimCborInvalid);
             if (! is_array($claimMap) || array_is_list($claimMap)) {
                 throw new ManifestException(sprintf('manifest %s: the claim is not a CBOR map', $label), StatusCode::ClaimCborInvalid);
             }
@@ -154,7 +156,7 @@ final readonly class Manifest
         $assertions = [];
         foreach ($assertionStore->superboxes() as $assertionBox) {
             $assertionLabel = $assertionBox->description->label;
-            $data = self::at(sprintf('%s/c2pa.assertions/%s', $manifestUrl, $assertionLabel), static fn (): mixed => self::assertionData($assertionBox));
+            $data = self::at(sprintf('%s/c2pa.assertions/%s', $manifestUrl, $assertionLabel), static fn (): mixed => self::assertionData($assertionBox, $budget));
             $assertions[$assertionLabel] = new Assertion($assertionLabel, $assertionBox, $data);
         }
 
@@ -293,17 +295,17 @@ final readonly class Manifest
         return $content[0]->data;
     }
 
-    private static function decodeCbor(string $data, string $what, StatusCode $status = StatusCode::GeneralError): mixed
+    private static function decodeCbor(string $data, string $what, CborBudget $budget, StatusCode $status = StatusCode::GeneralError): mixed
     {
         try {
-            return (new CborDecoder)->decode($data);
+            return (new CborDecoder)->decode($data, $budget);
         } catch (CborException $e) {
             throw new ManifestException(sprintf('%s: invalid CBOR: %s', $what, $e->getMessage()), $status, $e);
         }
     }
 
     /** An assertion's data by the kind of content box it holds: one kind, one box. */
-    private static function assertionData(Superbox $box): mixed
+    private static function assertionData(Superbox $box, CborBudget $budget): mixed
     {
         $label = $box->description->label;
         $byType = [];
@@ -312,7 +314,7 @@ final readonly class Manifest
         }
         $kinds = array_keys($byType);
         if ($kinds === ['cbor']) {
-            return self::decodeCbor(self::only($byType['cbor'], $label), sprintf('assertion %s', $label));
+            return self::decodeCbor(self::only($byType['cbor'], $label), sprintf('assertion %s', $label), $budget);
         }
         if ($kinds === ['json']) {
             try {
@@ -348,6 +350,10 @@ final readonly class Manifest
             throw new ManifestException(sprintf('assertion %s: the embedded-file description has no media type', $label));
         }
 
-        return substr($bfdb, 1, $end - 1);
+        $type = substr($bfdb, 1, $end - 1);
+
+        // SPEC-043 AC3: a media type that is not UTF-8 reads as empty, as c2patool renders it; it goes
+        // into the report, which is JSON, and it binds nothing (the assertion's hash covers the box)
+        return mb_check_encoding($type, 'UTF-8') ? $type : '';
     }
 }

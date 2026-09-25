@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Cbor\CborBudget;
 use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cbor\CborDecoder;
 use Provemark\C2paVerifier\Cbor\CborException;
@@ -220,7 +221,10 @@ it('AC6: indefinite lengths decode, bounded like everything else', function (): 
         expect(fn () => spec006Decode($hex))->toThrow(CborException::class, $where);
     }
     $tooMany = '9f'.str_repeat('00', CborDecoder::DEFAULT_MAX_ITEMS + 1).'ff';
-    expect(fn () => spec006Decode($tooMany))->toThrow(CborException::class, 'above the limit of '.CborDecoder::DEFAULT_MAX_ITEMS);
+    // a total budget above the per-container limit, so that it is the container's bound this proves
+    // (SPEC-043 AC1 added the total, which alone would refuse this one item earlier)
+    expect(fn () => (new CborDecoder)->decode((string) hex2bin($tooMany), new CborBudget(2 * CborDecoder::DEFAULT_MAX_ITEMS)))
+        ->toThrow(CborException::class, 'above the limit of '.CborDecoder::DEFAULT_MAX_ITEMS);
 
     $claim = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/cbor/claim-indefinite-array.cbor');
     $decoded = (new CborDecoder)->decode($claim);

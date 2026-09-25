@@ -104,15 +104,23 @@ final readonly class Certificate
         $this->sha256 = hash('sha256', $der, true);
 
         if ($parsed === null) {
-            $parsed = openssl_x509_parse($handle);
+            // SPEC-043 AC4: a warning here means a field was not read as DER defines it (a NUL inside a
+            // UTCTime: "Illegal length in timestamp"); c2patool refuses such a certificate, so does this
+            $parsed = self::withoutWarnings(static fn (): array|false => openssl_x509_parse($handle), $warning);
+            if ($warning !== null) {
+                throw new TrustException(sprintf('a certificate of %d bytes could not be parsed: %s', strlen($der), $warning));
+            }
         }
         if ($parsed === false || ! is_array($parsed['subject'] ?? null) || ! is_array($parsed['issuer'] ?? null)) {
             throw new TrustException(sprintf('a certificate of %d bytes could not be parsed', strlen($der)));
         }
         if ($key === null) {
-            $public = openssl_pkey_get_public($handle);
-            $details = $public === false ? false : openssl_pkey_get_details($public);
-            if ($details === false) {
+            $details = self::withoutWarnings(static function () use ($handle): array|false {
+                $public = openssl_pkey_get_public($handle);
+
+                return $public === false ? false : openssl_pkey_get_details($public);
+            }, $warning);
+            if ($details === false || $warning !== null) {
                 throw new TrustException(sprintf('the public key of a certificate of %d bytes could not be read', strlen($der)));
             }
             $key = [];
@@ -164,12 +172,38 @@ final readonly class Certificate
     /** Is this certificate's signature made by $issuer's key? openssl_x509_verify(): 1 yes, 0 no, -1 error — only 1 counts. */
     public function signedBy(self $issuer): bool
     {
-        $key = openssl_pkey_get_public($issuer->handle);
-        if ($key === false) {
-            return false;
-        }
+        return self::withoutWarnings(function () use ($issuer): bool {
+            $key = openssl_pkey_get_public($issuer->handle);
 
-        return openssl_x509_verify($this->handle, $key) === 1;
+            return $key !== false && openssl_x509_verify($this->handle, $key) === 1;
+        }, $warning);
+    }
+
+    /**
+     * $call with PHP's warnings caught rather than printed (SPEC-043 AC4: a warning on standard output
+     * breaks the JSON report); the first one is handed back in $warning, OpenSSL's queue is left as is.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $call
+     *
+     * @param-out  string|null  $warning
+     *
+     * @return T
+     */
+    private static function withoutWarnings(callable $call, ?string &$warning = null): mixed
+    {
+        $warning = null;
+        set_error_handler(static function (int $severity, string $message) use (&$warning): bool {
+            $warning ??= preg_replace('/^openssl_[a-z0-9_]+\(\): /', '', $message);
+
+            return true;
+        });
+        try {
+            return $call();
+        } finally {
+            restore_error_handler();
+        }
     }
 
     public function sameAs(self $other): bool

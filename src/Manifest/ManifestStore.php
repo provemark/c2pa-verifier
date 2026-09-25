@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Manifest;
 
+use Provemark\C2paVerifier\Cbor\CborBudget;
 use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cbor\CborException;
 use Provemark\C2paVerifier\Cbor\CborTag;
@@ -35,11 +36,13 @@ final readonly class ManifestStore
         // every manifest read first, because a claim may redact an assertion of any other (SPEC-035
         // open question 1: the union of every claim's list); a manifest that cannot be read is
         // reported where it stands in the store, after the references of the ones before it
+        // one CBOR budget for the whole store: what is decoded here stays in memory (SPEC-043 AC1)
+        $budget = new CborBudget;
         $read = [];
         foreach ($root->superboxes() as $child) {
             if (in_array($child->description->uuid, [JumbfParser::UUID_MANIFEST, JumbfParser::UUID_UPDATE_MANIFEST], true)) {
                 try {
-                    $read[] = Manifest::read($child);
+                    $read[] = Manifest::read($child, $budget);
                 } catch (ManifestException|CborException $e) {
                     $read[] = $e;
                     break;

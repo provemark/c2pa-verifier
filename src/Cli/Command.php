@@ -145,6 +145,10 @@ final readonly class Command
      */
     private function open(string $path)
     {
+        $local = self::local($path);
+        if ($local === null) {
+            return ['reason' => 'No such file or directory'];
+        }
         $reason = 'unknown reason';
         set_error_handler(static function (int $severity, string $message) use (&$reason): bool {
             $reason = self::reason($message);
@@ -152,12 +156,35 @@ final readonly class Command
             return true;
         });
         try {
-            $stream = fopen($path, 'rb');
+            $stream = fopen($local, 'rb');
         } finally {
             restore_error_handler();
         }
+        if ($stream === false) {
+            return ['reason' => $reason];
+        }
+        // SPEC-043 AC5: the verifier reads a file twice (the store, then the hashed bytes); a pipe or a
+        // FIFO cannot be read twice, and copying one would need a bound of its own on disk
+        if (stream_get_meta_data($stream)['seekable'] !== true) {
+            fclose($stream);
 
-        return $stream === false ? ['reason' => $reason] : $stream;
+            return ['reason' => 'the input cannot seek (a pipe, a FIFO or a terminal); save it to a file and verify that'];
+        }
+
+        return $stream;
+    }
+
+    /**
+     * The path as a local file, or null (SPEC-043 AC6). fopen() on the argument itself would honour
+     * PHP's wrappers — data:, php://, phar://, and http:// with allow_url_fopen, a network request
+     * in the verification path — and would read a file named "data:,x" as the text "x". realpath()
+     * resolves only files that exist, and "file://" in front leaves no wrapper to choose.
+     */
+    private static function local(string $path): ?string
+    {
+        $real = realpath($path);
+
+        return $real === false ? null : 'file://'.$real;
     }
 
     /**
@@ -167,7 +194,11 @@ final readonly class Command
      */
     private function read(string $path): string|array
     {
-        if (is_dir($path)) {
+        $local = self::local($path);
+        if ($local === null) {
+            return ['reason' => 'No such file or directory'];
+        }
+        if (is_dir($local)) {
             return ['reason' => 'Is a directory'];
         }
         $reason = 'unknown reason';
@@ -177,7 +208,7 @@ final readonly class Command
             return true;
         });
         try {
-            $json = file_get_contents($path);
+            $json = file_get_contents($local);
         } finally {
             restore_error_handler();
         }

@@ -38,6 +38,13 @@ final readonly class IsobmffManifestStoreExtractor
     /** The only purpose this spec reads. `merkle` belongs to fragmented files. */
     public const PURPOSE_MANIFEST = 'manifest';
 
+    /**
+     * The longest purpose string read, NUL excluded (SPEC-043 AC2). The purposes C2PA defines are
+     * `manifest`, `original` and `merkle`; without a bound, a box with no NUL was read a byte at a time
+     * to its end.
+     */
+    public const MAX_PURPOSE_LENGTH = 64;
+
     /** SPEC-024: the same 16 MiB bound the other three containers carry. */
     public const DEFAULT_MAX_BOX_LENGTH = 16 * 1024 * 1024;
 
@@ -177,6 +184,9 @@ final readonly class IsobmffManifestStoreExtractor
                     $remaining = $available - 4;
                     $purpose = '';
                     while ($remaining > 0) {
+                        if (strlen($purpose) >= self::MAX_PURPOSE_LENGTH) {
+                            throw new ContainerException(sprintf('C2PA box at offset %d: the purpose string runs past %d bytes without a terminating NUL', $offset, self::MAX_PURPOSE_LENGTH));
+                        }
                         $byte = $reader->readExactly(1, $offset, 'the purpose');
                         $remaining--;
                         if ($byte === "\x00") {
@@ -185,9 +195,18 @@ final readonly class IsobmffManifestStoreExtractor
                         $purpose .= $byte;
                     }
 
-                    return $purpose === 'merkle' && $remaining > 0
-                        ? $reader->readExactly($remaining, $offset, 'the merkle data')
-                        : null;
+                    if ($purpose !== 'merkle' || $remaining <= 0) {
+                        return null;
+                    }
+                    // SPEC-043 AC2: the store's bounds, before a byte of it is read
+                    if ($remaining > $this->maxBoxLength) {
+                        throw new ContainerException(sprintf('C2PA merkle box at offset %d holds %d bytes, over the limit of %d', $offset, $remaining, $this->maxBoxLength));
+                    }
+                    if (! $this->budget->allows($remaining)) {
+                        throw new ContainerException(sprintf('C2PA merkle box at offset %d holds %d bytes, which does not fit this host: %d bytes of memory remain', $offset, $remaining, $this->budget->remainingBytes() ?? 0));
+                    }
+
+                    return $reader->readExactly($remaining, $offset, 'the merkle data');
                 }
             }
             $reader->skip($size - $read, $offset);
@@ -367,6 +386,13 @@ final readonly class IsobmffManifestStoreExtractor
                 throw new ContainerException(sprintf(
                     'C2PA box at offset %d: the purpose string is not terminated inside the box',
                     $offset,
+                ));
+            }
+            if (strlen($purpose) >= self::MAX_PURPOSE_LENGTH) {
+                throw new ContainerException(sprintf(
+                    'C2PA box at offset %d: the purpose string runs past %d bytes without a terminating NUL',
+                    $offset,
+                    self::MAX_PURPOSE_LENGTH,
                 ));
             }
             $byte = $reader->readExactly(1, $offset, 'the purpose');

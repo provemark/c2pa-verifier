@@ -38,10 +38,10 @@ final readonly class CborDecoder
      *
      * @throws CborException
      */
-    public function decode(string $bytes): mixed
+    public function decode(string $bytes, ?CborBudget $budget = null): mixed
     {
         $offset = 0;
-        $value = $this->item($bytes, $offset, 0);
+        $value = $this->item($bytes, $offset, 0, $budget ?? new CborBudget);
         if ($offset !== strlen($bytes)) {
             throw new CborException(sprintf(
                 '%d byte(s) remain after the value, which ended at offset %d',
@@ -54,9 +54,10 @@ final readonly class CborDecoder
     }
 
     /** One data item at $offset; $offset is left after it. */
-    private function item(string $bytes, int &$offset, int $depth): mixed
+    private function item(string $bytes, int &$offset, int $depth, CborBudget $budget): mixed
     {
         $head = $offset;
+        $budget->take($head);
         $initial = ord($this->take($bytes, $offset, 1, sprintf('the initial byte of the item at offset %d', $head)));
         $majorType = $initial >> 5;
         $additional = $initial & 0x1F;
@@ -68,8 +69,8 @@ final readonly class CborDecoder
             return match ($majorType) {
                 2 => new CborBytes($this->chunks($bytes, $offset, $head, 2, 'byte string')),
                 3 => $this->text($this->chunks($bytes, $offset, $head, 3, 'text string'), $head),
-                4 => $this->array($bytes, $offset, $head, null, $depth),
-                5 => $this->map($bytes, $offset, $head, null, $depth),
+                4 => $this->array($bytes, $offset, $head, null, $depth, $budget),
+                5 => $this->map($bytes, $offset, $head, null, $depth, $budget),
                 7 => throw new CborException(sprintf('break at offset %d outside an indefinite-length item', $head)),
                 default => throw new CborException(sprintf('major type %d at offset %d cannot have an indefinite length', $majorType, $head)),
             };
@@ -90,13 +91,13 @@ final readonly class CborDecoder
             case 3:
                 return $this->text($this->string($bytes, $offset, $head, $argument, 'text string'), $head);
             case 4:
-                return $this->array($bytes, $offset, $head, $argument, $depth);
+                return $this->array($bytes, $offset, $head, $argument, $depth, $budget);
             case 5:
-                return $this->map($bytes, $offset, $head, $argument, $depth);
+                return $this->map($bytes, $offset, $head, $argument, $depth, $budget);
             default:
                 $this->enter($depth, $head);
 
-                return new CborTag($this->fits($argument, $head), $this->item($bytes, $offset, $depth + 1));
+                return new CborTag($this->fits($argument, $head), $this->item($bytes, $offset, $depth + 1, $budget));
         }
     }
 
@@ -268,7 +269,7 @@ final readonly class CborDecoder
      * @param  int|null  $count  null: indefinite, items until a break, counted against the same limit
      * @return list<mixed>
      */
-    private function array(string $bytes, int &$offset, int $head, ?int $count, int $depth): array
+    private function array(string $bytes, int &$offset, int $head, ?int $count, int $depth, CborBudget $budget): array
     {
         $this->countable('array', $head, $count ?? 0);
         $this->enter($depth, $head);
@@ -277,7 +278,7 @@ final readonly class CborDecoder
             if ($count === null) {
                 $this->countable('array', $head, $i + 1);
             }
-            $items[] = $this->item($bytes, $offset, $depth + 1);
+            $items[] = $this->item($bytes, $offset, $depth + 1, $budget);
         }
 
         return $items;
@@ -287,7 +288,7 @@ final readonly class CborDecoder
      * @param  int|null  $count  null: indefinite, pairs until a break, counted against the same limit
      * @return array<int|string, mixed>
      */
-    private function map(string $bytes, int &$offset, int $head, ?int $count, int $depth): array
+    private function map(string $bytes, int &$offset, int $head, ?int $count, int $depth, CborBudget $budget): array
     {
         $this->countable('map', $head, $count ?? 0);
         $this->enter($depth, $head);
@@ -297,7 +298,7 @@ final readonly class CborDecoder
                 $this->countable('map', $head, $i + 1);
             }
             $keyOffset = $offset;
-            $key = $this->item($bytes, $offset, $depth + 1);
+            $key = $this->item($bytes, $offset, $depth + 1, $budget);
             if (! is_int($key) && ! is_string($key)) {
                 throw new CborException(sprintf('map key at offset %d is %s; keys must be integers or text', $keyOffset, self::kind($key)));
             }
@@ -307,7 +308,7 @@ final readonly class CborDecoder
             }
             // The value first, so a truncated map is reported as truncation
             // (RFC 8949 Appendix F lists "a2 00 00 00" that way), then the key.
-            $value = $this->item($bytes, $offset, $depth + 1);
+            $value = $this->item($bytes, $offset, $depth + 1, $budget);
             if (array_key_exists($key, $map)) {
                 throw new CborException(sprintf('duplicate map key %s at offset %d', self::show($key), $keyOffset));
             }

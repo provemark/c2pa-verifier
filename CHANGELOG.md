@@ -66,6 +66,25 @@ patch release.
   certificate serial, `signingCredential.invalid`. The last is a stated
   difference: `c2patool` reads such a certificate. RFC 5280 allows 20
   octets, and no file measured carries more. Present in 0.1.0 to 0.2.1.
+- **Security: hostile input ends in a report or a refusal (SPEC-043).**
+  Six ways to crash the verifier, exhaust its memory or corrupt its output,
+  none needing a key. All were present in 0.1.0 to 0.2.1:
+  - a claim of nested CBOR arrays took hundreds of MiB; the items of a
+    manifest store now have one budget of 65,536;
+  - an ISOBMFF `merkle` box was read whole whatever its size, and a
+    purpose string without a NUL was read to the box's end; both are
+    bounded now;
+  - a thumbnail media type that is not UTF-8 made the JSON report throw;
+    it now reads as `""`, as in `c2patool`;
+  - OpenSSL warnings reached standard output ahead of the JSON; they are
+    caught, and a certificate whose parse warns is
+    `signingCredential.invalid`;
+  - a pipe or FIFO as input ended with a PHP error; the command now exits
+    2 with a reason;
+  - the command opened PHP stream wrappers (`data:`, `php://`, and
+    `http://`, a network request); it now opens local files only, for the
+    input and for `--settings`, and a file named like a wrapper is read as
+    that file.
 - **A JPEG whose first APP11 piece carries packet sequence number 0 is
   read (SPEC-041).** Microsoft Bing Image Creator writes every store this
   way, and both `c2patool` versions read it. Every later piece must still
