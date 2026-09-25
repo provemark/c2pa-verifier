@@ -5,7 +5,7 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## 0.2.2 — unreleased (a security release; dated when it is tagged)
+## 0.2.2 — 2026-09-25
 
 A security release. A review of the whole code base on 2026-09-25 found
 five ways to reach a wrong verdict, and eight ways to crash the verifier,

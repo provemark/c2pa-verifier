@@ -7211,3 +7211,12 @@ README are where the disclosure lives.
 - Measured: `composer check` (525 passed).
 - Decided by Maurice: the release is prepared locally; nothing is
   published until he says so.
+
+## 2026-09-25 — Release 0.2.2
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "push main en tag v0.2.2".
+- Produced: the CHANGELOG heading dated; this entry; `main` pushed; the
+  annotated tag `v0.2.2` on this commit, pushed after CI.
+- Measured: `composer check`; the commit messages checked for attribution
+  lines before the push; CI on the pushed commit.
+- Decided by Maurice: push and tag 0.2.2.
