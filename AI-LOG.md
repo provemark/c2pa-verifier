@@ -6887,3 +6887,23 @@ README are where the disclosure lives.
 - Reasoned: AC3 is red because the first piece is refused before the
   second is reached — the right file refused for the wrong reason.
 - Decided by Maurice: go-ahead for step 142a.
+
+## 2026-09-25 — SPEC-041 built
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, akkoord, bouw maar" (step 142b); then, when AC1 stayed red
+  on a second cause, "ja, akkoord met het amendement en SPEC-042".
+- Produced: `src/Container/JpegManifestStoreExtractor.php` (a first
+  Z = 0 accepted); SPEC-041 amendment 1, Traceability, status
+  `implemented`; AC1 of `FirstPieceSequenceTest.php` narrowed;
+  `docs/comparison.md` (the Bing row, a row for the signature URI);
+  `notes/step-142-spec041.md` part b; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: `vendor/bin/pest --group=SPEC-041` (5 passed); `composer
+  check` (exit 0, 503 passed); 122 JPEG fixtures through
+  `bin/c2pa-verify` with and without the change, state and sorted codes
+  compared: two files moved. The Bing file's signature URI form read
+  from its bytes, and counted over the nine Bing files and the corpus.
+- Reasoned: the signature URI is JUMBF resolution, a second concept, so
+  it gets its own spec.
+- Decided by Maurice: amendment 1 to SPEC-041 (confirmed); SPEC-042 as
+  the next draft.

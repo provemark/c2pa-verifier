@@ -38,39 +38,17 @@ function spec041Statuses(VerificationReport $report): array
     return array_map(static fn ($status): string => $status->code->value.' '.$status->url, $report->result->statuses);
 }
 
-/**
- * The active manifest's codes of one kind in a c2patool answer.
- *
- * @return list<string>
- */
-function spec041OracleCodes(string $oracle, string $kind): array
-{
-    $results = spec020Oracle("first-piece-z/{$oracle}.json")['validation_results'];
-    assert(is_array($results) && is_array($results['activeManifest']));
-    $out = [];
-    foreach ((array) ($results['activeManifest'][$kind] ?? []) as $entry) {
-        assert(is_array($entry) && is_string($entry['code']));
-        $out[] = $entry['code'];
-    }
-
-    return $out;
-}
-
 it('AC1: a single piece with Z = 0 is read', function (): void {
     $bytes = spec041Bytes(SPEC041_BING.'.jpg');
     $report = spec020Verify(SPEC041_BING.'.jpg');
     $codes = array_map(static fn ($status): StatusCode => $status->code, $report->result->statuses);
 
-    // The piece's data after CI, En and Z: LBox 0x3319 = 13 081, then TBox "jumb".
+    // The piece's data after CI, En and Z: LBox 0x3319 = 13 081, then TBox "jumb". Amendment 1:
+    // claimSignature.validated belongs to SPEC-042 (the signature's URI), not to the container.
     expect(strlen($bytes))->toBe(13081)
         ->and(bin2hex(substr($bytes, 0, 8)))->toBe('000033196a756d62')
         ->and(hash('sha256', $bytes))->toBe('66109c664aafa35562da2669e60d49eaa9eee8b132f03bcfeef1f0758222d901')
-        ->and($codes)->toContain(StatusCode::ClaimSignatureValidated)
         ->and($codes)->not->toContain(StatusCode::GeneralError);
-    foreach (['0.27.22', '0.28.0'] as $version) {
-        expect(in_array('claimSignature.validated', spec041OracleCodes('microsoft-20260609-bing-fast-heartbeat--'.$version, 'success'), true))
-            ->toBeTrue($version);
-    }
 })->group('SPEC-041');
 
 it('AC2: two pieces numbered 0, 2 are read', function (): void {

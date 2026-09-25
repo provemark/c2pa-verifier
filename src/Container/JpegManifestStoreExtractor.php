@@ -142,7 +142,10 @@ final readonly class JpegManifestStoreExtractor
             if ($fields['lbox'] < 8) {
                 throw new ContainerException(sprintf('LBox %d in piece %d is not a supported box length', $fields['lbox'], $pieceNumber));
             }
-            if ($fields['z'] !== $pieceNumber) {
+            // SPEC-041: Bing Image Creator numbers its first (and only) piece 0, which c2pa-rs
+            // reads; every later piece still carries its own number.
+            $firstPieceZero = $pieceNumber === 1 && $fields['z'] === 0;
+            if ($fields['z'] !== $pieceNumber && ! $firstPieceZero) {
                 throw new ContainerException(sprintf(
                     'piece out of order at offset %d: packet sequence number expected %d, found %d',
                     $offset,

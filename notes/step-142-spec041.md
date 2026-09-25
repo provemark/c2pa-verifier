@@ -61,3 +61,41 @@ now uses `in_array(…)` with `toBeTrue($message)`.
 `composer check` is otherwise clean: 500 passed.
 
 Committed locally, not pushed.
+
+## 142b — built
+
+`JpegManifestStoreExtractor::extract()` accepts Z = 0 on the first piece
+and nothing else new. Every later piece still carries its own number, and
+the error message is unchanged. `vendor/bin/pest --group=SPEC-041`:
+**5 passed**. `composer check`: exit 0, 503 passed.
+
+**What moved.** Every JPEG under `tests/Fixtures` (122 files) was run
+through `bin/c2pa-verify` with and without the change, comparing the state
+and the sorted status codes with their urls. The explanations were left
+out, because they carry the time of the run. Two files moved:
+
+- `first-piece-z/zero-two.jpg`: `Invalid` → `Valid`, as both `c2patool`
+  versions say;
+- the Bing file: `general.error` → `claimSignature.missing`.
+
+A first comparison of the raw JSON seemed to move eleven files more. Those
+were explanations naming *now* (*"expired at 2026-09-25T…"*), not the
+change.
+
+**The Bing file is still `Invalid`, for a different reason.** With the
+container read, its claim names its signature as
+`self#jumbf=c2pa/urn:uuid:…/c2pa.signature`. That is a path without the
+leading slash which still starts with `c2pa/` and the manifest label. This
+verifier reads it as relative to the manifest and finds no `c2pa` box
+there. Both `c2patool` versions find the signature. All nine Bing files
+of step 141 carry this form. In the corpus it occurs once more, in
+`c2pa-rs/prerelease.jpg`, which is refused earlier for other reasons. It
+is a question of JUMBF URI resolution, not of the JPEG container.
+Amendment 1, confirmed by Maurice van Loon the same day, therefore narrows
+AC1 to the container (the store read, no `general.error`) and leaves
+`claimSignature.validated` to SPEC-042. The `not->toContain(general.error)`
+in AC1 was seen failing before the change: the report then carried
+exactly that code.
+
+`docs/comparison.md`: the Bing row now says a first Z = 0 is read, and a
+new row names the signature URI and SPEC-042.

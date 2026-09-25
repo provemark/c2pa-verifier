@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-25                      |
 | Supersedes | —                                                 |
@@ -67,9 +67,9 @@ reader accepts.
     Commons; sha1 `cf21a619deb9e6d27da99c8ee36e3d81dd0d82b4`)
   - When the JPEG extractor runs
   - Then it returns the store: 13 081 bytes, equal to the piece's data
-    after CI, En and Z. When the file is verified, the report carries
-    `claimSignature.validated` and no `general.error`, as both `c2patool`
-    versions report for it.
+    after CI, En and Z. When the file is verified, the report carries no
+    `general.error` *(amendment 1: `claimSignature.validated` moved to
+    SPEC-042)*.
 
 - **AC2 — two pieces numbered 0, 2 are read**
   - Given `fixture-signed.jpg` with its first piece's Z rewritten from 1
@@ -177,14 +177,33 @@ questions 2 and 3 as proposed.
    `claimSignature.validated` and the absence of `general.error`, not on
    `validation_state`. Proposal: as written. *(not a blocker)*
 
+## Amendments
+
+1. **2026-09-25, step 142b, measured.** With the first piece accepted, the
+   Bing file is read, but its claim names its signature as
+   `self#jumbf=c2pa/urn:uuid:…/c2pa.signature`: a path without a leading
+   slash that still starts with `c2pa/` and the manifest label. This
+   verifier reads a path without a slash as relative to the manifest,
+   finds no `c2pa` box there, and reports `claimSignature.missing`. Both
+   `c2patool` versions find the signature. All nine Bing files of step 141
+   carry this form. It is a question of JUMBF URI resolution, not of the
+   JPEG container, so AC1's `claimSignature.validated` moves to SPEC-042,
+   and AC1 keeps what belongs to this spec: the store is read, and no
+   `general.error`.
+
+   Weight C: a criterion narrowed to its own concept, no behaviour
+   changed.
+
+   Confirmed by Maurice van Loon, 2026-09-25 (step 142).
+
 ## Traceability
 
 Filled when status becomes `implemented`.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
+| AC1 | tests/Unit/Container/FirstPieceSequenceTest.php :: AC1: a single piece with Z = 0 is read / SPEC-041 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$firstPieceZero`) |
+| AC2 | tests/Unit/Container/FirstPieceSequenceTest.php :: AC2: two pieces numbered 0, 2 are read / SPEC-041 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$firstPieceZero`) |
+| AC3 | tests/Unit/Container/FirstPieceSequenceTest.php :: AC3: after a first Z = 0 the second piece still needs Z = 2 / SPEC-041 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$firstPieceZero`) |
+| AC4 | tests/Unit/Container/FirstPieceSequenceTest.php :: AC4: any other first Z stays refused / SPEC-041 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$firstPieceZero`) |
+| AC5 | tests/Unit/Container/FirstPieceSequenceTest.php :: AC5: SPEC-001 AC3 is unchanged / SPEC-041 | src/Container/JpegManifestStoreExtractor.php :: extract() (`$firstPieceZero`); src/Container/ContainerException.php |
