@@ -6817,3 +6817,25 @@ README are where the disclosure lives.
   file; files from current writers are the stronger next measurement.
 - Decided by Maurice: to measure before choosing an issue, and to record
   it as a note.
+
+## 2026-09-25 — Files from current writers
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ik wil die meting doen op bestanden van actuele makers, kan je
+  die bestanden vinden?"; "er is ook c2patool 0.28"; then "ja, doe dat
+  maar" (record it, correct the comparison, name Bing as a spec
+  candidate).
+- Produced: `notes/step-141-current-writers.md`; two lines of
+  `docs/comparison.md` (the EKU row corrected, a row for the first
+  APP11 piece's Z); a row in `NOTES.md`. No specification, test or code
+  changed. The measured files stayed outside the repository.
+- Measured: newest uploads of 23 Wikimedia Commons categories fetched
+  through the MediaWiki API, kept when holding a C2PA store (79 found,
+  78 measured); `bin/c2pa-verify`, `c2patool` 0.27.22 and 0.28.0 on
+  each. 56 agree in all three; Bing ×9 refused here on Z = 0; Trufo-issued
+  OpenAI signers ×6 `Invalid` in 0.28.0 only; Firefly ×7 the documented
+  timestamp-authority divergence. Leaf EKUs read with `openssl x509`;
+  `c2pa-rs`'s `jpeg_io.rs` read at `ada3e4a`.
+- Reasoned: no wrong `Valid` on any current writer's file; the Bing
+  refusal is narrow and worth a spec after reading ISO/IEC 19566-5.
+- Decided by Maurice: to measure current writers, to include c2patool
+  0.28.0, and to record this as a note with the comparison corrected.
