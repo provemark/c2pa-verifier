@@ -83,7 +83,7 @@ final readonly class TstInfo
         if (count($imprint) !== 2) {
             throw new TimestampException(sprintf('messageImprint has %d fields, not hashAlgorithm and hashedMessage', count($imprint)));
         }
-        $hashAlgorithm = $imprint[0]->sequence()[0]->oid();
+        $hashAlgorithm = $imprint[0]->element(0)->oid();
         $hashedMessage = $imprint[1]->octets();
         $expected = self::DIGEST_LENGTHS[$hashAlgorithm] ?? null;
         if ($expected === null) {

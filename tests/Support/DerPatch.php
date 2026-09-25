@@ -112,6 +112,38 @@ final class DerPatch
     }
 
     /**
+     * Every constructed element with at least one child, as [offset, contents offset, contents length,
+     * the last child's offset], in file order — descending into an OCTET STRING that wraps a SEQUENCE,
+     * as splice() does (SPEC-016 amendment 4: each one emptied, and each without its last child).
+     *
+     * @return list<array{offset: int, contents: int, length: int, last: int}>
+     */
+    public static function constructed(string $bytes, int $offset = 0, ?int $end = null): array
+    {
+        $end ??= strlen($bytes);
+        $out = [];
+        while ($offset < $end) {
+            $element = self::element($bytes, $offset);
+            $contents = $offset + $element['headerLength'];
+            $descendable = ($element['tag'] & 0x20) !== 0 || ($element['tag'] === 0x04 && $element['length'] > 0 && ord($bytes[$contents]) === 0x30);
+            if ($descendable && $element['length'] > 0) {
+                $last = $contents;
+                for ($child = $contents; $child < $contents + $element['length']; $child += $c['headerLength'] + $c['length']) {
+                    $c = self::element($bytes, $child);
+                    $last = $child;
+                }
+                if (($element['tag'] & 0x20) !== 0) {
+                    $out[] = ['offset' => $offset, 'contents' => $contents, 'length' => $element['length'], 'last' => $last];
+                }
+                $out = [...$out, ...self::constructed($bytes, $contents, $contents + $element['length'])];
+            }
+            $offset = $contents + $element['length'];
+        }
+
+        return $out;
+    }
+
+    /**
      * The SET OF SignerInfo of a sigTst value: its offset, header length, contents offset and length. Found as the last child of SignedData.
      *
      * @return array{offset: int, headerLength: int, contents: int, length: int, tag: int}

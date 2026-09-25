@@ -102,6 +102,20 @@ final readonly class Der
         return $this->childrenOf(self::SEQUENCE);
     }
 
+    /**
+     * The i-th element of a SEQUENCE, read by position: a field the parser needs must exist, or it is
+     * an Asn1Exception rather than a PHP error on a missing index (SPEC-016 amendment 4).
+     */
+    public function element(int $i): self
+    {
+        $children = $this->sequence();
+        if (! isset($children[$i])) {
+            throw new Asn1Exception(sprintf('SEQUENCE at offset %d has %d element(s), no element %d', $this->offset, count($children), $i));
+        }
+
+        return $children[$i];
+    }
+
     /** @return list<Der> */
     public function set(): array
     {

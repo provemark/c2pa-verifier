@@ -113,7 +113,7 @@ final readonly class SignerInfo
             throw new TimestampException(sprintf('SignerInfo sid at offset %d is %s, neither issuerAndSerialNumber nor [0] subjectKeyIdentifier', $sid->offset, $sid->describe()));
         }
 
-        $digestAlgorithm = $fields[2]->sequence()[0]->oid();
+        $digestAlgorithm = $fields[2]->element(0)->oid();
 
         $i = 3;
         if (! $fields[$i]->is(TagClass::ContextSpecific, 0)) {   // the fourth field exists: five are checked above
@@ -162,7 +162,7 @@ final readonly class SignerInfo
             throw new TimestampException(sprintf('SignerInfo at offset %d ends before signatureAlgorithm and signature', $der->offset));
         }
         $signatureAlgorithmParts = $fields[$i]->sequence();
-        $signatureAlgorithm = $signatureAlgorithmParts[0]->oid();
+        $signatureAlgorithm = $fields[$i]->element(0)->oid();
         $signatureParameters = $signatureAlgorithm === self::OID_RSA_PSS && isset($signatureAlgorithmParts[1]) ? $signatureAlgorithmParts[1]->encoded() : null;
         $signature = $fields[$i + 1]->octets();
 

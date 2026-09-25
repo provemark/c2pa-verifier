@@ -7122,3 +7122,24 @@ README are where the disclosure lives.
   genuine files; the init segment's digest gets the tail too, since it
   is the same digest.
 - Decided by Maurice: amendment 4 confirmed.
+
+## 2026-09-25 — Step 153: SPEC-016 amendment 4, SPEC-030 amendment 3
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, bereid het eerste crashpunt voor"; then "ja ga verder,
+  bevestigd".
+- Produced: SPEC-016 amendment 4 and AC11, SPEC-030 amendment 3 and
+  AC11, their Traceability rows; `tests/Unit/Asn1/MissingElementTest.php`;
+  `DerPatch::constructed()`; `Der::element()` and its use at seven reads
+  in `SignedData`, `SignerInfo`, `TstInfo` and `OcspCheck`;
+  `notes/step-153-missing-der-element.md`; CHANGELOG, NOTES and
+  milestones rows. Committed locally, not pushed.
+- Measured: the review's probe reproduced (exit 255, PHP fatal error);
+  a scratch mutation probe, then the test (51 escapes at seven places,
+  none on a removed last child); AC11 red, then green; SPEC-016, -017,
+  -030 groups (70, 18, 11 passed); `composer check` (517 passed); 19,150
+  runs unchanged; `php bin/fuzz.php 20260925 60` before and after (0
+  faults, the same 34 suspects, all `Valid` in both `c2patool` versions).
+- Reasoned: `DerPatch` builds the test's patches because a patch must
+  not depend on the reader it exercises; the scratch probe used the
+  reader and was not carried over.
+- Decided by Maurice: both amendments confirmed.

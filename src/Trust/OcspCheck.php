@@ -236,7 +236,8 @@ final readonly class OcspCheck
 
             $data = $tbs->sequence();
             // ResponseData's version is [0] EXPLICIT and DEFAULT v1, so it is usually absent
-            $offset = $data[0]->class === TagClass::ContextSpecific && $data[0]->tag === 0 ? 1 : 0;
+            $first = $tbs->element(0);
+            $offset = $first->class === TagClass::ContextSpecific && $first->tag === 0 ? 1 : 0;
             $responderId = $data[$offset] ?? null;
             $producedAt = ($data[$offset + 1] ?? null)?->time();
             $responses = $data[$offset + 2] ?? null;

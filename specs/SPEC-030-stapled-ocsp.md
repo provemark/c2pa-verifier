@@ -228,6 +228,16 @@ assumption: this project fails closed.
   - Then the step stops at the limit with a skip naming it, before the
     bytes are read (SPEC-024).
 
+- **AC11 — an element that is not there is skipped, never a PHP error** *(amendment 3; required: malformed input)*
+  - Given `tests/Fixtures/ocsp/good.der`, `revoked.der` and `removed.der`,
+    each mutated once for every constructed element (emptied, and
+    without its last child), as in SPEC-016 AC11
+  - When each is stapled to the throw-away chain and checked, with every
+    PHP warning turned into an exception
+  - Then each gives its statuses, among them
+    `signingCredential.ocsp.skipped` for every mutation that breaks the
+    response, and nothing escapes.
+
 ## References
 
 - Specification: C2PA 2.4, the revocation steps of the signature
@@ -370,6 +380,16 @@ needs an amendment with this spec — the same shape as when
 
    Confirmed by Maurice van Loon, 2026-09-22 (step 93).
 
+3. **2026-09-25, step 153, found by the security review; measured** *(confirmed by Maurice van Loon, 2026-09-25)* —
+   with SPEC-016 amendment 4: an empty `ResponseData` was read at
+   position 0 without a check (`OcspCheck`, the optional version). That
+   raised a PHP warning, printed on standard output ahead of the JSON
+   report, followed by a read of a property on null. It now goes through
+   `Der::element()`, whose `Asn1Exception` the check already turns into
+   `signingCredential.ocsp.skipped`. Measured with AC11's mutations: 3
+   escapes before, one per fixture, all at that line. **Weight B**: a
+   warning becomes a status; no verdict changes. New criterion AC11.
+
 ## Open questions
 
 All three were answered on approval (Maurice van Loon, 2026-09-22) by
@@ -436,3 +456,4 @@ least one test; every source file maps back to this spec.
 | AC8 | `tests/Unit/Trust/OcspCheckTest.php :: AC8: removeFromCRL is not a revocation` | `Trust\OcspCheck::REASON_REMOVE_FROM_CRL`, `statusOf()`; `tests/Fixtures/ocsp/removed.der` |
 | AC9 | `tests/Unit/Trust/OcspCheckTest.php :: AC9: nothing that passed stops passing` | the twelve verdicts measured in step 92a; `Report\StatusCode::isInformational()` |
 | AC10 | `tests/Unit/Trust/OcspCheckTest.php :: AC10: bounded, like every other parser here` | `Trust\OcspCheck::DEFAULT_MAX_RESPONSES`, `DEFAULT_MAX_RESPONSE_BYTES`, `responseBytes()` |
+| AC11 | `tests/Unit/Asn1/MissingElementTest.php :: AC11 / SPEC-030` | `Trust\OcspCheck` (ResponseData's first element through `Der::element()`) |

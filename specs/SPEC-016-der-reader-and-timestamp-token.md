@@ -315,6 +315,19 @@ scratch script did. Byte vectors for AC1–AC2 are literals in the test.
     element count below 2 048 (measured in the tests-first step and
     written into the test as the ceiling the defaults leave room for).
 
+- **AC11 — an element that is not there is a refusal, never a PHP error** *(amendment 4; required: malformed input)*
+  - Given the timestamp tokens of `c2pa-rs/C.jpg` (RSA),
+    `public-testfiles/truepic-20230212-camera.jpg` (RSA with SHA-384) and
+    `c2pa-rs/ocsp.jpg` (ECDSA), each mutated once for every constructed
+    element: that element emptied, and separately without its last
+    child, with every enclosing length re-encoded by the test's own
+    `DerPatch`, which does not use the reader under test
+  - When each is parsed and judged, with every PHP warning turned into an
+    exception
+  - Then each either passes or is a `TimestampException`, which the check
+    reports as `timeStamp.malformed`. No warning, no `Error`, no other
+    exception escapes.
+
 ## References
 
 - Specification: X.690 (2021) §8.1 (identifier and length octets),
@@ -505,6 +518,30 @@ final class TimestampException extends \RuntimeException {}
 2. **2026-09-22, step 41b, found by the first green run** — the signer is not "the first certificate": DigiCert's tokens put the signer first, Truepic's put its root first and the signer last (AC4 and AC5 failed on Truepic with `RootCA` and `openssl_verify` 0). `SignedData::signerCertificate()` now returns the certificate the `sid` names — by issuer Name DER and serial, or by subjectKeyIdentifier (read from the certificate's own extensions; no corpus token uses that choice, so it is reasoned, not measured) — and AC4, AC5 and AC10 use it. AC10's "three certificates" is "two or three, the signer among them": the two `ocsp*.jpg` tokens carry two (an ECDSA TSA, "Adobe SHA256 ECC256 Timestamp Responder 2025 1", under the 2025 DigiCert CA — the first ECDSA timestamp signature for SPEC-017). Five literals in the tests were mine, not the oracle's, and were corrected against the measurement: the OID vector's length byte (`06 09`, not `06 0a`); the `TimeStampResp` head (`…3003020100`, 9 bytes = 18 hex digits); the leaf CN `DigiCert Timestamp 2022 - 2`; `genTime` at offset **86** of `CA_ct.jpg`'s TSTInfo; and the AC7 extension patch, which first used `[3]` with an EXPLICIT wrapper where RFC 3161 says `extensions [1] IMPLICIT Extensions` (the reader refuses both — the `[3]` as an unexpected field, the `[1]` for its critical extension — but the test must break what it claims to break).
 3. **2026-09-22, step 44, found by the writers corpus (step 43)** *(confirmed by Maurice van Loon, 2026-09-22)* — two of the reader's rules were true of the five tokens measured and wrong in general. (a) A negative INTEGER is legal DER and RFC 3161's `nonce` is a random value that TSA clients encode as they draw it: Amazon Bedrock's and `c2pa-ts`'s tokens carry `0x-335F9549` and `0x-612D17525B24B1B64D0E` (as `openssl ts -reply -text` prints them) and were `malformed` here. `Der::integer(bool $signed = false)`: with `$signed` a negative value is read as two's complement and returned as a decimal with a minus sign; `TstInfo` reads the nonce signed; serials, versions, accuracies stay non-negative (RFC 5280 §4.1.2.2 for serials). (b) A `GeneralizedTime` may carry fractional seconds (RFC 3161 §2.4.2) and c2patool keeps them in `signature_info.time` (`…55.837381+00:00`, `…40.669+00:00` — the token's own digits); `time()` still returns whole seconds, and `Der::timeFraction()` returns the digits after the point (or null); `TstInfo::$genTimeFraction` carries them. AC11 added: the three writer tokens parse with the signed nonces and the fractions named.
 
+4. **2026-09-25, step 153, found by the security review; measured** *(confirmed by Maurice van Loon, 2026-09-25)* —
+   a child the parser reads by position must exist. `Der::element(int $i)`
+   returns the i-th element of a SEQUENCE, or throws `Asn1Exception` when
+   the element is not a SEQUENCE or has no such child. Six places read
+   `->sequence()[0]` without that check:
+
+   - `SignedData` (a digest algorithm, the encapContentInfo, a
+     certificate extension);
+   - `SignerInfo` (the digest and signature algorithms);
+   - `TstInfo` (the imprint's hash algorithm).
+
+   An empty SEQUENCE there was a PHP warning followed by `Call to a member
+   function oid() on null`, a fatal `Error` that no check catches. The
+   verifier then ended with exit status 255 and no report, on input
+   anyone can write, with no key needed.
+
+   Measured with AC11's mutations before the change: 48 escapes at those
+   six places over the three tokens; none on a removed last child, which
+   the existing `count()` checks already cover. With the change the
+   `Asn1Exception` takes the path every other malformed token takes:
+   `TimestampException`, then `timeStamp.malformed`. **Weight B**: a crash
+   becomes a status; no verdict that was reached before changes. New
+   criterion AC11.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -522,4 +559,5 @@ least one test; every source file maps back to this spec.
 | AC8 | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC8: bounded — a token is at most maxBytes, a header at most maxTokens — * (5) / SPEC-016 | src/Timestamp/TimestampHeader.php :: fromUnprotected(); src/Asn1/DerReader.php :: readAt() (maxBytes); src/Timestamp/TimestampException.php |
 | AC9 | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC9: CA_ct.jpg is the corpus's malformed token, and the message says why — genTime 20240806216337Z: minute 63 at offset 86 of the TSTInfo / SPEC-016 | src/Asn1/Der.php :: time(); src/Timestamp/TstInfo.php :: read() (the genTime wrap) |
 | AC10 | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC10: every corpus token parses, and none takes the reader past its bounds — 38 timestamped files, 37 parse; … / SPEC-016 | src/Timestamp/TimestampHeader.php, src/Timestamp/TimeStampToken.php, src/Asn1/DerReader.php (the bounds) |
+| AC11 | tests/Unit/Asn1/MissingElementTest.php :: AC11 / SPEC-016 | src/Asn1/Der.php (`element()`); src/Timestamp/SignedData.php, SignerInfo.php, TstInfo.php (the six reads by position); tests/Support/DerPatch.php (`constructed()`) |
 | AC11 (amendment 3) | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC11: a negative INTEGER reads signed on request …; … GeneralizedTime fractions are kept …; … the writer token parses — * (3) / SPEC-016 | src/Asn1/Der.php :: integer(bool $signed), timeFraction(); src/Timestamp/TstInfo.php :: read() (nonce signed, $genTimeFraction) |

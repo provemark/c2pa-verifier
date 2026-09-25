@@ -88,7 +88,7 @@ final readonly class SignedData
             }
             foreach ($field->child(0)->sequence() as $extension) {
                 $parts = $extension->sequence();
-                if ($parts[0]->oid() === self::OID_SUBJECT_KEY_IDENTIFIER) {
+                if ($extension->element(0)->oid() === self::OID_SUBJECT_KEY_IDENTIFIER) {
                     $value = $parts[count($parts) - 1];
                     // extnValue is an OCTET STRING wrapping the DER of the extension's type: for SKI, an OCTET STRING
                     $subjectKeyId = (new DerReader)->read($value->octets())->octets();
@@ -113,11 +113,11 @@ final readonly class SignedData
         $version = (int) $fields[0]->integer();
         $digestAlgorithms = [];
         foreach ($fields[1]->set() as $algorithm) {
-            $digestAlgorithms[] = $algorithm->sequence()[0]->oid();
+            $digestAlgorithms[] = $algorithm->element(0)->oid();
         }
 
         $encap = $fields[2]->sequence();
-        $eContentType = $encap[0]->oid();
+        $eContentType = $fields[2]->element(0)->oid();
         if ($eContentType !== self::OID_TSTINFO) {
             throw new TimestampException(sprintf('eContentType is %s, not id-ct-TSTInfo (%s)', $eContentType, self::OID_TSTINFO));
         }

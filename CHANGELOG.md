@@ -50,6 +50,12 @@ patch release.
   change makes a genuine file that `c2pa-rs` signed with such a tail
   `Trusted` here, as in both `c2patool` versions; it was `Invalid`.
   Present in 0.1.0 to 0.2.1.
+- **Security: a timestamp token or OCSP response with an empty element
+  no longer ends the process (SPEC-016 amendment 4, SPEC-030 amendment
+  3).** An empty SEQUENCE where a field was read by position gave a
+  fatal PHP error: no report, exit status 255. Such a token is now
+  `timeStamp.malformed`, and such a response `signingCredential.ocsp.skipped`.
+  No key is needed to write such a file. Present in 0.1.0 to 0.2.1.
 - **A JPEG whose first APP11 piece carries packet sequence number 0 is
   read (SPEC-041).** Microsoft Bing Image Creator writes every store this
   way, and both `c2patool` versions read it. Every later piece must still
