@@ -177,14 +177,21 @@ final readonly class Command
     /**
      * The path as a local file, or null (SPEC-043 AC6). fopen() on the argument itself would honour
      * PHP's wrappers — data:, php://, phar://, and http:// with allow_url_fopen, a network request
-     * in the verification path — and would read a file named "data:,x" as the text "x". realpath()
-     * resolves only files that exist, and "file://" in front leaves no wrapper to choose.
+     * in the verification path — and would read a file named "data:,x" as the text "x". The path is
+     * made absolute against the working directory and opened with "file://" in front, which leaves no
+     * wrapper to choose. Symlinks are not resolved: on Linux /dev/stdin leads to "pipe:[…]", which
+     * realpath() cannot resolve, and the refusal must then say that the input cannot seek.
      */
     private static function local(string $path): ?string
     {
-        $real = realpath($path);
+        if ($path === '') {
+            return null;
+        }
+        $cwd = getcwd();
+        $absolute = str_starts_with($path, '/') || $cwd === false ? $path : $cwd.'/'.$path;
+        $local = 'file://'.$absolute;
 
-        return $real === false ? null : 'file://'.$real;
+        return file_exists($local) ? $local : null;
     }
 
     /**

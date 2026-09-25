@@ -61,8 +61,10 @@ path, which is where the fault is, and then it was red.
   `RsaPss` and `CoseSign1` were already silent.
 - **AC5.** `Command::open()` refuses a stream that cannot seek, with exit
   2.
-- **AC6.** `Command::local()` opens only what `realpath()` resolves, with
-  `file://` in front, for the input and for `--settings`.
+- **AC6.** `Command::local()` makes the path absolute against the working
+  directory, without resolving symlinks, and opens it with `file://` in
+  front, for the input and for `--settings`. A path that does not exist
+  as a local file is *No such file*.
 
 Measured:
 
@@ -77,6 +79,23 @@ Measured:
   into the sweep's own standard output, which is finding 4 itself.
 - `php bin/fuzz.php 20260925 60`: 0 faults, the same 34 suspects as in
   steps 153 and 154.
+
+## 155c — found by CI on Linux
+
+The first version of `local()` used `realpath()`. On macOS that resolves
+`/dev/stdin` to `/dev/fd/0`, and the tests were green. On Linux it leads
+through `/proc/self/fd/0` to `pipe:[…]`, which `realpath()` cannot
+resolve. CI on PHP 8.3, 8.4 and 8.5 failed AC5 on its message: exit 2 and
+empty output as required, but *No such file* where the reason is that
+the input cannot seek.
+
+The refusal held, but the reason was wrong, and the release was not
+tagged on red. `local()` no longer resolves symlinks: the absolute path
+behind `file://` is enough to rule out every wrapper, and `/dev/stdin`
+and a FIFO now reach the seekable check on both systems. Measured on
+macOS: SPEC-043 6 passed and SPEC-019 12 passed. A FIFO gives *cannot
+seek*; `data:`, `php://`, `http://` and `phar://` each give *No such
+file*, with no request made. Linux is measured by CI on the fix.
 
 ## Disclosure
 

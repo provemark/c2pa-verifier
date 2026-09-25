@@ -7220,3 +7220,16 @@ README are where the disclosure lives.
 - Measured: `composer check`; the commit messages checked for attribution
   lines before the push; CI on the pushed commit.
 - Decided by Maurice: push and tag 0.2.2.
+
+## 2026-09-25 — Step 155c: the command's local-file check on Linux
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: (continuing "push main en tag v0.2.2") CI failed on the pushed
+  release commit; the tag waits.
+- Produced: `Command::local()` without `realpath()`; the step-155 note
+  (155c) and SPEC-043's Traceability row for AC6.
+- Measured: CI run 36117335050 red on PHP 8.3, 8.4 and 8.5, one test
+  (SPEC-043 AC5: *No such file* where *cannot seek* was expected, since
+  Linux's `/dev/stdin` resolves to `pipe:[…]`); after the fix, locally
+  SPEC-043 and SPEC-019 green, a FIFO and four wrapper paths through the
+  command; `composer check`.
+- Decided by Maurice: none (the tag is his decision, on green CI).

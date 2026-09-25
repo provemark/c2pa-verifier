@@ -185,6 +185,6 @@ least one test; every source file maps back to this spec.
 | AC3 | tests/Unit/Verifier/HostileInputTest.php :: AC3 / SPEC-043 | src/Manifest/Manifest.php (`mediaType()`); bin/make-hostile-input-variants.php |
 | AC4 | tests/Unit/Verifier/HostileInputTest.php :: AC4 / SPEC-043 | src/Trust/Certificate.php (`withoutWarnings()`, the constructor, `signedBy()`); bin/make-hostile-input-variants.php |
 | AC5 | tests/Unit/Verifier/HostileInputTest.php :: AC5 / SPEC-043 | src/Cli/Command.php (`open()`: the seekable check) |
-| AC6 | tests/Unit/Verifier/HostileInputTest.php :: AC6 / SPEC-043 | src/Cli/Command.php (`local()`, `open()`, `read()`) |
+| AC6 | tests/Unit/Verifier/HostileInputTest.php :: AC6 / SPEC-043 | src/Cli/Command.php (`local()`: an absolute path behind `file://`, symlinks not resolved, so AC5 holds on Linux too; `open()`, `read()`) |
 
 Measured 2026-09-25: 6 red (and the three parts a first failure hid, run apart) → 6 green, `composer check` exit 0, 525 tests; 19,788 runs over every signed fixture and settings file, the only change `hostile/certificate-time-nul.jpg` (still `Invalid`, now `signingCredential.invalid`); `php bin/fuzz.php 20260925 60`: 0 faults, the same 34 suspects.
