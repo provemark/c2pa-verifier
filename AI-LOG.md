@@ -7200,3 +7200,14 @@ README are where the disclosure lives.
 - Note on order: the tests were written while SPEC-043 was a draft, and
   `bin/spec-check.php` said so ("tests precede approval"). Nothing was
   committed before the approval.
+
+## 2026-09-25 — Preparing the 0.2.2 security release (local)
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: prepare the 0.2.2 security release, locally first.
+- Produced: the Unreleased section of CHANGELOG.md as `0.2.2`, with the
+  review's findings in a Security section of their own (wrong verdicts;
+  crashes, hangs and corrupted reports); the 2026-09-25 review in
+  SECURITY.md's findings. Committed locally, not pushed; nothing tagged.
+- Measured: `composer check` (525 passed).
+- Decided by Maurice: the release is prepared locally; nothing is
+  published until he says so.

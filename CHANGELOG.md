@@ -5,21 +5,29 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.2.2 — unreleased (a security release; dated when it is tagged)
 
-Measured on files from current writers, and one container fix. No API
-change, no new status code. Under this project's rule this would be a
-patch release.
+A security release. A review of the whole code base on 2026-09-25 found
+five ways to reach a wrong verdict, and eight ways to crash the verifier,
+exhaust its memory or time, or corrupt its output. Each is present in
+0.1.0 to 0.2.1, and none needs a signing key. Every user should upgrade.
 
-### Fixed
-- **Security: a certificate that is not a certificate authority no longer
+**A `0.2.2`, not a `0.3`:** no class, method, member or settings shape
+changes, the recorded public API is the same 126 symbols, and there is no
+new status code. What changes is the verdict on the files described below,
+and the command's handling of input that is not a local, seekable file.
+
+### Security
+
+A wrong verdict:
+- **A certificate that is not a certificate authority no longer
   issues (SPEC-014 amendment 4).** The chain walk accepted any issuer whose
   name and key matched. A signer under a configured anchor could issue a
   leaf on any name and be `Trusted` under it. Every issuer must now carry
   `CA:TRUE`, `keyCertSign` when keyUsage is present, and a `pathlen` that
   allows the chain; an intermediate must be valid when the leaf is judged.
   Present in 0.1.0 to 0.2.1.
-- **Security: only a manifest that is validated may acknowledge a fault
+- **Only a manifest that is validated may acknowledge a fault
   (SPEC-021 amendment 6).** The faults an ingredient assertion recorded
   were taken from every manifest in the store, including manifests that
   are never validated. Such a manifest could cancel a real fault of one
@@ -27,36 +35,38 @@ patch release.
   now comes only from the active manifest and the manifests its
   ingredients reach, and a failure of the manifest that binds an update
   manifest's asset is never dropped. Present in 0.1.0 to 0.2.1.
-- **Security: a standard manifest no longer gets an update manifest's
+- **A standard manifest no longer gets an update manifest's
   exclusion adjustment (SPEC-022 amendment 6).** When the store held any
   update manifest, a standard active manifest without a hard binding of
   its own borrowed its parent's binding with the exclusion widened to the
   current store, and could be `Valid`. The adjustment of C2PA 2.4
   §15.12.1.1 now applies only when the active manifest is an update
-  manifest. Such a file is `Invalid` with `assertion.dataHash.mismatch`,
-  as in both `c2patool` versions. Present in 0.1.0 to 0.2.1.
-- **Security: a fragment's Merkle location must lie inside the tree
+  manifest. Such a file is `Invalid` with `assertion.dataHash.mismatch`.
+  Present in 0.1.0 to 0.2.1.
+- **A fragment's Merkle location must lie inside the tree
   (SPEC-028 amendment 1).** A fragmented BMFF stream with one fragment
   withheld and a copy of another fragment carrying an out-of-range
   `location` in its merkle box could be `Trusted`. A location must now
   be at least 0 and less than the declared `count`, else
-  `assertion.bmffHash.mismatch` naming the fragment, as both `c2patool`
-  versions refuse such a stream. Present in 0.1.0 to 0.2.1.
-- **Security: the bytes after the last ISOBMFF box are hashed (SPEC-027
+  `assertion.bmffHash.mismatch` naming the fragment. Present in 0.1.0 to
+  0.2.1.
+- **The bytes after the last ISOBMFF box are hashed (SPEC-027
   amendment 4).** Fewer than eight bytes after the last top-level box were
   never hashed, so bytes appended or changed there after signing left an
   MP4, MOV, AVIF or HEIC file, or a fragment, `Trusted`. They are now
   hashed as `c2pa-rs` hashes them: last, with no offset marker. The same
   change makes a genuine file that `c2pa-rs` signed with such a tail
-  `Trusted` here, as in both `c2patool` versions; it was `Invalid`.
+  `Trusted` here; it was `Invalid`.
   Present in 0.1.0 to 0.2.1.
-- **Security: a timestamp token or OCSP response with an empty element
+
+A crash, a hang or a corrupted report:
+- **A timestamp token or OCSP response with an empty element
   no longer ends the process (SPEC-016 amendment 4, SPEC-030 amendment
   3).** An empty SEQUENCE where a field was read by position gave a
   fatal PHP error: no report, exit status 255. Such a token is now
   `timeStamp.malformed`, and such a response `signingCredential.ocsp.skipped`.
   No key is needed to write such a file. Present in 0.1.0 to 0.2.1.
-- **Security: a very long INTEGER no longer takes minutes (SPEC-016
+- **A very long INTEGER no longer takes minutes (SPEC-016
   amendment 5, SPEC-015 amendment 6).** Converting an INTEGER to decimal
   was quadratic, so a file with a long INTEGER in a timestamp token, an
   OCSP response or a certificate serial kept the verifier busy for tens
@@ -66,7 +76,7 @@ patch release.
   certificate serial, `signingCredential.invalid`. The last is a stated
   difference: `c2patool` reads such a certificate. RFC 5280 allows 20
   octets, and no file measured carries more. Present in 0.1.0 to 0.2.1.
-- **Security: hostile input ends in a report or a refusal (SPEC-043).**
+- **Hostile input ends in a report or a refusal (SPEC-043).**
   Six ways to crash the verifier, exhaust its memory or corrupt its output,
   none needing a key. All were present in 0.1.0 to 0.2.1:
   - a claim of nested CBOR arrays took hundreds of MiB; the items of a
@@ -85,6 +95,8 @@ patch release.
     `http://`, a network request); it now opens local files only, for the
     input and for `--settings`, and a file named like a wrapper is read as
     that file.
+
+### Fixed
 - **A JPEG whose first APP11 piece carries packet sequence number 0 is
   read (SPEC-041).** Microsoft Bing Image Creator writes every store this
   way, and both `c2patool` versions read it. Every later piece must still

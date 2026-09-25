@@ -72,9 +72,10 @@ once before and was wrong: see `PRED-IMG-004` below.
 
 ## Findings so far
 
-The project keeps its own record. Three cases of a wrong `Valid` have been
-found in it, all by the maintainers; the first two before any release, the
-third after `0.1.0`:
+The project keeps its own record. Eight cases of a wrong `Valid` or
+`Trusted` have been found in it, all by the maintainers: two before any
+release, one after `0.1.0`, and five, with eight ways to crash the
+verifier, in the security review of 2026-09-25, fixed in `0.2.2`:
 
 - **2026-09-22, no hard binding** (`notes/step-47-no-hard-binding.md`).
   A correctly signed manifest with no `c2pa.hash.data` assertion — a
@@ -104,6 +105,32 @@ third after `0.1.0`:
   amendment 7 (step 109): an exclusion that holds any part of the store
   must hold nothing else. Over 864 runs, that changed the verdict of
   these three corpus files and no others.
+
+- **2026-09-25, a security review of the whole code base — present in
+  `0.1.0` to `0.2.1`, fixed in `0.2.2`.** None of these needs a signing
+  key. A wrong verdict:
+  - an issuer in the chain walk was never checked to be a certificate
+    authority, so a signer under an anchor could issue a leaf on any name
+    and be `Trusted` (step 148, SPEC-014 amendment 4);
+  - an ingredient assertion of a manifest the graph never reaches could
+    cancel a real fault of one it does, so a changed asset could stay
+    `Valid` or `Trusted` (step 149, SPEC-021 amendment 6);
+  - a standard manifest without a hard binding borrowed its parent's,
+    with the exclusion widened, when any update manifest was in the
+    store (step 150, SPEC-022 amendment 6);
+  - a fragment's Merkle location was not range-checked, so a withheld
+    fragment could be replaced by a copy of another (step 151, SPEC-028
+    amendment 1);
+  - up to seven bytes after the last ISOBMFF box were not hashed (step
+    152, SPEC-027 amendment 4).
+
+  A crash, a hang or a corrupted report: an empty DER element in a
+  timestamp token or an OCSP response (step 153); a very long INTEGER
+  (step 154); and a CBOR memory bomb, unbounded ISOBMFF reads, a media
+  type that is not UTF-8, OpenSSL warnings on standard output, input that
+  cannot seek, and PHP stream wrappers in the command (step 155,
+  SPEC-043). Each is described in its note under `notes/`, with the test
+  that was red before the fix.
 
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now
