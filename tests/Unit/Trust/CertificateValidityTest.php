@@ -99,9 +99,23 @@ it('AC2: the same values as OpenSSL on native PHP, for every fixture certificate
     }
     $compared = 0;
     foreach ($ders as $name => $der) {
-        $parsed = @openssl_x509_parse(spec044Pem($der));
-        // the reference only where OpenSSL's reading is right: no fraction (amendment 1), a readable time
-        if (! is_array($parsed) || ! is_int($parsed['validFrom_time_t'] ?? null) || ! is_string($parsed['validTo'] ?? null) || str_contains($parsed['validTo'], '.')) {
+        $warned = false;
+        set_error_handler(static function () use (&$warned): bool {
+            $warned = true;
+
+            return true;
+        });
+        try {
+            $parsed = openssl_x509_parse(spec044Pem($der));
+        } finally {
+            restore_error_handler();
+        }
+        // the reference only where PHP's reading can be right: both times DER (YYMMDDHHMMSSZ or YYYYMMDDHHMMSSZ, so
+        // no fraction, amendment 1) and no warning. Anything else is AC4's case. How PHP reads `no-seconds` differs
+        // by OpenSSL: 3.6 refuses it, Ubuntu 24.04's warns "Unable to parse time string" (CI run 36132220588),
+        // php-wasm's 1.1.1t reads it silently
+        $isDerTime = static fn (mixed $time): bool => is_string($time) && preg_match('/\A(\d{2}){6,7}Z\z/', $time) === 1;
+        if ($warned || ! is_array($parsed) || ! is_int($parsed['validFrom_time_t'] ?? null) || ! $isDerTime($parsed['validFrom'] ?? null) || ! $isDerTime($parsed['validTo'] ?? null)) {
             continue;
         }
         $certificate = Certificate::fromDer($der);

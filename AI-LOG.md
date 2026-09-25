@@ -7341,3 +7341,17 @@ README are where the disclosure lives.
   passes the time string through intact; read from the source, not traced.
 - Decided by Maurice: build the fix first; the reports to PHP and to
   php-wasm wait until after that.
+
+## 2026-09-25 — Step 156b: AC2 on Linux's OpenSSL
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "akkoord, push naar main".
+- Produced: the four SPEC-044 commits pushed; AC2's reference narrowed to
+  certificates whose times are DER and are read without a warning;
+  SPEC-044's Traceability says so.
+- Measured: CI run 36132220588 red on PHP 8.3, 8.4 and 8.5, AC2 only:
+  Ubuntu 24.04's OpenSSL reads `validity/no-seconds.leaf.pem`, PHP warns
+  "Unable to parse time string", and `Certificate` refuses it (SPEC-043
+  AC4), as AC4 requires; in php-wasm (OpenSSL 1.1.1t) PHP reads it without
+  a warning and `Der::time()` refuses it. Locally AC2 still compares 73
+  certificates; `composer check`, exit 0, 530 tests.
+- Decided by Maurice: the push.
