@@ -210,3 +210,22 @@ it('AC9: the corpora are unchanged and update_manifest joins them', function ():
         ->and($graph->missing)->toBe([])
         ->and($graph->unreferenced)->toBe([]);
 })->group('SPEC-022');
+
+// AC10, amendment 6 (step 150): a standard active manifest does not get an update manifest's treatment
+it('AC10: a standard active manifest without a binding gets c2patool\'s verdict and code, whether or not the store holds an update manifest', function (): void {
+    foreach (['standard-no-binding', 'standard-borrows-with-update'] as $name) {
+        $report = spec020Verify("update-manifest/{$name}.jpg", SPEC022_VARIANT_SETTINGS);
+        $matched = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::AssertionDataHashMatch));
+
+        expect($report->store?->active->isUpdateManifest)->toBeFalse($name)
+            ->and($report->result->state)->toBe(ValidationState::Invalid, $name)
+            ->and($report->result->state->value)->toBe(spec020Oracle("update-manifest/{$name}.json")['validation_state'], $name)
+            ->and($report->result->state->value)->toBe(spec020Oracle("update-manifest/{$name}--0.28.0.json")['validation_state'], $name)
+            ->and($matched)->toBe([], "{$name}: the parent's binding matched for a standard manifest")
+            // c2pa-rs's reading (ADR-0005): the parent's binding is still found, but its exclusion is not
+            // adjusted for a manifest that is not an update manifest, so the cover rule fails on it
+            ->and(spec022Failures($report))->toBe(spec021OracleFailures("update-manifest/{$name}.json"), $name)
+            ->and(spec022Failures($report))->toBe(spec021OracleFailures("update-manifest/{$name}--0.28.0.json"), $name)
+            ->and(spec022Failures($report))->toBe(['assertion.dataHash.mismatch'], $name);
+    }
+})->group('SPEC-022');

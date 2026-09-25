@@ -27,6 +27,14 @@ patch release.
   now comes only from the active manifest and the manifests its
   ingredients reach, and a failure of the manifest that binds an update
   manifest's asset is never dropped. Present in 0.1.0 to 0.2.1.
+- **Security: a standard manifest no longer gets an update manifest's
+  exclusion adjustment (SPEC-022 amendment 6).** When the store held any
+  update manifest, a standard active manifest without a hard binding of
+  its own borrowed its parent's binding with the exclusion widened to the
+  current store, and could be `Valid`. The adjustment of C2PA 2.4
+  §15.12.1.1 now applies only when the active manifest is an update
+  manifest. Such a file is `Invalid` with `assertion.dataHash.mismatch`,
+  as in both `c2patool` versions. Present in 0.1.0 to 0.2.1.
 - **A JPEG whose first APP11 piece carries packet sequence number 0 is
   read (SPEC-041).** Microsoft Bing Image Creator writes every store this
   way, and both `c2patool` versions read it. Every later piece must still

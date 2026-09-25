@@ -21,3 +21,12 @@ the script asserts a byte-exact round trip on the unchanged store first.
 | `ingredient-inputto` | its ingredient's relationship `parentOf` → `inputTo` | **exit 1**: `Error: claim missing hard binding` — without a parent the binding chain ends |
 | `no-standard-parent` | the *parent* manifest's box UUID `c2ma` → `c2um` (and the reference hashes recomputed), so the chain never reaches a standard manifest | **exit 1**: `Error: claim missing hard binding` |
 | `two-parents` | the PNG fixture with two `parentOf` ingredient assertions | `Invalid`: `manifest.multipleParents` — where this verifier says `Trusted` before SPEC-022 |
+
+Two more, built by `bin/make-standard-binding-variants.php <dir>` (step
+150, SPEC-022 amendment 6). Nothing is signed: only the active manifest's
+box UUID changes, which lies outside the claim.
+
+| variant | what it is | c2patool 0.27.22 and 0.28.0 (with the settings) |
+|---|---|---|
+| `standard-no-binding` | the active manifest's box UUID `c2um` → `c2ma`: a standard manifest with no hard binding, and no update manifest left in the store | `Invalid`: `assertion.dataHash.mismatch` on the parent's hash — the binding is found up `parentOf`, its exclusion not adjusted |
+| `standard-borrows-with-update` | the same, with an unreferenced copy of the original update manifest (label changed in one character) before it; the store spans several APP11 segments | `Invalid`: the same — where this verifier said `Valid` before amendment 6 |

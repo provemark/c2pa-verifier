@@ -258,6 +258,19 @@ variants made in the tests-first step.
     `Trusted`; `update_manifest` leaves `SPEC013_RS_MULTI` and
     `SPEC013_NOT_YET`; no exception escapes the fuzzer.
 
+- **AC10 — a standard active manifest is not treated as an update manifest** *(amendment 6; required: error path)*
+  - Given `standard-no-binding.jpg`, `update_manifest.jpg` with the
+    active manifest's box UUID `c2um` → `c2ma` and nothing re-signed, and
+    `standard-borrows-with-update.jpg`, the same with an unreferenced copy
+    of the original update manifest placed before it
+  - When the Verifier runs
+  - Then both are `Invalid` with `assertion.dataHash.mismatch` on the
+    parent's `c2pa.hash.data` and no `assertion.dataHash.match`: the
+    parent's binding is found, as `c2pa-rs` finds it, but its exclusion
+    is not adjusted, because the active manifest is not an update
+    manifest. The state and the failure codes equal both `c2patool`
+    versions'.
+
 ## References
 
 - Specification: C2PA 2.4 §11.2.3 (update manifests: the box type, the
@@ -402,6 +415,37 @@ actions check.
    guard is unchanged: a status whose url names the active manifest is
    never dropped.
 
+6. **2026-09-25, step 150, found by the security review; measured** *(confirmed by Maurice van Loon, 2026-09-25)* —
+   the exclusion adjustment of §15.12.1.1 is applied only when the
+   **active manifest** is an update manifest, not whenever the store
+   holds one. The Scope said "applied only when the store holds at least
+   one update manifest", and the binding manifest was looked up up the
+   `parentOf` chain only in that case. A standard active manifest
+   without a hard binding of its own therefore borrowed its parent's
+   binding *and* had the parent's stale exclusion widened to the grown
+   store, as soon as any `c2um` sat anywhere in the store, even one that
+   nothing references. The hash then matched, and the file was `Valid`:
+   a manifest that binds nothing, riding on its parent's binding.
+
+   Measured with both `c2patool` versions (0.27.22, 0.28.0) on the two
+   variants of AC10: `c2pa-rs` also follows `parentOf` for a standard
+   manifest without a binding, with or without a `c2um` in the store,
+   but never adjusts that manifest's exclusion, so the parent's
+   exclusion no longer covers the store and the result is
+   `assertion.dataHash.mismatch` on the parent's hash. Under ADR-0005
+   this verifier follows that reading rather than the literal §10.2.2
+   (`claim.hardBindings.missing`): the state is the same, and the code
+   is `c2patool`'s. The cover rule of SPEC-012 (amendments 5 and 7) is
+   what makes the unadjusted exclusion fail closed.
+
+   So the binding manifest is now looked up up the `parentOf` chain for
+   any active manifest without a hard binding of its own, and the
+   adjustment runs only for an active update manifest. With no manifest
+   up the chain carrying a binding, the result is still
+   `claim.hardBindings.missing`. **Weight A**: a file that was wrongly
+   `Valid` becomes `Invalid`, as in both `c2patool` versions. New
+   criterion AC10.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -418,5 +462,6 @@ least one test; every source file maps back to this spec.
 | AC7 | tests/Unit/Verifier/UpdateManifestTest.php :: AC7 / SPEC-022; tests/Unit/Jumbf/JumbfParserTest.php :: AC13 / SPEC-005 | src/Jumbf/JumbfParser.php (`refuseUnreadable()`, `UUID_TIMESTAMP_MANIFEST`) |
 | AC8 | tests/Unit/Verifier/UpdateManifestTest.php :: AC8 / SPEC-022 | src/Manifest/Claim.php (an empty `claim_generator_info`) |
 | AC9 | tests/Unit/Verifier/UpdateManifestTest.php :: AC9 / SPEC-022; tests/Unit/Verifier/VerifierTest.php :: AC12 / SPEC-013 | tests/Pest.php; the whole verification path |
+| AC10 | tests/Unit/Verifier/UpdateManifestTest.php :: AC10 / SPEC-022 | src/Verifier/Verifier.php (`bindingOf()`, `hasOwnHardBinding()`, the adjustment only for an active update manifest); bin/make-standard-binding-variants.php |
 
 `src/Manifest/UpdateManifestCheck.php` maps to this spec; `StatusCode`'s three new cases are its. Measured 2026-09-22: 9 red → 9 green, `composer check` exit 0, 345 tests, 208 fuzz runs with no fault.

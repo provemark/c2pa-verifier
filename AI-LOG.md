@@ -7052,3 +7052,27 @@ README are where the disclosure lives.
   (confirmed by the unchanged sweep).
 - Decided by Maurice: none in this session (amendment 6 was confirmed in
   the previous one).
+
+## 2026-09-25 — Step 150: SPEC-022 amendment 6
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, bereid lek 3 voor"; then "ja ga verder, bevestigd".
+- Produced: SPEC-022 amendment 6, AC10 and its Traceability row;
+  `bin/make-standard-binding-variants.php`; two unsigned probes in
+  `tests/Fixtures/update-manifest/` with README rows; c2patool 0.27.22 and
+  0.28.0 JSON for both in `tests/Fixtures/c2patool/update-manifest/`; the
+  AC10 test in `tests/Unit/Verifier/UpdateManifestTest.php`;
+  `Verifier::bindingOf()` and `hasOwnHardBinding()`, the adjustment only
+  for an active update manifest; `notes/step-150-standard-manifest-binding.md`;
+  CHANGELOG, NOTES and milestones rows. Committed locally, not pushed.
+- Measured: the review's shape reproduced on the new probe (`Valid`
+  here); both `c2patool` versions on both probes (`Invalid`,
+  `assertion.dataHash.mismatch` on the parent's hash, also without any
+  `c2um` in the store); AC10 red on both probes, then green;
+  `vendor/bin/pest --group=SPEC-022` (10 passed); `composer check`
+  (513 passed); 18,950 runs before and after (100 moved, all the two
+  probes).
+- Reasoned: the cover rule of SPEC-012 is what makes the unadjusted
+  exclusion fail closed; a manifest with any hard-binding assertion,
+  supported or not, never borrows.
+- Decided by Maurice: option B (follow `c2pa-rs`'s reading under
+  ADR-0005, not the literal §10.2.2); amendment 6 confirmed.

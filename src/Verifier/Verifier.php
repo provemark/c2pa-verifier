@@ -310,13 +310,12 @@ final readonly class Verifier
             // update manifest — then it is found up the parentOf chain (§15.12). The exclusion it carries
             // was written before the update manifest was appended, so it is adjusted to the store's
             // current range (§15.12.1.1) — see DataHashCheck.
-            $hasUpdate = false;
-            foreach ($manifestStore->manifests as $other) {
-                $hasUpdate = $hasUpdate || $other->isUpdateManifest;
-            }
-            $binding = $hasUpdate && $graph !== null
-                ? UpdateManifestCheck::bindingManifest($manifestStore, $graph->ingredients)
-                : $manifest;
+            //
+            // SPEC-022 amendment 6: a standard manifest without a hard binding of its own is also followed up
+            // parentOf, as c2pa-rs does, but its exclusion is adjusted only for an active update manifest.
+            // A stale exclusion then fails the cover rule, so the borrowed binding cannot make it Valid;
+            // with no binding up the chain, the manifest's own missing binding is reported as before.
+            $binding = self::bindingOf($manifest, $manifestStore, $graph);
             $gatheredOnly = $binding === null ? null : self::hardBindingGatheredOnly($binding);
             if ($binding === null) {
                 $statuses[] = new ValidationStatus(StatusCode::ClaimHardBindingsMissing, sprintf('self#jumbf=/c2pa/%s/%s', $manifest->label, $manifest->claim->version === 2 ? 'c2pa.claim.v2' : 'c2pa.claim'), 'the active manifest is an update manifest and no manifest up its parentOf chain carries a hard binding (C2PA 2.4 §15.12)');
@@ -330,7 +329,7 @@ final readonly class Verifier
                 // the manifest actually carries, not the container it arrived in.
                 $statuses = [...$statuses, ...(BmffHashCheck::labelOf($binding) !== null
                     ? $this->bmffHash->check($binding, $stream)
-                    : $this->dataHash->check($binding, $stream, $store, $hasUpdate))];
+                    : $this->dataHash->check($binding, $stream, $store, $manifest->isUpdateManifest))];
             }
             // SPEC-027 amendment 1: `checks_performed` says which hard binding ran, so
             // that a caller reading it cannot mistake a BMFF file for one whose data hash
@@ -351,17 +350,45 @@ final readonly class Verifier
         // manifest, and never a failure of the manifest that binds an update manifest's asset
         // (SPEC-021 amendment 6)
         if ($graph !== null) {
-            $bindingLabel = null;
-            foreach ($manifestStore->manifests as $other) {
-                if ($other->isUpdateManifest) {
-                    $bindingLabel = UpdateManifestCheck::bindingManifest($manifestStore, $graph->ingredients)?->label;
-                    break;
-                }
-            }
+            $borrowed = self::bindingOf($manifest, $manifestStore, $graph);
+            $bindingLabel = $borrowed === null || $borrowed === $manifest ? null : $borrowed->label;
             $statuses = $this->ingredients->drop($statuses, IngredientManifestCheck::recordedInStore($graph), $manifestStore->active->label, $bindingLabel);
         }
 
         return ValidationResult::fromStatuses($statuses, $checks);
+    }
+
+    /**
+     * The manifest whose hard binding covers the asset (C2PA 2.4 §15.12): the active manifest when it
+     * is a standard manifest with a hard binding of its own, else the first manifest up its parentOf
+     * chain that has one. A standard manifest with nothing up the chain answers for itself, so that its
+     * missing binding is reported as it always was; an update manifest with nothing answers null.
+     */
+    private static function bindingOf(Manifest $manifest, ManifestStore $manifestStore, ?ManifestGraph $graph): ?Manifest
+    {
+        if ($graph === null || (! $manifest->isUpdateManifest && self::hasOwnHardBinding($manifest))) {
+            return $manifest;
+        }
+        $found = UpdateManifestCheck::bindingManifest($manifestStore, $graph->ingredients);
+
+        return $found ?? ($manifest->isUpdateManifest ? null : $manifest);
+    }
+
+    /**
+     * Whether the manifest carries any hard-binding assertion, supported or not: one that is not
+     * supported is then refused on this manifest rather than replaced by a parent's.
+     */
+    private static function hasOwnHardBinding(Manifest $manifest): bool
+    {
+        foreach (array_keys($manifest->assertions) as $label) {
+            foreach (['c2pa.hash.data', 'c2pa.hash.bmff', 'c2pa.hash.boxes', 'c2pa.hash.collection.data'] as $prefix) {
+                if (str_starts_with((string) $label, $prefix)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
