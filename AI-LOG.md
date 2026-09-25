@@ -7225,8 +7225,11 @@ README are where the disclosure lives.
 - Model: Claude Opus 5.5 (1M context), Claude Code CLI
 - Asked: (continuing "push main en tag v0.2.2") CI failed on the pushed
   release commit; the tag waits.
-- Produced: `Command::local()` without `realpath()`; the step-155 note
-  (155c) and SPEC-043's Traceability row for AC6.
+- Produced: `Command::local()` without `realpath()`, then (CI run
+  36118261688 red the same way, `file_exists()` resolving like
+  `realpath()`) without any existence check, leaving that to `fopen()`,
+  and with a path over `PHP_MAXPATHLEN` treated as missing; the step-155
+  note (155c) and SPEC-043's Traceability row for AC6.
 - Measured: CI run 36117335050 red on PHP 8.3, 8.4 and 8.5, one test
   (SPEC-043 AC5: *No such file* where *cannot seek* was expected, since
   Linux's `/dev/stdin` resolves to `pipe:[…]`); after the fix, locally

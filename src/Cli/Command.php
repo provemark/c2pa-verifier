@@ -179,8 +179,9 @@ final readonly class Command
      * PHP's wrappers — data:, php://, phar://, and http:// with allow_url_fopen, a network request
      * in the verification path — and would read a file named "data:,x" as the text "x". The path is
      * made absolute against the working directory and opened with "file://" in front, which leaves no
-     * wrapper to choose. Symlinks are not resolved: on Linux /dev/stdin leads to "pipe:[…]", which
-     * realpath() cannot resolve, and the refusal must then say that the input cannot seek.
+     * wrapper to choose. Whether it exists is left to fopen() itself: on Linux /dev/stdin leads to
+     * "pipe:[…]", which realpath() and PHP's stat cannot resolve though open() can, and the refusal
+     * must then say that the input cannot seek, not that it is missing.
      */
     private static function local(string $path): ?string
     {
@@ -189,9 +190,9 @@ final readonly class Command
         }
         $cwd = getcwd();
         $absolute = str_starts_with($path, '/') || $cwd === false ? $path : $cwd.'/'.$path;
-        $local = 'file://'.$absolute;
 
-        return file_exists($local) ? $local : null;
+        // longer than any path the system accepts, so no file (a data: URL of an image is kilobytes)
+        return strlen($absolute) > PHP_MAXPATHLEN ? null : 'file://'.$absolute;
     }
 
     /**
