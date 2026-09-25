@@ -12,6 +12,13 @@ change, no new status code. Under this project's rule this would be a
 patch release.
 
 ### Fixed
+- **Security: a certificate that is not a certificate authority no longer
+  issues (SPEC-014 amendment 4).** The chain walk accepted any issuer whose
+  name and key matched. A signer under a configured anchor could issue a
+  leaf on any name and be `Trusted` under it. Every issuer must now carry
+  `CA:TRUE`, `keyCertSign` when keyUsage is present, and a `pathlen` that
+  allows the chain; an intermediate must be valid when the leaf is judged.
+  Present in 0.1.0 to 0.2.1.
 - **A JPEG whose first APP11 piece carries packet sequence number 0 is
   read (SPEC-041).** Microsoft Bing Image Creator writes every store this
   way, and both `c2patool` versions read it. Every later piece must still

@@ -245,6 +245,31 @@ measured in the tests-first step (Open questions).
     `Trusted` (the fixtures) and asserts the rest unchanged; the
     `SPEC013_NOT_YET` list loses `signingCredential.untrusted`
 
+- **AC11 — only a certificate authority may issue** *(amendment 4; required: error path)*
+  - Given the probes of `tests/Fixtures/trust/issuer/`, each
+    `fixture-unsigned.jpg` signed by a throwaway leaf, under
+    `probe-root.settings.json` (the probe root as the one anchor):
+    - `good-chain`: leaf ← intermediate (`CA:TRUE`, `keyCertSign`,
+      `pathlen:0`) ← root;
+    - `ee-as-issuer`: a leaf issued by another *end-entity* certificate
+      (`CA:FALSE`) that the root issued;
+    - `ca-without-keycertsign`: an intermediate with `CA:TRUE` whose
+      keyUsage lacks `keyCertSign`;
+    - `pathlen-exceeded`: two intermediates under one with `pathlen:0`;
+    - `expired-intermediate`: an intermediate valid only in 2020;
+  - and `ee-as-issuer` under `honest-as-anchor.settings.json`, where the
+    end-entity issuer itself is the anchor
+  - When verified
+  - Then `good-chain` is `Trusted`, and every other case is
+    `signingCredential.untrusted` with `validation_state` `Valid`, as
+    `c2patool` 0.28.0 says for each. The explanation names the
+    certificate and the rule it breaks. `c2patool` 0.27.22 says the
+    same, except `Trusted` for `expired-intermediate`.
+  - And `ChainCheck::checkCertificates()` on the `ee-as-issuer` chain
+    under the legacy `trust.trust_anchors`, which anchors timestamp
+    authorities too, is untrusted. The timestamp check walks the same
+    code.
+
 ## References
 
 - Specification: C2PA 2.4 §14.4.1 (the validator's lists: trust anchors,
@@ -349,6 +374,10 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
   chain shows OpenSSL rendering the same DN differently on two
   certificates, the comparison moves to the DER of the Name; measured
   then.
+- Non-blocker (amendment 4): whether an anchor that is itself out of its
+  validity still anchors. RFC 5280 §6.1.1 treats a trust anchor as input;
+  no probe measures what `c2patool` does with an expired root. Unchanged
+  until one does.
 
 ## Amendments
 
@@ -373,6 +402,41 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 120).
 
+4. **2026-09-25, step 148, found by the security review.** The walk counted a link when the issuer's name
+   matched and its key verified the signature. It never asked whether the
+   issuer may issue certificates. Any holder of an end-entity certificate
+   under a configured anchor could therefore issue a leaf on any name, for
+   example "Adobe Inc", and this verifier said `Trusted` under that name.
+   Both `c2patool` versions say `signingCredential.untrusted`. The flaw is
+   present in 0.1.0, 0.2.0 and 0.2.1.
+
+   The rule, for every certificate that acts as an issuer in the walk (an
+   x5chain certificate that signed the one before it, and an anchor that
+   signed the last one) (RFC 5280 §4.2.1.9, §4.2.1.3, §6.1.4):
+   - basicConstraints `CA:TRUE`;
+   - when keyUsage is present, `keyCertSign` in it;
+   - its `pathlen`, when present, is not smaller than the number of
+     intermediate CA certificates between it and the leaf;
+   - an x5chain intermediate is valid at the time the leaf is judged: a
+     trusted timestamp's `genTime`, else now.
+
+   A leaf that is itself an anchor, and a leaf on the allowed list, are
+   unchanged: neither issues anything. A broken rule is
+   `signingCredential.untrusted`, the code both `c2patool` versions give,
+   not `.invalid`. The timestamp authority's chain goes through the same
+   walk (SPEC-017), so it gets the same rule.
+
+   Not in the rule: the validity of the anchor itself. RFC 5280 treats a
+   trust anchor as input, not as a certificate to check, and no probe
+   measures it. It is left as an open question.
+
+   New criterion AC11. **Weight A**: files whose chain breaks the rule go
+   from `Trusted` to `Valid`. Under ADR-0005 this is strictness that
+   prevents a wrong `Trusted`. It is stricter than 0.27.22 on the expired
+   intermediate only, where it agrees with 0.28.0.
+
+   Confirmed by Maurice van Loon, 2026-09-25 (step 148).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -390,3 +454,4 @@ least one test; every source file maps back to this spec.
 | AC8 | tests/Unit/Trust/ChainCheckTest.php :: AC8: the second oracle: OpenSSL agrees with the walk / SPEC-014 | src/Trust/ChainCheck.php :: check() |
 | AC9 | tests/Unit/Trust/ChainCheckTest.php :: AC9: the three states are told apart by the rule, on paper and on files / SPEC-014 | src/Report/ValidationResult.php :: fromStatuses(); src/Report/ValidationState.php :: Trusted |
 | AC10 | tests/Unit/Trust/ChainCheckTest.php :: AC10: the codes are verbatim, and the drift alarm grows / SPEC-014 | src/Report/StatusCode.php :: SigningCredentialTrusted, SigningCredentialUntrusted, isSuccess(); tests/Pest.php :: SPEC013_CORPUS |
+| AC11 | tests/Unit/Trust/IssuerConstraintsTest.php :: AC11: a proper intermediate still leads to Trusted; AC11: a certificate that may not issue breaks the chain; AC11: the walk the timestamp check shares refuses the same chain / SPEC-014 | src/Trust/ChainCheck.php :: checkCertificates(), issuerFault(); src/Trust/Certificate.php :: $pathLen; the judged time from src/Verifier/Verifier.php, src/Verifier/IngredientManifestCheck.php and src/Timestamp/TimestampCheck.php (genTime) |

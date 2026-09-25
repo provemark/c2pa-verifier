@@ -47,6 +47,9 @@ final readonly class Certificate
 
     public bool $isCa;
 
+    /** basicConstraints pathLenConstraint: how many intermediate CAs may follow this one; null when absent (SPEC-014 amendment 4). */
+    public ?int $pathLen;
+
     /** X.509 version, 1-based (OpenSSL reports 0-based). */
     public int $version;
 
@@ -122,6 +125,7 @@ final readonly class Certificate
         $this->issuer = self::name($parsed['issuer']);
         $extensions = is_array($parsed['extensions'] ?? null) ? $parsed['extensions'] : [];
         $this->isCa = is_string($extensions['basicConstraints'] ?? null) && str_contains($extensions['basicConstraints'], 'CA:TRUE');
+        $this->pathLen = $this->isCa && is_string($extensions['basicConstraints'] ?? null) && preg_match('/pathlen:(\d+)/', $extensions['basicConstraints'], $m) === 1 ? (int) $m[1] : null;
         $this->version = (is_int($parsed['version'] ?? null) ? $parsed['version'] : 0) + 1;
         $this->validFrom = is_int($parsed['validFrom_time_t'] ?? null) ? $parsed['validFrom_time_t'] : 0;
         $this->validTo = is_int($parsed['validTo_time_t'] ?? null) ? $parsed['validTo_time_t'] : 0;

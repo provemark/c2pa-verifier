@@ -175,7 +175,7 @@ final readonly class IngredientManifestCheck
 
         $trustSettings = $settings ?? new TrustSettings([], []);
         if ($trustSettings->verifyTrust) {
-            $statuses = [...$statuses, ...$this->trust->check($manifest, $trustSettings)];
+            $statuses = [...$statuses, ...$this->trust->check($manifest, $trustSettings, $at)];
         }
 
         $hashedUris = $this->hashedUris->check($manifest);

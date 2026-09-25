@@ -189,7 +189,7 @@ final readonly class TimestampCheck
             } catch (TrustException $e) {
                 return new TimestampResult(true, [...$statuses, $this->status(StatusCode::TimeStampUntrusted, $url, sprintf('timestamp cert untrusted: %s — a certificate in the token could not be read: %s', $tsaName, $e->getMessage()))], $tst->genTime, false, $tst->genTimeFraction);
             }
-            foreach ($this->chain->checkCertificates($ordered, $tsaSettings, $url) as $outcome) {
+            foreach ($this->chain->checkCertificates($ordered, $tsaSettings, $url, $tst->genTime) as $outcome) {
                 $trusted = $outcome->code === StatusCode::SigningCredentialTrusted;
                 $statuses[] = $this->status(
                     $trusted ? StatusCode::TimeStampTrusted : StatusCode::TimeStampUntrusted,

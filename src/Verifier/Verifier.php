@@ -235,7 +235,7 @@ final readonly class Verifier
         // only verify_trust false keeps quiet (SPEC-014 amendment 1)
         $trustSettings = $settings ?? new TrustSettings([], []);
         if ($trustSettings->verifyTrust) {
-            $statuses = [...$statuses, ...$this->trust->check($manifest, $trustSettings)];
+            $statuses = [...$statuses, ...$this->trust->check($manifest, $trustSettings, $at)];
             $checks[] = 'trust';
         }
 

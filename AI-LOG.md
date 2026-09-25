@@ -7003,3 +7003,28 @@ README are where the disclosure lives.
 - Measured: `git diff --stat v0.2.1..HEAD -- src` (one file);
   `composer check`.
 - Decided by Maurice: no tag now; the Unreleased section; push.
+
+## 2026-09-25 — Security review; SPEC-014 amendment 4
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI; five review
+  subagents, each read-only on the repository, probes in a scratch
+  directory.
+- Asked: "Als je door de hele code loopt, zie je dan nog security
+  issues?"; then "ja, bereid het amendement en de rode test voor"; then
+  "ja ga verder, bevestigd".
+- Produced: SPEC-014 amendment 4 and AC11; `bin/make-issuer-variants.php`;
+  `tests/Fixtures/trust/issuer/` (five probes, settings, README);
+  `tests/Fixtures/c2patool/issuer/`; `tests/Unit/Trust/IssuerConstraintsTest.php`;
+  `ChainCheck::issuerFault()`, `Certificate::$pathLen`, the judged time
+  passed from `Verifier`, `IngredientManifestCheck` and `TimestampCheck`;
+  `notes/step-148-issuer-constraints.md`; CHANGELOG, NOTES and milestones
+  rows. Committed locally, not pushed.
+- Measured: the review's probe reproduced (`Trusted` here, untrusted in
+  both `c2patool` versions); the five probes through both versions; the
+  tests red (6 failed, 1 passed), then green; `composer check` (510
+  passed); 12,375 runs before and after (5 moved, all probes); the 78
+  Commons files under the recipe (none moved).
+- Reasoned: the review's other findings (four more wrong verdicts and
+  eight crashes or DoS) are listed for the next steps; nothing about them
+  is committed yet.
+- Decided by Maurice: amendment 4 confirmed; no push until the security
+  release.
