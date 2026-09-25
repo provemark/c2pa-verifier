@@ -148,6 +148,18 @@ init segment and an iterable yielding one fragment stream at a time.
   - Then every state and failure code is unchanged. Adding a second kind
     of input may not move the answer for the first.
 
+- **AC8 — a location outside the tree is refused** *(amendment 1; required: error path)*
+  - Given the stream with `seg_1` withheld and a copy of `seg_5` whose
+    merkle box says `location` 5 (`broken/seg_5-location-5.m4s`), and
+    separately with `seg_5` withheld and a copy of `seg_1` saying
+    `location` -1 (`broken/seg_1-location-minus-1.m4s`)
+  - When the stream is verified
+  - Then each is `Invalid` with `assertion.bmffHash.mismatch` and no
+    `assertion.bmffHash.match`, as `c2patool` 0.27.22 and 0.28.0 answer
+    both sets, and the explanation names the fragment and its location.
+    A location is a leaf's place in a tree of `count` leaves: it is at
+    least 0 and less than `count`, or the fragment has no place.
+
 ## References
 
 - Measured, step 82 (`notes/step-82-fragmented-bmff.md`): the box layout
@@ -237,6 +249,24 @@ statuses: a fragmented stream is many files, and each status says which.
    the call. Non-blocker, and worth a sentence in the explanation whichever
    way it goes.
 
+## Amendments
+
+1. **2026-09-25, step 151, found by the security review; measured** *(confirmed by Maurice van Loon, 2026-09-25)* —
+   a fragment's `location` is range-checked: `0 <= location < count`,
+   else `assertion.bmffHash.mismatch` naming the fragment. The path
+   through the tree was computed from the location without that check,
+   so a location past the end took the last leaf's path and a negative
+   one the first leaf's. The merkle box is excluded from the leaf hash,
+   so a copy of a fragment with only its location changed still climbed
+   to the root. The duplicate check saw two different numbers and the
+   count check saw `count` places filled. A stream with one fragment
+   withheld and another offered twice was therefore `Trusted`.
+
+   Measured with both `c2patool` versions on the two sets of AC8: each
+   is refused with `assertion.bmffHash.mismatch`; the untouched stream
+   is `Trusted`. This is a correction toward `c2patool`, not a
+   difference from it. New criterion AC8.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -256,3 +286,4 @@ All tests are in `tests/Unit/Verifier/FragmentedVerifierTest.php`, group
 | AC5 | `AC5: the count is part of the promise` | `BmffHashCheck::checkMerkle()` (the count), `checkFragment()` (a location filled twice) |
 | AC6 | `AC6: more than one merkle map is refused by name` | `FragmentedVerifier::merkleMapOf()`, `BmffHashCheck::merkleMapOf()` |
 | AC7 | `AC7: a whole file still behaves exactly as it did` | `Verifier` (unchanged), `BmffHashCheck::check()` |
+| AC8 | `AC8: a location outside the tree does not fill a place in it` | `BmffHashCheck::checkFragment()` (the range check); `bin/make-fragmented-variants.php` |

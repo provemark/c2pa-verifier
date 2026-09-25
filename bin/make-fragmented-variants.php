@@ -36,6 +36,22 @@ flip($source.'/init.mp4', $directory.'/init-byte-changed.mp4', 13675 + 100);
 // AC3: a leaf. seg_3's mdat begins at 435 in every fragment of this stream.
 flip($source.'/seg_3.m4s', $directory.'/seg_3-byte-changed.m4s', 435 + 100);
 
-printf("2 variants in %s\n", $directory);
+/** A fragment with its merkle box's `location` changed, written under a new name. */
+function relocate(string $from, string $to, string $old, string $new): void
+{
+    $bytes = (string) file_get_contents($from);
+    $key = "\x68location";   // the CBOR text string "location", then its one-byte integer value
+    if (substr_count($bytes, $key.$old) !== 1) {
+        throw new RuntimeException("expected one location {$old} in {$from}");
+    }
+    file_put_contents($to, str_replace($key.$old, $key.$new, $bytes));
+}
+
+// AC8 (step 151, amendment 1): a location outside [0, count). The merkle box is excluded from the
+// leaf hash, so the fragment still hashes to the same leaf; only its claimed place changes.
+relocate($source.'/seg_5.m4s', $directory.'/seg_5-location-5.m4s', "\x04", "\x05");
+relocate($source.'/seg_1.m4s', $directory.'/seg_1-location-minus-1.m4s', "\x00", "\x20");
+
+printf("4 variants in %s\n", $directory);
 printf("AC4 uses ../foreign-seg_3.m4s, a fragment of the seven-fragment stream\n");
 printf("AC5 needs no file: the test offers four fragments, then five with one repeated\n");

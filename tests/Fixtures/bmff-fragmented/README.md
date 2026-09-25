@@ -22,3 +22,11 @@ This verifier refuses the whole stream today, by name: SPEC-026 AC5 refuses
 a `merkle` purpose and SPEC-027 AC5 refuses a `merkle` field. The fixture
 is here because step 82 measured what verifying it would take, and a
 measurement without the file it was made on is a claim.
+
+`broken/` holds the variants `bin/make-fragmented-variants.php` writes, each
+with one thing wrong. Two came with step 151 (SPEC-028 amendment 1):
+`seg_5-location-5.m4s` and `seg_1-location-minus-1.m4s`. Each is a fragment
+whose merkle box names a `location` outside the five-leaf tree, with nothing
+else changed. `c2patool` 0.27.22 and 0.28.0 refuse both sets of AC8 with
+`assertion.bmffHash.mismatch`; their answers are in
+`../c2patool/bmff-fragmented/location-*.txt`.

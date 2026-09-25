@@ -181,3 +181,26 @@ it('AC7: a whole file still behaves exactly as it did', function (): void {
             ->and(in_array(StatusCode::AssertionBmffHashMatch->value, spec028Codes($report), true))->toBeTrue($file);
     }
 })->group('SPEC-028');
+
+// AC8, amendment 1 (step 151)
+it('AC8: a location outside the tree does not fill a place in it', function (): void {
+    // the merkle box is not in the leaf hash, so each copy still climbs to the root: before amendment 1
+    // a location past the end climbed as the last leaf and a negative one as the first, and a withheld
+    // fragment's place was taken by a second copy of another
+    $cases = [
+        'location 5 of 5, seg_1 withheld' => [[...array_slice(spec028Five(), 1), 'broken/seg_5-location-5.m4s'], 'location-5'],
+        'location -1, seg_5 withheld' => [['broken/seg_1-location-minus-1.m4s', ...array_slice(spec028Five(), 0, 4)], 'location-minus-1'],
+    ];
+    foreach ($cases as $name => [$fragments, $oracle]) {
+        $report = spec028Verify($fragments);
+        $recorded = (string) file_get_contents(Corpus::fixtures()."/c2patool/bmff-fragmented/{$oracle}.txt");
+
+        expect($report->result->state)->toBe(ValidationState::Invalid, $name)
+            ->and(spec028Codes($report))->toContain(StatusCode::AssertionBmffHashMismatch->value)
+            ->and(spec028Codes($report))->not->toContain(StatusCode::AssertionBmffHashMatch->value)
+            // c2patool 0.27.22 and 0.28.0 refuse both sets with this code, in text
+            ->and(str_contains($recorded, 'code: "assertion.bmffHash.mismatch"'))->toBeTrue($oracle)
+            // and ours names the fragment and the tree's size
+            ->and(str_contains(spec028Explanations($report), 'location'))->toBeTrue(spec028Explanations($report));
+    }
+})->group('SPEC-028');

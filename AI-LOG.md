@@ -7076,3 +7076,25 @@ README are where the disclosure lives.
   supported or not, never borrows.
 - Decided by Maurice: option B (follow `c2pa-rs`'s reading under
   ADR-0005, not the literal §10.2.2); amendment 6 confirmed.
+
+## 2026-09-25 — Step 151: SPEC-028 amendment 1
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: "ja, bereid lek 4 voor"; then "ja ga verder, bevestigd".
+- Produced: SPEC-028's first amendment, AC8 and its Traceability row;
+  two relocated fragments from `bin/make-fragmented-variants.php` in
+  `tests/Fixtures/bmff-fragmented/broken/` with a README paragraph;
+  c2patool 0.27.22 and 0.28.0 answers in
+  `tests/Fixtures/c2patool/bmff-fragmented/location-*.txt`; the AC8 test
+  in `tests/Unit/Verifier/FragmentedVerifierTest.php`; the range check in
+  `BmffHashCheck::checkFragment()`; `notes/step-151-merkle-location-range.md`;
+  CHANGELOG, NOTES and milestones rows. Committed locally, not pushed.
+- Measured: the review's probe reproduced (`Trusted`); both `c2patool`
+  versions on the genuine and the two broken sets, with the test anchors
+  (`Trusted`; refused with `assertion.bmffHash.mismatch` twice); AC8 red
+  (`Trusted` on both sets), then green; `vendor/bin/pest --group=SPEC-028`
+  (8 passed); `composer check` (514 passed); 18,950 whole-file runs
+  unchanged; 16,807 five-fragment sets before and after (2,520 → 120
+  `Trusted`, the 120 being the orderings of the real five).
+- Reasoned: a missing `count` reads as 0, so every fragment is refused
+  rather than placed.
+- Decided by Maurice: amendment 1 confirmed.

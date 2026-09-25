@@ -35,6 +35,13 @@ patch release.
   §15.12.1.1 now applies only when the active manifest is an update
   manifest. Such a file is `Invalid` with `assertion.dataHash.mismatch`,
   as in both `c2patool` versions. Present in 0.1.0 to 0.2.1.
+- **Security: a fragment's Merkle location must lie inside the tree
+  (SPEC-028 amendment 1).** A fragmented BMFF stream with one fragment
+  withheld and a copy of another fragment carrying an out-of-range
+  `location` in its merkle box could be `Trusted`. A location must now
+  be at least 0 and less than the declared `count`, else
+  `assertion.bmffHash.mismatch` naming the fragment, as both `c2patool`
+  versions refuse such a stream. Present in 0.1.0 to 0.2.1.
 - **A JPEG whose first APP11 piece carries packet sequence number 0 is
   read (SPEC-041).** Microsoft Bing Image Creator writes every store this
   way, and both `c2patool` versions read it. Every later piece must still

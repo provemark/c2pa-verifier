@@ -236,6 +236,11 @@ final readonly class BmffHashCheck
             return sprintf('%s: its merkle box has no location', $name);
         }
         $location = $proof['location'];
+        // SPEC-028 amendment 1: a leaf's place in a tree of $count leaves. path() does not check it, and
+        // the merkle box is not in the leaf hash, so a copy with another number would climb as a real leaf
+        if ($location < 0 || $location >= $count) {
+            return sprintf('%s claims location %d, outside the tree of %d fragment(s) the assertion declares', $name, $location, $count);
+        }
         if (array_key_exists($location, $seen)) {
             return sprintf('%s claims location %d, which another fragment already filled', $name, $location);
         }
