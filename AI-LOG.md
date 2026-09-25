@@ -7251,3 +7251,16 @@ README are where the disclosure lives.
   not known; it was not measured.
 - Decided by Maurice: option 2, the FIFO; the Linux message is recorded as
   a known limit.
+
+## 2026-09-25 — 0.2.2 released; no advisory
+- Model: Claude Opus 5.5 (1M context), Claude Code CLI
+- Asked: whether a GitHub security advisory is needed for 0.2.2, since
+  hardly anyone uses the library yet.
+- Produced: this entry. The tag `v0.2.2` is on 4fe071c (CI green on PHP
+  8.3, 8.4 and 8.5); Packagist lists it. Old local branches removed.
+- Measured: Packagist, 5 downloads in total and 0 dependents; GitHub, 0
+  stars; SECURITY.md promises no advisory or CVE.
+- Decided by Maurice: no GitHub advisory for 0.2.2. The CHANGELOG's
+  Security section, SECURITY.md's findings and the notes of steps 148 to
+  155 are the disclosure. A draft is kept outside the repository in case
+  a user turns up.
