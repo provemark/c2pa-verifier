@@ -7605,3 +7605,15 @@ README are where the disclosure lives.
   collisions), not demonstrated.
 - Decided by Maurice: SPEC-047 amendment 1 confirmed; measure first. Not
   pushed.
+
+## 2026-09-27 — SPEC-048 drafted (step 169)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SHA-1 en MD5 weigeren, stel SPEC-048 op".
+- Produced: `specs/SPEC-048-weak-hashes-in-the-path.md` (draft), a row in
+  `NOTES.md`. No code, no tests.
+- Measured: nothing new; the draft rests on step 168.
+- Reasoned: that SPEC-015 accepts any `rsassaPss` leaf, whatever its hash
+  (read in `CertificateProfileCheck::SIGNATURE_ALGORITHMS`); the RFC 4055
+  default.
+- Decided by Maurice: refuse SHA-1 and MD5 in the path; RSA-1024 as the
+  oracles. Not pushed.
