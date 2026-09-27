@@ -209,7 +209,7 @@ public const int MAX_JSON_BYTES = 262144;   // open question 1
 
    **Weight C:** the evidence changes, not the rule.
 
-   Awaits confirmation by Maurice van Loon.
+   Confirmed by Maurice van Loon, 2026-09-27 (step 162).
 
 2. **2026-09-27, step 161b, found by the whole suite.** AC3's file with
    14 million chunks is a 14 MB `caBX` chunk. After the other tests, the
@@ -223,7 +223,7 @@ public const int MAX_JSON_BYTES = 262144;   // open question 1
 
    **Weight C:** the evidence changes, not the rule.
 
-   Awaits confirmation by Maurice van Loon.
+   Confirmed by Maurice van Loon, 2026-09-27 (step 162).
 
 ## Traceability
 

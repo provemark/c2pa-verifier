@@ -5,7 +5,12 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.2.4 — 2026-09-27
+
+A security release for two wrong verdicts and four inputs that exhausted
+memory or time. All six were found in a review from the side of the first
+plugin that bundles this library. No class, method, member, status code
+or settings shape changed. Every user should upgrade.
 
 ### Security
 - **Only a manifest the ingredient graph reaches may redact (SPEC-035

@@ -7487,3 +7487,20 @@ README are where the disclosure lives.
 - Reasoned: none beyond SPEC-045's own.
 - Decided by Maurice: SPEC-045 approved; JSON limit 256 KiB; SPEC-031
   amendment 3 confirmed. Not pushed (SECURITY.md).
+
+## 2026-09-27 — The check before 0.2.4, and the release texts (step 162)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendments 1 en 2 bevestigd, bereid 0.2.4 voor".
+- Produced: `notes/step-162-pre-release-check.md`, rows 157–162 and
+  SPEC-045 in `docs/milestones.md`, the README's count of wrong verdicts,
+  a paragraph in `docs/trust-settings.md`, a row in `NOTES.md`; SPEC-045
+  amendments 1 and 2 marked confirmed; `CHANGELOG.md` (0.2.4),
+  `README.md` (current tag), `SECURITY.md` (findings of 2026-09-27).
+- Measured: `composer spec-check`, `composer check` (536 passed);
+  `php bin/fuzz.php 20260927 60` over 176 files (10,161 runs, 0 faults, 45
+  `Valid`), both `c2patool` versions on the 45 (all `Valid`);
+  `php bin/package-check.php` (336 files); `php bin/api-check.php` (126
+  symbols); the surface and `StatusCode` diffed against `v0.2.3` (empty).
+- Reasoned: 0.2.4 rather than 0.3.0, by step 138's rule.
+- Decided by Maurice: SPEC-045 amendments 1 and 2 confirmed; prepare
+  0.2.4. Push, tag and Packagist wait for his permission.

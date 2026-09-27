@@ -72,11 +72,12 @@ once before and was wrong: see `PRED-IMG-004` below.
 
 ## Findings so far
 
-The project keeps its own record. Nine cases of a wrong `Valid` or
+The project keeps its own record. Eleven cases of a wrong `Valid` or
 `Trusted` have been found in it, all by the maintainers: two before any
 release, one after `0.1.0`, five, with eight ways to crash the verifier,
-in the security review of 2026-09-25, fixed in `0.2.2`, and one fixed in
-`0.2.3`:
+in the security review of 2026-09-25, fixed in `0.2.2`, one fixed in
+`0.2.3`, and two, with four ways to exhaust the verifier, in a review of
+2026-09-27, fixed in `0.2.4`:
 
 - **2026-09-22, no hard binding** (`notes/step-47-no-hard-binding.md`).
   A correctly signed manifest with no `c2pa.hash.data` assertion — a
@@ -143,6 +144,28 @@ in the security review of 2026-09-25, fixed in `0.2.2`, and one fixed in
   one. Found while measuring the verifier under php-wasm, where the same
   function also shifts the time by the host's timezone. Closed by
   SPEC-044: the validity is read from the certificate's own DER.
+
+- **2026-09-27, a review from the side of the first user — fixed in
+  `0.2.4`** (`notes/step-157-review-from-the-plugin.md`). The WordPress
+  plugin that bundles the library runs it on every upload, so the library
+  was reviewed again before the plugin was published. Two wrong verdicts:
+  - a manifest that nothing references, and so is never validated,
+    could declare an assertion of the active manifest redacted; with that
+    box removed, the file stayed `Valid` or `Trusted`. Present in `0.2.1`
+    to `0.2.3`. Both `c2patool` versions say `Invalid` (step 158,
+    SPEC-035 amendment 5);
+  - under the legacy `trust.trust_anchors`, which anchor time-stamping
+    authorities as well as signers, a certificate whose only EKU is Time
+    Stamping could sign a `Trusted` manifest. Present in `0.1.0` to
+    `0.2.3`. Both `c2patool` versions still say `Trusted`; this verifier
+    no longer does (step 159, SPEC-031 amendment 3).
+
+  Memory or time exhausted, or an exception: a JSON assertion with no
+  size limit (4 MB was fatal at 256M), one assertion hashed once per
+  reference to it (20.6 s for 1,000), CBOR string chunks that cost no
+  item (47 s for 14 million in the unsigned COSE header), and an empty
+  embedded-file description box that threw `ValueError` (step 161,
+  SPEC-045).
 
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now

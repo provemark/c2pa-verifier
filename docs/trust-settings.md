@@ -51,7 +51,11 @@ put on a signature.* Leave it out if you would rather see those files as
 
 The settings file holds the contents of the PEM files, not their paths.
 The C2PA lists become separate entries, so that the signer list anchors
-no timestamp authority and the reverse (C2PA 2.4 §14.4):
+no timestamp authority and the reverse (C2PA 2.4 §14.4). The older single
+field, `trust.trust_anchors`, anchors both at once; this verifier then
+still refuses to trust a signer whose only EKU is Time Stamping, which
+`c2patool` does trust (SPEC-031 AC9), but separate entries say what is
+meant:
 
 ```sh
 php -r '
