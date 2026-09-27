@@ -7383,3 +7383,23 @@ README are where the disclosure lives.
 - Decided by Maurice: publish in the site repository; the Google Pixel
   photo instead of the OpenAI file, with a third trust choice for Google's
   Pixel CAs; link the demo for findability.
+
+## 2026-09-27 — A review from the plugin's side, recorded
+- Model: Claude Opus 5.5, Claude Code CLI (three read-only review agents
+  and a check of their main proofs)
+- Asked: review the verifier as seriously as the WordPress plugin that
+  bundles it was reviewed; then "leg de bevindingen eerst vast in NOTES.md
+  van de verifier".
+- Produced: `notes/step-157-review-from-the-plugin.md` and its row in
+  `NOTES.md`. Nothing in `src/` changed.
+- Measured: with probe scripts outside the repository against the public
+  API: the redaction bypass (`Valid`), a TSA certificate as signer under
+  legacy anchors (`Trusted`), a 4 MB JSON assertion (fatal at 256M), 3,000
+  references to one 8 MB assertion (62.8 s), 14 million CBOR chunks
+  (48.6 s), an empty `bfdb` (`ValueError`); 349 fixtures on PHP 8.3.33 and
+  8.5.8 identical. Re-run by hand: the redaction bypass, the TSA case, the
+  JSON fatal, the `ValueError`, 300 references (6.1 s).
+- Reasoned: the v1 AI-label removal, the lower chain, OCSP and ESSCertID
+  findings. Not measured: `c2patool` on the probes, PHP 8.4.
+- Decided by Maurice: record the findings first. Not pushed (the
+  repository is public; SECURITY.md).
