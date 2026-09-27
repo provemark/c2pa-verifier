@@ -7650,3 +7650,15 @@ README are where the disclosure lives.
 - Reasoned: 0.2.5 rather than 0.3.0, by step 138's rule.
 - Decided by Maurice: SPEC-048 amendment 1 confirmed; prepare 0.2.5. Push,
   tag and Packagist wait for his permission.
+
+## 2026-09-27 — 0.2.5 released (step 172)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push en release 0.2.5".
+- Produced: `main` pushed (steps 164–171), the annotated tag `v0.2.5` on
+  `0e1da23`, rows in `docs/milestones.md` and `NOTES.md`.
+- Measured: `gh repo view` (public); CI run 36322668888 green on 8.3, 8.4
+  and 8.5; the GitHub zip of `v0.2.5` and `git archive v0.2.5`, 349 files
+  each, identical lists; `bin/package-check.php` 349; Packagist lists
+  `v0.2.5`; a fresh `composer require provemark/c2pa-verifier:^0.2`
+  installs v0.2.5 and calls `nc-outside.png` `Valid`.
+- Decided by Maurice: push and release.
