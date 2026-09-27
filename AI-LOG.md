@@ -7634,3 +7634,19 @@ README are where the disclosure lives.
 - Reasoned: the RFC 4055 default; the case against SHA-1 (not
   reproduced).
 - Decided by Maurice: SPEC-048 approved. Not pushed.
+
+## 2026-09-27 — The check before 0.2.5, and the release texts (step 171)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendment 1 bevestigd, bereid 0.2.5 voor".
+- Produced: `notes/step-171-pre-release-check.md`; `CHANGELOG.md` (0.2.5),
+  `SECURITY.md` (the chain findings), `README.md` (current tag, fifteen
+  cases); rows in `NOTES.md` and `docs/milestones.md`; SPEC-048 amendment 1
+  marked confirmed.
+- Measured: `composer spec-check`, `composer check` (552 passed);
+  `php bin/fuzz.php 20260927 60` over 193 files (11,181 runs, 0 faults, 46
+  `Valid`), both `c2patool` versions on the 46 (all `Valid`);
+  `php bin/package-check.php` (348 files); `php bin/api-check.php`; the
+  surface and `StatusCode` diffed against `v0.2.4` (empty).
+- Reasoned: 0.2.5 rather than 0.3.0, by step 138's rule.
+- Decided by Maurice: SPEC-048 amendment 1 confirmed; prepare 0.2.5. Push,
+  tag and Packagist wait for his permission.

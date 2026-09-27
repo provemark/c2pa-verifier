@@ -152,7 +152,7 @@ No public API changes.
 
    **Weight C:** the evidence, and one more named difference.
 
-   Awaits confirmation by Maurice van Loon.
+   Confirmed by Maurice van Loon, 2026-09-27 (step 171).
 
 ## Traceability
 

@@ -5,6 +5,48 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.2.5 — 2026-09-27
+
+A security release for four wrong `Trusted` in the certificate chain,
+found by measuring the lower findings of the review of 2026-09-27, and for
+three refusals that are stricter than `c2patool` by the maintainer's
+decision. No class, method, member, status code or settings shape
+changed. Every user should upgrade.
+
+### Security
+- **Name constraints are enforced (SPEC-046).** A subordinate CA limited
+  to one organisation's names could issue a certificate naming any
+  organisation, and the file was `Trusted`. `directoryName` and
+  `rfc822Name` constraints are now evaluated as RFC 5280 §4.2.1.10 says;
+  a leaf outside them is `signingCredential.untrusted`. Present in 0.1.0
+  to 0.2.4. Both `c2patool` versions say `untrusted`.
+- **An unknown critical extension stops the path (SPEC-046).** A
+  certificate's extensions are read from its DER with their critical flag.
+  One this verifier does not process is `signingCredential.untrusted`
+  anywhere in the path and also `signingCredential.invalid` in the leaf,
+  as both `c2patool` versions give it. Present in 0.1.0 to 0.2.4.
+- **The signer's chain is looked for where it may be (SPEC-047).** A
+  chain under label 33 in the unprotected header, and a chain in both
+  headers, were read and could be `Trusted`. Both are now refused, as
+  `c2patool` refuses them. Present in 0.1.0 to 0.2.4.
+
+### Changed
+- **In a claim v2 or later, the chain must be in the protected header
+  (SPEC-047).** The unprotected header is not signed, so a chain there
+  could be exchanged for another certificate for the same key, and that
+  certificate was shown as the signer. Such a file is now
+  `signingCredential.invalid`. A claim v1 keeps the older form. Stricter
+  than `c2patool`.
+- **No MD5 or SHA-1 signature between the anchor and the leaf
+  (SPEC-048).** RSASSA-PSS counts by its hash, and an absent hash is
+  SHA-1. Such a path is `signingCredential.untrusted`, and a PSS leaf over
+  SHA-1 is `signingCredential.invalid`. Stricter than OpenSSL and
+  `c2patool`.
+- **A name constraint of another form (`dNSName`, URI, IP address) fails
+  closed (SPEC-046).** Stricter than OpenSSL, which evaluates them.
+
+The differences are named in `docs/comparison.md`.
+
 ## 0.2.4 — 2026-09-27
 
 A security release for two wrong verdicts and four inputs that exhausted

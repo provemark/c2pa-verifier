@@ -72,12 +72,13 @@ once before and was wrong: see `PRED-IMG-004` below.
 
 ## Findings so far
 
-The project keeps its own record. Eleven cases of a wrong `Valid` or
+The project keeps its own record. Fifteen cases of a wrong `Valid` or
 `Trusted` have been found in it, all by the maintainers: two before any
 release, one after `0.1.0`, five, with eight ways to crash the verifier,
 in the security review of 2026-09-25, fixed in `0.2.2`, one fixed in
-`0.2.3`, and two, with four ways to exhaust the verifier, in a review of
-2026-09-27, fixed in `0.2.4`:
+`0.2.3`, two, with four ways to exhaust the verifier, in a review of
+2026-09-27, fixed in `0.2.4`, and four more from that review's lower
+findings, fixed in `0.2.5`:
 
 - **2026-09-22, no hard binding** (`notes/step-47-no-hard-binding.md`).
   A correctly signed manifest with no `c2pa.hash.data` assertion — a
@@ -166,6 +167,21 @@ in the security review of 2026-09-25, fixed in `0.2.2`, one fixed in
   item (47 s for 14 million in the unsigned COSE header), and an empty
   embedded-file description box that threw `ValueError` (step 161,
   SPEC-045).
+
+- **2026-09-27, the certificate chain — present in `0.1.0` to `0.2.4`,
+  fixed in `0.2.5`** (`notes/step-164-chain-constraints-measured.md`). The
+  review's lower findings, measured on a throw-away hierarchy against both
+  `c2patool` versions and `openssl verify`, gave four wrong `Trusted`:
+  - a leaf outside an intermediate's name constraints;
+  - an unknown critical extension in the leaf;
+  - an unknown critical extension in an intermediate;
+  - a chain read from the unprotected header under label 33, or from both
+    headers.
+
+  `c2patool` refuses all four. They were closed by SPEC-046 and SPEC-047.
+  The same release refuses, beyond `c2patool`, an unprotected chain in a
+  claim v2 or later, and MD5 or SHA-1 signatures in the path (SPEC-047,
+  SPEC-048).
 
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now
