@@ -156,7 +156,7 @@ No public API changes.
 
    **Weight C:** where the rule sits, not what it decides.
 
-   Awaits confirmation by Maurice van Loon.
+   Confirmed by Maurice van Loon, 2026-09-27 (step 167).
 
 ## Traceability
 

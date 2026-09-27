@@ -31,23 +31,21 @@
       "signature_info": {
         "alg": "Es256",
         "issuer": "C2PA Verifier throw-away hierarchy",
-        "common_name": "Leaf under a critical intermediate",
-        "cert_serial_number": "614303"
+        "common_name": "Leaf under an RSA-1024 intermediate",
+        "cert_serial_number": "866577"
       },
       "label": "urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0",
       "claim_version": 2
     }
   },
-  "validation_status": [
-    {
-      "code": "signingCredential.untrusted",
-      "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature",
-      "explanation": "signing certificate untrusted"
-    }
-  ],
   "validation_results": {
     "activeManifest": {
       "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature",
+          "explanation": "signing certificate trusted, found in [system_anchors] trust anchors"
+        },
         {
           "code": "claimSignature.insideValidity",
           "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature",
@@ -79,15 +77,17 @@
           "explanation": "data hash valid"
         }
       ],
-      "informational": [],
-      "failure": [
+      "informational": [
         {
-          "code": "signingCredential.untrusted",
+          "code": "signingCredential.ocsp.skipped",
           "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature",
-          "explanation": "signing certificate untrusted"
+          "explanation": "OCSP fetching skipped"
         }
-      ]
-    }
+      ],
+      "failure": []
+    },
+    "specVersion": "2.4.0",
+    "trustListUri": "system_anchors"
   },
-  "validation_state": "Valid"
+  "validation_state": "Trusted"
 }

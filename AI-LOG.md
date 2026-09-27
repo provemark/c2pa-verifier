@@ -7588,3 +7588,20 @@ README are where the disclosure lives.
   of `x5chain-text-swapped.png` after the change.
 - Reasoned: none beyond the spec's own.
 - Decided by Maurice: SPEC-047 approved with option A. Not pushed.
+
+## 2026-09-27 — The algorithms of intermediates, measured (step 168)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendment 1 bevestigd, maar is nu alles opgelost?"; after
+  the list of what is still open, "akkoord, doe eerst de meting".
+- Produced: two variants in `bin/make-chain-constraint-variants.php` and
+  its own Sig_structure; all `tests/Fixtures/chain-constraints/` files and
+  their answers rebuilt; `notes/step-168-intermediate-algorithms.md`, rows
+  in `NOTES.md` and `docs/milestones.md`; SPEC-047 amendment 1 marked
+  confirmed.
+- Measured: `openssl verify` (OpenSSL 3.6.3), both `c2patool` versions and
+  this verifier on the two new files (all `Trusted`); `composer check`
+  (547 passed) on the rebuilt files.
+- Reasoned: the case for refusing SHA-1 in the path (chosen-prefix
+  collisions), not demonstrated.
+- Decided by Maurice: SPEC-047 amendment 1 confirmed; measure first. Not
+  pushed.

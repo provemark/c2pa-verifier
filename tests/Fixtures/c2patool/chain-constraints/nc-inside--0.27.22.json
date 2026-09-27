@@ -32,7 +32,7 @@
         "alg": "Es256",
         "issuer": "Permitted Org",
         "common_name": "Inside the constraint",
-        "cert_serial_number": "899191"
+        "cert_serial_number": "694827"
       },
       "label": "urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0",
       "claim_version": 2
