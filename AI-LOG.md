@@ -7536,3 +7536,18 @@ README are where the disclosure lives.
   (`cert_chain_from_sign1`) where c2pa-rs looks for the chain; the reach
   of the swap.
 - Decided by Maurice: measure first. Not pushed (SECURITY.md).
+
+## 2026-09-27 — SPEC-046 and SPEC-047 drafted (step 165)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, A geen melding bij Adobe".
+- Produced: `specs/SPEC-046-chain-constraints.md` and
+  `specs/SPEC-047-x5chain-placement.md` (drafts), a row in `NOTES.md`. No
+  code, no tests.
+- Measured: nothing new; the drafts rest on step 164's measurements.
+- Reasoned: from `c2pa` `certificate_trust/openssl.rs` (`X509_STRICT`,
+  `PARTIAL_CHAIN`, no policy check) and `certificate_profile.rs` (the
+  leaf's handled extensions), read at `main`. The C2PA 2.2 HTML was
+  fetched for the chain's placement and came back truncated (SPEC-047 open
+  question 1).
+- Decided by Maurice: option A for the unprotected `"x5chain"` in v2
+  claims; no report to Adobe. Not pushed (SECURITY.md).
