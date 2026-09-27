@@ -24,6 +24,8 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  */
 final readonly class ChainCheck
 {
+    private const EKU_TIME_STAMPING = '1.3.6.1.5.5.7.3.8';
+
     /** @return list<ValidationStatus> */
     public function check(Manifest $manifest, TrustSettings $settings, ?int $at = null): array
     {
@@ -45,6 +47,7 @@ final readonly class ChainCheck
         }
 
         $statuses = $this->checkCertificates($chain, $settings, $url, $at);
+        $statuses = $this->timeStampingSigner($chain, $settings, $url, $at, $statuses);
         $note = self::kindNote($settings, TrustAnchorSet::MANIFEST, $chain);
         if ($note === '') {
             return $statuses;
@@ -54,6 +57,32 @@ final readonly class ChainCheck
         return array_map(static fn (ValidationStatus $s): ValidationStatus => $s->code === StatusCode::SigningCredentialUntrusted
             ? new ValidationStatus($s->code, $s->url, $s->explanation.$note)
             : $s, $statuses);
+    }
+
+    /**
+     * A signer whose only EKU is Time Stamping is trusted only by what vouches for signers alone
+     * (SPEC-031 amendment 3): a "manifest" entry or an allowed list, never the legacy
+     * `trust_anchors`, which anchor signers and time-stamping authorities alike. Otherwise whoever
+     * holds a TSA key under such a list signs manifests that come out Trusted, as c2pa-rs allows.
+     * Time Stamping beside another EKU is already a profile fault (SPEC-015), so it is left alone.
+     *
+     * @param  non-empty-list<Certificate>  $chain
+     * @param  list<ValidationStatus>  $statuses  the outcome under the whole settings
+     * @return list<ValidationStatus>
+     */
+    private function timeStampingSigner(array $chain, TrustSettings $settings, string $url, ?int $at, array $statuses): array
+    {
+        $trusted = array_filter($statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialTrusted) !== [];
+        if (! $trusted || $settings->trustAnchors === [] || $chain[0]->extendedKeyUsage !== [self::EKU_TIME_STAMPING]) {
+            return $statuses;
+        }
+        $signersOnly = new TrustSettings([], $settings->allowedList, $settings->trustConfig, $settings->verifyTrust, $settings->anchorSets);
+        $without = $this->checkCertificates($chain, $signersOnly, $url, $at);
+        if (array_filter($without, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialTrusted) !== []) {
+            return $without;
+        }
+
+        return [new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s carries only the Time Stamping EKU and reaches only the legacy trust_anchors, which anchor time-stamping authorities as well as signers; a "manifest" entry of trust.anchors or the allowed list must vouch for it as a signer', $chain[0]->subjectCn()))];
     }
 
     /**

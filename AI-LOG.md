@@ -7428,3 +7428,25 @@ README are where the disclosure lives.
 - Decided by Maurice: go ahead with step 158; finding 2 option A (refuse a
   signer whose only EKU is timeStamping under legacy anchors, and document
   it as a deliberate difference). Not pushed (SECURITY.md).
+
+## 2026-09-27 — Under the legacy anchors a TSA certificate signs nothing (step 159)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendment 5 bevestigd".
+- Produced: `src/Trust/ChainCheck.php` (`timeStampingSigner()`),
+  `bin/make-tsa-signer-variants.php`, `tests/Fixtures/tsa-signer/` (two
+  re-signed PNGs, their leaf certificates, the throw-away root, three
+  settings files, a README), `tests/Fixtures/c2patool/tsa-signer/` (twelve
+  oracle reports), SPEC-031 AC9 and amendment 3, AC9 in
+  `tests/Unit/Trust/TrustAnchorsTest.php`, a row in `docs/comparison.md`,
+  `notes/step-159-tsa-signer.md`, rows in `NOTES.md` and `CHANGELOG.md`;
+  SPEC-035 amendment 5 marked confirmed.
+- Measured: both `c2patool` versions on both leaves under the three
+  settings files (table in the note); `vendor/bin/pest --group=SPEC-031`
+  (1 failed, then 9 passed); a first build that also caught Time Stamping
+  beside another EKU failed SPEC-015 AC2 and AC10 on `eku-mixed` and was
+  narrowed; `composer check` (532 passed); 21,384 runs before and after
+  (one moved).
+- Reasoned: that the TSA's own chain must keep the legacy anchors, so the
+  rule lives in `check()` and not in `checkCertificates()`.
+- Decided by Maurice: confirmed SPEC-035 amendment 5; go ahead with step
+  159 (option A, chosen earlier). Not pushed (SECURITY.md).

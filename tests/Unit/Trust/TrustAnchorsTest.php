@@ -274,3 +274,24 @@ it('AC8: a trust_config counts for its own entry', function (): void {
     $e5 = spec031Verify($probe, spec031Settings('e5-config-on-another-entry'));
     expect(spec031Codes($e5, 'signingCredential.invalid'))->toBe(['signingCredential.invalid']);
 })->group('SPEC-031');
+
+it('AC9: under the legacy anchors a time-stamping certificate signs nothing (amendment 3)', function (): void {
+    // step 159: bin/make-tsa-signer-variants.php, a throw-away root and two leaves re-signing the PNG fixture
+    $oracle = static fn (string $leaf, string $settings, string $version): mixed => spec020Oracle("tsa-signer/{$leaf}--{$settings}--{$version}.json")['validation_state'];
+    $verify = static fn (string $leaf, string $settings): VerificationReport => spec031Verify("tsa-signer/{$leaf}.png", spec031Settings("tsa-signer/{$settings}.settings.json"));
+    foreach (['0.28.0', '0.27.22'] as $version) {
+        // the recorded difference: c2pa-rs lets the legacy list anchor a TSA certificate as a signer
+        expect($oracle('tsa-only', 'legacy', $version))->toBe('Trusted', $version)
+            ->and($oracle('email', 'legacy', $version))->toBe('Trusted', $version);
+    }
+    $tsa = $verify('tsa-only', 'legacy');
+    $untrusted = array_values(array_filter($tsa->result->statuses, static fn (ValidationStatus $s): bool => $s->code->value === 'signingCredential.untrusted'));
+    expect($tsa->result->state->value)->toBe('Valid')
+        ->and(count($untrusted))->toBe(1)
+        ->and($untrusted[0]->explanation ?? '')->toContain('Time Stamping');
+    // the guard: the same root and field vouch for an ordinary signer, and the two outcomes differ
+    expect($verify('email', 'legacy')->result->state->value)->toBe('Trusted');
+    // a "manifest" entry is the settings' own statement that the root anchors signers: unchanged, as c2patool 0.28.0
+    expect($verify('tsa-only', 'manifest-entry')->result->state->value)->toBe('Trusted')
+        ->and($oracle('tsa-only', 'manifest-entry', '0.28.0'))->toBe('Trusted');
+})->group('SPEC-031');

@@ -213,6 +213,19 @@ the 2.4 text on 2026-09-24, step 110):
     - E1, E2, E2b and E9 (the legacy shape) are already this verifier's
       verdicts today, measured.
 
+- **AC9 — under the legacy anchors a time-stamping certificate signs nothing** *(amendment 3; required: error path)*
+  - Given a throw-away root and two leaves under it, one whose only EKU is
+    Time Stamping and one whose only EKU is E-mail Protection, each
+    re-signing the PNG fixture, and the root named once in the legacy
+    `trust.trust_anchors` and once as a `"manifest"` entry
+  - When each is verified
+  - Then the Time Stamping leaf under the legacy field is
+    `signingCredential.untrusted` and `Valid`, with an explanation that
+    names the EKU; the E-mail Protection leaf under the same field stays
+    `Trusted`; the Time Stamping leaf under the `"manifest"` entry stays
+    `Trusted`. Both `c2patool` versions call the first `Trusted`, which is
+    the difference named in `docs/comparison.md`.
+
 - **AC7 — the drift alarm learns the new shape**
   - Given the corpus runs that already use `full.settings.json` and
     `full-plus-digicert-g4.settings.json`
@@ -384,6 +397,33 @@ final readonly class TrustSettings
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 120).
 
+3. **2026-09-27, step 159, found by the review of step 157.** The legacy
+   `trust.trust_anchors` anchor signers and time-stamping authorities
+   alike (AC6), and the certificate profile accepts a signer whose only
+   EKU is Time Stamping, as `c2pa-rs`'s built-in list does
+   (SPEC-015). Together, whoever holds the key of a time-stamping
+   authority under such a list could sign manifests that come out
+   `Trusted`. The review measured it on the Pixel 10's TSA certificate
+   under `google-pixel-intermediates.settings.json`, and step 159
+   measured it on a throw-away hierarchy. Both `c2patool` versions say
+   `Trusted` there, and 0.28.0 says so even when the root is only a
+   `"tsa"` entry (AC6's known difference).
+
+   Now a signer whose only EKU is Time Stamping is trusted only by what
+   vouches for signers alone: a `"manifest"` entry or an allowed list. If
+   only the legacy field reaches it, the result is
+   `signingCredential.untrusted`. Time Stamping beside another EKU is
+   already a profile fault (SPEC-015) and is left as it was. The time-stamping side is not touched:
+   a TSA's own chain still reaches the legacy anchors. New criterion AC9.
+
+   ADR-0005: stricter than `c2patool` because it prevents unchecked
+   trust. Maurice van Loon chose this over only documenting the risk,
+   2026-09-27.
+
+   **Weight A.** Files that were wrongly `Trusted` become `Valid`.
+
+   Awaits confirmation by Maurice van Loon.
+
 ## Traceability
 
 Filled when status becomes `implemented`.
@@ -398,3 +438,4 @@ Filled when status becomes `implemented`.
 | AC6 | tests/Unit/Trust/TrustAnchorsTest.php :: AC6: every anchor counts only for its own kind / SPEC-031 | src/Trust/ChainCheck.php :: anchorsOf(), tsaAnchorsOf(), kindNote(), check(); src/Timestamp/TimestampCheck.php :: tsaSettings(), check() (the note); src/Trust/TrustAnchorSet.php :: __construct() (§14.4.3) |
 | AC7 | tests/Unit/Trust/TrustAnchorsTest.php :: AC7: the drift alarm learns the new shape / SPEC-031 | src/Trust/ChainCheck.php :: kindNote() (only an entry the chain would reach is named) |
 | AC8 | tests/Unit/Trust/TrustAnchorsTest.php :: AC8: a trust_config counts for its own entry / SPEC-031 | src/Trust/CertificateProfileCheck.php :: check(), acceptedEkus() |
+| AC9 | tests/Unit/Trust/TrustAnchorsTest.php :: AC9: under the legacy anchors a time-stamping certificate signs nothing (amendment 3) / SPEC-031 | src/Trust/ChainCheck.php :: check(), timeStampingSigner() |

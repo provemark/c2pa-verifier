@@ -372,7 +372,7 @@ Questions 2, 3 and 4 were settled by adopting their proposals.
    **Weight A.** Files that were wrongly `Valid` or `Trusted` become
    `Invalid`.
 
-   Awaits confirmation by Maurice van Loon.
+   Confirmed by Maurice van Loon, 2026-09-27 (step 158).
 
 ## Traceability
 

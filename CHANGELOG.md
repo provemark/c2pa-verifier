@@ -16,6 +16,13 @@ committed.
   stayed `Valid`, or `Trusted`. Present in 0.2.1 to 0.2.3. Both `c2patool`
   versions say `Invalid` (`assertion.missing`), and so does this verifier
   now.
+- **Under the legacy `trust.trust_anchors`, a certificate whose only EKU
+  is Time Stamping no longer signs a `Trusted` manifest (SPEC-031
+  amendment 3).** That field anchors time-stamping authorities as well as
+  signers, so a TSA key could sign content that came out `Trusted`. Such a
+  signer is now trusted only by a `"manifest"` entry of `trust.anchors` or
+  the allowed list. Both `c2patool` versions still call it `Trusted`; the
+  difference is named in `docs/comparison.md`.
 
 ## 0.2.3 — 2026-09-25
 
