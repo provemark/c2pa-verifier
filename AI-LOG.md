@@ -7504,3 +7504,17 @@ README are where the disclosure lives.
 - Reasoned: 0.2.4 rather than 0.3.0, by step 138's rule.
 - Decided by Maurice: SPEC-045 amendments 1 and 2 confirmed; prepare
   0.2.4. Push, tag and Packagist wait for his permission.
+
+## 2026-09-27 — 0.2.4 released (step 163)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "A, push en release 0.2.4".
+- Produced: `main` pushed (steps 157–162), the annotated tag `v0.2.4` on
+  `7740353`, rows in `docs/milestones.md` and `NOTES.md`.
+- Measured: `gh repo view` (public); CI run 36302993316 green on 8.3, 8.4
+  and 8.5; the GitHub zip of `v0.2.4` and `git archive v0.2.4`, 337 files
+  each, identical lists; `bin/package-check.php` 337; Packagist's
+  `p2/provemark/c2pa-verifier.json` lists `v0.2.4`; a fresh
+  `composer require provemark/c2pa-verifier:^0.2` installs v0.2.4, and
+  its CLI gives `Invalid` (exit 1) on the redaction fixture.
+- Decided by Maurice: option A, publish the texts about `c2patool`'s
+  behaviour for the Time-Stamping signer as they are; push and release.
