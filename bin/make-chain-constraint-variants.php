@@ -15,6 +15,9 @@ declare(strict_types=1);
  *                        leaf has no DNS name (SPEC-046 AC5: a form this verifier does not evaluate)
  *   int-sha1             an intermediate the root signed with ecdsa-with-SHA1 (step 168)
  *   int-rsa1024          an intermediate with an RSA key of 1024 bits, which signs the leaf (step 168)
+ *   md5-intermediate     a second intermediate, signed by the RSA-1024 one with md5WithRSAEncryption (SPEC-048)
+ *   pss-sha1-intermediate  the same, signed with RSASSA-PSS over SHA-1: no hash parameter (SPEC-048)
+ *   pss-sha1-leaf        a leaf the RSA-1024 intermediate signs with RSASSA-PSS over SHA-1 (SPEC-048)
  *   policy-required      an intermediate with a critical policyConstraints requireExplicitPolicy:0; the
  *                        leaf carries no certificatePolicies, so no policy is valid (RFC 5280 §6.1.5)
  *   critical-leaf        the leaf carries a critical extension of an unknown OID (RFC 5280 §4.2)
@@ -203,7 +206,7 @@ authorityKeyIdentifier = keyid
 CNF);
 
 /** A key, a CSR and a certificate for $name, issued by $issuer (null: self-signed root). */
-$issue = static function (string $name, string $subject, string $section, ?string $issuer, ?string $keyOf = null, string $digest = 'sha256', bool $rsa1024 = false) use ($keys): string {
+$issue = static function (string $name, string $subject, string $section, ?string $issuer, ?string $keyOf = null, string $digest = 'sha256', bool $rsa1024 = false, bool $pss = false) use ($keys): string {
     $key = "{$keys}/".($keyOf ?? $name).'.key';
     if (! is_file($key)) {
         ccRun($rsa1024 ? ccSh('openssl', 'genrsa', '-out', $key, '1024') : ccSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', $key));
@@ -212,7 +215,7 @@ $issue = static function (string $name, string $subject, string $section, ?strin
         ccRun(ccSh('openssl', 'req', '-x509', '-new', '-key', $key, '-subj', $subject, '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', $section, '-out', "{$keys}/{$name}.pem"));
     } else {
         ccRun(ccSh('openssl', 'req', '-new', '-key', $key, '-subj', $subject, '-config', "{$keys}/ext.cnf", '-out', "{$keys}/{$name}.csr"));
-        ccRun(ccSh('openssl', 'x509', '-req', '-in', "{$keys}/{$name}.csr", '-CA', "{$keys}/{$issuer}.pem", '-CAkey', "{$keys}/{$issuer}.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-'.$digest, '-extfile', "{$keys}/ext.cnf", '-extensions', $section, '-out', "{$keys}/{$name}.pem"));
+        ccRun(ccSh(...['openssl', 'x509', '-req', '-in', "{$keys}/{$name}.csr", '-CA', "{$keys}/{$issuer}.pem", '-CAkey', "{$keys}/{$issuer}.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-'.$digest, ...($pss ? ['-sigopt', 'rsa_padding_mode:pss'] : []), '-extfile', "{$keys}/ext.cnf", '-extensions', $section, '-out', "{$keys}/{$name}.pem"]));
     }
 
     return (string) file_get_contents("{$keys}/{$name}.pem");
@@ -224,6 +227,8 @@ $pem['int-nc'] = $issue('int-nc', "{$org}/CN=Name-constrained Intermediate", 'v3
 $pem['int-nc-dns'] = $issue('int-nc-dns', "{$org}/CN=DNS-constrained Intermediate", 'v3_nc_dns', 'root');
 $pem['int-sha1'] = $issue('int-sha1', "{$org}/CN=Intermediate signed with SHA-1", 'v3_intermediate', 'root', null, 'sha1');
 $pem['int-rsa1024'] = $issue('int-rsa1024', "{$org}/CN=Intermediate with an RSA-1024 key", 'v3_intermediate', 'root', null, 'sha256', true);
+$pem['int-md5'] = $issue('int-md5', "{$org}/CN=Intermediate signed with MD5", 'v3_intermediate', 'int-rsa1024', null, 'md5');
+$pem['int-pss-sha1'] = $issue('int-pss-sha1', "{$org}/CN=Intermediate signed with RSASSA-PSS over SHA-1", 'v3_intermediate', 'int-rsa1024', null, 'sha1', false, true);
 $pem['int-policy'] = $issue('int-policy', "{$org}/CN=Policy-constrained Intermediate", 'v3_policy', 'root');
 $pem['int-critical'] = $issue('int-critical', "{$org}/CN=Intermediate with an unknown critical extension", 'v3_critical_intermediate', 'root');
 $pem['int-plain'] = $issue('int-plain', "{$org}/CN=Plain Intermediate", 'v3_intermediate', 'root');
@@ -232,6 +237,9 @@ $pem['nc-outside'] = $issue('nc-outside', '/O=Other Org/CN=Outside the constrain
 $pem['nc-dns'] = $issue('nc-dns', "{$org}/CN=Leaf under a DNS constraint", 'v3_leaf', 'int-nc-dns');
 $pem['sha1-intermediate'] = $issue('sha1-intermediate', "{$org}/CN=Leaf under a SHA-1 intermediate", 'v3_leaf', 'int-sha1');
 $pem['rsa1024-intermediate'] = $issue('rsa1024-intermediate', "{$org}/CN=Leaf under an RSA-1024 intermediate", 'v3_leaf', 'int-rsa1024');
+$pem['md5-intermediate'] = $issue('md5-intermediate', "{$org}/CN=Leaf under an MD5 intermediate", 'v3_leaf', 'int-md5');
+$pem['pss-sha1-intermediate'] = $issue('pss-sha1-intermediate', "{$org}/CN=Leaf under a PSS-SHA-1 intermediate", 'v3_leaf', 'int-pss-sha1');
+$pem['pss-sha1-leaf'] = $issue('pss-sha1-leaf', "{$org}/CN=Leaf signed with RSASSA-PSS over SHA-1", 'v3_leaf', 'int-rsa1024', null, 'sha1', false, true);
 $pem['policy-required'] = $issue('policy-required', "{$org}/CN=Leaf without a policy", 'v3_leaf', 'int-policy');
 $pem['critical-leaf'] = $issue('critical-leaf', "{$org}/CN=Leaf with an unknown critical extension", 'v3_critical_leaf', 'int-plain');
 $pem['critical-intermediate'] = $issue('critical-intermediate', "{$org}/CN=Leaf under a critical intermediate", 'v3_leaf', 'int-critical');
@@ -284,8 +292,15 @@ $sign = static function (string $keyName, string $protected, string ...$unprotec
 $x5chainLabel = "\x18\x21";
 $files = [];
 // leaf => the intermediate that issued it (null: the root)
-foreach (['nc-inside' => 'int-nc', 'nc-outside' => 'int-nc', 'nc-dns' => 'int-nc-dns', 'sha1-intermediate' => 'int-sha1', 'rsa1024-intermediate' => 'int-rsa1024', 'policy-required' => 'int-policy', 'critical-leaf' => 'int-plain', 'critical-intermediate' => 'int-critical', 'plain' => null] as $leaf => $intermediate) {
-    $chain = $intermediate === null ? ccChain(ccDer($pem[$leaf])) : ccChain(ccDer($pem[$leaf]), ccDer($pem[$intermediate]));
+// leaf => the intermediates above it, nearest first
+$leaves = [
+    'nc-inside' => ['int-nc'], 'nc-outside' => ['int-nc'], 'nc-dns' => ['int-nc-dns'], 'sha1-intermediate' => ['int-sha1'],
+    'rsa1024-intermediate' => ['int-rsa1024'], 'md5-intermediate' => ['int-md5', 'int-rsa1024'],
+    'pss-sha1-intermediate' => ['int-pss-sha1', 'int-rsa1024'], 'pss-sha1-leaf' => ['int-rsa1024'], 'policy-required' => ['int-policy'],
+    'critical-leaf' => ['int-plain'], 'critical-intermediate' => ['int-critical'], 'plain' => [],
+];
+foreach ($leaves as $leaf => $intermediates) {
+    $chain = ccChain(ccDer($pem[$leaf]), ...array_map(static fn (string $i): string => ccDer($pem[$i]), $intermediates));
     $files[$leaf] = $sign($leaf, "\xa2\x01\x26".$x5chainLabel.$chain);
 }
 $files['x5chain-unprotected'] = $sign('plain', "\xa1\x01\x26", $x5chainLabel.ccChain(ccDer($pem['plain'])));
@@ -314,10 +329,11 @@ foreach ($files as $name => $cose) {
 
 // RFC 5280 path validation by OpenSSL, as a reference: the leaf, its intermediate untrusted, the root trusted
 echo "openssl verify (RFC 5280 path validation):\n";
-foreach (['nc-inside' => 'int-nc', 'nc-outside' => 'int-nc', 'nc-dns' => 'int-nc-dns', 'sha1-intermediate' => 'int-sha1', 'rsa1024-intermediate' => 'int-rsa1024', 'policy-required' => 'int-policy', 'critical-leaf' => 'int-plain', 'critical-intermediate' => 'int-critical', 'plain' => null, 'swapped' => null] as $leaf => $intermediate) {
+foreach ([...$leaves, 'swapped' => []] as $leaf => $intermediates) {
     $args = ['openssl', 'verify', '-CAfile', "{$dir}/root.pem", '-purpose', 'any'];
-    if ($intermediate !== null) {
-        $args = [...$args, '-untrusted', "{$dir}/{$intermediate}.pem"];
+    if ($intermediates !== []) {
+        file_put_contents("{$keys}/untrusted.pem", implode('', array_map(static fn (string $i): string => $pem[$i], $intermediates)));
+        $args = [...$args, '-untrusted', "{$keys}/untrusted.pem"];
     }
     $plainOut = ccRun(ccSh(...[...$args, "{$dir}/{$leaf}.pem"]), true);
     $policyOut = ccRun(ccSh(...[...$args, '-policy_check', "{$dir}/{$leaf}.pem"]), true);

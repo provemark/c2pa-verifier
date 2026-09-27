@@ -26,6 +26,29 @@ final readonly class CertificateExtensions
 
     private const OID_EMAIL_ADDRESS = '1.2.840.113549.1.9.1';
 
+    private const OID_RSASSA_PSS = '1.2.840.113549.1.1.10';
+
+    private const OID_SHA1 = '1.3.14.3.2.26';
+
+    /** Signature algorithms that rest on MD2, MD4, MD5 or SHA-1 (SPEC-048 scope item 1). */
+    private const WEAK_SIGNATURES = [
+        '1.2.840.113549.1.1.2' => 'md2WithRSAEncryption',
+        '1.2.840.113549.1.1.3' => 'md4WithRSAEncryption',
+        '1.2.840.113549.1.1.4' => 'md5WithRSAEncryption',
+        '1.2.840.113549.1.1.5' => 'sha1WithRSAEncryption',
+        '1.3.14.3.2.29' => 'sha1WithRSA',
+        '1.2.840.10045.4.1' => 'ecdsa-with-SHA1',
+        '1.2.840.10040.4.3' => 'dsa-with-sha1',
+    ];
+
+    /** The hashes that make an RSASSA-PSS signature weak. */
+    private const WEAK_HASHES = [
+        self::OID_SHA1 => 'SHA-1',
+        '1.2.840.113549.2.5' => 'MD5',
+        '1.2.840.113549.2.2' => 'MD2',
+        '1.2.840.113549.2.4' => 'MD4',
+    ];
+
     /**
      * The extensions this verifier understands (SPEC-046 scope item 1): those of RFC 5280 §4.2 that
      * OpenSSL recognises, and the OCSP no-check extension. A critical extension outside this list
@@ -57,12 +80,16 @@ final readonly class CertificateExtensions
      * @param  list<array{oid: string, critical: bool, value: string}>  $extensions  in certificate order
      * @param  list<list<array{0: string, 1: string}>>  $subjectRdns  each RDN's attributes as [OID, normalised value], sorted
      * @param  list<string>  $emails  subjectAltName rfc822Name entries and the subject's emailAddress, lower-cased
+     * @param  string  $signatureOid  the certificate's outer signatureAlgorithm (RFC 5280 §4.1.1.2)
+     * @param  string|null  $pssHashOid  for RSASSA-PSS, the hash; SHA-1 when the parameter is absent (RFC 4055 §3.1)
      */
     private function __construct(
         public array $extensions,
         public array $subjectRdns,
         public array $emails,
         public ?NameConstraints $nameConstraints,
+        public string $signatureOid,
+        public ?string $pssHashOid,
     ) {}
 
     /** @throws TrustException when the DER does not hold a readable tbsCertificate */
@@ -71,7 +98,22 @@ final readonly class CertificateExtensions
         try {
             // TBSCertificate ::= SEQUENCE { [0] version OPTIONAL, serialNumber, signature, issuer, validity,
             //   subject, subjectPublicKeyInfo, [1] issuerUID OPTIONAL, [2] subjectUID OPTIONAL, [3] extensions OPTIONAL }
-            $tbs = (new DerReader)->read($der)->element(0);
+            $certificate = (new DerReader)->read($der);
+            $tbs = $certificate->element(0);
+            // Certificate ::= SEQUENCE { tbsCertificate, signatureAlgorithm AlgorithmIdentifier, signatureValue }
+            $algorithm = $certificate->element(1);
+            $signatureOid = $algorithm->element(0)->oid();
+            $pssHashOid = null;
+            if ($signatureOid === self::OID_RSASSA_PSS) {
+                // RSASSA-PSS-params ::= SEQUENCE { hashAlgorithm [0] AlgorithmIdentifier DEFAULT sha1, … }
+                $pssHashOid = self::OID_SHA1;
+                $parameters = $algorithm->sequence()[1] ?? null;
+                foreach ($parameters !== null && $parameters->is(TagClass::Universal, Der::SEQUENCE) ? $parameters->sequence() : [] as $field) {
+                    if ($field->is(TagClass::ContextSpecific, 0)) {
+                        $pssHashOid = $field->child(0)->element(0)->oid();
+                    }
+                }
+            }
             $fields = $tbs->sequence();
             $versioned = $fields !== [] && $fields[0]->is(TagClass::ContextSpecific, 0);
             $subject = $tbs->element($versioned ? 5 : 4);
@@ -112,10 +154,25 @@ final readonly class CertificateExtensions
                 }
             }
 
-            return new self($extensions, $rdns, array_values(array_unique($emails)), $constraints);
+            return new self($extensions, $rdns, array_values(array_unique($emails)), $constraints, $signatureOid, $pssHashOid);
         } catch (Asn1Exception $e) {
             throw new TrustException(sprintf('the extensions or names of a certificate of %d bytes could not be read: %s', strlen($der), $e->getMessage()));
         }
+    }
+
+    /**
+     * The name of the certificate's signature algorithm when it rests on MD2, MD4, MD5 or SHA-1, else null
+     * (SPEC-048): RSASSA-PSS counts by its hash, and an absent hash is SHA-1.
+     */
+    public function weakHash(): ?string
+    {
+        if ($this->signatureOid === self::OID_RSASSA_PSS) {
+            $hash = self::WEAK_HASHES[$this->pssHashOid ?? self::OID_SHA1] ?? null;
+
+            return $hash === null ? null : sprintf('RSASSA-PSS over %s', $hash);
+        }
+
+        return self::WEAK_SIGNATURES[$this->signatureOid] ?? null;
     }
 
     /** @return list<string> the OIDs of critical extensions this verifier does not understand */

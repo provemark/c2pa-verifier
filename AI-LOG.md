@@ -7617,3 +7617,20 @@ README are where the disclosure lives.
   default.
 - Decided by Maurice: refuse SHA-1 and MD5 in the path; RSA-1024 as the
   oracles. Not pushed.
+
+## 2026-09-27 — SPEC-048 built (step 170)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-048 goedgekeurd".
+- Produced: `src/Trust/CertificateExtensions.php` (`$signatureOid`,
+  `$pssHashOid`, `weakHash()`), `src/Trust/ChainCheck.php` (`pathFault()`),
+  `src/Trust/CertificateProfileCheck.php` (rule 4 for PSS), three variants
+  and two-intermediate chains in `bin/make-chain-constraint-variants.php`,
+  `tests/Unit/Trust/WeakHashTest.php`, SPEC-048 approved, amendment 1,
+  Traceability, implemented; a row in `docs/comparison.md`;
+  `notes/step-170-spec048.md`, rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: `openssl verify`, both `c2patool` versions and this verifier on
+  the new probes; `vendor/bin/pest --group=SPEC-048` (3 failed, then 5
+  passed); `composer check` (552 passed); 22,880 runs before and after.
+- Reasoned: the RFC 4055 default; the case against SHA-1 (not
+  reproduced).
+- Decided by Maurice: SPEC-048 approved. Not pushed.

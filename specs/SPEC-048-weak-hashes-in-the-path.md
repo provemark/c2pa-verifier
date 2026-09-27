@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-27                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -139,6 +139,21 @@ No public API changes.
    allowed).* The anchor is trusted by configuration, not by its
    signature; RFC 5280 §6.1 does not verify it either.
 
+## Amendments
+
+1. **2026-09-27, step 170a, measured before the tests.** The three new
+   probes were made as the Behavior section describes. OpenSSL signs MD5
+   and RSASSA-PSS over SHA-1 without complaint, and `openssl verify` and
+   both `c2patool` versions call all three `Trusted`. That includes
+   `pss-sha1-leaf`, so `c2pa-rs`'s profile does not look at a PSS leaf's
+   hash either. AC3's leaf refusal is therefore stricter than `c2patool`
+   too, not only the path rule. The `docs/comparison.md` row names both.
+   No criterion changed.
+
+   **Weight C:** the evidence, and one more named difference.
+
+   Awaits confirmation by Maurice van Loon.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -146,8 +161,8 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
+| AC1 | tests/Unit/Trust/WeakHashTest.php :: AC1: a SHA-1 intermediate is untrusted / SPEC-048 | src/Trust/ChainCheck.php :: pathFault(); src/Trust/CertificateExtensions.php :: weakHash(), WEAK_SIGNATURES |
+| AC2 | tests/Unit/Trust/WeakHashTest.php :: AC2: an MD5 intermediate is untrusted / SPEC-048 | src/Trust/CertificateExtensions.php :: WEAK_SIGNATURES |
+| AC3 | tests/Unit/Trust/WeakHashTest.php :: AC3: RSASSA-PSS with its default hash is weak / SPEC-048 | src/Trust/CertificateExtensions.php :: fromDer() ($pssHashOid), weakHash(); src/Trust/CertificateProfileCheck.php :: checkLeaf() (rule 4) |
+| AC4 | tests/Unit/Trust/WeakHashTest.php :: AC4: what stays as it was / SPEC-048 | src/Trust/ChainCheck.php :: pathFault() (the anchor and the leaf excluded) |
+| AC5 | tests/Unit/Trust/WeakHashTest.php :: AC5: nothing else moves / SPEC-048; the before/after run of step 170 | the whole verification path |

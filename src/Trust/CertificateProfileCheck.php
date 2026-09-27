@@ -124,6 +124,10 @@ final readonly class CertificateProfileCheck
         if (! in_array($leaf->signatureAlgorithm, self::SIGNATURE_ALGORITHMS, true)) {
             $faults[] = $invalid(sprintf('signature algorithm %s is not one of %s (C2PA 2.4 §14.5)', $leaf->signatureAlgorithm, implode(', ', self::SIGNATURE_ALGORITHMS)));
         }
+        // … and RSASSA-PSS by its hash: over SHA-1 or MD5, explicit or by default, it is weak (SPEC-048)
+        if ($leaf->signatureAlgorithm === 'rsassaPss' && $leaf->x509->weakHash() !== null) {
+            $faults[] = $invalid(sprintf('the signature is %s (C2PA 2.4 §14.5 allows SHA-256, SHA-384 and SHA-512; RFC 4055 makes SHA-1 the default)', $leaf->x509->weakHash()));
+        }
         // 5. the key
         $faults = [...$faults, ...array_map($invalid, $this->keyFaults($leaf))];
         // 6. KeyUsage, as c2pa-rs keeps it

@@ -243,7 +243,8 @@ final readonly class ChainCheck
     /**
      * What RFC 5280 path processing refuses in a path that reached an anchor (SPEC-046): a critical
      * extension this verifier does not understand, in any certificate of the path (§4.2), and a name
-     * outside the constraints of a CA above it (§6.1.3 (b), (c)). A self-issued intermediate's own
+     * outside the constraints of a CA above it (§6.1.3 (b), (c)); and, stricter than RFC 5280, an
+     * intermediate signed over MD5 or SHA-1 (SPEC-048). A self-issued intermediate's own
      * subject is exempt, as §6.1.3 (b) says; the leaf's never is.
      *
      * @param  list<Certificate>  $path  the anchor or the first certificate first, the leaf last
@@ -257,6 +258,14 @@ final readonly class ChainCheck
             }
         }
         $last = count($path) - 1;
+        // no signature over MD5 or SHA-1 between the anchor and the leaf (SPEC-048): the anchor is trusted by
+        // configuration, and the leaf's algorithm is SPEC-015's
+        for ($i = 1; $i < $last; $i++) {
+            $weak = $path[$i]->x509->weakHash();
+            if ($weak !== null) {
+                return sprintf('%s is signed with %s, a hash that collisions have broken; this verifier does not trust a certificate path through it (SPEC-048)', $path[$i]->subjectCn(), $weak);
+            }
+        }
         foreach ($path as $i => $constraining) {
             $constraints = $constraining->x509->nameConstraints;
             if ($constraints === null) {
