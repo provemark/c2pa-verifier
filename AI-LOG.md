@@ -7551,3 +7551,23 @@ README are where the disclosure lives.
   question 1).
 - Decided by Maurice: option A for the unprotected `"x5chain"` in v2
   claims; no report to Adobe. Not pushed (SECURITY.md).
+
+## 2026-09-27 — SPEC-046 built (step 166)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-046 en SPEC-047 goedgekeurd".
+- Produced: `src/Trust/CertificateExtensions.php`,
+  `src/Trust/NameConstraints.php`, `src/Trust/Certificate.php` (`$x509`),
+  `src/Trust/ChainCheck.php` (`pathFault()`),
+  `src/Trust/CertificateProfileCheck.php` (rule 9), the `nc-dns` variant in
+  `bin/make-chain-constraint-variants.php` (all step 164 files rebuilt),
+  `tests/Unit/Trust/ChainConstraintsTest.php`, SPEC-046 and SPEC-047
+  approved, SPEC-046 implemented with Traceability, a row in
+  `docs/comparison.md`, `notes/step-166-spec046.md`, rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: both `c2patool` versions and `openssl verify` on the rebuilt
+  files (unchanged answers, `nc-dns` `Trusted`); `vendor/bin/pest
+  --group=SPEC-046` (4 failed, then 6 passed); `composer check` (542
+  passed); 22,605 runs before and after (only the step 164 files moved).
+- Reasoned: the RDN comparison rules of RFC 5280 §7.1 as implemented; the
+  e-mail matching of §4.2.1.10.
+- Decided by Maurice: SPEC-046 and SPEC-047 approved. Not pushed.

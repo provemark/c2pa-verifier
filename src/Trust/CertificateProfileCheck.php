@@ -20,7 +20,8 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * AuthorityKeyIdentifier. Every fault is its own signingCredential.invalid;
  * validity is signingCredential.expired. The rules are c2pa-rs's
  * certificate_profile.rs, read to the end in step 33, on what ext-openssl
- * reports; unknown critical extensions are the one rule it cannot see.
+ * reports, and, from the certificate's own DER, no critical extension it
+ * does not process (SPEC-046).
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
  * removed in any release; the contract is the nine classes named in the README.
@@ -143,6 +144,10 @@ final readonly class CertificateProfileCheck
         // 8. AuthorityKeyIdentifier
         if (! $leaf->hasAuthorityKeyIdentifier) {
             $faults[] = $invalid('no AuthorityKeyIdentifier extension');
+        }
+        // 9. no critical extension this verifier does not process (SPEC-046; RFC 5280 §4.2), as c2pa-rs's profile
+        foreach ($leaf->x509->unknownCritical() as $oid) {
+            $faults[] = $invalid(sprintf('the critical extension %s is not one this verifier processes (RFC 5280 §4.2)', $oid));
         }
 
         return $faults;

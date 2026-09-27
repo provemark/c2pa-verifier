@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-27                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -194,9 +194,9 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
+| AC1 | tests/Unit/Trust/ChainConstraintsTest.php :: AC1: a leaf outside a name constraint is untrusted / SPEC-046 | src/Trust/ChainCheck.php :: pathFault(); src/Trust/NameConstraints.php :: violation() |
+| AC2 | tests/Unit/Trust/ChainConstraintsTest.php :: AC2: a leaf inside it is trusted / SPEC-046 | src/Trust/NameConstraints.php :: violation() (directoryName, within a subtree) |
+| AC3 | tests/Unit/Trust/ChainConstraintsTest.php :: AC3: an unknown critical extension in the leaf / SPEC-046 | src/Trust/CertificateProfileCheck.php :: checkLeaf() (rule 9); src/Trust/ChainCheck.php :: pathFault(); src/Trust/CertificateExtensions.php :: UNDERSTOOD, unknownCritical() |
+| AC4 | tests/Unit/Trust/ChainConstraintsTest.php :: AC4: an unknown critical extension in an intermediate / SPEC-046 | src/Trust/ChainCheck.php :: pathFault() |
+| AC5 | tests/Unit/Trust/ChainConstraintsTest.php :: AC5: name forms that are not evaluated fail closed / SPEC-046 | src/Trust/NameConstraints.php :: fromDer() ($unevaluated), violation() |
+| AC6 | tests/Unit/Trust/ChainConstraintsTest.php :: AC6: nothing else moves / SPEC-046; the before/after run of step 166 | src/Trust/Certificate.php :: $x509; src/Trust/CertificateExtensions.php :: fromDer() |

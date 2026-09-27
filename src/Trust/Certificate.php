@@ -86,6 +86,9 @@ final readonly class Certificate
 
     public string $serialDecimal;
 
+    /** The extensions with their critical flag, the subject's RDNs, the e-mail addresses, the name constraints (SPEC-046). */
+    public CertificateExtensions $x509;
+
     private \OpenSSLCertificate $handle;
 
     /**
@@ -141,6 +144,7 @@ final readonly class Certificate
         $this->pathLen = $this->isCa && is_string($extensions['basicConstraints'] ?? null) && preg_match('/pathlen:(\d+)/', $extensions['basicConstraints'], $m) === 1 ? (int) $m[1] : null;
         $this->version = (is_int($parsed['version'] ?? null) ? $parsed['version'] : 0) + 1;
         [$this->validFrom, $this->validTo] = self::validity($der);
+        $this->x509 = CertificateExtensions::fromDer($der);
         $this->signatureAlgorithm = is_string($parsed['signatureTypeLN'] ?? null) ? $parsed['signatureTypeLN'] : '(unknown)';
         [$this->keyType, $this->keyBits, $this->curve] = self::keyFacts($key);
         $this->extendedKeyUsage = is_string($extensions['extendedKeyUsage'] ?? null) ? self::ekuOids($extensions['extendedKeyUsage']) : null;

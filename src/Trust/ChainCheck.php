@@ -120,6 +120,11 @@ final readonly class ChainCheck
             foreach ($anchors as $anchor) {
                 // depth = links walked from the leaf to the anchor: the leaf itself an anchor is 0, the leaf signed by one is 1
                 if ($current->sameAs($anchor)) {
+                    $fault = self::pathFault(array_reverse(array_slice($chain, 0, $depth + 1)));
+                    if ($fault !== null) {
+                        return [new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))];
+                    }
+
                     return [new ValidationStatus(StatusCode::SigningCredentialTrusted, $url, sprintf('signing certificate trusted: %s is itself a trust anchor (depth %d)', $current->subjectCn(), $depth))];
                 }
                 if ($current->issuer === $anchor->subject && $current->signedBy($anchor)) {
@@ -129,6 +134,10 @@ final readonly class ChainCheck
                         $anchorFault ??= $fault;
 
                         continue;
+                    }
+                    $fault = self::pathFault([$anchor, ...array_reverse(array_slice($chain, 0, $depth + 1))]);
+                    if ($fault !== null) {
+                        return [new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))];
                     }
 
                     return [new ValidationStatus(StatusCode::SigningCredentialTrusted, $url, sprintf('signing certificate trusted: the chain reaches the trust anchor %s at depth %d (%s)', $anchor->subjectCn(), $depth + 1, implode(' → ', [...array_map(static fn (Certificate $c): string => $c->subjectCn(), array_slice($chain, 0, $depth + 1)), $anchor->subjectCn()])))];
@@ -231,6 +240,42 @@ final readonly class ChainCheck
      * keyCertSign when keyUsage is present, allow $below intermediates under it,
      * and, when $at is given (an x5chain intermediate, not an anchor), be valid then.
      */
+    /**
+     * What RFC 5280 path processing refuses in a path that reached an anchor (SPEC-046): a critical
+     * extension this verifier does not understand, in any certificate of the path (§4.2), and a name
+     * outside the constraints of a CA above it (§6.1.3 (b), (c)). A self-issued intermediate's own
+     * subject is exempt, as §6.1.3 (b) says; the leaf's never is.
+     *
+     * @param  list<Certificate>  $path  the anchor or the first certificate first, the leaf last
+     */
+    private static function pathFault(array $path): ?string
+    {
+        foreach ($path as $certificate) {
+            $unknown = $certificate->x509->unknownCritical();
+            if ($unknown !== []) {
+                return sprintf('%s carries the critical extension %s, which this verifier does not process (RFC 5280 §4.2)', $certificate->subjectCn(), implode(', ', $unknown));
+            }
+        }
+        $last = count($path) - 1;
+        foreach ($path as $i => $constraining) {
+            $constraints = $constraining->x509->nameConstraints;
+            if ($constraints === null) {
+                continue;
+            }
+            for ($j = $i + 1; $j <= $last; $j++) {
+                if ($j < $last && $path[$j]->subject === $path[$j]->issuer) {
+                    continue;
+                }
+                $violation = $constraints->violation($path[$j]);
+                if ($violation !== null) {
+                    return sprintf('%s: %s (RFC 5280 §4.2.1.10)', $constraining->subjectCn(), $violation);
+                }
+            }
+        }
+
+        return null;
+    }
+
     private static function issuerFault(Certificate $issuer, Certificate $issued, int $below, ?int $at): ?string
     {
         if (! $issuer->isCa) {

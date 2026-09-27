@@ -11,6 +11,8 @@ declare(strict_types=1);
  *
  *   nc-inside            an intermediate whose nameConstraints permit O=Permitted Org; the leaf is inside
  *   nc-outside           the same intermediate; the leaf's subject is O=Other Org, outside the constraint
+ *   nc-dns               an intermediate whose nameConstraints permit only dNSName:example.com; the
+ *                        leaf has no DNS name (SPEC-046 AC5: a form this verifier does not evaluate)
  *   policy-required      an intermediate with a critical policyConstraints requireExplicitPolicy:0; the
  *                        leaf carries no certificatePolicies, so no policy is valid (RFC 5280 §6.1.5)
  *   critical-leaf        the leaf carries a critical extension of an unknown OID (RFC 5280 §4.2)
@@ -166,6 +168,12 @@ authorityKeyIdentifier = keyid
 nameConstraints = critical, permitted;dirName:nc_permitted
 [nc_permitted]
 O = Permitted Org
+[v3_nc_dns]
+basicConstraints = critical, CA:TRUE
+keyUsage = critical, keyCertSign, cRLSign
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid
+nameConstraints = critical, permitted;DNS:example.com
 [v3_policy]
 basicConstraints = critical, CA:TRUE
 keyUsage = critical, keyCertSign, cRLSign
@@ -210,11 +218,13 @@ $issue = static function (string $name, string $subject, string $section, ?strin
 $pem = [];
 $pem['root'] = $issue('root', "{$org}/CN=Throw-away Chain-constraint Root", 'v3_root', null);
 $pem['int-nc'] = $issue('int-nc', "{$org}/CN=Name-constrained Intermediate", 'v3_nc', 'root');
+$pem['int-nc-dns'] = $issue('int-nc-dns', "{$org}/CN=DNS-constrained Intermediate", 'v3_nc_dns', 'root');
 $pem['int-policy'] = $issue('int-policy', "{$org}/CN=Policy-constrained Intermediate", 'v3_policy', 'root');
 $pem['int-critical'] = $issue('int-critical', "{$org}/CN=Intermediate with an unknown critical extension", 'v3_critical_intermediate', 'root');
 $pem['int-plain'] = $issue('int-plain', "{$org}/CN=Plain Intermediate", 'v3_intermediate', 'root');
 $pem['nc-inside'] = $issue('nc-inside', '/O=Permitted Org/CN=Inside the constraint', 'v3_leaf', 'int-nc');
 $pem['nc-outside'] = $issue('nc-outside', '/O=Other Org/CN=Outside the constraint', 'v3_leaf', 'int-nc');
+$pem['nc-dns'] = $issue('nc-dns', "{$org}/CN=Leaf under a DNS constraint", 'v3_leaf', 'int-nc-dns');
 $pem['policy-required'] = $issue('policy-required', "{$org}/CN=Leaf without a policy", 'v3_leaf', 'int-policy');
 $pem['critical-leaf'] = $issue('critical-leaf', "{$org}/CN=Leaf with an unknown critical extension", 'v3_critical_leaf', 'int-plain');
 $pem['critical-intermediate'] = $issue('critical-intermediate', "{$org}/CN=Leaf under a critical intermediate", 'v3_leaf', 'int-critical');
@@ -266,7 +276,7 @@ $sign = static function (string $keyName, string $protected, string ...$unprotec
 $x5chainLabel = "\x18\x21";
 $files = [];
 // leaf => the intermediate that issued it (null: the root)
-foreach (['nc-inside' => 'int-nc', 'nc-outside' => 'int-nc', 'policy-required' => 'int-policy', 'critical-leaf' => 'int-plain', 'critical-intermediate' => 'int-critical', 'plain' => null] as $leaf => $intermediate) {
+foreach (['nc-inside' => 'int-nc', 'nc-outside' => 'int-nc', 'nc-dns' => 'int-nc-dns', 'policy-required' => 'int-policy', 'critical-leaf' => 'int-plain', 'critical-intermediate' => 'int-critical', 'plain' => null] as $leaf => $intermediate) {
     $chain = $intermediate === null ? ccChain(ccDer($pem[$leaf])) : ccChain(ccDer($pem[$leaf]), ccDer($pem[$intermediate]));
     $files[$leaf] = $sign($leaf, "\xa2\x01\x26".$x5chainLabel.$chain);
 }
@@ -290,7 +300,7 @@ foreach ($files as $name => $cose) {
 
 // RFC 5280 path validation by OpenSSL, as a reference: the leaf, its intermediate untrusted, the root trusted
 echo "openssl verify (RFC 5280 path validation):\n";
-foreach (['nc-inside' => 'int-nc', 'nc-outside' => 'int-nc', 'policy-required' => 'int-policy', 'critical-leaf' => 'int-plain', 'critical-intermediate' => 'int-critical', 'plain' => null, 'swapped' => null] as $leaf => $intermediate) {
+foreach (['nc-inside' => 'int-nc', 'nc-outside' => 'int-nc', 'nc-dns' => 'int-nc-dns', 'policy-required' => 'int-policy', 'critical-leaf' => 'int-plain', 'critical-intermediate' => 'int-critical', 'plain' => null, 'swapped' => null] as $leaf => $intermediate) {
     $args = ['openssl', 'verify', '-CAfile', "{$dir}/root.pem", '-purpose', 'any'];
     if ($intermediate !== null) {
         $args = [...$args, '-untrusted', "{$dir}/{$intermediate}.pem"];
