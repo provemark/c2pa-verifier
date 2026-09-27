@@ -7518,3 +7518,21 @@ README are where the disclosure lives.
   its CLI gives `Invalid` (exit 1) on the redaction fixture.
 - Decided by Maurice: option A, publish the texts about `c2patool`'s
   behaviour for the Time-Stamping signer as they are; push and release.
+
+## 2026-09-27 — The lower chain findings, measured (step 164)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "kan je de laatste notes oppakken die vanuit de wp verifier
+  plugin zijn gekomen? Er zijn belangrijke fixes nodig"; after the
+  proposal to measure first, "akkoord".
+- Produced: `bin/make-chain-constraint-variants.php`,
+  `tests/Fixtures/chain-constraints/` (eleven re-signed PNGs, the public
+  certificates, the settings), `tests/Fixtures/c2patool/chain-constraints/`,
+  `notes/step-164-chain-constraints-measured.md`, rows in `NOTES.md` and
+  `docs/milestones.md`. Nothing in `src/`.
+- Measured: `openssl verify` on every leaf (with and without
+  `-policy_check`); both `c2patool` versions and this verifier on every
+  file (table in the note).
+- Reasoned: from `c2pa` `sdk/src/crypto/cose/sign1.rs`
+  (`cert_chain_from_sign1`) where c2pa-rs looks for the chain; the reach
+  of the swap.
+- Decided by Maurice: measure first. Not pushed (SECURITY.md).

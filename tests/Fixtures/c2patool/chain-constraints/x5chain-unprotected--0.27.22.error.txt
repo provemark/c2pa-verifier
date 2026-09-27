@@ -1,0 +1,1 @@
+Error: could not find signing certificate chain in COSE signature
