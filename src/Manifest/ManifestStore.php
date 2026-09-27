@@ -33,8 +33,9 @@ final readonly class ManifestStore
 
     public static function fromTree(Superbox $root): self
     {
-        // every manifest read first, because a claim may redact an assertion of any other (SPEC-035
-        // open question 1: the union of every claim's list); a manifest that cannot be read is
+        // every manifest read first, because a claim may redact an assertion of another (SPEC-035
+        // open question 1), counted only from the manifests the graph reaches (amendment 5, redacting());
+        // a manifest that cannot be read is
         // reported where it stands in the store, after the references of the ones before it
         // one CBOR budget for the whole store: what is decoded here stays in memory (SPEC-043 AC1)
         $budget = new CborBudget;
@@ -49,7 +50,7 @@ final readonly class ManifestStore
                 }
             }
         }
-        $redactions = Manifest::redactionsOf(array_values(array_filter($read, static fn (Manifest|ManifestException|CborException $m): bool => $m instanceof Manifest)));
+        $redactions = Manifest::redactionsOf(self::redacting(array_values(array_filter($read, static fn (Manifest|ManifestException|CborException $m): bool => $m instanceof Manifest))));
         $manifests = [];
         foreach ($read as $manifest) {
             if (! $manifest instanceof Manifest) {
@@ -63,6 +64,37 @@ final readonly class ManifestStore
         }
 
         return new self($manifests, $manifests[array_key_last($manifests)]);
+    }
+
+    /**
+     * The manifests whose redactions count: the active one and those the ingredient graph reaches
+     * from it (SPEC-035 amendment 5), as c2pa-rs gathers them while it walks the claims it
+     * validates. A manifest nothing references is never validated, so what it declares redacted
+     * excuses nothing (C2PA 2.4 §6.8: a redaction is made by a manifest that takes the redacted one
+     * as an ingredient). When the graph cannot be built, only the active manifest counts; the
+     * verifier reports the graph's own error.
+     *
+     * @param  list<Manifest>  $read  in store order, references not yet checked
+     * @return list<Manifest>
+     */
+    private static function redacting(array $read): array
+    {
+        $byLabel = [];
+        foreach ($read as $manifest) {
+            $byLabel[$manifest->label] = $manifest;
+        }
+        if ($byLabel === []) {
+            return [];
+        }
+        $active = $byLabel[array_key_last($byLabel)];
+        try {
+            $graph = ManifestGraph::fromStore(new self($byLabel, $active));
+            $reached = [$active->label, ...array_map('strval', array_keys($graph->referenced))];
+        } catch (ManifestException) {
+            $reached = [$active->label];
+        }
+
+        return array_values(array_filter($read, static fn (Manifest $m): bool => in_array($m->label, $reached, true)));
     }
 
     /**

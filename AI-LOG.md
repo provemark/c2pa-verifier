@@ -7403,3 +7403,28 @@ README are where the disclosure lives.
   findings. Not measured: `c2patool` on the probes, PHP 8.4.
 - Decided by Maurice: record the findings first. Not pushed (the
   repository is public; SECURITY.md).
+
+## 2026-09-27 — Only a manifest the graph reaches may redact (step 158)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "Er staan nieuwe dingen in de notes … Kan je daar naar kijken en
+  aan beginnen?"; after the explanation of step 158, "akkoord, en A voor
+  finding 2".
+- Produced: `src/Manifest/ManifestStore.php` (`redacting()`),
+  `bin/make-redaction-scope-variants.php`, `tests/Fixtures/redaction-scope/`
+  (two PNGs and a README), `tests/Fixtures/c2patool/redaction-scope/` (four
+  oracle reports), SPEC-035 AC9 and amendment 5, AC9 in
+  `tests/Unit/Manifest/RedactionTest.php`,
+  `notes/step-158-redaction-scope.md`, rows in `NOTES.md` and `CHANGELOG.md`.
+- Measured: `c2patool` 0.27.22 and 0.28.0 on both variants with
+  `--settings tests/Fixtures/trust/full.settings.json` (`Invalid`,
+  `assertion.missing`); step 157's probe without `alg` (`Error: unknown
+  algorithm` in both); `vendor/bin/pest --group=SPEC-035` (1 failed, then
+  10 passed); `composer check` (531 passed); 20,094 runs over 394 fixtures
+  and 51 settings files before and after (only the new fixture moved).
+- Reasoned: from `c2pa` `store.rs` (`get_claim_referenced_manifests_impl()`,
+  read at `main`) that c2pa-rs collects redactions only from the claims it
+  walks; that a separate "never the active manifest" rule would prevent
+  nothing (ADR-0005).
+- Decided by Maurice: go ahead with step 158; finding 2 option A (refuse a
+  signer whose only EKU is timeStamping under legacy anchors, and document
+  it as a deliberate difference). Not pushed (SECURITY.md).

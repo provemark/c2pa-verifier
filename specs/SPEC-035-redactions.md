@@ -184,6 +184,15 @@ Both `c2patool` versions judge every file.
     `ingredient.claimSignature.validated` is informational and the other
     five are failures. Each new symbol is in the recorded surface.
 
+- **AC9 — only a manifest the graph reaches may redact** *(amendment 5; required: error path)*
+  - Given a store whose active manifest lacks a box its claim lists, and a
+    manifest that nothing references declaring that box redacted
+  - When the store is read
+  - Then the redaction does not count: the result is `Invalid` with
+    `assertion.missing`, the same as without the redaction, as both
+    `c2patool` versions say. Only the active manifest's and the reached
+    manifests' `redacted_assertions` are collected.
+
 ## References
 
 - Specification: C2PA 2.4 §6.6, §6.8 (*Redaction of Assertions*), §10.2.2,
@@ -334,6 +343,37 @@ Questions 2, 3 and 4 were settled by adopting their proposals.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 130).
 
+5. **2026-09-27, step 158, found by the review of step 157.** Scope
+   item 1 collected the redaction set from every claim in the store,
+   including manifests that nothing references and that are therefore
+   never validated. Such a manifest, unsigned, could declare an assertion
+   of the **active** manifest redacted. The box could then be removed, and
+   the file stayed `Valid`, or `Trusted` with a trust file. Measured on
+   `fixture-signed.png` with its thumbnail removed: `Trusted` under
+   `trust/full.settings.json`, where both `c2patool` versions say
+   `Invalid` (`assertion.missing`).
+
+   `c2pa` `store.rs` (read at `main`, 2026-09-27) fills the redaction
+   list in `get_claim_referenced_manifests_impl()`, that is, during the
+   walk from the active claim over the claims it references. This reader
+   now does the same: only the active manifest and the manifests that
+   SPEC-020's graph reaches from it count. If the graph cannot be built,
+   only the active manifest counts, and the verifier reports the graph's
+   error.
+
+   Considered and left out: a separate rule that no manifest may redact
+   the active one. A reached manifest can only redact the active manifest
+   if the active claim references it, and whoever signs the active claim
+   already decides which assertions it lists. So that rule prevents no
+   wrong `Valid` and would only be stricter than `c2patool`
+   (ADR-0005). The active claim's own self-redaction stays
+   `assertion.selfRedacted` (AC4). New criterion AC9.
+
+   **Weight A.** Files that were wrongly `Valid` or `Trusted` become
+   `Invalid`.
+
+   Awaits confirmation by Maurice van Loon.
+
 ## Traceability
 
 Filled when status becomes `implemented`.
@@ -348,3 +388,4 @@ Filled when status becomes `implemented`.
 | AC6 | tests/Unit/Manifest/RedactionTest.php :: AC6: a mismatch without a redaction stays a mismatch / SPEC-035 | src/Verifier/IngredientManifestCheck.php :: hash() (the route only when the manifest has redactions and a v2 claim) |
 | AC7 | tests/Unit/Manifest/RedactionTest.php :: AC7: nothing else moves / SPEC-035; the drift alarms (SPEC-013 AC10–AC13); the before/after run of step 129b | — |
 | AC8 | tests/Unit/Manifest/RedactionTest.php :: AC8: the vocabulary grows by six codes, verbatim / SPEC-035 | src/Report/StatusCode.php (six cases; isInformational()); tests/Fixtures/api/public-surface.txt |
+| AC9 | tests/Unit/Manifest/RedactionTest.php :: AC9: only a manifest the graph reaches may redact (amendment 5) / SPEC-035 | src/Manifest/ManifestStore.php :: fromTree(), redacting() |

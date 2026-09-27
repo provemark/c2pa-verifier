@@ -5,6 +5,18 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Security
+- **Only a manifest the ingredient graph reaches may redact (SPEC-035
+  amendment 5).** Redactions were collected from every manifest in the
+  store, including one that nothing references and that is never
+  validated. An unsigned manifest of that kind could declare an assertion
+  of the active manifest redacted, and with that box removed the file
+  stayed `Valid`, or `Trusted`. Present in 0.2.1 to 0.2.3. Both `c2patool`
+  versions say `Invalid` (`assertion.missing`), and so does this verifier
+  now.
+
 ## 0.2.3 — 2026-09-25
 
 A security release for one wrong `Trusted`, found while measuring the

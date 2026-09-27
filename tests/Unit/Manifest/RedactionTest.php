@@ -207,3 +207,24 @@ it('AC8: the vocabulary grows by six codes, verbatim', function (): void {
         expect(in_array("Report\\StatusCode :: const {$name}", $surface, true))->toBeTrue($name);
     }
 })->group('SPEC-035');
+
+it('AC9: only a manifest the graph reaches may redact (amendment 5)', function (): void {
+    // step 158: the fixture's thumbnail box removed from the active manifest and, in front of it, an
+    // unsigned manifest nothing references (bin/make-redaction-scope-variants.php); under full.settings.json
+    // the untouched fixture is Trusted in both c2patool versions and here
+    $thumbnail = 'assertion.missing self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.assertions/c2pa.thumbnail.claim';
+    $states = [];
+    foreach (['unreferenced-redacts-thumbnail', 'unreferenced-no-redaction'] as $probe) {
+        foreach (['0.28.0', '0.27.22'] as $version) {
+            $oracle = spec020Oracle("redaction-scope/{$probe}--{$version}.json");
+            expect($oracle['validation_state'])->toBe('Invalid', "{$probe} {$version}")
+                ->and(spec035OracleFaults($oracle))->toBe([$thumbnail], "{$probe} {$version}");
+        }
+        $report = spec020Verify("redaction-scope/{$probe}.png", 'trust/full.settings.json');
+        $states[$probe] = $report->result->state->value;
+        expect($report->result->state->value)->toBe('Invalid', $probe)
+            ->and(array_map(static fn (ValidationStatus $s): string => $s->code->value, spec035WithCode($report, 'assertion.missing')))->toBe(['assertion.missing'], $probe);
+    }
+    // the redaction of a manifest nothing validates changes nothing
+    expect($states['unreferenced-redacts-thumbnail'])->toBe($states['unreferenced-no-redaction']);
+})->group('SPEC-035');
