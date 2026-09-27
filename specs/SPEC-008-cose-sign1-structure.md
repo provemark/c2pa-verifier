@@ -335,6 +335,17 @@ final readonly class CoseSign1
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 120).
 
+3. **2026-09-27, defined in SPEC-047 and approved with it by Maurice van
+   Loon.** The lookup order of the `x5chain` bullet is replaced, as `c2pa`
+   `sign1.rs` (`cert_chain_from_sign1`) looks:
+   - protected 33, then protected `"x5chain"`;
+   - only when neither is there, unprotected `"x5chain"`.
+
+   Label 33 is no longer read from the unprotected header, and a chain in
+   both headers is an error. `chainProtected` is used by SPEC-047's rule for
+   claims v2 and later (`CoseSign1::ofManifest()`). The error message for a
+   missing chain keeps AC10's opening words.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

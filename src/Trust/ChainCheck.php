@@ -35,7 +35,7 @@ final readonly class ChainCheck
         $url = sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label);
 
         try {
-            $cose = CoseSign1::fromBytes($manifest->signatureBytes());
+            $cose = CoseSign1::ofManifest($manifest);
             $chain = array_map(static fn ($c): Certificate => Certificate::fromDer($c->bytes), $cose->chain);
         } catch (CoseException $e) {
             return [new ValidationStatus($e->status, $url, $e->getMessage())];

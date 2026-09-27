@@ -65,7 +65,7 @@ final readonly class TimestampCheck
     {
         $url = sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label);
         try {
-            $cose = CoseSign1::fromBytes($manifest->signatureBytes());
+            $cose = CoseSign1::ofManifest($manifest);
             $header = TimestampHeader::fromUnprotected($cose->unprotected);
         } catch (CoseException $e) {
             return TimestampResult::none();   // the signature check reports this; no header to judge

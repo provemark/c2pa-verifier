@@ -173,7 +173,7 @@ final readonly class Verifier
     private function signatureInfo(ManifestStore $manifestStore, TimestampResult $timestamp): ?array
     {
         try {
-            $cose = CoseSign1::fromBytes($manifestStore->active->signatureBytes());
+            $cose = CoseSign1::ofManifest($manifestStore->active);
             if ($cose->chain === []) {
                 return null;
             }
@@ -434,7 +434,7 @@ final readonly class Verifier
     private function unprotectedHeader(Manifest $manifest): array
     {
         try {
-            return CoseSign1::fromBytes($manifest->signatureBytes())->unprotected;
+            return CoseSign1::ofManifest($manifest)->unprotected;
         } catch (CoseException|ManifestException) {
             return [];
         }
@@ -446,7 +446,7 @@ final readonly class Verifier
         try {
             return array_map(
                 static fn (CborBytes $c): Certificate => Certificate::fromDer($c->bytes),
-                CoseSign1::fromBytes($manifest->signatureBytes())->chain,
+                CoseSign1::ofManifest($manifest)->chain,
             );
         } catch (CoseException|ManifestException|TrustException) {
             return [];

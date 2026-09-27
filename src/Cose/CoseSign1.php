@@ -8,6 +8,8 @@ use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cbor\CborDecoder;
 use Provemark\C2paVerifier\Cbor\CborException;
 use Provemark\C2paVerifier\Cbor\CborTag;
+use Provemark\C2paVerifier\Manifest\Manifest;
+use Provemark\C2paVerifier\Manifest\ManifestException;
 use Provemark\C2paVerifier\Report\StatusCode;
 
 /**
@@ -158,8 +160,29 @@ final readonly class CoseSign1
     }
 
     /**
-     * Where the chain is: protected 33, protected "x5chain", unprotected 33,
-     * unprotected "x5chain" — 33 wins within a bucket (C2PA 2.4 §14.5).
+     * A manifest's signature, with the rule that depends on its claim (SPEC-047 scope item 3): in a
+     * claim v2 or later the chain must be in the protected header, because the unprotected one is
+     * not signed (RFC 9052 §3) and a chain there could be any certificate for the same key. A v1
+     * claim may keep the older, unprotected form, as c2pa-rs reads it.
+     *
+     * @throws CoseException
+     * @throws ManifestException when the manifest has no readable signature box
+     */
+    public static function ofManifest(Manifest $manifest): self
+    {
+        $cose = self::fromBytes($manifest->signatureBytes());
+        if ($manifest->claim->version >= 2 && ! $cose->chainProtected) {
+            throw new CoseException(sprintf('the claim is v%d, and its signer\'s certificate chain is not in the protected header, so the signature does not cover which certificate signed (SPEC-047)', $manifest->claim->version), StatusCode::SigningCredentialInvalid);
+        }
+
+        return $cose;
+    }
+
+    /**
+     * Where the chain is, as c2pa-rs's cert_chain_from_sign1 looks (SPEC-047): protected 33, then
+     * protected "x5chain" — 33 wins within the bucket (C2PA 2.4 §14.5) — and only when neither is
+     * there, the unprotected "x5chain" of older C2PA versions. Label 33 is not read from the
+     * unprotected header, and a chain in both headers is refused.
      *
      * @param  array<int|string, mixed>  $protected
      * @param  array<int|string, mixed>  $unprotected
@@ -167,14 +190,19 @@ final readonly class CoseSign1
      */
     private static function findChain(array $protected, array $unprotected): array
     {
-        foreach ([[true, $protected], [false, $unprotected]] as [$isProtected, $bucket]) {
-            foreach ([self::LABEL_X5CHAIN, self::LABEL_X5CHAIN_DEPRECATED] as $label) {
-                if (array_key_exists($label, $bucket)) {
-                    return [$bucket[$label], $isProtected];
+        foreach ([self::LABEL_X5CHAIN, self::LABEL_X5CHAIN_DEPRECATED] as $label) {
+            if (array_key_exists($label, $protected)) {
+                if (array_key_exists(self::LABEL_X5CHAIN_DEPRECATED, $unprotected)) {
+                    throw new CoseException('an x5chain in both the protected and the unprotected header; which certificate signed is ambiguous (SPEC-047)', StatusCode::SigningCredentialInvalid);
                 }
+
+                return [$protected[$label], true];
             }
         }
-        throw new CoseException('no x5chain in either header bucket (label 33 or "x5chain")', StatusCode::SigningCredentialInvalid);
+        if (array_key_exists(self::LABEL_X5CHAIN_DEPRECATED, $unprotected)) {
+            return [$unprotected[self::LABEL_X5CHAIN_DEPRECATED], false];
+        }
+        throw new CoseException('no x5chain in either header bucket: none in the protected header (label 33 or "x5chain"), none under "x5chain" in the unprotected one; label 33 is not read from the unprotected header (SPEC-047)', StatusCode::SigningCredentialInvalid);
     }
 
     /**

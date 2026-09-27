@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-27                      |
 | Supersedes | —                                                 |
@@ -144,6 +144,20 @@ No public API changes.
    is still unsigned. A line in the report, or in `docs/comparison.md`
    only? Proposal: only the comparison row, since `c2patool` says nothing.
 
+## Amendments
+
+1. **2026-09-27, step 167, while building.** `ClaimSignatureCheck` is left
+   as it is: the signature verifies under the key in the header, and
+   `claimSignature.validated` says only that. The refusal comes from the
+   chain and profile checks, and from the empty `signature_info`, through
+   `CoseSign1::ofManifest()`. The v2 case therefore shows
+   `signingCredential.invalid` beside `claimSignature.validated`, as the
+   missing-chain case of SPEC-008 AC10 does.
+
+   **Weight C:** where the rule sits, not what it decides.
+
+   Awaits confirmation by Maurice van Loon.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -151,8 +165,8 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
+| AC1 | tests/Unit/Cose/X5chainPlacementTest.php :: AC1: label 33 in the unprotected header is not a chain / SPEC-047 | src/Cose/CoseSign1.php :: findChain() |
+| AC2 | tests/Unit/Cose/X5chainPlacementTest.php :: AC2: a chain in both headers is refused / SPEC-047 | src/Cose/CoseSign1.php :: findChain() |
+| AC3 | tests/Unit/Cose/X5chainPlacementTest.php :: AC3: an unprotected chain in a v2 claim is refused / SPEC-047 | src/Cose/CoseSign1.php :: ofManifest(); its callers in src/Verifier/Verifier.php (signatureInfo(), unprotectedHeader(), chainOf()), src/Trust/ChainCheck.php :: check(), src/Trust/CertificateProfileCheck.php :: check(), src/Timestamp/TimestampCheck.php :: check() |
+| AC4 | tests/Unit/Cose/X5chainPlacementTest.php :: AC4: a v1 claim keeps the older form / SPEC-047 | src/Cose/CoseSign1.php :: ofManifest() (claim version 1) |
+| AC5 | tests/Unit/Cose/X5chainPlacementTest.php :: AC5: nothing else moves / SPEC-047; the before/after run of step 167 | the whole verification path |

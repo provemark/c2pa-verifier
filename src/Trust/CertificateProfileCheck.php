@@ -48,7 +48,7 @@ final readonly class CertificateProfileCheck
     {
         $url = sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label);
         try {
-            $chain = CoseSign1::fromBytes($manifest->signatureBytes())->chain;
+            $chain = CoseSign1::ofManifest($manifest)->chain;
             if ($chain === []) {
                 return [new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, 'x5chain holds no certificate')];
             }

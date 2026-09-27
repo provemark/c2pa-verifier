@@ -7571,3 +7571,20 @@ README are where the disclosure lives.
 - Reasoned: the RDN comparison rules of RFC 5280 §7.1 as implemented; the
   e-mail matching of §4.2.1.10.
 - Decided by Maurice: SPEC-046 and SPEC-047 approved. Not pushed.
+
+## 2026-09-27 — SPEC-047 built (step 167)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-046 en SPEC-047 goedgekeurd" (continued).
+- Produced: `src/Cose/CoseSign1.php` (`findChain()`, `ofManifest()`), its
+  callers in `src/Verifier/Verifier.php`, `src/Trust/ChainCheck.php`,
+  `src/Trust/CertificateProfileCheck.php` and
+  `src/Timestamp/TimestampCheck.php`; `tests/Unit/Cose/X5chainPlacementTest.php`;
+  SPEC-047 implemented with amendment 1 and Traceability; SPEC-008
+  amendment 3; a row in `docs/comparison.md`; `notes/step-167-spec047.md`,
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: `vendor/bin/pest --group=SPEC-047` (3 failed, then 5 passed;
+  AC4 first compared with the wrong oracle); `composer check` (547 passed);
+  22,605 runs before and after (only the five probes moved); the statuses
+  of `x5chain-text-swapped.png` after the change.
+- Reasoned: none beyond the spec's own.
+- Decided by Maurice: SPEC-047 approved with option A. Not pushed.
