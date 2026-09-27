@@ -7450,3 +7450,18 @@ README are where the disclosure lives.
   rule lives in `check()` and not in `checkCertificates()`.
 - Decided by Maurice: confirmed SPEC-035 amendment 5; go ahead with step
   159 (option A, chosen earlier). Not pushed (SECURITY.md).
+
+## 2026-09-27 — SPEC-045 drafted (step 160)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord" to drafting one spec for findings 3–6 of step 157.
+- Produced: `specs/SPEC-045-hostile-input-second-round.md` (draft), a row
+  in `NOTES.md`. No code, no tests.
+- Measured: the review's probes rerun (`p1_json.php 1|3|4` at
+  `memory_limit=256M`, `p11_hash_repeat.php 1 300|1000 8`,
+  `p7_cose_chunks.php`, `p4_cbor_chunks.php`, `p2_bfdb.php`); both
+  `c2patool` versions on the probes with `full.settings.json`; the JSON
+  content boxes of 524 fixture files (a scratch scan).
+- Reasoned: from `c2pa` `claim.rs` (`verify_internal`) that c2pa-rs hashes
+  each assertion once; the four-minute estimate; the 18 MB peak at 256 KiB
+  (scaled, not run).
+- Decided by Maurice: go ahead with the draft. Not pushed (SECURITY.md).
