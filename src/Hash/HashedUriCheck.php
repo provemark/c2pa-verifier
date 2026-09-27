@@ -42,11 +42,12 @@ final readonly class HashedUriCheck
     {
         $statuses = [];
         $resolved = [];
+        $digests = [];
         foreach ([...$manifest->claim->createdAssertions, ...$manifest->claim->gatheredAssertions] as $entry) {
             if ($manifest->isRedacted($entry->url) && ! $this->resolves($manifest, $entry->url)) {
                 continue;   // redacted and removed: nothing left to hash (SPEC-035; §15.11.3.3.1)
             }
-            [$status, $box] = $this->entry($manifest, $entry);
+            [$status, $box] = $this->entry($manifest, $entry, $digests);
             $statuses[] = $status;
             if ($box !== null) {
                 $resolved[] = $box;
@@ -152,16 +153,19 @@ final readonly class HashedUriCheck
      */
     public function checkEntry(Manifest $manifest, HashedUri $entry): ValidationStatus
     {
-        return $this->entry($manifest, $entry)[0];
+        $digests = [];
+
+        return $this->entry($manifest, $entry, $digests)[0];
     }
 
     /**
      * The entry's status and, when the url resolved, its box — so that
      * check() knows which boxes are spoken for.
      *
+     * @param  array<string, string>  $digests  box id and algorithm => digest, for one check()
      * @return array{0: ValidationStatus, 1: ?Superbox}
      */
-    private function entry(Manifest $manifest, HashedUri $entry): array
+    private function entry(Manifest $manifest, HashedUri $entry, array &$digests): array
     {
         try {
             $box = $manifest->resolve($entry->url);
@@ -183,7 +187,9 @@ final readonly class HashedUriCheck
         if ($length !== self::ALGORITHMS[$alg]) {
             return [new ValidationStatus(StatusCode::AssertionHashedUriMismatch, $url, sprintf('the claim carries a %d-byte hash for this assertion, but %s produces %d bytes', $length, $alg, self::ALGORITHMS[$alg])), $box];
         }
-        $actual = hash($alg, $box->payload(), true);
+        // each box hashed once per algorithm, however many entries name it (SPEC-045 AC2), as c2pa-rs
+        // hashes each assertion once and compares every reference with that hash
+        $actual = $digests[spl_object_id($box).':'.$alg] ??= hash($alg, $box->payload(), true);
 
         $status = hash_equals($expected, $actual)
             ? new ValidationStatus(StatusCode::AssertionHashedUriMatch, $url, sprintf('hashed uri matched: %s (%s over %d bytes)', $entry->url, $alg, $box->length - 8))

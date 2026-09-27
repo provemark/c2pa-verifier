@@ -67,8 +67,8 @@ final readonly class CborDecoder
         }
         if ($additional === 31) {
             return match ($majorType) {
-                2 => new CborBytes($this->chunks($bytes, $offset, $head, 2, 'byte string')),
-                3 => $this->text($this->chunks($bytes, $offset, $head, 3, 'text string'), $head),
+                2 => new CborBytes($this->chunks($bytes, $offset, $head, 2, 'byte string', $budget)),
+                3 => $this->text($this->chunks($bytes, $offset, $head, 3, 'text string', $budget), $head),
                 4 => $this->array($bytes, $offset, $head, null, $depth, $budget),
                 5 => $this->map($bytes, $offset, $head, null, $depth, $budget),
                 7 => throw new CborException(sprintf('break at offset %d outside an indefinite-length item', $head)),
@@ -225,9 +225,11 @@ final readonly class CborDecoder
     /**
      * The chunks of an indefinite-length string (RFC 8949 §3.2.3): definite
      * strings of the same major type until a break; a chunk of another type
-     * or an indefinite chunk is an error. The total is bounded by the input.
+     * or an indefinite chunk is an error. The total is bounded by the input,
+     * and every chunk costs an item of the budget (SPEC-045 AC3): an empty
+     * chunk is one byte of input, so without that charge it is free.
      */
-    private function chunks(string $bytes, int &$offset, int $head, int $majorType, string $what): string
+    private function chunks(string $bytes, int &$offset, int $head, int $majorType, string $what, CborBudget $budget): string
     {
         $joined = '';
         while (true) {
@@ -236,6 +238,7 @@ final readonly class CborDecoder
             if ($initial === 0xFF) {
                 return $joined;
             }
+            $budget->take($chunkHead);
             if ($initial >> 5 !== $majorType) {
                 throw new CborException(sprintf('chunk at offset %d of the indefinite-length %s at offset %d is of major type %d', $chunkHead, $what, $head, $initial >> 5));
             }

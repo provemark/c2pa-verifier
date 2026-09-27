@@ -7465,3 +7465,25 @@ README are where the disclosure lives.
   each assertion once; the four-minute estimate; the 18 MB peak at 256 KiB
   (scaled, not run).
 - Decided by Maurice: go ahead with the draft. Not pushed (SECURITY.md).
+
+## 2026-09-27 — SPEC-045 built (step 161)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, 256 KiB, SPEC-045 goedgekeurd, amendment 3 bevestigd".
+- Produced: `src/Manifest/Manifest.php` (`MAX_JSON_BYTES`, `charge()`, the
+  `bfdb` length check), `src/Hash/HashedUriCheck.php` (the digest per box
+  and algorithm), `src/Cbor/CborDecoder.php` (`chunks()` charges the
+  budget), `bin/make-hostile-input-2-variants.php`,
+  `tests/Fixtures/hostile-2/` (three PNGs and a README),
+  `tests/Unit/Verifier/HostileInputSecondRoundTest.php`, SPEC-045 approved,
+  amendments 1 and 2, Traceability, status implemented;
+  `notes/step-161-spec045.md`, rows in `NOTES.md` and `CHANGELOG.md`;
+  SPEC-031 amendment 3 marked confirmed.
+- Measured: `vendor/bin/pest --group=SPEC-045` (4 failed, then 4 passed);
+  the AC3 failure in the whole suite and its cause (the memory check);
+  `p7_cose_chunks.php 2|14` with and without the decoder change;
+  `composer check` (536 passed); 21,546 runs before and after (only the
+  new fixtures moved); `php bin/fuzz.php 20260925 60` (0 faults, 34
+  suspects).
+- Reasoned: none beyond SPEC-045's own.
+- Decided by Maurice: SPEC-045 approved; JSON limit 256 KiB; SPEC-031
+  amendment 3 confirmed. Not pushed (SECURITY.md).

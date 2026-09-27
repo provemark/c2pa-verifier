@@ -422,7 +422,7 @@ final readonly class TrustSettings
 
    **Weight A.** Files that were wrongly `Trusted` become `Valid`.
 
-   Awaits confirmation by Maurice van Loon.
+   Confirmed by Maurice van Loon, 2026-09-27 (step 160).
 
 ## Traceability
 

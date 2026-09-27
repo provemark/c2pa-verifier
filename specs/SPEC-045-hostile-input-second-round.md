@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-27                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -71,10 +71,10 @@ reference tool stays bounded.
 **In scope**
 
 1. **JSON is bounded and charged.** A JSON content box larger than
-   `MAX_JSON_BYTES` (open question 1: 256 KiB proposed) is refused before
-   it is decoded, with `assertion.json.invalid` and a message that names
-   the limit. A JSON box within the limit is decoded, and its items (every
-   value, and every array or object) are charged to the store's
+   `MAX_JSON_BYTES` (256 KiB, open question 1) is refused before it is
+   decoded, with `assertion.json.invalid` and a message that names the
+   limit. A JSON box within the limit is decoded, and its items (every
+   key, value, array and object; amendment 1) are charged to the store's
    `CborBudget`, so that JSON and CBOR share the 65,536 items of SPEC-043
    AC1.
 2. **An assertion is hashed once per algorithm.** `HashedUriCheck` keeps
@@ -109,8 +109,9 @@ committing it.
 
 - **AC1 — a JSON assertion is bounded** *(required: malformed input)*
   - Given `fixture-signed.png` with an unreferenced JSON assertion of 4 MB
-    (`[[0],[0],…]`); the same with one of 200 KiB (about 51,000 items);
-    and the same with two of 150 KiB each
+    (`[[0],[0],…]`); the same with a 200 KiB JSON object of one string;
+    and the same with two JSON arrays of 150 KiB of `10,` each
+    (amendment 1)
   - When each is verified under `memory_limit` 256M, and the report is
     converted with `toJson()`
   - Then none ends in a fatal error. The 4 MB assertion is refused before
@@ -176,7 +177,8 @@ public const int MAX_JSON_BYTES = 262144;   // open question 1
 
 ## Open questions
 
-1. **The JSON limit** *(blocking)*. The proposal is 256 KiB, about 128 times
+1. **The JSON limit** — *answered 2026-09-27 by Maurice van Loon: 256 KiB.*
+   The proposal was 256 KiB, about 128 times
    the largest measured (2,031 bytes). At that size `json_decode()` peaks
    near 18 MB, measured by scaling from the 1 MB probe (72 MB), not run.
    1 MiB would peak near 72 MB. The item charge is what bounds the store
@@ -189,6 +191,40 @@ public const int MAX_JSON_BYTES = 262144;   // open question 1
    doing on its own, as a refactor with no change in behaviour, after this
    spec.
 
+## Amendments
+
+1. **2026-09-27, step 161a, counted before the tests.** AC1's inputs do
+   not measure what AC1 says. `[[0],[0],…]` costs two items per 4 bytes,
+   so 200 KiB of it is about 102,400 items, over the store's budget on its
+   own, not *"about 51,000"*. Two boxes of 150 KiB of it would each be
+   over the budget alone. The inputs are now:
+   - within the limit: a 200 KiB JSON object holding one string (two
+     items), which is decoded;
+   - over the budget together: two JSON arrays of 150 KiB of three-byte
+     numbers (`10,`), about 51,200 items each. Each is within the budget
+     on its own, and together they exceed it.
+
+   Scope item 1 also says what an item is: every key, value, array and
+   object, as a CBOR map's keys are items too (SPEC-043).
+
+   **Weight C:** the evidence changes, not the rule.
+
+   Awaits confirmation by Maurice van Loon.
+
+2. **2026-09-27, step 161b, found by the whole suite.** AC3's file with
+   14 million chunks is a 14 MB `caBX` chunk. After the other tests, the
+   suite's process had 49 MB of memory left, so SPEC-013's memory check
+   refused the chunk before the COSE was read (*"does not fit this
+   host"*). That is `Invalid` and fast, but it is not the limit that AC3
+   names. The test now uses 2 million chunks. Measured with the probe of
+   step 157 at 2 million: 6.78 s before the change, with the claim
+   signature valid, and 0.26 s after, with the item limit named. At 14
+   million: 47.05 s before and 0.28 s after. The rule is unchanged.
+
+   **Weight C:** the evidence changes, not the rule.
+
+   Awaits confirmation by Maurice van Loon.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -196,8 +232,8 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
+| AC1 | tests/Unit/Verifier/HostileInputSecondRoundTest.php :: AC1: a JSON assertion is bounded / SPEC-045 | src/Manifest/Manifest.php :: MAX_JSON_BYTES, assertionData(), charge() |
+| AC2 | tests/Unit/Verifier/HostileInputSecondRoundTest.php :: AC2: one assertion referenced many times is hashed once / SPEC-045 | src/Hash/HashedUriCheck.php :: check(), entry() (the digest per box and algorithm) |
+| AC3 | tests/Unit/Verifier/HostileInputSecondRoundTest.php :: AC3: the chunks of a string are charged / SPEC-045 | src/Cbor/CborDecoder.php :: chunks() |
+| AC4 | tests/Unit/Verifier/HostileInputSecondRoundTest.php :: AC4: an empty bfdb is refused, not thrown / SPEC-045 | src/Manifest/Manifest.php :: mediaType() |
+| AC5 | tests/Unit/Verifier/VerifierTest.php :: AC10–AC13 / SPEC-013 (the drift alarms); bin/fuzz.php; the before/after run of step 161b | the whole verification path |

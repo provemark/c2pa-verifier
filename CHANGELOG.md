@@ -24,6 +24,16 @@ committed.
   the allowed list. Both `c2patool` versions still call it `Trusted`; the
   difference is named in `docs/comparison.md`.
 
+### Fixed
+- **Four inputs no longer exhaust memory or time, or throw (SPEC-045).**
+  A JSON assertion over 256 KiB is refused before it is decoded, and JSON
+  items count against the manifest store's CBOR item budget (a 4 MB one
+  was fatal at 256M). An assertion that the claim names many times is
+  hashed once (1,000 references to 8 MB took 20.6 s). Every chunk of an
+  indefinite-length CBOR string costs an item (14 million empty chunks in
+  the unsigned COSE header took 47 s). An empty embedded-file description
+  box is `Invalid` instead of a `ValueError` that reached the caller.
+
 ## 0.2.3 — 2026-09-25
 
 A security release for one wrong `Trusted`, found while measuring the

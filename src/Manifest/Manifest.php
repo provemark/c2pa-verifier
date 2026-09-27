@@ -28,6 +28,9 @@ final readonly class Manifest
 {
     private const URI_PREFIX = 'self#jumbf=';
 
+    /** The largest JSON content box decoded (SPEC-045 AC1): 128 times the largest measured, 2,031 bytes. */
+    public const int MAX_JSON_BYTES = 262144;
+
     /**
      * @param  array<string, Assertion>  $assertions  by label, in store order; $assertionStore is the superbox itself, unknown boxes included (SPEC-007 amendment 2, for SPEC-011)
      */
@@ -317,11 +320,22 @@ final readonly class Manifest
             return self::decodeCbor(self::only($byType['cbor'], $label), sprintf('assertion %s', $label), $budget);
         }
         if ($kinds === ['json']) {
+            $json = self::only($byType['json'], $label);
+            if (strlen($json) > self::MAX_JSON_BYTES) {
+                throw new ManifestException(sprintf('assertion %s: the JSON is %d bytes; this verifier decodes at most %d (SPEC-045)', $label, strlen($json), self::MAX_JSON_BYTES), StatusCode::AssertionJsonInvalid);
+            }
             try {
-                return json_decode(self::only($byType['json'], $label), true, 64, JSON_THROW_ON_ERROR);
+                $data = json_decode($json, true, 64, JSON_THROW_ON_ERROR);
             } catch (\JsonException $e) {
                 throw new ManifestException(sprintf('assertion %s: invalid JSON: %s', $label, $e->getMessage()), StatusCode::AssertionJsonInvalid, $e);
             }
+            try {
+                self::charge($data, $budget);
+            } catch (CborException $e) {
+                throw new ManifestException(sprintf('assertion %s: its JSON goes beyond the limit of %d CBOR items for this manifest store (SPEC-043, SPEC-045)', $label, $budget->items), StatusCode::GeneralError, $e);
+            }
+
+            return $data;
         }
         if ($kinds === ['bfdb', 'bidb']) {
             return new EmbeddedFile(self::mediaType(self::only($byType['bfdb'], $label), $label), self::only($byType['bidb'], $label));
@@ -342,11 +356,31 @@ final readonly class Manifest
         return $boxes[0]->data;
     }
 
+    /**
+     * Every key, value, array and object of decoded JSON, charged to the store's budget as a CBOR item
+     * is (SPEC-045 AC1): JSON and CBOR share one budget.
+     */
+    private static function charge(mixed $data, CborBudget $budget): void
+    {
+        $budget->take(0);
+        if (! is_array($data)) {
+            return;
+        }
+        $keyed = ! array_is_list($data);
+        foreach ($data as $value) {
+            if ($keyed) {
+                $budget->take(0);
+            }
+            self::charge($value, $budget);
+        }
+    }
+
     /** The media type of an embedded-file description box: a toggles byte, then the type, NUL-terminated. */
     private static function mediaType(string $bfdb, string $label): string
     {
-        $end = strpos($bfdb, "\0", 1);
-        if (strlen($bfdb) < 2 || $end === false) {
+        // the length first: strpos() throws ValueError on an offset past the end (SPEC-045 AC4)
+        $end = strlen($bfdb) < 2 ? false : strpos($bfdb, "\0", 1);
+        if ($end === false) {
             throw new ManifestException(sprintf('assertion %s: the embedded-file description has no media type', $label));
         }
 
