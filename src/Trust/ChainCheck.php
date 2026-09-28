@@ -266,6 +266,16 @@ final readonly class ChainCheck
                 return sprintf('%s is signed with %s, a hash that collisions have broken; this verifier does not trust a certificate path through it (SPEC-048)', $path[$i]->subjectCn(), $weak);
             }
         }
+        // an RSA key with no real public exponent between the anchor and the leaf (SPEC-049): with e = 1 anyone can
+        // sign as that certificate without its key, so it could issue anything; the leaf's exponent is the profile's
+        for ($i = 1; $i < $last; $i++) {
+            if ($path[$i]->keyType === 'RSA') {
+                $fault = RsaExponent::fault($path[$i]->rsaExponent);
+                if ($fault !== null) {
+                    return sprintf('%s has an RSA key this verifier does not trust a certificate path through: %s', $path[$i]->subjectCn(), $fault);
+                }
+            }
+        }
         foreach ($path as $i => $constraining) {
             $constraints = $constraining->x509->nameConstraints;
             if ($constraints === null) {

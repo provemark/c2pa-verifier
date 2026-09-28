@@ -162,7 +162,11 @@ final readonly class CertificateProfileCheck
     {
         return match ($leaf->keyType) {
             'EC' => in_array($leaf->curve, self::CURVES, true) ? [] : [sprintf('EC key on %s; C2PA 2.4 §14.5 allows %s', $leaf->curve ?? '(unknown curve)', implode(', ', self::CURVES))],
-            'RSA' => $leaf->keyBits >= 2048 ? [] : [sprintf('RSA key of %d bits; C2PA 2.4 §14.5 requires at least 2048', $leaf->keyBits)],
+            // the modulus by C2PA 2.4 §14.5, and the exponent, which §14.5 leaves open, by RFC 8017 §3.1 (SPEC-049)
+            'RSA' => array_values(array_filter([
+                $leaf->keyBits >= 2048 ? null : sprintf('RSA key of %d bits; C2PA 2.4 §14.5 requires at least 2048', $leaf->keyBits),
+                RsaExponent::fault($leaf->rsaExponent),
+            ], is_string(...))),
             'Ed25519' => [],
             default => [sprintf('key of type %s (%d bits); C2PA 2.4 §14.5 allows EC on P-256/384/521, RSA of 2048 bits or more, Ed25519', $leaf->keyType, $leaf->keyBits)],
         };

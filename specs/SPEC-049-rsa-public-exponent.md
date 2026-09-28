@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-28                      |
 | Supersedes | —                                                 |
@@ -171,6 +171,64 @@ beside the modulus test. No public API changes.
 
    Confirmed by Maurice van Loon, 2026-09-28.
 
+2. **2026-09-28, proposed before the tests.** No RSA certificate with a bad
+   exponent is built for the repository, so AC1, AC2, AC3 and AC6 rest on
+   the rule itself, as c2pa-rs 0.91.1's own test does (PR #2712,
+   `rsa_public_exponent_profile`: 1, 2, 4 and −3 refused; 3 and 65537
+   accepted; no certificate involved, read through `gh`).
+   - The rule is one function over the exponent's bytes as
+     `openssl_pkey_get_details()` gives them. AC1: `01` refused. AC2: `02`
+     and `04` refused. AC3: an empty or absent exponent refused. AC6's
+     values are the same, and the path uses the same function. `03` and
+     `010001` are accepted. A negative exponent cannot be written in those
+     unsigned bytes; open question 2 stands.
+   - A second test per call site shows the function is consulted: the
+     leaf profile and the chain walk, each on RSA certificates already in
+     the corpus (`e = 65537`), which keep their verdicts (AC4), and each
+     naming the exponent in its explanation only when the function
+     refuses.
+   - What no test covers: a real certificate with `e = 1` refused end to
+     end. That rests on reading the call sites and on step 174's
+     measurement, as upstream's rests on its code.
+
+   **Weight B:** the criteria's inputs change; what they assert does not.
+
+   Confirmed by Maurice van Loon, 2026-09-28.
+
+3. **2026-09-28, found by the tests before the code.** Scope item 1 reads
+   the exponent from `openssl_pkey_get_details()`'s `['rsa']['e']`. For a
+   key whose algorithm is `id-RSASSA-PSS` (1.2.840.113549.1.1.10), PHP
+   reports no `['rsa']` details at all: measured on PHP 8.5.8 with
+   OpenSSL 3.6.3, `type` −1 and only `bits`, `key` and `type`, as
+   `Certificate::keyFacts()` already notes. Of the corpus's JPEG, PNG and
+   WebP files whose active leaf could be read, 45 have such a key
+   (`c2pa-rs/CA_ct.jpg`, `c2pa-rs/CIE-sig-CA.jpg`,
+   `c2pa-rs/update_manifest.jpg`, `matrix/ps256.jpg`, …) and 7 an
+   `rsaEncryption` key. Under item 3 as approved, all 45 would become
+   `signingCredential.invalid`, and the exponent rule would never see the
+   key type it most needs to see.
+   - Item 1 changes: the exponent is read from the certificate's
+     subjectPublicKeyInfo with this verifier's own DER reader (SPEC-016).
+     For both `rsaEncryption` and `id-RSASSA-PSS` the BIT STRING holds
+     `RSAPublicKey ::= SEQUENCE { modulus INTEGER, publicExponent INTEGER }`
+     (RFC 8017 appendix A.1.1; RFC 4055 §1.2). The value is the INTEGER's
+     content octets, so a negative exponent is read as such and refused
+     (open question 2 answered).
+   - Item 3 now means a subjectPublicKeyInfo that does not hold that
+     structure, which is a malformed key, not a key type PHP does not
+     describe.
+   - The leaf call-site tests alter that structure's exponent in the key
+     the details report (`['key']`), instead of `['rsa']['e']`; the real
+     key still verifies every signature. AC6 and the rule's own tests are
+     unchanged.
+   - AC4 gains `c2pa-rs/CA_ct.jpg`, an `id-RSASSA-PSS` leaf, keeping its
+     verdict.
+
+   **Weight A:** where a value is read from changes, and so does which keys
+   a criterion covers.
+
+   Confirmed by Maurice van Loon, 2026-09-28.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -178,8 +236,9 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1 | | |
-| AC2 | | |
-| AC3 | | |
-| AC4 | | |
-| AC5 | | |
+| AC1 | tests/Unit/Trust/RsaExponentTest.php :: AC1: an exponent of 1 is refused; AC1: the leaf profile consults the rule / SPEC-049 | src/Trust/RsaExponent.php :: fault(); src/Trust/CertificateProfileCheck.php :: keyFaults() |
+| AC2 | tests/Unit/Trust/RsaExponentTest.php :: AC2: an even exponent is refused / SPEC-049 | src/Trust/RsaExponent.php :: fault() |
+| AC3 | tests/Unit/Trust/RsaExponentTest.php :: AC3: an exponent that cannot be read is refused; AC3: the leaf profile refuses an RSA key that holds no exponent / SPEC-049 | src/Trust/RsaExponent.php :: fromSubjectPublicKeyInfo(), fault(); src/Trust/Certificate.php :: rsaExponent() |
+| AC4 | tests/Unit/Trust/RsaExponentTest.php :: AC4: real exponents are accepted; AC4: real RSA files keep their verdicts / SPEC-049 | src/Trust/RsaExponent.php :: fault() |
+| AC5 | the before/after run of step 175 (23,352 runs, no line moved) | the whole verification path |
+| AC6 | tests/Unit/Trust/RsaExponentTest.php :: AC6: an intermediate with a bad exponent is untrusted; AC6: the same intermediate with its own exponent is trusted / SPEC-049 | src/Trust/ChainCheck.php :: pathFault() |

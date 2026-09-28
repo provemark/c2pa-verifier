@@ -72,6 +72,9 @@ final readonly class Certificate
 
     public ?string $curve;
 
+    /** An RSA key's publicExponent octets from its subjectPublicKeyInfo; null for another key type, or when an RSA key holds none (SPEC-049) */
+    public ?string $rsaExponent;
+
     /** @var list<string>|null OIDs (an OpenSSL name it knows mapped; an unknown one kept as given) — null when the extension is absent */
     public ?array $extendedKeyUsage;
 
@@ -147,6 +150,7 @@ final readonly class Certificate
         $this->x509 = CertificateExtensions::fromDer($der);
         $this->signatureAlgorithm = is_string($parsed['signatureTypeLN'] ?? null) ? $parsed['signatureTypeLN'] : '(unknown)';
         [$this->keyType, $this->keyBits, $this->curve] = self::keyFacts($key);
+        $this->rsaExponent = $this->keyType === 'RSA' ? self::rsaExponent($key) : null;
         $this->extendedKeyUsage = is_string($extensions['extendedKeyUsage'] ?? null) ? self::ekuOids($extensions['extendedKeyUsage']) : null;
         $this->keyUsage = is_string($extensions['keyUsage'] ?? null) ? self::names($extensions['keyUsage']) : null;
         $this->hasAuthorityKeyIdentifier = array_key_exists('authorityKeyIdentifier', $extensions);
@@ -284,6 +288,23 @@ final readonly class Certificate
         }
 
         return $typed;
+    }
+
+    /**
+     * The exponent from the key's own subjectPublicKeyInfo, which openssl_pkey_get_details() hands back
+     * as `key` for every key type, the id-RSASSA-PSS ones it gives no RSA details for included
+     * (SPEC-049 amendment 3).
+     *
+     * @param  array<string, mixed>  $key
+     */
+    private static function rsaExponent(array $key): ?string
+    {
+        if (! is_string($key['key'] ?? null)) {
+            return null;
+        }
+        $spki = base64_decode(preg_replace('/-----[^-]+-----|\s/', '', $key['key']) ?? '', true);
+
+        return $spki === false ? null : RsaExponent::fromSubjectPublicKeyInfo($spki);
     }
 
     /**

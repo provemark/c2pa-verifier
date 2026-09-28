@@ -7718,3 +7718,26 @@ README are where the disclosure lives.
   SPEC-049. The assistant stopped before building the test certificates;
   no tests or code in `src/` changed.
 - Decided by Maurice: option B; SPEC-049 approved; amendment 1 confirmed.
+
+## 2026-09-28 — SPEC-049 built (step 175)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ik kan die certificaten niet zelf maken"; then to check
+  c2pa-rs's own tests, to add amendment 2 and later amendment 3, each
+  confirmed ("akkoord, amendment 2 bevestigd", "akkoord, amendment 3
+  bevestigd").
+- Produced: `src/Trust/RsaExponent.php`; `Certificate::$rsaExponent`; the
+  exponent rule in `CertificateProfileCheck::keyFaults()` and
+  `ChainCheck::pathFault()`; `tests/Unit/Trust/RsaExponentTest.php`
+  (16 tests); SPEC-049 amendments 2 and 3, Traceability, status
+  `implemented`; a row in `docs/comparison.md`;
+  `notes/step-175-spec049.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: PR #2712's files through `gh` (one source file, a test on the
+  function alone, no certificates); `openssl_pkey_get_details()` on the
+  PS256 leaf of `matrix/ps256.jpg` (no RSA details for `id-RSASSA-PSS`);
+  a count of leaf key types over the corpus (45 `id-RSASSA-PSS`, 7
+  `rsaEncryption`); `vendor/bin/pest --group=SPEC-049` before (14 failed,
+  2 passed) and after (16 passed); `composer check` (exit 0, 569
+  passed); a before/after sweep of 23,352 runs from a worktree at HEAD
+  against the working tree (no line differs).
+- Decided by Maurice: amendments 2 and 3.
