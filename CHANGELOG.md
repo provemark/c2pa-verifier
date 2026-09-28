@@ -5,6 +5,32 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.2.6 — 2026-09-28
+
+A security release for one wrong `Trusted`, found by reading the
+verification fixes of c2pa-rs 0.91.1 against this verifier. No class,
+method, member, status code or settings shape changed. Every user should
+upgrade.
+
+### Security
+- **An RSA key needs a real public exponent (SPEC-049).** With public
+  exponent 1, raising a signature to the exponent changes nothing, so a
+  PS256 claim verified without the private key, and a leaf with such a
+  key could come out `Trusted`. An exponent below 3, an even exponent and
+  a negative one are now `signingCredential.invalid` in the leaf. Present
+  in 0.1.0 to 0.2.5. `c2patool` 0.27.22 and 0.28.0 give the same wrong
+  `Trusted`; c2pa-rs 0.91.1 refuses it (CAI-13156).
+
+### Changed
+- **The same exponent rule between the anchor and the leaf (SPEC-049).**
+  An intermediate with such a key makes the path
+  `signingCredential.untrusted`, since anyone could issue certificates
+  under it. Stricter than `c2patool` and c2pa-rs 0.91.1, which check the
+  leaf only.
+- The exponent is read from the key's subjectPublicKeyInfo, so RSA keys
+  with the `id-RSASSA-PSS` algorithm are covered too; PHP reports no RSA
+  details for them.
+
 ## 0.2.5 — 2026-09-27
 
 A security release for four wrong `Trusted` in the certificate chain,

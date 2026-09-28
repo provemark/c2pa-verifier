@@ -7741,3 +7741,20 @@ README are where the disclosure lives.
   passed); a before/after sweep of 23,352 runs from a worktree at HEAD
   against the working tree (no line differs).
 - Decided by Maurice: amendments 2 and 3.
+
+## 2026-09-28 — The check before 0.2.6 (step 176)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, doe de controle vóór de release".
+- Produced: the 0.2.6 section of `CHANGELOG.md`; SECURITY.md's sixteenth
+  case and its count; the README's tag, count of wrong verdicts and fuzz
+  count; `notes/step-176-pre-release-check.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: `composer spec-check` (49 implemented); a search for
+  unconfirmed amendments (none); `composer check` (exit 0, 569 passed);
+  `php bin/fuzz.php 20260928 60` over 188 files (10,818 runs, 0 faults,
+  50 `Valid`), both `c2patool` versions on the 50 (all `Valid`);
+  `php bin/package-check.php`; `php bin/api-check.php`; the surface and
+  `StatusCode` diffed against `v0.2.5` (empty).
+- Reasoned: 0.2.6 rather than 0.3.0, by step 138's rule.
+- Decided by Maurice: prepare 0.2.6. Push, tag and Packagist wait for his
+  permission.
