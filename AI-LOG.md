@@ -7680,3 +7680,25 @@ README are where the disclosure lives.
   `composer check`. The file's origin and the other readers' verdicts were
   measured in the sister repository's session the same day.
 - Decided by Maurice: add the test; not to report anything upstream.
+
+## 2026-09-28 — c2pa-rs 0.91.1 measured; SPEC-049 drafted (step 174)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "wat is de volgende stap", then "akkoord" to measuring c2pa-rs
+  0.91.1's read-side fixes against this verifier, then "ja ga door" to
+  recording the measurement and drafting a spec.
+- Produced: `notes/step-174-engine-0.91.1-measured.md`;
+  `specs/SPEC-049-rsa-public-exponent.md` (draft); rows in `NOTES.md` and
+  `docs/milestones.md`, where step 173's row now says done. Probe scripts
+  and throw-away certificates kept outside the repository.
+- Measured: the three pull requests read through `gh` (#2712, #2686,
+  #2688) and their merge dates against the build of `c2patool` 0.28.0
+  (c2pa 0.91.0, before all three); a throw-away P-256 root with RSA leaves
+  at e = 65537, 3 and 1, the last signed without a key, judged by
+  `bin/c2pa-verify` and `c2patool` 0.27.22 and 0.28.0 (all `Trusted`); an
+  e = 1 intermediate (`signingCredential.trusted` passed, the file
+  `Invalid` for a missing AuthorityKeyIdentifier in the probe);
+  `openssl_pkey_get_details()` on each certificate; C2PA 2.4 §13.2.1 and
+  §14.5.1.1 from spec.c2pa.org. Reasoned: point 2 from
+  `Verifier::check()` and `IngredientManifestCheck::drop()`, point 3 from
+  SPEC-030's scope.
+- Decided by Maurice: measure first (step 174), then draft the spec.
