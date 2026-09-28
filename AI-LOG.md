@@ -7772,3 +7772,16 @@ README are where the disclosure lives.
   references; `git log -S"70 870"` (unchanged since step 50);
   `composer check`; `composer spec-check`.
 - Decided by Maurice: none.
+
+## 2026-09-28 — 0.2.6 released (step 177)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, push en release 0.2.6".
+- Produced: `main` pushed (steps 174–176, five commits), the annotated tag
+  `v0.2.6` on `32ab4eb`, rows in `docs/milestones.md` and `NOTES.md`.
+- Measured: `gh repo view` (public); CI run 36396514160 green on 8.3, 8.4
+  and 8.5; the GitHub zip of `v0.2.6` and `git archive v0.2.6`, 355 files
+  each, identical lists; `bin/package-check.php` 355; Packagist lists
+  `v0.2.6` on `32ab4eb`; a fresh `composer require
+  provemark/c2pa-verifier:^0.2` installs v0.2.6, ships `RsaExponent` and
+  calls `matrix/ps256.jpg` `Trusted` under `trust/full.settings.json`.
+- Decided by Maurice: push and release.
