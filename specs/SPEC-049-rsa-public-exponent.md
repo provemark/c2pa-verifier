@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-28                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -53,10 +53,15 @@ an even exponent never is (λ(n) is even).
    `claimSignature.validated` as a trusted result.
 3. **An exponent that cannot be read** (no `['rsa']['e']` for an RSA key)
    is refused the same way: fail closed, not assumed valid.
+4. **In the path** (open question 1, decided B). A certificate the walk
+   verifies, the anchor aside, whose RSA key fails item 1's test makes the
+   path `signingCredential.untrusted`, naming the certificate and the
+   exponent. The timestamp authority's chain (SPEC-017) uses the same
+   walk, so this holds there too, as `timeStamp.untrusted`.
 
 **Out of scope**
 
-- Intermediates and the trust anchor: see open question 1.
+- The trust anchor's own key: it is trusted because the settings name it.
 - An exponent larger than the modulus, and exponents coprime tests beyond
   evenness: OpenSSL already refuses `e ≥ n` on use, and a full coprimality
   check needs λ(n), which a verifier does not have.
@@ -100,6 +105,16 @@ run. Both `c2patool` versions judge each file and are recorded.
     exponent below 3 or an even one; the before/after run is the
     measurement of that.
 
+- **AC6 — an intermediate with a bad exponent is untrusted** *(required: error path)*
+  - Given a chain whose intermediate has an RSA key with `e = 1` or an even
+    `e`, and whose leaf is otherwise sound (synthetic certificates in a
+    unit test of the path check; the intermediate's own link need not
+    verify, because the rule reads the exponent alone)
+  - Then the path is `signingCredential.untrusted`, naming the
+    intermediate and its exponent
+  - And an intermediate with `e = 65537` in the same position is not
+    refused on its exponent.
+
 ## References
 
 - Specification: C2PA 2.4 §14.5.1.1 (the RSA modulus bound) and §13.2.1
@@ -123,22 +138,18 @@ beside the modulus test. No public API changes.
 
 ## Open questions
 
-1. **Intermediates too?** *(blocking; the maintainer's decision).* Step 174
-   showed the chain walk accepts an `e = 1` intermediate's forged link
-   (`signingCredential.trusted` succeeded), but a clean probe of the net
-   verdict did not resolve, and c2pa-rs 0.91.1's fix is scoped to the
-   end-entity profile. Two options:
-   - **A — leaf only**, exactly as c2pa-rs 0.91.1. Matches the reference
-     tool; leaves an `e = 1` intermediate to the path check as today.
-   - **B — leaf and path**: any certificate the walk verifies, the anchor
-     aside, with `e < 3` or an even `e` makes the path
-     `signingCredential.untrusted`, as SPEC-048 does for weak hashes. An
-     `e = 1` intermediate would let anyone issue leaves under it without
-     its key; this closes that. Stricter than every oracle, named in
-     `docs/comparison.md`. Needs the clean intermediate probe first.
-   Proposal: B, because the walk measurably accepts the forged link and
-   fail closed is the project's first rule — but only after that probe
-   gives the net verdict.
+1. **Intermediates too?** *Decided 2026-09-28 by Maurice van Loon: B,
+   leaf and path.* Any certificate the walk verifies, the anchor aside,
+   whose RSA key has `e < 3` or an even `e` makes the path
+   `signingCredential.untrusted`, naming the certificate and the exponent,
+   as SPEC-048 does for weak hashes. The evidence is step 174: the walk
+   accepted an `e = 1` intermediate's link (`signingCredential.trusted`
+   passed). The rule refuses on the exponent alone, whatever the link's
+   signature, so no forged chain is needed to test it: AC6 uses an
+   intermediate whose only fault is its exponent. Stricter than every
+   oracle (c2pa-rs 0.91.1 checks the end-entity profile only), named in
+   `docs/comparison.md`. The net verdict of a fully forged intermediate
+   chain was not measured and is not pursued.
 2. **A negative exponent** *(non-blocking).* DER INTEGER is signed; a
    negative `e` should never parse as an RSA key. If OpenSSL reports it as
    unsigned bytes, AC1/AC2 already catch the resulting value; otherwise
@@ -147,7 +158,18 @@ beside the modulus test. No public API changes.
 
 ## Amendments
 
-None.
+1. **2026-09-28, proposed before the tests.** AC1 as approved rests on a
+   file whose signature is made without a private key. That file is not
+   built for the repository. AC1 instead uses a leaf whose only fault is
+   `e = 1` and whose signature does not verify: the rule refuses on the
+   exponent alone, so the criterion is the presence of
+   `signingCredential.invalid` naming the exponent. It is absent today
+   (red) and present after the change (green). Step 174's measurement
+   remains the evidence that such a leaf can otherwise reach `Trusted`.
+
+   **Weight B:** a criterion's input changes; what it asserts does not.
+
+   Confirmed by Maurice van Loon, 2026-09-28.
 
 ## Traceability
 

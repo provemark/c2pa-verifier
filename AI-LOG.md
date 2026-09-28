@@ -7702,3 +7702,19 @@ README are where the disclosure lives.
   `Verifier::check()` and `IngredientManifestCheck::drop()`, point 3 from
   SPEC-030's scope.
 - Decided by Maurice: measure first (step 174), then draft the spec.
+
+## 2026-09-28 — SPEC-049 decided and approved (step 174, continued)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "B, en eerst de nette meting van de intermediate"; then
+  "akkoord, SPEC-049 approved"; then "akkoord, amendment 1 bevestigd";
+  then "ja, commit de spec-wijzigingen".
+- Produced: `specs/SPEC-049-rsa-public-exponent.md` — open question 1
+  decided (B, leaf and path), scope item 4 and AC6 added, status
+  `approved`, amendment 1 (AC1's input: a leaf whose only fault is
+  `e = 1`, no signature made without a key) proposed and confirmed; the
+  SPEC-049 row in `docs/milestones.md`.
+- Measured: `php bin/spec-check.php` (49 specs, OK). Not done: the clean
+  measurement of a forged intermediate chain, and the tests and code of
+  SPEC-049. The assistant stopped before building the test certificates;
+  no tests or code in `src/` changed.
+- Decided by Maurice: option B; SPEC-049 approved; amendment 1 confirmed.
