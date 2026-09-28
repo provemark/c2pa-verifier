@@ -30,8 +30,15 @@ tagged in this step.*
 - **Texts brought up to date in this step:**
   - the CHANGELOG, with 0.2.6's *Security* and *Changed* sections;
   - SECURITY.md's *Findings so far*, sixteen cases now;
-  - the README's current tag, its count of wrong verdicts and its count
-    of fuzzed files (70,870 + 10,818 = 81,688).
+  - the README's current tag and its count of wrong verdicts;
+  - the fuzzing line in the README and `docs/comparison.md`. Both said
+    70 870 files, a total from step 50 that the fuzz runs of steps 138,
+    162 and 171 were never added to. They now give this release's run
+    instead of a cumulative figure;
+  - `docs/conformance.md`, last updated at SPEC-040: `PRED-INGR-002` and
+    `PRED-CRYP-009` described behaviour that SPEC-035 amendment 5 and
+    SPEC-047 had changed, and `PRED-CRYP-003` and `-007` gained SPEC-046
+    to SPEC-049. No verdict in the count changed.
 
 ## 0.2.6, not 0.3.0
 

@@ -252,8 +252,9 @@ alone.
   something is *absent*; all are documented in [`SECURITY.md`](SECURITY.md)
   and closed.
 - **Bounded input.** Every parser has hard limits and acceptance criteria
-  for malformed input; 81 688 randomly mutated files have gone through the
-  verifier without an exception escaping (`bin/fuzz.php`, replayable).
+  for malformed input. Before every release the corpora are fuzzed
+  (`bin/fuzz.php`, replayable); before 0.2.6, 10 818 randomly mutated files
+  went through the verifier without an exception escaping.
 
 ## Working on it
 

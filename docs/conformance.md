@@ -3,7 +3,8 @@
 *Measured 2026-09-22 (step 90); updated the same day after SPEC-030 closed
 five of its gaps (step 92); corrected 2026-09-24 (step 108), when `PRED-IMG-004`
 turned out to be a gap that step 90 had marked enforced, and closed the same
-day (step 109).* This table puts every predicate of
+day (step 109); four rows brought up to date with SPEC-035 amendment 5 and
+SPEC-046 to SPEC-049 on 2026-09-28 (step 176).* This table puts every predicate of
 [`encypherai/c2pa-conformance-suite`](https://github.com/encypherai/c2pa-conformance-suite)
 that applies to the containers this verifier reads next to what this
 verifier actually does. The suite's catalogue formalises **237 normative
@@ -72,7 +73,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | predicate | sev | rule | this verifier |
 |---|---|---|---|
 | `PRED-INGR-001` | shall | Display attribution warning for invalid manifest data | **yes** — `VerificationReport` carries every failure and `Cli\Command` prints them; nothing is attributed to a signer whose manifest failed |
-| `PRED-INGR-002` | shall | Gather and validate redacted assertions for each ingredient manifest | **yes** — since 2026-09-24 (SPEC-035): every claim's absolute `redacted_assertions` is gathered for the store; a redacted assertion that is gone is skipped, one still present with content is `assertion.notRedacted`, and a v2 ingredient manifest with redactions is bound by its claim signature (`ingredient.claimSignature.*`) |
+| `PRED-INGR-002` | shall | Gather and validate redacted assertions for each ingredient manifest | **yes** — since 2026-09-24 (SPEC-035): the absolute `redacted_assertions` of the active manifest and of the manifests the ingredient graph reaches are gathered, never those of an unreached manifest (SPEC-035 amendment 5, 2026-09-27); a redacted assertion that is gone is skipped, one still present with content is `assertion.notRedacted`, and a v2 ingredient manifest with redactions is bound by its claim signature (`ingredient.claimSignature.*`) |
 | `PRED-INGR-003` | shall | Validate hashed_uri and hashed_ext_uri references in standard assertions | **yes** — `HashedUriCheck` resolves and hashes every hashed URI of the claim; external retrieval is optional in the rule and declined here |
 | `PRED-INGR-004` | may | Ingredient nesting with associated manifests | **yes** — `ManifestGraph` walks nested ingredients and their manifests (SPEC-020) |
 | `PRED-INGR-005` | shall | Execute recursive ingredient validation algorithm | **yes** — `IngredientManifestCheck` runs the recursive algorithm over the graph (SPEC-021) |
@@ -110,13 +111,13 @@ accept; its predicate list does not depend on its cryptography being right.
 |---|---|---|---|
 | `PRED-CRYP-001` | may | Optional validation result metadata fields | by design — optional `specVersion`/`trustListURI` fields are not emitted |
 | `PRED-CRYP-002` | shall | Claim signature URI resolution | **yes** — `Manifest::signatureBytes()` resolves the claim's signature URI within the manifest; absent is `claimSignature.missing` |
-| `PRED-CRYP-003` | shall | Signing credential validation | **yes** — `CertificateProfileCheck` (SPEC-015), every fault `signingCredential.invalid` |
+| `PRED-CRYP-003` | shall | Signing credential validation | **yes** — `CertificateProfileCheck` (SPEC-015), every fault `signingCredential.invalid`; since 2026-09-27 also an unknown critical extension (SPEC-046) and a PSS leaf over SHA-1 (SPEC-048), and since 2026-09-28 an RSA public exponent below 3 or even (SPEC-049) |
 | `PRED-CRYP-004` | shall | Signature algorithm allowed list check | **yes** — `SignatureVerifier` allows ES256/384/512, PS256/384/512, EdDSA; anything else is `algorithm.unsupported` |
 | `PRED-CRYP-005` | shall | Timestamp presence check before trust chain verification | **yes** — the timestamp check runs before the chain and hands it the attested time (SPEC-013 amendment 8) |
 | `PRED-CRYP-006` | shall | Trust anchor temporal validity gating | **gap** — a trust anchor with `notBefore`/`notAfter` gating is not supported: `TrustSettings` has no such field |
-| `PRED-CRYP-007` | shall | Certificate chain of trust to trust anchor | **yes** — `ChainCheck` builds to an anchor; `signingCredential.trusted` / `.untrusted` (SPEC-014) |
+| `PRED-CRYP-007` | shall | Certificate chain of trust to trust anchor | **yes** — `ChainCheck` builds to an anchor; `signingCredential.trusted` / `.untrusted` (SPEC-014). Every issuer must be a CA with `keyCertSign` within its `pathlen` (SPEC-014 amendment 4); name constraints and unknown critical extensions stop the path (SPEC-046), as do MD5 or SHA-1 signatures (SPEC-048) and an RSA key with a bad exponent (SPEC-049) between the anchor and the leaf |
 | `PRED-CRYP-008` | shall | COSE claim signature cryptographic verification | **yes** — `CoseSign1` + `SignatureVerifier` over the Sig_structure; `claimSignature.validated` / `.mismatch` (SPEC-009) |
-| `PRED-CRYP-009` | may | COSE header bucket placement permissiveness | **yes** — `CoseSign1::findChain()` reads both buckets, integer label 33 winning within one |
+| `PRED-CRYP-009` | may | COSE header bucket placement permissiveness | **yes** for a claim v1 — `CoseSign1::findChain()` looks as `c2pa-rs` does: the protected header (label 33 or `"x5chain"`), else the unprotected `"x5chain"`. Label 33 in the unprotected header is no chain, and a chain in both headers is refused; in a claim v2 or later an unprotected chain is `signingCredential.invalid`, stricter by design (SPEC-047, 2026-09-27) |
 | `PRED-CRYP-010` | shall | Multiple tstToken entries rejected as malformed | partial — the header is a CBOR map, so a second `sigTst` key cannot survive decoding; a `tstToken` list inside one header is not counted |
 | `PRED-CRYP-011` | shall | sigTst time-stamp response PKI status validation | **yes** — `TimeStampToken` requires PKIStatusInfo 0 or 1 (SPEC-016) |
 | `PRED-CRYP-012` | shall | sigTst2 TimeStampToken retrieval | **yes** — `sigTst2` is read as a bare TimeStampToken (SPEC-016, SPEC-017) |

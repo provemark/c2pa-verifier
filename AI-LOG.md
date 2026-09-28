@@ -7758,3 +7758,17 @@ README are where the disclosure lives.
 - Reasoned: 0.2.6 rather than 0.3.0, by step 138's rule.
 - Decided by Maurice: prepare 0.2.6. Push, tag and Packagist wait for his
   permission.
+
+## 2026-09-28 — Stale texts found before 0.2.6 (step 176, continued)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "Kijk eerst of er nog meer moet worden bijgewerkt".
+- Produced: `docs/conformance.md` (`PRED-INGR-002` and `PRED-CRYP-009`
+  corrected to what SPEC-035 amendment 5 and SPEC-047 do; `PRED-CRYP-003`
+  and `-007` extended with SPEC-046 to SPEC-049; the header's history);
+  the fuzzing line in `README.md` and `docs/comparison.md`, which carried
+  step 50's total of 70 870 unchanged through three later fuzz runs, now
+  the 0.2.6 run; the step 176 note.
+- Measured: a search of tracked files for stale counts, versions and spec
+  references; `git log -S"70 870"` (unchanged since step 50);
+  `composer check`; `composer spec-check`.
+- Decided by Maurice: none.
