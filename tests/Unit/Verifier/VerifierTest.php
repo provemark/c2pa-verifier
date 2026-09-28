@@ -281,6 +281,19 @@ it('AC7: the parsers\' faults become statuses with their codes and urls', functi
         ->and(spec013OracleUrl(spec013C2patool('variants/json-broken'), 'assertion.json.invalid'))->toBe('stds.schema-org.CreativeWork');
 })->group('SPEC-013');
 
+it('AC7: a claim a real writer left with trailing bytes is claim.cbor.invalid (c2pa-rs 0.91.0, step 173)', function (): void {
+    // Signed by c2pa-rs 0.91.0 through @contentauth/c2pa-node 0.9.8, with specVersion in
+    // claim_generator_info: the claim map holds one entry more than its header declares
+    // (upstream c2pa-rs #2731), so the decoder stops 18 bytes short of the box's end.
+    $report = spec013Verify('cbor/claim-trailing-bytes-c2pa-rs-0.91.0.png');
+    expect($report->hasManifest)->toBeTrue()
+        ->and(spec013Codes($report))->toBe(['claim.cbor.invalid'])
+        ->and($report->result->statuses[0]->url)->toBe('self#jumbf=/c2pa/urn:c2pa:1fe3283e-194c-4115-a929-23b7ae59683d/c2pa.claim.v2')
+        ->and($report->result->statuses[0]->explanation)->toContain('18 byte(s) remain after the value, which ended at offset 584')
+        ->and($report->result->checksPerformed)->toBe([])
+        ->and($report->result->state)->toBe(ValidationState::Invalid);
+})->group('SPEC-013');
+
 it('AC8: the report\'s shape, and the sister parser reads it', function (): void {
     $valid = spec013Verify('fixture-signed.png');
     $tampered = spec013Verify('binding/pixel-changed.png');

@@ -43,5 +43,33 @@ d99e8029f329fc57b34b3340b8e90fd60c8c0468ed6cc49e30e6af2912802028  claim-float.cb
 c2eef09f5162c55abc4c9198f0ae636aa58fef6bc8ba0b1cb45e2cef37345325  hashdata-nonshortest-int.cbor
 ```
 
+## A real writer's claim with trailing bytes (step 173)
+
+`claim-trailing-bytes-c2pa-rs-0.91.0.png` was not built here. It is what
+c2pa-rs 0.91.0 wrote, through `@contentauth/c2pa-node` 0.9.8, when signing
+the unsigned PNG fixture with the c2pa-rs `sample/` ES256 test
+certificate on 2026-09-28, sync path, no timestamp. The manifest put
+`specVersion: "2.4.0"` in `claim_generator_info`, as C2PA 2.4 places it.
+The claim's CBOR map then holds one entry more than its header declares
+(upstream c2pa-rs #2731, open on that day), so a decoder that honours the
+header stops 18 bytes before the end of the box: exactly one more text key
+`specVersion` (12 bytes) and its value `2.4.0` (6 bytes).
+
+| reader | verdict |
+|---|---|
+| c2patool 0.27.22 (c2pa-rs 0.90.22) | `Error: claim could not be converted from CBOR` |
+| c2pa-rs 0.91.0 itself (`Reader.fromAsset` in c2pa-node 0.9.8) | `claim_cbor: Syntax error: unexpected trailing data: 18 bytes remaining` |
+| this verifier | `Invalid`, `claim.cbor.invalid`, "18 byte(s) remain after the value, which ended at offset 584" |
+
+The signature and every hash in it are correct, because the writer signed
+the bytes it wrote. With the trailing-bytes check disabled, this verifier
+reports `claimSignature.validated`, `assertion.dataHash.match` and only
+`signingCredential.untrusted`, which means `Valid`. That check is the only
+thing between this file and a wrong `Valid`.
+
+```
+61b832efafea428600887aa784358c4981ab55a712a834ee49f5e637d224b5ee  claim-trailing-bytes-c2pa-rs-0.91.0.png
+```
+
 The RFC 8949 Appendix A and F vectors of AC4–AC11 are short and live in
 the test file as hex.

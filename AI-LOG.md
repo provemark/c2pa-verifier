@@ -7662,3 +7662,21 @@ README are where the disclosure lives.
   `v0.2.5`; a fresh `composer require provemark/c2pa-verifier:^0.2`
   installs v0.2.5 and calls `nc-outside.png` `Valid`.
 - Decided by Maurice: push and release.
+
+## 2026-09-28 — A real writer's claim with trailing bytes (step 173)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: in a session on `provemark/content-credentials`, whether the
+  verifier needed changes after the refused c2pa-node 0.9.8 bump; then
+  "bereid de test voor".
+- Produced: `tests/Fixtures/cbor/claim-trailing-bytes-c2pa-rs-0.91.0.png`
+  and its section in `tests/Fixtures/cbor/README.md`; one test in
+  `tests/Unit/Verifier/VerifierTest.php` (SPEC-013 AC7); the SPEC-013
+  Traceability row; `notes/step-173-real-trailing-claim.md`; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: `bin/c2pa-verify` on the file (`Invalid`, `claim.cbor.invalid`,
+  exit 1); `vendor/bin/pest --filter="trailing bytes is claim"` with the
+  trailing-bytes check in `CborDecoder::decode()` disabled (1 failed, and
+  the verdict would have been `Valid`) and restored (1 passed);
+  `composer check`. The file's origin and the other readers' verdicts were
+  measured in the sister repository's session the same day.
+- Decided by Maurice: add the test; not to report anything upstream.
