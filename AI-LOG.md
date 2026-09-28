@@ -7785,3 +7785,23 @@ README are where the disclosure lives.
   provemark/c2pa-verifier:^0.2` installs v0.2.6, ships `RsaExponent` and
   calls `matrix/ps256.jpg` `Trusted` under `trust/full.settings.json`.
 - Decided by Maurice: push and release.
+
+## 2026-09-28 — A fixture with AI origin in a parent ingredient (step 178)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked (in the WordPress plugin's session): "maak het testbestand", for
+  the plugin's SPEC-027.
+- Produced: `bin/make-ai-history-variants.php`;
+  `tests/Fixtures/ai-history/` (`parent-chain.png`, `.bin`, the
+  throw-away root, `both-roots.settings.json`, README); c2patool's JSON in
+  `tests/Fixtures/c2patool/ai-history/`;
+  `tests/Unit/Verifier/AiHistoryTest.php`; the step 178 note and its row
+  in `NOTES.md`.
+- Measured: c2patool 0.27.22 and this verifier give `Trusted` with the
+  settings and `Valid` without, with the ingredient delta
+  `signingCredential.untrusted`. The recorded ingredient results are
+  empty; only the delta names the unknown signer. The keys were deleted
+  at the end of the run. `composer check`: 571 passed. The two new tests
+  passed at once: they pin existing behaviour on a new file.
+- Reasoned: that the active manifest keeping `c2pa.created` next to a
+  `parentOf` ingredient is fine for this purpose, as in step 60.
+- Decided by Maurice: that the fixture is made here.
