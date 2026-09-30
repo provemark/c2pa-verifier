@@ -7879,3 +7879,22 @@ README are where the disclosure lives.
   Unicode L2/26-042 and `encypherai/c2pa-text`. / Reasoned: no oracle
   until the handlers are in a default `c2patool` build.
 - Decided by Maurice: a placeholder note only; nothing built.
+
+## 2026-09-30 — Draft SPEC-051 (step 184)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: whether the verifier still needs work (upstream changes, spec
+  changes, bugs); then "akkoord, beide adviezen volgen, schrijf SPEC-051".
+- Produced: `specs/SPEC-051-merkle-hash-algorithm.md` (draft); rows in
+  `NOTES.md` and `docs/milestones.md`. Two read-only subagents did an
+  upstream survey and a code review; their findings not built here are
+  queued as next steps (BMFF exclusion limit, ingredient hash algorithm,
+  `c2pa-rs` #2702 location order, re-measure on `c2patool` 0.28.1).
+- Measured: a scratch script replacing the merkle map's `sha256` in
+  `tests/Fixtures/bmff-fragmented/init.mp4` by `fooooo` makes
+  `Verifier::verify()` throw `ValueError` (hash_init); `sha256` put back
+  does not throw. The three `sha256` offsets (636, 682, 1316) and `merkle`
+  at 643 found with a `strpos` loop. `php bin/spec-check.php`: 51 specs.
+  / Reasoned: `crc32b` would be accepted; read `c2pa-rs` main
+  `hash_utils.rs` (only sha256/384/512) and `bmff_hash.rs` (map alg first).
+- Decided by Maurice: a second guard in the digest (yes); the ingredient
+  hash algorithm as a separate step (yes).
