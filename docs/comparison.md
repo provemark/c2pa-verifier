@@ -91,7 +91,7 @@ own variant, the state and the failure codes with their URLs are
 One case is equal on purpose, and recorded because an upstream fix sits
 next to it (step 192). Two fragments of a fragmented stream exchange their
 contents, each keeping its own Merkle proof (`seg_2` ↔ `seg_3`). The set
-is `Trusted` here and in `c2patool` 0.27.22. `c2pa-rs` #2702 (on main
+is `Trusted` here and in `c2patool` 0.27.22 and 0.28.1 (step 193). `c2pa-rs` #2702 (on main
 since 2026-09-28, in no release yet) makes `location` follow the
 physical order of Merkle boxes *inside one file*. This verifier refuses
 such a file outright (two C2PA `uuid` boxes, `general.error`). A check of

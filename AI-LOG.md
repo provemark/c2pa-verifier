@@ -8000,3 +8000,18 @@ README are where the disclosure lives.
   full.settings.json`), as the unchanged set. / Reasoned: read the
   `c2pa-rs` #2702 diff (`gh pr diff`); `tfdt` inside the hashed leaf.
 - Decided by Maurice: record only.
+
+## 2026-09-30 — Fragments measured on c2patool 0.28.1 (step 193)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, download 0.28.1 en doe stap 4".
+- Produced: `notes/step-193-fragments-on-0.28.1.md`; eight
+  `tests/Fixtures/c2patool/bmff-fragmented/<case>--0.28.1.txt` and
+  `swapped.txt`; `docs/comparison.md` (0.28.1 named); a row in `NOTES.md`.
+  The tool itself is kept outside the repository.
+- Measured: `gh release download v0.28.1 --repo contentauth/c2patool`
+  (universal macOS zip, SHA-256 4766e8ec…0cbc3; `gh attestation verify`:
+  404, none published); eight case directories run on 0.27.22 and 0.28.1
+  with `--settings full.settings.json fragment --fragments_glob
+  "seg_*.m4s"`, and through `FragmentedVerifier`: state and failure code
+  equal in all eight.
+- Decided by Maurice: download 0.28.1 and measure.
