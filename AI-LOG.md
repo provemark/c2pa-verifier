@@ -7929,3 +7929,29 @@ README are where the disclosure lives.
   as the fixtures' bases.
 - Decided by Maurice: a local constant per class; sharing one list is a
   later tidy-up.
+
+## 2026-09-30 — SPEC-052 fixtures, amendment 1 and build (steps 187–188)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-052 goedgekeurd, schrijf de tests"; after the
+  oracle contradicted AC3, "akkoord, optie A, schrijf het amendement";
+  then "akkoord, amendement bevestigd, bouw de implementatie".
+- Produced: `bin/make-spec052-variants.php`; `tests/Fixtures/spec052/`
+  (four variants, throw-away root and settings);
+  `tests/Fixtures/c2patool/spec052/` (four answers);
+  `tests/Unit/Verifier/IngredientHashAlgorithmTest.php`;
+  `src/Verifier/IngredientManifestCheck.php`; SPEC-052 amendment 1,
+  status `implemented`, Traceability; `notes/step-187-spec052-oracle.md`,
+  `notes/step-188-spec052.md`; `docs/comparison.md` (one row),
+  `SECURITY.md` (one case), CHANGELOG `Unreleased`; rows in `NOTES.md`
+  and `docs/milestones.md`.
+- Measured: the variant script twice with fresh keys, `c2patool` 0.27.22
+  the same both times; this verifier at `2e36eca`: `Trusted` on the three
+  JPEG variants where `c2patool` says `Invalid`; SPEC-052 tests 8 red
+  (after the amendment) → 8 green; `composer check` exit 0;
+  `bin/api-check.php` surface matches; corpus 844 runs before and after,
+  only the four new variants moved. / Reasoned: read `c2pa-rs` 0.90.22
+  `store.rs` (`get_manifest_box_hashes` uses `claim.alg()`).
+- Decided by Maurice: approved SPEC-052; option A (follow `c2pa-rs`);
+  amendment 1 confirmed.
+- Note: SPEC-052 stayed `draft` in the file after Maurice approved it
+  until `bin/spec-check.php` flagged it in this step; corrected here.

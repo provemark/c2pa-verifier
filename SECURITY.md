@@ -193,6 +193,19 @@ engine's own fixes, fixed in `0.2.6`:
   intermediate with such a key. SPEC-049 refuses the exponent in the leaf
   and, beyond `c2patool`, anywhere between the anchor and the leaf.
 
+- **2026-09-30, a hash algorithm the specification does not allow —
+  present in `0.1.0` to `0.2.7`, fixed in the next release**
+  (`notes/step-185-spec051.md`, `notes/step-188-spec052.md`). A review of
+  `src/` found two places that took a hash algorithm's name from the file
+  and held it only to what PHP can compute:
+  - the merkle map of a fragmented ISOBMFF file: six edited bytes
+    (`sha256` → `fooooo`) made `verify()` throw a `ValueError`, with no key
+    needed (SPEC-051);
+  - an ingredient reference: a signed reference naming `crc32b`, with the
+    right `crc32b`, was `Trusted` here and `Invalid` in `c2patool` 0.27.22,
+    which hashes the manifest box with the ingredient claim's algorithm
+    only (SPEC-052). It needs a signer who chose `crc32b`.
+
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now
 tooling (`bin/make-absence-variants.php`) and part of every new spec.

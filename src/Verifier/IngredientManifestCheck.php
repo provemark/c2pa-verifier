@@ -46,6 +46,9 @@ use Provemark\C2paVerifier\Trust\TrustSettings;
  */
 final readonly class IngredientManifestCheck
 {
+    /** The hash algorithms C2PA 2.4 §13.1 allows (SPEC-052); a local list, as HashedUriCheck keeps its own. */
+    private const ALGORITHMS = ['sha256', 'sha384', 'sha512'];
+
     public function __construct(
         private ClaimSignatureCheck $signature = new ClaimSignatureCheck,
         private HashedUriCheck $hashedUris = new HashedUriCheck,
@@ -85,8 +88,10 @@ final readonly class IngredientManifestCheck
 
     /**
      * The box hash one reference states (C2PA 2.4 §8.4.2.3): the manifest superbox's payload under the
-     * reference's algorithm, or the claim's, or SHA-256. The pre-1.3 form — the same hash over the
-     * claim's CBOR bytes — is accepted without a word, exactly as c2pa-rs does.
+     * ingredient claim's algorithm, or SHA-256 — never the reference's, as c2pa-rs computes it
+     * (SPEC-052 amendment 1). The pre-1.3 form — a hash over the claim's CBOR bytes, under the
+     * reference's algorithm or else the claim's — is accepted without a word, exactly as c2pa-rs does.
+     * An algorithm outside the three computes nothing, so its route cannot match.
      *
      * @return list<ValidationStatus>
      */
@@ -96,23 +101,16 @@ final readonly class IngredientManifestCheck
         if ($reference === null) {
             return [];
         }
-        $alg = $reference->alg ?? $manifest->claim->alg ?? 'sha256';
-        if (! in_array($alg, hash_algos(), true)) {
-            return [new ValidationStatus(
-                StatusCode::AlgorithmUnsupported,
-                $reference->url,
-                sprintf('the ingredient reference names the hash algorithm %s, which this verifier cannot compute', $alg),
-                $ingredient->url,
-            )];
-        }
         if ($manifest->redacted !== [] && $manifest->claim->version >= 2) {
             return $this->claimSignature($manifest, $ingredient, $reference->url);
         }
+        $boxAlg = $manifest->claim->alg ?? 'sha256';
+        $legacyAlg = $reference->alg ?? $boxAlg;
         $expected = $reference->hash->bytes;
-        if (hash_equals(hash($alg, $manifest->box->payload(), true), $expected)) {
+        if (self::implemented($boxAlg) && hash_equals(hash($boxAlg, $manifest->box->payload(), true), $expected)) {
             return [new ValidationStatus(StatusCode::IngredientManifestValidated, $reference->url, 'ingredient hash matched', $ingredient->url)];
         }
-        if (hash_equals(hash($alg, $manifest->claimBytes(), true), $expected)) {
+        if (self::implemented($legacyAlg) && hash_equals(hash($legacyAlg, $manifest->claimBytes(), true), $expected)) {
             // the pre-1.3 hash: the ingredient is not refused, but nothing is claimed for it either —
             // the manifest below decides, as it does at c2patool (eleven corpus files, step 55)
             return [];
@@ -121,9 +119,31 @@ final readonly class IngredientManifestCheck
         return [new ValidationStatus(
             StatusCode::IngredientManifestMismatch,
             $reference->url,
-            sprintf('the ingredient manifest %s hashes to neither the value the assertion recorded over its box nor the one over its claim', $manifest->label),
+            sprintf(
+                'the ingredient manifest %s hashes to neither the value the assertion recorded over its box nor the one over its claim%s',
+                $manifest->label,
+                self::why($boxAlg, $legacyAlg),
+            ),
             $ingredient->url,
         )];
+    }
+
+    /** C2PA 2.4 §13.1, as HashedUriCheck and DataHashCheck hold them (SPEC-052). */
+    private static function implemented(string $alg): bool
+    {
+        return in_array($alg, self::ALGORITHMS, true);
+    }
+
+    /** What an algorithm outside the three, or a reference naming another than the box hash uses, adds to a mismatch. */
+    private static function why(string $boxAlg, string $legacyAlg): string
+    {
+        foreach (array_unique([$boxAlg, $legacyAlg]) as $alg) {
+            if (! self::implemented($alg)) {
+                return sprintf('; the hash algorithm %s is not one of sha256, sha384, sha512 (C2PA 2.4 §13.1)', $alg);
+            }
+        }
+
+        return $legacyAlg === $boxAlg ? '' : sprintf('; the box hash uses the ingredient claim\'s %s, and the reference names %s', $boxAlg, $legacyAlg);
     }
 
     /**
@@ -142,8 +162,9 @@ final readonly class IngredientManifestCheck
             return [new ValidationStatus(StatusCode::IngredientClaimSignatureMissing, $url, sprintf('ingredient claimSignature missing: the manifest %s has redacted assertions, so only the claim-signature hash can bind it, and the ingredient assertion records none', $manifest->label), $ingredient->url)];
         }
         $alg = $manifest->claim->alg ?? 'sha256';
-        if (! in_array($alg, hash_algos(), true)) {
-            return [new ValidationStatus(StatusCode::AlgorithmUnsupported, $url, sprintf('the ingredient claim names the hash algorithm %s, which this verifier cannot compute', $alg), $ingredient->url)];
+        if (! self::implemented($alg)) {
+            // nothing is computed, as at c2pa-rs, whose comparison then fails (SPEC-052 amendment 1)
+            return [new ValidationStatus(StatusCode::IngredientClaimSignatureMismatch, $url, sprintf('ingredient claimSignature mismatch: the signature box of %s cannot be hashed; the hash algorithm %s is not one of sha256, sha384, sha512 (C2PA 2.4 §13.1)', $manifest->label, $alg), $ingredient->url)];
         }
         $actual = hash($alg, $manifest->resolve($manifest->claim->signatureUri)->payload(), true);
 

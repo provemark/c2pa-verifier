@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-30                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -171,6 +171,82 @@ final class IngredientManifestCheck
   (for example `ingredient.manifest.mismatch`), that is a proposed
   amendment for Maurice, not a silent change.
 
+## Amendments
+
+1. **2026-09-30, step 187, after the fixtures and before the build.** The
+   oracle contradicts Scope 1 and AC3. Measured with
+   `bin/make-spec052-variants.php` and `c2patool` 0.27.22 (answers in
+   `tests/Fixtures/c2patool/spec052/`, stable over two runs with fresh
+   keys):
+
+   | variant | this verifier at `2e36eca` | `c2patool` 0.27.22 |
+   |---|---|---|
+   | `crc32b-reference.jpg` | **`Trusted`**, `ingredient.manifest.validated` | `Invalid`, `ingredient.manifest.mismatch` |
+   | `sha384-reference.jpg` | `Trusted`, `ingredient.manifest.validated` | `Invalid`, `ingredient.manifest.mismatch` |
+   | `sha512-reference.jpg` | `Trusted`, `ingredient.manifest.validated` | `Invalid`, `ingredient.manifest.mismatch` |
+   | `crc32b-claim-signature.png` | `Invalid`, `ingredient.claimSignature.validated` | `Invalid`, `ingredient.claimSignature.mismatch` |
+
+   The first row is a wrong `Trusted` in every release up to 0.2.7. It
+   needs a signer who chose `crc32b` for the reference.
+
+   Why `c2patool` refuses `sha384` too (read in `c2pa-rs` 0.90.22,
+   `sdk/src/store.rs`, `ingredient_checks` and `get_manifest_box_hashes`):
+   the manifest box hash is always computed with the **ingredient claim's**
+   `alg` (`claim.alg()`). The reference's `alg` is used only for the
+   pre-1.3 hash over the claim bytes (`verify_by_alg`). The
+   claim-signature hash uses the ingredient claim's `alg` too
+   (`calc_sig_box_hash(claim, claim.alg())`). A name outside the three
+   gives no hash, so the comparison fails.
+
+   Maurice chose to follow `c2pa-rs` (option A). This replaces Scope 1–2
+   and AC1–AC3, AC5:
+
+   - **Scope 1 (new).** The box hash is computed with the ingredient
+     claim's `alg` (SHA-256 when it has none), never with the reference's.
+     The pre-1.3 hash over the claim bytes keeps the reference's `alg`,
+     else the ingredient claim's, as `c2pa-rs` does. The claim-signature
+     route keeps the ingredient claim's `alg`. Every one of these is held
+     to `sha256`, `sha384`, `sha512`: a name outside the three computes
+     nothing, and that route cannot match.
+   - **Scope 2 (new).** No `algorithm.unsupported` from this check any
+     more. A reference that matches no route is
+     `ingredient.manifest.mismatch`, and a claim-signature hash that cannot
+     match is `ingredient.claimSignature.mismatch`, as `c2patool` reports
+     them. When an `alg` outside the three is the reason, the explanation
+     names it and cites §13.1.
+   - **The open question in Out of scope** ("which claim's `alg` is the
+     default") is answered: the ingredient claim's, which `c2pa-rs` uses
+     and this verifier already used.
+   - **AC1 (new).** `crc32b-reference.jpg`: `ingredient.manifest.mismatch`
+     scoped to the active ingredient, its explanation naming `crc32b` and
+     §13.1; no `ingredient.manifest.validated`; `Invalid`; the active
+     claim's own signature `claimSignature.validated`.
+   - **AC2 (new).** `crc32b-claim-signature.png`:
+     `ingredient.claimSignature.mismatch` for the redacted parent, its
+     explanation naming `crc32b` and §13.1; no
+     `ingredient.claimSignature.validated` and no
+     `ingredient.manifest.validated`; `Invalid`.
+   - **AC3 (new).** `sha384-reference.jpg` and `sha512-reference.jpg`:
+     `ingredient.manifest.mismatch`, as `c2patool`; no
+     `ingredient.manifest.validated`, no `algorithm.unsupported`.
+   - **AC5 (new).** For all four variants the state equals `c2patool`'s,
+     and the failure codes scoped to the ingredient that this check
+     produces (`ingredient.manifest.*`, `ingredient.claimSignature.*`)
+     equal the ones in `c2patool`'s `ingredientDeltas`. The one difference
+     left is outside this check: for the parent in
+     `crc32b-claim-signature.png`, whose claim `alg` is `crc32b`,
+     `HashedUriCheck` reports `algorithm.unsupported` three times where
+     `c2patool` reports `assertion.hashedURI.mismatch`. Same state; it is
+     recorded in `docs/comparison.md` under the differences by design.
+   - AC4 is unchanged.
+
+   **Weight A:** verdicts change. `crc32b-reference.jpg` goes from
+   `Trusted` to `Invalid`; so do the `sha384` and `sha512` variants, which
+   AC3 as approved would have kept `Trusted`. The corpus is expected not
+   to move (every file uses `sha256`), which AC4 measures.
+
+   Option A chosen and the text confirmed by Maurice van Loon, 2026-09-30.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -178,8 +254,8 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  |                             |                      |
-| AC2                  |                             |                      |
-| AC3                  |                             |                      |
-| AC4                  |                             |                      |
-| AC5                  |                             |                      |
+| AC1                  | `tests/Unit/Verifier/IngredientHashAlgorithmTest.php` :: "AC1: a crc32b reference is a mismatch even when it matches" / SPEC-052 (amendment 1); fixture `tests/Fixtures/spec052/crc32b-reference.jpg` | `Verifier\IngredientManifestCheck::hash()`, `::implemented()`, `::why()` |
+| AC2                  | `tests/Unit/Verifier/IngredientHashAlgorithmTest.php` :: "AC2: the claim-signature route is a mismatch too" / SPEC-052; fixture `crc32b-claim-signature.png` | `Verifier\IngredientManifestCheck::claimSignature()` |
+| AC3                  | `tests/Unit/Verifier/IngredientHashAlgorithmTest.php` :: "AC3: a sha384 or sha512 reference is a mismatch, as at c2patool" (2 files) / SPEC-052 | `Verifier\IngredientManifestCheck::hash()` (the box hash under the ingredient claim's `alg`) |
+| AC4                  | measured, `notes/step-188-spec052.md`: 844 runs over 422 fixtures plus the fragmented set, before and after; only the four `spec052/` variants moved | — |
+| AC5                  | `tests/Unit/Verifier/IngredientHashAlgorithmTest.php` :: "AC5: the state and this check's ingredient codes are c2patool 0.27.22's" (4 files) / SPEC-052; answers in `tests/Fixtures/c2patool/spec052/`, made by `bin/make-spec052-variants.php` | `Verifier\IngredientManifestCheck` |

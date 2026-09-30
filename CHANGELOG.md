@@ -18,6 +18,15 @@ committed.
   `assertion.bmffHash.mismatch`, and the digest itself refuses any
   algorithm but `sha256`, `sha384` and `sha512`. Never a wrong `Valid`: the
   crash replaced the report.
+- **An ingredient reference is hashed as `c2patool` hashes it (SPEC-052).**
+  The manifest box hash was computed with the algorithm the reference
+  named, held only to what PHP can compute. A signed reference naming
+  `crc32b`, with the right `crc32b`, was `Trusted`; `c2patool` 0.27.22 says
+  `Invalid`. Now the box hash uses the ingredient claim's algorithm, as
+  `c2pa-rs` does, and every route holds to `sha256`, `sha384` and `sha512`.
+  A reference that names another algorithm than its ingredient claim is
+  `ingredient.manifest.mismatch`, as at `c2patool`; the ingredient check no
+  longer reports `algorithm.unsupported`.
 
 ## 0.2.7 — 2026-09-30
 
