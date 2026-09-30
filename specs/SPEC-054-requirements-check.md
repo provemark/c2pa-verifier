@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-09-30                      |
 | Supersedes | —                                                 |
@@ -69,8 +69,9 @@ WordPress's own (`$required_php_version = '7.4'` in
     `openssl` and `mbstring` are loaded;
   - `missing` (list of strings, stable codes): `php>=8.3`, `ext-openssl`,
     `ext-mbstring`, in that order, only those that fail;
-  - `ed25519` (bool): whether Ed25519 signatures can be verified here
-    (`sodium` loaded, or PHP 8.4 or later with `openssl`).
+  - `ed25519` (bool): whether Ed25519 signatures can be verified here:
+    true only when `supported`, and `sodium` is loaded or PHP is 8.4 or
+    later (whose `openssl` verifies them).
 - *Syntax PHP 7.4 and later can parse*, checked on 7.4, 8.0, 8.1 and 8.2
   in CI (`php -l`) and by running the file there.
 - *A CI job on PHP 7.4, 8.0, 8.1 and 8.2* that lints the file and runs a
@@ -117,7 +118,8 @@ assumption: this project fails closed.
     and version `8.4.0` with the same list
   - When the closure is called
   - Then both are `supported`; `ed25519` is false for 8.3.0 and true for
-    8.4.0
+    8.4.0; and version `8.2.29` with `openssl`, `mbstring` and `sodium` is
+    not `supported` and has `ed25519` false
 
 - **AC4 — below PHP 8.3 it answers and loads nothing** *(required: error path)*
   - Given PHP 7.4, 8.0, 8.1 and 8.2 in CI, each on its own
@@ -204,6 +206,14 @@ None. Both were answered at approval (Maurice van Loon, 2026-09-30):
    Changed: Problem (which version fails on what; the 7.4 floor), Scope
    (syntax and CI job on 7.4, 8.0, 8.1, 8.2), AC4 (all four versions),
    References (the four parsers). Approved by Maurice van Loon, 2026-09-30.
+2. **2026-09-30, step 199, while building.** Scope described `ed25519` two
+   ways: "whether Ed25519 signatures can be verified here" and the formula
+   "`sodium` loaded, or PHP 8.4 or later with `openssl`". Built to the
+   formula, the probe printed `"ed25519":true` on PHP 7.4 to 8.2 (sodium is
+   loaded in those images) while the verifier cannot run there at all. The
+   sentence is what a host needs, so the formula now requires `supported`
+   too. Changed: Scope (`ed25519`), AC3 (the 8.2-with-sodium case).
+   Approved by Maurice van Loon, 2026-09-30.
 
 ## Traceability
 
@@ -212,10 +222,11 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
+| AC1                  | `tests/Unit/RequirementsTest.php` :: AC1 (both) | `requirements.php` (defaults: `PHP_VERSION`, `get_loaded_extensions()`) |
+| AC2                  | `tests/Unit/RequirementsTest.php` :: AC2 (both) | `requirements.php` (`$missing`, in order) |
+| AC3                  | `tests/Unit/RequirementsTest.php` :: AC3 (both) | `requirements.php` (`ed25519`, amendment 2) |
+| AC4                  | `tests/Support/requirements-probe.php --assert-unsupported`; `.github/workflows/ci.yml` job `older-php` (7.4, 8.0, 8.1, 8.2) | `requirements.php` (PHP 7.4 syntax, declares nothing) |
+| AC5                  | `tests/Unit/RequirementsTest.php` :: AC5 (both) | `requirements.php` (version pattern, string names only) |
+| AC6                  | `tests/Unit/RequirementsTest.php` :: AC6, through `requirements-probe.php` | `requirements.php` (returns a closure) |
+| AC7                  | `tests/Unit/RequirementsTest.php` :: AC7 | `bin/package-check.php` (`PACKAGE_SHIPPED`) |
+| Public API, tooling  | README "Before loading" and "Public API"; `composer check` | `README.md`, `phpstan.neon` |

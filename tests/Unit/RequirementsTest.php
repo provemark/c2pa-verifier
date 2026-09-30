@@ -98,6 +98,10 @@ it('AC3: Ed25519 is told apart from support', function (): void {
         ->and(spec054Check('8.3.0', [...$without, 'sodium']))->toBe(['supported' => true, 'missing' => [], 'ed25519' => true]);
 })->group('SPEC-054');
 
+it('AC3: below 8.3 nothing can be checked, so neither can Ed25519, sodium or not', function (): void {
+    expect(spec054Check('8.2.29', SPEC054_ALL))->toBe(['supported' => false, 'missing' => ['php>=8.3'], 'ed25519' => false]);
+})->group('SPEC-054');
+
 it('AC5: a version it cannot place is not supported, and it does not throw', function (string $version): void {
     expect(spec054Check($version, SPEC054_ALL))->toMatchArray(['supported' => false, 'missing' => ['php>=8.3']]);
 })->with(['empty' => [''], 'letters' => ['abc']])->group('SPEC-054');

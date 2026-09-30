@@ -139,6 +139,24 @@ Everything the verifier says about a file comes from the file. Values
 in the report (labels, explanations, URLs) are untrusted text until you
 escape them.
 
+### Before loading, on a host that also runs older PHP
+
+Everything in `src/` needs PHP 8.3. On anything older, requiring one of its
+files is a fatal parse error, not an exception you can catch. A host that
+also runs on older PHP (a WordPress plugin, say, where the floor is 7.4)
+asks first, with the one file written for PHP 7.4 and later:
+
+```php
+$check = (require __DIR__.'/vendor/provemark/c2pa-verifier/requirements.php')();
+
+$check['supported']; // true: PHP 8.3 or later, openssl and mbstring loaded; load src/
+$check['missing'];   // what fails: 'php>=8.3', 'ext-openssl', 'ext-mbstring'
+$check['ed25519'];   // Ed25519 signatures can be checked (sodium, or PHP 8.4+)
+```
+
+It declares nothing and returns a closure, so two bundled copies can each
+require their own (SPEC-054).
+
 ### From the shell
 
 ```sh
@@ -200,6 +218,10 @@ without saying so.
 | `Trust\TrustAnchorSet` | one `trust.anchors` entry, as `TrustSettings::$anchorSets` holds it |
 | `Trust\TrustException` | the one exception that reaches you: settings that are not settings |
 | `Cli\Command` | what `bin/c2pa-verify` runs |
+
+And one file: `requirements.php`, with the return shape above
+(`supported`, `missing`, `ed25519`). It is readable by PHP 7.4 and later,
+and that is part of the promise too.
 
 **Everything else in `src/` is marked `@internal`, and may change in any release**
 — the container extractors, the JUMBF and CBOR readers, the COSE

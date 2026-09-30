@@ -43,6 +43,7 @@ const PACKAGE_SHIPPED = [
     'composer.json',
     'docs',
     'notes',
+    'requirements.php',
     'specs',
     'src',
 ];

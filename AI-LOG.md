@@ -8109,3 +8109,22 @@ README are where the disclosure lives.
   enums" (a claim from reading); the measurement shows `readonly` classes
   and promoted properties. Fixed before this commit.
 - Decided by Maurice: amendment 1.
+
+## 2026-09-30 — SPEC-054 built, amendment 2 (step 199)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf requirements.php"; then "akkoord met amendement
+  2, commit het".
+- Produced: `requirements.php`; `requirements.php` in `PACKAGE_SHIPPED`
+  and in PHPStan's paths; README "Before loading" and a "Public API"
+  paragraph; one AC3 test (8.2 with sodium); SPEC-054 amendment 2,
+  `implemented`, Traceability filled; `notes/step-199-spec054.md`; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: Pest group SPEC-054 on 8.5.8 and 8.3.33, 14 of 15 green before
+  the commit (AC7 packs HEAD); the probe with `--assert-unsupported` in
+  Docker on 7.4.33, 8.0.30, 8.1.34, 8.2.34, each exit 0 with nothing
+  declared; `composer check` clean apart from AC7 (620 passed); after the
+  commit, SPEC-054 15 of 15 on 8.5 and 8.3, and `composer check` and
+  `composer test:parallel` 621 passed.
+- Reasoned: none beyond the spec.
+- Not yet measured: the CI job `older-php`; it runs on the next push.
+- Decided by Maurice: amendment 2 (`ed25519` only when `supported`).
