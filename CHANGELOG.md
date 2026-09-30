@@ -27,6 +27,14 @@ committed.
   A reference that names another algorithm than its ingredient claim is
   `ingredient.manifest.mismatch`, as at `c2patool`; the ingredient check no
   longer reports `algorithm.unsupported`.
+- **A BMFF hash's exclusions are bounded (SPEC-053).** Planning which
+  bytes a BMFF hash covers cost boxes × boxes × exclusions, with no limit:
+  an MP4 with 4000 empty boxes and 8 exclusions took 11.4 s to verify, and
+  larger ones ran out of memory, with no key needed. Now an assertion
+  with more than 64 exclusions, an exclusion with more than 64 subsets,
+  or a plan of more than 4096 excluded ranges is
+  `assertion.bmffHash.malformed`, before any hashing. Real files use at
+  most 8 exclusions and 2 subsets.
 
 ## 0.2.7 — 2026-09-30
 

@@ -206,6 +206,10 @@ engine's own fixes, fixed in `0.2.6`:
     which hashes the manifest box with the ingredient claim's algorithm
     only (SPEC-052). It needs a signer who chose `crc32b`.
 
+  The same review found the BMFF exclusion plan unbounded: an MP4 with
+  4000 empty boxes and 8 exclusions took 11.4 s, and larger ones exhausted
+  memory, without a key (SPEC-053, `notes/step-191-spec053.md`).
+
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now
 tooling (`bin/make-absence-variants.php`) and part of every new spec.

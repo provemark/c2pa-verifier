@@ -7971,3 +7971,19 @@ README are where the disclosure lives.
   `plan()` and `remaining()`; c2pa-rs's limits not read.
 - Decided by Maurice: limits 64 / 64 / 4096; the linear `remaining()`
   only as a later step if the cost at the limits is too high.
+
+## 2026-09-30 — SPEC-053 tests, amendment 1 and build (steps 190–191)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-053 goedgekeurd, schrijf de tests"; then
+  "akkoord, amendement bevestigd, bouw de implementatie".
+- Produced: `tests/Unit/Hash/BmffExclusionLimitsTest.php`;
+  `src/Hash/BmffHashCheck.php` (three limits, `bound()`, `plan()`'s
+  `$maxRanges`), `src/Hash/BmffLimitException.php`; SPEC-053 approved,
+  amendment 1, `implemented`, Traceability; `notes/step-191-spec053.md`;
+  CHANGELOG `Unreleased`, `SECURITY.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: SPEC-053 tests 4 failed / 3 passed before (AC3 11.4 s end to
+  end), 7 passed after (AC3 0.02 s; AC4 0.74 s and 0.02 s); `composer
+  check` exit 0, 606 passed; `bin/api-check.php` surface matches; corpus
+  844 runs before and after, identical.
+- Decided by Maurice: approved SPEC-053; amendment 1 confirmed.

@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-30                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -184,6 +184,33 @@ final readonly class BmffHashCheck
   implementation choice; the criterion is that no range beyond the limit
   is hashed and `remaining()` never sees more than the limit.
 
+## Amendments
+
+1. **2026-09-30, step 190, while writing the tests.** AC3 and AC4 ask for
+   4096 appended `free` boxes. The extractor refuses a file with more
+   than 4096 boxes in all (`IsobmffManifestStoreExtractor::DEFAULT_MAX_BOXES`),
+   and `fixture-signed.mp4` already has 29, nested ones included. So:
+   - **AC3** appends 4000 `free` boxes. The 8 exclusions then match 4001
+     boxes: 32,008 ranges. Measured through `Verifier::verify()` before
+     the change: 11.4 s and no `malformed`. This is the end-to-end
+     measurement the Problem section had only reasoned.
+   - **AC4 "many boxes"** appends 2047 `free` boxes (2048 with the file's
+     own) and uses one exclusion with 2 subsets: exactly 4096 ranges.
+     **AC4 "many subsets"** uses 64 exclusions of 64 subsets, all on
+     `/ftyp`: exactly 4096 ranges.
+   - **One support test is added:** the variant builder, given the file's
+     own exclusions, gives back a file the verifier reads with
+     `assertion.bmffHash.match`. Every criterion rests on that builder.
+
+   Measured at the limits before the change: 0.77 s ("many boxes") and
+   0.02 s ("many subsets") for the whole verification. Both are under
+   2 seconds, so the linear `remaining()` is not needed. That step is
+   dropped unless a later measurement says otherwise.
+
+   **Weight B:** the criteria's inputs change; what they assert does not.
+
+   Confirmed by Maurice van Loon, 2026-09-30.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -191,9 +218,9 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  |                             |                      |
-| AC2                  |                             |                      |
-| AC3                  |                             |                      |
-| AC4                  |                             |                      |
-| AC5                  |                             |                      |
-| AC6                  |                             |                      |
+| AC1                  | `tests/Unit/Hash/BmffExclusionLimitsTest.php` :: "AC1: more than 64 exclusions is malformed" / SPEC-053 | `Hash\BmffHashCheck::bound()`, `DEFAULT_MAX_EXCLUSIONS`; `Hash\BmffLimitException` |
+| AC2                  | `tests/Unit/Hash/BmffExclusionLimitsTest.php` :: "AC2: more than 64 subsets in one exclusion is malformed" / SPEC-053 | `Hash\BmffHashCheck::bound()`, `DEFAULT_MAX_SUBSETS` |
+| AC3                  | `tests/Unit/Hash/BmffExclusionLimitsTest.php` :: "AC3: more than 4096 excluded ranges is malformed, and quickly" / SPEC-053 (amendment 1: 4000 boxes; 11.4 s before, 0.02 s after) | `Hash\BmffHashCheck::plan()` (`$maxRanges`), `DEFAULT_MAX_RANGES`; `check()` reports `BmffLimitException` as `malformed` |
+| AC4                  | `tests/Unit/Hash/BmffExclusionLimitsTest.php` :: "AC4: at the limits it is not malformed and stays within 5 seconds" (2 cases) / SPEC-053 (a guard: 0.77 s and 0.02 s before, 0.74 s and 0.02 s after) | — |
+| AC5                  | `tests/Unit/Hash/BmffExclusionLimitsTest.php` :: "AC5: the fragmented init segment is bounded too" / SPEC-053 | `Hash\BmffHashCheck::bound()` (the fragments share the init segment's exclusions) |
+| AC6                  | measured, `notes/step-191-spec053.md`: 844 runs over 422 fixtures plus the fragmented set, before and after, identical | — |

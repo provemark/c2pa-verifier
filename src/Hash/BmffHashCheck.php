@@ -60,6 +60,17 @@ final readonly class BmffHashCheck
     /** Read in 64 KiB pieces, as SPEC-012 does: a video is not held in memory. */
     public const DEFAULT_CHUNK_SIZE = 64 * 1024;
 
+    /**
+     * SPEC-053: the plan costs boxes × boxes × exclusions, and the specification sets no limit.
+     * Real files use at most 8 exclusions and 2 subsets (the 31 in tests/Fixtures, measured).
+     */
+    public const DEFAULT_MAX_EXCLUSIONS = 64;
+
+    public const DEFAULT_MAX_SUBSETS = 64;
+
+    /** The excluded ranges one plan may collect: the product that makes the cost. */
+    public const DEFAULT_MAX_RANGES = 4096;
+
     /** The filters c2pa-rs honours and no fixture here carries (SPEC-027 AC5). */
     /** `subset` was here until SPEC-029 implemented it; the rest await a file that uses them. */
     private const UNSUPPORTED_FILTERS = ['length', 'version', 'flags', 'exact'];
@@ -74,6 +85,9 @@ final readonly class BmffHashCheck
         private int $chunkSize = self::DEFAULT_CHUNK_SIZE,
         private IsobmffManifestStoreExtractor $boxes = new IsobmffManifestStoreExtractor,
         private iterable $fragments = [],
+        private int $maxExclusions = self::DEFAULT_MAX_EXCLUSIONS,
+        private int $maxSubsets = self::DEFAULT_MAX_SUBSETS,
+        private int $maxRanges = self::DEFAULT_MAX_RANGES,
     ) {}
 
     /**
@@ -92,6 +106,7 @@ final readonly class BmffHashCheck
         }
         try {
             $assertion = $this->assertionOf($data);
+            $this->bound($assertion['exclusions']);
             // the checks before this one have read the stream to its end; the box walk
             // reads forward from wherever it is told to start
             rewind($stream);
@@ -105,8 +120,10 @@ final readonly class BmffHashCheck
                 }
 
                 return Read::upTo($stream, $length);
-            });
+            }, $this->maxRanges);
             $included = self::withTail($included, array_values(array_filter($boxes, static fn (array $box): bool => substr_count($box['path'], '/') === 1)), $stream);
+        } catch (BmffLimitException $e) {
+            return [new ValidationStatus(StatusCode::AssertionBmffHashMalformed, $url, $e->getMessage())];
         } catch (HashException|ContainerException $e) {
             return [new ValidationStatus(StatusCode::AssertionBmffHashMismatch, $url, $e->getMessage())];
         }
@@ -498,6 +515,27 @@ final readonly class BmffHashCheck
         ];
     }
 
+    /**
+     * SPEC-053: the exclusion list's size, checked before a box is read. The fragments share the
+     * init segment's exclusions, so this bounds them too.
+     *
+     * @param  list<array<string, mixed>>  $exclusions
+     *
+     * @throws BmffLimitException
+     */
+    private function bound(array $exclusions): void
+    {
+        if (count($exclusions) > $this->maxExclusions) {
+            throw new BmffLimitException(sprintf('%s: %d exclusions exceed the limit of %d', self::LABEL, count($exclusions), $this->maxExclusions));
+        }
+        foreach ($exclusions as $exclusion) {
+            $subsets = $exclusion['subset'] ?? null;
+            if (is_array($subsets) && count($subsets) > $this->maxSubsets) {
+                throw new BmffLimitException(sprintf('%s: an exclusion of %s has %d subsets, beyond the limit of %d', self::LABEL, is_string($exclusion['xpath'] ?? null) ? $exclusion['xpath'] : 'no xpath', count($subsets), $this->maxSubsets));
+            }
+        }
+    }
+
     /** Which BMFF binding this manifest carries, newest first, or null for none. */
     public static function labelOf(Manifest $manifest): ?string
     {
@@ -525,8 +563,9 @@ final readonly class BmffHashCheck
      * @return list<array{offset: int, length: int, marker: bool}>
      *
      * @throws HashException on a filter this verifier does not implement
+     * @throws BmffLimitException past $maxRanges excluded ranges (SPEC-053), before remaining() sees them
      */
-    public static function plan(array $tree, array $exclusions, callable $readAt): array
+    public static function plan(array $tree, array $exclusions, callable $readAt, int $maxRanges = self::DEFAULT_MAX_RANGES): array
     {
         $excluded = [];
         foreach ($tree as $box) {
@@ -535,6 +574,9 @@ final readonly class BmffHashCheck
                     continue;
                 }
                 foreach (self::ranges($box, $exclusion) as $range) {
+                    if (count($excluded) >= $maxRanges) {
+                        throw new BmffLimitException(sprintf('%s: the exclusions exclude more than %d ranges, the limit', self::LABEL, $maxRanges));
+                    }
                     $excluded[] = $range;
                 }
             }
