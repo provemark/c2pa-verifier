@@ -8059,3 +8059,20 @@ README are where the disclosure lives.
   `tests/Fixtures/` (508 with a certificate): three hits, all own SPEC-046
   variants.
 - Decided by Maurice: measure only.
+
+## 2026-09-30 — SPEC-054 drafted: a requirements check older PHP can read (step 197)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: what can be done now so the verifier can be taken up by the
+  WordPress AI plugin (WordPress/ai#1071); then "ja, stel de spec voor punt
+  1 op".
+- Produced: `specs/SPEC-054-requirements-check.md` (draft); rows in
+  `NOTES.md` and `docs/milestones.md`. No code.
+- Measured: 68 places with 8.1–8.3 syntax in `src/`
+  (`grep -rn "readonly class\|^enum \|const string\|const array" src | wc -l`);
+  the AI plugin's `composer.json` (`"php": ">=7.4"`, platform 7.4) and CI
+  matrix (7.4 to 8.4), read with `gh api`; `Verifier` catches the
+  `CoseException` a missing Ed25519 backend throws (`src/Verifier/Verifier.php`).
+- Reasoned: that Composer refuses a `php ^8.3` package on a 7.4 platform,
+  so such a host bundles files; that a returned closure avoids clashes
+  between bundled copies.
+- Decided by Maurice: to draft this spec; approval is his.
