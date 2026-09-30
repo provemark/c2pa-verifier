@@ -7866,3 +7866,16 @@ README are where the disclosure lives.
   `composer require provemark/c2pa-verifier:^0.2` installs v0.2.7, ships
   `src/Container/Read.php` and calls `fixture-signed.jpg` `Valid`.
 - Decided by Maurice: push and release.
+
+## 2026-09-30 — Text assets as a placeholder (step 183)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: whether text can ever be verified this way and whether anyone is
+  working on it; then "Schrijf een korte notitie als plaatshouder".
+- Produced: `notes/step-183-text-assets.md`; rows in `NOTES.md` and
+  `docs/milestones.md` (text added to the `later` row).
+- Measured: nothing run against files. Looked up with `gh`: `c2pa-rs`
+  #2494 merged 2026-09-10 behind `unstable_plain_text`, #2377 and #2505
+  in `docs/experimental-features.md`, #2729 open; read C2PA 2.4 §A.7–A.9,
+  Unicode L2/26-042 and `encypherai/c2pa-text`. / Reasoned: no oracle
+  until the handlers are in a default `c2patool` build.
+- Decided by Maurice: a placeholder note only; nothing built.
