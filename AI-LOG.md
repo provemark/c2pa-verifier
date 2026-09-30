@@ -7955,3 +7955,19 @@ README are where the disclosure lives.
   amendment 1 confirmed.
 - Note: SPEC-052 stayed `draft` in the file after Maurice approved it
   until `bin/spec-check.php` flagged it in this step; corrected here.
+
+## 2026-09-30 — Draft SPEC-053 (step 189)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, doe stap 2", then "akkoord, adviezen volgen, schrijf SPEC-053".
+- Produced: `specs/SPEC-053-bmff-exclusion-limits.md` (draft); rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: a scratch script calling `BmffHashCheck::plan()` directly with
+  N top-level `free` boxes and M matching exclusions (1 subset each):
+  256×16 0.1 s, 512×32 0.8 s, 1024×32 3.0 s, 1024×64 6.2 s, 4096×1
+  1.5 s, 4096×2 3.3 s, 4096×8 11.9 s (4096×100 aborted after two
+  minutes); a scratch script over the 31 BMFF hash assertions in
+  `tests/Fixtures/`: at most 8 exclusions, 2 subsets, 51 boxes.
+  / Reasoned: the growth (boxes × boxes × exclusions) from reading
+  `plan()` and `remaining()`; c2pa-rs's limits not read.
+- Decided by Maurice: limits 64 / 64 / 4096; the linear `remaining()`
+  only as a later step if the cost at the limits is too high.
