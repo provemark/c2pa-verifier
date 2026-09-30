@@ -7898,3 +7898,20 @@ README are where the disclosure lives.
   `hash_utils.rs` (only sha256/384/512) and `bmff_hash.rs` (map alg first).
 - Decided by Maurice: a second guard in the digest (yes); the ingredient
   hash algorithm as a separate step (yes).
+
+## 2026-09-30 — SPEC-051 built (step 185)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-051 goedgekeurd, schrijf de tests", then
+  "akkoord, bouw de implementatie".
+- Produced: `tests/Unit/Hash/MerkleHashAlgorithmTest.php`;
+  `src/Hash/BmffHashCheck.php` (`ALGORITHMS`, the map check in
+  `merkleMapOf()`, the guard in `digest()`, two callers catching it);
+  SPEC-051 to `implemented` with Traceability; `notes/step-185-spec051.md`;
+  CHANGELOG `Unreleased`; rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: `vendor/bin/pest --group=SPEC-051` 7 failed / 1 passed before,
+  8 passed after; `composer check` exit 0, 591 passed; `php bin/api-check.php`
+  surface matches; a scratch script over 836 runs (418 fixtures, two
+  settings) plus the fragmented set, before (`git stash`) and after,
+  identical once today's timestamps were masked (the unmasked diff was the
+  clock, shown by two runs of the same code).
+- Decided by Maurice: approved SPEC-051; build it.

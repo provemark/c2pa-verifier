@@ -5,6 +5,20 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Fixed
+- **The merkle map names one of the three hash algorithms (SPEC-051).** A
+  fragmented ISOBMFF file's merkle map may name its own `alg`, and that
+  name went unchecked to PHP's `hash_init()`. Six edited bytes in an
+  existing file (`sha256` → `fooooo`) made `verify()` throw a `ValueError`
+  instead of returning a report; no key was needed. A name PHP knows but
+  C2PA does not (`crc32b`) was computed, and an `alg` that was not text
+  fell back silently to the assertion's. Now each is
+  `assertion.bmffHash.mismatch`, and the digest itself refuses any
+  algorithm but `sha256`, `sha384` and `sha512`. Never a wrong `Valid`: the
+  crash replaced the report.
+
 ## 0.2.7 — 2026-09-30
 
 A fix for callers that pass a stream that is not a plain local file. No

@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-30                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -176,8 +176,8 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  |                             |                      |
-| AC2                  |                             |                      |
-| AC3                  |                             |                      |
-| AC4                  |                             |                      |
-| AC5                  |                             |                      |
+| AC1                  | `tests/Unit/Hash/MerkleHashAlgorithmTest.php` :: "AC1: an unknown name in the merkle map is refused, not thrown" (whole, fragmented) / SPEC-051 | `Hash\BmffHashCheck::merkleMapOf()` (`ALGORITHMS`) |
+| AC2                  | `tests/Unit/Hash/MerkleHashAlgorithmTest.php` :: "AC2: a name PHP knows but C2PA does not is refused" (whole, fragmented) / SPEC-051 | `Hash\BmffHashCheck::merkleMapOf()` |
+| AC3                  | `tests/Unit/Hash/MerkleHashAlgorithmTest.php` :: "AC3: a merkle map alg that is not text is refused, not replaced" (whole, fragmented) / SPEC-051 | `Hash\BmffHashCheck::merkleMapOf()` |
+| AC4                  | `tests/Unit/Hash/MerkleHashAlgorithmTest.php` :: "AC4: the range digest refuses an algorithm outside the three" / SPEC-051 | `Hash\BmffHashCheck::digest()`; its two callers in `check()` and `checkMerkle()` report the refusal (`checkFragment()` already caught it) |
+| AC5                  | `tests/Unit/Hash/MerkleHashAlgorithmTest.php` :: "AC5: the genuine fragmented set still matches" / SPEC-051 (a guard, green before and after); corpus measured in `notes/step-185-spec051.md`: 836 runs over 418 fixtures plus the fragmented set, reports identical before and after | — |

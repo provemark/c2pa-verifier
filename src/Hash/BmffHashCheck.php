@@ -54,6 +54,9 @@ final readonly class BmffHashCheck
      */
     public const LABELS = [self::LABEL, 'c2pa.hash.bmff.v2'];
 
+    /** The hash algorithms C2PA 2.4 §13.1 allows, for the assertion, its merkle map and the digest (SPEC-051). */
+    private const ALGORITHMS = ['sha256', 'sha384', 'sha512'];
+
     /** Read in 64 KiB pieces, as SPEC-012 does: a video is not held in memory. */
     public const DEFAULT_CHUNK_SIZE = 64 * 1024;
 
@@ -117,7 +120,11 @@ final readonly class BmffHashCheck
         }
 
         $expected = $assertion['hash'];
-        $computed = $this->digest($stream, $included, $assertion['alg']);
+        try {
+            $computed = $this->digest($stream, $included, $assertion['alg']);
+        } catch (HashException $e) {
+            return [...$notes, new ValidationStatus(StatusCode::AssertionBmffHashMismatch, $url, $e->getMessage())];
+        }
         if ($expected === null || ! hash_equals($expected, $computed)) {
             return [...$notes, new ValidationStatus(
                 StatusCode::AssertionBmffHashMismatch,
@@ -160,13 +167,18 @@ final readonly class BmffHashCheck
         } catch (HashException $e) {
             return [new ValidationStatus(StatusCode::AssertionBmffHashMismatch, $url, $e->getMessage())];
         }
+        // merkleMapOf() has held a present alg to the three (SPEC-051)
         $alg = is_string($map['alg'] ?? null) ? $map['alg'] : $assertion['alg'];
 
         $initHash = $map['initHash'] ?? null;
         if (! $initHash instanceof CborBytes) {
             return [new ValidationStatus(StatusCode::AssertionBmffHashMismatch, $url, self::LABEL.': the merkle map has no initHash')];
         }
-        $computed = $this->digest($stream, $included, $alg);
+        try {
+            $computed = $this->digest($stream, $included, $alg);
+        } catch (HashException $e) {
+            return [new ValidationStatus(StatusCode::AssertionBmffHashMismatch, $url, $e->getMessage())];
+        }
         if (! hash_equals($initHash->bytes, $computed)) {
             return [new ValidationStatus(StatusCode::AssertionBmffHashMismatch, $url, sprintf(
                 'the init segment does not match its initHash: computed %s, the assertion says %s',
@@ -323,6 +335,16 @@ final readonly class BmffHashCheck
         if (! is_array($map) || array_is_list($map)) {
             throw new HashException(self::LABEL.': the merkle map is not a CBOR map');
         }
+        // SPEC-051: absent means the assertion's alg; present, it is text and one of the three
+        if (array_key_exists('alg', $map)) {
+            $alg = $map['alg'];
+            if (! is_string($alg)) {
+                throw new HashException(sprintf('%s: the merkle map alg is %s, not text', self::LABEL, get_debug_type($alg)));
+            }
+            if (! in_array($alg, self::ALGORITHMS, true)) {
+                throw new HashException(sprintf('%s: the merkle map names the hash algorithm %s, which is not one this verifier implements', self::LABEL, $alg));
+            }
+        }
 
         /** @var array<string, mixed> */
         return $map;
@@ -442,7 +464,7 @@ final readonly class BmffHashCheck
             throw new HashException(self::LABEL.' is not a CBOR map');
         }
         $alg = $data['alg'] ?? 'sha256';
-        if (! is_string($alg) || ! in_array($alg, ['sha256', 'sha384', 'sha512'], true)) {
+        if (! is_string($alg) || ! in_array($alg, self::ALGORITHMS, true)) {
             throw new HashException(sprintf('%s: hash algorithm %s is not one this verifier implements', self::LABEL, is_string($alg) ? $alg : gettype($alg)));
         }
 
@@ -730,9 +752,15 @@ final readonly class BmffHashCheck
     /**
      * @param  resource  $stream
      * @param  list<array{offset: int, length: int, marker?: bool}>  $included
+     *
+     * @throws HashException for an algorithm outside the three (SPEC-051)
      */
     private function digest($stream, array $included, string $alg): string
     {
+        // SPEC-051: a second guard, so no path that forgets to check can crash here or hash weakly
+        if (! in_array($alg, self::ALGORITHMS, true)) {
+            throw new HashException(sprintf('%s: hash algorithm %s is not one this verifier implements', self::LABEL, $alg));
+        }
         $context = hash_init($alg);
         foreach ($included as $range) {
             // the offset first, as a big-endian uint64: this is what binds position.
