@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-30                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -73,6 +73,8 @@ written for PHP 7.4.
 - *README*: a short section "Before loading" with the three lines a host
   needs, and a line in "Public API" naming the file and its return shape as
   part of the contract (SPEC-025).
+- *Tooling*: the file in PHPStan's paths (level max) and formatted by
+  Pint.
 
 **Out of scope** (each needs its own spec before it may be built)
 
@@ -176,14 +178,14 @@ if ($check['supported']) {
 
 ## Open questions
 
-- *PHPStan and Pint* (non-blocker): the file is outside `src/`, `tests/`
-  and `bin/`, so PHPStan does not analyse it today. Proposal: add it to the
-  paths (level max still applies; PHPStan reads 7.4 syntax) and let Pint
-  format it, with the 7.4 lint in CI as the guard against a formatter rule
+None. Both were answered at approval (Maurice van Loon, 2026-09-30):
+
+- *PHPStan and Pint*: the file is added to PHPStan's paths (level max)
+  and formatted by Pint; the 7.4 lint in CI guards against a formatter rule
   that introduces newer syntax.
-- *Is the file part of the public API?* (blocker): proposal yes, listed in
-  README "Public API" beside the classes, so a change to its return shape
-  is a promise broken, not a detail.
+- *Public API*: yes. The file and its return shape are listed in README
+  "Public API" beside the classes, so a change to that shape is a broken
+  promise, not a detail.
 
 ## Traceability
 

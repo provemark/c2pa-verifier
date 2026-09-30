@@ -8076,3 +8076,13 @@ README are where the disclosure lives.
   so such a host bundles files; that a returned closure avoids clashes
   between bundled copies.
 - Decided by Maurice: to draft this spec; approval is his.
+
+## 2026-09-30 — Approve SPEC-054
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur SPEC-054 goed met beide voorstellen".
+- Produced: SPEC-054 `approved`, its open questions answered in the spec
+  and the tooling added to its scope; rows in `NOTES.md` and
+  `docs/milestones.md` updated.
+- Measured: nothing new.
+- Decided by Maurice: approval; `requirements.php` is part of the public
+  API; it is analysed by PHPStan at level max and formatted by Pint.
