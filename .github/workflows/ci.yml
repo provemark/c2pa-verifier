@@ -1,5 +1,5 @@
 # The same command as locally, on the three PHP versions the package
-# promises. Nothing here reaches outside the repository except Composer's
+# promises, and requirements.php on the four it does not (SPEC-054). Nothing here reaches outside the repository except Composer's
 # own package downloads: no service, no extension, no binary. So there is no
 # non-blocking job and no continue-on-error — a red job is a red run.
 name: ci
@@ -65,13 +65,36 @@ jobs:
       # on every push. Three seconds a version keeps the property.
       - run: composer test:parallel
 
+  # SPEC-054: requirements.php is the one file a host may load before it knows
+  # whether the verifier can run, so it must parse and answer on every PHP the
+  # verifier does not support, from WordPress's floor (7.4) up to 8.2. No
+  # Composer here: a host that bundles the files has none either, and Pest 4
+  # does not run below 8.3. The probe asserts the criterion itself.
+  older-php:
+    name: requirements.php (PHP ${{ matrix.php }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.0', '8.1', '8.2']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - run: php -l requirements.php
+      - run: php -l tests/Support/requirements-probe.php
+      - run: php tests/Support/requirements-probe.php --assert-unsupported
+
   # One job for a branch protection rule to hang on. It succeeds only when
   # every matrix leg succeeded; a skipped or cancelled leg is not success.
   all-green:
     name: all green
-    needs: check
+    needs: [check, older-php]
     if: always()
     runs-on: ubuntu-24.04
     steps:
       - run: |
           test "${{ needs.check.result }}" = "success" || { echo "check: ${{ needs.check.result }}"; exit 1; }
+          test "${{ needs.older-php.result }}" = "success" || { echo "older-php: ${{ needs.older-php.result }}"; exit 1; }

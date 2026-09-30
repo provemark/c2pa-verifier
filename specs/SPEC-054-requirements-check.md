@@ -17,10 +17,13 @@
 The verifier requires PHP `^8.3` with `ext-openssl` and `ext-mbstring`
 (`composer.json`). A host that runs on older PHP too cannot find out
 whether it may use the verifier without loading it, and loading it is
-what goes wrong: `src/` uses syntax from PHP 8.1 to 8.3 (`readonly`
-classes, enums, typed class constants; 68 places, counted with
-`grep -rn "readonly class\|^enum \|const string\|const array" src | wc -l`).
-PHP 7.4 cannot parse such a file. Including one is a fatal parse error for
+what goes wrong: `src/` uses syntax from PHP 8.0 to 8.3 (promoted
+constructor properties, enums, `readonly` classes, typed class constants).
+Measured with `php -l` on every file in `src/` in the official Docker
+images (step 198): on 7.4 and 8.0, 70 of 83 files do not parse (62 of
+them on `readonly` classes); on 8.1, 62 (all on `readonly` classes); on
+8.2, 4 (typed class constants, among them `Manifest/Manifest.php`, which
+every verification loads). Including such a file is a fatal parse error for
 the whole request, not an exception the host can catch. A version check
 inside the verifier's classes is therefore too late: the check has to sit
 in front of them, in a file older PHP can read.
@@ -45,7 +48,9 @@ should be able to say so before a user meets it.
 This spec adds one file that answers "can the verifier run here, and if
 not, why" and loads nothing else. It is the one deliberate exception to the
 fixed design decision "pure PHP `^8.3`": this file, and only this file, is
-written for PHP 7.4.
+written for every PHP from 7.4 on. 7.4 is the floor because it is
+WordPress's own (`$required_php_version = '7.4'` in
+`wp-includes/version.php` on trunk); below it no WordPress host runs.
 
 ## Scope
 
@@ -66,10 +71,10 @@ written for PHP 7.4.
     `ext-mbstring`, in that order, only those that fail;
   - `ed25519` (bool): whether Ed25519 signatures can be verified here
     (`sodium` loaded, or PHP 8.4 or later with `openssl`).
-- *Syntax PHP 7.4 can parse*, checked on PHP 7.4 in CI (`php -l`) and by
-  running the file there.
-- *A CI job on PHP 7.4* that lints the file and runs a plain PHP script
-  (Pest does not run on 7.4) asserting the result.
+- *Syntax PHP 7.4 and later can parse*, checked on 7.4, 8.0, 8.1 and 8.2
+  in CI (`php -l`) and by running the file there.
+- *A CI job on PHP 7.4, 8.0, 8.1 and 8.2* that lints the file and runs a
+  plain PHP script (Pest 4 does not run below 8.3) asserting the result.
 - *README*: a short section "Before loading" with the three lines a host
   needs, and a line in "Public API" naming the file and its return shape as
   part of the contract (SPEC-025).
@@ -114,8 +119,8 @@ assumption: this project fails closed.
   - Then both are `supported`; `ed25519` is false for 8.3.0 and true for
     8.4.0
 
-- **AC4 — on PHP 7.4 it answers and loads nothing** *(required: error path)*
-  - Given PHP 7.4 in CI
+- **AC4 — below PHP 8.3 it answers and loads nothing** *(required: error path)*
+  - Given PHP 7.4, 8.0, 8.1 and 8.2 in CI, each on its own
   - When `php -l requirements.php` runs, and a script requires the file,
     calls the closure and lists the declared classes before and after
   - Then the lint passes, `supported` is false with `php>=8.3` in
@@ -145,10 +150,11 @@ assumption: this project fails closed.
   `version_compare()`, https://www.php.net/manual/en/function.version-compare.php ;
   `get_loaded_extensions()`,
   https://www.php.net/manual/en/function.get-loaded-extensions.php .
-- Oracle: PHP 7.4's parser (`php -l` on 7.4 in CI) for AC4; the existing
+- Oracle: the parsers of PHP 7.4, 8.0, 8.1 and 8.2 (`php -l` on each in
+  CI) for AC4; the existing
   CI matrix (8.3, 8.4, 8.5 with openssl, mbstring, sodium) for AC1; SPEC-009
   amendment 1 for the Ed25519 boundary in AC3.
-- Measured: the 68 places with 8.1–8.3 syntax in `src/` (command above);
+- Measured: which files in `src/` each of PHP 7.4, 8.0, 8.1 and 8.2 cannot parse (`php -l`, step 198);
   the WordPress AI plugin's `composer.json` (`>=7.4`, platform 7.4) and its
   CI matrix (`test.yml`: 7.4 to 8.4), read with `gh api` on 2026-09-30.
 - Reasoned: that Composer refuses a `php ^8.3` package on a 7.4 platform,
@@ -181,11 +187,23 @@ if ($check['supported']) {
 None. Both were answered at approval (Maurice van Loon, 2026-09-30):
 
 - *PHPStan and Pint*: the file is added to PHPStan's paths (level max)
-  and formatted by Pint; the 7.4 lint in CI guards against a formatter rule
+  and formatted by Pint; the lint on 7.4–8.2 in CI guards against a formatter rule
   that introduces newer syntax.
 - *Public API*: yes. The file and its return shape are listed in README
   "Public API" beside the classes, so a change to that shape is a broken
   promise, not a detail.
+
+## Amendments
+
+1. **2026-09-30, before the tests, raised by Maurice van Loon.** The draft
+   named PHP 7.4 only. The check has to hold on every PHP the verifier
+   cannot run on, and 8.2 is the closest case: it parses all but four
+   files, but one of the four is `Manifest/Manifest.php`, so a host on 8.2
+   that loads `src/` fails as hard as one on 7.4 (measured in step 198). That 7.4 syntax also
+   parses on 8.0–8.2 is reasoned, not measured, so each version is tested.
+   Changed: Problem (which version fails on what; the 7.4 floor), Scope
+   (syntax and CI job on 7.4, 8.0, 8.1, 8.2), AC4 (all four versions),
+   References (the four parsers). Approved by Maurice van Loon, 2026-09-30.
 
 ## Traceability
 

@@ -8086,3 +8086,26 @@ README are where the disclosure lives.
 - Measured: nothing new.
 - Decided by Maurice: approval; `requirements.php` is part of the public
   API; it is analysed by PHPStan at level max and formatted by Pint.
+
+## 2026-09-30 — SPEC-054 amendment 1 and its tests, red (step 198)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf de tests"; then "maar het moet toch voor alles
+  onder php 8.3 niet alleen voor 7.4"; then "akkoord met amendement 1,
+  schrijf de tests".
+- Produced: SPEC-054 amendment 1 (AC4, scope, CI and references cover
+  7.4, 8.0, 8.1 and 8.2; the Problem section's syntax claim replaced by a
+  measurement); `tests/Unit/RequirementsTest.php`;
+  `tests/Support/requirements-probe.php` (PHP 7.4 syntax); the `older-php`
+  CI job, required by `all green`; `notes/step-198-spec054-red.md`; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: `php -l` over `src/` in `php:7.4-cli`, `8.0`, `8.1`, `8.2`:
+  70, 70, 62 and 4 of 83 files fail to parse. `vendor/bin/pest
+  --group=SPEC-054` on PHP 8.5.8 and 8.3.33: 14 failed. The probe with
+  `--assert-unsupported` on 7.4–8.2: exit 2, "requirements.php is not
+  there". PHPStan level max and Pint pass on the new files.
+- Reasoned: that 7.4 is the right floor because WordPress trunk requires
+  it (`$required_php_version = '7.4'`).
+- Correction: the first wording of amendment 1 said 7.4 and 8.0 fail "on the
+  enums" (a claim from reading); the measurement shows `readonly` classes
+  and promoted properties. Fixed before this commit.
+- Decided by Maurice: amendment 1.
