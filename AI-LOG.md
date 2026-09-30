@@ -8045,3 +8045,17 @@ README are where the disclosure lives.
   `src/Hash/BmffLimitException.php` and calls
   `spec052/crc32b-reference.jpg` `Invalid`.
 - Decided by Maurice: push and release.
+
+## 2026-09-30 — Name constraints in the wild measured (step 196)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: what name-constraint forms are; then "ja, meet of de trust list
+  naamconstraints gebruikt".
+- Produced: `notes/step-196-name-constraints-in-the-wild.md`; a row in
+  `NOTES.md`. No spec, no code.
+- Measured: `C2PA-TRUST-LIST.pem` (30) and `C2PA-TSA-TRUST-LIST.pem` (22)
+  from `c2pa-org/conformance-public` main (list files last changed at
+  `70ec46e`, 2026-08-13), each through `openssl x509 -noout -text`: no
+  Name Constraints; a byte search for `06 03 55 1D 1E` over 631 files in
+  `tests/Fixtures/` (508 with a certificate): three hits, all own SPEC-046
+  variants.
+- Decided by Maurice: measure only.
