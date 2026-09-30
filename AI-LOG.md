@@ -8031,3 +8031,17 @@ README are where the disclosure lives.
   extra (`crc32b-reference.jpg#20260930-44-block`) Invalid in both
   `c2patool` versions and in the new code.
 - Decided by Maurice: run the pre-release check.
+
+## 2026-09-30 — Record the release of 0.2.8 (step 195)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en breng 0.2.8 uit".
+- Produced: `main` pushed (steps 183–194); the annotated tag `v0.2.8` on
+  `ec16da2`, pushed; rows in `docs/milestones.md` and `NOTES.md`. No
+  GitHub release object, as for the earlier tags.
+- Measured: CI run 36705773196 green on `ec16da2` (PHP 8.3, 8.4, 8.5);
+  the GitHub archive of `v0.2.8` holds 374 files, equal to `git archive`
+  and `bin/package-check.php`; Packagist lists `v0.2.8`; a fresh
+  `composer require provemark/c2pa-verifier:^0.2` installs v0.2.8, ships
+  `src/Hash/BmffLimitException.php` and calls
+  `spec052/crc32b-reference.jpg` `Invalid`.
+- Decided by Maurice: push and release.
