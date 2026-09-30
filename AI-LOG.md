@@ -7853,3 +7853,16 @@ README are where the disclosure lives.
   `bin/package-check.php` clean.
 - Reasoned: 0.2.7 is a patch (no contract change).
 - Decided by Maurice: push and release 0.2.7.
+
+## 2026-09-30 — Record the release of 0.2.7 (step 182)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push de verifier en breng 0.2.7 uit".
+- Produced: `main` pushed (steps 179–181); the annotated tag `v0.2.7` on
+  `b533f9a`, pushed; rows in `docs/milestones.md` and `NOTES.md`. No
+  GitHub release object, as for the earlier tags.
+- Measured: CI run 36673429520 green on `b533f9a` (PHP 8.3, 8.4, 8.5);
+  the GitHub archive of `v0.2.7` holds 361 files, equal to `git archive`
+  and `bin/package-check.php`; Packagist lists `v0.2.7`; a fresh
+  `composer require provemark/c2pa-verifier:^0.2` installs v0.2.7, ships
+  `src/Container/Read.php` and calls `fixture-signed.jpg` `Valid`.
+- Decided by Maurice: push and release.
