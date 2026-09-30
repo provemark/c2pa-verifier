@@ -7805,3 +7805,20 @@ README are where the disclosure lives.
 - Reasoned: that the active manifest keeping `c2pa.created` next to a
   `parentOf` ingredient is fine for this purpose, as in step 60.
 - Decided by Maurice: that the fixture is made here.
+
+## 2026-09-30 — SPEC-050 drafted: a short read is not the end of the file (step 179)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked (in the WordPress plugin's session, after measuring the plugin
+  next to WP Offload Media): "begin met punt 2, de verifier"; "akkoord,
+  schrijf SPEC-050 als draft".
+- Produced: `specs/SPEC-050-short-reads.md` (draft) and its row in
+  `NOTES.md`.
+- Measured (in the plugin's environment, `v0.2.6` bundled): through the
+  AWS SDK's S3 stream wrapper opened as seekable, two `Valid` JPEGs came
+  out `Invalid` with `general.error` "unexpected end of file … wanted
+  63992 bytes, got 16364"; a loop over the same stream read all 96,939
+  bytes with 11 short reads; a `php://temp` copy gave `Valid`.
+  `php bin/spec-check.php`: OK, 50 specs.
+- Reasoned: the table of read sites, from `src/` at `0cf13e4`; that a
+  short read cannot yield a wrong `Valid`.
+- Decided by Maurice: to start with the verifier, and the spec as a draft.
