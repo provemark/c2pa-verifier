@@ -5,6 +5,24 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.2.7 — 2026-09-30
+
+A fix for callers that pass a stream that is not a plain local file. No
+class, method, member, status code or settings shape changed, and no
+verdict on a local file moved.
+
+### Fixed
+- **A short read is not the end of the file (SPEC-050).** PHP's `fread()`
+  may return fewer bytes than asked on a stream that is not a plain file,
+  such as a stream wrapper. Five read sites took that for the end of the
+  file, so a genuine file read through such a stream came out `Invalid`
+  ("unexpected end of file") or "unsupported file type". Measured with the
+  AWS SDK's S3 stream wrapper, as WP Offload Media hands it out. Every read
+  now asks again until it has the bytes or the stream gives nothing more; a
+  stream that gives nothing is treated as ended, so the verifier never
+  waits forever. Never a wrong `Valid`: a short read only ever removed
+  bytes.
+
 ## 0.2.6 — 2026-09-28
 
 A security release for one wrong `Trusted`, found by reading the

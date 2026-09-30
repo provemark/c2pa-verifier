@@ -7838,3 +7838,18 @@ README are where the disclosure lives.
   nothing thrown.
 - Reasoned: that no short read can yield a wrong `Valid`.
 - Decided by Maurice: the spec's approval and building it.
+
+## 2026-09-30 — The check before 0.2.7 (step 181)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push de verifier en breng 0.2.7 uit".
+- Produced: `notes/step-181-pre-release-check.md`; CHANGELOG 0.2.7; the
+  README's tag and fuzzing line; the fuzzing line in `docs/comparison.md`;
+  rows in `docs/milestones.md` (SPEC-050, 181) and `NOTES.md`.
+- Measured: `php bin/fuzz.php 20260930 60` over 189 files: 10,878 runs,
+  0 faults, 42 `Valid`, all 42 `Valid` in `c2patool` 0.27.22; the same
+  seed with `v0.2.6`'s code (own autoloader, checked) gives the same 42.
+  A first attempt at that comparison was void: a symlinked `vendor/`
+  loaded the new `src/`, and it is not counted. `bin/api-check.php` and
+  `bin/package-check.php` clean.
+- Reasoned: 0.2.7 is a patch (no contract change).
+- Decided by Maurice: push and release 0.2.7.
