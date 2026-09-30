@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-09-30                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -170,7 +170,7 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
+| AC1                  | `tests/Unit/Verifier/ShortReadTest.php` :: "AC1: every format verifies the same through short reads" (7 files) / SPEC-050 | `Container\Read::upTo()`; `Container\StreamReader::readExactly()`, `::readUpTo()`; `Container\FormatDetector::head()` |
+| AC2                  | `tests/Unit/Verifier/ShortReadTest.php` :: "AC2: a fragmented stream verifies the same through short reads" / SPEC-050 | `Container\Read::upTo()`; `Hash\BmffHashCheck` (exclusion matcher, fragment leaf) |
+| AC3                  | `tests/Unit/Verifier/ShortReadTest.php` :: "AC3: a truncated file is still truncated through short reads" (3 files) / SPEC-050 | `Container\Read::upTo()` (stops at the end); `Container\StreamReader::readExactly()` |
+| AC4                  | `tests/Unit/Verifier/ShortReadTest.php` :: "AC4: a stream that stops giving bytes ends the read" / SPEC-050; wrapper `tests/Support/ShortReadStream.php` | `Container\Read::upTo()` (an empty read ends the loop) |

@@ -53,9 +53,9 @@ final readonly class FormatDetector
         if (! is_resource($stream) || ! rewind($stream)) {
             throw new \InvalidArgumentException('FormatDetector needs a seekable stream resource');
         }
-        $head = fread($stream, self::PROBE_LENGTH);
+        $head = Read::upTo($stream, self::PROBE_LENGTH);
         rewind($stream);
 
-        return $head === false ? '' : $head;
+        return $head;
     }
 }

@@ -7822,3 +7822,19 @@ README are where the disclosure lives.
 - Reasoned: the table of read sites, from `src/` at `0cf13e4`; that a
   short read cannot yield a wrong `Valid`.
 - Decided by Maurice: to start with the verifier, and the spec as a draft.
+
+## 2026-09-30 — SPEC-050 built: a short read is not the end of the file (step 180)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf de tests"; "akkoord, bouw de oplossing".
+- Produced: SPEC-050 approved, then implemented with its Traceability;
+  `src/Container/Read.php`; `StreamReader`, `FormatDetector` and
+  `BmffHashCheck` read through it; `tests/Support/ShortReadStream.php`;
+  `tests/Unit/Verifier/ShortReadTest.php`; the step 180 note and its row
+  in `NOTES.md`.
+- Measured: before the change the SPEC-050 group gave 11 failed, 1 passed
+  (`vendor/bin/pest --group=SPEC-050`); after, 12 passed. `composer
+  check`: exit 0, 583 passed. A corpus run of 557 media fixtures × 57
+  settings (none and 56 files), 31,749 runs, identical before and after,
+  nothing thrown.
+- Reasoned: that no short read can yield a wrong `Valid`.
+- Decided by Maurice: the spec's approval and building it.

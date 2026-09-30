@@ -41,15 +41,15 @@ final readonly class StreamReader
         if ($length < 0) {
             throw new \LogicException(sprintf('negative read length %d', $length));
         }
-        $bytes = fread($this->stream, $length);
-        if ($bytes === false || strlen($bytes) !== $length) {
+        $bytes = Read::upTo($this->stream, $length);
+        if (strlen($bytes) !== $length) {
             throw new ContainerException(sprintf(
                 'unexpected end of file while reading %s of the %s at offset %d: wanted %d bytes, got %d',
                 $what,
                 $this->noun,
                 $offset,
                 $length,
-                $bytes === false ? 0 : strlen($bytes),
+                strlen($bytes),
             ));
         }
 
@@ -66,9 +66,8 @@ final readonly class StreamReader
         if ($length <= 0) {
             throw new \LogicException(sprintf('readUpTo needs a positive length, got %d', $length));
         }
-        $bytes = fread($this->stream, $length);
 
-        return $bytes === false ? '' : $bytes;
+        return Read::upTo($this->stream, $length);
     }
 
     /**

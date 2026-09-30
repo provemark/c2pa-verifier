@@ -9,6 +9,7 @@ use Provemark\C2paVerifier\Cbor\CborDecoder;
 use Provemark\C2paVerifier\Cbor\CborException;
 use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\IsobmffManifestStoreExtractor;
+use Provemark\C2paVerifier\Container\Read;
 use Provemark\C2paVerifier\Manifest\Manifest;
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationStatus;
@@ -99,9 +100,8 @@ final readonly class BmffHashCheck
                 if (fseek($stream, $at) !== 0) {
                     throw new HashException(sprintf('cannot seek to %d while matching an exclusion', $at));
                 }
-                $bytes = fread($stream, $length);
 
-                return $bytes === false ? '' : $bytes;
+                return Read::upTo($stream, $length);
             });
             $included = self::withTail($included, array_values(array_filter($boxes, static fn (array $box): bool => substr_count($box['path'], '/') === 1)), $stream);
         } catch (HashException|ContainerException $e) {
@@ -254,9 +254,8 @@ final readonly class BmffHashCheck
                 if ($length < 1 || fseek($fragment, $at) !== 0) {
                     return '';
                 }
-                $bytes = fread($fragment, $length);
 
-                return $bytes === false ? '' : $bytes;
+                return Read::upTo($fragment, $length);
             }), $top, $fragment), $alg);
         } catch (HashException|CborException|ContainerException $e) {
             return sprintf('%s: %s', $name, $e->getMessage());
