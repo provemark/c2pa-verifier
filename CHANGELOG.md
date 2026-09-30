@@ -5,7 +5,15 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.2.8 — 2026-09-30
+
+Three fixes from a review of `src/`, one of them a wrong `Trusted`. No
+class, method, member, status code or settings shape changed. The
+verdicts that move: an ingredient reference whose hash algorithm is not
+the one `c2patool` uses goes from `Trusted` to `Invalid`, as `c2patool`
+says; a BMFF hash with a merkle map naming an unknown algorithm, or with
+more exclusions than the new limits, is reported as `Invalid` instead of
+crashing or stalling. No corpus file's verdict moved.
 
 ### Fixed
 - **The merkle map names one of the three hash algorithms (SPEC-051).** A

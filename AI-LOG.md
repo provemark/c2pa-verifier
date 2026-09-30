@@ -8015,3 +8015,19 @@ README are where the disclosure lives.
   "seg_*.m4s"`, and through `FragmentedVerifier`: state and failure code
   equal in all eight.
 - Decided by Maurice: download 0.28.1 and measure.
+
+## 2026-09-30 — The check before 0.2.8 (step 194)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, doe de controle vóór 0.2.8".
+- Produced: `notes/step-194-pre-release-check.md`; CHANGELOG (0.2.8),
+  README (tag, count, fuzzing line), `docs/comparison.md`, `SECURITY.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: `php bin/spec-check.php` (53 implemented); `php
+  bin/api-check.php`, `php bin/package-check.php` (373 files); `git diff
+  v0.2.7 -- tests/Fixtures/api/public-surface.txt
+  src/Report/StatusCode.php` empty; `php bin/fuzz.php 20260930 60` over
+  193 files: 11,118 runs, 0 faults, 47 Valid, all Valid in `c2patool`
+  0.27.22 and 0.28.1; the same seed in a `v0.2.7` worktree: 48 Valid, the
+  extra (`crc32b-reference.jpg#20260930-44-block`) Invalid in both
+  `c2patool` versions and in the new code.
+- Decided by Maurice: run the pre-release check.

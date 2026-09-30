@@ -172,10 +172,12 @@ without an anchor — 34 corpus files, informational, no verdict changes.
 - Test anchors and anchors cut from tokens. The production C2PA trust
   lists were used once, as a measurement (step 113): two corpus files
   reach an official anchor. The project does not bundle or fetch them.
-- Fuzzing before every release (`bin/fuzz.php`): before 0.2.7, 10 878
-  randomly mutated files over 189 corpus files without an escaping
-  exception; the 42 mutations that stayed `Valid` were confirmed `Valid` by
-  `c2patool` 0.27.22, and are the same 42 under 0.2.6 (step 181).
+- Fuzzing before every release (`bin/fuzz.php`): before 0.2.8, 11 118
+  randomly mutated files over 193 corpus files without an escaping
+  exception; the 47 mutations that stayed `Valid` were confirmed `Valid` by
+  `c2patool` 0.27.22 and 0.28.1. Under 0.2.7 the same seed left 48: the
+  extra one, a mutation of SPEC-052's `crc32b` variant, is `Invalid` in
+  both `c2patool` versions (step 194).
 - Two wrong `Valid`s found by the absence audit and closed (see
   `SECURITY.md`); the method is now part of every spec.
 - Every signature algorithm and every hash algorithm exercised by a file

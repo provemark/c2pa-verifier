@@ -194,7 +194,7 @@ engine's own fixes, fixed in `0.2.6`:
   and, beyond `c2patool`, anywhere between the anchor and the leaf.
 
 - **2026-09-30, a hash algorithm the specification does not allow —
-  present in `0.1.0` to `0.2.7`, fixed in the next release**
+  present in `0.1.0` to `0.2.7`, fixed in `0.2.8`**
   (`notes/step-185-spec051.md`, `notes/step-188-spec052.md`). A review of
   `src/` found two places that took a hash algorithm's name from the file
   and held it only to what PHP can compute:

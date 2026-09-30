@@ -81,7 +81,7 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.2.7`**, still a `0.x` on purpose. `^0.2` receives
+The current tag is **`v0.2.8`**, still a `0.x` on purpose. `^0.2` receives
 every 0.2.x fix, and a change that breaks the API below will be `0.3.0`.
 Coming from `0.2.0`: nothing that worked is refused, but some verdicts and
 reports now match `c2patool`'s where they did not, and `StatusCode` has 14
@@ -248,12 +248,12 @@ alone.
   missing `x5chain`, no hard binding, no actions assertion: `Invalid` with
   a status code, never a silent `Valid`. A verifier that wrongly says
   `Valid` is worse than one that errors — and this project has found
-  sixteen such cases in itself, the first two by asking what happens when
+  seventeen such cases in itself, the first two by asking what happens when
   something is *absent*; all are documented in [`SECURITY.md`](SECURITY.md)
   and closed.
 - **Bounded input.** Every parser has hard limits and acceptance criteria
   for malformed input. Before every release the corpora are fuzzed
-  (`bin/fuzz.php`, replayable); before 0.2.7, 10 878 randomly mutated files
+  (`bin/fuzz.php`, replayable); before 0.2.8, 11 118 randomly mutated files
   went through the verifier without an exception escaping.
 
 ## Working on it
