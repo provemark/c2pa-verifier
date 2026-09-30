@@ -7987,3 +7987,16 @@ README are where the disclosure lives.
   check` exit 0, 606 passed; `bin/api-check.php` surface matches; corpus
   844 runs before and after, identical.
 - Decided by Maurice: approved SPEC-053; amendment 1 confirmed.
+
+## 2026-09-30 — Merkle location order measured (step 192)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, doe stap 3", then "akkoord, alleen vastleggen".
+- Produced: `notes/step-192-merkle-order.md`; a paragraph in
+  `docs/comparison.md`; a row in `NOTES.md`. No spec, no code.
+- Measured: `init.mp4` + `seg_1…5.m4s` concatenated → `Invalid`
+  (`general.error`, two C2PA uuid boxes); `seg_2` ↔ `seg_3` exchanged in a
+  scratch directory → `Trusted` in `FragmentedVerifier` and in
+  `c2patool` 0.27.22 (`fragment --fragments_glob "seg_*.m4s"`, `--settings
+  full.settings.json`), as the unchanged set. / Reasoned: read the
+  `c2pa-rs` #2702 diff (`gh pr diff`); `tfdt` inside the hashed leaf.
+- Decided by Maurice: record only.

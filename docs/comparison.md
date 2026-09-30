@@ -88,6 +88,16 @@ two others by the TSA leniency below) — on every corpus file that is not in an
 own variant, the state and the failure codes with their URLs are
 `c2patool`'s. Nothing is more lenient.
 
+One case is equal on purpose, and recorded because an upstream fix sits
+next to it (step 192). Two fragments of a fragmented stream exchange their
+contents, each keeping its own Merkle proof (`seg_2` ↔ `seg_3`). The set
+is `Trusted` here and in `c2patool` 0.27.22. `c2pa-rs` #2702 (on main
+since 2026-09-28, in no release yet) makes `location` follow the
+physical order of Merkle boxes *inside one file*. This verifier refuses
+such a file outright (two C2PA `uuid` boxes, `general.error`). A check of
+order across separate fragment files would need the caller's order to be
+the playback order, and is left until `c2pa-rs` adds one.
+
 ## Where a second implementation disagrees
 
 Measured on 2026-09-22 (step 61) by running `richardwooding/c2pa`
