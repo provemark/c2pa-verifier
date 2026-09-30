@@ -7915,3 +7915,17 @@ README are where the disclosure lives.
   identical once today's timestamps were masked (the unmasked diff was the
   clock, shown by two runs of the same code).
 - Decided by Maurice: approved SPEC-051; build it.
+
+## 2026-09-30 — Draft SPEC-052 (step 186)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, doe stap 1b", then "akkoord, advies volgen, schrijf SPEC-052".
+- Produced: `specs/SPEC-052-ingredient-hash-algorithm.md` (draft); rows
+  in `NOTES.md` and `docs/milestones.md`.
+- Measured: nothing run against files. / Reasoned: read
+  `IngredientManifestCheck::hash()` and `::claimSignature()` (both accept
+  any `hash_algos()` name), `HashedUriCheck`/`DataHashCheck` (the three,
+  §13.1), `c2pa-rs` main `hash_utils.rs` (empty hash for an unknown
+  name); chose `c2pa-rs/CACA.jpg` and `redactions/redacted-with-action.png`
+  as the fixtures' bases.
+- Decided by Maurice: a local constant per class; sharing one list is a
+  later tidy-up.
