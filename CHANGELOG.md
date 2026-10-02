@@ -5,6 +5,22 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.2.9 — 2026-10-02
+
+One addition and no fix: `requirements.php`, a file a host on older PHP
+can read before it loads `src/`. Nothing in `src/` changed since 0.2.8, so
+no verdict, report, class, method, status code or settings shape moved.
+
+### Added
+- **A requirements check older PHP can read (SPEC-054).** Everything in
+  `src/` needs PHP 8.3, and on anything older requiring one of its files is
+  a fatal parse error a host cannot catch. `requirements.php` at the
+  package root is written in PHP 7.4 syntax, declares nothing and returns a
+  closure answering `supported`, `missing` (`php>=8.3`, `ext-openssl`,
+  `ext-mbstring`) and `ed25519`. A host that also runs on PHP 7.4 to 8.2,
+  such as a WordPress plugin, asks it first; README "Before loading". It
+  is part of the public API, and CI runs it on PHP 7.4, 8.0, 8.1 and 8.2.
+
 ## 0.2.8 — 2026-09-30
 
 Three fixes from a review of `src/`, one of them a wrong `Trusted`. No

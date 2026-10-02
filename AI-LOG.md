@@ -8128,3 +8128,20 @@ README are where the disclosure lives.
 - Reasoned: none beyond the spec.
 - Not yet measured: the CI job `older-php`; it runs on the next push.
 - Decided by Maurice: amendment 2 (`ed25519` only when `supported`).
+
+## 2026-10-02 — The check before 0.2.9 (step 200)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "release 0.2.9 en pas ook de plekken aan waar deze wordt
+  gebruikt".
+- Produced: CHANGELOG 0.2.9 ("Added": SPEC-054); the README's current tag;
+  `notes/step-200-pre-release-check.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: `php bin/spec-check.php` (54 implemented); `composer check`
+  (621 passed); `php bin/package-check.php` (379 files) and
+  `php bin/api-check.php` (surface matches); `git diff v0.2.8 -- src/`
+  empty; CI run 36749893798 on `984883a` green in all 8 jobs, the
+  `older-php` job on 7.4, 8.0, 8.1 and 8.2 among them (step 199's open
+  measurement).
+- Reasoned: no fuzzing needed, since `src/` is unchanged since 0.2.8; a
+  patch, since the API only grew.
+- Decided by Maurice: release 0.2.9.
