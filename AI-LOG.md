@@ -8145,3 +8145,18 @@ README are where the disclosure lives.
 - Reasoned: no fuzzing needed, since `src/` is unchanged since 0.2.8; a
   patch, since the API only grew.
 - Decided by Maurice: release 0.2.9.
+
+## 2026-10-02 — 0.2.9 released (step 201)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "release 0.2.9 en pas ook de plekken aan waar deze wordt
+  gebruikt".
+- Produced: push of `main` (steps 196–200); annotated tag `v0.2.9` on
+  `6e880a9`, pushed; rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: CI run 37001138783 on `6e880a9` green in all 8 jobs before the
+  tag; the GitHub archive of `v0.2.9` holds 380 files, as `git archive` and
+  `bin/package-check.php` do (step 200's note said 379: it counted before
+  that note existed); Packagist lists `v0.2.9`; in an empty project
+  `composer require provemark/c2pa-verifier:^0.2` installs v0.2.9, its
+  `requirements.php` returns `supported => true` on PHP 8.5, and `verify()`
+  gives `Invalid` for `spec052/crc32b-reference.jpg`.
+- Decided by Maurice: release 0.2.9.
