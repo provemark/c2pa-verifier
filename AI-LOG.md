@@ -8160,3 +8160,13 @@ README are where the disclosure lives.
   `requirements.php` returns `supported => true` on PHP 8.5, and `verify()`
   gives `Invalid` for `spec052/crc32b-reference.jpg`.
 - Decided by Maurice: release 0.2.9.
+
+## 2026-10-04 — The conformance programme: not now (step 202)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "wat is die beslissing?"; then "ja, leg het vast als \"niet nu\"".
+- Produced: `notes/step-202-conformance-programme.md`; a row in
+  `NOTES.md`.
+- Measured: none.
+- Reasoned: that the legal-entity requirement decides the question
+  before the network and product requirements do.
+- Decided by Maurice: not now.
