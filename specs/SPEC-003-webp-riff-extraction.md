@@ -376,6 +376,21 @@ rest of the data, then the pad byte. Keeps walking to see a second `C2PA`
    the `C2PA` chunk header (offset 320 in the WebP fixture, 16,086 in the
    WAV fixture). The goal is unchanged: no costly read of a broken file.
 
+5. **2026-10-05, step 244, approved by Maurice van Loon** — a bound on
+   the walk, found by the pre-release review of 0.3.0 (step 243). The RIFF
+   walk and its scan for the store had no limit on the number of chunks,
+   unlike ISOBMFF (4,096 boxes, SPEC-024) and ID3 (4,096 frames, SPEC-056
+   AC12). Measured: a 16 MB WAV made of empty chunks took 1.5 s, so about
+   90 s per GB, past a shared host's 30 s.
+
+   - **AC20 (new) — more than 4,096 chunks at the top level is a fault.**
+     Given a WAV whose RIFF chunk holds 5,000 empty chunks (built in the
+     test): `ContainerException` naming the limit, before the 4,097th chunk
+     is read; the same holds for the scan of amendment 4. Real WAV, AVI and
+     WebP files hold a handful of top-level chunks (the corpus: at most 7).
+
+   Approved by Maurice van Loon, 2026-10-05 (step 244).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -403,3 +418,4 @@ least one test; every source file maps back to this spec. Since step 206 the wal
 | AC17 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC17: bytes after the RIFF chunk are not the container's concern (amendment 3) / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract() (the walk ends where the RIFF chunk ends) |
 | AC18 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC18: a fault says whether the walk had reached a C2PA chunk (amendment 3) / SPEC-003 | src/Container/ContainerException.php :: $storeReached; src/Container/RiffManifestStoreExtractor.php :: extract(); AC18: a stream that cannot be measured is a fault before any C2PA chunk (step 217) |
 | AC19 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC19: where the RIFF chunk cannot hold another whole chunk, the walk stops (amendment 4); AC19: a header size below 4 is refused before any chunk is read (amendment 4) / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract(), walk(), reachesStore() |
+| AC20 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC20: more than 4,096 chunks at the top level is a fault (amendment 5) / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: walk(), reachesStore() (`MAX_CHUNKS`) |

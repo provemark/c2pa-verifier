@@ -209,3 +209,72 @@ it('AC10: a fault says whether a C2PA uuid box had been read (amendment 3)', fun
         expect(spec026Reached($extract, $read($name)))->toBeTrue($name);
     }
 })->group('SPEC-026');
+
+/** A stream that hands out at most three bytes per read, as a network or filter stream may (SPEC-050). */
+final class Spec026ShortReadStream
+{
+    /** @var resource|null */
+    public $context;
+
+    private string $bytes = '';
+
+    private int $position = 0;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
+    {
+        $this->bytes = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/'.substr($path, strlen('spec026short://')));
+
+        return true;
+    }
+
+    public function stream_read(int $count): string
+    {
+        $chunk = substr($this->bytes, $this->position, min($count, 3));
+        $this->position += strlen($chunk);
+
+        return $chunk;
+    }
+
+    public function stream_eof(): bool
+    {
+        return $this->position >= strlen($this->bytes);
+    }
+
+    public function stream_tell(): int
+    {
+        return $this->position;
+    }
+
+    public function stream_seek(int $offset, int $whence): bool
+    {
+        $this->position = match ($whence) {
+            SEEK_SET => $offset,
+            SEEK_CUR => $this->position + $offset,
+            default => strlen($this->bytes) + $offset,
+        };
+
+        return true;
+    }
+
+    /** @return array<string, int> */
+    public function stream_stat(): array
+    {
+        return ['size' => strlen($this->bytes)];
+    }
+}
+
+it('AC10: a C2PA box with a broken size reaches the store on a stream that reads short too (step 244, SPEC-050)', function (): void {
+    if (! in_array('spec026short', stream_get_wrappers(), true)) {
+        stream_wrapper_register('spec026short', Spec026ShortReadStream::class);
+    }
+    $stream = fopen('spec026short://isobmff/size-past-end.mp4', 'rb');
+    assert($stream !== false);
+    $reached = null;
+    try {
+        (new IsobmffManifestStoreExtractor)->extract($stream);
+    } catch (ContainerException $e) {
+        $reached = $e->storeReached;
+    }
+
+    expect($reached)->toBeTrue();
+})->group('SPEC-026');

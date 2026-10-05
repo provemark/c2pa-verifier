@@ -299,4 +299,4 @@ SHA-256 `58b8f2cce9f90ccb41239a8428c723a427862eb58670e8ca803dbd1a6f4a3a82`.
 | AC7 | `AC7: size zero runs to the end of the stream, and cannot be caught here` | `boxHeader()` (amendment 1) |
 | AC8 | `AC8: the bounds of SPEC-024 apply here too` | `DEFAULT_MAX_BOX_LENGTH`, `MemoryBudget` |
 | AC9 | `AC9: AVIF is the same container, measured rather than assumed` | `extract()`; `tests/Fixtures/fixture-signed.avif` |
-| AC10 | tests/Unit/Container/IsobmffManifestStoreExtractorTest.php :: AC10: a fault says whether a C2PA uuid box had been read (amendment 3) / SPEC-026 | src/Container/IsobmffManifestStoreExtractor.php :: extract() (`storeReached`, the UUID read before the size check) |
+| AC10 | tests/Unit/Container/IsobmffManifestStoreExtractorTest.php :: AC10: a fault says whether a C2PA uuid box had been read (amendment 3); AC10: a C2PA box with a broken size reaches the store on a stream that reads short too (step 244, SPEC-050) / SPEC-026 | src/Container/IsobmffManifestStoreExtractor.php :: extract() (`storeReached`, the UUID read before the size check) |

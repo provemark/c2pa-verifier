@@ -8853,3 +8853,23 @@ README are where the disclosure lives.
 - Measured: `composer check`; the attribution check; CI.
 - Reasoned: none.
 - Decided by Maurice: both amendments confirmed; the push.
+
+## 2026-10-05 — The check before 0.3.0; a review; the fixes' tests, red (steps 243–244)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "wat is 243?"; "akkoord, begin met stap 243 en goede review";
+  "akkoord, voer A en B uit, C documenteren, D later".
+- Produced: README and `docs/comparison.md` fuzzing lines;
+  `notes/step-243-pre-release-check.md`; SPEC-003 amendment 5 (AC20,
+  approved); three red tests (SPEC-003 AC20, SPEC-056 AC11, SPEC-026
+  AC10); Traceability; rows in `NOTES.md`.
+- Measured: `bin/spec-check.php`, `bin/api-check.php`, `git diff v0.2.9`
+  on the surface, `bin/package-check.php`; the fuzzer over the release set
+  (15,801 runs) and over the old formats under this tree and under a
+  `v0.2.9` worktree with its own autoloader (66 = 66; a first attempt that
+  ran the new code twice was redone); a code review of `src/`; findings 1
+  and 3 reproduced with both `c2patool` versions; the corpus's largest
+  top-level chunk count (7); Pest (3 failed, 789 passed); PHPStan; Pint.
+- Reasoned: which findings are bugs, which need an amendment, which are
+  documentation.
+- Decided by Maurice: fix 1, 2, 7; amendment for 3; document 4–6; 8–10
+  later.

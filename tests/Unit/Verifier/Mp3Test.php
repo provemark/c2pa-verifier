@@ -206,3 +206,17 @@ it('AC25: free-format MPEG audio without a tag stays unknown, a named limit (ame
     // MPEG-1 Layer III, bitrate index 0 (free format), 44.1 kHz: no frame length to find a second header by
     expect((new FormatDetector)->detect(spec056VerifierStream("\xFF\xFB\x00\x00".str_repeat("\x55", 2000))))->toBeNull();
 })->group('SPEC-056');
+
+it('AC11: a frame past the tag after the C2PA GEOB ends the walk but keeps the store, as c2patool reads it (step 244)', function (): void {
+    // padding-after.mp3 with a TXXX header of 1,000 bytes written into its padding, after the GEOB
+    $syncsafe = static fn (int $v): string => chr(($v >> 21) & 0x7F).chr(($v >> 14) & 0x7F).chr(($v >> 7) & 0x7F).chr($v & 0x7F);
+    $bytes = substr_replace(spec056File('mp3/padding-after.mp3'), 'TXXX'.$syncsafe(1000)."\0\0", 33 + 13515, 10);
+    $report = (new Verifier)->verify(spec056VerifierStream($bytes));
+    $tree = spec056Report($report);
+
+    // both c2patool versions: the manifest read, Invalid, assertion.dataHash.mismatch (measured in step 243)
+    expect($report->hasManifest)->toBeTrue()
+        ->and($tree['validation_state'])->toBe('Invalid')
+        ->and(spec056Codes($tree, 'success'))->toContain('claimSignature.validated')
+        ->and(spec056Codes($tree, 'failure'))->toContain('assertion.dataHash.mismatch');
+})->group('SPEC-056');

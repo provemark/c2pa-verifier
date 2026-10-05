@@ -327,3 +327,24 @@ it('AC19: a header size below 4 is refused before any chunk is read (amendment 4
         ->and($caught?->storeReached)->toBeFalse()
         ->and(ftell($stream))->toBeLessThanOrEqual(12);
 })->group('SPEC-003');
+
+it('AC20: more than 4,096 chunks at the top level is a fault (amendment 5)', function (): void {
+    $unsigned = spec003Fixture('fixture-unsigned.webp');
+    $many = spec003Resized($unsigned.str_repeat('junk'.pack('V', 0), 5000));
+    $caught = null;
+    try {
+        (new WebpManifestStoreExtractor)->extract(spec003Memory($many));
+    } catch (ContainerException $e) {
+        $caught = $e;
+    }
+    // the same under the scan of amendment 4: a header size larger than the file
+    $scanned = null;
+    try {
+        (new WebpManifestStoreExtractor)->extract(spec003Memory(substr_replace($many, pack('V', strlen($many)), 4, 4)));
+    } catch (ContainerException $e) {
+        $scanned = $e;
+    }
+
+    expect($caught?->getMessage())->toContain('more than 4096 chunks')
+        ->and($scanned)->toBeInstanceOf(ContainerException::class);
+})->group('SPEC-003');
