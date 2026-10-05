@@ -8731,3 +8731,22 @@ README are where the disclosure lives.
 - Reasoned: that the suite had grown to the edge of 128 MB rather than
   leaking.
 - Decided by Maurice: amendment 3 (step 232).
+
+## 2026-10-05 — The signed FLAC, measured (step 234)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push" (step 233, CI run 37299931903 green); "wat is de
+  volgende stap?"; "ik wil flac en avi ook in 0.3".
+- Produced: `tests/Fixtures/fixture-unsigned.flac`, `fixture-signed.flac`,
+  `fixture-signed-flac.manifest.json`, `bin/make-flac-variants.php`,
+  `tests/Fixtures/flac/` (six variants, one c2patool-signed file, README),
+  `tests/Fixtures/c2patool/flac/` (eight recordings),
+  `notes/step-234-flac-measured.md`; rows in `NOTES.md` and
+  `tests/Fixtures/README.md`.
+- Measured: the FLAC metadata blocks with a probe; the fixture signed with
+  `c2patool` 0.27.22 and read with both versions, with and without trust
+  settings; the tag against the exclusion; the public repositories for
+  `.flac`; the variants with both versions; `c2patool` signing two sources
+  (one refused); this verifier on every FLAC.
+- Reasoned: that SPEC-056's reader applies unchanged; two proposals for the
+  FLAC spec.
+- Decided by Maurice: FLAC and AVI in 0.3.0.
