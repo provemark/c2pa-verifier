@@ -8303,3 +8303,20 @@ README are where the disclosure lives.
   chunk.
 - Decided by Maurice: the three amendments confirmed; the fixture
   builders leave the dist.
+
+## 2026-10-05 — WAV files from other writers (step 210)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "wat adviseer je? Eerst wav nog beter testen of avi verder?";
+  then, on the advice to finish WAV first, "akkoord, begin met stap 210".
+- Produced: `tests/Fixtures/wav-writers/` (four WAVs, four licence texts,
+  README), `tests/Fixtures/c2patool/wav-writers/` (four JSON recordings),
+  `notes/step-210-wav-other-writers.md`; rows in `NOTES.md` and
+  `tests/Fixtures/README.md`.
+- Measured: the trees of nine repositories through `gh api` for `.wav`
+  and `.bwf`; the four files with both `c2patool` versions and this
+  verifier, the signed one compared state and codes with and without the
+  test roots; the bomb's nesting depth and its time and peak memory
+  (`/usr/bin/time -l`).
+- Reasoned: that the signed file's writer is the same Rust core by
+  another route, so it is not an independent writer.
+- Decided by Maurice: finish WAV before AVI.

@@ -32,6 +32,9 @@ What may live here:
   unchanged) and `fixture-signed.avi`, signed with c2patool 0.27.22 and
   the same certificates (step 209); variants under `avi/`, among them a
   signed file with a second RIFF chunk (`avi/signed-avix.avi`).
+- **WAV from other writers** under `wav-writers/`: four files from
+  `contentauth/c2pa-rs` and `contentauth/c2pa-python` at pinned commits,
+  with their licences (step 210).
 
 What never lives here, in any branch, under any name: a private key. This
 project verifies only; it has no use for one. `*.key` is gitignored
