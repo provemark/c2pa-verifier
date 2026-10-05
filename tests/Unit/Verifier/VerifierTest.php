@@ -281,12 +281,22 @@ it('AC7: the parsers\' faults become statuses with their codes and urls', functi
         ->and(spec013OracleUrl(spec013C2patool('variants/json-broken'), 'assertion.json.invalid'))->toBe('stds.schema-org.CreativeWork');
 })->group('SPEC-013');
 
-it('AC7: a RIFF fault before any C2PA chunk is hasManifest false, the fault still a general.error (amendments 16, 17)', function (): void {
+it('AC7: a RIFF fault before any C2PA chunk is hasManifest false, the fault still a general.error (amendments 16, 17, 18)', function (): void {
     foreach (['webp/truncated-between-chunks.webp', 'wav/truncated-between-chunks.wav', 'wav-writers/c2pa-rs-sample3.invalid.wav'] as $file) {
         $report = spec013Verify($file);
         expect($report->hasManifest)->toBeFalse($file)
             ->and(spec013Codes($report))->toBe(['general.error'], $file)
             ->and($report->result->state)->toBe(ValidationState::Invalid, $file);
+    }
+    // amendment 18: JPEG, PNG and ISOBMFF faults before the store, too
+    foreach (['jpeg/rst-before-sos.jpg', 'jpeg/truncated-between-segments.jpg', 'jpeg/truncated-in-app0.jpg', 'png/truncated-between-chunks.png', 'isobmff/largesize-missing.mp4'] as $file) {
+        $report = spec013Verify($file);
+        expect($report->hasManifest)->toBeFalse($file)
+            ->and(spec013Codes($report))->toBe(['general.error'], $file)
+            ->and($report->result->state)->toBe(ValidationState::Invalid, $file);
+    }
+    foreach (['jpeg/truncated-in-piece-2.jpg', 'png/crc-wrong.png', 'isobmff/size-past-end.mp4'] as $file) {
+        expect(spec013Verify($file)->hasManifest)->toBeTrue($file);
     }
     // a fault at or after the C2PA chunk keeps saying a manifest is there; since amendment 17 also a
     // header size larger than a file whose C2PA chunk header is there

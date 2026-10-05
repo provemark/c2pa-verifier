@@ -135,3 +135,38 @@ it('AC16: a file that ends exactly on a segment boundary is an error naming the 
     expect(fn () => spec001Extract('jpeg/truncated-between-segments.jpg'))
         ->toThrow(ContainerException::class, 'marker of the segment at offset 20');
 })->group('SPEC-001');
+
+/** Whether $bytes, through $extract, fail with a ContainerException, and if so its storeReached. */
+function spec001Reached(callable $extract, string $bytes): ?bool
+{
+    $stream = fopen('php://memory', 'r+b');
+    assert($stream !== false);
+    fwrite($stream, $bytes);
+    rewind($stream);
+    try {
+        $extract($stream);
+    } catch (ContainerException $e) {
+        return $e->storeReached;
+    }
+
+    return null;
+}
+
+it('AC17: a fault says whether an APP11 JUMBF piece had been read (amendment 5)', function (): void {
+    $fixtures = dirname(__DIR__, 2).'/Fixtures/';
+    $read = static fn (string $name): string => (string) file_get_contents($fixtures.$name);
+    $extract = static function (mixed $stream): void {
+        assert(is_resource($stream));
+        (new JpegManifestStoreExtractor)->extract($stream);
+    };
+    $unsigned = $read('fixture-unsigned.jpg');
+
+    foreach (['jpeg/rst-before-sos.jpg', 'jpeg/truncated-between-segments.jpg', 'jpeg/truncated-in-app0.jpg'] as $name) {
+        expect(spec001Reached($extract, $read($name)))->toBeFalse($name);
+    }
+    // an APP1 length past the end of an unsigned file (step 221)
+    expect(spec001Reached($extract, substr($unsigned, 0, 2)."\xFF\xE1".pack('n', 60000)."Exif\0\0".substr($unsigned, 2)))->toBeFalse();
+    foreach (['jpeg/truncated-in-piece-2.jpg', 'jpeg/swapped-pieces.jpg', 'jpeg/missing-piece-2.jpg'] as $name) {
+        expect(spec001Reached($extract, $read($name)))->toBeTrue($name);
+    }
+})->group('SPEC-001');

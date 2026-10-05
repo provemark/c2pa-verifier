@@ -575,7 +575,7 @@ final class ManifestException extends \RuntimeException
 
     **Weight B: a field in the report, for JPEG, PNG and ISOBMFF.**
 
-    **Proposed, awaiting approval.**
+    Held by AC7. Approved by Maurice van Loon, 2026-10-05 (step 223).
 
 ## Traceability
 

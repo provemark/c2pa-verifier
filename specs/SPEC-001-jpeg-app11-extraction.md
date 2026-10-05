@@ -296,7 +296,7 @@ checks and limits pass. It never calls `file_get_contents`.
    malformed file has a manifest (SPEC-013 amendment 18, step 221's
    measurement).
 
-   **Proposed, awaiting approval.**
+   Held as **AC17**. Approved by Maurice van Loon, 2026-10-05 (step 223).
 
 ## Traceability
 
@@ -321,3 +321,4 @@ least one test; every source file maps back to this spec.
 | AC14 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC14: a file truncated before the first piece is an error naming the segment offset, not null / SPEC-001 | src/Container/StreamReader.php :: skip() (end-of-file look-up, amendment 2) |
 | AC15 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC15: a marker without a length field before SOS is an error naming the marker and its offset / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: hasLengthField(), extract() |
 | AC16 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC16: a file that ends exactly on a segment boundary is an error naming the offset where a marker was expected / SPEC-001 | src/Container/StreamReader.php :: skip() (ends exactly after: no error), src/Container/JpegManifestStoreExtractor.php :: readMarker() (the next read names offset 20) |
+| AC17 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC17: a fault says whether an APP11 JUMBF piece had been read (amendment 5) / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (`storeReached`) |

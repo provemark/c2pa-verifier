@@ -123,3 +123,37 @@ it('AC14: a file that ends before IEND is an error naming the offset where a chu
     expect(fn () => spec002Extract('png/truncated-between-chunks.png'))
         ->toThrow(ContainerException::class, 'offset 33');
 })->group('SPEC-002');
+
+/** Whether $bytes, through $extract, fail with a ContainerException, and if so its storeReached. */
+function spec002Reached(callable $extract, string $bytes): ?bool
+{
+    $stream = fopen('php://memory', 'r+b');
+    assert($stream !== false);
+    fwrite($stream, $bytes);
+    rewind($stream);
+    try {
+        $extract($stream);
+    } catch (ContainerException $e) {
+        return $e->storeReached;
+    }
+
+    return null;
+}
+
+it('AC15: a fault says whether a caBX chunk header had been read (amendment 3)', function (): void {
+    $fixtures = dirname(__DIR__, 2).'/Fixtures/';
+    $read = static fn (string $name): string => (string) file_get_contents($fixtures.$name);
+    $extract = static function (mixed $stream): void {
+        assert(is_resource($stream));
+        (new PngManifestStoreExtractor)->extract($stream);
+    };
+    $unsigned = $read('fixture-unsigned.png');
+
+    expect(spec002Reached($extract, $read('png/truncated-between-chunks.png')))->toBeFalse()
+        // cut in half, and a chunk length past the end, in an unsigned file (step 221)
+        ->and(spec002Reached($extract, substr($unsigned, 0, intdiv(strlen($unsigned), 2))))->toBeFalse()
+        ->and(spec002Reached($extract, substr($unsigned, 0, 33).pack('N', 900000).'teSt'.'hello'))->toBeFalse();
+    foreach (['png/crc-wrong.png', 'png/truncated-in-cabx.png', 'png/two-cabx.png'] as $name) {
+        expect(spec002Reached($extract, $read($name)))->toBeTrue($name);
+    }
+})->group('SPEC-002');

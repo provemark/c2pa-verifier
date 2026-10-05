@@ -277,7 +277,7 @@ calls `file_get_contents`. `fread` with a length of 0 throws in PHP 8, and
    malformed file has a manifest (SPEC-013 amendment 18, step 221's
    measurement).
 
-   **Proposed, awaiting approval.**
+   Held as **AC15**. Approved by Maurice van Loon, 2026-10-05 (step 223).
 
 ## Traceability
 
@@ -300,3 +300,4 @@ least one test; every source file maps back to this spec.
 | AC12 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC12: a chunk length above the limit is an error before the data is read / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (`$maxChunkLength` check before the LBox read) |
 | AC13 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC13: the default limit is 16 MiB / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: DEFAULT_MAX_CHUNK_LENGTH, __construct() |
 | AC14 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC14: a file that ends before IEND is an error naming the offset where a chunk header was expected, not null / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (chunk header read via `readUpTo`), src/Container/StreamReader.php :: skip() |
+| AC15 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC15: a fault says whether a caBX chunk header had been read (amendment 3) / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (`storeReached`) |

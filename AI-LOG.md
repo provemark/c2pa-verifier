@@ -8543,3 +8543,15 @@ README are where the disclosure lives.
 - Reasoned: the point at which each container's store is reached; that
   JUMBF faults are not container faults.
 - Decided by Maurice: the flag alone (step 221's advice, point 1).
+
+## 2026-10-05 — storeReached for JPEG, PNG and ISOBMFF: approved; tests red (step 223)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur de vier amendementen goed en ga door".
+- Produced: the four amendments marked approved and given criteria
+  (SPEC-001 AC17, SPEC-002 AC15, SPEC-026 AC10, SPEC-013 AC7); tests in
+  the three extractor test files and `VerifierTest`; Traceability rows;
+  `notes/step-223-store-reached-everywhere-red.md`; a row in `NOTES.md`.
+- Measured: Pest per group (one failure in each of the four) and in full;
+  PHPStan; Pint; `bin/spec-check.php`.
+- Reasoned: none beyond the tests.
+- Decided by Maurice: the four amendments approved.

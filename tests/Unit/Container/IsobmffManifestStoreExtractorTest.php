@@ -171,3 +171,39 @@ it('AC9: every ISOBMFF flavour this verifier claims is a fixture it holds', func
             ->and(spec026Extract("fixture-unsigned.{$flavour}"))->toBeNull($flavour);
     }
 })->group('SPEC-026');
+
+/** Whether $bytes, through $extract, fail with a ContainerException, and if so its storeReached. */
+function spec026Reached(callable $extract, string $bytes): ?bool
+{
+    $stream = fopen('php://memory', 'r+b');
+    assert($stream !== false);
+    fwrite($stream, $bytes);
+    rewind($stream);
+    try {
+        $extract($stream);
+    } catch (ContainerException $e) {
+        return $e->storeReached;
+    }
+
+    return null;
+}
+
+it('AC10: a fault says whether a C2PA uuid box had been read (amendment 3)', function (): void {
+    $fixtures = dirname(__DIR__, 2).'/Fixtures/';
+    $read = static fn (string $name): string => (string) file_get_contents($fixtures.$name);
+    $extract = static function (mixed $stream): void {
+        assert(is_resource($stream));
+        (new IsobmffManifestStoreExtractor)->extract($stream);
+    };
+    $unsigned = $read('fixture-unsigned.mp4');
+
+    expect(spec026Reached($extract, $read('isobmff/largesize-missing.mp4')))->toBeFalse()
+        // cut in half, a box past the end, garbage appended, in an unsigned file (step 221)
+        ->and(spec026Reached($extract, substr($unsigned, 0, intdiv(strlen($unsigned), 2))))->toBeFalse()
+        ->and(spec026Reached($extract, $unsigned.pack('N', 1000).'free'.str_repeat("\0", 8)))->toBeFalse()
+        ->and(spec026Reached($extract, $unsigned.str_repeat("\xAA", 128)))->toBeFalse();
+    // a C2PA box that runs past the end still reached the store, as a RIFF C2PA chunk does
+    foreach (['isobmff/size-past-end.mp4', 'isobmff/two-c2pa-boxes.mp4', 'isobmff/purpose-unknown.mp4'] as $name) {
+        expect(spec026Reached($extract, $read($name)))->toBeTrue($name);
+    }
+})->group('SPEC-026');
