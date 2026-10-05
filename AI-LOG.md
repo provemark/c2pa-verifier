@@ -8575,3 +8575,22 @@ README are where the disclosure lives.
 - Reasoned: that reading the UUID after a failed size check gives the
   amendment's answer without changing `boxHeader()`.
 - Decided by Maurice: the four amendments approved (step 223).
+
+## 2026-10-05 — The signed MP3 and its tag variants, measured (step 225)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push" (step 224); then "akkoord, begin met MP3".
+- Produced: the push of `main` (`82521e5..cd8a954`) and CI run
+  37287529790 (eight jobs green); `tests/Fixtures/fixture-unsigned.mp3`,
+  `fixture-signed.mp3`, `fixture-signed-mp3.manifest.json`,
+  `bin/make-mp3-variants.php`, `tests/Fixtures/mp3/` (25 variants and a
+  README), `notes/step-225-mp3-measured.md`; rows in `NOTES.md` and
+  `tests/Fixtures/README.md`; a memory note for the next session.
+- Measured: C2PA 2.4 §A.3.4 read from the published HTML; the fixture
+  signed with `c2patool` 0.27.22 and read with both versions, with and
+  without trust settings; the tag parsed with a probe against the
+  exclusion `c2patool` reports; the 25 variants with both versions; the
+  store searched for `FF 00`; `composer check` (exit 0, after typing the
+  script for PHPStan).
+- Reasoned: that the RIFF rule (strict about the store, lenient about the
+  rest) fits ID3; three open questions for the spec.
+- Decided by Maurice: MP3 next.

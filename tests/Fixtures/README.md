@@ -35,6 +35,9 @@ What may live here:
 - **WAV from other writers** under `wav-writers/`: four files from
   `contentauth/c2pa-rs` and `contentauth/c2pa-python` at pinned commits,
   with their licences (step 210).
+- **MP3** — `fixture-unsigned.mp3` (the sister repository's file,
+  unchanged) and `fixture-signed.mp3`, signed with c2patool 0.27.22 and the
+  same certificates (step 225); variants under `mp3/`.
 
 What never lives here, in any branch, under any name: a private key. This
 project verifies only; it has no use for one. `*.key` is gitignored
