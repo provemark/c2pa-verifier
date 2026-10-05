@@ -36,8 +36,8 @@ There is no bug bounty.
 ## Scope of what is verified
 
 Verified: the manifest store's extraction (JPEG APP11, PNG `caBX`, the
-RIFF `C2PA` chunk of WebP and WAV, and the ISOBMFF `uuid` box of MP4, MOV,
-AVIF and HEIC), JUMBF and
+RIFF `C2PA` chunk of WebP and WAV, the ID3v2 GEOB frame of MP3, and the
+ISOBMFF `uuid` box of MP4, MOV, AVIF and HEIC), JUMBF and
 CBOR structure with bounds, claim v1/v2 syntax, the COSE_Sign1 signature
 under the leaf certificate, the hashed URI of every assertion the claim
 names, the hard binding over the asset — `c2pa.hash.data` and, for

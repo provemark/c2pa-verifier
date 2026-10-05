@@ -8621,3 +8621,25 @@ README are where the disclosure lives.
   `bin/spec-check.php`.
 - Reasoned: the messages the tests expect.
 - Decided by Maurice: SPEC-056 approved with the three proposals.
+
+## 2026-10-05 — SPEC-056 built: MP3 (step 228)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur SPEC-056 goed met de drie voorstellen en ga door";
+  then, on the contradiction the build found, "akkoord, kies optie 1 en ga
+  door".
+- Produced: `src/Container/Id3ManifestStoreExtractor.php`;
+  `src/Container/FormatDetector.php` (`mp3`, `isMpegFrame()`);
+  `src/Verifier/Verifier.php`; `bin/fuzz.php`; the SPEC-024 AC1 test;
+  SPEC-056 `implemented` with Traceability and amendment 1; SPEC-013
+  amendment 19 and SPEC-024 amendment 3 (awaiting confirmation); README,
+  `SECURITY.md`, `docs/comparison.md`, CHANGELOG,
+  `tests/Fixtures/mp3/README.md`; `notes/step-228-spec056.md`; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: `vendor/bin/pest --group=SPEC-056` (34 passed) and in full
+  (724 passed); `composer check` (exit 0); the corpus against step 224
+  with the message normalised (no existing file moved); every MP3 against
+  both `c2patool` versions; the fuzzer over the MP3 files (4,075 runs, 0
+  faults, 42 `Valid`, each `Valid` in both versions).
+- Reasoned: that a tagless MP3 should yield `null` (a build error, per
+  AC13); the three options for the AC11/AC13 contradiction.
+- Decided by Maurice: option 1 (SPEC-056 amendment 1).

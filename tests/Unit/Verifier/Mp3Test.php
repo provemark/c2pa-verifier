@@ -63,14 +63,22 @@ function spec056Report(VerificationReport $report): array
     return $report->toArray();
 }
 
-it('AC11: bytes after the tag, and a tag size one too large, are judged by the data hash', function (string $variant): void {
+it('AC11: bytes after the tag are judged by the data hash', function (string $variant): void {
     $report = spec056Report((new Verifier)->verify(spec056VerifierStream(spec056File("mp3/{$variant}.mp3"))));
 
     expect($report['format'])->toBe('mp3')
         ->and($report['validation_state'])->toBe('Invalid')
         ->and(spec056Codes($report, 'success'))->toContain('claimSignature.validated')
         ->and(spec056Codes($report, 'failure'))->toContain('assertion.dataHash.mismatch');
-})->with(['id3v1-appended', 'tag-size-plus-one'])->group('SPEC-056');
+})->with(['id3v1-appended'])->group('SPEC-056');
+
+it('AC11: a tag size one too large leaves no MPEG audio after the tag, so the file is unknown (amendment 1)', function (): void {
+    $report = (new Verifier)->verify(spec056VerifierStream(spec056File('mp3/tag-size-plus-one.mp3')));
+
+    expect($report->format)->toBe('unknown')
+        ->and($report->hasManifest)->toBeFalse()
+        ->and(array_map(static fn ($s): string => $s->code->value, $report->result->statuses))->toBe(['general.error']);
+})->group('SPEC-056');
 
 it('AC13: mp3 when MPEG audio follows the tag or opens the file, and nothing else is guessed', function (): void {
     $detector = new FormatDetector;

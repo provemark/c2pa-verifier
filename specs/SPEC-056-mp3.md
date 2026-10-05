@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-05, with the three proposals |
 | Supersedes | —                                                 |
@@ -241,7 +241,20 @@ constructor parameter, as WAV's.
 
 ## Amendments
 
-None yet.
+1. **2026-10-05, step 228, found by the build; approved by Maurice van
+   Loon the same day (option 1 of three)** — AC11 and AC13 contradicted
+   each other on `tag-size-plus-one.mp3`. AC11 said the verifier reads it
+   and the data hash judges the changed byte; AC13's detection, approved
+   with open question 3, calls a file `mp3` only when MPEG audio follows
+   the tag, and here the tag ends one byte into the audio, so the file is
+   `unknown` and never reaches the extractor. AC13 stands. AC11 now says:
+   the **extractor** yields the store of AC1 for `tag-size-plus-one.mp3`;
+   **verified**, the file is `unknown`, `Invalid`, one `general.error`
+   (`c2patool`: *No claim found*; neither says `Valid`).
+   `id3v1-appended.mp3` is unchanged: read and `Invalid` with
+   `assertion.dataHash.mismatch`. Rejected: calling every ID3 tag not
+   followed by `fLaC` an MP3 (an AAC file would be labelled `mp3`), and
+   searching a few bytes past the tag for the sync word.
 
 ## Traceability
 
@@ -250,17 +263,17 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
-| AC11                 | —                           | —                    |
-| AC12                 | —                           | —                    |
-| AC13                 | —                           | —                    |
-| AC14                 | —                           | —                    |
+| AC1 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC1: extracts the store from the fixture, byte-exact, with its range / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk(), objectStart() |
+| AC2 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC2: no C2PA GEOB is an outcome, not an error; the MIME type is matched exactly (four datasets) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk(), mime() |
+| AC3 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC3: the tag is read in all its shapes (eight datasets) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk(), extendedHeaderLength(), objectStart(), wideNul() |
+| AC4 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC4: a tag header that contradicts itself is a fault before any frame is read (three datasets) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk() (version and syncsafe checks) |
+| AC5 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC5: a tag that promises more than the file holds is a fault, and says the store was there / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk(), scanForStore() |
+| AC6 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC6: two C2PA GEOBs are a fault naming both offsets / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk() (`$storeOffset !== null`) |
+| AC7 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC7: LBox must equal the object length / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk() (LBox check) |
+| AC8 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC8: the C2PA GEOB must fit the tag / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk() (`$bodyEnd > $tagEnd` for the C2PA GEOB) |
+| AC9 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC9: an object shorter than a box header is a fault (two datasets) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk() (`BOX_HEADER_LENGTH`) |
+| AC10 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC10: a C2PA GEOB that cannot be read as it stands is a fault; the flag alone is not / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk() (format flags, unsynchronisation) |
+| AC11 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC11: what lies outside the tag is not the container's concern; tests/Unit/Verifier/Mp3Test.php :: AC11: bytes after the tag are judged by the data hash; AC11: a tag size one too large leaves no MPEG audio after the tag, so the file is unknown (amendment 1) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk(); src/Container/FormatDetector.php :: detect() |
+| AC12 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC12: the bounds apply / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: DEFAULT_MAX_OBJECT_LENGTH, MAX_FRAMES, walk() |
+| AC13 | tests/Unit/Verifier/Mp3Test.php :: AC13: mp3 when MPEG audio follows the tag or opens the file, and nothing else is guessed; AC13: a tagless MP3 has no manifest and no failure; an unknown file names MP3 among the formats / SPEC-056 | src/Container/FormatDetector.php :: detect(), isMpegFrame(); src/Container/Id3ManifestStoreExtractor.php :: walk() (a tagless file); src/Verifier/Verifier.php :: verify() |
+| AC14 | tests/Unit/Verifier/Mp3Test.php :: AC14: the signed fixture verifies as c2patool 0.27.22 and 0.28.1 say, without and with trust settings (four datasets); AC14: one byte of the audio flipped is assertion.dataHash.mismatch / SPEC-056 | src/Verifier/Verifier.php :: __construct() (`$mp3`), verify() (the `mp3` arm) |

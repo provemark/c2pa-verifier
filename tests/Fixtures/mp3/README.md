@@ -5,40 +5,40 @@ Built by `bin/make-mp3-variants.php` from `../fixture-signed.mp3` and
 as the encapsulated object of a GEOB frame (C2PA 2.4 §A.3.4). Each
 variant changes one thing about the tag or the frame and rebuilds the
 sizes around it, unless the variant is about a size. Measured with
-`c2patool` 0.27.22 and 0.28.1 on 2026-10-05, without trust settings. There
-is no MP3 spec yet; this verifier reads none of them (`unknown`).
+`c2patool` 0.27.22 and 0.28.1 on 2026-10-05, without trust settings. The last column
+is this verifier since SPEC-056 (step 228).
 
 "read" means: the store is extracted, `claimSignature.validated`, then
 `assertion.dataHash.mismatch` (the change touched hashed bytes); 0.28.1
 sometimes lists the mismatch twice.
 
-| file | what changed | `c2patool` 0.27.22 | 0.28.1 |
-|---|---|---|---|
-| `two-geob.mp3` | the C2PA GEOB frame twice | read | read |
-| `mime-octet-stream.mp3` | MIME `application/octet-stream` | *No claim found* | the same |
-| `mime-upper-case.mp3` | MIME `APPLICATION/C2PA` | *No claim found* | the same |
-| `other-geob-first.mp3` | a `text/plain` GEOB before the C2PA one | read | read |
-| `encoding-latin1.mp3` | text encoding 0 (one-byte terminators) | read | read |
-| `encoding-utf16.mp3` | text encoding 1 (UTF-16 with BOM, two-byte terminators) | read | read |
-| `encoding-utf16be.mp3` | text encoding 2 (UTF-16BE) | read | read |
-| `version-2-3.mp3` | the tag as ID3v2.3 (plain frame sizes) | read | read |
-| `flag-unsynchronisation.mp3` | the header's unsynchronisation flag, bytes unchanged | read | read |
-| `flag-extended-header.mp3` | a minimal extended header | read | read |
-| `flag-footer.mp3` | the footer flag and a `3DI` footer | read | read |
-| `padding-after.mp3` | 64 zero bytes of padding inside the tag | read | read |
-| `frame-flags-compressed.mp3` | the GEOB's compression and data-length flags | *No claim found* | the same |
-| `lbox-differs.mp3` | LBox +1 | **`Valid`** | **`Valid`** |
-| `object-too-short.mp3` | a 4-byte object | *unexpected end of file* | the same |
-| `object-empty.mp3` | an empty object | *No claim found* | the same |
-| `frame-overruns-tag.mp3` | the GEOB size +1,000, past the tag | read | read |
-| `tag-size-plus-one.mp3` | the tag size +1 | *No claim found* | the same |
-| `tag-size-not-syncsafe.mp3` | a tag size byte with its top bit set | *No claim found* | the same |
-| `truncated-in-store.mp3` | the file cut 1,000 bytes into the store | *invalid CBOR box* | the same |
-| `id3v1-appended.mp3` | a 128-byte ID3v1 tag appended | read | read |
-| `store-in-appended-tag.mp3` | the C2PA GEOB in a second tag at the end | *No claim found* | the same |
-| `junk-before-tag.mp3` | 16 zero bytes before the tag | *No claim found* | the same |
-| `unsigned-no-tag.mp3` | the unsigned file without its tag | *No claim found* | the same |
-| `unsigned-id3v1.mp3` | the unsigned file + an ID3v1 tag | *No claim found* | the same |
+| file | what changed | `c2patool` 0.27.22 | 0.28.1 | SPEC-056 (step 228) |
+|---|---|---|---|---|
+| `two-geob.mp3` | the C2PA GEOB frame twice | read | read | AC6 error |
+| `mime-octet-stream.mp3` | MIME `application/octet-stream` | *No claim found* | the same | AC2 no manifest |
+| `mime-upper-case.mp3` | MIME `APPLICATION/C2PA` | *No claim found* | the same | AC2 no manifest |
+| `other-geob-first.mp3` | a `text/plain` GEOB before the C2PA one | read | read | AC3 read |
+| `encoding-latin1.mp3` | text encoding 0 (one-byte terminators) | read | read | AC3 read |
+| `encoding-utf16.mp3` | text encoding 1 (UTF-16 with BOM, two-byte terminators) | read | read | AC3 read |
+| `encoding-utf16be.mp3` | text encoding 2 (UTF-16BE) | read | read | AC3 read |
+| `version-2-3.mp3` | the tag as ID3v2.3 (plain frame sizes) | read | read | AC3 read |
+| `flag-unsynchronisation.mp3` | the header's unsynchronisation flag, bytes unchanged | read | read | AC10 error |
+| `flag-extended-header.mp3` | a minimal extended header | read | read | AC3 read |
+| `flag-footer.mp3` | the footer flag and a `3DI` footer | read | read | AC3 read |
+| `padding-after.mp3` | 64 zero bytes of padding inside the tag | read | read | AC3 read |
+| `frame-flags-compressed.mp3` | the GEOB's compression and data-length flags | *No claim found* | the same | AC10 error |
+| `lbox-differs.mp3` | LBox +1 | **`Valid`** | **`Valid`** | AC7 error |
+| `object-too-short.mp3` | a 4-byte object | *unexpected end of file* | the same | AC9 error |
+| `object-empty.mp3` | an empty object | *No claim found* | the same | AC9 error |
+| `frame-overruns-tag.mp3` | the GEOB size +1,000, past the tag | read | read | AC8 error |
+| `tag-size-plus-one.mp3` | the tag size +1 | *No claim found* | the same | AC11: the extractor reads it; verified `unknown` (amendment 1) |
+| `tag-size-not-syncsafe.mp3` | a tag size byte with its top bit set | *No claim found* | the same | AC4 error |
+| `truncated-in-store.mp3` | the file cut 1,000 bytes into the store | *invalid CBOR box* | the same | AC5 error |
+| `id3v1-appended.mp3` | a 128-byte ID3v1 tag appended | read | read | AC11 read |
+| `store-in-appended-tag.mp3` | the C2PA GEOB in a second tag at the end | *No claim found* | the same | AC2 no manifest |
+| `junk-before-tag.mp3` | 16 zero bytes before the tag | *No claim found* | the same | AC13 `unknown` |
+| `unsigned-no-tag.mp3` | the unsigned file without its tag | *No claim found* | the same | AC13 `mp3`, no manifest |
+| `unsigned-id3v1.mp3` | the unsigned file + an ID3v1 tag | *No claim found* | the same | AC11 no manifest |
 
 SHA-256 (as printed by the script):
 

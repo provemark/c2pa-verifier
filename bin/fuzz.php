@@ -23,6 +23,7 @@ declare(strict_types=1);
  * Prints one line per finding and a summary; exit code 1 on any fault.
  */
 
+use Provemark\C2paVerifier\Container\Id3ManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WavManifestStoreExtractor;
@@ -40,12 +41,12 @@ $out = $argv[3] ?? sys_get_temp_dir().'/c2pa-fuzz';
 $paths = array_slice($argv, 4);
 if ($paths === []) {
     $root = dirname(__DIR__).'/tests/Fixtures';
-    $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp', $root.'/fixture-signed.mp4', $root.'/fixture-signed.wav', $root.'/wav', $root.'/wav-writers'];   // MP4 and WAV since step 213
+    $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp', $root.'/fixture-signed.mp4', $root.'/fixture-signed.wav', $root.'/wav', $root.'/wav-writers', $root.'/fixture-signed.mp3', $root.'/mp3'];   // MP4 and WAV since step 213, MP3 since step 228
 }
 $files = [];
 foreach ($paths as $path) {
     if (is_dir($path)) {
-        foreach (glob($path.'/*.{jpg,jpeg,png,webp,wav}', GLOB_BRACE) ?: [] as $file) {
+        foreach (glob($path.'/*.{jpg,jpeg,png,webp,wav,mp3}', GLOB_BRACE) ?: [] as $file) {
             $files[] = $file;
         }
     } elseif (is_file($path)) {
@@ -73,6 +74,7 @@ function fuzzStoreRanges(string $file): array
             str_starts_with($head, "\xFF\xD8") => (new JpegManifestStoreExtractor)->extract($stream),
             str_starts_with($head, "\x89PNG") => (new PngManifestStoreExtractor)->extract($stream),
             substr($head, 0, 4) === 'RIFF' && substr($head, 8, 4) === 'WAVE' => (new WavManifestStoreExtractor)->extract($stream),   // step 212
+            str_starts_with($head, 'ID3') => (new Id3ManifestStoreExtractor)->extract($stream),   // step 228
             substr($head, 0, 4) === 'RIFF' => (new WebpManifestStoreExtractor)->extract($stream),
             default => null,
         };

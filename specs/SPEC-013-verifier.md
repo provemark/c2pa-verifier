@@ -577,6 +577,19 @@ final class ManifestException extends \RuntimeException
 
     Held by AC7. Approved by Maurice van Loon, 2026-10-05 (step 223).
 
+19. **2026-10-05, step 228, with SPEC-056's implementation** — the
+    report's `format` gains `mp3`: an ID3v2 tag followed by MPEG audio, or
+    MPEG audio from the first byte (SPEC-056 AC13). Detection reads past the
+    twelve-byte probe for an ID3 tag: one seek to the tag's end and four
+    bytes there; the stream is rewound afterwards, as AC6 requires. The
+    unknown-format message names MP3. The `Verifier` constructor gains the
+    MP3 extractor as its last parameter. No existing file changes verdict
+    (the corpus, with the message normalised: identical).
+
+    **Weight B: a new value in the report.**
+
+    Awaiting confirmation.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

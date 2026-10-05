@@ -8,6 +8,7 @@ use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cbor\CborException;
 use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\FormatDetector;
+use Provemark\C2paVerifier\Container\Id3ManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\IsobmffManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\ManifestStoreBytes;
@@ -83,6 +84,8 @@ final readonly class Verifier
         private UpdateManifestCheck $updateManifests = new UpdateManifestCheck,
         // SPEC-055: last, so that a caller passing the others by position since 0.2 is not moved
         private WavManifestStoreExtractor $wav = new WavManifestStoreExtractor,
+        // SPEC-056: last, for the same reason
+        private Id3ManifestStoreExtractor $mp3 = new Id3ManifestStoreExtractor,
     ) {}
 
     /**
@@ -97,7 +100,7 @@ final readonly class Verifier
             $head = $this->formats->head($stream);
 
             return new VerificationReport('unknown', false, null, ValidationResult::fromStatuses([
-                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, WebP, WAV or ISOBMFF signature', Bytes::hex($head))),
+                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, WebP, WAV, MP3 or ISOBMFF signature', Bytes::hex($head))),
             ], []));
         }
 
@@ -108,6 +111,7 @@ final readonly class Verifier
                 'png' => $this->png->extract($stream),
                 'webp' => $this->webp->extract($stream),
                 'wav' => $this->wav->extract($stream),   // SPEC-055
+                'mp3' => $this->mp3->extract($stream),   // SPEC-056
                 // SPEC-026: the container only. There is no BMFF hard-binding check yet,
                 // so the data hash finds no `c2pa.hash.data` and says
                 // claim.hardBindings.missing — Invalid, named, and never a silent Valid.

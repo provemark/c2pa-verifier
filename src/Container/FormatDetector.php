@@ -20,7 +20,7 @@ final readonly class FormatDetector
 
     /**
      * @param  resource  $stream  readable and seekable
-     * @return 'jpeg'|'png'|'webp'|'wav'|'isobmff'|null
+     * @return 'jpeg'|'png'|'webp'|'wav'|'isobmff'|'mp3'|null
      */
     public function detect($stream): ?string
     {
@@ -43,8 +43,44 @@ final readonly class FormatDetector
         if (strlen($head) === self::PROBE_LENGTH && substr($head, 4, 4) === 'ftyp') {
             return 'isobmff';
         }
+        // MP3 (SPEC-056): an ID3v2 tag followed by MPEG audio, or MPEG audio from the
+        // first byte. ID3 alone is not enough: FLAC and AAC carry the same tag.
+        if (self::isMpegFrame($head)) {
+            return 'mp3';
+        }
+        if (strlen($head) === self::PROBE_LENGTH && str_starts_with($head, 'ID3') && preg_match('/[\x80-\xFF]/', substr($head, 6, 4)) !== 1) {
+            $size = 0;
+            foreach (str_split(substr($head, 6, 4)) as $byte) {
+                $size = ($size << 7) | ord($byte);
+            }
+            $audio = 10 + $size + ((ord($head[5]) & 0x10) !== 0 ? 10 : 0);   // after the tag, and its footer when flagged
+            $next = fseek($stream, $audio) === 0 ? Read::upTo($stream, 4) : '';
+            rewind($stream);
+
+            return self::isMpegFrame($next) ? 'mp3' : null;
+        }
 
         return null;
+    }
+
+    /**
+     * An MPEG audio frame header (ISO/IEC 11172-3): eleven sync bits, then a
+     * version, layer, bitrate and sample rate that are not reserved. JPEG's
+     * FF D8 is not one: D8 lacks the three high bits.
+     */
+    public static function isMpegFrame(string $bytes): bool
+    {
+        if (strlen($bytes) < 3 || $bytes[0] !== "\xFF") {
+            return false;
+        }
+        $b1 = ord($bytes[1]);
+        $b2 = ord($bytes[2]);
+
+        return ($b1 & 0xE0) === 0xE0
+            && (($b1 >> 3) & 0x03) !== 0x01   // version 01 is reserved
+            && (($b1 >> 1) & 0x03) !== 0x00   // layer 00 is reserved
+            && ($b2 >> 4) !== 0x0F            // bitrate index 1111 is bad
+            && (($b2 >> 2) & 0x03) !== 0x03;  // sample rate 11 is reserved
     }
 
     /**

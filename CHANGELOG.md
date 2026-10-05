@@ -21,6 +21,15 @@ committed.
   binding, an oversized RIFF size, a 1,000-deep `LIST` bomb). Memory stays
   flat on large files: 33 MB peak at 2 GB (step 211).
 
+- **MP3 (SPEC-056).** An MP3 whose manifest store sits in an ID3v2 tag's
+  GEOB frame with the MIME type `application/c2pa` (C2PA 2.4 §A.3.4) is read
+  and verified like the other formats; `format` is `mp3`. ID3v2.3 and v2.4,
+  every text encoding, an extended header, a footer and padding are read;
+  a C2PA GEOB that is compressed, unsynchronised, duplicated, too long for
+  its tag, or whose LBox differs, is refused. A file is `mp3` when MPEG
+  audio follows the tag or opens the file; a tagless MP3 has no manifest.
+  Measured against `c2patool` 0.27.22 and 0.28.1 over 25 variants (step 225).
+
 ### Changed
 - **WebP and WAV: strict about the `C2PA` chunk, lenient as `c2patool`
   about the rest (SPEC-003 amendment 3, SPEC-055 amendment 3).** Bytes
@@ -45,7 +54,7 @@ committed.
   short tail inside the RIFF chunk, or a chunk other than `C2PA` that runs
   past its end, stops the walk, as `c2patool`'s does, instead of being a
   fault; a header size below 4 is now refused.
-- The unknown-format explanation names WAV among the formats read.
+- The unknown-format explanation names WAV and MP3 among the formats read.
 - A RIFF file with the form type `WAVE` that was `unknown` before is now a
   WAV. The one such file among the fixtures, a WebP with its form type
   changed (`webp/riff-not-webp.webp`), is now `Invalid` with
