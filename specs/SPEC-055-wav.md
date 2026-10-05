@@ -407,7 +407,7 @@ same way, so SPEC-003's tests prove the refactor. `FormatDetector` returns
      manifest, no failure; the signed WAV with the same tail: `Invalid`,
      `claimSignature.validated` and `assertion.dataHash.mismatch`.
 
-   **Proposed, awaiting approval.**
+   Approved by Maurice van Loon, 2026-10-05 (step 219).
 
 ## Traceability
 
@@ -435,3 +435,4 @@ least one test; every source file maps back to this spec.
 | AC17 | tests/Unit/Verifier/WavTest.php :: AC17: the WebP whose form type says WAVE is read as a WAV and fails its data hash, as c2patool says / SPEC-055 | src/Container/FormatDetector.php :: detect(); src/Verifier/Verifier.php :: verify() |
 | AC18 | tests/Unit/Verifier/WavTest.php :: AC18: the signed WAV of another writer verifies as c2patool 0.27.22 and 0.28.1 say, without and with the test roots (four datasets); AC18: the unsigned WAV and the nested-LIST bomb of c2pa-rs are WAVs with no manifest and no failure; AC18: the c2pa-rs WAV whose RIFF size exceeds the file is one general.error naming both sizes / SPEC-055 | src/Container/FormatDetector.php :: detect() (`WAVE`); src/Container/RiffManifestStoreExtractor.php :: extract() (amendment 2) |
 | AC19 | tests/Unit/Verifier/WavTest.php :: AC19: ordinary WAV quirks outside the store are not faults in an unsigned file (amendment 3); AC19: a signed WAV with an ID3v1 tag appended fails its data hash, as c2patool says (amendment 3) / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (amendment 3); src/Verifier/Verifier.php :: verify() (SPEC-013 amendment 16) |
+| AC20 | tests/Unit/Verifier/WavTest.php :: AC20: a WAV cut short reports its manifest when the C2PA chunk header is there (amendment 4); AC20: a short tail inside the RIFF chunk is left to the data hash (amendment 4) / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract(), walk(), reachesStore() |

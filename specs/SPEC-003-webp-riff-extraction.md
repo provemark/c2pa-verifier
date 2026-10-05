@@ -365,7 +365,7 @@ rest of the data, then the pad byte. Keeps walking to see a second `C2PA`
    - AC18's dataset changes with it: `riff-size-plus-one` now reaches the
      store.
 
-   **Proposed, awaiting approval.**
+   Approved by Maurice van Loon, 2026-10-05 (step 219).
 
 ## Traceability
 
@@ -393,3 +393,4 @@ least one test; every source file maps back to this spec. Since step 206 the wal
 | AC16 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC16: a header size larger than the file is refused before any chunk header is read / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract() (size check before the loop, stream repositioned first) |
 | AC17 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC17: bytes after the RIFF chunk are not the container's concern (amendment 3) / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract() (the walk ends where the RIFF chunk ends) |
 | AC18 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC18: a fault says whether the walk had reached a C2PA chunk (amendment 3) / SPEC-003 | src/Container/ContainerException.php :: $storeReached; src/Container/RiffManifestStoreExtractor.php :: extract(); AC18: a stream that cannot be measured is a fault before any C2PA chunk (step 217) |
+| AC19 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC19: where the RIFF chunk cannot hold another whole chunk, the walk stops (amendment 4); AC19: a header size below 4 is refused before any chunk is read (amendment 4) / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract(), walk(), reachesStore() |

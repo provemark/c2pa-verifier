@@ -219,7 +219,9 @@ it('AC18: a fault says whether the walk had reached a C2PA chunk (amendment 3)',
     expect($caught)->toBeInstanceOf(ContainerException::class)
         ->and($caught?->storeReached)->toBe($reached);
 })->with([
-    'size +1: refused before any chunk' => ['riff-size-plus-one', false],
+    // amendment 4: a size larger than the file is still refused, after a scan for the store
+    'size +1: the C2PA chunk is there' => ['riff-size-plus-one', true],
+    'cut inside the C2PA chunk' => ['truncated-in-c2pa', true],
     'cut before the C2PA chunk' => ['truncated-between-chunks', false],
     'two C2PA chunks' => ['two-c2pa', true],
     'LBox differs' => ['lbox-differs', true],
@@ -289,4 +291,38 @@ it('AC18: a stream that cannot be measured is a fault before any C2PA chunk (ste
     expect($caught)->toBeInstanceOf(ContainerException::class)
         ->and($caught?->getMessage())->toContain('cannot seek')
         ->and($caught?->storeReached)->toBeFalse();
+})->group('SPEC-003');
+
+it('AC19: where the RIFF chunk cannot hold another whole chunk, the walk stops (amendment 4)', function (): void {
+    $signed = spec003Fixture('fixture-signed.webp');
+    $unsigned = spec003Fixture('fixture-unsigned.webp');
+    $tail = "\0\0\0";
+    $overrun = 'XXXX'.pack('V', 100).'abc';
+    $extract = static fn (string $bytes): ?string => (new WebpManifestStoreExtractor)->extract(spec003Memory($bytes))?->bytes;
+
+    // measured in steps 217 and 218 with both c2patool versions: the signed ones are read and fail the
+    // data hash, the unsigned ones have no claim
+    expect(hash('sha256', $extract(spec003Resized($signed.$tail)) ?? ''))->toBe(SPEC003_STORE_SHA256)
+        ->and(hash('sha256', $extract(spec003Resized($signed.$overrun)) ?? ''))->toBe(SPEC003_STORE_SHA256)
+        ->and($extract(spec003Resized($unsigned.$tail)))->toBeNull()
+        ->and($extract(spec003Resized($unsigned.$overrun)))->toBeNull()
+        // a chunk before C2PA that runs past the end, or stray bytes before it, hide the store, as in c2patool
+        ->and($extract(substr_replace($signed, pack('V', 10000000), 16, 4)))->toBeNull()
+        ->and($extract(spec003Resized(substr($signed, 0, 312).$tail.substr($signed, 312))))->toBeNull();
+})->group('SPEC-003');
+
+it('AC19: a header size below 4 is refused before any chunk is read (amendment 4)', function (): void {
+    $stream = spec003Memory(substr_replace(spec003Fixture('fixture-signed.webp'), pack('V', 0), 4, 4));
+
+    try {
+        (new WebpManifestStoreExtractor)->extract($stream);
+        $caught = null;
+    } catch (ContainerException $e) {
+        $caught = $e;
+    }
+
+    expect($caught)->toBeInstanceOf(ContainerException::class)
+        ->and($caught?->getMessage())->toContain('RIFF size 0')
+        ->and($caught?->storeReached)->toBeFalse()
+        ->and(ftell($stream))->toBeLessThanOrEqual(12);
 })->group('SPEC-003');

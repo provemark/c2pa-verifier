@@ -8483,3 +8483,17 @@ README are where the disclosure lives.
 - Reasoned: the proposed report per file; the three points for approval.
 - Decided by Maurice: none in this step (the direction was decided after
   step 217's review).
+
+## 2026-10-05 — The edges of the leniency approved; their tests, red (step 219)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur de drie amendementen goed en ga door".
+- Produced: SPEC-003 amendment 4, SPEC-055 amendment 4 and SPEC-013
+  amendment 17 marked approved; tests in
+  `tests/Unit/Container/WebpManifestStoreExtractorTest.php`,
+  `tests/Unit/Verifier/WavTest.php` and `tests/Unit/Verifier/VerifierTest.php`;
+  Traceability rows for SPEC-003 AC19 and SPEC-055 AC20;
+  `notes/step-219-riff-edges-red.md`; a row in `NOTES.md`.
+- Measured: Pest per group and in full (8 failed, 679 passed); PHPStan;
+  Pint; `bin/spec-check.php`.
+- Reasoned: none beyond the tests.
+- Decided by Maurice: the three amendments approved.

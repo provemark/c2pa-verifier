@@ -234,3 +234,28 @@ it('AC19: a signed WAV with an ID3v1 tag appended fails its data hash, as c2pato
         ->and(spec055Codes($report, 'success'))->toContain('claimSignature.validated')
         ->and(spec055Codes($report, 'failure'))->toContain('assertion.dataHash.mismatch');
 })->group('SPEC-055');
+
+it('AC20: a WAV cut short reports its manifest when the C2PA chunk header is there (amendment 4)', function (string $file, bool $hasManifest): void {
+    $report = (new Verifier)->verify(spec055VerifierStream($file));
+
+    expect($report->hasManifest)->toBe($hasManifest)
+        ->and($report->result->state)->toBe(ValidationState::Invalid)
+        ->and(array_map(static fn ($s): string => $s->code->value, $report->result->statuses))->toBe(['general.error']);
+})->with([
+    'size +1' => ['wav/riff-size-plus-one.wav', true],
+    'cut inside the C2PA chunk' => ['wav/truncated-in-c2pa.wav', true],
+    'cut before the C2PA chunk' => ['wav/truncated-between-chunks.wav', false],
+    'c2pa-rs: size 1 MB too large, no C2PA chunk' => ['wav-writers/c2pa-rs-sample3.invalid.wav', false],
+])->group('SPEC-055');
+
+it('AC20: a short tail inside the RIFF chunk is left to the data hash (amendment 4)', function (): void {
+    $fixtures = dirname(__DIR__, 2).'/Fixtures/';
+    $unsigned = spec055Report((new Verifier)->verify(spec055MemoryStream(spec055Resized((string) file_get_contents($fixtures.'fixture-unsigned.wav')."\0\0\0"))));
+    $signed = spec055Report((new Verifier)->verify(spec055MemoryStream(spec055Resized((string) file_get_contents($fixtures.'fixture-signed.wav')."\0\0\0"))));
+
+    expect($unsigned['has_manifest'])->toBeFalse()
+        ->and(spec055Codes($unsigned, 'failure'))->toBe([])
+        ->and($signed['validation_state'])->toBe('Invalid')
+        ->and(spec055Codes($signed, 'success'))->toContain('claimSignature.validated')
+        ->and(spec055Codes($signed, 'failure'))->toContain('assertion.dataHash.mismatch');
+})->group('SPEC-055');
