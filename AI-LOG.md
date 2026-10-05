@@ -8959,3 +8959,18 @@ README are where the disclosure lives.
 - Reasoned: that one place in `ValidationStatus` covers every check that
   quotes certificate or file bytes.
 - Decided by Maurice: step 249 as proposed.
+
+## 2026-10-05 — 0.3.0 released (step 250)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push" (steps 247–249); "akkoord, zet de tag v0.3.0 als
+  CI groen is"; "akkoord, log de release en push".
+- Produced: push of `main` (steps 247–249); annotated tag `v0.3.0` on
+  `d3fcca4`, pushed; rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: CI run 37312393998 on `d3fcca4` green in all 8 jobs before the
+  tag; the GitHub archive of `v0.3.0` holds 376 files, as `git archive` and
+  `bin/package-check.php` do; Packagist lists `v0.3.0` with source and
+  dist at `d3fcca4`; in an empty project `composer require
+  provemark/c2pa-verifier:^0.3` installs v0.3.0, whose command reads
+  `fixture-signed.{wav,mp3,flac,avi,jpg}` as `wav`, `mp3`, `flac`, `avi`,
+  `jpeg`, each `Valid` with `has_manifest` true.
+- Decided by Maurice: push, then the tag once CI was green.
