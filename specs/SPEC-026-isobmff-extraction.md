@@ -262,7 +262,21 @@ final readonly class IsobmffManifestStoreExtractor
 
    Confirmed by Maurice van Loon, 2026-09-22 (step 81).
 
+3. **2026-10-05, step 222, proposed** — as SPEC-001 amendment 5, for
+   ISOBMFF: the store is reached when a top-level `uuid` box carries the
+   C2PA UUID. Its 16 bytes are read before the box's size is checked
+   against the file whenever they lie inside the file, so that a C2PA box
+   that runs past the end still reports that the store was reached (as a
+   RIFF `C2PA` chunk that runs past the end does). A fault before that (a
+   box size past the end, a file cut short before the C2PA box) is
+   `storeReached` false.
 
+   The verdict does not change: the fault stays `Invalid` with
+   `general.error`. Only `has_manifest` stops saying that an unsigned,
+   malformed file has a manifest (SPEC-013 amendment 18, step 221's
+   measurement).
+
+   **Proposed, awaiting approval.**
 
 ## Traceability
 

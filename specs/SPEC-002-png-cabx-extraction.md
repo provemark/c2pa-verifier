@@ -266,6 +266,18 @@ calls `file_get_contents`. `fread` with a length of 0 throws in PHP 8, and
    survives. AC13's literal changes with it.
    Confirmed by Maurice van Loon, 2026-09-22 (step 68).
 
+3. **2026-10-05, step 222, proposed** — as SPEC-001 amendment 5, for PNG:
+   the store is reached when a chunk header of type `caBX` has been read.
+   A fault before that (a chunk length past the end, a file cut short
+   before the `caBX` chunk) is `storeReached` false; a fault in the `caBX`
+   chunk or after it stays `true`.
+
+   The verdict does not change: the fault stays `Invalid` with
+   `general.error`. Only `has_manifest` stops saying that an unsigned,
+   malformed file has a manifest (SPEC-013 amendment 18, step 221's
+   measurement).
+
+   **Proposed, awaiting approval.**
 
 ## Traceability
 

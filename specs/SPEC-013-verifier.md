@@ -557,6 +557,26 @@ final class ManifestException extends \RuntimeException
 
     Approved by Maurice van Loon, 2026-10-05 (step 219).
 
+18. **2026-10-05, step 222, proposed** — amendment 16's rule for every
+    container: after a container fault, `hasManifest` is the extractor's
+    `storeReached`, for JPEG, PNG and ISOBMFF too (SPEC-001 amendment 5,
+    SPEC-002 amendment 3, SPEC-026 amendment 3). Step 221 measured the
+    open point amendment 16 named: an unsigned JPEG, PNG or MP4 with a
+    container fault said it had a manifest; `c2patool` gives a parse error
+    on each, or, for an MP4 cut short, finds no claim.
+
+    Files whose report changes (`hasManifest` true → false, verdict and
+    message unchanged): `jpeg/rst-before-sos.jpg`,
+    `jpeg/truncated-between-segments.jpg`, `jpeg/truncated-in-app0.jpg`,
+    `png/truncated-between-chunks.png`, `isobmff/largesize-missing.mp4`.
+    A JUMBF, CBOR or manifest fault is not a container fault and keeps
+    `hasManifest` true. The ISOBMFF walk's leniency for a truncated last
+    box is not part of this amendment.
+
+    **Weight B: a field in the report, for JPEG, PNG and ISOBMFF.**
+
+    **Proposed, awaiting approval.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

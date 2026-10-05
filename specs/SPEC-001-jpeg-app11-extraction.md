@@ -282,6 +282,21 @@ checks and limits pass. It never calls `file_get_contents`.
    survives. AC12's literal changes with it; `DEFAULT_MAX_PIECES` is untouched, and the note beside it ("2048 x 64 KiB, above MAX_LBOX") still holds.
    Confirmed by Maurice van Loon, 2026-09-22 (step 68).
 
+5. **2026-10-05, step 222, proposed** — every `ContainerException` says
+   whether the store had been reached (`storeReached`, as SPEC-003
+   amendment 3 introduced for RIFF). For a JPEG the store is reached when
+   an APP11 segment's header has been read and starts with the JUMBF
+   common identifier `JP`. A fault before that (a segment length past the
+   end, a marker out of place, a file cut short before any APP11 JUMBF
+   piece) is `storeReached` false; a fault in or after the pieces stays
+   `true`.
+
+   The verdict does not change: the fault stays `Invalid` with
+   `general.error`. Only `has_manifest` stops saying that an unsigned,
+   malformed file has a manifest (SPEC-013 amendment 18, step 221's
+   measurement).
+
+   **Proposed, awaiting approval.**
 
 ## Traceability
 

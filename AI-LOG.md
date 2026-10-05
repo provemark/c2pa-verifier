@@ -8529,3 +8529,17 @@ README are where the disclosure lives.
 - Reasoned: that the flag alone can be fixed without changing a verdict;
   that relaxing the ISOBMFF walk is a larger question.
 - Decided by Maurice: measure the open point first.
+
+## 2026-10-05 — has_manifest from storeReached for JPEG, PNG and ISOBMFF: proposed (step 222)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, werk punt 1 uit als stap 222".
+- Produced: SPEC-001 amendment 5, SPEC-002 amendment 3, SPEC-026
+  amendment 3, SPEC-013 amendment 18 (proposed);
+  `notes/step-222-store-reached-everywhere-proposed.md`; a row in
+  `NOTES.md`.
+- Measured: every JPEG, PNG and ISOBMFF fixture whose report is one
+  `general.error` with `has_manifest: true`, with the fault's offset set
+  against the store's; the five predicted files' current messages.
+- Reasoned: the point at which each container's store is reached; that
+  JUMBF faults are not container faults.
+- Decided by Maurice: the flag alone (step 221's advice, point 1).
