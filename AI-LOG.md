@@ -8518,3 +8518,14 @@ README are where the disclosure lives.
 - Reasoned: that rewinding the stream to pass the old tests would make
   them assert something untrue.
 - Decided by Maurice: the addendum.
+
+## 2026-10-05 — has_manifest after a container fault in JPEG, PNG and ISOBMFF (step 221)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en meet eerst het open punt".
+- Produced: the push of `main` (`1dcf3ee..82521e5`, no tag);
+  `notes/step-221-has-manifest-other-formats.md`; a row in `NOTES.md`.
+- Measured: 15 unsigned and 6 signed JPEG, PNG and MP4 variants built in
+  scratch, each with this verifier and both `c2patool` versions.
+- Reasoned: that the flag alone can be fixed without changing a verdict;
+  that relaxing the ISOBMFF walk is a larger question.
+- Decided by Maurice: measure the open point first.
