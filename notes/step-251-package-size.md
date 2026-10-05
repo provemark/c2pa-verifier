@@ -46,3 +46,14 @@ that names open question 4 (amendment 3, AC8).
 "PACKAGE_DIST_CEILING"` — the number now lives in `bin/package-check.php`
 only, and the tests ask for it there, with `packageGitZipSize()` and
 `packageZipFinding()`.
+
+## Built
+
+`bin/package-check.php` holds both numbers (`PACKAGE_DIST_CEILING`, 16 MB;
+`PACKAGE_ZIP_SIGNAL`, 5 MB), measures the zip (`packageGitZipSize()`) and
+makes the signal's finding (`packageZipFinding()`); the test file reads the
+ceiling from there instead of keeping its own copy. The script now prints
+`dist: 377 files, 3.8 MB (ceiling 16 MB); as a zip 1.3 MB (signal 5 MB)`.
+`vendor/bin/pest tests/Unit/PackageTest.php`: 15 passed; `composer
+check`: exit 0, 802 tests.
+

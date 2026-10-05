@@ -8988,3 +8988,16 @@ README are where the disclosure lives.
 - Reasoned: the growth rate, from those tags.
 - Decided by Maurice: option 1 (16 MB, open question 4 stands), with the
   zip's size shown and a 5 MB signal.
+
+## 2026-10-05 — SPEC-023 amendment 3 built (step 252)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, voer amendement 3 uit".
+- Produced: `bin/package-check.php` (`PACKAGE_DIST_CEILING`,
+  `PACKAGE_ZIP_SIGNAL`, `packageGitZipSize()`, `packageZipFinding()`, the
+  dist line); `tests/Unit/PackageTest.php` reads the ceiling from it;
+  CHANGELOG `Unreleased`; the step-251 note completed; a row in `NOTES.md`.
+- Measured: the package tests (15 passed) after being red; `php
+  bin/package-check.php` (3.8 MB tar, 1.3 MB zip, no finding); `composer
+  check` (exit 0, 802 tests).
+- Reasoned: none.
+- Decided by Maurice: amendment 3.

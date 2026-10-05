@@ -98,6 +98,16 @@ interface PackageArchive
     public function read(string $path): string;
 }
 
+/**
+ * AC3: the most the archive may be, as the tar this check measures. It is there to fire long
+ * before the 62.9 MB of step 62 ship again, not to budget the prose that ships by decision
+ * (SPEC-023 open question 4); 16 MB since amendment 3.
+ */
+const PACKAGE_DIST_CEILING = 16 * 1024 * 1024;
+
+/** AC8 (amendment 3): a zip over this size returns open question 4 to the maintainer. */
+const PACKAGE_ZIP_SIGNAL = 5 * 1024 * 1024;
+
 /** An archive held in memory: for cases that must be broken on purpose. */
 final readonly class PackageArrayArchive implements PackageArchive
 {
@@ -470,6 +480,28 @@ function packageGitArchive(string $root, bool $worktreeAttributes, string $commi
 }
 
 /**
+ * The size of the archive as the zip Composer fetches (`git archive --format=zip`, export-ignore
+ * applied from the working tree), in bytes (SPEC-023 AC8).
+ */
+function packageGitZipSize(string $root, string $commit = 'HEAD'): int
+{
+    $zip = packageTempPath('c2pa-dist-').'.zip';
+    packageGit($root, ['archive', '--format=zip', '-9', '--worktree-attributes', '-o', $zip, $commit]);
+    $size = (int) filesize($zip);
+    unlink($zip);
+
+    return $size;
+}
+
+/** The finding a zip of $bytes makes: none up to PACKAGE_ZIP_SIGNAL, one naming open question 4 above it. */
+function packageZipFinding(int $bytes): ?string
+{
+    return $bytes > PACKAGE_ZIP_SIGNAL
+        ? sprintf('the zip is %.1f MB, over %.1f MB: SPEC-023 open question 4 (what the package ships) returns to the maintainer', $bytes / 1048576, PACKAGE_ZIP_SIGNAL / 1048576)
+        : null;
+}
+
+/**
  * The package as Composer installs it: the archive under
  * vendor/provemark/c2pa-verifier/, with an autoloader built from the psr-4 map
  * the archive's own composer.json declares (SPEC-023 AC6, amendment 1).
@@ -599,10 +631,12 @@ if (isset($argv) && realpath($argv[0]) === realpath(__FILE__)) {
     echo $result->render();
 
     $archive = packageGitArchive($repository, true);
-    $dist = packageDistCheck($archive, 4 * 1024 * 1024);
-    printf('dist: %d files, %.1f MB%s', count($archive->entries()), $archive->size() / 1048576, PHP_EOL);
-    foreach ($dist->findings as $finding) {
+    $dist = packageDistCheck($archive, PACKAGE_DIST_CEILING);
+    $zip = packageGitZipSize($repository);
+    printf('dist: %d files, %.1f MB (ceiling %.0f MB); as a zip %.1f MB (signal %.0f MB)%s', count($archive->entries()), $archive->size() / 1048576, PACKAGE_DIST_CEILING / 1048576, $zip / 1048576, PACKAGE_ZIP_SIGNAL / 1048576, PHP_EOL);
+    $zipFinding = packageZipFinding($zip);
+    foreach ([...$dist->findings, ...($zipFinding === null ? [] : [$zipFinding])] as $finding) {
         echo '  ', $finding, PHP_EOL;
     }
-    exit(max($result->exitCode(), $dist->exitCode()));
+    exit(max($result->exitCode(), $dist->exitCode(), $zipFinding === null ? 0 : 1));
 }

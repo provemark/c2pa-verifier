@@ -5,6 +5,15 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Changed
+- **`bin/package-check.php`: the dist ceiling is 16 MB (SPEC-023 amendment
+  3)**, and the check also shows the size of the zip Composer fetches;
+  a zip over 5 MB is a finding that returns the question of what the
+  package ships to the maintainer. The 0.3.0 dist: 3.8 MB as tar, 1.3 MB
+  as zip.
+
 ## 0.3.0 — 2026-10-05
 
 Four new formats — WAV, AVI, MP3 and FLAC — read and verified like the

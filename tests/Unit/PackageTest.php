@@ -256,4 +256,3 @@ it('AC8 (amendment 3): the zip\'s size is measured, and over 5 MB it names open 
         ->and(packageZipFinding(PACKAGE_ZIP_SIGNAL))->toBeNull()
         ->and(packageZipFinding(PACKAGE_ZIP_SIGNAL + 1))->toContain('open question 4');
 })->group('SPEC-023');
-
