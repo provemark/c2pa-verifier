@@ -114,3 +114,18 @@ it('AC6: nothing else moves', function (): void {
             ->and(spec046Oracle($name, '0.28.0')['validation_state'])->toBe('Trusted', $name);
     }
 })->group('SPEC-046');
+
+it('AC7: a name that is not UTF-8 is compared byte for byte (amendment 1, step 247)', function (): void {
+    $outside = spec020Verify('name-encoding/t61-outside.png', 'name-encoding/root.settings.json');
+    $inside = spec020Verify('name-encoding/t61-inside.png', 'name-encoding/root.settings.json');
+    $oracle = static fn (string $name): array => spec020Oracle("name-encoding/{$name}--0.28.1.json");
+
+    // c2patool 0.28.1, and OpenSSL's path validation ("permitted subtree violation", step 247)
+    expect($oracle('t61-outside')['validation_state'])->toBe('Valid')
+        ->and($oracle('t61-inside')['validation_state'])->toBe('Trusted');
+
+    expect($outside->result->state->value)->toBe('Valid')
+        ->and(spec046Failures($outside))->toBe(['signingCredential.untrusted'])
+        ->and(spec046Explained($outside, 'signingCredential.untrusted'))->toContain('name constraint')
+        ->and($inside->result->state->value)->toBe('Trusted');
+})->group('SPEC-046');

@@ -356,6 +356,19 @@ files could disagree and the command would have to pick one.
    rendered raw — fixed in SPEC-007 (amendment 5), where the rendering
    lives; the command is unchanged. No criterion of this spec changed.
 
+2. **2026-10-05, step 247, approved by Maurice van Loon** — the same file
+   as SPEC-007 amendment 6 made the command die with PHP's fatal error, a
+   stack trace with absolute paths on standard error, and exit 255, outside
+   AC1's 0/1/2.
+
+   - **AC13 (new) — such a file gets its report.** Given that file: exit
+     1, the report on standard output (`Invalid`), nothing on standard
+     error. And should a report still fail to encode, the command writes one
+     `Error: …` line and exits 2, as for every other failure of its own
+     (reasoned: no input is known to reach it once SPEC-007 AC15 holds).
+
+   Approved by Maurice van Loon, 2026-10-05 (step 247).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -377,3 +390,4 @@ least one test; every source file maps back to this spec.
 | AC12 | tests/Unit/Cli/CommandTest.php :: nothing but one JSON document on stdout, and no control byte in it / SPEC-019 | src/Cli/Command.php; src/Verifier/VerificationReport.php (`toJson()`) |
 
 Every file under `src/Cli/` maps to this spec; `bin/c2pa-verify` is its shim; `deptrac.yaml`'s `Cli` layer (→ Verifier, Trust, Report, Support) and `composer.json`'s `bin` entry are its configuration. Measured 2026-09-22: 12 red → 12 green, `composer check` exit 0, 314 tests.
+| AC13 | tests/Unit/Cli/CommandTest.php :: AC13: a file whose assertion holds NaN and Infinity gets its report, exit 1, nothing on stderr (amendment 2, step 247) / SPEC-019 | src/Manifest/ManifestStore.php :: plain(); src/Cli/Command.php :: run() (a `JsonException` is exit 2) |

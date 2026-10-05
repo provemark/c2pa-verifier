@@ -476,6 +476,35 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 135).
 
+9. **2026-10-05, step 247, approved by Maurice van Loon** — a hard binding
+   was found by its exact label. C2PA 2.4 §6.4 gives a second assertion of
+   a type the label with `__1`, a third `__2`; §15.10.1.2 allows exactly
+   one hard binding of any kind. Measured with both `c2patool` versions on
+   two variants of the PNG fixture (`bin/make-data-hash-variants.php`):
+   `hard-binding-instance` (the one binding labelled `c2pa.hash.data__1`)
+   is verified there, `assertion.dataHash.match`, and was
+   `claim.hardBindings.missing` here; `hard-bindings-instance-two`
+   (`c2pa.hash.data`, right, beside `c2pa.hash.data__1`, wrong) is
+   `assertion.multipleHardBindings` and `assertion.dataHash.mismatch` there,
+   and here the second was skipped: without the broken signature of the
+   variant, `Valid`.
+
+   - **AC11 (new) — a hard binding is known by its base label, and they
+     are counted before any is checked.** The base label is the label
+     without a trailing `__` and digits. The verifier counts every hard
+     binding the binding manifest's assertion store holds — `c2pa.hash.data`,
+     `c2pa.hash.boxes`, `c2pa.hash.collection.data`, `c2pa.hash.bmff.v2`,
+     `c2pa.hash.bmff.v3`, each with any instance suffix — before it chooses
+     the data-hash or the BMFF check; more than one is
+     `assertion.multipleHardBindings` alone, as AC8 answers for two boxes of
+     one label. Given `hard-binding-instance`: `assertion.dataHash.match`,
+     no `claim.hardBindings.missing`; given `hard-bindings-instance-two`:
+     `assertion.multipleHardBindings`. The count holds on the BMFF route
+     too, where a second binding of another kind was not looked at
+     (reasoned from the code; no fixture).
+
+   Approved by Maurice van Loon, 2026-10-05 (step 247).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -493,3 +522,4 @@ least one test; every source file maps back to this spec.
 | AC8 | tests/Unit/Hash/DataHashCheckTest.php :: AC8: exactly one hard binding / SPEC-012 | src/Hash/DataHashCheck.php :: check() ($bindings, isOtherHardBinding()) |
 | AC9 | tests/Unit/Hash/DataHashCheckTest.php :: AC9: streamed, not slurped / SPEC-012 | src/Hash/DataHashCheck.php :: hashExcept() (StreamReader, $chunkSize) |
 | AC10 | tests/Unit/Hash/DataHashCheckTest.php :: AC10: the codes are verbatim, and informational is a third kind / SPEC-012 | src/Report/StatusCode.php :: the six cases, isSuccess(), isInformational(), isFailure(); src/Report/ValidationResult.php :: fromStatuses() |
+| AC11 | tests/Unit/Hash/DataHashCheckTest.php :: AC11: a hard binding is known by its base label: c2pa.hash.data__1 alone is verified, as c2patool verifies it (amendment 9, step 247); AC11: c2pa.hash.data beside c2pa.hash.data__1 is two hard bindings, as c2patool says (amendment 9, step 247) / SPEC-012 | src/Hash/HardBindings.php; src/Hash/DataHashCheck.php :: check(); src/Hash/BmffHashCheck.php :: labelOf(); src/Verifier/Verifier.php :: verify() (the count) |

@@ -35,6 +35,8 @@ PHP with the step-16 verification paths (`notes/step-19-signature-vectors.md`).
 | `ps256-rsa2048` | -37 | RSA 2048 | `true` | PS256 under a plain RSA key: the EMSA-PSS path |
 | `ps384-rsa3072` | -38 | RSA 3072 | `true` | PS384 under a plain RSA key |
 | `ps384-under-rsapss-sha256-key` | -38 | RSA-PSS 2048 (params: SHA-256, salt 32) | `false` | the key's PSS parameters say SHA-256, the claim says PS384: does OpenSSL refuse? (measured in step 19) |
+| `ps256-rsapss-salt0` | -37 | RSA-PSS 2048 (no parameters) | `false` | salt length 0: RFC 8230 §2 fixes it at the hash length; `openssl_verify` accepts it (step 247, SPEC-009 AC12) |
+| `ps256-rsapss-salt32` | -37 | RSA-PSS 2048 (no parameters) | `true` | salt length 32: the guard beside it (step 247) |
 | `ps512-rsa4096` | -39 | RSA 4096 | `true` | PS512 under a plain RSA key |
 
 SHA-256 of the files as committed:
@@ -53,5 +55,11 @@ b92bd33c7973c1e1bda615f95420b5d7c4aa6c4aac7116af787934f0a1e0f22f  ps256-rsa2048-
 d9f86b3fc694774bcfba7c429b389c7f0d3d05377460d2444ff03a4aa8d0dba2  ps256-rsa2048.json
 5c17bc4c3a1bdb6572809c580eddba090e2776abdde9620ac8c7aeb54af02927  ps384-rsa3072.json
 f62448e3115b6aeef1d7b43df0da2fa4e4f1db46bedd131c822dea5b2038917f  ps384-under-rsapss-sha256-key.json
+43f14bfb291344a0bda89b89202d0cd773e061b5d5d486e6c7e9733ed7fdd401  ps256-rsapss-salt0.json
+41892c640fdca0109269b2842df816e433ea8ac65f2a67422ef209016527d345  ps256-rsapss-salt32.json
 d946e4aee65696a773fae58b607b008a2bbae3292190564809f362af50dd0145  ps512-rsa4096.json
 ```
+
+The two `ps256-rsapss-*` vectors were added in step 247 with
+`php bin/make-signature-vectors.php ps256-rsapss-salt0 ps256-rsapss-salt32`,
+which makes only the vectors it names and leaves every other one as it is.

@@ -333,3 +333,18 @@ test('nothing but one JSON document on stdout, and no control byte in it', funct
         expect($decoded)->toBeArray($relative);
     }
 })->group('SPEC-019');
+
+it('AC13: a file whose assertion holds NaN and Infinity gets its report, exit 1, nothing on stderr (amendment 2, step 247)', function (): void {
+    $path = tempnam(sys_get_temp_dir(), 'spec019-');
+    assert($path !== false);
+    file_put_contents($path, spec247NonFiniteJpeg());
+    try {
+        [$status, $stdout, $stderr] = spec019Run($path);
+    } finally {
+        unlink($path);
+    }
+
+    expect($status)->toBe(1)
+        ->and(spec019State($stdout))->toBe('Invalid')
+        ->and($stderr)->toBe('');
+})->group('SPEC-019');

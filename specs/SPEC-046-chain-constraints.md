@@ -187,6 +187,33 @@ No public API changes.
    oracle, and it prevents nothing that a trust anchor does not already
    decide.
 
+## Amendments
+
+1. **2026-10-05, step 247, approved by Maurice van Loon** — a wrong
+   `Trusted`, found by the review of the whole of `src/` before 0.3.0 and
+   measured. A directoryName's attribute values were normalised with a
+   `/u` regular expression, which returns `null` on bytes that are not
+   UTF-8; every such value became `''`, so two different names compared
+   equal. A T61String or IA5String may hold such bytes, and OpenSSL
+   accepts them. Measured on a throw-away hierarchy
+   (`bin/make-name-encoding-variants.php`): an intermediate permitting only
+   `O = T61String "Caf\xE9"`, a leaf with `O = T61String "Other\xFF"` —
+   OpenSSL: *permitted subtree violation*; `c2patool` 0.28.1: `Valid`,
+   `signingCredential.untrusted`; here: `Trusted`. In every release since
+   0.2.5.
+
+   - **AC7 (new) — a name that is not UTF-8 is compared byte for byte.**
+     An attribute value that is not valid UTF-8, after the BMPString and
+     UniversalString conversion, is compared as it is, without the
+     whitespace and case folding RFC 5280 §7.1 asks for text. Given
+     `name-encoding/t61-outside.png` with `name-encoding/root.settings.json`:
+     `Valid`, `signingCredential.untrusted` alone, the explanation naming the
+     name constraint, as 0.28.1. Given `t61-inside.png` (the leaf's `O` is
+     the permitted bytes): `Trusted`, as 0.28.1. (`c2patool` 0.27.22 calls
+     both `Invalid` with `claimSignature.mismatch`: its own, recorded.)
+
+   Approved by Maurice van Loon, 2026-10-05 (step 247).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -200,3 +227,4 @@ least one test; every source file maps back to this spec.
 | AC4 | tests/Unit/Trust/ChainConstraintsTest.php :: AC4: an unknown critical extension in an intermediate / SPEC-046 | src/Trust/ChainCheck.php :: pathFault() |
 | AC5 | tests/Unit/Trust/ChainConstraintsTest.php :: AC5: name forms that are not evaluated fail closed / SPEC-046 | src/Trust/NameConstraints.php :: fromDer() ($unevaluated), violation() |
 | AC6 | tests/Unit/Trust/ChainConstraintsTest.php :: AC6: nothing else moves / SPEC-046; the before/after run of step 166 | src/Trust/Certificate.php :: $x509; src/Trust/CertificateExtensions.php :: fromDer() |
+| AC7 | tests/Unit/Trust/ChainConstraintsTest.php :: AC7: a name that is not UTF-8 is compared byte for byte (amendment 1, step 247) / SPEC-046 | src/Trust/CertificateExtensions.php :: normalise() |

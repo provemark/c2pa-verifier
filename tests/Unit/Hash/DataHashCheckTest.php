@@ -17,6 +17,7 @@ use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationResult;
 use Provemark\C2paVerifier\Report\ValidationState;
 use Provemark\C2paVerifier\Report\ValidationStatus;
+use Provemark\C2paVerifier\Verifier\VerificationReport;
 
 /*
  * SPEC-012: the data-hash check — c2pa.hash.data against the asset,
@@ -400,4 +401,57 @@ it('AC10: the codes are verbatim, and informational is a third kind', function (
     $info = new ValidationStatus(StatusCode::AssertionDataHashAdditionalExclusionsPresent, $url, 'extra');
     expect(ValidationResult::fromStatuses([$match, $info], ['dataHash'])->state)->toBe(ValidationState::Valid)
         ->and(ValidationResult::fromStatuses([$info], ['dataHash'])->state)->toBe(ValidationState::Invalid);
+})->group('SPEC-012');
+
+/** @return array{list<string>, list<string>} the active manifest's failure and success codes, sorted */
+function spec247Codes(VerificationReport $report): array
+{
+    $codes = [[], []];
+    foreach ($report->result->statuses as $status) {
+        if ($status->ingredientUri === null) {
+            $codes[$status->code->isFailure() ? 0 : 1][] = $status->code->value;
+        }
+    }
+    sort($codes[0]);
+    sort($codes[1]);
+
+    return $codes;
+}
+
+/** @return array{list<string>, list<string>} the oracle's active-manifest failure and success codes, sorted */
+function spec247OracleCodes(string $name, string $version): array
+{
+    $results = spec020Oracle("hash-instance/{$name}--{$version}.json")['validation_results'];
+    assert(is_array($results) && is_array($results['activeManifest']));
+    $codes = [[], []];
+    foreach (['failure' => 0, 'success' => 1] as $kind => $i) {
+        foreach ((array) ($results['activeManifest'][$kind] ?? []) as $entry) {
+            assert(is_array($entry) && is_string($entry['code']));
+            $codes[$i][] = $entry['code'];
+        }
+        sort($codes[$i]);
+    }
+
+    return $codes;
+}
+
+it('AC11: a hard binding is known by its base label: c2pa.hash.data__1 alone is verified, as c2patool verifies it (amendment 9, step 247)', function (): void {
+    [$failures, $successes] = spec247Codes(spec020Verify('binding/hard-binding-instance.png'));
+    foreach (['0.27.22', '0.28.1'] as $version) {
+        expect(spec247OracleCodes('hard-binding-instance', $version)[0])->toBe(['claimSignature.mismatch', 'signingCredential.untrusted'], $version)
+            ->and(spec247OracleCodes('hard-binding-instance', $version)[1])->toContain('assertion.dataHash.match');
+    }
+
+    expect($failures)->toBe(['claimSignature.mismatch', 'signingCredential.untrusted'])
+        ->and($successes)->toContain('assertion.dataHash.match');
+})->group('SPEC-012');
+
+it('AC11: c2pa.hash.data beside c2pa.hash.data__1 is two hard bindings, as c2patool says (amendment 9, step 247)', function (): void {
+    [$failures] = spec247Codes(spec020Verify('binding/hard-bindings-instance-two.png'));
+    foreach (['0.27.22', '0.28.1'] as $version) {
+        expect(spec247OracleCodes('hard-bindings-instance-two', $version)[0])->toContain('assertion.multipleHardBindings');
+    }
+
+    // as AC8 for two boxes of one label: multipleHardBindings alone, no data hash run (c2patool runs both)
+    expect($failures)->toBe(['assertion.multipleHardBindings', 'claimSignature.mismatch', 'signingCredential.untrusted']);
 })->group('SPEC-012');

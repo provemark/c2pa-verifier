@@ -261,3 +261,26 @@ it('AC6: only local files are opened, for the input and for --settings', functio
         rmdir($dir);
     }
 })->group('SPEC-043');
+
+it('AC12: a stream that cannot seek is refused with InvalidArgumentException and no PHP warning (amendment 2, step 247)', function (): void {
+    $pipe = popen('cat '.escapeshellarg(Corpus::fixtures().'/fixture-signed.jpg'), 'r');
+    assert($pipe !== false);
+    $warnings = [];
+    set_error_handler(static function (int $level, string $message) use (&$warnings): bool {
+        $warnings[] = $message;
+
+        return true;
+    });
+    $caught = null;
+    try {
+        (new Verifier)->verify($pipe);
+    } catch (InvalidArgumentException $e) {
+        $caught = $e;
+    } finally {
+        restore_error_handler();
+        pclose($pipe);
+    }
+
+    expect($caught?->getMessage())->toContain('seekable')
+        ->and($warnings)->toBe([]);
+})->group('SPEC-043');

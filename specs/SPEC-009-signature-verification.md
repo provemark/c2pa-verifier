@@ -297,6 +297,30 @@ holds a private key or signs.
    that does not fit, or cannot be read → `signingCredential.invalid`. No
    criterion changed.
 
+3. **2026-10-05, step 247, approved by Maurice van Loon** — under an
+   `id-RSASSA-PSS` key, PS256/384/512 went to `openssl_verify()`, which
+   accepts any salt length (measured: salt 0, 32 and 64 all return 1);
+   under an `rsaEncryption` key AC7's EMSA-PSS check fixes it at the hash
+   length. RFC 8230 §2, which C2PA 2.4 §13.2.1 cites: *"The salt length is
+   the same length as the hash function output."* The key's own PSS
+   parameters keep being checked by OpenSSL (AC7's
+   `ps384-under-rsapss-sha256-key`).
+
+   - **AC12 (new) — the salt is the hash length under either key type.**
+     Given the synthetic vectors `ps256-rsapss-salt0` (an unrestricted
+     `id-RSASSA-PSS` key, salt 0) and `ps256-rsapss-salt32` (the same kind
+     of key, salt 32): the first returns `false`; the second `true`, and
+     `false` with a flipped claim byte. Both must pass: OpenSSL's check of
+     the key's parameters and the EMSA-PSS check with the salt fixed, run
+     on the same RSA public key read as `rsaEncryption`.
+
+   Measured and kept as it is: AC6's curve crossing. The review that found
+   this also proposed refusing ES256 under a P-384 key; C2PA 2.4 §13.2.1
+   says *"Implementations shall accept keys on any of these curves for all
+   ECDSA algorithm choices"*, so AC6 stands.
+
+   Approved by Maurice van Loon, 2026-10-05 (step 247).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -315,3 +339,4 @@ least one test; every source file maps back to this spec.
 | AC9 | tests/Unit/Cose/SignatureVerifierTest.php :: AC9: an unsupported algorithm cannot be verified / SPEC-009 | src/Cose/SignatureVerifier.php :: verify() (`NAMES`) |
 | AC10 | tests/Unit/Cose/SignatureVerifierTest.php :: AC10: the R||S to DER conversion is exact / SPEC-009 | src/Cose/EcdsaSignature.php :: toDer(), integer(), length() |
 | AC11 | tests/Unit/Cose/SignatureVerifierTest.php :: AC11: the leaf key is read from chain[0], so a reversed chain is a mismatch, not an error / SPEC-009 | src/Cose/SignatureVerifier.php :: verify() (`chain[0]`) |
+| AC12 | tests/Unit/Cose/SignatureVerifierTest.php :: AC12: under an id-RSASSA-PSS key the salt is the hash length too (amendment 3, step 247) / SPEC-009 | src/Cose/SignatureVerifier.php :: rsaPss(); src/Cose/PublicKey.php :: asRsaEncryption() |

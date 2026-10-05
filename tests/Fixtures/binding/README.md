@@ -166,3 +166,15 @@ in step 46, shown here, closed in step 47 (SPEC-013 amendment 10:
 the data-hash check runs unless `c2pa.hash.data` is declared and its
 hashed URI failed; absent → `claim.hardBindings.missing`).
 
+## Step 247 (SPEC-012 amendment 9): a hard binding under an instance label
+
+C2PA 2.4 §6.4 labels a second assertion of a type `…__1`. Both variants are
+built by `bin/make-data-hash-variants.php`, unsigned as the others (only the
+signature is broken), and answered by `c2patool` 0.27.22 and 0.28.1 under
+`../c2patool/hash-instance/`.
+
+| variant | what it is | c2patool 0.27.22 and 0.28.1 | SHA-256 of the PNG |
+|---|---|---|---|
+| `hard-binding-instance` | the one `c2pa.hash.data` relabelled `c2pa.hash.data__1`; label, hashed URI and exclusion grown, hashes recomputed | `Invalid`: `claimSignature.mismatch`, `signingCredential.untrusted`; `assertion.dataHash.match` | `852ccc58cb179ac9fe4390fb6bd4b19c30a0bf684754af50cfb05f154af28f04` |
+| `hard-bindings-instance-two` | `hard-bindings-two` with its second box and claim entry under `c2pa.hash.data__1`, that box's hash zeroed (wrong) | `Invalid`: `assertion.multipleHardBindings`, `assertion.dataHash.mismatch` (the second), `claimSignature.mismatch`, `signingCredential.untrusted`; one `assertion.dataHash.match` | `b4e553b50f7640f3a98ebf8299b9f96d03044c683e67341b1aa69dcb24699478` |
+

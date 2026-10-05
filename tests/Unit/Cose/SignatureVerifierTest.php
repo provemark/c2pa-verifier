@@ -303,3 +303,15 @@ it('AC7: the EMSA-PSS trailer byte is checked: 0xbc verifies, anything else does
     expect(RsaPss::verify($message, $signatures['whole'], $public, 'sha256', 2048))->toBeTrue()
         ->and(RsaPss::verify($message, $signatures['wrong'], $public, 'sha256', 2048))->toBeFalse();
 })->group('SPEC-009');
+
+it('AC12: under an id-RSASSA-PSS key the salt is the hash length too (amendment 3, step 247)', function (): void {
+    $verifier = new SignatureVerifier;
+    $salt0 = spec009Vector('ps256-rsapss-salt0');
+    $salt32 = spec009Vector('ps256-rsapss-salt32');
+
+    expect($salt0['expect'])->toBe('false')
+        ->and($verifier->verify($salt0['cose'], $salt0['claim']))->toBeFalse('salt 0')
+        ->and($salt32['expect'])->toBe('true')
+        ->and($verifier->verify($salt32['cose'], $salt32['claim']))->toBeTrue('salt 32')
+        ->and($verifier->verify($salt32['cose'], spec009Flip($salt32['claim'])))->toBeFalse('salt 32 flipped');
+})->group('SPEC-009');

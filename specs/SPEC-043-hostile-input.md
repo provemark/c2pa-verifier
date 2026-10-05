@@ -192,6 +192,19 @@ final class CborBudget            // mutable on purpose: shared by several decod
    changes. On Linux, `bin/c2pa-verify /dev/stdin` with piped input says
    *No such file or directory* where *cannot seek* would be right.
 
+2. **2026-10-05, step 247, approved by Maurice van Loon** — `Verifier::verify()`
+   on a pipe printed PHP's `rewind(): Stream does not support seeking`
+   warning before it threw the `InvalidArgumentException` this spec keeps
+   (measured). A warning reaches the output of a caller that does not
+   expect one, a JSON response for instance.
+
+   - **AC12 (new) — a stream that cannot seek is refused without a
+     warning.** Given a pipe (`popen`) carrying `fixture-signed.jpg`: the
+     `InvalidArgumentException` naming a seekable stream, and no PHP
+     warning or notice.
+
+   Approved by Maurice van Loon, 2026-10-05 (step 247).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -207,3 +220,4 @@ least one test; every source file maps back to this spec.
 | AC6 | tests/Unit/Verifier/HostileInputTest.php :: AC6 / SPEC-043 | src/Cli/Command.php (`local()`: an absolute path behind `file://`, symlinks not resolved, so AC5 holds on Linux too; `open()`, `read()`) |
 
 Measured 2026-09-25: 6 red (and the three parts a first failure hid, run apart) → 6 green, `composer check` exit 0, 525 tests; 19,788 runs over every signed fixture and settings file, the only change `hostile/certificate-time-nul.jpg` (still `Invalid`, now `signingCredential.invalid`); `php bin/fuzz.php 20260925 60`: 0 faults, the same 34 suspects.
+| AC12 | tests/Unit/Verifier/HostileInputTest.php :: AC12: a stream that cannot seek is refused with InvalidArgumentException and no PHP warning (amendment 2, step 247) / SPEC-043 | src/Container/FormatDetector.php :: head() (`seekable` read before `rewind()`) |

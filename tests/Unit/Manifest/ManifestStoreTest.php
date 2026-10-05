@@ -12,6 +12,7 @@ use Provemark\C2paVerifier\Manifest\EmbeddedFile;
 use Provemark\C2paVerifier\Manifest\HashedUri;
 use Provemark\C2paVerifier\Manifest\ManifestException;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
+use Provemark\C2paVerifier\Verifier\Verifier;
 use Provemark\ContentCredentials\Core\Reading\ManifestStoreParser;
 
 /*
@@ -315,4 +316,25 @@ it('amendment 5: claim_generator_info with a byte string renders as JSON, the by
 
     expect(strlen((string) base64_decode($hash, true)))->toBe(32) // strlen: toHaveLength() counts UTF-8 characters, not bytes
         ->and(json_decode($store->toJson(), true, 512, JSON_THROW_ON_ERROR))->toBeArray();
+})->group('SPEC-007');
+
+it('AC15: a float JSON cannot hold is rendered as its name, and the report encodes (amendment 6, step 247)', function (): void {
+    $stream = fopen('php://memory', 'w+b');
+    assert($stream !== false);
+    fwrite($stream, spec247NonFiniteJpeg());
+    rewind($stream);
+    $report = (new Verifier)->verify($stream);
+
+    $lists = [];
+    $walk = static function (mixed $node) use (&$walk, &$lists): void {
+        if (is_array($node)) {
+            if (array_is_list($node)) {
+                $lists[] = $node;
+            }
+            array_map($walk, $node);
+        }
+    };
+    $walk(json_decode($report->toJson(), true, 512, JSON_THROW_ON_ERROR));
+
+    expect($lists)->toContain(['NaN', 'Infinity', '-Infinity', 'NaN']);
 })->group('SPEC-007');

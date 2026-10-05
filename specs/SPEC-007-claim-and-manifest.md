@@ -412,6 +412,23 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
    that icon as `{format, identifier}`; the rendering of assertion and
    generator *content* is not measured against c2patool — `docs/comparison.md`.)
 
+6. **2026-10-05, step 247, approved by Maurice van Loon** — found by the
+   review of the whole of `src/` before 0.3.0 and measured: a CBOR float
+   that is NaN or an infinity, anywhere in a decoded assertion, reached
+   `json_encode()` as a PHP float, and `JSON_THROW_ON_ERROR` made the report
+   throw (`Inf and NaN cannot be JSON encoded`). JSON has no such numbers
+   (RFC 8259 §6). The assertion need not be signed or declared. `c2patool`
+   0.27.22 and 0.28.1 stop with a decode error on the same file.
+
+   - **AC15 (new) — a float JSON cannot hold is rendered as its name.**
+     Given `fixture-signed.jpg` with the text `c2pa.created` replaced, at
+     the same length, by the half-floats NaN, +Infinity, −Infinity, NaN
+     (built in the test): the report's JSON holds the list
+     `["NaN", "Infinity", "-Infinity", "NaN"]`, and `toJson()` does not
+     throw. Finite floats are unchanged.
+
+   Approved by Maurice van Loon, 2026-10-05 (step 247).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -433,3 +450,4 @@ least one test; every source file maps back to this spec.
 | AC12 | tests/Unit/Manifest/ManifestStoreTest.php :: AC12: structural faults in the manifest are errors / SPEC-007 | src/Manifest/Manifest.php :: fromBox(), theOne(), singleCbor(); src/Manifest/ManifestStore.php :: fromTree() |
 | AC13 | tests/Unit/Manifest/ManifestStoreTest.php :: AC13: invalid JSON in a json box is an error naming the assertion, never the bytes / SPEC-007 | src/Manifest/Manifest.php :: assertionData() (json) |
 | AC14 | tests/Unit/Manifest/ManifestStoreTest.php :: AC14: a claim_generator_info without a name is an error / SPEC-007 | src/Manifest/Claim.php :: generatorInfo() |
+| AC15 | tests/Unit/Manifest/ManifestStoreTest.php :: AC15: a float JSON cannot hold is rendered as its name, and the report encodes (amendment 6, step 247) / SPEC-007 | src/Manifest/ManifestStore.php :: plain() |

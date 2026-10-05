@@ -8900,3 +8900,25 @@ README are where the disclosure lives.
   3.8 MB); the attribution check before the push; CI.
 - Reasoned: none.
 - Decided by Maurice: the release commit; no tag yet.
+
+## 2026-10-05 — A review of the whole of `src/`; the fixes' tests, red (step 247)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "kan je nog 1 goede review doen over alle code?"; "akkoord, volg
+  je advies: alles in 0.3.0".
+- Produced: a code review of `src/`; SPEC-007 amendment 6, SPEC-009
+  amendment 3, SPEC-012 amendment 9, SPEC-019 amendment 2, SPEC-043
+  amendment 2, SPEC-046 amendment 1 (approved), with Traceability; seven
+  red tests; `bin/make-name-encoding-variants.php`; two variants in
+  `bin/make-data-hash-variants.php`; a name filter and two vectors in
+  `bin/make-signature-vectors.php`; fixtures, `c2patool` answers and
+  READMEs; `notes/step-247-whole-review.md`; a row in `NOTES.md`.
+- Measured: the NaN crash (CLI exit 255) and `c2patool`'s answer; a pipe's
+  warning; `openssl_verify` on salts 0/32/64 under an `id-RSASSA-PSS` key,
+  and the EMSA-PSS check on the same key read as `rsaEncryption`; the T61
+  hierarchy against this verifier, OpenSSL and both `c2patool` versions;
+  both instance-label variants against both versions; Pest (7 failed,
+  792 passed); PHPStan; Pint.
+- Read: C2PA 2.4 §6.4, §13.2.1, §15.10.1.2; RFC 8230 §2.
+- Reasoned: the BMFF route's missing count (no fixture).
+- Decided by Maurice: all fixes in 0.3.0; finding 2 not built (refuted by
+  the specification); findings 8 and 9 later.

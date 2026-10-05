@@ -180,8 +180,18 @@ $vectors = [
     'alg-unsupported' => ['genkey' => $ec('prime256v1'), 'alg' => -65535, 'hash' => 'sha256', 'kind' => 'EC P-256', 'rsBytes' => 32, 'expect' => 'exception', 'why' => 'alg -65535 is not in C2PA 2.4 §13.2.1'],
     // ---- an id-RSASSA-PSS key restricted to SHA-256, asked to verify as PS384 ----
     'ps384-under-rsapss-sha256-key' => ['genkey' => 'openssl genpkey -algorithm RSA-PSS -pkeyopt rsa_keygen_bits:2048 -pkeyopt rsa_pss_keygen_md:sha256 -pkeyopt rsa_pss_keygen_mgf1_md:sha256 -pkeyopt rsa_pss_keygen_saltlen:32', 'alg' => -38, 'hash' => 'sha256', 'kind' => 'RSA-PSS 2048 (params: SHA-256, salt 32)', 'sign' => $pss('sha256'), 'verify' => $pssVerify('sha256'), 'expect' => 'false', 'why' => 'the key\'s PSS parameters say SHA-256, the claim says PS384: does OpenSSL refuse? (measured in step 19)'],
+    // ---- an unrestricted id-RSASSA-PSS key: the salt length RFC 8230 §2 fixes (step 247) ----
+    'ps256-rsapss-salt0' => ['genkey' => 'openssl genpkey -algorithm RSA-PSS -pkeyopt rsa_keygen_bits:2048', 'alg' => -37, 'hash' => 'sha256', 'kind' => 'RSA-PSS 2048 (no parameters)', 'sign' => 'openssl dgst -sha256 -sign %key% -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:0 -out %sig% %msg%', 'verify' => 'openssl dgst -sha256 -verify %pub% -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:0 -signature %sig% %msg%', 'expect' => 'false', 'why' => 'PS256 with salt length 0 under an id-RSASSA-PSS key: RFC 8230 §2 fixes the salt at the hash length (32); openssl_verify accepts any (measured in step 247)'],
+    'ps256-rsapss-salt32' => ['genkey' => 'openssl genpkey -algorithm RSA-PSS -pkeyopt rsa_keygen_bits:2048', 'alg' => -37, 'hash' => 'sha256', 'kind' => 'RSA-PSS 2048 (no parameters)', 'sign' => $pss('sha256'), 'verify' => $pssVerify('sha256'), 'expect' => 'true', 'why' => 'PS256 with salt length 32 under an id-RSASSA-PSS key: the guard beside ps256-rsapss-salt0'],
 ];
 
+// names on the command line: make only those, and leave every other vector as it is (keys are random)
+/** @var list<string> $argv */
+$argv = $_SERVER['argv'];
+$only = array_slice($argv, 1);
+if ($only !== []) {
+    $vectors = array_intersect_key($vectors, array_flip($only));
+}
 foreach ($vectors as $name => $v) {
     makeVector($name, $v, $tmp, $dir, $claim);
 }

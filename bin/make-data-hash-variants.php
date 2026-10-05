@@ -170,6 +170,9 @@ $variants = [
     'hard-binding-missing' => static fn (string $s): string => rehashed($relabel($s, 'c2pa.othr.data'), $png, 'sha256', $hashStart + 2, 32, [], $claimHashValue, $HASH_DATA_BOX),
     // the label is 3 bytes longer, so the assertion's cbor moves by 3 and the claim's hash value by 3 + 3 (the url grew too)
     'hard-binding-bmff' => static fn (string $s): string => rehashed($relabel($s, 'c2pa.hash.bmff.v2'), $png, 'sha256', $hashStart + 2 + 3, 32, [], $claimHashValue + 6, $HASH_DATA_BOX),
+    // step 247: the one binding under its second instance's label (C2PA 2.4 §6.4), as long as c2pa.hash.bmff.v2
+    // the label and its hashed URI are 3 bytes longer each, so the store, and the exclusion that covers it, grow by 6
+    'hard-binding-instance' => static fn (string $s): string => rehashed(bReplace($relabel($s, 'c2pa.hash.data__1'), $exStart + 3 + 17, "\x19\xb3\xd5", cborUint(12 + 46025 + 6)), $png, 'sha256', $hashStart + 2 + 3, 32, [], $claimHashValue + 6, $HASH_DATA_BOX),
     'hard-bindings-two' => static function (string $s) use ($HASH_DATA_BOX, $storeBox, $createdList, $createdEntry, $createdEntryEnd, $claimBox, $exStart, $hashStart, $claimHashValue, $png): string {
         $entryLength = $createdEntryEnd - $createdEntry;                                            // 87
         $final = 46025 + 195 + $entryLength;                                                        // the store with a second box and a second entry
@@ -189,6 +192,30 @@ $variants = [
         }
 
         return $s;
+    },
+    // step 247: hard-bindings-two with the second box and its claim entry under c2pa.hash.data__1 (C2PA 2.4 §6.4);
+    // its data hash deliberately wrong, so that a verifier that skips the second instance is seen to
+    'hard-bindings-instance-two' => static function (string $s) use ($relabel, $HASH_DATA_BOX, $storeBox, $createdList, $createdEntry, $createdEntryEnd, $claimBox, $exStart, $hashStart, $claimHashValue, $png): string {
+        $lone = $relabel($s, 'c2pa.hash.data__1');
+        $box = substr($lone, $HASH_DATA_BOX, 198);                                                 // the relabelled box, 3 bytes longer
+        $entryLength = $createdEntryEnd - $createdEntry;                                            // 87
+        $entry = substr($lone, $createdEntry + 3, $entryLength + 3);                                // its claim entry, the url 3 bytes longer
+        $final = 46025 + 198 + $entryLength + 3;
+        $s = bReplace($s, $exStart + 17, "\x19\xb3\xd5", cborUint(12 + $final));
+        $box = bReplace($box, $exStart + 3 + 17 - $HASH_DATA_BOX, "\x19\xb3\xd5", cborUint(12 + $final));
+        $s = bSplice($s, 33026, 0, $box, $storeBox);                                                // the second instance at the end of the store
+        $s = bSplice($s, $createdEntryEnd + 198, 0, $entry, array_map(static fn (int $o): int => $o < 117 ? $o : $o + 198, $claimBox));
+        $s = bReplace($s, $createdList + 198, "\x81", "\x82");
+        $digest = dataHash('sha256', pngWithStore($png, $s), [[33, 12 + $final]]);
+        $s = bReplace($s, $hashStart + 2, substr($s, $hashStart + 2, 32), $digest);                // the first instance: right
+        $copyHash = 33026 + ($hashStart + 2 + 3 - $HASH_DATA_BOX);
+        $s = bReplace($s, $copyHash, substr($s, $copyHash, 32), str_repeat("\x00", 32));           // the second: wrong
+        $first = hash('sha256', substr($s, $HASH_DATA_BOX + 8, 195 - 8), true);
+        $second = hash('sha256', substr($s, 33026 + 8, 198 - 8), true);
+        $s = bReplace($s, $claimHashValue + 198, substr($s, $claimHashValue + 198, 32), $first);
+        $at = $claimHashValue + 198 + $entryLength + 3;
+
+        return bReplace($s, $at, substr($s, $at, 32), $second);
     },
 ];
 

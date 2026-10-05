@@ -232,3 +232,18 @@ function spec021Mismatch(): array
 
     return (new IngredientManifestCheck)->hash($store->manifests[$label], $broken);
 }
+
+/**
+ * Step 247: fixture-signed.jpg with the CBOR text "c2pa.created" in its actions assertion replaced, at the
+ * same length, by an array of four half-floats: NaN, +Infinity, -Infinity, NaN. JSON has no such numbers.
+ */
+function spec247NonFiniteJpeg(): string
+{
+    $bytes = (string) file_get_contents(Corpus::fixtures().'/fixture-signed.jpg');
+    $at = strpos($bytes, "\x6cc2pa.created");
+    if ($at === false) {
+        throw new RuntimeException('the fixture has no c2pa.created text');
+    }
+
+    return substr_replace($bytes, "\x84\xf9\x7e\x00\xf9\x7c\x00\xf9\xfc\x00\xf9\x7e\x00", $at, 13);
+}
