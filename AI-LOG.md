@@ -8675,3 +8675,21 @@ README are where the disclosure lives.
   Pest (13 failed, 724 passed), PHPStan, Pint, `bin/spec-check.php`.
 - Reasoned: the seven points of amendment 2.
 - Decided by Maurice: amendment 2.
+
+## 2026-10-05 — Built: SPEC-056 amendment 2 (step 231)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur amendement 2 goed en ga door".
+- Produced: `src/Container/Id3ManifestStoreExtractor.php` (rewritten
+  around `header()` and `frameHeader()`), `src/Container/FormatDetector.php`
+  (`mpegAudioAfterTags()`, `mpegAudioAt()`, `mpegFrameLength()`); an AC16
+  guard test; `docs/comparison.md`, CHANGELOG, the `mp3-writers` README;
+  `notes/step-231-mp3-amendment-2-built.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: the fixture's second MPEG frame at the computed length; Pest
+  (48 SPEC-056, 738 in all); PHPStan; the corpus against step 228; every
+  MP3 against both `c2patool` versions; the fuzzer over the MP3 files and
+  the default set (15,332 runs, 0 faults, 212 `Valid`, each `Valid` in
+  both versions).
+- Reasoned: that amendment 2 asks two frame headers only of an untagged
+  file.
+- Decided by Maurice: amendment 2 (step 230).

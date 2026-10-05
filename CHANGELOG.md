@@ -27,8 +27,13 @@ committed.
   every text encoding, an extended header, a footer and padding are read;
   a C2PA GEOB that is compressed, unsynchronised, duplicated, too long for
   its tag, or whose LBox differs, is refused. A file is `mp3` when MPEG
-  audio follows the tag or opens the file; a tagless MP3 has no manifest.
-  Measured against `c2patool` 0.27.22 and 0.28.1 over 25 variants (step 225).
+  audio follows the tag (after any zero padding and further tags) or
+  opens the file (two frame headers); a tagless MP3 has no manifest. The
+  GEOB's MIME type may be `application/c2pa` or the legacy
+  `application/x-c2pa-manifest-store`, the two `c2patool` accepts; iTunes
+  frame sizes are read. Measured against `c2patool` 0.27.22 and 0.28.1 over
+  35 variants, six real tags signed by `c2patool`, an MP3 signed by c2pa-ts
+  (an independent writer) and a 300 MB file (steps 225, 230).
 
 ### Changed
 - **WebP and WAV: strict about the `C2PA` chunk, lenient as `c2patool`

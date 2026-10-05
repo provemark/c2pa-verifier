@@ -43,24 +43,122 @@ final readonly class FormatDetector
         if (strlen($head) === self::PROBE_LENGTH && substr($head, 4, 4) === 'ftyp') {
             return 'isobmff';
         }
-        // MP3 (SPEC-056): an ID3v2 tag followed by MPEG audio, or MPEG audio from the
-        // first byte. ID3 alone is not enough: FLAC and AAC carry the same tag.
+        // MP3 (SPEC-056): MPEG audio from the first byte, two frame headers in a row
+        // (amendment 2: one header alone matched a UTF-16 text file); or an ID3v2 tag,
+        // then zero padding and further tags, then MPEG audio. ID3 alone is not enough:
+        // FLAC and AAC carry the same tag.
         if (self::isMpegFrame($head)) {
-            return 'mp3';
-        }
-        if (strlen($head) === self::PROBE_LENGTH && str_starts_with($head, 'ID3') && preg_match('/[\x80-\xFF]/', substr($head, 6, 4)) !== 1) {
-            $size = 0;
-            foreach (str_split(substr($head, 6, 4)) as $byte) {
-                $size = ($size << 7) | ord($byte);
-            }
-            $audio = 10 + $size + ((ord($head[5]) & 0x10) !== 0 ? 10 : 0);   // after the tag, and its footer when flagged
-            $next = fseek($stream, $audio) === 0 ? Read::upTo($stream, 4) : '';
+            $mp3 = self::mpegAudioAt($stream, 0);
             rewind($stream);
 
-            return self::isMpegFrame($next) ? 'mp3' : null;
+            return $mp3 ? 'mp3' : null;
+        }
+        if (Id3ManifestStoreExtractor::header($head) !== null) {
+            $mp3 = self::mpegAudioAfterTags($stream);
+            rewind($stream);
+
+            return $mp3 ? 'mp3' : null;
         }
 
         return null;
+    }
+
+    /** How far zero padding after an ID3 tag is skipped, and how many further tags (amendment 2). */
+    private const MAX_PADDING = 65536;
+
+    private const MAX_TAGS = 8;
+
+    /**
+     * Whether MPEG audio follows the ID3 tag at offset 0, after any zero padding
+     * and further ID3v2 tags (SPEC-056 AC16).
+     *
+     * @param  resource  $stream
+     */
+    private static function mpegAudioAfterTags($stream): bool
+    {
+        $position = 0;
+        for ($tags = 0; $tags <= self::MAX_TAGS; $tags++) {
+            if (fseek($stream, $position) !== 0) {
+                return false;
+            }
+            $header = Id3ManifestStoreExtractor::header(Read::upTo($stream, 10));
+            if ($header === null) {
+                break;
+            }
+            $position += $header['next'];   // relative to the tag's own start
+            // zero padding after the tag
+            if (fseek($stream, $position) !== 0) {
+                return false;
+            }
+            $zeros = strspn(Read::upTo($stream, self::MAX_PADDING), "\0");
+            if ($zeros === self::MAX_PADDING) {
+                return false;
+            }
+            $position += $zeros;
+        }
+
+        // after a tag one frame header is enough (AC13); two are asked only of a file with no tag (AC17)
+        return fseek($stream, $position) === 0 && self::isMpegFrame(Read::upTo($stream, 4));
+    }
+
+    /**
+     * Whether two MPEG audio frame headers follow each other at $position: the
+     * second where the first frame's length says (SPEC-056 AC17).
+     *
+     * @param  resource  $stream
+     */
+    private static function mpegAudioAt($stream, int $position): bool
+    {
+        if (fseek($stream, $position) !== 0) {
+            return false;
+        }
+        $first = Read::upTo($stream, 4);
+        $length = self::isMpegFrame($first) ? self::mpegFrameLength($first) : null;
+        if ($length === null || fseek($stream, $position + $length) !== 0) {
+            return false;
+        }
+
+        return self::isMpegFrame(Read::upTo($stream, 4));
+    }
+
+    /**
+     * The length of an MPEG audio frame from its header (ISO/IEC 11172-3, 13818-3,
+     * and MPEG 2.5); null for the free-format bitrate, whose length the header does
+     * not give.
+     */
+    private static function mpegFrameLength(string $header): ?int
+    {
+        $b1 = ord($header[1]);
+        $b2 = ord($header[2]);
+        $version = ($b1 >> 3) & 0x03;   // 0: 2.5, 2: 2, 3: 1
+        $layer = 4 - (($b1 >> 1) & 0x03);   // 1, 2 or 3
+        $bitrateIndex = $b2 >> 4;
+        $rateIndex = ($b2 >> 2) & 0x03;
+        if ($bitrateIndex === 0 || $bitrateIndex === 15 || $rateIndex === 3) {
+            return null;   // free format gives no length; 15 and 3 are reserved (isMpegFrame refuses them too)
+        }
+        $mpeg1 = $version === 3;
+        $bitrates = match (true) {
+            $mpeg1 && $layer === 1 => [32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448],
+            $mpeg1 && $layer === 2 => [32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384],
+            $mpeg1 => [32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320],
+            $layer === 1 => [32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256],
+            default => [8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160],
+        };
+        $rates = match ($version) {
+            3 => [44100, 48000, 32000],
+            2 => [22050, 24000, 16000],
+            default => [11025, 12000, 8000],
+        };
+        $bitrate = $bitrates[$bitrateIndex - 1] * 1000;
+        $rate = $rates[$rateIndex];
+        $padding = ($b2 >> 1) & 0x01;
+
+        return match (true) {
+            $layer === 1 => (intdiv(12 * $bitrate, $rate) + $padding) * 4,
+            $layer === 3 && ! $mpeg1 => intdiv(72 * $bitrate, $rate) + $padding,
+            default => intdiv(144 * $bitrate, $rate) + $padding,
+        };
     }
 
     /**

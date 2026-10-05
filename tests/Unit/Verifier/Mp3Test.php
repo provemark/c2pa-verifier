@@ -175,3 +175,12 @@ it('AC17: MPEG audio without a tag needs two frame headers (amendment 2)', funct
 it('AC20: a v2.3 tag with header bit 0x10 is followed by its audio, not by a footer (amendment 2)', function (): void {
     expect((new FormatDetector)->detect(spec056VerifierStream(spec056File('mp3/footer-bit-v23.mp3'))))->toBe('mp3');
 })->group('SPEC-056');
+
+it('AC16: after a tag one MPEG frame header is enough; two are asked only of a file without a tag (amendment 2)', function (): void {
+    // c2pa-rs's hostile file: a v2.3 tag and a single MPEG frame; c2patool finds no claim (step 231)
+    $report = (new Verifier)->verify(spec056VerifierStream(spec056File('mp3-writers/c2pa-rs-id3v23_compression_underflow.mp3')));
+
+    expect($report->format)->toBe('mp3')
+        ->and($report->hasManifest)->toBeFalse()
+        ->and(spec056Codes(spec056Report($report), 'failure'))->toBe([]);
+})->group('SPEC-056');

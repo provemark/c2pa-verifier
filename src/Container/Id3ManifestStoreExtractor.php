@@ -13,14 +13,17 @@ use Provemark\C2paVerifier\Support\MemoryBudget;
  *
  * Reads the 10-byte header (version 3 or 4, a syncsafe size), skips an
  * extended header, then walks the frames to the end of the tag — v2.3 sizes
- * plain, v2.4 sizes syncsafe — until padding. Strict about the C2PA GEOB (a
- * GEOB whose MIME type is exactly `application/c2pa`): at most one, inside
- * the tag, not compressed, encrypted or unsynchronised, its object at least a
- * box header and its LBox equal to the object's length. As lenient as
- * c2patool about the rest: other frames are skipped unread, a frame other
- * than the C2PA GEOB that runs past the tag ends the walk, and what follows
- * the tag (audio, a footer, an ID3v1 tag) is left to the data hash, which
- * covers it. Every fault says whether a C2PA GEOB had been reached.
+ * plain, v2.4 sizes syncsafe unless a byte says otherwise (iTunes) — until
+ * padding. The C2PA GEOB is a GEOB whose MIME type is exactly one of the two
+ * c2patool accepts. Strict about it: at most one, inside the tag, not
+ * compressed, encrypted or unsynchronised, its object at least a box header
+ * and its LBox equal to the object's length. As lenient as c2patool about the
+ * rest: other frames are skipped unread, a frame other than the C2PA GEOB that
+ * runs past the tag ends the walk, and what follows the tag is left to the data
+ * hash, which covers it. A frame id that is not four capitals or digits, and
+ * unsynchronisation that changes bytes, are faults: the walk could no longer
+ * be trusted to have seen every frame (SPEC-056 amendment 2). Every fault says
+ * whether a C2PA GEOB had been reached; nothing escapes but ContainerException.
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
  * removed in any release; the contract is the nine classes named in the README.
@@ -33,21 +36,49 @@ final readonly class Id3ManifestStoreExtractor
     /** A tag of more frames than this is refused (AC12). */
     public const MAX_FRAMES = 4096;
 
-    /** The JUMBF media type (C2PA 2.4 §11.4), matched exactly, as c2patool matches it. */
-    private const MIME = 'application/c2pa';
+    /** The JUMBF media types c2patool accepts for the GEOB, exactly (C2PA 2.4 §11.4; the legacy one since amendment 2). */
+    public const MIME_TYPES = ['application/c2pa', 'application/x-c2pa-manifest-store'];
 
     private const HEADER_LENGTH = 10;
 
     /** LBox (4) + TBox (4): the least a JUMBF box can be. */
     private const BOX_HEADER_LENGTH = 8;
 
-    /** The GEOB's encoding byte, MIME type and two text fields are read within this many bytes. */
-    private const MAX_TEXT_LENGTH = 4096;
+    /** The GEOB's first read: encoding, MIME type and, nearly always, both text fields. */
+    private const FIRST_READ = 4096;
+
+    /** Further reads while the text fields have not ended. */
+    private const CHUNK = 65536;
 
     public function __construct(
         public int $maxObjectLength = self::DEFAULT_MAX_OBJECT_LENGTH,
         private MemoryBudget $budget = new MemoryBudget,
     ) {}
+
+    /**
+     * The shape of an ID3v2.3 or v2.4 tag header: its version, flags, where the
+     * frames end, and where the tag ends with its footer (v2.4 only), both counted
+     * from the tag's own first byte. Null for
+     * anything else, a size that is not syncsafe included. Shared with
+     * FormatDetector, so that the two never disagree about a tag's end.
+     *
+     * @return array{version: int, flags: int, end: int, next: int}|null
+     */
+    public static function header(string $bytes): ?array
+    {
+        if (strlen($bytes) < self::HEADER_LENGTH || ! str_starts_with($bytes, 'ID3')) {
+            return null;
+        }
+        $version = ord($bytes[3]);
+        $sizeBytes = substr($bytes, 6, 4);
+        if (($version !== 3 && $version !== 4) || preg_match('/[\x80-\xFF]/', $sizeBytes) === 1) {
+            return null;
+        }
+        $flags = ord($bytes[5]);
+        $end = self::HEADER_LENGTH + self::syncsafe($sizeBytes);
+
+        return ['version' => $version, 'flags' => $flags, 'end' => $end, 'next' => $end + ($version === 4 && ($flags & 0x10) !== 0 ? self::HEADER_LENGTH : 0)];
+    }
 
     /**
      * @param  resource  $stream  a readable, seekable stream positioned at 0
@@ -72,62 +103,63 @@ final readonly class Id3ManifestStoreExtractor
     private function walk($stream, bool &$reached): ?ManifestStoreBytes
     {
         $reader = new StreamReader($stream, 'frame');
-        $header = $reader->readUpTo(self::HEADER_LENGTH);
-        if (FormatDetector::isMpegFrame($header)) {
-            return null;   // MPEG audio from the first byte: no tag, so no store (SPEC-056 AC13)
+        $first = $reader->readUpTo(self::HEADER_LENGTH);
+        if (FormatDetector::isMpegFrame($first)) {
+            return null;   // MPEG audio from the first byte: no tag, so no store (AC13)
         }
-        if (strlen($header) !== self::HEADER_LENGTH || ! str_starts_with($header, 'ID3')) {
-            throw new ContainerException(sprintf('not an ID3v2 tag: expected ID3 at offset 0, found %s', Bytes::hex(substr($header, 0, 3))));
+        if (strlen($first) !== self::HEADER_LENGTH || ! str_starts_with($first, 'ID3')) {
+            throw new ContainerException(sprintf('not an ID3v2 tag: expected ID3 at offset 0, found %s', Bytes::hex(substr($first, 0, 3))));
         }
-        $version = ord($header[3]);
+        $version = ord($first[3]);
         if ($version !== 3 && $version !== 4) {
             throw new ContainerException(sprintf('ID3v2.%d is not read: only versions 3 and 4 (AC4)', $version));
         }
-        $flags = ord($header[5]);
-        $sizeBytes = substr($header, 6, 4);
-        if (preg_match('/[\x80-\xFF]/', $sizeBytes) === 1) {
-            throw new ContainerException(sprintf('the ID3 tag size %s at offset 6 is not syncsafe (AC4)', Bytes::hex($sizeBytes)));
+        $header = self::header($first);
+        if ($header === null) {
+            throw new ContainerException(sprintf('the ID3 tag size %s at offset 6 is not syncsafe (AC4)', Bytes::hex(substr($first, 6, 4))));
         }
-        $tagEnd = self::HEADER_LENGTH + self::syncsafe($sizeBytes);
+        $tagEnd = $header['end'];
         $fileEnd = $reader->end();
         if ($tagEnd > $fileEnd) {
             // a fault, but one that says whether the store was there (AC5, as SPEC-003 amendment 4)
-            $reached = $this->scanForStore($reader, $version, min($tagEnd, $fileEnd));
+            $reached = $this->scanForStore($reader, $version, $fileEnd);
             throw new ContainerException(sprintf('the ID3 tag ends at %d, past the end of the file at %d', $tagEnd, $fileEnd));
         }
+        $unsynchronised = ($header['flags'] & 0x80) !== 0;
+        if ($unsynchronised && ($at = $this->unsynchronisedBytesAt($stream, $tagEnd)) !== null) {
+            throw new ContainerException(sprintf('the ID3 tag has the unsynchronisation flag and FF 00 at offset %d: its frames cannot be read as they stand (AC19)', $at));
+        }
         $offset = self::HEADER_LENGTH;
-        if (($flags & 0x40) !== 0) {
+        if (($header['flags'] & 0x40) !== 0) {
             $offset += $this->extendedHeaderLength($reader, $version, $tagEnd);
         }
-        $unsynchronised = ($flags & 0x80) !== 0;
 
         $store = null;
         $storeOffset = null;
-        $storeFrame = null;
+        $storeAt = null;
         $frames = 0;
         while ($offset + self::HEADER_LENGTH <= $tagEnd) {
             $frameHeader = $reader->readExactly(self::HEADER_LENGTH, $offset, 'the frame header');
-            $id = substr($frameHeader, 0, 4);
-            if ($id[0] === "\0") {
+            if ($frameHeader[0] === "\0") {
                 break;   // padding: the frames have ended
             }
             if (++$frames > self::MAX_FRAMES) {
                 throw new ContainerException(sprintf('more than %d frames in the ID3 tag (offset %d)', self::MAX_FRAMES, $offset));
             }
-            $size = $version === 4 ? self::syncsafe(substr($frameHeader, 4, 4)) : self::uint32(substr($frameHeader, 4, 4));
+            ['id' => $id, 'size' => $size, 'flags' => $frameFlags] = self::frameHeader($frameHeader, $version, $offset);
             $bodyEnd = $offset + self::HEADER_LENGTH + $size;
 
-            $prefix = '';
+            $body = '';
             $isStore = false;
-            if ($id === 'GEOB' && $size > 0) {
-                $prefix = $reader->readExactly(min($size, self::MAX_TEXT_LENGTH, $fileEnd - $offset - self::HEADER_LENGTH), $offset, 'the GEOB frame');
-                $isStore = self::mime($prefix) === self::MIME;
+            if ($id === 'GEOB') {
+                $body = $reader->readExactly(max(0, min($size, self::FIRST_READ, $fileEnd - $offset - self::HEADER_LENGTH)), $offset, 'the GEOB frame');
+                $isStore = in_array(self::mime($body), self::MIME_TYPES, true);
             }
             if (! $isStore) {
                 if ($bodyEnd > $tagEnd) {
                     return null;   // a frame other than the C2PA GEOB runs past the tag: the walk stops, as c2patool's does
                 }
-                $reader->skip($size - strlen($prefix), $offset);
+                $reader->skip($size - strlen($body), $offset);
                 $offset = $bodyEnd;
 
                 continue;
@@ -140,7 +172,10 @@ final readonly class Id3ManifestStoreExtractor
             if ($bodyEnd > $tagEnd) {
                 throw new ContainerException(sprintf('the C2PA GEOB frame at offset %d declares %d bytes, past the end of the tag at %d (AC8)', $offset, $size, $tagEnd));
             }
-            $formatFlags = $version === 4 ? ord($frameHeader[9]) & 0x0F : ord($frameHeader[9]) & 0xE0;
+            // v2.4: data length 0x01, unsynchronisation 0x02, encryption 0x04, compression 0x08;
+            // v2.3: compression 0x80, encryption 0x40. Grouping changes the body, so a grouped
+            // GEOB never reaches here: its MIME type is not where it is looked for (AC20).
+            $formatFlags = $version === 4 ? $frameFlags & 0x0F : $frameFlags & 0xC0;
             if ($formatFlags !== 0) {
                 throw new ContainerException(sprintf('the C2PA GEOB frame at offset %d has format flags %02X: compressed, encrypted, unsynchronised or with a data length, it is not read (AC10)', $offset, $formatFlags));
             }
@@ -148,7 +183,13 @@ final readonly class Id3ManifestStoreExtractor
                 throw new ContainerException(sprintf('the ID3 tag\'s unsynchronisation flag is set: the C2PA GEOB frame at offset %d is not read (AC10)', $offset));
             }
 
-            $objectAt = self::objectStart($prefix, $offset);
+            // the text fields may be of any length within the frame (AC20): read on until they end
+            while (($objectAt = self::objectStart($body, $offset)) === null) {
+                if (strlen($body) >= $size || strlen($body) > $this->maxObjectLength) {
+                    throw new ContainerException(sprintf('the C2PA GEOB frame at offset %d: its text fields do not end within the frame', $offset));
+                }
+                $body .= $reader->readExactly(min(self::CHUNK, $size - strlen($body)), $offset, 'the GEOB text fields');
+            }
             $length = $size - $objectAt;
             if ($length < self::BOX_HEADER_LENGTH) {
                 throw new ContainerException(sprintf('the C2PA GEOB object length %d is shorter than the %d-byte box header (offset %d)', $length, self::BOX_HEADER_LENGTH, $offset));
@@ -165,7 +206,7 @@ final readonly class Id3ManifestStoreExtractor
                     $offset,
                 ));
             }
-            $object = substr($prefix, $objectAt);
+            $object = substr($body, $objectAt);
             if (strlen($object) < 4) {
                 $object .= $reader->readExactly(4 - strlen($object), $offset, 'LBox');
             }
@@ -176,15 +217,65 @@ final readonly class Id3ManifestStoreExtractor
             }
             $store = $object.$reader->readExactly($length - strlen($object), $offset, 'the GEOB object');
             $storeOffset = $offset;
-            $storeFrame = $offset + self::HEADER_LENGTH + $objectAt;
+            $storeAt = $offset + self::HEADER_LENGTH + $objectAt;
             $offset = $bodyEnd;
         }
 
-        if ($store === null || $storeFrame === null) {
+        if ($store === null || $storeAt === null) {
             return null;
         }
 
-        return new ManifestStoreBytes($store, [['start' => $storeFrame, 'length' => strlen($store)]]);   // the object alone, as c2patool excludes it
+        return new ManifestStoreBytes($store, [['start' => $storeAt, 'length' => strlen($store)]]);   // the object alone, as c2patool excludes it
+    }
+
+    /**
+     * A frame header's id, body size and format-flags byte. The id must be four
+     * capitals or digits (AC18): anything else means the walk has lost its place.
+     * A v2.4 size with a byte above 7F is not syncsafe and is read as a plain
+     * integer, as iTunes writes it and c2patool reads it (AC18).
+     *
+     * @return array{id: string, size: int, flags: int}
+     */
+    private static function frameHeader(string $bytes, int $version, int $offset): array
+    {
+        $id = substr($bytes, 0, 4);
+        if (preg_match('/\A[A-Z0-9]{4}\z/', $id) !== 1) {
+            throw new ContainerException(sprintf('the frame id %s at offset %d is not four capitals or digits (AC18)', Bytes::hex($id), $offset));
+        }
+        $sizeBytes = substr($bytes, 4, 4);
+        $size = $version === 4 && preg_match('/[\x80-\xFF]/', $sizeBytes) !== 1 ? self::syncsafe($sizeBytes) : self::uint32($sizeBytes);
+
+        return ['id' => $id, 'size' => $size, 'flags' => ord($bytes[9])];
+    }
+
+    /**
+     * The offset of the first FF 00 between offset 10 and the tag's end, read
+     * straight from the stream in chunks; null when there is none, in which case
+     * unsynchronisation changed nothing (AC19). The stream is left at offset 10.
+     *
+     * @param  resource  $stream
+     */
+    private function unsynchronisedBytesAt($stream, int $tagEnd): ?int
+    {
+        $position = self::HEADER_LENGTH;
+        $carry = '';
+        while ($position < $tagEnd && fseek($stream, $position) === 0) {
+            $chunk = (string) fread($stream, max(1, min(self::CHUNK, $tagEnd - $position)));
+            if ($chunk === '') {
+                break;
+            }
+            $found = strpos($carry.$chunk, "\xFF\x00");
+            if ($found !== false) {
+                fseek($stream, self::HEADER_LENGTH);
+
+                return $position - strlen($carry) + $found;
+            }
+            $carry = substr($chunk, -1);
+            $position += strlen($chunk);
+        }
+        fseek($stream, self::HEADER_LENGTH);
+
+        return null;
     }
 
     /** The length of an extended header, which is skipped (v2.4: syncsafe and counting itself; v2.3: plain, not counting its 4-byte size). */
@@ -201,22 +292,22 @@ final readonly class Id3ManifestStoreExtractor
     }
 
     /**
-     * Whether a C2PA GEOB's header and MIME type lie between offset 10 and $end,
-     * read frame header by frame header, never a frame's data (AC5).
+     * Whether a C2PA GEOB's header and MIME type lie between offset 10 and
+     * $end, read with the walk's own frame reading, never a frame's object (AC5).
      */
     private function scanForStore(StreamReader $reader, int $version, int $end): bool
     {
         try {
             $offset = self::HEADER_LENGTH;
-            while ($offset + self::HEADER_LENGTH <= $end) {
+            $frames = 0;
+            while ($offset + self::HEADER_LENGTH <= $end && ++$frames <= self::MAX_FRAMES) {
                 $frameHeader = $reader->readExactly(self::HEADER_LENGTH, $offset, 'the frame header');
                 if ($frameHeader[0] === "\0") {
                     return false;
                 }
-                $size = $version === 4 ? self::syncsafe(substr($frameHeader, 4, 4)) : self::uint32(substr($frameHeader, 4, 4));
-                $available = min($size, self::MAX_TEXT_LENGTH, $end - $offset - self::HEADER_LENGTH);
-                $prefix = $available > 0 ? $reader->readExactly($available, $offset, 'the frame') : '';
-                if (substr($frameHeader, 0, 4) === 'GEOB' && self::mime($prefix) === self::MIME) {
+                ['id' => $id, 'size' => $size] = self::frameHeader($frameHeader, $version, $offset);
+                $prefix = $reader->readExactly(max(0, min($size, self::FIRST_READ, $end - $offset - self::HEADER_LENGTH)), $offset, 'the frame');
+                if ($id === 'GEOB' && in_array(self::mime($prefix), self::MIME_TYPES, true)) {
                     return true;
                 }
                 $next = $offset + self::HEADER_LENGTH + $size;
@@ -236,6 +327,9 @@ final readonly class Id3ManifestStoreExtractor
     /** The MIME type of a GEOB body: ISO-8859-1 after the encoding byte, up to its NUL; null when it does not end inside $body. */
     private static function mime(string $body): ?string
     {
+        if (strlen($body) < 2) {
+            return null;   // no MIME type can end here (AC21: strpos() past the end raised a ValueError)
+        }
         $end = strpos($body, "\0", 1);
 
         return $end === false ? null : substr($body, 1, $end - 1);
@@ -244,21 +338,22 @@ final readonly class Id3ManifestStoreExtractor
     /**
      * Where the object begins in a GEOB body: after the MIME type and the file name
      * and description in the body's text encoding (0 and 3: one NUL; 1 and 2: two,
-     * on a two-byte boundary).
+     * on a two-byte boundary). Null when the text fields have not ended within $body.
      */
-    private static function objectStart(string $body, int $offset): int
+    private static function objectStart(string $body, int $offset): ?int
     {
         $encoding = ord($body[0]);
         if ($encoding > 3) {
             throw new ContainerException(sprintf('the C2PA GEOB frame at offset %d has text encoding %d; only 0 to 3 exist', $offset, $encoding));
         }
+        $wide = $encoding === 1 || $encoding === 2;
         $position = (int) strpos($body, "\0", 1) + 1;   // after the MIME type, which mime() found
         for ($field = 0; $field < 2; $field++) {
-            $end = $encoding === 1 || $encoding === 2 ? self::wideNul($body, $position) : strpos($body, "\0", $position);
+            $end = $wide ? self::wideNul($body, $position) : strpos($body, "\0", $position);
             if ($end === false) {
-                throw new ContainerException(sprintf('the C2PA GEOB frame at offset %d: its text fields do not end within %d bytes', $offset, self::MAX_TEXT_LENGTH));
+                return null;
             }
-            $position = $end + ($encoding === 1 || $encoding === 2 ? 2 : 1);
+            $position = $end + ($wide ? 2 : 1);
         }
 
         return $position;
