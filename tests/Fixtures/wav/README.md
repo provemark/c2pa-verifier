@@ -27,15 +27,15 @@ exercises and what this verifier answers.
 | `length-differs.wav` | chunk length +1, data untouched (the pad byte becomes data) | **`Valid`** | `Invalid`: `assertion.dataHash.match` **and** `mismatch`, *exclusion does not match the manifest location* | AC9 error |
 | `lbox-differs.wav` | LBox inside the box +1, chunk length untouched | **`Valid`** | **`Valid`** | AC8 error (stricter than both versions) |
 | `riff-size-plus-one.wav` | RIFF size in the header +1 | `Invalid`: signature validated, `assertion.dataHash.mismatch` (the header is hashed) | the same | AC4 error |
-| `riff-size-excludes-c2pa.wav` | RIFF size as if `C2PA` were absent | `Error: No claim found` (the walk stops at the declared size) | the same | AC4 error |
+| `riff-size-excludes-c2pa.wav` | RIFF size as if `C2PA` were absent | `Error: No claim found` (the walk stops at the declared size) | the same | AC4: `null` since amendment 3, as `c2patool` |
 | `c2pa-too-short.wav` | a `C2PA` of 4 bytes, shorter than a box header | `Error: unexpected end of file` | the same | AC10 error |
 | `c2pa-empty.wav` | a `C2PA` of length 0 | `Error: No claim found` | the same | AC10 error |
 | `pad-missing.wav` | the odd-length `C2PA` without its pad byte; RIFF size one less | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same | AC11 error |
 | `pad-nonzero.wav` | the pad byte `FF` instead of `00` | `Invalid`: signature validated, `assertion.dataHash.mismatch` (the pad byte is hashed) | the same | AC11 error |
 | `odd-chunk-before.wav` | an unknown 3-byte chunk (+ pad) before `C2PA` | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same, with two `mismatch` entries | AC12 extracts; `Invalid`, `assertion.dataHash.mismatch` |
 | `chunk-overruns-file.wav` | `C2PA` length +1,000; RIFF size correct for the file | `Error: asset could not be parsed: RIFF chunk declared size exceeds file size` | the same | AC5 error |
-| `trailing-bytes.wav` | 100 bytes after the end of the RIFF chunk, RIFF size unchanged | `Invalid`: signature validated, `assertion.dataHash.mismatch` (bytes after the RIFF chunk are hashed) | the same | AC4 error |
-| `second-riff.wav` | a second RIFF chunk after the first, holding a copy of `C2PA` | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same | AC4 error |
+| `trailing-bytes.wav` | 100 bytes after the end of the RIFF chunk, RIFF size unchanged | `Invalid`: signature validated, `assertion.dataHash.mismatch` (bytes after the RIFF chunk are hashed) | the same | AC4: extracts since amendment 3; `Invalid`, `assertion.dataHash.mismatch`, as `c2patool` |
+| `second-riff.wav` | a second RIFF chunk after the first, holding a copy of `C2PA` | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same | AC4: extracts since amendment 3; `Invalid`, `assertion.dataHash.mismatch`, as `c2patool` |
 | `rf64.wav` | the 64-bit form: `RF64`, size `FFFFFFFF`, a `ds64` chunk first | `Error: error parsing RIFF: invalid file signature: invalid header: expected "RIFF", got "RF64"` | `Error: asset could not be parsed: invalid header: expected "RIFF", got "RF64"` | AC14 `unknown` |
 
 SHA-256 (as printed by the script):

@@ -22,6 +22,20 @@ committed.
   flat on large files: 33 MB peak at 2 GB (step 211).
 
 ### Changed
+- **WebP and WAV: strict about the `C2PA` chunk, lenient as `c2patool`
+  about the rest (SPEC-003 amendment 3, SPEC-055 amendment 3).** Bytes
+  after the RIFF chunk (an ID3v1 tag on a WAV, for instance), a header size
+  that ends before the file does, and a pad byte after another chunk that
+  is missing at the end or not zero are no longer container faults; the
+  data hash still covers every one of those bytes in a signed file. An
+  unsigned WAV or WebP with such a quirk was `Invalid` with
+  `has_manifest: true` and is now a file without a manifest, as `c2patool`
+  says. Everything about the `C2PA` chunk itself stays as strict as before.
+- **`has_manifest` after a RIFF container fault (SPEC-013 amendment 16)**
+  is `true` only when the walk had reached a `C2PA` chunk. A truncated
+  WebP or WAV, or one whose header size exceeds the file, is still
+  `Invalid` with `general.error`, now with `has_manifest: false`. JPEG, PNG
+  and ISOBMFF are unchanged.
 - The unknown-format explanation names WAV among the formats read.
 - A RIFF file with the form type `WAVE` that was `unknown` before is now a
   WAV. The one such file among the fixtures, a WebP with its form type

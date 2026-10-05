@@ -8433,3 +8433,20 @@ README are where the disclosure lives.
   (two errors, both the missing property); Pint; `bin/spec-check.php`.
 - Reasoned: none beyond the tests.
 - Decided by Maurice: the three amendments approved.
+
+## 2026-10-05 — Built: strict about the C2PA chunk, lenient about the rest (step 216)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, ga door met stap 216".
+- Produced: `src/Container/ContainerException.php` (`$storeReached`),
+  `src/Container/RiffManifestStoreExtractor.php` (the walk to the RIFF
+  chunk's end, the pad rule, the reached flag), `src/Verifier/Verifier.php`
+  (`hasManifest`); CHANGELOG, the WebP and WAV fixture READMEs, SPEC-013
+  Traceability; `notes/step-216-riff-leniency-built.md`; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: Pest per group (27, 50, 21 passed); `composer check` (exit 0,
+  678 tests); the corpus against step 208 (ten files moved, the predicted
+  ten); each new report against step 214's table; the fuzzer over the RIFF
+  files (3,765 runs, 0 faults, 19 `Valid`, each `Valid` in both `c2patool`
+  versions).
+- Reasoned: none beyond the amendments.
+- Decided by Maurice: build step 216.

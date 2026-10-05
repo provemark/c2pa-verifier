@@ -7,7 +7,9 @@ is about that field. Regenerate with `php bin/make-webp-variants.php`; the
 script prints each file's SHA-256, and these are the values committed on
 2026-09-20. Measured with c2patool 0.27.22 the same day
 (`notes/step-06-webp-fixture.md`). The SPEC-003 column names the criterion each file
-exercises.
+exercises. Since SPEC-003 amendment 3 (step 216) a header size that ends
+before the file does is no longer an error, and a fault before the `C2PA`
+chunk reports no manifest (SPEC-013 amendment 16).
 
 | file | what is wrong | c2patool 0.27.22 | SPEC-003 |
 |---|---|---|---|
@@ -20,7 +22,7 @@ exercises.
 | `length-differs.webp` | chunk length +1, data untouched (the pad byte becomes data) | extracts; **`Valid`** — the extra trailing byte is tolerated downstream | AC10 error (stricter than the oracle) |
 | `lbox-differs.webp` | LBox inside the box +1 (100,636), chunk length 100,635 | extracts; **`Valid`** — LBox is not compared to the chunk length | AC9 error (stricter than the oracle) |
 | `riff-size-plus-one.webp` | RIFF size in the header +1 | extracts; `claimSignature.validated`, then `assertion.dataHash.mismatch` → `Invalid` (the header is hashed) | AC5 error (stricter than the oracle) |
-| `riff-size-excludes-c2pa.webp` | RIFF size in the header as if `C2PA` were absent (304) | `Error: No claim found` — the walk stops at the declared size | AC5, AC16 error (c2patool: no store) |
+| `riff-size-excludes-c2pa.webp` | RIFF size in the header as if `C2PA` were absent (304) | `Error: No claim found` — the walk stops at the declared size | AC5: `null` since amendment 3 (2026-10-05), as `c2patool` |
 | `c2pa-too-short.webp` | a `C2PA` of 4 bytes, shorter than a box header | `Error: unexpected end of file` | AC11 error |
 | `c2pa-empty.webp` | a `C2PA` of length 0 | `Error: No claim found` | AC11 error (stricter than the oracle) |
 | `pad-missing.webp` | the odd-length `C2PA` without its pad byte; RIFF size one less | extracts; `claimSignature.validated`, then `assertion.dataHash.mismatch` → `Invalid` | AC12 error (stricter than the oracle) |

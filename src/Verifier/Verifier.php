@@ -114,7 +114,8 @@ final readonly class Verifier
                 'isobmff' => $this->isobmff->extract($stream),
             };
         } catch (ContainerException $e) {
-            return new VerificationReport($format, true, null, ValidationResult::fromStatuses([
+            // a manifest only when the extractor had reached the store (SPEC-013 amendment 16)
+            return new VerificationReport($format, $e->storeReached, null, ValidationResult::fromStatuses([
                 new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, $e->getMessage()),
             ], []));
         }
