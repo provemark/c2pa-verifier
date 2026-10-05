@@ -284,3 +284,16 @@ it('AC12: a stream that cannot seek is refused with InvalidArgumentException and
     expect($caught?->getMessage())->toContain('seekable')
         ->and($warnings)->toBe([]);
 })->group('SPEC-043');
+
+it('AC13: every explanation is UTF-8, whatever bytes a certificate carries (amendment 3, step 249)', function (): void {
+    $stream = fopen(Corpus::fixtures().'/hostile-3/keyusage-not-utf8.jpg', 'rb');
+    assert($stream !== false);
+    $report = (new Verifier)->verify($stream);
+    $keyUsage = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialInvalid && str_contains($s->explanation, 'KeyUsage')));
+
+    expect($report->result->state)->toBe(ValidationState::Invalid)
+        ->and($keyUsage)->not->toBe([])
+        ->and(mb_check_encoding($keyUsage[0]->explanation ?? '', 'UTF-8'))->toBeTrue()
+        ->and(json_decode($report->toJson(), true, 512, JSON_THROW_ON_ERROR))->toBeArray()
+        ->and((new ValidationStatus(StatusCode::GeneralError, 'self#jumbf=/c2pa', "a\xffb\xc0"))->explanation)->toBe('a?b?');
+})->group('SPEC-043');

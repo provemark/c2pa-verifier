@@ -205,6 +205,27 @@ final class CborBudget            // mutable on purpose: shared by several decod
 
    Approved by Maurice van Loon, 2026-10-05 (step 247).
 
+3. **2026-10-05, step 249, approved by Maurice van Loon** — found by the
+   fuzzer once it encoded every report (step 248): 5 of 16,041 mutations,
+   one cause. A damaged KeyUsage extension comes back from
+   `openssl_x509_parse()` as its raw DER bytes, and
+   `CertificateProfileCheck` writes them into the explanation of
+   `signingCredential.invalid`; bytes that are not UTF-8 make `toJson()`
+   throw. The certificate travels in the file and the explanation is
+   written whether or not the signature holds: no key is needed. Measured:
+   `v0.2.9`'s command ends with PHP's fatal error (exit 255); `c2patool`
+   0.27.22 and 0.28.1 answer `Error: unknown algorithm`.
+
+   - **AC13 (new) — every explanation is UTF-8.** A `ValidationStatus`
+     replaces each byte sequence of its explanation that is not UTF-8 with
+     `?` when it is made, so that no check can put such bytes in a report.
+     Given `tests/Fixtures/hostile-3/keyusage-not-utf8.jpg`: `Invalid`,
+     `signingCredential.invalid` with an explanation that is valid UTF-8 and
+     still names the KeyUsage, and `toJson()` does not throw. The report's
+     own encoding stays strict, so that the fuzzer finds any other source.
+
+   Approved by Maurice van Loon, 2026-10-05 (step 249).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -221,3 +242,4 @@ least one test; every source file maps back to this spec.
 
 Measured 2026-09-25: 6 red (and the three parts a first failure hid, run apart) → 6 green, `composer check` exit 0, 525 tests; 19,788 runs over every signed fixture and settings file, the only change `hostile/certificate-time-nul.jpg` (still `Invalid`, now `signingCredential.invalid`); `php bin/fuzz.php 20260925 60`: 0 faults, the same 34 suspects.
 | AC12 | tests/Unit/Verifier/HostileInputTest.php :: AC12: a stream that cannot seek is refused with InvalidArgumentException and no PHP warning (amendment 2, step 247) / SPEC-043 | src/Container/FormatDetector.php :: head() (`seekable` read before `rewind()`) |
+| AC13 | tests/Unit/Verifier/HostileInputTest.php :: AC13: every explanation is UTF-8, whatever bytes a certificate carries (amendment 3, step 249) / SPEC-043 | src/Report/ValidationStatus.php :: __construct() |
