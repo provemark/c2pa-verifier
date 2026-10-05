@@ -172,6 +172,14 @@ logic; only the four helpers move. The JPEG `readMarker`, `readUint16`,
    `Container`. AC5 is unchanged in substance; its test now names
    `Bytes::hex()`.
 
+2. **2026-10-05, step 206, with SPEC-055** — the WebP walk moved into
+   `RiffManifestStoreExtractor`, shared with WAV; `WebpManifestStoreExtractor`
+   delegates to it with the form type `WEBP`. AC1's grep therefore reads
+   `{Jpeg,Png,Riff}ManifestStoreExtractor.php`, and checks that the WebP
+   class delegates. AC1 is unchanged in substance: no extractor has a
+   private stream helper, and every walk uses `StreamReader`. Awaiting
+   confirmation.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -179,7 +187,7 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1 | tests/Unit/Container/StreamReaderTest.php :: AC1: no extractor carries a private readExactly, skip or tell any more; and the whole suite (SPEC-001/002/003 groups unchanged) / SPEC-004 | src/Container/{Jpeg,Png,Webp}ManifestStoreExtractor.php :: extract() (`new StreamReader(`) |
+| AC1 | tests/Unit/Container/StreamReaderTest.php :: AC1: no extractor carries a private readExactly, skip or tell any more; and the whole suite (SPEC-001/002/003 groups unchanged) / SPEC-004 | src/Container/{Jpeg,Png,Riff}ManifestStoreExtractor.php :: extract() (`new StreamReader(`; amendment 2) |
 | AC2 | tests/Unit/Container/StreamReaderTest.php :: AC2: readExactly returns exactly the bytes asked for, or fails naming what, where and how much; AC2: readExactly of zero bytes returns an empty string and does not touch the stream / SPEC-004 | src/Container/StreamReader.php :: readExactly() |
 | AC3 | tests/Unit/Container/StreamReaderTest.php :: AC3: skip to exactly the end of the file is not an error; the next read is; AC3: skip past the end of the file is an error naming the segment, its end and the file end / SPEC-004 | src/Container/StreamReader.php :: skip() |
 | AC4 | tests/Unit/Container/StreamReaderTest.php :: AC4: end returns the file length and leaves the position alone / SPEC-004 | src/Container/StreamReader.php :: end(), tell() |

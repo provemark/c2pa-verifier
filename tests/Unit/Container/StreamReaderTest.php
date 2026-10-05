@@ -28,13 +28,17 @@ function spec004Stream(string $bytes, int $position = 0)
 }
 
 it('AC1: no extractor carries a private readExactly, skip or tell any more', function (): void {
-    foreach (['Jpeg', 'Png', 'Webp'] as $container) {
+    // Step 206 (SPEC-004 amendment 2): the WebP walk lives in RiffManifestStoreExtractor,
+    // so that is the file grepped; the WebP class only delegates to it.
+    foreach (['Jpeg', 'Png', 'Riff'] as $container) {
         $source = (string) file_get_contents(dirname(__DIR__, 3)."/src/Container/{$container}ManifestStoreExtractor.php");
 
         expect(preg_match('/private (?:static )?function (?:readExactly|skip|tell|fileEnd|hex)\(/', $source))
             ->toBe(0, "{$container}ManifestStoreExtractor still has a private stream helper");
         expect($source)->toContain('new StreamReader(');
     }
+    expect((string) file_get_contents(dirname(__DIR__, 3).'/src/Container/WebpManifestStoreExtractor.php'))
+        ->toContain("new RiffManifestStoreExtractor('WEBP'");
 })->group('SPEC-004');
 
 it('AC2: readExactly returns exactly the bytes asked for, or fails naming what, where and how much', function (): void {

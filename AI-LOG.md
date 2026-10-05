@@ -8222,3 +8222,20 @@ README are where the disclosure lives.
   RIFF walk as a separate refactor step; the amendments the spec forces.
 - Decided by Maurice: a `C2PA` that is not last is extracted (step 204's
   question, answered at the start of this step).
+
+## 2026-10-05 — SPEC-055 approved; the RIFF walk shared (step 206)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, zet SPEC-055 op approved en ga door met stap 206".
+- Produced: `src/Container/RiffManifestStoreExtractor.php`;
+  `src/Container/WebpManifestStoreExtractor.php` reduced to a delegate;
+  `tests/Unit/Container/StreamReaderTest.php` (SPEC-004 AC1's grep);
+  SPEC-055 status `approved`; SPEC-004 amendment 2 (awaiting
+  confirmation); SPEC-003 Traceability; `notes/step-206-riff-walk-shared.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: `composer check` (one red test after the move, SPEC-004 AC1;
+  then exit 0, 621 tests); a scratch corpus script over 606 fixtures × 2
+  settings, twice before and once after the change: identical; the old
+  and new class compared with `diff`.
+- Reasoned: that the move should be its own step so that a changed
+  verdict could have only one cause.
+- Decided by Maurice: SPEC-055 approved.
