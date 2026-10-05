@@ -310,6 +310,32 @@ same way, so SPEC-003's tests prove the refactor. `FormatDetector` returns
    Traceability moved in step 206.
    Confirmed by Maurice van Loon, 2026-10-05 (step 209).
 
+2. **2026-10-05, step 210b, proposed** — a criterion for the WAVs of other
+   writers that step 210 found and measured. Every verdict already equals
+   `c2patool`'s; without a criterion nothing keeps it so.
+
+   - **AC18 — WAVs from other writers verify as `c2patool` says**
+     *(oracle: `c2patool` 0.27.22 and 0.28.1, step 210)*
+     - Given the four files under `tests/Fixtures/wav-writers/`
+     - When each is verified without settings, and the signed one also
+       with `tests/Fixtures/matrix/test-roots.settings.json`
+     - Then `c2pa-python-sample1_signed.wav` is `format` `wav`, and its
+       state and its sorted success and failure codes equal each of the
+       four recordings under `tests/Fixtures/c2patool/wav-writers/`
+       (`Valid` without settings, `Trusted` with them);
+       `c2pa-rs-sample1.wav` and `c2pa-rs-riff_bomb_1000.wav` are `wav`
+       with `hasManifest` false and no failure status;
+       `c2pa-rs-sample3.invalid.wav` is `Invalid` with exactly one
+       `general.error` whose explanation names the header's size (1441174)
+       and the file's (441172)
+
+   How it is seen red, since the behaviour exists already: the test is run
+   once with the `WAVE` line of `FormatDetector::detect()` taken out, where
+   every file must fail it, and the line is put back. No other criterion
+   changes.
+
+   **Proposed, awaiting approval.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

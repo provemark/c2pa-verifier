@@ -8320,3 +8320,12 @@ README are where the disclosure lives.
 - Reasoned: that the signed file's writer is the same Rust core by
   another route, so it is not an independent writer.
 - Decided by Maurice: finish WAV before AVI.
+
+## 2026-10-05 — SPEC-055 amendment 2 proposed: AC18 (step 210b)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, eerst AC18 voorstellen, dan stap 211".
+- Produced: SPEC-055 amendment 2 (proposed); a row in `NOTES.md`.
+- Measured: none (the verdicts it states were measured in step 210).
+- Reasoned: how a criterion for behaviour that already exists can be seen
+  red.
+- Decided by Maurice: AC18 to be proposed before step 211.
