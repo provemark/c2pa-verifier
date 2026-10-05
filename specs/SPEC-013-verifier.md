@@ -536,6 +536,27 @@ final class ManifestException extends \RuntimeException
 
     Approved by Maurice van Loon, 2026-10-05 (step 215).
 
+17. **2026-10-05, step 218, proposed** — a correction and a consequence
+    of SPEC-003 amendment 4.
+
+    - **Correction.** Amendment 16 said of a RIFF fault before the store
+      that "`c2patool` errors on it too". For `riff-size-plus-one` that is
+      false: `c2patool` reads the manifest there and reports `Invalid`
+      with `assertion.dataHash.mismatch` (step 204, measured again in
+      step 217). Step 214's note had it right; the amendment's sentence
+      did not. Under amendment 4 this file reaches the store again, so
+      the sentence no longer applies to it.
+    - **Consequence.** `hasManifest` becomes `true` again for
+      `riff-size-plus-one` and `truncated-in-c2pa` (WebP and WAV) and for
+      any signed RIFF file cut short after its `C2PA` chunk header, with
+      the same `Invalid` and `general.error`. `truncated-between-chunks`
+      and `wav-writers/c2pa-rs-sample3.invalid.wav` stay `false`. AC7's
+      amendment-16 test changes with it.
+
+    **Weight B: a field in the report, for one more class of RIFF files.**
+
+    **Proposed, awaiting approval.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

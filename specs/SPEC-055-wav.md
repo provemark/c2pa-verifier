@@ -373,6 +373,42 @@ same way, so SPEC-003's tests prove the refactor. `FormatDetector` returns
 
    Approved by Maurice van Loon, 2026-10-05 (step 215).
 
+4. **2026-10-05, step 218, proposed** — SPEC-003 amendment 4, for WAV:
+   the same four rules, the same reasons.
+
+   - **A header size larger than the file stays a fault**, with the same
+     message, but before it is thrown the chunk headers are scanned up to
+     the end of the file, without reading any chunk's data, to see whether
+     a `C2PA` chunk header is there. `storeReached` says what the scan
+     found. A signed file cut short (a partial upload) is then reported as
+     a manifest that failed, not as a file without one.
+   - **Where the RIFF chunk cannot hold another whole chunk, the walk
+     stops**: fewer than 8 bytes left before its end, or a chunk other than
+     `C2PA` whose length runs past its end. What remains is not read here
+     and is left to the data hash, as `c2patool` leaves it. A `C2PA` chunk
+     whose length runs past the end stays a fault (AC6 unchanged).
+   - **A header size below 4**, too small for the form type it must hold,
+     is a fault before any chunk is read (`storeReached` false). `c2patool`
+     finds no claim; this is stricter on purpose: the header contradicts
+     itself.
+   - **Documented, not changed:** an earlier chunk whose length is changed
+     to run to the end of the RIFF chunk, or stray bytes that misalign the
+     walk before the `C2PA` chunk, hide the store; the file is reported
+     without a manifest, as `c2patool` reports it. That is no new power:
+     deleting the chunk hides it as well. It is one more reason why "no
+     manifest" never proves that a file had none (step 214).
+
+   - **AC20 (new).** `wav/riff-size-plus-one.wav` and
+     `wav/truncated-in-c2pa.wav`, verified: `hasManifest` **true**,
+     `Invalid`, one `general.error` (the size message, unchanged).
+     `wav/truncated-between-chunks.wav` and
+     `wav-writers/c2pa-rs-sample3.invalid.wav`: `hasManifest` false, as
+     now. An unsigned WAV with a 3-byte tail inside the RIFF chunk: no
+     manifest, no failure; the signed WAV with the same tail: `Invalid`,
+     `claimSignature.validated` and `assertion.dataHash.mismatch`.
+
+   **Proposed, awaiting approval.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

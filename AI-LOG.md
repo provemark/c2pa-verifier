@@ -8470,3 +8470,16 @@ README are where the disclosure lives.
 - Reasoned: that finding 9 belongs with finding 2's change.
 - Decided by Maurice: no release yet; the push; the advice on the review's
   findings 1–4.
+
+## 2026-10-05 — The edges of the RIFF leniency: proposed (step 218)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, ga door met stap 218".
+- Produced: SPEC-003 amendment 4, SPEC-055 amendment 4, SPEC-013
+  amendment 17 (proposed); `notes/step-218-riff-edges-proposed.md`; a row
+  in `NOTES.md`.
+- Measured: two WebP files built in scratch (a chunk overrunning before
+  `C2PA`, stray bytes before it) with this verifier and both `c2patool`
+  versions; `bin/spec-check.php`.
+- Reasoned: the proposed report per file; the three points for approval.
+- Decided by Maurice: none in this step (the direction was decided after
+  step 217's review).

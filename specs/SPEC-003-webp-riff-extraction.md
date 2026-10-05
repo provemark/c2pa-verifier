@@ -325,6 +325,48 @@ rest of the data, then the pad byte. Keeps walking to see a second `C2PA`
 
    Approved by Maurice van Loon, 2026-10-05 (step 215).
 
+4. **2026-10-05, step 218, proposed (second review, findings 1–4 of step
+   217; direction decided by Maurice van Loon the same day)** — amendment
+   3 stopped short in four places. Measured on the reviewer's files with
+   both `c2patool` versions; none yields a wrong `Valid` today.
+
+   - **A header size larger than the file stays a fault**, with the same
+     message, but before it is thrown the chunk headers are scanned up to
+     the end of the file, without reading any chunk's data, to see whether
+     a `C2PA` chunk header is there. `storeReached` says what the scan
+     found. A signed file cut short (a partial upload) is then reported as
+     a manifest that failed, not as a file without one.
+   - **Where the RIFF chunk cannot hold another whole chunk, the walk
+     stops**: fewer than 8 bytes left before its end, or a chunk other than
+     `C2PA` whose length runs past its end. What remains is not read here
+     and is left to the data hash, as `c2patool` leaves it. A `C2PA` chunk
+     whose length runs past the end stays a fault (AC6 unchanged).
+   - **A header size below 4**, too small for the form type it must hold,
+     is a fault before any chunk is read (`storeReached` false). `c2patool`
+     finds no claim; this is stricter on purpose: the header contradicts
+     itself.
+   - **Documented, not changed:** an earlier chunk whose length is changed
+     to run to the end of the RIFF chunk, or stray bytes that misalign the
+     walk before the `C2PA` chunk, hide the store; the file is reported
+     without a manifest, as `c2patool` reports it. That is no new power:
+     deleting the chunk hides it as well. It is one more reason why "no
+     manifest" never proves that a file had none (step 214).
+
+   - **AC19 (new) — the edges of the leniency.** Built in memory from the
+     fixtures: a signed WebP with a 3-byte tail inside the RIFF chunk, and
+     with an overrunning chunk after the `C2PA` chunk, yield the store of
+     AC1; an unsigned WebP with the same tail, or the same overrunning
+     chunk, yields `null`; a signed WebP whose `VP8L` length runs past the
+     RIFF end, or with 3 stray bytes before the `C2PA` chunk, yields
+     `null`; a header size of 0 is a `ContainerException` with
+     `storeReached` false; `riff-size-plus-one` and `truncated-in-c2pa`
+     are a `ContainerException` with `storeReached` **true**,
+     `truncated-between-chunks` with `storeReached` false.
+   - AC18's dataset changes with it: `riff-size-plus-one` now reaches the
+     store.
+
+   **Proposed, awaiting approval.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
