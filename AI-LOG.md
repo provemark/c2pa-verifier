@@ -8750,3 +8750,15 @@ README are where the disclosure lives.
 - Reasoned: that SPEC-056's reader applies unchanged; two proposals for the
   FLAC spec.
 - Decided by Maurice: FLAC and AVI in 0.3.0.
+
+## 2026-10-05 — SPEC-057 drafted: FLAC (step 235)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf SPEC-057 als stap 235".
+- Produced: `specs/SPEC-057-flac.md` (draft); rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: the fixture's store with a probe and through
+  `Id3ManifestStoreExtractor` (byte-equal, range `[63, 13463]`); the
+  extractor on the unsigned FLAC today (a `ContainerException`);
+  `bin/spec-check.php`.
+- Reasoned: six criteria from step 234; no new reader.
+- Decided by Maurice: write the spec.
