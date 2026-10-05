@@ -8594,3 +8594,15 @@ README are where the disclosure lives.
 - Reasoned: that the RIFF rule (strict about the store, lenient about the
   rest) fits ID3; three open questions for the spec.
 - Decided by Maurice: MP3 next.
+
+## 2026-10-05 — SPEC-056 drafted: MP3 (step 226)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf de MP3-spec als stap 226".
+- Produced: `specs/SPEC-056-mp3.md` (draft); rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: the fixture's store (length, SHA-256, first bytes) and the
+  MPEG frame header after the tag, with a probe; the sister library's
+  `fixture.flac` opens with `fLaC` before signing; `bin/spec-check.php`.
+- Reasoned: fourteen criteria from step 225; the RIFF rule carried over;
+  three proposals for the open questions.
+- Decided by Maurice: write the spec.
