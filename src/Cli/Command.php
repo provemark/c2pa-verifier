@@ -125,7 +125,16 @@ final readonly class Command
         } finally {
             fclose($stream);
         }
-        fwrite($stdout, $report->toJson()."\n");
+        try {
+            $json = $report->toJson();
+        } catch (\JsonException $e) {
+            // SPEC-019 AC13: no input is known to reach this since SPEC-007 AC15; should one, it is
+            // the command's own failure, one line and exit 2, never PHP's fatal error and its trace
+            fwrite($stderr, sprintf("Error: the report cannot be written as JSON: %s\n", $e->getMessage()));
+
+            return 2;
+        }
+        fwrite($stdout, $json."\n");
 
         return $report->result->state === ValidationState::Invalid ? 1 : 0;
     }

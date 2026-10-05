@@ -259,6 +259,10 @@ final readonly class ManifestStore
         if (is_array($value)) {
             return array_map(self::plain(...), $value);
         }
+        if (is_float($value) && ! is_finite($value)) {
+            // JSON has no NaN or infinity (RFC 8259 §6): named, so that the report still encodes (SPEC-007 AC15)
+            return is_nan($value) ? 'NaN' : ($value > 0 ? 'Infinity' : '-Infinity');
+        }
 
         return $value;
     }

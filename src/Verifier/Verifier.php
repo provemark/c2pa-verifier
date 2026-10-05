@@ -22,6 +22,7 @@ use Provemark\C2paVerifier\Cose\CoseException;
 use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Hash\BmffHashCheck;
 use Provemark\C2paVerifier\Hash\DataHashCheck;
+use Provemark\C2paVerifier\Hash\HardBindings;
 use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfException;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
@@ -337,6 +338,10 @@ final readonly class Verifier
                 // SPEC-013 amendment 13: a hard binding the signer lists only among gathered assertions is not
                 // one the claim makes (§10.2.2); c2pa 0.91.0 refuses such a file outright. It is not read.
                 $statuses[] = new ValidationStatus(StatusCode::ClaimHardBindingsMissing, sprintf('self#jumbf=/c2pa/%s', $binding->label), sprintf('the hard binding %s is listed only in gathered_assertions; created_assertions "shall contain, at minimum, a reference to an assertion that represents a hard binding" (C2PA 2.4 §10.2.2), so the manifest has none of its own', $gatheredOnly));
+            } elseif (count($hard = HardBindings::in($binding)) > 1) {
+                // SPEC-012 amendment 9: counted before either check is chosen, every kind and instance
+                // label together, so that the BMFF route cannot pass over a second binding either
+                $statuses[] = new ValidationStatus(StatusCode::AssertionMultipleHardBindings, sprintf('self#jumbf=/c2pa/%s', $binding->label), sprintf('the manifest has %d hard bindings (%s); a standard manifest has exactly one (C2PA 2.4 §15.10.1.2)', count($hard), HardBindings::describe(...$hard)));
             } else {
                 // SPEC-027: ISOBMFF binds through c2pa.hash.bmff.v3, whose exclusions are
                 // box paths rather than byte ranges. Which check runs follows the assertion
@@ -413,7 +418,7 @@ final readonly class Verifier
      */
     private static function hardBindingGatheredOnly(Manifest $manifest): ?string
     {
-        $isBinding = static fn (string $label): bool => $label === DataHashCheck::LABEL || in_array($label, BmffHashCheck::LABELS, true);
+        $isBinding = static fn (string $label): bool => in_array(HardBindings::baseLabel($label), [DataHashCheck::LABEL, ...BmffHashCheck::LABELS], true);
         $labelOf = static function (HashedUri $reference) use ($manifest): ?string {
             try {
                 return $manifest->resolve($reference->url)->description->label;

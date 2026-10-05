@@ -16,6 +16,39 @@ was reached. The recorded API surface is unchanged; the report's `format`
 has four new values, so this is a minor version: a caller on `^0.2` keeps
 0.2.9 until it asks for `^0.3`.
 
+A review of the whole of `src/` before the release found one wrong
+`Trusted`, present since 0.2.5, and a report that a single assertion could
+stop from being written. Both are fixed here; there is no 0.2.x release
+with them, so every user of 0.2.5 to 0.2.9 should move to 0.3.0.
+
+### Security
+- **A name constraint over a name that is not UTF-8 (SPEC-046 amendment
+  1).** Such names were all folded to the empty string, so a leaf outside
+  a name-constrained intermediate's permitted directoryName could be
+  `Trusted`. They are now compared byte for byte. Measured on a throw-away
+  hierarchy against OpenSSL and `c2patool` 0.28.1; present in 0.2.5 to
+  0.2.9.
+- **A CBOR NaN or infinity in an assertion (SPEC-007 amendment 6, SPEC-019
+  amendment 2).** The report could not be encoded: `toJson()` threw, and
+  `bin/c2pa-verify` died with PHP's fatal error and a stack trace on
+  standard error (exit 255). Such a value is now rendered as `"NaN"`,
+  `"Infinity"` or `"-Infinity"`; a report that still cannot be encoded is
+  `Error: …` and exit 2. The fuzzer now encodes every report.
+
+### Fixed
+- **PS256/384/512 under an `id-RSASSA-PSS` key (SPEC-009 amendment 3):**
+  any salt length was accepted; RFC 8230 §2 fixes it at the hash length,
+  as was already required under an ordinary RSA key.
+- **A hard binding under an instance label (SPEC-012 amendment 9):**
+  `c2pa.hash.data__1` (C2PA 2.4 §6.4) is a hard binding. Alone it is
+  verified, as `c2patool` verifies it (it was `claim.hardBindings.missing`);
+  beside another it is `assertion.multipleHardBindings`. Hard bindings of
+  every kind are now counted before the data-hash or the BMFF check is
+  chosen, so a second one is never passed over.
+- **A stream that cannot seek (SPEC-043 amendment 2):** `verify()` still
+  refuses it with `InvalidArgumentException`, now without printing PHP's
+  `rewind()` warning first.
+
 ### Added
 - **WAV (SPEC-055).** A WAV whose manifest store sits in a RIFF `C2PA`
   chunk (C2PA 2.4 §A.3.7) is read and verified like the other formats:

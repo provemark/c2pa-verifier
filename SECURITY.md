@@ -73,14 +73,16 @@ once before and was wrong: see `PRED-IMG-004` below.
 
 ## Findings so far
 
-The project keeps its own record. Sixteen cases of a wrong `Valid` or
+The project keeps its own record. Eighteen cases of a wrong `Valid` or
 `Trusted` have been found in it, all by the maintainers: two before any
 release, one after `0.1.0`, five, with eight ways to crash the verifier,
 in the security review of 2026-09-25, fixed in `0.2.2`, one fixed in
 `0.2.3`, two, with four ways to exhaust the verifier, in a review of
 2026-09-27, fixed in `0.2.4`, four more from that review's lower
-findings, fixed in `0.2.5`, and one found by reading the reference
-engine's own fixes, fixed in `0.2.6`:
+findings, fixed in `0.2.5`, one found by reading the reference
+engine's own fixes, fixed in `0.2.6`, one found by a review of `src/`,
+fixed in `0.2.8`, and one found by a review of the whole of `src/` before
+`0.3.0`, fixed in it:
 
 - **2026-09-22, no hard binding** (`notes/step-47-no-hard-binding.md`).
   A correctly signed manifest with no `c2pa.hash.data` assertion — a
@@ -210,6 +212,20 @@ engine's own fixes, fixed in `0.2.6`:
   The same review found the BMFF exclusion plan unbounded: an MP4 with
   4000 empty boxes and 8 exclusions took 11.4 s, and larger ones exhausted
   memory, without a key (SPEC-053, `notes/step-191-spec053.md`).
+
+- **2026-10-05, a name constraint over a name that is not UTF-8 —
+  present in `0.2.5` to `0.2.9`, fixed in `0.3.0`**
+  (`notes/step-247-whole-review.md`). The name-constraint check folded
+  attribute values with a `/u` regular expression, which returns nothing
+  on bytes that are not UTF-8, so every such value became empty and two
+  different names compared equal. Measured on a throw-away hierarchy: an
+  intermediate permitting only `O = "Caf\xE9"` (a T61String), a leaf with
+  `O = "Other\xFF"`: `Trusted` here; `c2patool` 0.28.1 `Valid` with
+  `signingCredential.untrusted`; OpenSSL *permitted subtree violation*. It
+  needs a name-constrained CA under one of your anchors that issues outside
+  its constraint (SPEC-046 amendment 1). The same review found that a NaN
+  in any assertion made the report fail to encode, which ended the command
+  with PHP's fatal error, without a key (SPEC-007 amendment 6).
 
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now

@@ -71,8 +71,7 @@ these rows moves an alarm.
 | OCSP staples, certificate revocation | checked (with network) | **the responses stapled into the signature are checked** (SPEC-030): a verified `revoked` makes the file `Invalid`, and every file reports whether revocation was checked at all. c2patool 0.27.22 emits no OCSP code of its own on the two fixtures that carry a stapled response, so this verifier says more here, not less | an online OCSP query, an AIA fetch or a CRL — never in the verification path |
 | Assertion content beyond the actions rules of SPEC-018, SPEC-032, SPEC-033 and SPEC-034 — `assertion.required.missing` | validated | not read (`SPEC013_NOT_YET`) — no corpus file shows a difference | M7 / a spec |
 | `c2pa.hash.data.part`, `c2pa.hash.multi-asset` (a second asset's hashes, e.g. Ultra HDR) | not validated either | not read | — |
-| Unknown critical X.509 extensions on the signer | refused | not seen (`openssl_x509_parse` does not flag them) — the one place this verifier is *more lenient* by omission, no corpus file shows it | an amendment with the DER reader |
-| JSON report | assertions rendered, thumbnails, ingredient tree | `c2patool`'s five keys, `format`, `has_manifest`, `remote_manifest`, `checks_performed`; assertions decoded but not rendered | — |
+| JSON report | assertions rendered, thumbnails, ingredient tree | `c2patool`'s five keys, `format`, `has_manifest`, `remote_manifest`, `checks_performed`; assertions rendered as decoded (byte strings as base64, a NaN or infinity as `"NaN"`, `"Infinity"`, `"-Infinity"`), no thumbnails | — |
 | Command line | `c2patool <file>` with `--detailed`, `--info`, signing, trust sub-commands, fragments | `bin/c2pa-verify <file> [--settings <path>]`: the JSON report, nothing else (SPEC-019) | — |
 
 ## Where the verdicts are equal (measured, code for code)
@@ -94,6 +93,17 @@ seventeen multi-manifest files, sixteen verdicts exactly c2patool's, the
 two others by the TSA leniency below) — on every corpus file that is not in an exception list, and on every
 own variant, the state and the failure codes with their URLs are
 `c2patool`'s. Nothing is more lenient.
+
+Since step 247 three more are equal. An unknown critical X.509 extension
+is `signingCredential.invalid` on the signer and makes an intermediate
+`signingCredential.untrusted`, as both versions say (SPEC-046, measured
+on `tests/Fixtures/chain-constraints/`). A hard binding under an instance
+label (`c2pa.hash.data__1`, C2PA 2.4 §6.4) is verified, and beside another
+is `assertion.multipleHardBindings` (SPEC-012 amendment 9; `c2patool`
+also runs both hashes). A name constraint over a name that is not UTF-8
+is judged byte for byte, as `c2patool` 0.28.1 judges it; 0.27.22 calls
+both such files `Invalid` with `claimSignature.mismatch` (SPEC-046
+amendment 1).
 
 One case is equal on purpose, and recorded because an upstream fix sits
 next to it (step 192). Two fragments of a fragmented stream exchange their
@@ -123,6 +133,7 @@ files with the same trust anchors.
 | difference | why | where named |
 |---|---|---|
 | MP3: a C2PA GEOB frame that is compressed, encrypted or under unsynchronisation, that runs past its tag, whose LBox differs from its object, or that appears twice, is refused (`general.error`); `c2patool` finds no claim, or reads the first and judges by the hash, or (LBox) says `Valid` | strict about the store, as for RIFF: each makes the store's bytes or extent uncertain (step 225, both versions) | SPEC-056 AC6–AC10 |
+| An assertion holding a CBOR NaN or infinity: `c2patool` stops with a decode error; here the file gets its report, the value named `"NaN"`, `"Infinity"` or `"-Infinity"` | JSON has no such numbers (RFC 8259 §6), and a report that cannot be written was a crash (step 247) | SPEC-007 amendment 6, SPEC-019 amendment 2 |
 | A FLAC cut short inside its ID3 tag is reported as `mp3`; `c2patool` errors | what follows a tag that runs past the end of the file cannot be seen; the verdict, `Invalid`, holds (step 243) | a known limit, CHANGELOG 0.3.0 |
 | A JPEG with a non-C2PA JUMBF in APP11, then a broken segment, reports `has_manifest: true` | the store is taken as reached at an APP11 JUMBF piece, before its label is read; rare (step 243) | a known limit, SPEC-001 amendment 5 |
 | FLAC: an ID3 tag followed by neither `fLaC` nor MPEG audio (a damaged marker, another stream) is `unknown`; `c2patool` reads the tag by the file extension and judges the hash | this verifier never reads a file extension; both say `Invalid` (step 234) | SPEC-057 AC4 |

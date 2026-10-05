@@ -229,7 +229,8 @@ final readonly class FormatDetector
      */
     public function head($stream): string
     {
-        if (! is_resource($stream) || ! rewind($stream)) {
+        // the seekable flag first: rewind() on a pipe prints a PHP warning before it fails (SPEC-043 AC12)
+        if (! is_resource($stream) || ! stream_get_meta_data($stream)['seekable'] || ! rewind($stream)) {
             throw new \InvalidArgumentException('FormatDetector needs a seekable stream resource');
         }
         $head = Read::upTo($stream, self::PROBE_LENGTH);

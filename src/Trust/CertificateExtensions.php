@@ -218,6 +218,12 @@ final readonly class CertificateExtensions
             default => $value->contents,
         };
 
+        if (! mb_check_encoding($text, 'UTF-8')) {
+            // SPEC-046 AC7: bytes that are not UTF-8 (a T61String or IA5String may hold them) are
+            // compared as they are; the /u fold below returns null on them, and every such name was ''
+            return $text;
+        }
+
         return mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', $text)));
     }
 }

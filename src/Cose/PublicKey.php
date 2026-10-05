@@ -95,6 +95,78 @@ final readonly class PublicKey
         return $raw;
     }
 
+    /**
+     * The same RSA public key read as rsaEncryption (SPEC-009 AC12): an id-RSASSA-PSS key's
+     * SubjectPublicKeyInfo with its algorithm identifier replaced and its key bits unchanged.
+     * PHP gives no modulus for an RSA-PSS key and refuses raw RSA on it; read this way, the
+     * EMSA-PSS check with the salt RFC 8230 §2 fixes can run on it.
+     *
+     * @throws CoseException when the key is not RSA-PSS or its SubjectPublicKeyInfo is not as OpenSSL writes it
+     */
+    public function asRsaEncryption(): \OpenSSLAsymmetricKey
+    {
+        if ($this->kind !== self::KIND_RSA_PSS) {
+            throw new CoseException(sprintf('only an RSA-PSS key is read as rsaEncryption, not an %s', $this->describe()), StatusCode::SigningCredentialInvalid);
+        }
+        // SubjectPublicKeyInfo ::= SEQUENCE { algorithm AlgorithmIdentifier, subjectPublicKey BIT STRING }
+        [$outerLength, $at] = self::header($this->spki, 0, 0x30);
+        if ($at + $outerLength !== strlen($this->spki)) {
+            throw new CoseException('the RSA-PSS SubjectPublicKeyInfo does not end where its length says', StatusCode::SigningCredentialInvalid);
+        }
+        [$algorithmLength, $algorithmAt] = self::header($this->spki, $at, 0x30);
+        $bitsAt = $algorithmAt + $algorithmLength;
+        [$bitsLength, $bitsContent] = self::header($this->spki, $bitsAt, 0x03);
+        if ($bitsContent + $bitsLength !== strlen($this->spki)) {
+            throw new CoseException('the RSA-PSS SubjectPublicKeyInfo holds more than its algorithm and key', StatusCode::SigningCredentialInvalid);
+        }
+        $body = "\x30\x0d".self::OID_RSA."\x05\x00".substr($this->spki, $bitsAt);
+        $der = "\x30".self::length(strlen($body)).$body;
+        $pem = "-----BEGIN PUBLIC KEY-----\n".chunk_split(base64_encode($der), 64, "\n")."-----END PUBLIC KEY-----\n";
+        $key = OpenSsl::quiet(static fn () => openssl_pkey_get_public($pem));
+        $details = $key === false ? false : OpenSsl::quiet(static fn () => openssl_pkey_get_details($key));
+        if ($key === false || $details === false || $details['type'] !== OPENSSL_KEYTYPE_RSA || $details['bits'] !== $this->bits) {
+            throw new CoseException('the RSA-PSS key cannot be read as an RSA key of the same size', StatusCode::SigningCredentialInvalid);
+        }
+
+        return $key;
+    }
+
+    /**
+     * The tag at $at must be $tag; returns its content length and where the content starts.
+     *
+     * @return array{int, int}
+     */
+    private static function header(string $der, int $at, int $tag): array
+    {
+        if (! isset($der[$at + 1]) || ord($der[$at]) !== $tag) {
+            throw new CoseException(sprintf('the RSA-PSS SubjectPublicKeyInfo has no tag 0x%02x at offset %d', $tag, $at), StatusCode::SigningCredentialInvalid);
+        }
+        $first = ord($der[$at + 1]);
+        if ($first < 0x80) {
+            return [$first, $at + 2];
+        }
+        $count = $first & 0x7F;
+        if ($count < 1 || $count > 2 || ! isset($der[$at + 1 + $count])) {
+            throw new CoseException(sprintf('the RSA-PSS SubjectPublicKeyInfo has a length of %d bytes at offset %d', $count, $at), StatusCode::SigningCredentialInvalid);
+        }
+        $length = 0;
+        for ($i = 0; $i < $count; $i++) {
+            $length = ($length << 8) | ord($der[$at + 2 + $i]);
+        }
+
+        return [$length, $at + 2 + $count];
+    }
+
+    /** A DER length of at most two bytes: an RSA key of up to 16,384 bits fits (SPEC-009). */
+    private static function length(int $n): string
+    {
+        if ($n < 0 || $n > 0xFFFF) {
+            throw new CoseException(sprintf('an RSA SubjectPublicKeyInfo of %d bytes is beyond what this verifier reads', $n), StatusCode::SigningCredentialInvalid);
+        }
+
+        return $n < 0x80 ? chr($n) : ($n < 0x100 ? "\x81".chr($n) : "\x82".chr(($n >> 8) & 0xFF).chr($n & 0xFF));
+    }
+
     public function describe(): string
     {
         return match ($this->kind) {

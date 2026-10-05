@@ -539,9 +539,11 @@ final readonly class BmffHashCheck
     /** Which BMFF binding this manifest carries, newest first, or null for none. */
     public static function labelOf(Manifest $manifest): ?string
     {
-        foreach (self::LABELS as $label) {
-            if (array_key_exists($label, $manifest->assertions)) {
-                return $label;
+        foreach (self::LABELS as $kind) {
+            foreach (array_keys($manifest->assertions) as $label) {
+                if (HardBindings::baseLabel((string) $label) === $kind) {   // an instance label too (SPEC-012 amendment 9)
+                    return (string) $label;
+                }
             }
         }
 

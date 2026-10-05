@@ -37,8 +37,6 @@ final readonly class DataHashCheck
     private const ALGORITHMS = ['sha256' => 32, 'sha384' => 48, 'sha512' => 64];
 
     /** Hard-binding labels this verifier knows of but does not implement (M8 and later). */
-    private const OTHER_HARD_BINDINGS = ['c2pa.hash.bmff', 'c2pa.hash.boxes', 'c2pa.hash.collection.data'];
-
     public function __construct(
         private int $maxExclusions = self::DEFAULT_MAX_EXCLUSIONS,
         private int $chunkSize = self::DEFAULT_CHUNK_SIZE,
@@ -55,15 +53,16 @@ final readonly class DataHashCheck
         $bindings = [];
         foreach ($manifest->assertionStore->superboxes() as $box) {
             $label = $box->description->label;
-            if ($label === self::LABEL) {
+            $base = HardBindings::baseLabel($label);   // c2pa.hash.data__1 is a c2pa.hash.data (SPEC-012 amendment 9)
+            if ($base === self::LABEL) {
                 $bindings[] = $box;
-            } elseif (in_array($label, BmffHashCheck::LABELS, true)) {
+            } elseif (in_array($base, BmffHashCheck::LABELS, true)) {
                 // SPEC-027/029: these two are verified, by BmffHashCheck, and the Verifier
                 // routes a manifest that carries one there rather than here. Reaching this
                 // line means someone called this check directly with a BMFF binding, and
                 // saying "not supported" would be untrue since M8.
                 return [new ValidationStatus(StatusCode::GeneralError, sprintf('%s/c2pa.assertions/%s', $manifestUrl, $label), sprintf('the hard binding %s is verified by BmffHashCheck, not here; this check answers for %s alone', $label, self::LABEL))];
-            } elseif (self::isOtherHardBinding($label)) {
+            } elseif (HardBindings::isHardBinding($label)) {
                 return [new ValidationStatus(StatusCode::GeneralError, sprintf('%s/c2pa.assertions/%s', $manifestUrl, $label), sprintf('the hard binding %s is not supported yet: BMFF, box and collection hashes are M8 and later; only %s is verified today', $label, self::LABEL))];
             }
         }
@@ -74,8 +73,10 @@ final readonly class DataHashCheck
             return [new ValidationStatus(StatusCode::AssertionMultipleHardBindings, $manifestUrl, sprintf('the manifest has %d %s assertions (at offsets %s); a standard manifest has exactly one (C2PA 2.4 §15.10.1.2)', count($bindings), self::LABEL, implode(', ', array_map(static fn (Superbox $b): int => $b->offset, $bindings))))];
         }
 
-        $url = sprintf('%s/c2pa.assertions/%s', $manifestUrl, self::LABEL);
-        $data = $manifest->assertions[self::LABEL]->data;
+        // the label the box carries: c2pa.hash.data, or an instance of it (SPEC-012 amendment 9)
+        $label = $bindings[0]->description->label;
+        $url = sprintf('%s/c2pa.assertions/%s', $manifestUrl, $label);
+        $data = ($manifest->assertions[$label] ?? null)?->data;
         if (! is_array($data) || array_is_list($data)) {
             return [new ValidationStatus(StatusCode::AssertionDataHashMalformed, $url, sprintf('%s is not a CBOR map', self::LABEL))];
         }
@@ -261,16 +262,5 @@ final readonly class DataHashCheck
         }
 
         return hash_final($context, true);
-    }
-
-    private static function isOtherHardBinding(string $label): bool
-    {
-        foreach (self::OTHER_HARD_BINDINGS as $prefix) {
-            if ($label === $prefix || str_starts_with($label, $prefix.'.')) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

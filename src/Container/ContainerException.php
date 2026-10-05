@@ -11,9 +11,10 @@ namespace Provemark\C2paVerifier\Container;
  *
  * `$storeReached` says whether the extractor had come to the manifest
  * store when the container failed (SPEC-003 amendment 3, AC18). The
- * verifier reports a manifest only then (SPEC-013 amendment 16). It is
- * `true` unless an extractor says otherwise: only the RIFF walk does so
- * far, and the other extractors keep their earlier report.
+ * verifier reports a manifest only then (SPEC-013 amendment 16). Every
+ * extractor sets it, JPEG, PNG, ISOBMFF, RIFF and ID3 alike (SPEC-013
+ * amendments 16 to 18); the default `true` is what a fault outside an
+ * extractor's walk reports.
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
  * removed in any release; the contract is the nine classes named in the README.

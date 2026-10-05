@@ -8922,3 +8922,23 @@ README are where the disclosure lives.
 - Reasoned: the BMFF route's missing count (no fixture).
 - Decided by Maurice: all fixes in 0.3.0; finding 2 not built (refuted by
   the specification); findings 8 and 9 later.
+
+## 2026-10-05 — The whole review's fixes built; the check repeated (step 248)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, volg je advies: alles in 0.3.0" (step 247).
+- Produced: `src/Manifest/ManifestStore.php`, `src/Cli/Command.php`,
+  `src/Container/FormatDetector.php`, `src/Cose/PublicKey.php`,
+  `src/Cose/SignatureVerifier.php`, `src/Hash/HardBindings.php` (new),
+  `src/Hash/DataHashCheck.php`, `src/Hash/BmffHashCheck.php`,
+  `src/Verifier/Verifier.php`, `src/Trust/CertificateExtensions.php`,
+  the `ContainerException` docblock; `bin/fuzz.php` encodes every report;
+  `docs/comparison.md`, CHANGELOG 0.3.0, SECURITY.md;
+  `notes/step-248-whole-review-fixes.md`; a row in `NOTES.md`.
+- Measured: each group green (SPEC-007, 009, 012, 019, 043, 046);
+  `composer check` (799); the corpus against step 245; the T61 pair; every
+  new-format file against both `c2patool` versions; the fuzzer on old and
+  new `src/` with the NaN seed (14 faults / 0); the release set fuzzed
+  (16,041 runs, 118 `Valid` confirmed, 5 faults); the faults' cause; one
+  fault file under `v0.2.9` (exit 255) and both `c2patool` versions.
+- Reasoned: that the five faults share one cause, from the report walk.
+- Decided by Maurice: none in this step; the new finding is proposed.

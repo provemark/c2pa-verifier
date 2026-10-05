@@ -9,7 +9,8 @@ declare(strict_types=1);
  * bit flips aimed at the manifest store itself — and run through
  * Verifier::verify(). Two things are never allowed, whatever the input:
  *
- *   1. an exception escaping the verifier (every fault must be a report);
+ *   1. an exception escaping the verifier, or its report's toJson() (every
+ *      fault must be a report that can be written; step 247);
  *   2. a Valid or Trusted verdict on a mutated file, unless the mutation
  *      provably touched nothing the verdict covers — those few are written
  *      out so that c2patool can be asked the same question (the note).
@@ -188,6 +189,7 @@ foreach ($files as $file) {
         $name = basename($file).'#'.$seed.'-'.$round.'-'.$kind;
         try {
             $report = $verifier->verify($stream);
+            $report->toJson();   // a report that cannot be written is a fault too (step 247: a NaN in an assertion)
             $state = $report->result->state;
             $states[$state->value] = ($states[$state->value] ?? 0) + 1;
             if ($state === ValidationState::Valid || $state === ValidationState::Trusted) {

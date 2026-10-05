@@ -106,9 +106,12 @@ final readonly class SignatureVerifier
     private function rsaPss(string $message, string $signature, PublicKey $key, string $hash): bool
     {
         if ($key->kind === PublicKey::KIND_RSA_PSS) {
-            // OpenSSL performs PSS itself for this key type, with the key's own
-            // parameters, and answers −1 when they do not match the hash asked.
-            return $this->opensslVerify($message, $signature, $key, self::OPENSSL_ALGOS[$hash]);
+            // Both must hold (SPEC-009 AC12). OpenSSL performs PSS for this key type with the
+            // key's own parameters, and answers −1 when they do not match the hash asked; it
+            // accepts any salt length. RFC 8230 §2 fixes the salt at the hash length, which the
+            // EMSA-PSS check enforces, run on the same key read as rsaEncryption.
+            return $this->opensslVerify($message, $signature, $key, self::OPENSSL_ALGOS[$hash])
+                && RsaPss::verify($message, $signature, $key->asRsaEncryption(), $hash, $key->bits);
         }
 
         // An ordinary RSA key: openssl_verify would do PKCS#1 v1.5. Never that.
