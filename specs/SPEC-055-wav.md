@@ -334,7 +334,7 @@ same way, so SPEC-003's tests prove the refactor. `FormatDetector` returns
    every file must fail it, and the line is put back. No other criterion
    changes.
 
-   **Proposed, awaiting approval.**
+   Approved by Maurice van Loon, 2026-10-05 (step 210c).
 
 ## Traceability
 
@@ -360,3 +360,4 @@ least one test; every source file maps back to this spec.
 | AC15 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC15: a C2PA inside the LIST chunk is not looked for; tests/Unit/Verifier/WavTest.php :: AC15: a C2PA inside the LIST chunk is no manifest, and no failure / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (top-level walk only) |
 | AC16 | tests/Unit/Verifier/WavTest.php :: AC16: the signed fixture verifies as c2patool 0.27.22 and 0.28.1 say, without and with trust settings (four datasets); AC16: one byte of the audio data flipped is assertion.dataHash.mismatch / SPEC-055 | src/Verifier/Verifier.php :: __construct() (`$wav`), verify() (the `wav` arm) |
 | AC17 | tests/Unit/Verifier/WavTest.php :: AC17: the WebP whose form type says WAVE is read as a WAV and fails its data hash, as c2patool says / SPEC-055 | src/Container/FormatDetector.php :: detect(); src/Verifier/Verifier.php :: verify() |
+| AC18 | tests/Unit/Verifier/WavTest.php :: AC18: the signed WAV of another writer verifies as c2patool 0.27.22 and 0.28.1 say, without and with the test roots (four datasets); AC18: the unsigned WAV and the nested-LIST bomb of c2pa-rs are WAVs with no manifest and no failure; AC18: the c2pa-rs WAV whose RIFF size exceeds the file is one general.error naming both sizes / SPEC-055 | src/Container/FormatDetector.php :: detect() (`WAVE`); src/Container/RiffManifestStoreExtractor.php :: extract() (amendment 2) |

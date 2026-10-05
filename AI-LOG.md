@@ -8342,3 +8342,15 @@ README are where the disclosure lives.
 - Reasoned: that the risk on shared hosting is the time limit, not
   memory, and that it is not specific to WAV.
 - Decided by Maurice: none.
+
+## 2026-10-05 — SPEC-055 amendment 2 approved; AC18's tests (step 210c)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur AC18 goed en ga door".
+- Produced: seven AC18 tests in `tests/Unit/Verifier/WavTest.php`;
+  SPEC-055 amendment 2 approved and its Traceability row; a row in
+  `NOTES.md`.
+- Measured: `vendor/bin/pest --group=SPEC-055 --filter=AC18` with the
+  `WAVE` detection line removed (7 failed), restored (`git diff` on `src/`
+  empty), then 7 passed; `composer check`.
+- Reasoned: none beyond the amendment.
+- Decided by Maurice: AC18 approved.

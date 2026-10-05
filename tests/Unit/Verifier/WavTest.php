@@ -154,3 +154,40 @@ it('AC17: the WebP whose form type says WAVE is read as a WAV and fails its data
         ->and(spec055Codes($tree, 'success'))->toContain('claimSignature.validated')
         ->and(spec055Codes($tree, 'failure'))->toContain('assertion.dataHash.mismatch');
 })->group('SPEC-055');
+
+it('AC18: the signed WAV of another writer verifies as c2patool 0.27.22 and 0.28.1 say, without and with the test roots', function (string $recorded, bool $trusted): void {
+    /** @var array<string, mixed> $oracle */
+    $oracle = json_decode((string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/c2patool/wav-writers/{$recorded}.json"), true, 512, JSON_THROW_ON_ERROR);
+    $settings = $trusted ? TrustSettings::fromJson((string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/matrix/test-roots.settings.json')) : null;
+    $report = (new Verifier)->verify(spec055VerifierStream('wav-writers/c2pa-python-sample1_signed.wav'), $settings);
+    $ours = spec055Report($report);
+
+    expect($report->format)->toBe('wav')
+        ->and($ours['validation_state'])->toBe($oracle['validation_state'])
+        ->and($ours['validation_state'])->toBe($trusted ? 'Trusted' : 'Valid')
+        ->and(spec055Codes($ours, 'success'))->toBe(spec055Codes($oracle, 'success'))
+        ->and(spec055Codes($ours, 'failure'))->toBe(spec055Codes($oracle, 'failure'));
+})->with([
+    '0.27.22' => ['c2pa-python-sample1_signed', false],
+    '0.27.22 trusted' => ['c2pa-python-sample1_signed.trusted', true],
+    '0.28.1' => ['c2pa-python-sample1_signed.0.28.1', false],
+    '0.28.1 trusted' => ['c2pa-python-sample1_signed.0.28.1.trusted', true],
+])->group('SPEC-055');
+
+it('AC18: the unsigned WAV and the nested-LIST bomb of c2pa-rs are WAVs with no manifest and no failure', function (string $file): void {
+    $report = (new Verifier)->verify(spec055VerifierStream("wav-writers/{$file}.wav"));
+
+    expect($report->format)->toBe('wav')
+        ->and($report->hasManifest)->toBeFalse()
+        ->and(spec055Codes(spec055Report($report), 'failure'))->toBe([]);
+})->with(['c2pa-rs-sample1', 'c2pa-rs-riff_bomb_1000'])->group('SPEC-055');
+
+it('AC18: the c2pa-rs WAV whose RIFF size exceeds the file is one general.error naming both sizes', function (): void {
+    $report = (new Verifier)->verify(spec055VerifierStream('wav-writers/c2pa-rs-sample3.invalid.wav'));
+
+    expect($report->format)->toBe('wav')
+        ->and($report->result->state)->toBe(ValidationState::Invalid)
+        ->and(array_map(static fn ($s): string => $s->code->value, $report->result->statuses))->toBe(['general.error'])
+        ->and($report->result->statuses[0]->explanation)->toContain('1441174')
+        ->and($report->result->statuses[0]->explanation)->toContain('441172');
+})->group('SPEC-055');
