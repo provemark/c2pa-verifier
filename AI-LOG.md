@@ -8792,3 +8792,12 @@ README are where the disclosure lives.
 - Reasoned: that SPEC-056 AC13's FLAC expectation was meant to change with
   this spec.
 - Decided by Maurice: SPEC-057 approved (step 236).
+
+## 2026-10-05 — Two amendments confirmed; pushed (step 238)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, bevestig de amendementen, push en ga door met AVI".
+- Produced: SPEC-013 amendment 20 and SPEC-056 amendment 4 marked
+  confirmed; the push of `main`.
+- Measured: `composer check`; the attribution check; CI.
+- Reasoned: none.
+- Decided by Maurice: both amendments confirmed; the push.

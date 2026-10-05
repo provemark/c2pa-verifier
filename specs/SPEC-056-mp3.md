@@ -350,7 +350,7 @@ constructor parameter, as WAV's.
    extractor returns `null` for a stream that opens with `fLaC`, as for one
    that opens with MPEG audio. AC13's test changes in that one expectation.
    Named in SPEC-057's open questions before either was written.
-   Awaiting confirmation.
+   Confirmed by Maurice van Loon, 2026-10-05 (step 238).
 
 ## Traceability
 
