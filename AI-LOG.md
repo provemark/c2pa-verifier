@@ -8381,3 +8381,24 @@ README are where the disclosure lives.
   green (`gh run view`).
 - Reasoned: none.
 - Decided by Maurice: push `main`.
+
+## 2026-10-05 — A review before 0.3.0; the small findings fixed (step 213)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "kan je nog echt goed de code reviewen om te zien of er nog fouten
+  of problemen in zitten"; then "akkoord, volg je advies en begin met stap
+  213".
+- Produced: a code review of `v0.2.9..HEAD` (ten findings);
+  `docs/comparison.md` (the remote-manifest scan limit), `bin/fuzz.php`
+  (default paths), `SECURITY.md` (scope), `docs/milestones.md` (the
+  SPEC-055 row), SPEC-003 Traceability; `notes/step-213-review-cleanup.md`;
+  a row in `NOTES.md`.
+- Measured: findings 1 and 2 reproduced on built files with this verifier
+  and both `c2patool` versions, and the same on an unsigned WebP; finding 4
+  on a 1 kB and a 9 MB WAV with a `_PMX` chunk after `data`; a two-round
+  run of the fuzzer's defaults (264 runs, 0 faults, its one `Valid`
+  mutation `Valid` in both `c2patool` versions); `composer check`.
+- Reasoned: that leniency outside the `C2PA` chunk cannot make a changed
+  signed file `Valid`, because the data hash covers it.
+- Decided by Maurice: the advice for findings 1–3 (strict about the
+  `C2PA` chunk, lenient as `c2patool` about the rest, `has_manifest` only
+  when a `C2PA` chunk was seen), before 0.3.0.

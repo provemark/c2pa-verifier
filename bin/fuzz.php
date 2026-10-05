@@ -40,7 +40,7 @@ $out = $argv[3] ?? sys_get_temp_dir().'/c2pa-fuzz';
 $paths = array_slice($argv, 4);
 if ($paths === []) {
     $root = dirname(__DIR__).'/tests/Fixtures';
-    $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp'];
+    $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp', $root.'/fixture-signed.mp4', $root.'/fixture-signed.wav', $root.'/wav', $root.'/wav-writers'];   // MP4 and WAV since step 213
 }
 $files = [];
 foreach ($paths as $path) {
