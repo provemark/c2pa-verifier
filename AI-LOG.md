@@ -8762,3 +8762,14 @@ README are where the disclosure lives.
   `bin/spec-check.php`.
 - Reasoned: six criteria from step 234; no new reader.
 - Decided by Maurice: write the spec.
+
+## 2026-10-05 — SPEC-057 approved; its tests, red (step 236)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur SPEC-057 goed en ga door".
+- Produced: SPEC-057 `approved`; `tests/Unit/Verifier/FlacTest.php`;
+  Traceability placeholders; rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: `vendor/bin/pest --group=SPEC-057` (15 failed, 1 passed: AC1,
+  which the spec says the existing reader meets); the full suite (15
+  failed, 748 passed); PHPStan; Pint; `bin/spec-check.php`.
+- Reasoned: none beyond the tests.
+- Decided by Maurice: SPEC-057 approved.
