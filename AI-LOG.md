@@ -8354,3 +8354,19 @@ README are where the disclosure lives.
   empty), then 7 passed; `composer check`.
 - Reasoned: none beyond the amendment.
 - Decided by Maurice: AC18 approved.
+
+## 2026-10-05 — The check before 0.3.0, part one (step 212)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur AC18 goed en ga door".
+- Produced: `bin/fuzz.php` (globs `wav`, reads `WAVE` with the WAV
+  extractor); README, `docs/comparison.md` and CHANGELOG updated;
+  `notes/step-212-pre-release-check.md`; a row in `NOTES.md`.
+- Measured: `php bin/fuzz.php 20261005 60 <out>` over the release set
+  with the WAV files (12,258 runs, 0 faults, 67 `Valid`); every one of the
+  67 with `c2patool` 0.27.22 and 0.28.1 (all `Valid`);
+  `bin/spec-check.php`, `bin/api-check.php`, `bin/package-check.php`;
+  `git diff v0.2.9` on the recorded surface and `StatusCode` (empty);
+  `composer check`.
+- Reasoned: that 0.3.0 is a minor version (new behaviour); that running
+  the seed under `v0.2.9` compares nothing for WAV.
+- Decided by Maurice: none.

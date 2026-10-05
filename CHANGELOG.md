@@ -15,7 +15,11 @@ committed.
   WebP and WAV now share. A `C2PA` chunk that is not the last is read and
   left to the data hash, as `c2patool` does. RF64 (WAV over 4 GB) and a
   `C2PA` nested in a `LIST` chunk are not read, as in `c2patool`.
-  Measured against `c2patool` 0.27.22 and 0.28.1 (steps 203–204).
+  Measured against `c2patool` 0.27.22 and 0.28.1 (steps 203–204), and
+  held against the WAVs of `contentauth/c2pa-rs` and
+  `contentauth/c2pa-python` too (step 210: a file signed through the C
+  binding, an oversized RIFF size, a 1,000-deep `LIST` bomb). Memory stays
+  flat on large files: 33 MB peak at 2 GB (step 211).
 
 ### Changed
 - The unknown-format explanation names WAV among the formats read.
@@ -24,6 +28,10 @@ committed.
   changed (`webp/riff-not-webp.webp`), is now `Invalid` with
   `assertion.dataHash.mismatch`, as `c2patool` says, instead of
   `general.error`.
+- The dist no longer carries the fixture builders (`bin/make-*.php` and
+  `bin/variant-helpers.php`): they read `tests/Fixtures/`, which never
+  shipped, so they could not run from `vendor/`. The dist is 3.5 MB
+  (SPEC-023 amendment 2).
 
 ## 0.2.9 — 2026-10-02
 

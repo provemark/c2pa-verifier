@@ -276,7 +276,7 @@ alone.
   and closed.
 - **Bounded input.** Every parser has hard limits and acceptance criteria
   for malformed input. Before every release the corpora are fuzzed
-  (`bin/fuzz.php`, replayable); before 0.2.8, 11 118 randomly mutated files
+  (`bin/fuzz.php`, replayable); before 0.3.0, 12 258 randomly mutated files
   went through the verifier without an exception escaping.
 
 ## Working on it

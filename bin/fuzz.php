@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
+use Provemark\C2paVerifier\Container\WavManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
 use Provemark\C2paVerifier\Report\ValidationState;
 use Provemark\C2paVerifier\Verifier\Verifier;
@@ -44,7 +45,7 @@ if ($paths === []) {
 $files = [];
 foreach ($paths as $path) {
     if (is_dir($path)) {
-        foreach (glob($path.'/*.{jpg,jpeg,png,webp}', GLOB_BRACE) ?: [] as $file) {
+        foreach (glob($path.'/*.{jpg,jpeg,png,webp,wav}', GLOB_BRACE) ?: [] as $file) {
             $files[] = $file;
         }
     } elseif (is_file($path)) {
@@ -71,6 +72,7 @@ function fuzzStoreRanges(string $file): array
         $store = match (true) {
             str_starts_with($head, "\xFF\xD8") => (new JpegManifestStoreExtractor)->extract($stream),
             str_starts_with($head, "\x89PNG") => (new PngManifestStoreExtractor)->extract($stream),
+            substr($head, 0, 4) === 'RIFF' && substr($head, 8, 4) === 'WAVE' => (new WavManifestStoreExtractor)->extract($stream),   // step 212
             substr($head, 0, 4) === 'RIFF' => (new WebpManifestStoreExtractor)->extract($stream),
             default => null,
         };
