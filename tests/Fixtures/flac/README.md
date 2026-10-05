@@ -5,18 +5,18 @@ Built by `bin/make-flac-variants.php` from `../fixture-signed.flac` and
 GEOB in front of the unchanged FLAC stream (C2PA 2.4 §A.3.4). The tag is
 MP3's, measured in steps 225–232 (`../mp3/`); these variants are about the
 stream marker `fLaC` and what stands before it. Measured with `c2patool`
-0.27.22 and 0.28.1 on 2026-10-05, without trust settings. There is no FLAC
-spec yet; this verifier reads none of them (`unknown`).
+0.27.22 and 0.28.1 on 2026-10-05, without trust settings. The last column is
+this verifier since SPEC-057 (step 237).
 
-| file | what it is | `c2patool` 0.27.22 | 0.28.1 |
-|---|---|---|---|
-| `zeros-after-tag.flac` | 16 zero bytes between the tag and `fLaC` | read, `assertion.dataHash.mismatch` | the same |
-| `marker-damaged.flac` | `fLaD` instead of `fLaC` | read, `assertion.dataHash.mismatch` (the marker is not checked) | the same |
-| `tag-then-other.flac` | `XXXX` instead of `fLaC` | read, `assertion.dataHash.mismatch` | the same |
-| `tag-at-end.flac` | the C2PA tag after the stream instead of before it | *No claim found* | the same |
-| `unsigned-with-id3.flac` | an unsigned FLAC with an ID3 tag (`TIT2`) before it; the source of the next | *No claim found* | the same |
-| `signed-with-id3.flac` | that file signed by `c2patool` 0.27.22 (not built by the script): one tag, `TIT2` then `GEOB`, then `fLaC` | **`Valid`** | **`Valid`** |
-| `unsigned-zeros-after-tag.flac` | an ID3 tag, 16 zero bytes, then the FLAC | *No claim found* | the same |
+| file | what it is | `c2patool` 0.27.22 | 0.28.1 | SPEC-057 (step 237) |
+|---|---|---|---|---|
+| `zeros-after-tag.flac` | 16 zero bytes between the tag and `fLaC` | read, `assertion.dataHash.mismatch` | the same | AC4: `flac`, read, `assertion.dataHash.mismatch` |
+| `marker-damaged.flac` | `fLaD` instead of `fLaC` | read, `assertion.dataHash.mismatch` (the marker is not checked) | the same | AC4: `unknown` |
+| `tag-then-other.flac` | `XXXX` instead of `fLaC` | read, `assertion.dataHash.mismatch` | the same | AC4: `unknown` |
+| `tag-at-end.flac` | the C2PA tag after the stream instead of before it | *No claim found* | the same | AC2: `flac`, no manifest |
+| `unsigned-with-id3.flac` | an unsigned FLAC with an ID3 tag (`TIT2`) before it; the source of the next | *No claim found* | the same | `flac`, no manifest |
+| `signed-with-id3.flac` | that file signed by `c2patool` 0.27.22 (not built by the script): one tag, `TIT2` then `GEOB`, then `fLaC` | **`Valid`** | **`Valid`** | AC3: `Valid` / `Trusted`, code for code |
+| `unsigned-zeros-after-tag.flac` | an ID3 tag, 16 zero bytes, then the FLAC | *No claim found* | the same | `flac`, no manifest |
 
 `c2patool` could not sign `unsigned-zeros-after-tag.flac`: both versions
 stop with *Error: embedding manifest*.

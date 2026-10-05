@@ -108,8 +108,8 @@ final readonly class Id3ManifestStoreExtractor
     {
         $reader = new StreamReader($stream, 'frame');
         $first = $reader->readUpTo(self::HEADER_LENGTH);
-        if (FormatDetector::isMpegFrame($first)) {
-            return null;   // MPEG audio from the first byte: no tag, so no store (AC13)
+        if (FormatDetector::isMpegFrame($first) || str_starts_with($first, 'fLaC')) {
+            return null;   // MPEG audio or a FLAC stream from the first byte: no tag, so no store (AC13; SPEC-057 AC2)
         }
         if (strlen($first) !== self::HEADER_LENGTH || ! str_starts_with($first, 'ID3')) {
             throw new ContainerException(sprintf('not an ID3v2 tag: expected ID3 at offset 0, found %s', Bytes::hex(substr($first, 0, 3))));

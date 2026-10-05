@@ -8773,3 +8773,22 @@ README are where the disclosure lives.
   failed, 748 passed); PHPStan; Pint; `bin/spec-check.php`.
 - Reasoned: none beyond the tests.
 - Decided by Maurice: SPEC-057 approved.
+
+## 2026-10-05 — SPEC-057 built: FLAC (step 237)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur SPEC-057 goed en ga door".
+- Produced: `src/Container/Id3ManifestStoreExtractor.php` (`null` for
+  `fLaC`), `src/Container/FormatDetector.php` (`flac`, `audioAfterTags()`),
+  `src/Verifier/Verifier.php` (the `flac` arm, the message);
+  `bin/fuzz.php` (FLAC); SPEC-056 AC13's test expectation (amendment 4);
+  SPEC-057 `implemented` with Traceability; SPEC-013 amendment 20 and
+  SPEC-056 amendment 4 (awaiting confirmation); README, `SECURITY.md`,
+  `docs/comparison.md`, CHANGELOG, the FLAC fixture README; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: Pest (16 SPEC-057, 763 in all); `composer check` (exit 0); the
+  corpus against step 233 (no file moved); every FLAC against both
+  `c2patool` versions (all equal); the fuzzer over FLAC and the default
+  set (10,969 runs, 0 faults, 145 `Valid`, each `Valid` in both versions).
+- Reasoned: that SPEC-056 AC13's FLAC expectation was meant to change with
+  this spec.
+- Decided by Maurice: SPEC-057 approved (step 236).

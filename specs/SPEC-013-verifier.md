@@ -590,6 +590,16 @@ final class ManifestException extends \RuntimeException
 
     Confirmed by Maurice van Loon, 2026-10-05 (step 229).
 
+20. **2026-10-05, step 237, with SPEC-057's implementation** — the
+    report's `format` gains `flac` (SPEC-057 AC4); the unknown-format
+    message names FLAC; `flac` is routed to the MP3 extractor, so the
+    constructor does not change. No existing file changes verdict (the
+    corpus against step 233: identical).
+
+    **Weight B: a new value in the report.**
+
+    Awaiting confirmation.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

@@ -37,6 +37,12 @@ committed.
   35 variants, six real tags signed by `c2patool`, an MP3 signed by c2pa-ts
   (an independent writer) and a 300 MB file (steps 225, 230, 232).
 
+- **FLAC (SPEC-057).** C2PA puts FLAC's store in the same ID3v2 tag as
+  MP3's, in front of the FLAC stream (C2PA 2.4 §A.3.4); it is read by the
+  MP3 reader and verified like the other formats; `format` is `flac`. A
+  file is FLAC when `fLaC` opens it or follows the tag(s); an untagged FLAC
+  has no manifest. Measured against `c2patool` 0.27.22 and 0.28.1 (step 234).
+
 ### Changed
 - **WebP and WAV: strict about the `C2PA` chunk, lenient as `c2patool`
   about the rest (SPEC-003 amendment 3, SPEC-055 amendment 3).** Bytes
@@ -61,7 +67,7 @@ committed.
   short tail inside the RIFF chunk, or a chunk other than `C2PA` that runs
   past its end, stops the walk, as `c2patool`'s does, instead of being a
   fault; a header size below 4 is now refused.
-- The unknown-format explanation names WAV and MP3 among the formats read.
+- The unknown-format explanation names WAV, MP3 and FLAC among the formats read.
 - A RIFF file with the form type `WAVE` that was `unknown` before is now a
   WAV. The one such file among the fixtures, a WebP with its form type
   changed (`webp/riff-not-webp.webp`), is now `Invalid` with

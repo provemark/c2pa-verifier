@@ -83,13 +83,14 @@ it('AC11: a tag size one too large leaves no MPEG audio after the tag, so the fi
 it('AC13: mp3 when MPEG audio follows the tag or opens the file, and nothing else is guessed', function (): void {
     $detector = new FormatDetector;
     $signed = spec056File('fixture-signed.mp3');
-    // the fixture's tag followed by a FLAC stream marker: ID3 is not enough
+    // the fixture's tag followed by a FLAC stream marker: ID3 is not enough to say mp3; since
+    // SPEC-057 (amendment 4) it is flac
     $flac = substr($signed, 0, 13548).'fLaC'.str_repeat("\0", 64);
 
     expect($detector->detect(spec056VerifierStream($signed)))->toBe('mp3')
         ->and($detector->detect(spec056VerifierStream(spec056File('mp3/unsigned-no-tag.mp3'))))->toBe('mp3')
         ->and($detector->detect(spec056VerifierStream(spec056File('mp3/junk-before-tag.mp3'))))->toBeNull()
-        ->and($detector->detect(spec056VerifierStream($flac)))->toBeNull()
+        ->and($detector->detect(spec056VerifierStream($flac)))->toBe('flac')
         ->and($detector->detect(spec056VerifierStream(spec056File('fixture-signed.webp'))))->toBe('webp');
 })->group('SPEC-056');
 

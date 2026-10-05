@@ -344,6 +344,14 @@ constructor parameter, as WAV's.
 
    Approved by Maurice van Loon, 2026-10-05 (step 232).
 
+4. **2026-10-05, step 237, with SPEC-057's implementation** — AC13 said a
+   file whose tag is followed by `fLaC` stays `unknown` "until its own
+   spec". SPEC-057 is that spec: such a file is now `flac`, and the
+   extractor returns `null` for a stream that opens with `fLaC`, as for one
+   that opens with MPEG audio. AC13's test changes in that one expectation.
+   Named in SPEC-057's open questions before either was written.
+   Awaiting confirmation.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

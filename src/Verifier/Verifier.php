@@ -100,7 +100,7 @@ final readonly class Verifier
             $head = $this->formats->head($stream);
 
             return new VerificationReport('unknown', false, null, ValidationResult::fromStatuses([
-                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, WebP, WAV, MP3 or ISOBMFF signature', Bytes::hex($head))),
+                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, WebP, WAV, MP3, FLAC or ISOBMFF signature', Bytes::hex($head))),
             ], []));
         }
 
@@ -112,6 +112,7 @@ final readonly class Verifier
                 'webp' => $this->webp->extract($stream),
                 'wav' => $this->wav->extract($stream),   // SPEC-055
                 'mp3' => $this->mp3->extract($stream),   // SPEC-056
+                'flac' => $this->mp3->extract($stream),   // SPEC-057: the same ID3 tag, in front of the FLAC stream
                 // SPEC-026: the container only. There is no BMFF hard-binding check yet,
                 // so the data hash finds no `c2pa.hash.data` and says
                 // claim.hardBindings.missing — Invalid, named, and never a silent Valid.

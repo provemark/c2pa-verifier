@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-05                      |
 | Supersedes | —                                                 |
@@ -127,7 +127,7 @@ extractor (no new constructor parameter).
 
 ## Amendments
 
-None yet.
+None.
 
 ## Traceability
 
@@ -136,9 +136,9 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
+| AC1 | tests/Unit/Verifier/FlacTest.php :: AC1: the fixture yields the store, byte-exact, with its range / SPEC-057 | src/Container/Id3ManifestStoreExtractor.php :: walk() (unchanged, SPEC-056) |
+| AC2 | tests/Unit/Verifier/FlacTest.php :: AC2: a FLAC without a tag has no manifest (two datasets) / SPEC-057 | src/Container/Id3ManifestStoreExtractor.php :: walk() (`fLaC` at the start); src/Container/FormatDetector.php :: detect() |
+| AC3 | tests/Unit/Verifier/FlacTest.php :: AC3: a tag merged with the source's own is read, and verifies as c2patool says (four datasets) / SPEC-057 | src/Container/Id3ManifestStoreExtractor.php :: walk(); src/Verifier/Verifier.php :: verify() (the `flac` arm) |
+| AC4 | tests/Unit/Verifier/FlacTest.php :: AC4: flac, mp3, or nothing guessed; AC4: zero bytes after the tag are read and judged by the data hash, as c2patool judges them / SPEC-057 | src/Container/FormatDetector.php :: detect(), audioAfterTags(); src/Verifier/Verifier.php :: verify() (the message) |
+| AC5 | tests/Unit/Verifier/FlacTest.php :: AC5: the signed fixture verifies as c2patool 0.27.22 and 0.28.1 say (four datasets); AC5: one byte of the FLAC stream flipped is assertion.dataHash.mismatch / SPEC-057 | src/Verifier/Verifier.php :: verify() (the `flac` arm) |
+| AC6 | tests/Unit/Verifier/FlacTest.php :: AC6: SPEC-056's rules hold for FLAC (two datasets) / SPEC-057 | src/Container/Id3ManifestStoreExtractor.php :: walk() (SPEC-056 AC7, AC22) |

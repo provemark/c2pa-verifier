@@ -7,7 +7,7 @@ namespace Provemark\C2paVerifier\Container;
 /**
  * The container format from the first bytes of the stream (SPEC-013): JPEG's
  * SOI, PNG's signature, RIFF's header with the WEBP or WAVE form type
- * (SPEC-055), ISOBMFF's `ftyp`, and MP3 (SPEC-056). For MP3 the detector reads
+ * (SPEC-055), ISOBMFF's `ftyp`, MP3 (SPEC-056) and FLAC (SPEC-057). For MP3 and FLAC the detector reads
  * past the twelve-byte probe: for a tagless file the second MPEG frame header,
  * where the first frame's length says; for a tagged one each tag header, a
  * small probe for zero padding after it, and four bytes where the audio should
@@ -24,7 +24,7 @@ final readonly class FormatDetector
 
     /**
      * @param  resource  $stream  readable and seekable
-     * @return 'jpeg'|'png'|'webp'|'wav'|'isobmff'|'mp3'|null
+     * @return 'jpeg'|'png'|'webp'|'wav'|'isobmff'|'mp3'|'flac'|null
      */
     public function detect($stream): ?string
     {
@@ -57,11 +57,15 @@ final readonly class FormatDetector
 
             return $mp3 ? 'mp3' : null;
         }
+        // FLAC (SPEC-057): the stream marker at the start, or after the ID3 tag(s) C2PA puts in front
+        if (str_starts_with($head, 'fLaC')) {
+            return 'flac';
+        }
         if (Id3ManifestStoreExtractor::header($head, alsoVersion2: true) !== null) {
-            $mp3 = self::mpegAudioAfterTags($stream);
+            $audio = self::audioAfterTags($stream);
             rewind($stream);
 
-            return $mp3 ? 'mp3' : null;
+            return $audio;
         }
 
         return null;
@@ -73,21 +77,23 @@ final readonly class FormatDetector
     private const MAX_TAGS = 8;
 
     /**
-     * Whether MPEG audio follows the ID3 tag at offset 0, after any zero padding
-     * and further ID3v2 tags (SPEC-056 AC16).
+     * What follows the ID3 tag at offset 0, after any zero padding and further
+     * ID3v2 tags (SPEC-056 AC16): MPEG audio is `mp3`, a FLAC stream marker is
+     * `flac` (SPEC-057 AC4), anything else null.
      *
      * @param  resource  $stream
+     * @return 'mp3'|'flac'|null
      */
-    private static function mpegAudioAfterTags($stream): bool
+    private static function audioAfterTags($stream): ?string
     {
         if (fseek($stream, 0, SEEK_END) !== 0) {
-            return false;
+            return null;
         }
         $fileEnd = (int) ftell($stream);
         $position = 0;
         for ($tags = 0; $tags <= self::MAX_TAGS; $tags++) {
             if (fseek($stream, $position) !== 0) {
-                return false;
+                return null;
             }
             $header = Id3ManifestStoreExtractor::header(Read::upTo($stream, 10), alsoVersion2: true);
             if ($header === null) {
@@ -95,13 +101,19 @@ final readonly class FormatDetector
             }
             $position += $header['next'];   // relative to the tag's own start
             if ($position > $fileEnd) {
-                return true;   // a tag that runs past the end of the file: the extractor says why (AC23)
+                return 'mp3';   // a tag that runs past the end of the file: the extractor says why (SPEC-056 AC23)
             }
             $position += self::zeroPadding($stream, $position);
         }
 
         // after a tag one frame header is enough (AC13); two are asked only of a file with no tag (AC17)
-        return fseek($stream, $position) === 0 && self::isMpegFrame(Read::upTo($stream, 4));
+        $next = fseek($stream, $position) === 0 ? Read::upTo($stream, 4) : '';
+
+        return match (true) {
+            self::isMpegFrame($next) => 'mp3',
+            $next === 'fLaC' => 'flac',
+            default => null,
+        };
     }
 
     /**

@@ -41,12 +41,12 @@ $out = $argv[3] ?? sys_get_temp_dir().'/c2pa-fuzz';
 $paths = array_slice($argv, 4);
 if ($paths === []) {
     $root = dirname(__DIR__).'/tests/Fixtures';
-    $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp', $root.'/fixture-signed.mp4', $root.'/fixture-signed.wav', $root.'/wav', $root.'/wav-writers', $root.'/fixture-signed.mp3', $root.'/mp3'];   // MP4 and WAV since step 213, MP3 since step 228
+    $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp', $root.'/fixture-signed.mp4', $root.'/fixture-signed.wav', $root.'/wav', $root.'/wav-writers', $root.'/fixture-signed.mp3', $root.'/mp3', $root.'/fixture-signed.flac', $root.'/flac'];   // MP4 and WAV since step 213, MP3 since step 228, FLAC since step 237
 }
 $files = [];
 foreach ($paths as $path) {
     if (is_dir($path)) {
-        foreach (glob($path.'/*.{jpg,jpeg,png,webp,wav,mp3}', GLOB_BRACE) ?: [] as $file) {
+        foreach (glob($path.'/*.{jpg,jpeg,png,webp,wav,mp3,flac}', GLOB_BRACE) ?: [] as $file) {
             $files[] = $file;
         }
     } elseif (is_file($path)) {
