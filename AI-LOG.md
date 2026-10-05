@@ -8824,3 +8824,22 @@ README are where the disclosure lives.
   class); Pint; `bin/spec-check.php`.
 - Reasoned: none beyond the tests.
 - Decided by Maurice: SPEC-058 approved.
+
+## 2026-10-05 — SPEC-058 built: AVI (step 241)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur SPEC-058 goed en ga door".
+- Produced: `src/Container/AviManifestStoreExtractor.php`;
+  `src/Container/FormatDetector.php` (`avi`); `src/Verifier/Verifier.php`
+  (the route, the message); `src/Container/RiffManifestStoreExtractor.php`
+  (the article); `bin/fuzz.php` (AVI); the SPEC-024 AC1 test; SPEC-058
+  `implemented` with Traceability; SPEC-013 amendment 21 and SPEC-024
+  amendment 4 (awaiting confirmation); README, `SECURITY.md`,
+  `docs/comparison.md`, CHANGELOG, the AVI fixture README; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: Pest (26 SPEC-058, 789 in all); `composer check` (exit 0,
+  after Pint formatted `Verifier.php`); the corpus against step 237 (only
+  the AVI files moved); every AVI against both `c2patool` versions; the
+  fuzzer over AVI and the default set (13,670 runs, 0 faults, 151 `Valid`,
+  each `Valid` in both versions).
+- Reasoned: none beyond the spec.
+- Decided by Maurice: SPEC-058 approved (step 240).

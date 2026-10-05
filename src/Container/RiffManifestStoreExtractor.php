@@ -193,9 +193,10 @@ final readonly class RiffManifestStoreExtractor
 
             if ($storeOffset !== null) {
                 throw new ContainerException(sprintf(
-                    'two C2PA chunks at offsets %d and %d; a %s carries at most one manifest store',
+                    'two C2PA chunks at offsets %d and %d; %s %s carries at most one manifest store',
                     $storeOffset,
                     $offset,
+                    preg_match('/\A[AEIOU]/', $this->name) === 1 ? 'an' : 'a',   // "an AVI", "a WAV" (SPEC-058 AC5)
                     $this->name,
                 ));
             }

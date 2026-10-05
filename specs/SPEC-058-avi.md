@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-05                      |
 | Supersedes | —                                                 |
@@ -117,7 +117,7 @@ constructor parameter.
 
 ## Amendments
 
-None yet.
+None.
 
 ## Traceability
 
@@ -126,8 +126,8 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
+| AC1 | tests/Unit/Verifier/AviTest.php :: AC1: the fixture yields the store, byte-exact, with its range / SPEC-058 | src/Container/AviManifestStoreExtractor.php :: extract(); src/Container/RiffManifestStoreExtractor.php :: extract() |
+| AC2 | tests/Unit/Verifier/AviTest.php :: AC2: no C2PA chunk in the first RIFF chunk is no manifest (four datasets) / SPEC-058 | src/Container/RiffManifestStoreExtractor.php :: walk() |
+| AC3 | tests/Unit/Verifier/AviTest.php :: AC3: a file of several RIFF chunks verifies as c2patool says (two datasets); AC3: a change after the first RIFF chunk fails the data hash, as c2patool says (six datasets) / SPEC-058 | src/Container/RiffManifestStoreExtractor.php :: extract() (the walk ends at the first RIFF chunk's end) |
+| AC4 | tests/Unit/Verifier/AviTest.php :: AC4: the rules SPEC-003 and SPEC-055 already hold (six datasets); AC4: a C2PA chunk not last, and bytes after the RIFF chunk, are judged by the data hash (two datasets) / SPEC-058 | src/Container/RiffManifestStoreExtractor.php :: walk(), readPad() |
+| AC5 | tests/Unit/Verifier/AviTest.php :: AC5: the signed fixture verifies as c2patool 0.27.22 and 0.28.1 say (four datasets); AC5: detection, a flipped movi byte, the message and its article / SPEC-058 | src/Container/FormatDetector.php :: detect(); src/Verifier/Verifier.php :: __construct() (`$avi`), verify(); src/Container/RiffManifestStoreExtractor.php :: walk() (the article) |

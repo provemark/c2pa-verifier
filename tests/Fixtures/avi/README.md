@@ -8,8 +8,10 @@ OpenDML AVI over 1 GB continues. `signed-avix.avi` is that file signed with
 `c2patool` 0.27.22 and the c2pa-rs ES256 test certificates (the command is
 in `notes/step-209-avi-measured.md`). The script builds the two-RIFF
 variants only when it is present. Measured with `c2patool` 0.27.22 and
-0.28.1 on 2026-10-05, without trust settings. There is no AVI spec yet,
-so this verifier reads none of them (`unknown`).
+0.28.1 on 2026-10-05, without trust settings. Since SPEC-058 (step 241)
+this verifier reads them: each gives `c2patool`'s answer, or the named
+stricter one of SPEC-003 (`two-c2pa`, `lbox-differs`, `pad-nonzero`);
+`tests/Unit/Verifier/AviTest.php` holds every file.
 
 | file | what is wrong | `c2patool` 0.27.22 | `c2patool` 0.28.1 |
 |---|---|---|---|

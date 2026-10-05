@@ -6,6 +6,7 @@ namespace Provemark\C2paVerifier\Verifier;
 
 use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cbor\CborException;
+use Provemark\C2paVerifier\Container\AviManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\FormatDetector;
 use Provemark\C2paVerifier\Container\Id3ManifestStoreExtractor;
@@ -86,6 +87,8 @@ final readonly class Verifier
         private WavManifestStoreExtractor $wav = new WavManifestStoreExtractor,
         // SPEC-056: last, for the same reason
         private Id3ManifestStoreExtractor $mp3 = new Id3ManifestStoreExtractor,
+        // SPEC-058: last, for the same reason
+        private AviManifestStoreExtractor $avi = new AviManifestStoreExtractor,
     ) {}
 
     /**
@@ -100,7 +103,7 @@ final readonly class Verifier
             $head = $this->formats->head($stream);
 
             return new VerificationReport('unknown', false, null, ValidationResult::fromStatuses([
-                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, WebP, WAV, MP3, FLAC or ISOBMFF signature', Bytes::hex($head))),
+                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, WebP, WAV, AVI, MP3, FLAC or ISOBMFF signature', Bytes::hex($head))),
             ], []));
         }
 
@@ -111,6 +114,7 @@ final readonly class Verifier
                 'png' => $this->png->extract($stream),
                 'webp' => $this->webp->extract($stream),
                 'wav' => $this->wav->extract($stream),   // SPEC-055
+                'avi' => $this->avi->extract($stream),   // SPEC-058
                 'mp3' => $this->mp3->extract($stream),   // SPEC-056
                 'flac' => $this->mp3->extract($stream),   // SPEC-057: the same ID3 tag, in front of the FLAC stream
                 // SPEC-026: the container only. There is no BMFF hard-binding check yet,

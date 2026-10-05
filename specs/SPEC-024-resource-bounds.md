@@ -237,6 +237,12 @@ reasoning that led to them stays readable.
    constant. Named in SPEC-056's open questions before either was written.
    Confirmed by Maurice van Loon, 2026-10-05 (step 229).
 
+4. **2026-10-05, step 241, with SPEC-058's implementation** — AC1's list
+   gains AVI: `AviManifestStoreExtractor` is the RIFF walk with the form
+   `AVI `, the same 16 MiB bound and `MemoryBudget`. The test gains the
+   constant. Named in SPEC-058's open questions.
+   Awaiting confirmation.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

@@ -600,6 +600,16 @@ final class ManifestException extends \RuntimeException
 
     Confirmed by Maurice van Loon, 2026-10-05 (step 238).
 
+21. **2026-10-05, step 241, with SPEC-058's implementation** — the
+    report's `format` gains `avi`; the unknown-format message names AVI;
+    the `Verifier` constructor gains the AVI extractor as its last
+    parameter. The RIFF walk's two-C2PA message takes its article from the
+    form's name ("an AVI", "a WAV"). No existing file changes verdict.
+
+    **Weight B: a new value in the report.**
+
+    Awaiting confirmation.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

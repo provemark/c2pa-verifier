@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Container\AviManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\Id3ManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\IsobmffManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
@@ -132,6 +133,7 @@ it('AC1: the default bound is 16 MiB in every container this verifier reads', fu
     expect(PngManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH)->toBe(SPEC024_BOUND)
         ->and(WebpManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH)->toBe(SPEC024_BOUND)
         ->and(WavManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH)->toBe(SPEC024_BOUND)
+        ->and(AviManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH)->toBe(SPEC024_BOUND)   // amendment 4: AVI
         ->and(Id3ManifestStoreExtractor::DEFAULT_MAX_OBJECT_LENGTH)->toBe(SPEC024_BOUND)   // amendment 3: MP3
         ->and(JpegManifestStoreExtractor::DEFAULT_MAX_LBOX)->toBe(SPEC024_BOUND)
         ->and(IsobmffManifestStoreExtractor::DEFAULT_MAX_BOX_LENGTH)->toBe(SPEC024_BOUND);

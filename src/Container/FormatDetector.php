@@ -24,7 +24,7 @@ final readonly class FormatDetector
 
     /**
      * @param  resource  $stream  readable and seekable
-     * @return 'jpeg'|'png'|'webp'|'wav'|'isobmff'|'mp3'|'flac'|null
+     * @return 'jpeg'|'png'|'webp'|'wav'|'avi'|'isobmff'|'mp3'|'flac'|null
      */
     public function detect($stream): ?string
     {
@@ -40,6 +40,9 @@ final readonly class FormatDetector
         }
         if (strlen($head) === self::PROBE_LENGTH && str_starts_with($head, 'RIFF') && substr($head, 8, 4) === 'WAVE') {
             return 'wav';   // SPEC-055; RF64 (`RF64`, files over 4 GB) is not read, as c2patool does not
+        }
+        if (strlen($head) === self::PROBE_LENGTH && str_starts_with($head, 'RIFF') && substr($head, 8, 4) === 'AVI ') {
+            return 'avi';   // SPEC-058
         }
         // ISOBMFF (SPEC-026): MP4, MOV, AVIF and HEIC all open with a `ftyp` box, and
         // the brand that follows is not read — a file that declares `ftyp` and carries
