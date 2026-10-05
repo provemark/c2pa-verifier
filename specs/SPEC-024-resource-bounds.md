@@ -228,7 +228,7 @@ reasoning that led to them stays readable.
    reach is wider. The criterion's test gains the WAV constant; SPEC-055
    AC13 holds the bound on the WAV fixture. Named in SPEC-055's open
    questions before either was written.
-   Awaiting confirmation.
+   Confirmed by Maurice van Loon, 2026-10-05 (step 209).
 
 
 ## Traceability

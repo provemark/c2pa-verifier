@@ -10,6 +10,11 @@
 # AI-LOG.md. They are what the README links to, and a package that describes
 # how it was built and where it differs from c2patool should carry that with
 # it. Together they are under 2 MB.
+#
+# Except the fixture builders, bin/make-*.php and the helpers they share
+# (SPEC-023 amendment 2, step 209): each one reads tests/Fixtures/, which
+# does not ship, so in a consumer's vendor/ it cannot run. They were half a
+# megabyte of the dist.
 
 /tests          export-ignore
 /.github        export-ignore
@@ -20,3 +25,5 @@
 /phpstan.neon   export-ignore
 /pint.json      export-ignore
 /deptrac.yaml   export-ignore
+/bin/make-*.php          export-ignore
+/bin/variant-helpers.php export-ignore

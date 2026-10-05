@@ -308,7 +308,7 @@ same way, so SPEC-003's tests prove the refactor. `FormatDetector` returns
    11 in the contract, 74 internal). The amendments that were needed are
    SPEC-013 amendment 15 and SPEC-024 amendment 2. SPEC-003's
    Traceability moved in step 206.
-   Awaiting confirmation.
+   Confirmed by Maurice van Loon, 2026-10-05 (step 209).
 
 ## Traceability
 

@@ -8278,3 +8278,28 @@ README are where the disclosure lives.
   position; the new by-design row in `docs/comparison.md`.
 - Decided by Maurice: AC16 compares with the recordings itself (no
   SPEC-013 drift-alarm change).
+
+## 2026-10-05 — The signed AVI and the two-RIFF file, measured (step 209)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, bevestig de drie amendementen en ga door met AVI";
+  then, asked how to resolve the package ceiling, chose "Variant-scripts
+  uitsluiten".
+- Produced: `tests/Fixtures/fixture-unsigned.avi`,
+  `tests/Fixtures/fixture-signed.avi`,
+  `tests/Fixtures/fixture-signed-avi.manifest.json`,
+  `bin/make-avi-variants.php`, `tests/Fixtures/avi/` (unsigned and signed
+  two-RIFF files, 16 variants, README); SPEC-013, SPEC-024 and SPEC-055
+  amendments marked confirmed; `.gitattributes` and SPEC-023 amendment 2;
+  `notes/step-209-avi-measured.md`; rows in `NOTES.md` and
+  `tests/Fixtures/README.md`.
+- Measured: the AVI fixture signed with `c2patool` 0.27.22 and read with
+  both versions, with and without trust settings; a two-RIFF AVI signed
+  with both versions (the store's place) and read crosswise; every variant
+  with both versions; `composer check` (SPEC-023's tests 4 failed, then
+  13 passed after the change; exit 0); `git archive` sizes at `v0.2.6`,
+  `v0.2.8`, `v0.2.9`, `HEAD`; `bin/package-check.php` (341 files, 3.5 MB).
+- Reasoned: that the ceiling was crossed by step 208's commit, not by this
+  step; that the AVI spec's open question is what follows the first RIFF
+  chunk.
+- Decided by Maurice: the three amendments confirmed; the fixture
+  builders leave the dist.

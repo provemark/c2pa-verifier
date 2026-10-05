@@ -232,6 +232,19 @@ reasoning that led to them stays readable.
    here. Reading the package's own declaration is not a second truth;
    generating a rival autoloader would be.
 
+2. **2026-10-05, step 209, decided by Maurice van Loon** — the fixture
+   builders (`bin/make-*.php`, 49 scripts, 510 kB) and the helpers they
+   share (`bin/variant-helpers.php`) are `export-ignore`. Each one reads
+   `tests/Fixtures/`, which does not ship, so none of them can run in a
+   consumer's `vendor/`. Cause: the dist had grown past AC3's 4 MB ceiling
+   (4,208,640 bytes at step 208's commit; 3.92 MB at `v0.2.6`, 4.13 MB at
+   `v0.2.9`), from the prose that ships by decision (open question 4).
+   Measured after: 341 files, 3.5 MB (3,665,920 bytes). `bin/` still ships
+   on the list of top-level paths; `bin/c2pa-verify`, `bin/fuzz.php`,
+   `bin/spec-check.php`, `bin/api-check.php` and `bin/package-check.php`
+   still ship. AC2–AC4 unchanged; the ceiling unchanged, so the question
+   returns when the prose grows by another half megabyte.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
