@@ -8843,3 +8843,13 @@ README are where the disclosure lives.
   each `Valid` in both versions).
 - Reasoned: none beyond the spec.
 - Decided by Maurice: SPEC-058 approved (step 240).
+
+## 2026-10-05 — Two amendments confirmed; pushed (step 242)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, bevestig de amendementen en push".
+- Produced: SPEC-013 amendment 21 and SPEC-024 amendment 4 marked
+  confirmed; rows in `NOTES.md` and `docs/milestones.md`; the push of
+  `main`.
+- Measured: `composer check`; the attribution check; CI.
+- Reasoned: none.
+- Decided by Maurice: both amendments confirmed; the push.

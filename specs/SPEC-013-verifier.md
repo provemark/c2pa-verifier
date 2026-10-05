@@ -608,7 +608,7 @@ final class ManifestException extends \RuntimeException
 
     **Weight B: a new value in the report.**
 
-    Awaiting confirmation.
+    Confirmed by Maurice van Loon, 2026-10-05 (step 242).
 
 ## Traceability
 

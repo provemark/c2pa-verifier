@@ -241,7 +241,7 @@ reasoning that led to them stays readable.
    gains AVI: `AviManifestStoreExtractor` is the RIFF walk with the form
    `AVI `, the same 16 MiB bound and `MemoryBudget`. The test gains the
    constant. Named in SPEC-058's open questions.
-   Awaiting confirmation.
+   Confirmed by Maurice van Loon, 2026-10-05 (step 242).
 
 ## Traceability
 
