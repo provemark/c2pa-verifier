@@ -84,7 +84,7 @@ function packageMinimalDist(): array
     ];
 }
 
-const PACKAGE_CEILING = 4 * 1024 * 1024;
+const PACKAGE_CEILING = PACKAGE_DIST_CEILING;   // one number, in bin/package-check.php (amendment 3)
 
 it('AC1: a top-level path that is neither shipped nor export-ignore is a finding', function (): void {
     $result = packageCheck(packageFixture('unclassified'), ['src', 'tests', 'benchmarks'], ['src']);
@@ -233,3 +233,27 @@ it('AC6: the package, installed where Composer would put it and nothing else, ve
     expect($run['exit'])->toBe(0, $run['stderr'])
         ->and($report['validation_state'])->toBe('Trusted');
 })->group('SPEC-023');
+
+it('AC3 (amendment 3): the ceiling is 16 MB, and still far below what step 62 shipped', function (): void {
+    $under = new PackageArrayArchive(['composer.json' => '{}', 'docs/big.md' => str_repeat('x', 10 * 1024 * 1024)]);
+    $over = new PackageArrayArchive(['composer.json' => '{}', 'docs/big.md' => str_repeat('x', 17 * 1024 * 1024)]);
+    $ceiling = static fn (PackageArchive $a): array => array_values(array_filter(packageDistCheck($a, PACKAGE_DIST_CEILING)->findings, static fn (string $f): bool => str_contains($f, 'over the ceiling')));
+
+    expect(PACKAGE_DIST_CEILING)->toBe(16 * 1024 * 1024)
+        ->and($ceiling($under))->toBe([])
+        ->and($ceiling($over))->toHaveCount(1)
+        ->and(PACKAGE_DIST_CEILING)->toBeLessThan((int) (62.9 * 1024 * 1024));
+})->group('SPEC-023');
+
+it('AC8 (amendment 3): the zip\'s size is measured, and over 5 MB it names open question 4', function (): void {
+    $zip = packageGitZipSize(dirname(__DIR__, 2));
+
+    expect(PACKAGE_ZIP_SIGNAL)->toBe(5 * 1024 * 1024)
+        ->and($zip)->toBeGreaterThan(0)
+        ->and($zip)->toBeLessThan(PACKAGE_ZIP_SIGNAL)
+        ->and($zip)->toBeLessThan(packageDist()->size())
+        ->and(packageZipFinding($zip))->toBeNull()
+        ->and(packageZipFinding(PACKAGE_ZIP_SIGNAL))->toBeNull()
+        ->and(packageZipFinding(PACKAGE_ZIP_SIGNAL + 1))->toContain('open question 4');
+})->group('SPEC-023');
+

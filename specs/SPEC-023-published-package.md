@@ -245,6 +245,26 @@ reasoning that led to them stays readable.
    still ship. AC2–AC4 unchanged; the ceiling unchanged, so the question
    returns when the prose grows by another half megabyte.
 
+3. **2026-10-05, step 251, decided by Maurice van Loon** — the ceiling
+   again, as amendment 2 foresaw. Measured on `v0.3.0`: 376 files, 3.50 MB
+   of files, 3.79 MB as the tar this check measures, 1.34 MB as the zip
+   Composer downloads; `src/` is 0.58 MB, the prose that ships by decision
+   (open question 4) 2.8 MB, growing by roughly 0.5 to 1 MB a week at this
+   project's pace (tar 2.81 MB at `v0.2.0`, 3.94 MB at `v0.2.9`). The
+   ceiling's job is unchanged: to fire long before the 62.9 MB of step 62.
+   Open question 4 stands.
+
+   - **AC3 now reads: the archive is at most 16 MB** (`PACKAGE_DIST_CEILING`
+     in `bin/package-check.php`, the one place the number lives).
+   - **AC8 (new) — the compressed size is shown, and a signal set.** The
+     check prints the size of the archive as a zip (`git archive
+     --format=zip`, the form Composer fetches) beside the tar's, and a zip
+     over 5 MB (`PACKAGE_ZIP_SIGNAL`) is a finding that names open question
+     4: the question returns to the maintainer then, not later by chance.
+     Given the archive of this repository, the zip is under 5 MB and no
+     such finding is made; given 5 MB and one byte, the finding names open
+     question 4; given exactly 5 MB, none.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -261,3 +281,4 @@ is `bin/package-check.php`, which is tooling and outside the Deptrac layers.
 | AC4 | `AC4: every relative link in the markdown the package ships resolves inside the package`; `AC4: a scheme, an absolute path and a bare fragment are not this criterion's business` | `packageLinks()`, `packageResolves()` |
 | AC5 | `AC5: the disclosure travels with the package` | `packageDistCheck()`, `PACKAGE_DISCLOSURE_SECTION` |
 | AC6 | `AC6: the package, installed where Composer would put it and nothing else, verifies a file` | `packageInstall()`, `packageRun()`, `PackageTarArchive::extractTo()` |
+| AC8 (amendment 3) | tests/Unit/PackageTest.php :: AC8 (amendment 3): the zip's size is measured, and over 5 MB it names open question 4 | bin/package-check.php :: packageGitZipSize(), packageZipFinding(), the script's dist line |

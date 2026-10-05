@@ -8974,3 +8974,17 @@ README are where the disclosure lives.
   `fixture-signed.{wav,mp3,flac,avi,jpg}` as `wav`, `mp3`, `flac`, `avi`,
   `jpeg`, each `Valid` with `has_manifest` true.
 - Decided by Maurice: push, then the tag once CI was green.
+
+## 2026-10-05 — The package's size; SPEC-023 amendment 3, tests red (step 251)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, begin met de pakketgrootte"; "wat adviseer je?";
+  "akkoord, voer amendement 3 uit".
+- Produced: SPEC-023 amendment 3 (AC3 at 16 MB, AC8 new); two tests and
+  the test constant now read from `bin/package-check.php`;
+  `notes/step-251-package-size.md`; a row in `NOTES.md`.
+- Measured: the dist of `v0.3.0` by top-level path and largest file; tar
+  and zip sizes of `git archive` at five tags; the tests red
+  (`PACKAGE_DIST_CEILING` undefined).
+- Reasoned: the growth rate, from those tags.
+- Decided by Maurice: option 1 (16 MB, open question 4 stands), with the
+  zip's size shown and a 5 MB signal.
