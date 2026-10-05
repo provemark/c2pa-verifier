@@ -8606,3 +8606,18 @@ README are where the disclosure lives.
 - Reasoned: fourteen criteria from step 225; the RIFF rule carried over;
   three proposals for the open questions.
 - Decided by Maurice: write the spec.
+
+## 2026-10-05 — SPEC-056 approved; its tests, red (step 227)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur SPEC-056 goed met de drie voorstellen en ga door".
+- Produced: SPEC-056 `approved`; `tests/Unit/Container/Id3ManifestStoreExtractorTest.php`,
+  `tests/Unit/Verifier/Mp3Test.php`, `tests/Fixtures/c2patool/mp3/` (four
+  recordings); Traceability placeholders; `notes/step-227-spec056-red.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: `c2patool` 0.27.22 and 0.28.1 on the signed MP3, with and
+  without trust settings; the second GEOB's offset in `two-geob.mp3`;
+  `vendor/bin/pest --group=SPEC-056` (34 failed) and in full (34 failed,
+  690 passed); PHPStan (11 errors, all from the missing class); Pint;
+  `bin/spec-check.php`.
+- Reasoned: the messages the tests expect.
+- Decided by Maurice: SPEC-056 approved with the three proposals.

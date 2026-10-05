@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-05, with the three proposals |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -250,3 +250,17 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
+| AC1                  | —                           | —                    |
+| AC2                  | —                           | —                    |
+| AC3                  | —                           | —                    |
+| AC4                  | —                           | —                    |
+| AC5                  | —                           | —                    |
+| AC6                  | —                           | —                    |
+| AC7                  | —                           | —                    |
+| AC8                  | —                           | —                    |
+| AC9                  | —                           | —                    |
+| AC10                 | —                           | —                    |
+| AC11                 | —                           | —                    |
+| AC12                 | —                           | —                    |
+| AC13                 | —                           | —                    |
+| AC14                 | —                           | —                    |
