@@ -399,7 +399,7 @@ final readonly class IsobmffManifestStoreExtractor
         if ($offset + 8 > $end || fseek($stream, $offset) !== 0) {
             return false;
         }
-        $head = (string) fread($stream, 8);
+        $head = Read::upTo($stream, 8);   // SPEC-050: every read through Read::upTo (step 245)
         if (strlen($head) !== 8 || substr($head, 4, 4) !== self::TYPE_UUID) {
             return false;
         }
@@ -408,7 +408,7 @@ final readonly class IsobmffManifestStoreExtractor
             return false;
         }
 
-        return fread($stream, 16) === self::C2PA_UUID;
+        return Read::upTo($stream, 16) === self::C2PA_UUID;
     }
 
     /** The JUMBF bytes of a C2PA box, after its twenty-one bytes of preamble. */

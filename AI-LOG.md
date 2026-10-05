@@ -8873,3 +8873,18 @@ README are where the disclosure lives.
   documentation.
 - Decided by Maurice: fix 1, 2, 7; amendment for 3; document 4–6; 8–10
   later.
+
+## 2026-10-05 — The review's fixes built; the check repeated (step 245)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, voer A en B uit, C documenteren, D later".
+- Produced: `src/Container/Id3ManifestStoreExtractor.php` (`break`, the
+  text released), `src/Container/IsobmffManifestStoreExtractor.php`
+  (`Read::upTo()`), `src/Container/RiffManifestStoreExtractor.php`
+  (`MAX_CHUNKS`); CHANGELOG (the bound, the known limits),
+  `docs/comparison.md`; the step-243 note completed; a row in `NOTES.md`.
+- Measured: Pest per group (32, 58, 11 passed) and in full (792);
+  `composer check` (exit 0); the corpus against step 241 (no file moved);
+  every new-format file against both `c2patool` versions; the release set
+  fuzzed (15,801 runs, 0 faults, 117 `Valid`, each `Valid` in both).
+- Reasoned: the memory fix (`unset`) without a measurement.
+- Decided by Maurice: the fixes and the bound (step 243).

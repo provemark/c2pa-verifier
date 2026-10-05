@@ -47,6 +47,9 @@ final readonly class RiffManifestStoreExtractor
     /** RIFF (4) + size (4) + form type (4). */
     private const HEADER_LENGTH = 12;
 
+    /** More top-level chunks than this is a fault, as ISOBMFF's boxes and ID3's frames (SPEC-003 amendment 5). */
+    public const MAX_CHUNKS = 4096;
+
     /** LBox (4) + TBox (4): the least a JUMBF box can be. */
     private const BOX_HEADER_LENGTH = 8;
 
@@ -149,8 +152,12 @@ final readonly class RiffManifestStoreExtractor
      */
     private function walk(StreamReader $reader, int $end, string $where, ?string &$store, ?int &$storeOffset, bool &$reached): void
     {
+        $chunks = 0;
         while ($reader->tell() < $end) {
             $offset = $reader->tell();
+            if (++$chunks > self::MAX_CHUNKS) {
+                throw new ContainerException(sprintf('more than %d chunks in the RIFF chunk (offset %d)', self::MAX_CHUNKS, $offset));
+            }
             if ($end - $offset < 8) {
                 // the RIFF chunk cannot hold another chunk: what remains is left to the data
                 // hash, as c2patool leaves it (SPEC-003 amendment 4)
@@ -259,7 +266,8 @@ final readonly class RiffManifestStoreExtractor
     {
         try {
             $offset = $reader->tell();
-            while ($fileEnd - $offset >= 8) {
+            $chunks = 0;
+            while ($fileEnd - $offset >= 8 && ++$chunks <= self::MAX_CHUNKS) {
                 /** @var array{type: string, length: int} $chunk */
                 $chunk = unpack('a4type/Vlength', $reader->readExactly(8, $offset, 'the chunk header'));
                 if ($chunk['type'] === self::TYPE_C2PA) {

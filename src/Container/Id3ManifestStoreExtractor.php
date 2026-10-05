@@ -161,7 +161,7 @@ final readonly class Id3ManifestStoreExtractor
             }
             if (! $isStore) {
                 if ($bodyEnd > $tagEnd) {
-                    return null;   // a frame other than the C2PA GEOB runs past the tag: the walk stops, as c2patool's does
+                    break;   // a frame other than the C2PA GEOB runs past the tag: the walk stops, as c2patool's does, keeping a store already read (step 245)
                 }
                 $reader->skip($size - strlen($body), $offset);
                 $offset = $bodyEnd;
@@ -215,6 +215,7 @@ final readonly class Id3ManifestStoreExtractor
                 ));
             }
             $object = substr($body, $objectAt);
+            unset($body);   // the text fields are not needed beside the store (step 245)
             if (strlen($object) < 4) {
                 $object .= $reader->readExactly(4 - strlen($object), $offset, 'LBox');
             }

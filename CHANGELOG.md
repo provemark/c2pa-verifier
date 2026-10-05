@@ -73,6 +73,20 @@ committed.
   past its end, stops the walk, as `c2patool`'s does, instead of being a
   fault; a header size below 4 is now refused.
 - The unknown-format explanation names WAV, AVI, MP3 and FLAC among the formats read.
+- **A bound on the RIFF walk (SPEC-003 amendment 5):** more than 4,096
+  top-level chunks in a WebP, WAV or AVI is refused, as ISOBMFF's 4,096
+  boxes and ID3's 4,096 frames are; a file of empty chunks otherwise cost
+  about 90 s per GB.
+
+### Known limits
+- A FLAC cut short inside its ID3 tag is reported as `mp3`: what follows
+  the tag cannot be seen. Its verdict, `Invalid`, is right.
+- A JPEG with a JUMBF box in APP11 that is not C2PA (JPEG 360, JPEG XT),
+  followed by a broken segment, reports `has_manifest: true`.
+- `Verifier`'s constructor takes its extractors as `@internal` parameters;
+  a caller who passed a WebP extractor with tighter limits gets the
+  default limits for WAV, AVI, MP3 and FLAC, whose extractors are new
+  trailing parameters.
 - A RIFF file with the form type `WAVE` that was `unknown` before is now a
   WAV. The one such file among the fixtures, a WebP with its form type
   changed (`webp/riff-not-webp.webp`), is now `Invalid` with

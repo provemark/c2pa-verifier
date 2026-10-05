@@ -62,3 +62,25 @@ none giving a wrong `Valid`. Checked:
 - **Later**: 8–10, a refactor without a change in behaviour.
 
 Steps 244–245 do this; the check is repeated after them.
+
+## After steps 244–245: the check repeated
+
+Steps 244 (tests, red: 3 failed, 789 passed) and 245 (the fixes) did what
+was decided: the ID3 walk keeps a store already read when a later frame
+runs past the tag (`break`, not `return null`); `carriesC2paUuid()` reads
+through `Read::upTo()`; the GEOB's text bytes are released once the object
+is taken (reasoned, not measured: an `unset`); the RIFF walk and its scan
+stop at 4,096 top-level chunks (SPEC-003 amendment 5); the known limits 4–6
+are in CHANGELOG `0.3.0` and `docs/comparison.md`.
+
+- `composer check`: exit 0, 792 tests.
+- The corpus against step 241, the unknown-format message normalised: no
+  file moved.
+- Every WAV, MP3, FLAC and AVI file against both `c2patool` versions:
+  every difference named in a spec; **none `Valid` here where `c2patool`
+  is not**.
+- The release set fuzzed again: 15,801 runs, 0 faults; the 117 that stayed
+  `Valid` are `Valid` in both versions.
+
+**Verdict**: ready for 0.3.0 once pushed and green in CI. The tag waits
+for Maurice's word.
