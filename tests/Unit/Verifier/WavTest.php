@@ -191,3 +191,46 @@ it('AC18: the c2pa-rs WAV whose RIFF size exceeds the file is one general.error 
         ->and($report->result->statuses[0]->explanation)->toContain('1441174')
         ->and($report->result->statuses[0]->explanation)->toContain('441172');
 })->group('SPEC-055');
+
+it('AC4: bytes after the RIFF chunk are judged by the data hash, as c2patool judges them (amendment 3)', function (string $variant): void {
+    $report = spec055Report((new Verifier)->verify(spec055VerifierStream("wav/{$variant}.wav")));
+
+    expect($report['validation_state'])->toBe('Invalid')
+        ->and($report['has_manifest'])->toBeTrue()
+        ->and(spec055Codes($report, 'success'))->toContain('claimSignature.validated')
+        ->and(spec055Codes($report, 'failure'))->toContain('assertion.dataHash.mismatch')
+        ->and(spec055Codes($report, 'failure'))->not->toContain('general.error');
+})->with(['trailing-bytes', 'second-riff'])->group('SPEC-055');
+
+/** A fixture's bytes with the RIFF size recomputed for its length. */
+function spec055Resized(string $bytes): string
+{
+    return substr_replace($bytes, pack('V', strlen($bytes) - 8), 4, 4);
+}
+
+it('AC19: ordinary WAV quirks outside the store are not faults in an unsigned file (amendment 3)', function (string $case): void {
+    $unsigned = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/fixture-unsigned.wav');
+    $odd = 'XXXX'.pack('V', 3).'abc';
+    $bytes = match ($case) {
+        'ID3v1 tag appended' => $unsigned.'TAG'.str_repeat("\0", 125),
+        'last odd chunk without pad' => spec055Resized($unsigned.$odd),
+        'pad FF after another chunk' => spec055Resized(substr($unsigned, 0, 36).$odd."\xFF".substr($unsigned, 36)),
+        default => throw new InvalidArgumentException("unknown case {$case}"),
+    };
+    $report = (new Verifier)->verify(spec055MemoryStream($bytes));
+
+    // measured in steps 213 and 214: c2patool 0.27.22 and 0.28.1 find no claim in all three
+    expect($report->format)->toBe('wav')
+        ->and($report->hasManifest)->toBeFalse()
+        ->and(spec055Codes(spec055Report($report), 'failure'))->toBe([]);
+})->with(['ID3v1 tag appended', 'last odd chunk without pad', 'pad FF after another chunk'])->group('SPEC-055');
+
+it('AC19: a signed WAV with an ID3v1 tag appended fails its data hash, as c2patool says (amendment 3)', function (): void {
+    $signed = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/fixture-signed.wav');
+    $report = spec055Report((new Verifier)->verify(spec055MemoryStream($signed.'TAG'.str_repeat("\0", 125))));
+
+    expect($report['validation_state'])->toBe('Invalid')
+        ->and($report['has_manifest'])->toBeTrue()
+        ->and(spec055Codes($report, 'success'))->toContain('claimSignature.validated')
+        ->and(spec055Codes($report, 'failure'))->toContain('assertion.dataHash.mismatch');
+})->group('SPEC-055');

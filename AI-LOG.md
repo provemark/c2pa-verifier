@@ -8416,3 +8416,20 @@ README are where the disclosure lives.
 - Reasoned: the proposed report per file; the three points for approval.
 - Decided by Maurice: none in this step (the direction was decided in
   step 213).
+
+## 2026-10-05 — The three amendments approved; their tests, red (step 215)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur de drie amendementen goed en ga door".
+- Produced: SPEC-003 amendment 3, SPEC-055 amendment 3 and SPEC-013
+  amendment 16 marked approved; tests in
+  `tests/Unit/Container/WebpManifestStoreExtractorTest.php`,
+  `tests/Unit/Container/WavManifestStoreExtractorTest.php`,
+  `tests/Unit/Verifier/WavTest.php` and
+  `tests/Unit/Verifier/VerifierTest.php`; Traceability rows for SPEC-003
+  AC17–AC18 and SPEC-055 AC19; `notes/step-215-riff-leniency-red.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: three WebP files built in scratch with both `c2patool`
+  versions; Pest per group and in full (17 failed, 661 passed); PHPStan
+  (two errors, both the missing property); Pint; `bin/spec-check.php`.
+- Reasoned: none beyond the tests.
+- Decided by Maurice: the three amendments approved.

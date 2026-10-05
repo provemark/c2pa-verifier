@@ -323,7 +323,7 @@ rest of the data, then the pad byte. Keeps walking to see a second `C2PA`
      `ContainerException` thrown before a `C2PA` chunk header was read says
      so (SPEC-013 amendment 16 uses it).
 
-   **Proposed, awaiting approval.**
+   Approved by Maurice van Loon, 2026-10-05 (step 215).
 
 ## Traceability
 
@@ -349,3 +349,5 @@ least one test; every source file maps back to this spec. Since step 206 the wal
 | AC14 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC14: a chunk length above the limit is an error before the data is read / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract() (`$maxChunkLength` check before the LBox read) |
 | AC15 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC15: the default limit is 16 MiB / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: DEFAULT_MAX_CHUNK_LENGTH, __construct() (delegating to RiffManifestStoreExtractor since step 206) |
 | AC16 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC16: the header size is checked against the file before any chunk header is read / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract() (size check before the loop, stream repositioned first) |
+| AC17 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC17: bytes after the RIFF chunk are not the container's concern (amendment 3) / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract() (the walk ends where the RIFF chunk ends) |
+| AC18 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC18: a fault says whether the walk had reached a C2PA chunk (amendment 3) / SPEC-003 | src/Container/ContainerException.php :: $storeReached; src/Container/RiffManifestStoreExtractor.php :: extract() |

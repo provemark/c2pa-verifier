@@ -281,6 +281,19 @@ it('AC7: the parsers\' faults become statuses with their codes and urls', functi
         ->and(spec013OracleUrl(spec013C2patool('variants/json-broken'), 'assertion.json.invalid'))->toBe('stds.schema-org.CreativeWork');
 })->group('SPEC-013');
 
+it('AC7: a RIFF fault before any C2PA chunk is hasManifest false, the fault still a general.error (amendment 16)', function (): void {
+    foreach (['webp/truncated-between-chunks.webp', 'webp/riff-size-plus-one.webp', 'wav/truncated-in-c2pa.wav', 'wav-writers/c2pa-rs-sample3.invalid.wav'] as $file) {
+        $report = spec013Verify($file);
+        expect($report->hasManifest)->toBeFalse($file)
+            ->and(spec013Codes($report))->toBe(['general.error'], $file)
+            ->and($report->result->state)->toBe(ValidationState::Invalid, $file);
+    }
+    // a fault at or after the C2PA chunk keeps saying a manifest is there
+    foreach (['webp/two-c2pa.webp', 'wav/lbox-differs.wav'] as $file) {
+        expect(spec013Verify($file)->hasManifest)->toBeTrue($file);
+    }
+})->group('SPEC-013');
+
 it('AC7: a claim a real writer left with trailing bytes is claim.cbor.invalid (c2pa-rs 0.91.0, step 173)', function (): void {
     // Signed by c2pa-rs 0.91.0 through @contentauth/c2pa-node 0.9.8, with specVersion in
     // claim_generator_info: the claim map holds one entry more than its header declares

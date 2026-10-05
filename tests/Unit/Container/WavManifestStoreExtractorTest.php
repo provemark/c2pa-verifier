@@ -74,13 +74,19 @@ it('AC4: a header size that disagrees with the file is an error naming both, bef
 
     expect(ftell($stream))->toBeLessThanOrEqual(12);
 })->with([
+    // amendment 3: only a size that promises more than the file holds is still an error
     'size +1' => ['riff-size-plus-one', 29543, 29542],
-    'size without C2PA' => ['riff-size-excludes-c2pa', 16070, 29542],
     'truncated in C2PA' => ['truncated-in-c2pa', 29542, 17078],
     'truncated between chunks' => ['truncated-between-chunks', 29542, 16070],
-    'trailing bytes' => ['trailing-bytes', 29542, 29642],
-    'a second RIFF chunk' => ['second-riff', 29542, 43026],
 ])->group('SPEC-055');
+
+it('AC4: a header size that ends before the C2PA chunk yields null, as c2patool finds no claim (amendment 3)', function (): void {
+    expect(spec055Extract('wav/riff-size-excludes-c2pa.wav'))->toBeNull();
+})->group('SPEC-055');
+
+it('AC4: bytes after the RIFF chunk leave the store as it is (amendment 3)', function (string $variant): void {
+    expect(hash('sha256', spec055Bytes("wav/{$variant}.wav")))->toBe(SPEC055_STORE_SHA256);
+})->with(['trailing-bytes', 'second-riff'])->group('SPEC-055');
 
 it('AC5: a chunk that overruns the file is an error naming the chunk offset and its declared length', function (): void {
     expect(fn () => spec055Extract('wav/chunk-overruns-file.wav'))

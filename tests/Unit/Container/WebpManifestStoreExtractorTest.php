@@ -74,9 +74,8 @@ it('AC5: a header size +1 is an error naming the header size and the file length
         ->toThrow(ContainerException::class, 'RIFF size 100949 in the header, 100948 bytes in the file');
 })->group('SPEC-003');
 
-it('AC5: a header size that excludes the C2PA chunk is an error, not "no store"', function (): void {
-    expect(fn () => spec003Extract('webp/riff-size-excludes-c2pa.webp'))
-        ->toThrow(ContainerException::class, 'RIFF size 304 in the header, 100948 bytes in the file');
+it('AC5: a header size that ends before the C2PA chunk yields null, as c2patool finds no claim (amendment 3)', function (): void {
+    expect(spec003Extract('webp/riff-size-excludes-c2pa.webp'))->toBeNull();
 })->group('SPEC-003');
 
 it('AC5: a file truncated inside the C2PA chunk is an error naming the header size and the file length', function (): void {
@@ -155,8 +154,9 @@ it('AC15: the default limit is 16 MiB', function (): void {
         ->and(hash('sha256', $extractor->extract(spec003Stream('fixture-signed.webp'))->bytes ?? ''))->toBe(SPEC003_STORE_SHA256);
 })->group('SPEC-003');
 
-it('AC16: the header size is checked against the file before any chunk header is read', function (): void {
-    $stream = spec003Stream('webp/riff-size-excludes-c2pa.webp');
+it('AC16: a header size larger than the file is refused before any chunk header is read', function (): void {
+    // amendment 3: only a size that promises more than the file holds is still an error
+    $stream = spec003Stream('webp/riff-size-plus-one.webp');
 
     expect(fn () => (new WebpManifestStoreExtractor)->extract($stream))
         ->toThrow(ContainerException::class);
@@ -164,3 +164,63 @@ it('AC16: the header size is checked against the file before any chunk header is
     // Only the twelve-byte header may have been read; the file length comes from a seek, not a read.
     expect(ftell($stream))->toBeLessThanOrEqual(12);
 })->group('SPEC-003');
+
+/** @return resource a memory stream holding $bytes, rewound */
+function spec003Memory(string $bytes)
+{
+    $stream = fopen('php://memory', 'r+b');
+    if ($stream === false) {
+        throw new RuntimeException('cannot open php://memory');
+    }
+    fwrite($stream, $bytes);
+    rewind($stream);
+
+    return $stream;
+}
+
+/** The bytes of a fixture with the RIFF size recomputed for its length. */
+function spec003Resized(string $bytes): string
+{
+    return substr_replace($bytes, pack('V', strlen($bytes) - 8), 4, 4);
+}
+
+function spec003Fixture(string $name): string
+{
+    return (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/'.$name);
+}
+
+it('AC12: a pad byte after another chunk is not checked, and may be missing where the RIFF chunk ends (amendment 3)', function (): void {
+    $unsigned = spec003Fixture('fixture-unsigned.webp');
+    $signed = spec003Fixture('fixture-signed.webp');
+    $odd = 'XXXX'.pack('V', 3).'abc';
+
+    // measured in step 215: c2patool 0.27.22 and 0.28.1 find no claim in the two unsigned files
+    expect((new WebpManifestStoreExtractor)->extract(spec003Memory(spec003Resized(substr($unsigned, 0, 12).$odd."\xFF".substr($unsigned, 12)))))->toBeNull()
+        ->and((new WebpManifestStoreExtractor)->extract(spec003Memory(spec003Resized($unsigned.$odd))))->toBeNull()
+        // and the store is still found after such a chunk (the data hash judges the inserted bytes)
+        ->and(hash('sha256', (new WebpManifestStoreExtractor)->extract(spec003Memory(spec003Resized(substr($signed, 0, 312).$odd."\xFF".substr($signed, 312))))->bytes ?? ''))->toBe(SPEC003_STORE_SHA256);
+})->group('SPEC-003');
+
+it('AC17: bytes after the RIFF chunk are not the container\'s concern (amendment 3)', function (): void {
+    $tail = str_repeat("\xAA", 128);
+
+    expect(hash('sha256', (new WebpManifestStoreExtractor)->extract(spec003Memory(spec003Fixture('fixture-signed.webp').$tail))->bytes ?? ''))->toBe(SPEC003_STORE_SHA256)
+        ->and((new WebpManifestStoreExtractor)->extract(spec003Memory(spec003Fixture('fixture-unsigned.webp').$tail)))->toBeNull();
+})->group('SPEC-003');
+
+it('AC18: a fault says whether the walk had reached a C2PA chunk (amendment 3)', function (string $variant, bool $reached): void {
+    try {
+        spec003Extract("webp/{$variant}.webp");
+        $caught = null;
+    } catch (ContainerException $e) {
+        $caught = $e;
+    }
+
+    expect($caught)->toBeInstanceOf(ContainerException::class)
+        ->and($caught?->storeReached)->toBe($reached);
+})->with([
+    'size +1: refused before any chunk' => ['riff-size-plus-one', false],
+    'cut before the C2PA chunk' => ['truncated-between-chunks', false],
+    'two C2PA chunks' => ['two-c2pa', true],
+    'LBox differs' => ['lbox-differs', true],
+])->group('SPEC-003');

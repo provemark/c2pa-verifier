@@ -534,7 +534,7 @@ final class ManifestException extends \RuntimeException
 
     **Weight B: a field in the report changes meaning for RIFF files.**
 
-    **Proposed, awaiting approval.**
+    Approved by Maurice van Loon, 2026-10-05 (step 215).
 
 ## Traceability
 
