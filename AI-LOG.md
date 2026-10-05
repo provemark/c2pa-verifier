@@ -8801,3 +8801,13 @@ README are where the disclosure lives.
 - Measured: `composer check`; the attribution check; CI.
 - Reasoned: none.
 - Decided by Maurice: both amendments confirmed; the push.
+
+## 2026-10-05 — SPEC-058 drafted: AVI (step 239)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, bevestig de amendementen, push en ga door met AVI".
+- Produced: `specs/SPEC-058-avi.md` (draft); `notes/step-239-avi-spec.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: a probe of `RiffManifestStoreExtractor` with the form `AVI `
+  over every AVI fixture; `bin/spec-check.php`.
+- Reasoned: five criteria from step 209 and the probe.
+- Decided by Maurice: AVI next.
