@@ -336,6 +336,43 @@ same way, so SPEC-003's tests prove the refactor. `FormatDetector` returns
 
    Approved by Maurice van Loon, 2026-10-05 (step 210c).
 
+3. **2026-10-05, step 214, proposed (review finding 1–3 of step 213;
+   direction decided by Maurice van Loon the same day)** — the same change
+   as SPEC-003 amendment 3, for WAV, where it matters more: an unsigned
+   WAV with an ID3v1 tag appended (128 bytes, `TAG`…), or whose last
+   odd-length chunk has no pad byte, or with a non-zero pad byte after
+   another chunk, is `Invalid` with `has_manifest: true` here and *No
+   claim found* in both `c2patool` versions (measured in steps 213 and
+   214).
+
+   The rule, in one line: **strict about the `C2PA` chunk, as lenient as
+   `c2patool` about everything else.** Leniency outside the store cannot
+   make a changed signed file `Valid`: the data hash covers every byte
+   outside the store's exclusion, the bytes after the RIFF chunk included
+   (measured in steps 204 and 213: each such change is
+   `assertion.dataHash.mismatch` in both `c2patool` versions).
+
+   - **AC4 is split as SPEC-003's AC5.** `riff-size-plus-one`,
+     `truncated-in-c2pa` and `truncated-between-chunks` stay errors with
+     their messages. `riff-size-excludes-c2pa` yields `null`.
+     `trailing-bytes` and `second-riff` yield the store of AC1, and
+     verified they are `Invalid` with `assertion.dataHash.mismatch`, as
+     both `c2patool` versions say.
+   - **AC11 is unchanged**: it is about the `C2PA` chunk's own pad byte.
+   - **AC19 (new) — ordinary WAV quirks outside the store are not
+     faults.** Given the unsigned fixture with a 128-byte ID3v1 tag
+     appended; with an odd-length chunk without a pad byte at the end of
+     the RIFF chunk; and with an odd-length chunk whose pad byte is `FF`
+     before `data`: each is `wav`, `hasManifest` false, no failure status.
+     Given the signed fixture with the same ID3v1 tag appended: `Invalid`,
+     `claimSignature.validated` and `assertion.dataHash.mismatch`. All four
+     as both `c2patool` versions say.
+   - **AC18 is unchanged in what it asserts**; `c2pa-rs-sample3.invalid.wav`
+     keeps its message and becomes `hasManifest` false (SPEC-013
+     amendment 16).
+
+   **Proposed, awaiting approval.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

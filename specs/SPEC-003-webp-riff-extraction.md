@@ -289,6 +289,41 @@ rest of the data, then the pad byte. Keeps walking to see a second `C2PA`
    survives. AC15's literal changes with it.
    Confirmed by Maurice van Loon, 2026-09-22 (step 68).
 
+3. **2026-10-05, step 214, proposed (review finding 1–3 of step 213;
+   direction decided by Maurice van Loon the same day)** — an unsigned
+   WebP with bytes after its RIFF chunk is `Invalid` with
+   `has_manifest: true` here, where both `c2patool` versions find no
+   claim (measured). The walk is stricter than it needs to be outside the
+   `C2PA` chunk.
+
+   The rule, in one line: **strict about the `C2PA` chunk, as lenient as
+   `c2patool` about everything else.** Leniency outside the store cannot
+   make a changed signed file `Valid`: the data hash covers every byte
+   outside the store's exclusion, the bytes after the RIFF chunk included
+   (measured in steps 204 and 213: each such change is
+   `assertion.dataHash.mismatch` in both `c2patool` versions).
+
+   - **AC5 is split.** A header size that promises **more** than the file
+     holds stays an error before any chunk header is read, with the same
+     message (`riff-size-plus-one`, `truncated-in-c2pa`,
+     `truncated-between-chunks`); AC16 keeps holding for these. A header
+     size that promises **less** than the file holds is no longer an error:
+     the walk ends where the RIFF chunk ends, and the bytes after it are
+     not read here. `riff-size-excludes-c2pa.webp` therefore yields
+     `null`, as `c2patool` says (*No claim found*).
+   - **AC12 is narrowed to the `C2PA` chunk's own pad byte**, which must
+     still be present and zero. After any other odd-length chunk the pad
+     byte is skipped and its value not checked, and when such a chunk ends
+     exactly where the RIFF chunk ends, a missing pad byte is accepted.
+   - **AC17 (new) — bytes after the RIFF chunk are not the container's
+     concern.** Given the signed fixture with 128 bytes appended, the
+     extractor returns the same store as AC1; given the unsigned fixture
+     with the same bytes appended, it returns `null`.
+   - **AC18 (new) — the walk says whether it reached a `C2PA` chunk.** A
+     `ContainerException` thrown before a `C2PA` chunk header was read says
+     so (SPEC-013 amendment 16 uses it).
+
+   **Proposed, awaiting approval.**
 
 ## Traceability
 

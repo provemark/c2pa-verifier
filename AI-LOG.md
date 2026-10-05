@@ -8402,3 +8402,17 @@ README are where the disclosure lives.
 - Decided by Maurice: the advice for findings 1–3 (strict about the
   `C2PA` chunk, lenient as `c2patool` about the rest, `has_manifest` only
   when a `C2PA` chunk was seen), before 0.3.0.
+
+## 2026-10-05 — Strict about the C2PA chunk, lenient about the rest: proposed (step 214)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, ga door met stap 214".
+- Produced: SPEC-003 amendment 3, SPEC-055 amendment 3, SPEC-013
+  amendment 16 (all proposed); `notes/step-214-riff-leniency-proposed.md`;
+  a row in `NOTES.md`.
+- Measured: a non-zero pad byte after a non-`C2PA` chunk, unsigned and
+  signed, with this verifier and both `c2patool` versions; this
+  verifier's report on every WebP, WAV and other-writer RIFF fixture and
+  on six built files.
+- Reasoned: the proposed report per file; the three points for approval.
+- Decided by Maurice: none in this step (the direction was decided in
+  step 213).

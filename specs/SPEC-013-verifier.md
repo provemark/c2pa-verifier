@@ -513,6 +513,29 @@ final class ManifestException extends \RuntimeException
 
     Confirmed by Maurice van Loon, 2026-10-05 (step 209).
 
+16. **2026-10-05, step 214, proposed (review finding 3 of step 213)** —
+    `hasManifest` is `true` after a container fault only when the
+    extractor had reached the store. Today every `ContainerException`
+    sets it, so a broken but unsigned file says it has a manifest.
+
+    - The RIFF walk (WebP, WAV) reports whether it had read a `C2PA` chunk
+      header before the fault (SPEC-003 amendment 3, AC18). When it had
+      not, the report is `hasManifest` false, `Invalid`, one
+      `general.error` naming the fault: the file is malformed, and
+      `c2patool` errors on it too, so the fault stays visible; it is just
+      not a fault in Content Credentials.
+    - The other extractors (JPEG, PNG, ISOBMFF) keep reporting `true` on
+      every fault, unchanged. Whether they have the same problem is not
+      measured; it is named here as an open point, not fixed in passing.
+    - Files whose report changes (`hasManifest` true → false, verdict and
+      message unchanged): `webp/` and `wav/` `truncated-between-chunks`,
+      `truncated-in-c2pa` and `riff-size-plus-one` (the size check runs
+      before any chunk is read), and `wav-writers/c2pa-rs-sample3.invalid.wav`.
+
+    **Weight B: a field in the report changes meaning for RIFF files.**
+
+    **Proposed, awaiting approval.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
