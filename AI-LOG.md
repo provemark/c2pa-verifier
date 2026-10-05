@@ -8170,3 +8170,21 @@ README are where the disclosure lives.
 - Reasoned: that the legal-entity requirement decides the question
   before the network and product requirements do.
 - Decided by Maurice: not now.
+
+## 2026-10-05 — Seven more formats, surveyed (step 203)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "Ik wil de verifier langzaam gaan uitbreiden met meer file
+  formaten zoals wav en meer. … Kan je daarvoor een goed plan maken?";
+  then "akkoord, begin met fase 0 en WAV als eerste".
+- Produced: `notes/step-203-format-survey.md`; a row in `NOTES.md`; the
+  "later" row in `docs/milestones.md`.
+- Measured: the seven unsigned sister-library fixtures signed with
+  `c2patool` 0.27.22 and 0.28.1 in a scratch directory (`c2patool <file>
+  -m manifest.json -o <out> -f`), each read with both versions
+  (`--settings`, `--detailed`): 28 × `Trusted`, `c2pa.hash.data` in all;
+  store placement by hexdump; one flipped byte per format read with both
+  versions; `bin/c2pa-verify` on a signed WAV (`Invalid`, `general.error`).
+- Reasoned: that each format is a container reader on the existing data-hash
+  check; the four families; that the WAV pad byte being hashed belongs in
+  the WAV spec.
+- Decided by Maurice: WAV first.
