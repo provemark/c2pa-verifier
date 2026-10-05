@@ -8329,3 +8329,16 @@ README are where the disclosure lives.
 - Reasoned: how a criterion for behaviour that already exists can be seen
   red.
 - Decided by Maurice: AC18 to be proposed before step 211.
+
+## 2026-10-05 — A large WAV: memory and time (step 211)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, eerst AC18 voorstellen, dan stap 211".
+- Produced: `notes/step-211-large-wav.md`; a row in `NOTES.md`.
+- Measured: three WAVs (100 MB, 500 MB, 2 GB) built and signed with
+  `c2patool` 0.27.22 in a scratch directory; `bin/c2pa-verify` on each
+  under `/usr/bin/time -l`, without a memory limit and with
+  `memory_limit=64M`; `c2patool` on each; one byte changed mid-file in the
+  2 GB file; the files deleted afterwards.
+- Reasoned: that the risk on shared hosting is the time limit, not
+  memory, and that it is not specific to WAV.
+- Decided by Maurice: none.
