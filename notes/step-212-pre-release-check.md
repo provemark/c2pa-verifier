@@ -46,8 +46,12 @@
   CHANGELOG `Unreleased` (WAV, step 210–211's measurements, the smaller
   dist).
 
-## Not checked yet (part two)
+## Part two: CI
 
-CI. Steps 203–212 are local; nothing is pushed. CI runs PHP 8.3, 8.4 and
-8.5 and the `older-php` job (7.4–8.2) on a push. That needs Maurice's
-word, and so does any tag.
+Pushed on Maurice's word (`b0f2148..840d992`, twelve commits, steps
+203–212; no commit message names Claude or Anthropic, checked before the
+push). CI run 37279625810 on `840d992`: **all eight jobs green** —
+`composer check` on PHP 8.3, 8.4 and 8.5, `requirements.php` on PHP 7.4,
+8.0, 8.1 and 8.2, and `all green`.
+
+No tag yet: that needs Maurice's word.

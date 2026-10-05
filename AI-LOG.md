@@ -8370,3 +8370,14 @@ README are where the disclosure lives.
 - Reasoned: that 0.3.0 is a minor version (new behaviour); that running
   the seed under `v0.2.9` compares nothing for WAV.
 - Decided by Maurice: none.
+
+## 2026-10-05 — The check before 0.3.0, part two: CI (step 212)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push main en laat CI draaien".
+- Produced: the push of `main` (`b0f2148..840d992`); the CI result in
+  `notes/step-212-pre-release-check.md` and `NOTES.md`.
+- Measured: `git log --format=%B origin/main..HEAD | grep -ci
+  "claude\|anthropic"` (0) before the push; CI run 37279625810, eight jobs
+  green (`gh run view`).
+- Reasoned: none.
+- Decided by Maurice: push `main`.
