@@ -177,8 +177,8 @@ logic; only the four helpers move. The JPEG `readMarker`, `readUint16`,
    delegates to it with the form type `WEBP`. AC1's grep therefore reads
    `{Jpeg,Png,Riff}ManifestStoreExtractor.php`, and checks that the WebP
    class delegates. AC1 is unchanged in substance: no extractor has a
-   private stream helper, and every walk uses `StreamReader`. Awaiting
-   confirmation.
+   private stream helper, and every walk uses `StreamReader`. Confirmed by
+   Maurice van Loon, 2026-10-05 (step 207).
 
 ## Traceability
 

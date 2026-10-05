@@ -8239,3 +8239,21 @@ README are where the disclosure lives.
 - Reasoned: that the move should be its own step so that a changed
   verdict could have only one cause.
 - Decided by Maurice: SPEC-055 approved.
+
+## 2026-10-05 — SPEC-055's tests, red (step 207)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, bevestig amendement 2 en ga door met stap 207".
+- Produced: `tests/Unit/Container/WavManifestStoreExtractorTest.php`,
+  `tests/Unit/Verifier/WavTest.php`, `tests/Fixtures/c2patool/wav/` (four
+  JSON recordings and a README); SPEC-055 Traceability placeholders;
+  SPEC-004 amendment 2 marked confirmed; `notes/step-207-spec055-red.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: `c2patool` 0.27.22 and 0.28.1 on the signed WAV, with and
+  without `--settings tests/Fixtures/trust/full.settings.json`; this
+  verifier's WebP report beside `c2patool`'s (same codes, other order);
+  `vendor/bin/pest --group=SPEC-055` (37 failed); `vendor/bin/pest`
+  (37 failed, 621 passed); PHPStan (22 errors, all from the missing
+  class); `bin/spec-check.php` clean.
+- Reasoned: that AC16 compares with the recordings itself rather than
+  amending SPEC-013's drift-alarm list.
+- Decided by Maurice: SPEC-004 amendment 2 confirmed.
