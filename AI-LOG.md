@@ -8188,3 +8188,22 @@ README are where the disclosure lives.
   check; the four families; that the WAV pad byte being hashed belongs in
   the WAV spec.
 - Decided by Maurice: WAV first.
+
+## 2026-10-05 — The signed WAV fixture, measured (step 204)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, ga door met stap 204".
+- Produced: `tests/Fixtures/fixture-unsigned.wav`,
+  `tests/Fixtures/fixture-signed.wav`,
+  `tests/Fixtures/fixture-signed-wav.manifest.json`,
+  `bin/make-wav-variants.php`, `tests/Fixtures/wav/` (21 variants and a
+  README), `notes/step-204-wav-measured.md`; rows in `NOTES.md` and
+  `tests/Fixtures/README.md`.
+- Measured: the fixture signed with `c2patool` 0.27.22 and read with
+  0.27.22 and 0.28.1, with and without `--settings`; the 21 variants read
+  with both versions; WebP's `length-differs` and `lbox-differs` re-read
+  with both versions; C2PA 2.4 §A.3.7 read from the published HTML;
+  `composer check` (exit 0, 621 tests).
+- Reasoned: that WAV can follow SPEC-003; that 0.28.1's new location
+  check equals SPEC-012's rule; that the chunk's position is a decision
+  for the spec.
+- Decided by Maurice: none.

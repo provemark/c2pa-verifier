@@ -24,6 +24,11 @@ What may live here:
   fixture — which is why SPEC-026 AC9 now says a flavour named anywhere
   must be a fixture here.
 
+- **WAV** — `fixture-unsigned.wav` (the sister repository's file,
+  unchanged) and `fixture-signed.wav`, signed with c2patool 0.27.22 and
+  the c2pa-rs ES256 test certificates (step 204), with malformed variants
+  under `wav/`.
+
 What never lives here, in any branch, under any name: a private key. This
 project verifies only; it has no use for one. `*.key` is gitignored
 unconditionally as a second line of defence, not as the first.
