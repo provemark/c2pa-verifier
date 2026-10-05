@@ -34,8 +34,10 @@ committed.
 - **`has_manifest` after a RIFF container fault (SPEC-013 amendment 16)**
   is `true` only when the walk had reached a `C2PA` chunk. A truncated
   WebP or WAV, or one whose header size exceeds the file, is still
-  `Invalid` with `general.error`, now with `has_manifest: false`. JPEG, PNG
-  and ISOBMFF are unchanged. A file whose header size exceeds the file is
+  `Invalid` with `general.error`, now with `has_manifest: false`. Since
+  SPEC-013 amendment 18 the same holds for JPEG, PNG and ISOBMFF: the store
+  is reached at an APP11 JUMBF piece, a `caBX` chunk, a C2PA `uuid` box (even
+  one whose size field is broken). No verdict changes. A file whose header size exceeds the file is
   reported with `has_manifest: true` when its `C2PA` chunk header is
   there (a signed file cut short), found by scanning the chunk headers
   only (SPEC-003 amendment 4, SPEC-013 amendment 17).

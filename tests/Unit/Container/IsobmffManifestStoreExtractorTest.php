@@ -203,7 +203,9 @@ it('AC10: a fault says whether a C2PA uuid box had been read (amendment 3)', fun
         ->and(spec026Reached($extract, $unsigned.pack('N', 1000).'free'.str_repeat("\0", 8)))->toBeFalse()
         ->and(spec026Reached($extract, $unsigned.str_repeat("\xAA", 128)))->toBeFalse();
     // a C2PA box that runs past the end still reached the store, as a RIFF C2PA chunk does
-    foreach (['isobmff/size-past-end.mp4', 'isobmff/two-c2pa-boxes.mp4', 'isobmff/purpose-unknown.mp4'] as $name) {
+    // size-below-header: a C2PA box whose size field is below its own header (step 224: missed by the
+    // first build, found by the corpus)
+    foreach (['isobmff/size-past-end.mp4', 'isobmff/size-below-header.mp4', 'isobmff/two-c2pa-boxes.mp4', 'isobmff/purpose-unknown.mp4'] as $name) {
         expect(spec026Reached($extract, $read($name)))->toBeTrue($name);
     }
 })->group('SPEC-026');

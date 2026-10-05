@@ -253,6 +253,21 @@ final readonly class IsobmffManifestStoreExtractor
      */
     public function extract($stream): ?ManifestStoreBytes
     {
+        // whether the store had been reached when a fault was thrown (SPEC-026 amendment 3,
+        // AC10): a fault before it is not a fault in a manifest (SPEC-013 amendment 18)
+        $reached = false;
+        try {
+            return $this->walk($stream, $reached);
+        } catch (ContainerException $e) {
+            throw $e->storeReached === $reached ? $e : new ContainerException($e->getMessage(), previous: $e, storeReached: $reached);
+        }
+    }
+
+    /**
+     * @param  resource  $stream
+     */
+    private function walk($stream, bool &$reached): ?ManifestStoreBytes
+    {
         $reader = new StreamReader($stream, 'box');
         $end = $reader->end();
 
@@ -270,7 +285,14 @@ final readonly class IsobmffManifestStoreExtractor
                     $offset,
                 ));
             }
-            [$size, $header, $type] = $this->boxHeader($reader, $offset, $end);
+            try {
+                [$size, $header, $type] = $this->boxHeader($reader, $offset, $end);
+            } catch (ContainerException $e) {
+                // a C2PA box whose size is broken still reached the store (SPEC-026 amendment 3)
+                $reached = $reached || $this->carriesC2paUuid($stream, $offset, $end);
+
+                throw $e;
+            }
             $read = $header;   // bytes of this box already consumed
 
             $isC2pa = false;
@@ -287,6 +309,7 @@ final readonly class IsobmffManifestStoreExtractor
             }
 
             if ($isC2pa) {
+                $reached = true;   // a C2PA uuid box: the store is reached (amendment 3)
                 if ($storeOffset !== null) {
                     throw new ContainerException(sprintf(
                         'two C2PA uuid boxes at offsets %d and %d; a file carries at most one manifest store',
@@ -362,6 +385,30 @@ final readonly class IsobmffManifestStoreExtractor
         }
 
         return [$size, $header, $type];
+    }
+
+    /**
+     * Whether the box at $offset is a `uuid` box carrying the C2PA UUID, its 16 bytes
+     * inside the file: read straight from the stream, for a box whose size field has
+     * already failed (SPEC-026 amendment 3, AC10).
+     *
+     * @param  resource  $stream
+     */
+    private function carriesC2paUuid($stream, int $offset, int $end): bool
+    {
+        if ($offset + 8 > $end || fseek($stream, $offset) !== 0) {
+            return false;
+        }
+        $head = (string) fread($stream, 8);
+        if (strlen($head) !== 8 || substr($head, 4, 4) !== self::TYPE_UUID) {
+            return false;
+        }
+        $at = $offset + (substr($head, 0, 4) === "\0\0\0\1" ? self::LARGE_BOX_HEADER_LENGTH : self::BOX_HEADER_LENGTH);
+        if ($at + 16 > $end || fseek($stream, $at) !== 0) {
+            return false;
+        }
+
+        return fread($stream, 16) === self::C2PA_UUID;
     }
 
     /** The JUMBF bytes of a C2PA box, after its twenty-one bytes of preamble. */

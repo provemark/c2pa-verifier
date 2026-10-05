@@ -8555,3 +8555,23 @@ README are where the disclosure lives.
   PHPStan; Pint; `bin/spec-check.php`.
 - Reasoned: none beyond the tests.
 - Decided by Maurice: the four amendments approved.
+
+## 2026-10-05 — Built: storeReached for JPEG, PNG and ISOBMFF (step 224)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur de vier amendementen goed en ga door".
+- Produced: `src/Container/JpegManifestStoreExtractor.php`,
+  `PngManifestStoreExtractor.php`, `IsobmffManifestStoreExtractor.php`
+  (`walk()`, the reached flag, `carriesC2paUuid()`); `size-below-header`
+  added to SPEC-026 AC10's test; CHANGELOG;
+  `notes/step-224-store-reached-everywhere-built.md`; a row in `NOTES.md`;
+  step 223's red commit corrected before push (its note said PHPStan was
+  clean before that was read).
+- Measured: Pest per group (18, 16, 10, 21 passed); PHPStan (one error,
+  then clean); `composer check` (exit 0, 690 tests); the corpus against
+  step 220 (six files at first, one not predicted; after the fix the five
+  predicted); step 221's built files; the fuzzer over the release set
+  (12,300 runs, 0 faults, 66 `Valid`, each `Valid` in both `c2patool`
+  versions).
+- Reasoned: that reading the UUID after a failed size check gives the
+  amendment's answer without changing `boxHeader()`.
+- Decided by Maurice: the four amendments approved (step 223).

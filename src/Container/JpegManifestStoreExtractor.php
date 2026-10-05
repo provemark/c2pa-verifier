@@ -51,6 +51,21 @@ final readonly class JpegManifestStoreExtractor
      */
     public function extract($stream): ?ManifestStoreBytes
     {
+        // whether the store had been reached when a fault was thrown (SPEC-001 amendment 5, AC17): a fault before
+        // it is not a fault in a manifest (SPEC-013 amendment 18)
+        $reached = false;
+        try {
+            return $this->walk($stream, $reached);
+        } catch (ContainerException $e) {
+            throw $e->storeReached === $reached ? $e : new ContainerException($e->getMessage(), previous: $e, storeReached: $reached);
+        }
+    }
+
+    /**
+     * @param  resource  $stream
+     */
+    private function walk($stream, bool &$reached): ?ManifestStoreBytes
+    {
         $reader = new StreamReader($stream, 'segment');
         $soi = $reader->readExactly(2, 0, 'SOI');
         if ($soi !== "\xFF\xD8") {
@@ -104,6 +119,7 @@ final readonly class JpegManifestStoreExtractor
 
                 continue;
             }
+            $reached = true;   // an APP11 JUMBF piece: the store is reached (amendment 5)
 
             /** @var array{en: int, z: int, lbox: int} $fields */
             $fields = unpack('nen/Nz/Nlbox', $header, 2);

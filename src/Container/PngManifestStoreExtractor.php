@@ -51,6 +51,21 @@ final readonly class PngManifestStoreExtractor
      */
     public function extract($stream): ?ManifestStoreBytes
     {
+        // whether the store had been reached when a fault was thrown (SPEC-002 amendment 3, AC15): a fault before
+        // it is not a fault in a manifest (SPEC-013 amendment 18)
+        $reached = false;
+        try {
+            return $this->walk($stream, $reached);
+        } catch (ContainerException $e) {
+            throw $e->storeReached === $reached ? $e : new ContainerException($e->getMessage(), previous: $e, storeReached: $reached);
+        }
+    }
+
+    /**
+     * @param  resource  $stream
+     */
+    private function walk($stream, bool &$reached): ?ManifestStoreBytes
+    {
         $reader = new StreamReader($stream, 'chunk');
         $signature = $reader->readExactly(8, 0, 'the signature');
         if ($signature !== self::SIGNATURE) {
@@ -87,6 +102,7 @@ final readonly class PngManifestStoreExtractor
 
                 continue;
             }
+            $reached = true;   // a caBX chunk header: the store is reached (amendment 3)
 
             if ($storeOffset !== null) {
                 throw new ContainerException(sprintf(
