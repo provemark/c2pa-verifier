@@ -8207,3 +8207,18 @@ README are where the disclosure lives.
   check equals SPEC-012's rule; that the chunk's position is a decision
   for the spec.
 - Decided by Maurice: none.
+
+## 2026-10-05 — SPEC-055 drafted: WAV (step 205)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, volg het advies en ga door met stap 205" (the advice:
+  extract a `C2PA` chunk that is not last and let the data hash judge).
+- Produced: `specs/SPEC-055-wav.md` (draft); rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: the fixture's store (13,463 bytes, SHA-256 and first eight
+  bytes) with a probe; the chunk offsets and lengths of `lbox-differs`,
+  `length-differs` and `two-c2pa`; `bin/c2pa-verify` on
+  `webp/riff-not-webp.webp` today (`unknown`); `php bin/spec-check.php`.
+- Reasoned: the seventeen criteria from SPEC-003 and step 204; the shared
+  RIFF walk as a separate refactor step; the amendments the spec forces.
+- Decided by Maurice: a `C2PA` that is not last is extracted (step 204's
+  question, answered at the start of this step).
