@@ -8643,3 +8643,13 @@ README are where the disclosure lives.
 - Reasoned: that a tagless MP3 should yield `null` (a build error, per
   AC13); the three options for the AC11/AC13 contradiction.
 - Decided by Maurice: option 1 (SPEC-056 amendment 1).
+
+## 2026-10-05 — Two amendments confirmed; pushed (step 229)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, bevestig de twee amendementen en push".
+- Produced: SPEC-013 amendment 19 and SPEC-024 amendment 3 marked
+  confirmed; rows in `NOTES.md` and `docs/milestones.md`; the push of
+  `main`.
+- Measured: `composer check`; the attribution check before the push; CI.
+- Reasoned: none.
+- Decided by Maurice: both amendments confirmed; the push.

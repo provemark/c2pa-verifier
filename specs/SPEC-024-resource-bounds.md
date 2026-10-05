@@ -235,7 +235,7 @@ reasoning that led to them stays readable.
    the C2PA GEOB's object and consults the same `MemoryBudget`; SPEC-056
    AC12 also bounds a tag at 4,096 frames. The criterion's test gains the
    constant. Named in SPEC-056's open questions before either was written.
-   Awaiting confirmation.
+   Confirmed by Maurice van Loon, 2026-10-05 (step 229).
 
 ## Traceability
 
