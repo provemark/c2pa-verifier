@@ -8710,3 +8710,24 @@ README are where the disclosure lives.
   `bin/spec-check.php`.
 - Reasoned: that finding 2 was an error in step 231's reasoning.
 - Decided by Maurice: amendment 3 and the fixes.
+
+## 2026-10-05 — Built: SPEC-056 amendment 3 (step 233)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur amendement 3 goed en ga door".
+- Produced: `src/Container/Id3ManifestStoreExtractor.php` (grouping, linear
+  text search, the scan's extended header, `Read::upTo()`, `header()` for
+  version 2), `src/Container/FormatDetector.php` (tags past the end, v2.2,
+  the padding probe, the docblock); the AC20 test filling a stream in
+  pieces; `spec024StorePng()` in `ResourceBoundsTest` writing in pieces;
+  `docs/comparison.md`, CHANGELOG; `notes/step-233-mp3-amendment-3-built.md`;
+  rows in `NOTES.md` and `docs/milestones.md`; step 232's note and log
+  corrected before push (a count not read; the suite's memory stop).
+- Measured: Pest per group and in full, twice (747 passed); the memory at
+  the failing test's start (34.8 MB) and around an 8 MB GEOB (no
+  retention); the old and new PNG builder byte-identical; `composer check`
+  (exit 0); the corpus against step 228; every MP3 against both `c2patool`
+  versions; the fuzzer (16,152 runs, 0 faults, 210 `Valid`, each `Valid`
+  in both versions).
+- Reasoned: that the suite had grown to the edge of 128 MB rather than
+  leaking.
+- Decided by Maurice: amendment 3 (step 232).

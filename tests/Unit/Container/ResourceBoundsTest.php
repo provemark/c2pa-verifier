@@ -33,21 +33,36 @@ use Provemark\C2paVerifier\Tests\Support\Corpus;
 
 const SPEC024_BOUND = 16 * 1024 * 1024;
 
-/** A PNG whose caBX chunk holds a JUMBF superbox of about $bytes, built in the temporary directory. */
+/**
+ * A PNG whose caBX chunk holds a JUMBF superbox of about $bytes, built in the temporary directory.
+ * Written in pieces, the CRC computed as it goes (step 233): built as one string it held several
+ * 20 MB copies at once, and the suite, grown past 740 tests, then ran out of its 128 MB here.
+ */
 function spec024StorePng(int $bytes): string
 {
-    $box = static fn (string $type, string $payload): string => pack('N', 8 + strlen($payload)).$type.$payload;
+    $fill = $bytes - 16 - 29;
+    $jumd = pack('N', 8 + 21).'jumd'.str_repeat("\x00", 16).'c2pa'."\x00";
+    $fillerHead = pack('N', 8 + $fill).'xxxx';
+    $superboxHead = pack('N', 8 + strlen($jumd) + strlen($fillerHead) + $fill).'jumb';
+    $cabxLength = strlen($superboxHead) + strlen($jumd) + strlen($fillerHead) + $fill;
     $chunk = static fn (string $type, string $data): string => pack('N', strlen($data)).$type.$data.pack('N', crc32($type.$data));
 
-    $filler = $box('xxxx', str_repeat("\x41", $bytes - 16 - 29));
-    $superbox = $box('jumb', $box('jumd', str_repeat("\x00", 16).'c2pa'."\x00").$filler);
-    $png = "\x89PNG\r\n\x1a\n"
-        .$chunk('IHDR', pack('NN', 1, 1)."\x08\x02\x00\x00\x00")
-        .$chunk('caBX', $superbox)
-        .$chunk('IEND', '');
-
     $path = spec024TempPath('store');
-    file_put_contents($path, $png);
+    $file = fopen($path, 'wb');
+    assert($file !== false);
+    fwrite($file, "\x89PNG\r\n\x1a\n".$chunk('IHDR', pack('NN', 1, 1)."\x08\x02\x00\x00\x00"));
+    $crc = hash_init('crc32b');
+    $head = 'caBX'.$superboxHead.$jumd.$fillerHead;
+    fwrite($file, pack('N', $cabxLength).$head);
+    hash_update($crc, $head);
+    $piece = str_repeat("\x41", 65536);
+    for ($left = $fill; $left > 0; $left -= strlen($piece)) {
+        $part = $left >= strlen($piece) ? $piece : substr($piece, 0, $left);
+        fwrite($file, $part);
+        hash_update($crc, $part);
+    }
+    fwrite($file, hash_final($crc, true).$chunk('IEND', ''));
+    fclose($file);
 
     return $path;
 }

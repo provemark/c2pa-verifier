@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Provemark\C2paVerifier\Container;
 
 /**
- * The container format from the first twelve bytes, nothing else read
- * (SPEC-013): JPEG's SOI, PNG's signature, RIFF's header with the WEBP or
- * WAVE form type (SPEC-055), ISOBMFF's `ftyp`. Anything else is null — RF64
- * and every other RIFF form included — an unknown format is an error for the
- * caller, never a guess. The stream is rewound afterwards.
+ * The container format from the first bytes of the stream (SPEC-013): JPEG's
+ * SOI, PNG's signature, RIFF's header with the WEBP or WAVE form type
+ * (SPEC-055), ISOBMFF's `ftyp`, and MP3 (SPEC-056). For MP3 the detector reads
+ * past the twelve-byte probe: for a tagless file the second MPEG frame header,
+ * where the first frame's length says; for a tagged one each tag header, a
+ * small probe for zero padding after it, and four bytes where the audio should
+ * begin. Anything else is null — an unknown format is an error for the caller,
+ * never a guess; RF64 and every other RIFF form included. The stream is rewound
+ * afterwards.
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
  * removed in any release; the contract is the nine classes named in the README.
@@ -53,7 +57,7 @@ final readonly class FormatDetector
 
             return $mp3 ? 'mp3' : null;
         }
-        if (Id3ManifestStoreExtractor::header($head) !== null) {
+        if (Id3ManifestStoreExtractor::header($head, alsoVersion2: true) !== null) {
             $mp3 = self::mpegAudioAfterTags($stream);
             rewind($stream);
 
@@ -76,29 +80,51 @@ final readonly class FormatDetector
      */
     private static function mpegAudioAfterTags($stream): bool
     {
+        if (fseek($stream, 0, SEEK_END) !== 0) {
+            return false;
+        }
+        $fileEnd = (int) ftell($stream);
         $position = 0;
         for ($tags = 0; $tags <= self::MAX_TAGS; $tags++) {
             if (fseek($stream, $position) !== 0) {
                 return false;
             }
-            $header = Id3ManifestStoreExtractor::header(Read::upTo($stream, 10));
+            $header = Id3ManifestStoreExtractor::header(Read::upTo($stream, 10), alsoVersion2: true);
             if ($header === null) {
                 break;
             }
             $position += $header['next'];   // relative to the tag's own start
-            // zero padding after the tag
-            if (fseek($stream, $position) !== 0) {
-                return false;
+            if ($position > $fileEnd) {
+                return true;   // a tag that runs past the end of the file: the extractor says why (AC23)
             }
-            $zeros = strspn(Read::upTo($stream, self::MAX_PADDING), "\0");
-            if ($zeros === self::MAX_PADDING) {
-                return false;
-            }
-            $position += $zeros;
+            $position += self::zeroPadding($stream, $position);
         }
 
         // after a tag one frame header is enough (AC13); two are asked only of a file with no tag (AC17)
         return fseek($stream, $position) === 0 && self::isMpegFrame(Read::upTo($stream, 4));
+    }
+
+    /**
+     * How many zero bytes follow $position, up to MAX_PADDING: a small probe first,
+     * read further only while it is all zeros.
+     *
+     * @param  resource  $stream
+     */
+    private static function zeroPadding($stream, int $position): int
+    {
+        $zeros = 0;
+        $probe = 16;
+        while ($zeros < self::MAX_PADDING && fseek($stream, $position + $zeros) === 0) {
+            $chunk = Read::upTo($stream, min($probe, self::MAX_PADDING - $zeros));
+            $run = strspn($chunk, "\0");
+            $zeros += $run;
+            if ($chunk === '' || $run < strlen($chunk)) {
+                break;
+            }
+            $probe = min($probe * 16, 16384);
+        }
+
+        return $zeros;
     }
 
     /**

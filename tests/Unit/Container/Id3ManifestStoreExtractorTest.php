@@ -202,14 +202,30 @@ it('AC21: a GEOB frame header at the very end of the file is a ContainerExceptio
 })->with(['the tag ends there' => [10], 'the tag promises more' => [100]])->group('SPEC-056');
 
 it('AC20: unterminated text fields are refused in linear time (amendment 3)', function (): void {
+    // Built in a stream piece by piece, and only the message kept: an exception's trace holds its
+    // frames' arguments, and an 8 MB string held there outlived the test and starved later ones.
     $syncsafe = static fn (int $v): string => chr(($v >> 21) & 0x7F).chr(($v >> 14) & 0x7F).chr(($v >> 7) & 0x7F).chr($v & 0x7F);
-    $body = "\x01application/c2pa\0".str_repeat('A', 8 * 1024 * 1024);   // UTF-16, no two-byte NUL anywhere
-    $geob = 'GEOB'.$syncsafe(strlen($body))."\0\0".$body;
+    $text = 8 * 1024 * 1024;   // UTF-16, no two-byte NUL anywhere
+    $bodyLength = strlen("\x01application/c2pa\0") + $text;
+    $stream = fopen('php://memory', 'r+b');
+    assert($stream !== false);
+    fwrite($stream, 'ID3'."\x04\0\0".$syncsafe($bodyLength + 10).'GEOB'.$syncsafe($bodyLength)."\0\0"."\x01application/c2pa\0");
+    for ($written = 0; $written < $text; $written += 65536) {
+        fwrite($stream, str_repeat('A', 65536));
+    }
+    rewind($stream);
     $start = microtime(true);
-    $caught = spec056Fault('ID3'."\x04\0\0".$syncsafe(strlen($geob)).$geob);
+    $message = '';
+    try {
+        (new Id3ManifestStoreExtractor)->extract($stream);
+    } catch (ContainerException $e) {
+        $message = $e->getMessage();
+    }
+    $seconds = microtime(true) - $start;
+    fclose($stream);
 
-    expect($caught?->getMessage())->toContain('text fields do not end')
-        ->and(microtime(true) - $start)->toBeLessThan(5.0);   // step 232: 13 s before the fix
+    expect($message)->toContain('text fields do not end')
+        ->and($seconds)->toBeLessThan(5.0);   // step 232: 13 s before the fix
 })->group('SPEC-056');
 
 it('AC22: the grouping flag on a GEOB that still reads as C2PA is a fault (amendment 3)', function (string $variant): void {

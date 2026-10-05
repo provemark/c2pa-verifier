@@ -60,18 +60,22 @@ final readonly class Id3ManifestStoreExtractor
      * frames end, and where the tag ends with its footer (v2.4 only), both counted
      * from the tag's own first byte. Null for
      * anything else, a size that is not syncsafe included. Shared with
-     * FormatDetector, so that the two never disagree about a tag's end.
+     * FormatDetector, so that the two never disagree about a tag's end; the
+     * detector also passes version 2, whose header has the same shape and no
+     * footer, so that an ID3v2.2 file reaches the extractor and is refused there
+     * by name (SPEC-056 amendment 3, AC24).
      *
      * @return array{version: int, flags: int, end: int, next: int}|null
      */
-    public static function header(string $bytes): ?array
+    public static function header(string $bytes, bool $alsoVersion2 = false): ?array
     {
         if (strlen($bytes) < self::HEADER_LENGTH || ! str_starts_with($bytes, 'ID3')) {
             return null;
         }
         $version = ord($bytes[3]);
         $sizeBytes = substr($bytes, 6, 4);
-        if (($version !== 3 && $version !== 4) || preg_match('/[\x80-\xFF]/', $sizeBytes) === 1) {
+        $known = $version === 3 || $version === 4 || ($alsoVersion2 && $version === 2);
+        if (! $known || preg_match('/[\x80-\xFF]/', $sizeBytes) === 1) {
             return null;
         }
         $flags = ord($bytes[5]);
@@ -122,7 +126,7 @@ final readonly class Id3ManifestStoreExtractor
         $fileEnd = $reader->end();
         if ($tagEnd > $fileEnd) {
             // a fault, but one that says whether the store was there (AC5, as SPEC-003 amendment 4)
-            $reached = $this->scanForStore($reader, $version, $fileEnd);
+            $reached = $this->scanForStore($reader, $version, $header['flags'], $fileEnd);
             throw new ContainerException(sprintf('the ID3 tag ends at %d, past the end of the file at %d', $tagEnd, $fileEnd));
         }
         $unsynchronised = ($header['flags'] & 0x80) !== 0;
@@ -172,10 +176,12 @@ final readonly class Id3ManifestStoreExtractor
             if ($bodyEnd > $tagEnd) {
                 throw new ContainerException(sprintf('the C2PA GEOB frame at offset %d declares %d bytes, past the end of the tag at %d (AC8)', $offset, $size, $tagEnd));
             }
-            // v2.4: data length 0x01, unsynchronisation 0x02, encryption 0x04, compression 0x08;
-            // v2.3: compression 0x80, encryption 0x40. Grouping changes the body, so a grouped
-            // GEOB never reaches here: its MIME type is not where it is looked for (AC20).
-            $formatFlags = $version === 4 ? $frameFlags & 0x0F : $frameFlags & 0xC0;
+            // v2.4: data length 0x01, unsynchronisation 0x02, encryption 0x04, compression 0x08,
+            // grouping 0x40; v2.3: compression 0x80, encryption 0x40, grouping 0x20. A GEOB whose
+            // group byte is really there does not match the MIME type and never reaches here
+            // (AC20); one that still reads as C2PA under the flag has bytes the flag says are
+            // something else, and is refused (AC22).
+            $formatFlags = $version === 4 ? $frameFlags & 0x4F : $frameFlags & 0xE0;
             if ($formatFlags !== 0) {
                 throw new ContainerException(sprintf('the C2PA GEOB frame at offset %d has format flags %02X: compressed, encrypted, unsynchronised or with a data length, it is not read (AC10)', $offset, $formatFlags));
             }
@@ -183,8 +189,10 @@ final readonly class Id3ManifestStoreExtractor
                 throw new ContainerException(sprintf('the ID3 tag\'s unsynchronisation flag is set: the C2PA GEOB frame at offset %d is not read (AC10)', $offset));
             }
 
-            // the text fields may be of any length within the frame (AC20): read on until they end
-            while (($objectAt = self::objectStart($body, $offset)) === null) {
+            // the text fields may be of any length within the frame (AC20): read on until they end,
+            // each search continuing where the last one stopped (amendment 3: linear, not quadratic)
+            $scan = ['from' => (int) strpos($body, "\0", 1) + 1, 'field' => 0];
+            while (($objectAt = self::objectStart($body, $offset, $scan)) === null) {
                 if (strlen($body) >= $size || strlen($body) > $this->maxObjectLength) {
                     throw new ContainerException(sprintf('the C2PA GEOB frame at offset %d: its text fields do not end within the frame', $offset));
                 }
@@ -259,10 +267,11 @@ final readonly class Id3ManifestStoreExtractor
     {
         $position = self::HEADER_LENGTH;
         $carry = '';
-        while ($position < $tagEnd && fseek($stream, $position) === 0) {
-            $chunk = (string) fread($stream, max(1, min(self::CHUNK, $tagEnd - $position)));
-            if ($chunk === '') {
-                break;
+        while ($position < $tagEnd) {
+            $wanted = min(self::CHUNK, $tagEnd - $position);
+            $chunk = fseek($stream, $position) === 0 ? Read::upTo($stream, max(1, $wanted)) : '';
+            if (strlen($chunk) !== $wanted) {
+                throw new ContainerException(sprintf('the ID3 tag could not be read at offset %d to look for unsynchronised bytes', $position));
             }
             $found = strpos($carry.$chunk, "\xFF\x00");
             if ($found !== false) {
@@ -295,10 +304,13 @@ final readonly class Id3ManifestStoreExtractor
      * Whether a C2PA GEOB's header and MIME type lie between offset 10 and
      * $end, read with the walk's own frame reading, never a frame's object (AC5).
      */
-    private function scanForStore(StreamReader $reader, int $version, int $end): bool
+    private function scanForStore(StreamReader $reader, int $version, int $flags, int $end): bool
     {
         try {
             $offset = self::HEADER_LENGTH;
+            if (($flags & 0x40) !== 0) {
+                $offset += $this->extendedHeaderLength($reader, $version, $end);   // as the walk does (amendment 3)
+            }
             $frames = 0;
             while ($offset + self::HEADER_LENGTH <= $end && ++$frames <= self::MAX_FRAMES) {
                 $frameHeader = $reader->readExactly(self::HEADER_LENGTH, $offset, 'the frame header');
@@ -338,34 +350,39 @@ final readonly class Id3ManifestStoreExtractor
     /**
      * Where the object begins in a GEOB body: after the MIME type and the file name
      * and description in the body's text encoding (0 and 3: one NUL; 1 and 2: two,
-     * on a two-byte boundary). Null when the text fields have not ended within $body.
+     * on a two-byte boundary from the field's start). Null when the text fields have
+     * not ended within $body; $scan then holds where to go on, so that a body read
+     * in chunks is searched once in all (amendment 3).
+     *
+     * @param  array{from: int, field: int}  $scan  the next field's start and how many fields have ended
      */
-    private static function objectStart(string $body, int $offset): ?int
+    private static function objectStart(string $body, int $offset, array &$scan): ?int
     {
         $encoding = ord($body[0]);
         if ($encoding > 3) {
             throw new ContainerException(sprintf('the C2PA GEOB frame at offset %d has text encoding %d; only 0 to 3 exist', $offset, $encoding));
         }
         $wide = $encoding === 1 || $encoding === 2;
-        $position = (int) strpos($body, "\0", 1) + 1;   // after the MIME type, which mime() found
-        for ($field = 0; $field < 2; $field++) {
-            $end = $wide ? self::wideNul($body, $position) : strpos($body, "\0", $position);
+        while ($scan['field'] < 2) {
+            $end = $wide ? self::wideNul($body, $scan['from']) : strpos($body, "\0", $scan['from']);
             if ($end === false) {
                 return null;
             }
-            $position = $end + ($wide ? 2 : 1);
+            $scan = ['from' => $end + ($wide ? 2 : 1), 'field' => $scan['field'] + 1];
         }
 
-        return $position;
+        return $scan['from'];
     }
 
-    /** The first two-byte NUL at or after $from, on a two-byte boundary from $from. */
+    /** The first two-byte NUL at or after $from, on a two-byte boundary from $from: strpos(), then the boundary checked. */
     private static function wideNul(string $body, int $from): int|false
     {
-        for ($i = $from; $i + 1 < strlen($body); $i += 2) {
-            if ($body[$i] === "\0" && $body[$i + 1] === "\0") {
-                return $i;
+        $at = $from;
+        while (($at = strpos($body, "\0\0", $at)) !== false) {
+            if (($at - $from) % 2 === 0) {
+                return $at;
             }
+            $at++;
         }
 
         return false;

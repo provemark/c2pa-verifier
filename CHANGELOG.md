@@ -31,9 +31,11 @@ committed.
   opens the file (two frame headers); a tagless MP3 has no manifest. The
   GEOB's MIME type may be `application/c2pa` or the legacy
   `application/x-c2pa-manifest-store`, the two `c2patool` accepts; iTunes
-  frame sizes are read. Measured against `c2patool` 0.27.22 and 0.28.1 over
+  frame sizes are read; a C2PA GEOB under a grouping flag is refused; a tag
+  that runs past the end of the file, or an ID3v2.2 tag, is reported as MP3
+  with the reason. Measured against `c2patool` 0.27.22 and 0.28.1 over
   35 variants, six real tags signed by `c2patool`, an MP3 signed by c2pa-ts
-  (an independent writer) and a 300 MB file (steps 225, 230).
+  (an independent writer) and a 300 MB file (steps 225, 230, 232).
 
 ### Changed
 - **WebP and WAV: strict about the `C2PA` chunk, lenient as `c2patool`
