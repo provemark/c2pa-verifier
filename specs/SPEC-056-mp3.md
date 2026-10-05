@@ -309,6 +309,41 @@ constructor parameter, as WAV's.
 
    Approved by Maurice van Loon, 2026-10-05 (step 230).
 
+3. **2026-10-05, step 232, approved by Maurice van Loon** — after a
+   second review of steps 230–231. Measured with both `c2patool`
+   versions on files built from the fixture (`bin/make-mp3-variants.php`).
+
+   - **AC22 — the grouping flag on the C2PA GEOB is a fault.** A GEOB whose
+     body still reads as C2PA while its grouping flag (v2.3 `0x20`, v2.4
+     `0x40`) is set has no group byte where the flag says one is; `c2patool`
+     reads the first body byte as the group id and finds no claim. Given
+     `group-flag-only.mp3` and `group-flag-only-v23.mp3`:
+     `ContainerException` naming the flags, `storeReached` true (stricter
+     by name). Step 231 had dropped this refusal on the reasoning that a
+     grouped GEOB never matches the MIME type; that holds only when the
+     group byte is really there (`grouped-geob-v2x.mp3`, AC20, unchanged).
+     Without this, a signer who set the flag before signing got `Valid`
+     here and no claim in `c2patool`.
+   - **AC23 — a tag that runs past the end of the file is `mp3`.** Given
+     `tag-past-eof.mp3` and `tag-past-eof-extended.mp3` (cut right after
+     the GEOB; `c2patool`: the manifest read, `Invalid`): detected as
+     `mp3`; verified, `hasManifest` true, `Invalid`, one `general.error`
+     (AC5's message); the scan of AC5 honours an extended header, so both
+     report `storeReached` true.
+   - **AC24 — an ID3v2.2 tag before MPEG audio is `mp3`**, so AC4's
+     refusal reaches the report. Given `v22-tag.mp3` (`c2patool`: *No claim
+     found*): `mp3`, `Invalid`, `general.error` naming `ID3v2.2`,
+     `hasManifest` false.
+   - **AC25 — free-format MPEG without a tag stays `unknown`** (a known
+     limit, named): its header gives no frame length, so the second header
+     of AC17 cannot be found; widening it would let text files through
+     again.
+   - AC20 gains a bound on time: text fields are searched once, from where
+     the last read ended, so an 8 MB unterminated UTF-16 description is
+     refused in well under the 13 s it took (measured in step 232).
+
+   Approved by Maurice van Loon, 2026-10-05 (step 232).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -331,9 +366,13 @@ least one test; every source file maps back to this spec.
 | AC13 | tests/Unit/Verifier/Mp3Test.php :: AC13: mp3 when MPEG audio follows the tag or opens the file, and nothing else is guessed; AC13: a tagless MP3 has no manifest and no failure; an unknown file names MP3 among the formats / SPEC-056 | src/Container/FormatDetector.php :: detect(), isMpegFrame(); src/Container/Id3ManifestStoreExtractor.php :: walk() (a tagless file); src/Verifier/Verifier.php :: verify() |
 | AC14 | tests/Unit/Verifier/Mp3Test.php :: AC14: the signed fixture verifies as c2patool 0.27.22 and 0.28.1 say, without and with trust settings (four datasets); AC14: one byte of the audio flipped is assertion.dataHash.mismatch / SPEC-056 | src/Verifier/Verifier.php :: __construct() (`$mp3`), verify() (the `mp3` arm) |
 | AC15 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC15: the legacy JUMBF media type is a C2PA GEOB too (amendment 2); tests/Unit/Verifier/Mp3Test.php :: AC15: the MP3 c2pa-ts signed is read, and fails its data hash as c2patool 0.28.1 says (amendment 2) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: MIME_TYPES, walk() |
-| AC16 | tests/Unit/Verifier/Mp3Test.php :: AC16: MPEG audio after zero padding or a further tag is mp3, and verifies as c2patool says (amendment 2) (four datasets); AC16: after a tag one MPEG frame header is enough; two are asked only of a file without a tag (amendment 2) / SPEC-056 | src/Container/FormatDetector.php :: detect(); src/Container/Id3ManifestStoreExtractor.php :: tagEnd() |
+| AC16 | tests/Unit/Verifier/Mp3Test.php :: AC16: MPEG audio after zero padding or a further tag is mp3, and verifies as c2patool says (amendment 2) (four datasets); AC16: after a tag one MPEG frame header is enough; two are asked only of a file without a tag (amendment 2) / SPEC-056 | src/Container/FormatDetector.php :: detect(); src/Container/Id3ManifestStoreExtractor.php :: header() |
 | AC17 | tests/Unit/Verifier/Mp3Test.php :: AC17: MPEG audio without a tag needs two frame headers (amendment 2) / SPEC-056 | src/Container/FormatDetector.php :: detect(), isMpegFrame(), mpegFrameLength() |
 | AC18 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC18: an iTunes frame size is read as a plain integer; an invalid frame id is a fault (amendment 2) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: frameHeader() |
-| AC19 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC19: unsynchronisation with FF 00 inside the tag is a fault before the frames are walked (amendment 2) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk(), containsUnsynchronisedBytes() |
-| AC20 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC20: text fields of any length, grouped frames, v2.3 header bit 0x10 (amendment 2); tests/Unit/Verifier/Mp3Test.php :: AC20: a v2.3 tag with header bit 0x10 is followed by its audio, not by a footer (amendment 2) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: objectStart(), walk(), tagEnd(); src/Container/FormatDetector.php :: detect() |
+| AC19 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC19: unsynchronisation with FF 00 inside the tag is a fault before the frames are walked (amendment 2) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk(), unsynchronisedBytesAt() |
+| AC20 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC20: text fields of any length, grouped frames, v2.3 header bit 0x10 (amendment 2); AC20: unterminated text fields are refused in linear time (amendment 3); tests/Unit/Verifier/Mp3Test.php :: AC20: a v2.3 tag with header bit 0x10 is followed by its audio, not by a footer (amendment 2) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: objectStart(), walk(), header(); src/Container/FormatDetector.php :: detect() |
 | AC21 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC21: a GEOB frame header at the very end of the file is a ContainerException or null, never another error (amendment 2) (two datasets) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: mime(), walk() |
+| AC22 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC22: the grouping flag on a GEOB that still reads as C2PA is a fault (amendment 3) (two datasets) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk() (format flags) |
+| AC23 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC23: a tag that runs past the end of the file says the store was there, extended header or not (amendment 3); tests/Unit/Verifier/Mp3Test.php :: AC23: a tag that runs past the end of the file is mp3, a manifest that failed (amendment 3) / SPEC-056 | src/Container/FormatDetector.php :: mpegAudioAfterTags(); src/Container/Id3ManifestStoreExtractor.php :: scanForStore() |
+| AC24 | tests/Unit/Verifier/Mp3Test.php :: AC24: an ID3v2.2 tag before MPEG audio is mp3, refused by name (amendment 3) / SPEC-056 | src/Container/FormatDetector.php :: mpegAudioAfterTags(); src/Container/Id3ManifestStoreExtractor.php :: header() |
+| AC25 | tests/Unit/Verifier/Mp3Test.php :: AC25: free-format MPEG audio without a tag stays unknown, a named limit (amendment 3) / SPEC-056 | src/Container/FormatDetector.php :: mpegFrameLength() |

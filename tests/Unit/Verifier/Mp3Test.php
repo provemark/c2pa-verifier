@@ -184,3 +184,24 @@ it('AC16: after a tag one MPEG frame header is enough; two are asked only of a f
         ->and($report->hasManifest)->toBeFalse()
         ->and(spec056Codes(spec056Report($report), 'failure'))->toBe([]);
 })->group('SPEC-056');
+
+it('AC23: a tag that runs past the end of the file is mp3, a manifest that failed (amendment 3)', function (string $variant): void {
+    $report = (new Verifier)->verify(spec056VerifierStream(spec056File("mp3/{$variant}.mp3")));
+
+    expect($report->format)->toBe('mp3')
+        ->and($report->hasManifest)->toBeTrue()
+        ->and(array_map(static fn ($s): string => $s->code->value, $report->result->statuses))->toBe(['general.error']);
+})->with(['tag-past-eof', 'tag-past-eof-extended'])->group('SPEC-056');
+
+it('AC24: an ID3v2.2 tag before MPEG audio is mp3, refused by name (amendment 3)', function (): void {
+    $report = (new Verifier)->verify(spec056VerifierStream(spec056File('mp3/v22-tag.mp3')));
+
+    expect($report->format)->toBe('mp3')
+        ->and($report->hasManifest)->toBeFalse()
+        ->and($report->result->statuses[0]->explanation)->toContain('ID3v2.2');
+})->group('SPEC-056');
+
+it('AC25: free-format MPEG audio without a tag stays unknown, a named limit (amendment 3)', function (): void {
+    // MPEG-1 Layer III, bitrate index 0 (free format), 44.1 kHz: no frame length to find a second header by
+    expect((new FormatDetector)->detect(spec056VerifierStream("\xFF\xFB\x00\x00".str_repeat("\x55", 2000))))->toBeNull();
+})->group('SPEC-056');

@@ -51,6 +51,11 @@ sometimes lists the mismatch twice.
 | `signed-zeros-after-tag.mp3` | that file signed by `c2patool` 0.27.22 (not built by the script) | **`Valid`** | **`Valid`** | AC16 (step 230) |
 | `unsigned-second-empty-tag.mp3` | the unsigned file with an empty second ID3 tag after its tag; the source of the next | *No claim found* | the same | — |
 | `signed-second-empty-tag.mp3` | that file signed by `c2patool` 0.27.22 (not built by the script) | **`Valid`** | **`Valid`** | AC16 (step 230) |
+| `group-flag-only.mp3` | the GEOB's v2.4 grouping flag (0x40) set, no group byte | *No claim found* | the same | AC22 error, stricter (step 232) |
+| `group-flag-only-v23.mp3` | the same in v2.3 (0x20) | *No claim found* | the same | AC22 error, stricter (step 232) |
+| `tag-past-eof.mp3` | the tag size 100,000 too large, the file cut after the GEOB | read | read | AC23: `mp3`, a manifest, `general.error` (step 232) |
+| `tag-past-eof-extended.mp3` | the same with an extended header | read | read | AC23 (step 232) |
+| `v22-tag.mp3` | an ID3v2.2 tag before the unsigned audio | *No claim found* | the same | AC24: `mp3`, refused by name (step 232) |
 
 SHA-256 (as printed by the script):
 
@@ -90,4 +95,9 @@ c0ae20b8863acb5373607453d98e433c24175e9360bc32b673aa4958867949ea  grouped-geob-v
 ced0ab5c13c68f331d3a16622c1786a676231d0132b9abb530da265b12178e5c  footer-bit-v23.mp3
 ab4435c59452a9b2a77df634ec467d99ea6c9163c57ed85ea9c9a8e3d515c1f8  unsigned-zeros-after-tag.mp3
 46af9d8247cd4e83f7f93cc00e2526c7928030037b36019c052e92fa1bf6e8e2  unsigned-second-empty-tag.mp3
+abb0f3c52acd1d60aa2a37d0ad7ac985fdfcccd8463b15411d351df1fe8a3f1a  group-flag-only.mp3
+d58d95fd9a02cdde0c7cf192d64fd5d26e81eb3f6d003ec13a9e7d4c80c43115  group-flag-only-v23.mp3
+1d0158f663ad6b004bf4a5577920d9cf4385dde906e99eebbcec054518fb7d40  tag-past-eof.mp3
+c2605b5627be79e6968e0c9dd3b00aead9430d4fb4593fbefdac45f5163b64fd  tag-past-eof-extended.mp3
+2793cee2daa33e70a2114c401c95292d1914efa2eb4d1c5bf2e04b06a1975816  v22-tag.mp3
 ```

@@ -195,6 +195,17 @@ $variants = [
     // unsigned sources, signed with c2patool by hand (notes/step-230-mp3-review.md)
     'unsigned-zeros-after-tag.mp3' => substr($unsigned, 0, $u['end']).str_repeat("\0", 16).$unsignedAudio,
     'unsigned-second-empty-tag.mp3' => substr($unsigned, 0, $u['end'])."ID3\x04\0\0".mp3Syncsafe(0).$unsignedAudio,
+
+    // step 232 (SPEC-056 amendment 3)
+    // the GEOB's grouping flag set, but no group byte: the body still reads as a C2PA GEOB
+    'group-flag-only.mp3' => mp3Tag([$tsse, substr($geob, 0, 8)."\x00\x40".substr($geob, 10)]).$audio,
+    'group-flag-only-v23.mp3' => mp3Tag([$v3($tsse), substr($v3($geob), 0, 8)."\x00\x20".substr($geob, 10)], '', 0, null, 3).$audio,
+    // the tag size 100,000 larger, the file cut right after the GEOB: the tag runs past the end
+    'tag-past-eof.mp3' => mp3Tag([$tsse, $geob], '', 0, strlen($tsse) + strlen($geob) + 100000),
+    // the same with a minimal v2.4 extended header before the frames
+    'tag-past-eof-extended.mp3' => mp3Tag([mp3Syncsafe(6)."\x01\x00".$tsse, $geob], '', 0x40, 6 + strlen($tsse) + strlen($geob) + 100000),
+    // an ID3v2.2 tag (three-character frame ids) before the unsigned audio
+    'v22-tag.mp3' => 'ID3'."\x02\0\0".mp3Syncsafe(10).'TT2'."\0\0\x04\0abc".$unsignedAudio,
 ];
 
 $dir = $root.'/tests/Fixtures/mp3';

@@ -8693,3 +8693,20 @@ README are where the disclosure lives.
 - Reasoned: that amendment 2 asks two frame headers only of an untagged
   file.
 - Decided by Maurice: amendment 2 (step 230).
+
+## 2026-10-05 — A second MP3 review; amendment 3; its tests, red (step 232)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, start de tweede review en push daarna"; "akkoord, keur
+  amendement 3 goed en ga door".
+- Produced: the push of `main` (`07a8379..7ed56a0`); a code review of
+  `07a8379..HEAD`; SPEC-056 amendment 3 (AC22–AC25, approved) and
+  Traceability fixes; five variants; tests in both MP3 test files;
+  `notes/step-232-mp3-second-review.md`; rows in `NOTES.md` and the MP3
+  fixture README.
+- Measured: CI run 37294961059 (green); the review's findings 1, 2, 3 and
+  7 reproduced, with both `c2patool` versions; the five new variants with
+  both versions; Pest (7 failed, 740 passed, once the result cache was
+  cleared: the defects-first order had exhausted 128 MB); PHPStan; Pint;
+  `bin/spec-check.php`.
+- Reasoned: that finding 2 was an error in step 231's reasoning.
+- Decided by Maurice: amendment 3 and the fixes.

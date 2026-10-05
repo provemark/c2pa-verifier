@@ -200,3 +200,28 @@ it('AC21: a GEOB frame header at the very end of the file is a ContainerExceptio
     expect($thrown === null || $thrown instanceof ContainerException)->toBeTrue($thrown === null ? '' : $thrown::class.': '.$thrown->getMessage())
         ->and($result)->toBeNull();
 })->with(['the tag ends there' => [10], 'the tag promises more' => [100]])->group('SPEC-056');
+
+it('AC20: unterminated text fields are refused in linear time (amendment 3)', function (): void {
+    $syncsafe = static fn (int $v): string => chr(($v >> 21) & 0x7F).chr(($v >> 14) & 0x7F).chr(($v >> 7) & 0x7F).chr($v & 0x7F);
+    $body = "\x01application/c2pa\0".str_repeat('A', 8 * 1024 * 1024);   // UTF-16, no two-byte NUL anywhere
+    $geob = 'GEOB'.$syncsafe(strlen($body))."\0\0".$body;
+    $start = microtime(true);
+    $caught = spec056Fault('ID3'."\x04\0\0".$syncsafe(strlen($geob)).$geob);
+
+    expect($caught?->getMessage())->toContain('text fields do not end')
+        ->and(microtime(true) - $start)->toBeLessThan(5.0);   // step 232: 13 s before the fix
+})->group('SPEC-056');
+
+it('AC22: the grouping flag on a GEOB that still reads as C2PA is a fault (amendment 3)', function (string $variant): void {
+    $caught = spec056Fault(spec056Fixture("mp3/{$variant}.mp3"));
+
+    expect($caught?->getMessage())->toContain('format flags')
+        ->and($caught?->storeReached)->toBeTrue();
+})->with(['group-flag-only', 'group-flag-only-v23'])->group('SPEC-056');
+
+it('AC23: a tag that runs past the end of the file says the store was there, extended header or not (amendment 3)', function (string $variant): void {
+    $caught = spec056Fault(spec056Fixture("mp3/{$variant}.mp3"));
+
+    expect($caught?->getMessage())->toContain('past the end of the file')
+        ->and($caught?->storeReached)->toBeTrue();
+})->with(['tag-past-eof', 'tag-past-eof-extended'])->group('SPEC-056');
