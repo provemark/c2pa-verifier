@@ -34,7 +34,7 @@ PHP, compiled to WebAssembly; your file never leaves your device.
 > [How this is built](#how-this-is-built) — and judge the method, not the
 > tool.
 
-It reads the manifest store out of a JPEG, PNG, WebP or ISOBMFF file
+It reads the manifest store out of a JPEG, PNG, WebP, WAV or ISOBMFF file
 (MP4, MOV, AVIF and HEIC, each held by a fixture here), checks the claim
 signature, the hash binding to the asset, the certificate chain against a
 trust list you supply, and the RFC 3161 timestamp, and returns a verdict that
@@ -52,7 +52,8 @@ WordPress and Drupal sites live. The other PHP routes to C2PA verification
 ## Status
 
 Milestones M0–M8 are done: the verifier reads JPEG, PNG and WebP and, since
-M8, ISOBMFF — MP4, MOV, AVIF, HEIC and fragmented DASH streams — then JUMBF
+M8, ISOBMFF — MP4, MOV, AVIF, HEIC and fragmented DASH streams — and, since
+SPEC-055, WAV; then JUMBF
 and CBOR, claim v1 and v2, and verifies COSE signatures (ES256/384/512,
 PS256/384/512, Ed25519), the hashed URIs, the data hash and the BMFF hash
 (`v2` and `v3`), the certificate profile and chain, and the timestamp —

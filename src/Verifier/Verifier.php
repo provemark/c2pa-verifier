@@ -13,6 +13,7 @@ use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\ManifestStoreBytes;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\RemoteManifestDetector;
+use Provemark\C2paVerifier\Container\WavManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
 use Provemark\C2paVerifier\Cose\ClaimSignatureCheck;
 use Provemark\C2paVerifier\Cose\CoseException;
@@ -80,6 +81,8 @@ final readonly class Verifier
         private ActionsCheck $actions = new ActionsCheck,
         private IngredientManifestCheck $ingredients = new IngredientManifestCheck,
         private UpdateManifestCheck $updateManifests = new UpdateManifestCheck,
+        // SPEC-055: last, so that a caller passing the others by position since 0.2 is not moved
+        private WavManifestStoreExtractor $wav = new WavManifestStoreExtractor,
     ) {}
 
     /**
@@ -94,7 +97,7 @@ final readonly class Verifier
             $head = $this->formats->head($stream);
 
             return new VerificationReport('unknown', false, null, ValidationResult::fromStatuses([
-                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, WebP or ISOBMFF signature', Bytes::hex($head))),
+                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, WebP, WAV or ISOBMFF signature', Bytes::hex($head))),
             ], []));
         }
 
@@ -104,6 +107,7 @@ final readonly class Verifier
                 'jpeg' => $this->jpeg->extract($stream),
                 'png' => $this->png->extract($stream),
                 'webp' => $this->webp->extract($stream),
+                'wav' => $this->wav->extract($stream),   // SPEC-055
                 // SPEC-026: the container only. There is no BMFF hard-binding check yet,
                 // so the data hash finds no `c2pa.hash.data` and says
                 // claim.hardBindings.missing — Invalid, named, and never a silent Valid.

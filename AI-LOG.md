@@ -8257,3 +8257,24 @@ README are where the disclosure lives.
 - Reasoned: that AC16 compares with the recordings itself rather than
   amending SPEC-013's drift-alarm list.
 - Decided by Maurice: SPEC-004 amendment 2 confirmed.
+
+## 2026-10-05 — SPEC-055 built: WAV (step 208)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, AC16 zoals het is, ga door met stap 208".
+- Produced: `src/Container/WavManifestStoreExtractor.php`; changes to
+  `src/Container/FormatDetector.php` and `src/Verifier/Verifier.php`;
+  `tests/Unit/Container/ResourceBoundsTest.php` (the WAV bound); SPEC-055
+  `implemented` with Traceability and amendment 1; SPEC-013 amendment 15;
+  SPEC-024 amendment 2; README, `docs/comparison.md`, CHANGELOG,
+  `tests/Fixtures/wav/README.md`; a correction in
+  `notes/step-204-wav-measured.md`; `notes/step-208-spec055.md`; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: `vendor/bin/pest --group=SPEC-055` (37 passed);
+  `composer check` (exit 0, 658 tests); `bin/package-check.php` (388
+  files); the scratch corpus script against step 206's baseline, raw (185
+  files changed) and with the unknown-format message normalised (22, all
+  WAV or `riff-not-webp.webp`); each WAV file's new verdict listed.
+- Reasoned: the constructor parameter placed last for callers by
+  position; the new by-design row in `docs/comparison.md`.
+- Decided by Maurice: AC16 compares with the recordings itself (no
+  SPEC-013 drift-alarm change).

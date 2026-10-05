@@ -10,34 +10,33 @@ prints each file's SHA-256; the values below are the ones committed on
 2026-10-05.
 
 The files were measured with `c2patool` 0.27.22 and 0.28.1 on the same day,
-without trust settings (`notes/step-204-wav-measured.md`). There is no
-WAV spec yet, so this verifier reads none of them: each one is `Invalid`
-with `general.error` (*unsupported file type*). The WAV spec will add a
-column with its acceptance criteria.
+without trust settings (`notes/step-204-wav-measured.md`). Since SPEC-055 (step 208)
+this verifier reads them; the last column names the criterion each file
+exercises and what this verifier answers.
 
-| file | what is wrong | `c2patool` 0.27.22 | `c2patool` 0.28.1 |
-|---|---|---|---|
-| `riff-form-xxxx.wav` | form type `XXXX` instead of `WAVE` | `Invalid`: signature validated, `assertion.dataHash.mismatch` (the form type is not checked; the header is hashed) | the same |
-| `truncated-in-c2pa.wav` | file ends 1,000 bytes into the `C2PA` data | `Error: asset could not be parsed: RIFF chunk declared size exceeds file size` | the same |
-| `truncated-between-chunks.wav` | file ends where the `C2PA` chunk header should start; RIFF size still claims the full file | `Error: asset could not be parsed: Invalid RIFF format` | the same |
-| `two-c2pa.wav` | the same `C2PA` chunk twice, at the end | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same |
-| `c2pa-before-data.wav` | `C2PA` before `data`, so not the last chunk | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same, with two `mismatch` entries: *exclusion does not match the manifest location* and *hashes do not match* |
-| `c2pa-first.wav` | `C2PA` as the first chunk | as `c2pa-before-data.wav` | as `c2pa-before-data.wav` |
-| `chunk-after-c2pa.wav` | an unknown 4-byte chunk after `C2PA`, so not the last chunk | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same |
-| `c2pa-in-list.wav` | `C2PA` nested inside the `LIST` chunk, not at the top level | `Error: No claim found` | the same |
-| `length-differs.wav` | chunk length +1, data untouched (the pad byte becomes data) | **`Valid`** | `Invalid`: `assertion.dataHash.match` **and** `mismatch`, *exclusion does not match the manifest location* |
-| `lbox-differs.wav` | LBox inside the box +1, chunk length untouched | **`Valid`** | **`Valid`** |
-| `riff-size-plus-one.wav` | RIFF size in the header +1 | `Invalid`: signature validated, `assertion.dataHash.mismatch` (the header is hashed) | the same |
-| `riff-size-excludes-c2pa.wav` | RIFF size as if `C2PA` were absent | `Error: No claim found` (the walk stops at the declared size) | the same |
-| `c2pa-too-short.wav` | a `C2PA` of 4 bytes, shorter than a box header | `Error: unexpected end of file` | the same |
-| `c2pa-empty.wav` | a `C2PA` of length 0 | `Error: No claim found` | the same |
-| `pad-missing.wav` | the odd-length `C2PA` without its pad byte; RIFF size one less | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same |
-| `pad-nonzero.wav` | the pad byte `FF` instead of `00` | `Invalid`: signature validated, `assertion.dataHash.mismatch` (the pad byte is hashed) | the same |
-| `odd-chunk-before.wav` | an unknown 3-byte chunk (+ pad) before `C2PA` | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same, with two `mismatch` entries |
-| `chunk-overruns-file.wav` | `C2PA` length +1,000; RIFF size correct for the file | `Error: asset could not be parsed: RIFF chunk declared size exceeds file size` | the same |
-| `trailing-bytes.wav` | 100 bytes after the end of the RIFF chunk, RIFF size unchanged | `Invalid`: signature validated, `assertion.dataHash.mismatch` (bytes after the RIFF chunk are hashed) | the same |
-| `second-riff.wav` | a second RIFF chunk after the first, holding a copy of `C2PA` | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same |
-| `rf64.wav` | the 64-bit form: `RF64`, size `FFFFFFFF`, a `ds64` chunk first | `Error: error parsing RIFF: invalid file signature: invalid header: expected "RIFF", got "RF64"` | `Error: asset could not be parsed: invalid header: expected "RIFF", got "RF64"` |
+| file | what is wrong | `c2patool` 0.27.22 | `c2patool` 0.28.1 | SPEC-055 |
+|---|---|---|---|---|
+| `riff-form-xxxx.wav` | form type `XXXX` instead of `WAVE` | `Invalid`: signature validated, `assertion.dataHash.mismatch` (the form type is not checked; the header is hashed) | the same | AC3 error (extractor); AC14 `unknown` |
+| `truncated-in-c2pa.wav` | file ends 1,000 bytes into the `C2PA` data | `Error: asset could not be parsed: RIFF chunk declared size exceeds file size` | the same | AC4 error |
+| `truncated-between-chunks.wav` | file ends where the `C2PA` chunk header should start; RIFF size still claims the full file | `Error: asset could not be parsed: Invalid RIFF format` | the same | AC4 error |
+| `two-c2pa.wav` | the same `C2PA` chunk twice, at the end | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same | AC6 error (stricter than the oracle) |
+| `c2pa-before-data.wav` | `C2PA` before `data`, so not the last chunk | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same, with two `mismatch` entries: *exclusion does not match the manifest location* and *hashes do not match* | AC7 extracts; `Invalid`, `assertion.dataHash.mismatch` |
+| `c2pa-first.wav` | `C2PA` as the first chunk | as `c2pa-before-data.wav` | as `c2pa-before-data.wav` | AC7 extracts; `Invalid`, `assertion.dataHash.mismatch` |
+| `chunk-after-c2pa.wav` | an unknown 4-byte chunk after `C2PA`, so not the last chunk | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same | AC7 extracts; `Invalid`, `assertion.dataHash.mismatch` |
+| `c2pa-in-list.wav` | `C2PA` nested inside the `LIST` chunk, not at the top level | `Error: No claim found` | the same | AC15 no store (`hasManifest` false) |
+| `length-differs.wav` | chunk length +1, data untouched (the pad byte becomes data) | **`Valid`** | `Invalid`: `assertion.dataHash.match` **and** `mismatch`, *exclusion does not match the manifest location* | AC9 error |
+| `lbox-differs.wav` | LBox inside the box +1, chunk length untouched | **`Valid`** | **`Valid`** | AC8 error (stricter than both versions) |
+| `riff-size-plus-one.wav` | RIFF size in the header +1 | `Invalid`: signature validated, `assertion.dataHash.mismatch` (the header is hashed) | the same | AC4 error |
+| `riff-size-excludes-c2pa.wav` | RIFF size as if `C2PA` were absent | `Error: No claim found` (the walk stops at the declared size) | the same | AC4 error |
+| `c2pa-too-short.wav` | a `C2PA` of 4 bytes, shorter than a box header | `Error: unexpected end of file` | the same | AC10 error |
+| `c2pa-empty.wav` | a `C2PA` of length 0 | `Error: No claim found` | the same | AC10 error |
+| `pad-missing.wav` | the odd-length `C2PA` without its pad byte; RIFF size one less | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same | AC11 error |
+| `pad-nonzero.wav` | the pad byte `FF` instead of `00` | `Invalid`: signature validated, `assertion.dataHash.mismatch` (the pad byte is hashed) | the same | AC11 error |
+| `odd-chunk-before.wav` | an unknown 3-byte chunk (+ pad) before `C2PA` | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same, with two `mismatch` entries | AC12 extracts; `Invalid`, `assertion.dataHash.mismatch` |
+| `chunk-overruns-file.wav` | `C2PA` length +1,000; RIFF size correct for the file | `Error: asset could not be parsed: RIFF chunk declared size exceeds file size` | the same | AC5 error |
+| `trailing-bytes.wav` | 100 bytes after the end of the RIFF chunk, RIFF size unchanged | `Invalid`: signature validated, `assertion.dataHash.mismatch` (bytes after the RIFF chunk are hashed) | the same | AC4 error |
+| `second-riff.wav` | a second RIFF chunk after the first, holding a copy of `C2PA` | `Invalid`: signature validated, `assertion.dataHash.mismatch` | the same | AC4 error |
+| `rf64.wav` | the 64-bit form: `RF64`, size `FFFFFFFF`, a `ds64` chunk first | `Error: error parsing RIFF: invalid file signature: invalid header: expected "RIFF", got "RF64"` | `Error: asset could not be parsed: invalid header: expected "RIFF", got "RF64"` | AC14 `unknown` |
 
 SHA-256 (as printed by the script):
 

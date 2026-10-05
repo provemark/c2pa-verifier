@@ -5,6 +5,26 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Added
+- **WAV (SPEC-055).** A WAV whose manifest store sits in a RIFF `C2PA`
+  chunk (C2PA 2.4 §A.3.7) is read and verified like the other formats:
+  signature, data hash, chain, trust and timestamp. The report's `format`
+  is `wav`. The chunk is read under SPEC-003's rules for WebP, whose walk
+  WebP and WAV now share. A `C2PA` chunk that is not the last is read and
+  left to the data hash, as `c2patool` does. RF64 (WAV over 4 GB) and a
+  `C2PA` nested in a `LIST` chunk are not read, as in `c2patool`.
+  Measured against `c2patool` 0.27.22 and 0.28.1 (steps 203–204).
+
+### Changed
+- The unknown-format explanation names WAV among the formats read.
+- A RIFF file with the form type `WAVE` that was `unknown` before is now a
+  WAV. The one such file among the fixtures, a WebP with its form type
+  changed (`webp/riff-not-webp.webp`), is now `Invalid` with
+  `assertion.dataHash.mismatch`, as `c2patool` says, instead of
+  `general.error`.
+
 ## 0.2.9 — 2026-10-02
 
 One addition and no fix: `requirements.php`, a file a host on older PHP

@@ -6,8 +6,9 @@ namespace Provemark\C2paVerifier\Container;
 
 /**
  * The container format from the first twelve bytes, nothing else read
- * (SPEC-013): JPEG's SOI, PNG's signature, RIFF's header with the WEBP form
- * type. Anything else is null — an unknown format is an error for the
+ * (SPEC-013): JPEG's SOI, PNG's signature, RIFF's header with the WEBP or
+ * WAVE form type (SPEC-055), ISOBMFF's `ftyp`. Anything else is null — RF64
+ * and every other RIFF form included — an unknown format is an error for the
  * caller, never a guess. The stream is rewound afterwards.
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
@@ -19,7 +20,7 @@ final readonly class FormatDetector
 
     /**
      * @param  resource  $stream  readable and seekable
-     * @return 'jpeg'|'png'|'webp'|'isobmff'|null
+     * @return 'jpeg'|'png'|'webp'|'wav'|'isobmff'|null
      */
     public function detect($stream): ?string
     {
@@ -32,6 +33,9 @@ final readonly class FormatDetector
         }
         if (strlen($head) === self::PROBE_LENGTH && str_starts_with($head, 'RIFF') && substr($head, 8, 4) === 'WEBP') {
             return 'webp';
+        }
+        if (strlen($head) === self::PROBE_LENGTH && str_starts_with($head, 'RIFF') && substr($head, 8, 4) === 'WAVE') {
+            return 'wav';   // SPEC-055; RF64 (`RF64`, files over 4 GB) is not read, as c2patool does not
         }
         // ISOBMFF (SPEC-026): MP4, MOV, AVIF and HEIC all open with a `ftyp` box, and
         // the brand that follows is not read — a file that declares `ftyp` and carries

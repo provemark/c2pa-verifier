@@ -496,6 +496,23 @@ final class ManifestException extends \RuntimeException
 
     Confirmed by Maurice van Loon, 2026-09-24 (step 129).
 
+15. **2026-10-05, step 208, with SPEC-055's implementation** — the
+    report's `format` gains the value `wav`: a stream that starts with
+    `RIFF` and has the form type `WAVE` is read as a WAV (SPEC-055 AC14).
+    The unknown-format explanation now reads *"not a JPEG, PNG, WebP, WAV
+    or ISOBMFF signature"*. AC6's criterion is unchanged: it asserts the
+    code, the URL and the bytes shown, not the list of formats. The
+    `Verifier` constructor gains its WAV extractor as the **last**
+    parameter, so a caller passing the others by position is not moved.
+    One existing file changes verdict: `webp/riff-not-webp.webp` (form
+    type `WAVE`) is now `wav`, `Invalid` with `assertion.dataHash.mismatch`,
+    where it was `unknown` with `general.error`; `c2patool` 0.27.22 gives
+    the same as now (SPEC-055 AC17).
+
+    **Weight B: a new value in the report, and one verdict moved towards `c2patool`.**
+
+    Awaiting confirmation.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

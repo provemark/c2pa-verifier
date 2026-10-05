@@ -221,6 +221,15 @@ reasoning that led to them stays readable.
    than a surprise.
    Confirmed by Maurice van Loon, 2026-09-22 (step 75).
 
+2. **2026-10-05, step 208, with SPEC-055's implementation** — AC1's list
+   gains a fifth container, WAV. Its extractor is SPEC-003's walk (step
+   206) with the form type `WAVE`, so it carries the same 16 MiB bound and
+   consults the same `MemoryBudget`; the rule is unchanged and only its
+   reach is wider. The criterion's test gains the WAV constant; SPEC-055
+   AC13 holds the bound on the WAV fixture. Named in SPEC-055's open
+   questions before either was written.
+   Awaiting confirmation.
+
 
 ## Traceability
 

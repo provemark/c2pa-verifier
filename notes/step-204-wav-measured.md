@@ -98,10 +98,11 @@ short:
 - **0.28.1 has learned the check SPEC-012 already makes**: the store's
   exclusion must equal the store's place in the file. The same variant on
   WebP (`tests/Fixtures/webp/length-differs.webp`) is also `Valid` in
-  0.27.22 and `Invalid` in 0.28.1, measured today. The WebP README and
-  `docs/comparison.md` still call this case "stricter than the oracle".
-  That is now true only against 0.27.22. Correcting that text is a
-  separate small step; nothing is built for it.
+  0.27.22 and `Invalid` in 0.28.1, measured today. The WebP README
+  calls this case "stricter than the oracle", which is true against the
+  0.27.22 it names. *(Corrected in step 208: this note first said that
+  `docs/comparison.md` had not caught up either. It had: steps 107–118
+  recorded the same change under 0.28.0. No separate step is needed.)*
 - **Where the chunk sits is the open question for the spec.** §A.3.7 says
   *shall be last*. Neither `c2patool` version checks that when it reads.
   Every moved chunk we can build is caught by the data hash, because

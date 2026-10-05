@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-05                      |
 | Supersedes | —                                                 |
@@ -300,7 +300,15 @@ same way, so SPEC-003's tests prove the refactor. `FormatDetector` returns
 
 ## Amendments
 
-None yet.
+1. **2026-10-05, step 208, found by the implementation** — open question
+   1 expected a SPEC-025 amendment for the two new classes. None is
+   needed: `RiffManifestStoreExtractor` and `WavManifestStoreExtractor`
+   carry `@internal`, which is what SPEC-025 AC2 asks, and the recorded
+   contract surface is unchanged (`bin/api-check.php`: 85 public classes,
+   11 in the contract, 74 internal). The amendments that were needed are
+   SPEC-013 amendment 15 and SPEC-024 amendment 2. SPEC-003's
+   Traceability moved in step 206.
+   Awaiting confirmation.
 
 ## Traceability
 
@@ -309,20 +317,20 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
-| AC11                 | —                           | —                    |
-| AC12                 | —                           | —                    |
-| AC13                 | —                           | —                    |
-| AC14                 | —                           | —                    |
-| AC15                 | —                           | —                    |
-| AC16                 | —                           | —                    |
-| AC17                 | —                           | —                    |
+| AC1 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC1: extracts the store from the fixture, byte-exact, without the pad byte, with its range / SPEC-055 | src/Container/WavManifestStoreExtractor.php :: extract(); src/Container/RiffManifestStoreExtractor.php :: extract(), readPad() |
+| AC2 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC2: a WAV without C2PA yields null, not an error / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (`$store === null`) |
+| AC3 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC3: a RIFF file whose form type is not WAVE is an error naming both, before any chunk / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (form type check); src/Container/WavManifestStoreExtractor.php :: __construct() (`WAVE`, `WAV`) |
+| AC4 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC4: a header size that disagrees with the file is an error naming both, before any chunk header (six datasets) / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (size check before the loop) |
+| AC5 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC5: a chunk that overruns the file is an error naming the chunk offset and its declared length / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (overrun check) |
+| AC6 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC6: two C2PA chunks are an error naming both offsets / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (`$storeOffset !== null`) |
+| AC7 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC7: a C2PA that is not the last chunk still yields the same store; tests/Unit/Verifier/WavTest.php :: AC7: a C2PA that is not the last chunk is judged by the data hash / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (no position check); src/Hash/DataHashCheck.php (unchanged) |
+| AC8 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC8: an LBox that differs from the chunk length is an error naming both values / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (LBox check) |
+| AC9 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC9: a chunk length that is off by one is an error naming LBox and the chunk length / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (LBox check) |
+| AC10 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC10: a C2PA shorter than a box header is an error naming the length and the 8-byte minimum / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (`BOX_HEADER_LENGTH` check) |
+| AC11 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC11: a missing pad byte is an error naming the offset where it was expected; AC11: a pad byte that is not zero is an error naming the offset and the byte / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: readPad() |
+| AC12 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC12: an odd-length chunk before C2PA is skipped correctly, pad included / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract(), readPad() |
+| AC13 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC13: a chunk length above the limit is an error before the data is read; AC13: the default limit is 16 MiB, and the fixture fits it / SPEC-055 | src/Container/WavManifestStoreExtractor.php :: DEFAULT_MAX_CHUNK_LENGTH, __construct(); src/Container/RiffManifestStoreExtractor.php :: extract() (limit before the LBox read) |
+| AC14 | tests/Unit/Verifier/WavTest.php :: AC14: RIFF with form WAVE is detected as wav, and nothing else is guessed; AC14: another RIFF form and RF64 stay unknown, an error naming the bytes, nothing read past them / SPEC-055 | src/Container/FormatDetector.php :: detect() (`WAVE`); src/Verifier/Verifier.php :: verify() (unknown-format message) |
+| AC15 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC15: a C2PA inside the LIST chunk is not looked for; tests/Unit/Verifier/WavTest.php :: AC15: a C2PA inside the LIST chunk is no manifest, and no failure / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (top-level walk only) |
+| AC16 | tests/Unit/Verifier/WavTest.php :: AC16: the signed fixture verifies as c2patool 0.27.22 and 0.28.1 say, without and with trust settings (four datasets); AC16: one byte of the audio data flipped is assertion.dataHash.mismatch / SPEC-055 | src/Verifier/Verifier.php :: __construct() (`$wav`), verify() (the `wav` arm) |
+| AC17 | tests/Unit/Verifier/WavTest.php :: AC17: the WebP whose form type says WAVE is read as a WAV and fails its data hash, as c2patool says / SPEC-055 | src/Container/FormatDetector.php :: detect(); src/Verifier/Verifier.php :: verify() |
