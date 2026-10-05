@@ -8811,3 +8811,16 @@ README are where the disclosure lives.
   over every AVI fixture; `bin/spec-check.php`.
 - Reasoned: five criteria from step 209 and the probe.
 - Decided by Maurice: AVI next.
+
+## 2026-10-05 — SPEC-058 approved; its tests, red (step 240)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur SPEC-058 goed en ga door".
+- Produced: SPEC-058 `approved`; `tests/Fixtures/c2patool/avi/` (six
+  recordings); `tests/Unit/Verifier/AviTest.php`; Traceability
+  placeholders; rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: CI run 37302205930 (green); `c2patool` 0.27.22 and 0.28.1 on
+  the signed AVI (with and without trust settings) and the two-RIFF AVI;
+  Pest (26 failed, 763 passed); PHPStan (8 errors, all from the missing
+  class); Pint; `bin/spec-check.php`.
+- Reasoned: none beyond the tests.
+- Decided by Maurice: SPEC-058 approved.
