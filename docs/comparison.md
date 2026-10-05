@@ -77,6 +77,13 @@ these rows moves an alarm.
 
 ## Where the verdicts are equal (measured, code for code)
 
+**A store that can be hidden, here as in `c2patool`** (WebP, WAV; steps
+214–218, both versions): a header size that ends before the `C2PA` chunk,
+an earlier chunk whose length runs to or past the end of the RIFF chunk,
+or stray bytes that misalign the walk before the `C2PA` chunk all make the
+file read as having no manifest. Deleting the chunk does the same; C2PA
+cannot prevent stripping. "No manifest" never proves that a file had none.
+
 Container extraction (byte-exact by hash), JUMBF, CBOR (floats, indefinite
 lengths), claim v1/v2, COSE ES256/384/512, PS256/384/512, Ed25519, hashed
 URIs, the data hash with the *cover* rule, certificate profile, chain and
@@ -115,6 +122,8 @@ files with the same trust anchors.
 
 | difference | why | where named |
 |---|---|---|
+| A RIFF header size below 4 (WebP, WAV) is refused (`general.error`); `c2patool` finds no claim | the header cannot hold its own form type: it contradicts itself (step 218) | SPEC-003 amendment 4, AC19 |
+| A RIFF header size larger than the file (WebP, WAV) is refused (`general.error`) after a scan of the chunk headers; `c2patool` reads `riff-size-plus-one` and calls it `Invalid` with a hash mismatch | reading it would mean walking past the end the header declares; both say `Invalid`, and the report says a manifest was there | SPEC-003 AC5, AC16 and amendment 4 |
 | A RIFF `C2PA` chunk (WebP, WAV) whose length and the LBox of the box inside it disagree is refused (`general.error`); `c2patool` 0.27.22 and 0.28.1 call `webp/lbox-differs` and `wav/lbox-differs` `Valid`. With the chunk length one too long instead, 0.28.1 now refuses too (`length-differs`, its new location check) | the container disagrees with itself about where the store ends; SPEC-003 refused it from the start (decided 2026-09-20) and SPEC-055 holds WAV to the same rule. Measured on both versions in step 204 | SPEC-003 AC9–AC10, SPEC-055 AC8–AC9 |
 | An icon that names a data box (earlier versions' mechanism) is `assertion.missing`; `c2pa-rs` accepts it without a hash check, and C2PA 2.4 §10.2.3.2 says consumers *should* support data boxes | maintainer's decision (SPEC-034 option A): no file shows one, and an unchecked reference is what the rule exists to refuse | SPEC-034 amendment 1 |
 | An icon map without a `url` (a resource reference, which `c2patool` 0.28.0's builder writes for `softwareAgents`) is not checked, as in `c2pa-rs` | only hashed URIs are references | SPEC-034 amendment 2 |

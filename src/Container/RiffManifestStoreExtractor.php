@@ -14,9 +14,12 @@ use Provemark\C2paVerifier\Support\MemoryBudget;
  * given by the caller.
  *
  * Strict about the `C2PA` chunk, as lenient as c2patool about the rest
- * (SPEC-003 amendment 3). A header size larger than the file is refused
- * before any chunk is read; a smaller one ends the walk where the RIFF chunk
- * ends, and the bytes after it are left to the data hash, which covers them.
+ * (SPEC-003 amendments 3 and 4). A header size below 4 is refused. One
+ * larger than the file is refused too, after a scan of the chunk headers
+ * that says whether the store was there; a smaller one ends the walk where
+ * the RIFF chunk ends, and the bytes after it are left to the data hash,
+ * which covers them. Where the RIFF chunk cannot hold another whole chunk
+ * other than `C2PA`, the walk stops, as c2patool's does.
  * Every chunk but `C2PA` is skipped unread, its pad byte too, unchecked, and
  * missing where the RIFF chunk ends. The one `C2PA` chunk is checked before
  * its data is read (limit, minimum, overrun), then its LBox against the chunk
@@ -95,6 +98,10 @@ final readonly class RiffManifestStoreExtractor
         // (SPEC-003 amendment 3, AC17). The length comes from a seek, not a read.
         /** @var array{1: int} $size */
         $size = unpack('V', $header, 4);
+        if ($size[1] < 4) {
+            // a RIFF chunk too small for the form type it holds contradicts itself (SPEC-003 amendment 4)
+            throw new ContainerException(sprintf('RIFF size %d is smaller than its 4-byte form type', $size[1]), storeReached: false);
+        }
         try {
             $fileEnd = $reader->end();
         } catch (ContainerException $e) {
@@ -102,11 +109,13 @@ final readonly class RiffManifestStoreExtractor
             throw new ContainerException($e->getMessage(), previous: $e, storeReached: false);
         }
         if ($size[1] > $fileEnd - 8) {
+            // still a fault, but a file cut short after its C2PA chunk header is a manifest that
+            // failed, not a file without one: scan the chunk headers for it (SPEC-003 amendment 4)
             throw new ContainerException(sprintf(
                 'RIFF size %d in the header, %d bytes in the file after it',
                 $size[1],
                 $fileEnd - 8,
-            ), storeReached: false);
+            ), storeReached: $this->reachesStore($reader, $fileEnd));
         }
         $end = 8 + $size[1];
         $where = $end === $fileEnd ? 'the file' : 'the RIFF chunk';
@@ -143,12 +152,9 @@ final readonly class RiffManifestStoreExtractor
         while ($reader->tell() < $end) {
             $offset = $reader->tell();
             if ($end - $offset < 8) {
-                throw new ContainerException(sprintf(
-                    'a chunk header at offset %d runs past the end of %s at %d',
-                    $offset,
-                    $where,
-                    $end,
-                ));
+                // the RIFF chunk cannot hold another chunk: what remains is left to the data
+                // hash, as c2patool leaves it (SPEC-003 amendment 4)
+                return;
             }
             $chunkHeader = $reader->readExactly(8, $offset, 'the chunk header');
             /** @var array{type: string, length: int} $chunk */
@@ -158,6 +164,11 @@ final readonly class RiffManifestStoreExtractor
             $reached = $reached || $isStore;
 
             if ($offset + 8 + $chunk['length'] > $end) {
+                if (! $isStore) {
+                    // a chunk other than C2PA that runs past the end: the walk stops here, as
+                    // c2patool's does, and the data hash judges the rest (SPEC-003 amendment 4)
+                    return;
+                }
                 throw new ContainerException(sprintf(
                     '%s chunk at offset %d declares %d bytes, past the end of %s at %d',
                     Bytes::printable($chunk['type']),
@@ -235,6 +246,36 @@ final readonly class RiffManifestStoreExtractor
                 $this->readPad($reader, $offset + 8 + $chunk['length'], $end, $where);
             }
         }
+    }
+
+    /**
+     * Whether a C2PA chunk header lies between offset 12 and $fileEnd, read
+     * header by header and never a chunk's data: for a file whose RIFF size
+     * promises more than it holds (SPEC-003 amendment 4). Stops at the first
+     * chunk that does not fit.
+     */
+    private function reachesStore(StreamReader $reader, int $fileEnd): bool
+    {
+        try {
+            $offset = $reader->tell();
+            while ($fileEnd - $offset >= 8) {
+                /** @var array{type: string, length: int} $chunk */
+                $chunk = unpack('a4type/Vlength', $reader->readExactly(8, $offset, 'the chunk header'));
+                if ($chunk['type'] === self::TYPE_C2PA) {
+                    return true;
+                }
+                $next = $offset + 8 + $chunk['length'] + ($chunk['length'] & 1);
+                if ($next >= $fileEnd) {
+                    return false;
+                }
+                $reader->skip($next - $offset - 8, $offset);
+                $offset = $next;
+            }
+        } catch (ContainerException) {
+            return false;
+        }
+
+        return false;
     }
 
     /**

@@ -367,6 +367,15 @@ rest of the data, then the pad byte. Keeps walking to see a second `C2PA`
 
    Approved by Maurice van Loon, 2026-10-05 (step 219).
 
+   **Addendum, 2026-10-05, step 220, approved by Maurice van Loon.** The
+   scan above conflicts with AC16's *"before any chunk header is read"*
+   (SPEC-055 AC4 said the same for WAV), which the build showed: four tests
+   failed on their stream position. AC16 now reads: a header size larger
+   than the file is refused **without any chunk's data being read**; only
+   chunk headers are scanned, and the stream stands at most at the end of
+   the `C2PA` chunk header (offset 320 in the WebP fixture, 16,086 in the
+   WAV fixture). The goal is unchanged: no costly read of a broken file.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -390,7 +399,7 @@ least one test; every source file maps back to this spec. Since step 206 the wal
 | AC13 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC13: an odd-length chunk before C2PA is skipped correctly, pad included / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: readPad(); src/Container/StreamReader.php :: skip() |
 | AC14 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC14: a chunk length above the limit is an error before the data is read / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract() (`$maxChunkLength` check before the LBox read) |
 | AC15 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC15: the default limit is 16 MiB / SPEC-003 | src/Container/WebpManifestStoreExtractor.php :: DEFAULT_MAX_CHUNK_LENGTH, __construct() (delegating to RiffManifestStoreExtractor since step 206) |
-| AC16 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC16: a header size larger than the file is refused before any chunk header is read / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract() (size check before the loop, stream repositioned first) |
+| AC16 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC16: a header size larger than the file is refused without reading any chunk's data / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract() (size check before the loop, stream repositioned first) |
 | AC17 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC17: bytes after the RIFF chunk are not the container's concern (amendment 3) / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract() (the walk ends where the RIFF chunk ends) |
 | AC18 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC18: a fault says whether the walk had reached a C2PA chunk (amendment 3) / SPEC-003 | src/Container/ContainerException.php :: $storeReached; src/Container/RiffManifestStoreExtractor.php :: extract(); AC18: a stream that cannot be measured is a fault before any C2PA chunk (step 217) |
 | AC19 | tests/Unit/Container/WebpManifestStoreExtractorTest.php :: AC19: where the RIFF chunk cannot hold another whole chunk, the walk stops (amendment 4); AC19: a header size below 4 is refused before any chunk is read (amendment 4) / SPEC-003 | src/Container/RiffManifestStoreExtractor.php :: extract(), walk(), reachesStore() |

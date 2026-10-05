@@ -8497,3 +8497,24 @@ README are where the disclosure lives.
   Pint; `bin/spec-check.php`.
 - Reasoned: none beyond the tests.
 - Decided by Maurice: the three amendments approved.
+
+## 2026-10-05 — Built: the edges of the RIFF leniency (step 220)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur de drie amendementen goed en ga door"; then, on
+  the conflict the build found, "akkoord, keur de aanvulling goed en ga
+  door".
+- Produced: `src/Container/RiffManifestStoreExtractor.php` (size below 4,
+  `reachesStore()`, the walk's stops, the docblock); the addendum to
+  SPEC-003 and SPEC-055 amendment 4; the AC16 and AC4 tests' position
+  bound; `docs/comparison.md`, CHANGELOG;
+  `notes/step-220-riff-edges-built.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: Pest per group (31, 55, 21 passed); the four conflicting tests
+  and the scan's stream positions (320, 16,086, 20, 78); `composer check`
+  (exit 0, 687 tests); the corpus against step 217 (the four predicted
+  files); the reviewer's and step 218's files; the fuzzer over the RIFF
+  files (3,765 runs, 0 faults, 19 `Valid`, each `Valid` in both `c2patool`
+  versions).
+- Reasoned: that rewinding the stream to pass the old tests would make
+  them assert something untrue.
+- Decided by Maurice: the addendum.

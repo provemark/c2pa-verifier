@@ -35,7 +35,14 @@ committed.
   is `true` only when the walk had reached a `C2PA` chunk. A truncated
   WebP or WAV, or one whose header size exceeds the file, is still
   `Invalid` with `general.error`, now with `has_manifest: false`. JPEG, PNG
-  and ISOBMFF are unchanged.
+  and ISOBMFF are unchanged. A file whose header size exceeds the file is
+  reported with `has_manifest: true` when its `C2PA` chunk header is
+  there (a signed file cut short), found by scanning the chunk headers
+  only (SPEC-003 amendment 4, SPEC-013 amendment 17).
+- **The edges of that leniency (SPEC-003 and SPEC-055 amendment 4).** A
+  short tail inside the RIFF chunk, or a chunk other than `C2PA` that runs
+  past its end, stops the walk, as `c2patool`'s does, instead of being a
+  fault; a header size below 4 is now refused.
 - The unknown-format explanation names WAV among the formats read.
 - A RIFF file with the form type `WAVE` that was `unknown` before is now a
   WAV. The one such file among the fixtures, a WebP with its form type

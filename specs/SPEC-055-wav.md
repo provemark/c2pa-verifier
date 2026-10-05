@@ -409,6 +409,15 @@ same way, so SPEC-003's tests prove the refactor. `FormatDetector` returns
 
    Approved by Maurice van Loon, 2026-10-05 (step 219).
 
+   **Addendum, 2026-10-05, step 220, approved by Maurice van Loon.** The
+   scan above conflicts with AC16's *"before any chunk header is read"*
+   (SPEC-055 AC4 said the same for WAV), which the build showed: four tests
+   failed on their stream position. AC16 now reads: a header size larger
+   than the file is refused **without any chunk's data being read**; only
+   chunk headers are scanned, and the stream stands at most at the end of
+   the `C2PA` chunk header (offset 320 in the WebP fixture, 16,086 in the
+   WAV fixture). The goal is unchanged: no costly read of a broken file.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -419,7 +428,7 @@ least one test; every source file maps back to this spec.
 | AC1 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC1: extracts the store from the fixture, byte-exact, without the pad byte, with its range / SPEC-055 | src/Container/WavManifestStoreExtractor.php :: extract(); src/Container/RiffManifestStoreExtractor.php :: extract(), readPad() |
 | AC2 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC2: a WAV without C2PA yields null, not an error / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (`$store === null`) |
 | AC3 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC3: a RIFF file whose form type is not WAVE is an error naming both, before any chunk / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (form type check); src/Container/WavManifestStoreExtractor.php :: __construct() (`WAVE`, `WAV`) |
-| AC4 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC4: a header size that disagrees with the file is an error naming both, before any chunk header (six datasets) / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (size check before the loop) |
+| AC4 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC4: a header size larger than the file is an error naming both, no chunk's data read (six datasets) / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (size check before the loop) |
 | AC5 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC5: a chunk that overruns the file is an error naming the chunk offset and its declared length / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (overrun check) |
 | AC6 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC6: two C2PA chunks are an error naming both offsets / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (`$storeOffset !== null`) |
 | AC7 | tests/Unit/Container/WavManifestStoreExtractorTest.php :: AC7: a C2PA that is not the last chunk still yields the same store; tests/Unit/Verifier/WavTest.php :: AC7: a C2PA that is not the last chunk is judged by the data hash / SPEC-055 | src/Container/RiffManifestStoreExtractor.php :: extract() (no position check); src/Hash/DataHashCheck.php (unchanged) |

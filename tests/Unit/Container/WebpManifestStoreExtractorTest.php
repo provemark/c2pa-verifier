@@ -154,15 +154,16 @@ it('AC15: the default limit is 16 MiB', function (): void {
         ->and(hash('sha256', $extractor->extract(spec003Stream('fixture-signed.webp'))->bytes ?? ''))->toBe(SPEC003_STORE_SHA256);
 })->group('SPEC-003');
 
-it('AC16: a header size larger than the file is refused before any chunk header is read', function (): void {
+it('AC16: a header size larger than the file is refused without reading any chunk\'s data', function (): void {
     // amendment 3: only a size that promises more than the file holds is still an error
     $stream = spec003Stream('webp/riff-size-plus-one.webp');
 
     expect(fn () => (new WebpManifestStoreExtractor)->extract($stream))
         ->toThrow(ContainerException::class);
 
-    // Only the twelve-byte header may have been read; the file length comes from a seek, not a read.
-    expect(ftell($stream))->toBeLessThanOrEqual(12);
+    // amendment 4 and its addendum: only chunk headers are scanned, at most to the end of the C2PA
+    // chunk header (312 + 8); the store's 100,635 bytes are never read
+    expect(ftell($stream))->toBeLessThanOrEqual(320);
 })->group('SPEC-003');
 
 /** @return resource a memory stream holding $bytes, rewound */

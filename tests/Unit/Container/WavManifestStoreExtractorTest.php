@@ -66,13 +66,15 @@ it('AC3: a RIFF file whose form type is not WAVE is an error naming both, before
     expect(ftell($stream))->toBeLessThanOrEqual(12);
 })->group('SPEC-055');
 
-it('AC4: a header size that disagrees with the file is an error naming both, before any chunk header', function (string $variant, int $size, int $inFile): void {
+it('AC4: a header size larger than the file is an error naming both, no chunk\'s data read', function (string $variant, int $size, int $inFile): void {
     $stream = spec055Stream("wav/{$variant}.wav");
 
     expect(fn () => (new WavManifestStoreExtractor)->extract($stream))
         ->toThrow(ContainerException::class, "RIFF size {$size} in the header, {$inFile} bytes in the file");
 
-    expect(ftell($stream))->toBeLessThanOrEqual(12);
+    // amendment 4 and its addendum: only chunk headers are scanned, at most to the end of the C2PA
+    // chunk header (16078 + 8); no chunk's data is read
+    expect(ftell($stream))->toBeLessThanOrEqual(16086);
 })->with([
     // amendment 3: only a size that promises more than the file holds is still an error
     'size +1' => ['riff-size-plus-one', 29543, 29542],
