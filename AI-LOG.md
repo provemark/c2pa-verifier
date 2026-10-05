@@ -8888,3 +8888,15 @@ README are where the disclosure lives.
   fuzzed (15,801 runs, 0 faults, 117 `Valid`, each `Valid` in both).
 - Reasoned: the memory fix (`unset`) without a measurement.
 - Decided by Maurice: the fixes and the bound (step 243).
+
+## 2026-10-05 — The release commit for 0.3.0 (step 246)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push" (step 245, CI run 37306691463 green); "akkoord,
+  voer stap 2 uit".
+- Produced: CHANGELOG `## 0.3.0 — 2026-10-05` with an introduction (two
+  bullets moved from *Known limits* back to *Changed*, where an earlier
+  insertion had put them); README's version passage; a row in `NOTES.md`.
+- Measured: `composer check` (exit 0); `bin/package-check.php` (372 files,
+  3.8 MB); the attribution check before the push; CI.
+- Reasoned: none.
+- Decided by Maurice: the release commit; no tag yet.

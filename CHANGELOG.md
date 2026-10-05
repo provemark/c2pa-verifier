@@ -5,7 +5,16 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.3.0 — 2026-10-05
+
+Four new formats — WAV, AVI, MP3 and FLAC — read and verified like the
+others, each measured against `c2patool` 0.27.22 and 0.28.1 and, where they
+exist, against files from other writers. On the way, every container
+became stricter about its C2PA store and as lenient as `c2patool` about the
+rest, and `has_manifest` now says a manifest is there only when the store
+was reached. The recorded API surface is unchanged; the report's `format`
+has four new values, so this is a minor version: a caller on `^0.2` keeps
+0.2.9 until it asks for `^0.3`.
 
 ### Added
 - **WAV (SPEC-055).** A WAV whose manifest store sits in a RIFF `C2PA`
@@ -77,6 +86,15 @@ committed.
   top-level chunks in a WebP, WAV or AVI is refused, as ISOBMFF's 4,096
   boxes and ID3's 4,096 frames are; a file of empty chunks otherwise cost
   about 90 s per GB.
+- A RIFF file with the form type `WAVE` that was `unknown` before is now a
+  WAV. The one such file among the fixtures, a WebP with its form type
+  changed (`webp/riff-not-webp.webp`), is now `Invalid` with
+  `assertion.dataHash.mismatch`, as `c2patool` says, instead of
+  `general.error`.
+- The dist no longer carries the fixture builders (`bin/make-*.php` and
+  `bin/variant-helpers.php`): they read `tests/Fixtures/`, which never
+  shipped, so they could not run from `vendor/`. The dist stays under
+  SPEC-023's 4 MB ceiling (SPEC-023 amendment 2).
 
 ### Known limits
 - A FLAC cut short inside its ID3 tag is reported as `mp3`: what follows
@@ -87,15 +105,6 @@ committed.
   a caller who passed a WebP extractor with tighter limits gets the
   default limits for WAV, AVI, MP3 and FLAC, whose extractors are new
   trailing parameters.
-- A RIFF file with the form type `WAVE` that was `unknown` before is now a
-  WAV. The one such file among the fixtures, a WebP with its form type
-  changed (`webp/riff-not-webp.webp`), is now `Invalid` with
-  `assertion.dataHash.mismatch`, as `c2patool` says, instead of
-  `general.error`.
-- The dist no longer carries the fixture builders (`bin/make-*.php` and
-  `bin/variant-helpers.php`): they read `tests/Fixtures/`, which never
-  shipped, so they could not run from `vendor/`. The dist is 3.5 MB
-  (SPEC-023 amendment 2).
 
 ## 0.2.9 — 2026-10-02
 
