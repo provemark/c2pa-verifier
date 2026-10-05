@@ -8942,3 +8942,20 @@ README are where the disclosure lives.
   fault file under `v0.2.9` (exit 255) and both `c2patool` versions.
 - Reasoned: that the five faults share one cause, from the report walk.
 - Decided by Maurice: none in this step; the new finding is proposed.
+
+## 2026-10-05 — Every explanation is UTF-8 (step 249)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, voer stap 249 uit".
+- Produced: SPEC-043 amendment 3 (AC13, approved) and its test (red
+  commit first); `tests/Fixtures/hostile-3/` with README;
+  `src/Report/ValidationStatus.php`; CHANGELOG 0.3.0, SECURITY.md, README
+  and `docs/comparison.md` fuzzing lines; `notes/step-249-explanations-utf8.md`;
+  a row in `NOTES.md`.
+- Measured: the fixture's changed offsets and the KeyUsage bytes; both
+  `c2patool` versions on it; Pest red (1 failed, 799 passed) then green;
+  `composer check` (800); `bin/api-check.php`; the corpus against step
+  248; the release set fuzzed (16,041 runs, 0 faults, 118 `Valid`
+  confirmed); every new-format file against both versions.
+- Reasoned: that one place in `ValidationStatus` covers every check that
+  quotes certificate or file bytes.
+- Decided by Maurice: step 249 as proposed.

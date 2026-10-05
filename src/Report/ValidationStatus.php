@@ -12,10 +12,13 @@ namespace Provemark\C2paVerifier\Report;
  */
 final readonly class ValidationStatus
 {
+    /** The explanation, every byte sequence that is not UTF-8 replaced by `?` (SPEC-043 AC13). */
+    public string $explanation;
+
     public function __construct(
         public StatusCode $code,
         public string $url,
-        public string $explanation,
+        string $explanation,
         /**
          * The URI of the ingredient assertion this status was found under, when it was
          * found while walking an ingredient (SPEC-020): the report groups such statuses
@@ -24,7 +27,11 @@ final readonly class ValidationStatus
          * rendering below is unchanged.
          */
         public ?string $ingredientUri = null,
-    ) {}
+    ) {
+        // a check may quote what a certificate or a file carries (a damaged KeyUsage comes back
+        // from OpenSSL as raw bytes); a report that cannot be written as JSON is no report
+        $this->explanation = mb_check_encoding($explanation, 'UTF-8') ? $explanation : mb_scrub($explanation, 'UTF-8');
+    }
 
     /** @return array{code: string, url: string, explanation: string} */
     public function toArray(): array

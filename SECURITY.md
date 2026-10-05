@@ -225,7 +225,9 @@ fixed in `0.2.8`, and one found by a review of the whole of `src/` before
   needs a name-constrained CA under one of your anchors that issues outside
   its constraint (SPEC-046 amendment 1). The same review found that a NaN
   in any assertion made the report fail to encode, which ended the command
-  with PHP's fatal error, without a key (SPEC-007 amendment 6).
+  with PHP's fatal error, without a key (SPEC-007 amendment 6); the fuzzer,
+  once it encoded every report, found the same effect from a damaged
+  KeyUsage extension quoted in an explanation (SPEC-043 amendment 3).
 
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now

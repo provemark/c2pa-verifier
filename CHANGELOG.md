@@ -34,6 +34,11 @@ with them, so every user of 0.2.5 to 0.2.9 should move to 0.3.0.
   standard error (exit 255). Such a value is now rendered as `"NaN"`,
   `"Infinity"` or `"-Infinity"`; a report that still cannot be encoded is
   `Error: …` and exit 2. The fuzzer now encodes every report.
+- **Bytes that are not UTF-8 in an explanation (SPEC-043 amendment 3).**
+  A damaged KeyUsage extension reached the explanation of
+  `signingCredential.invalid` as raw bytes, with the same effect, found by
+  the fuzzer once it encoded every report. Every explanation now replaces
+  such bytes with `?` when it is made.
 
 ### Fixed
 - **PS256/384/512 under an `id-RSASSA-PSS` key (SPEC-009 amendment 3):**
