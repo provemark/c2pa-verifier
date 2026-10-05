@@ -20,11 +20,13 @@ namespace Provemark\C2paVerifier\Container;
  */
 final class ContainerException extends \RuntimeException
 {
+    /** The first three parameters are RuntimeException's, in its order; `$storeReached` comes last (step 217). */
     public function __construct(
         string $message = '',
-        public readonly bool $storeReached = true,
+        int $code = 0,
         ?\Throwable $previous = null,
+        public readonly bool $storeReached = true,
     ) {
-        parent::__construct($message, 0, $previous);
+        parent::__construct($message, $code, $previous);
     }
 }

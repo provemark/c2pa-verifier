@@ -224,3 +224,69 @@ it('AC18: a fault says whether the walk had reached a C2PA chunk (amendment 3)',
     'two C2PA chunks' => ['two-c2pa', true],
     'LBox differs' => ['lbox-differs', true],
 ])->group('SPEC-003');
+
+/** A stream that reads but cannot seek: StreamReader::end() fails on it. */
+final class Spec003NoSeekStream
+{
+    /** @var resource|null */
+    public $context;
+
+    private string $bytes = '';
+
+    private int $position = 0;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
+    {
+        $this->bytes = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/'.substr($path, strlen('spec003noseek://')));
+
+        return true;
+    }
+
+    public function stream_read(int $count): string
+    {
+        $chunk = substr($this->bytes, $this->position, $count);
+        $this->position += strlen($chunk);
+
+        return $chunk;
+    }
+
+    public function stream_eof(): bool
+    {
+        return $this->position >= strlen($this->bytes);
+    }
+
+    public function stream_tell(): int
+    {
+        return $this->position;
+    }
+
+    public function stream_seek(int $offset, int $whence): bool
+    {
+        return false;
+    }
+
+    /** @return array<string, int> */
+    public function stream_stat(): array
+    {
+        return [];
+    }
+}
+
+it('AC18: a stream that cannot be measured is a fault before any C2PA chunk (step 217)', function (): void {
+    if (! in_array('spec003noseek', stream_get_wrappers(), true)) {
+        stream_wrapper_register('spec003noseek', Spec003NoSeekStream::class);
+    }
+    $stream = fopen('spec003noseek://fixture-signed.webp', 'rb');
+    assert($stream !== false);
+
+    try {
+        (new WebpManifestStoreExtractor)->extract($stream);
+        $caught = null;
+    } catch (ContainerException $e) {
+        $caught = $e;
+    }
+
+    expect($caught)->toBeInstanceOf(ContainerException::class)
+        ->and($caught?->getMessage())->toContain('cannot seek')
+        ->and($caught?->storeReached)->toBeFalse();
+})->group('SPEC-003');

@@ -9,17 +9,22 @@ use Provemark\C2paVerifier\Support\MemoryBudget;
 
 /**
  * RIFF `C2PA` → manifest store bytes: the walk shared by every RIFF form this
- * verifier reads (SPEC-003 for WebP; C2PA 2.4 §A.3.7 puts every RIFF form's
- * store in the same chunk). The form type and its name are given by the caller.
+ * verifier reads (SPEC-003 for WebP, SPEC-055 for WAV; C2PA 2.4 §A.3.7 puts
+ * every RIFF form's store in the same chunk). The form type and its name are
+ * given by the caller.
  *
- * Reads the twelve-byte header, checks the RIFF size against the file
- * length before anything else, then walks the chunks to that end. Every
- * chunk but `C2PA` is skipped unread; after an odd-length chunk the pad
- * byte is read and must be zero. The one `C2PA` chunk is checked before its
- * data is read (limit, minimum, overrun), then its LBox against the chunk
- * length; the pad byte is not part of the store. The walk continues past
- * it so that a second `C2PA` is seen and refused — c2patool takes the
- * first silently; this verifier does not choose.
+ * Strict about the `C2PA` chunk, as lenient as c2patool about the rest
+ * (SPEC-003 amendment 3). A header size larger than the file is refused
+ * before any chunk is read; a smaller one ends the walk where the RIFF chunk
+ * ends, and the bytes after it are left to the data hash, which covers them.
+ * Every chunk but `C2PA` is skipped unread, its pad byte too, unchecked, and
+ * missing where the RIFF chunk ends. The one `C2PA` chunk is checked before
+ * its data is read (limit, minimum, overrun), then its LBox against the chunk
+ * length, then its own pad byte, which must be there and zero; the pad byte
+ * is not part of the store. The walk continues past it so that a second
+ * `C2PA` is seen and refused — c2patool takes the first silently; this
+ * verifier does not choose. Every fault says whether a `C2PA` chunk header
+ * had been read (`ContainerException::$storeReached`).
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
  * removed in any release; the contract is the nine classes named in the README.
@@ -90,7 +95,12 @@ final readonly class RiffManifestStoreExtractor
         // (SPEC-003 amendment 3, AC17). The length comes from a seek, not a read.
         /** @var array{1: int} $size */
         $size = unpack('V', $header, 4);
-        $fileEnd = $reader->end();
+        try {
+            $fileEnd = $reader->end();
+        } catch (ContainerException $e) {
+            // a stream that cannot be measured is a fault before any C2PA chunk (SPEC-003 AC18, step 217)
+            throw new ContainerException($e->getMessage(), previous: $e, storeReached: false);
+        }
         if ($size[1] > $fileEnd - 8) {
             throw new ContainerException(sprintf(
                 'RIFF size %d in the header, %d bytes in the file after it',
@@ -107,10 +117,12 @@ final readonly class RiffManifestStoreExtractor
         // in a manifest (SPEC-003 AC18, SPEC-013 amendment 16)
         $reached = false;
 
+        // The walk's own faults, and StreamReader's inside it, are thrown with the
+        // default flag; this one place sets it from what the walk had seen.
         try {
             $this->walk($reader, $end, $where, $store, $storeOffset, $reached);
         } catch (ContainerException $e) {
-            throw $e->storeReached === $reached ? $e : new ContainerException($e->getMessage(), $reached, $e);
+            throw $e->storeReached === $reached ? $e : new ContainerException($e->getMessage(), previous: $e, storeReached: $reached);
         }
 
         if ($store === null || $storeOffset === null) {

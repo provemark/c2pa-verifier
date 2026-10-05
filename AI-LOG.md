@@ -8450,3 +8450,23 @@ README are where the disclosure lives.
   versions).
 - Reasoned: none beyond the amendments.
 - Decided by Maurice: build step 216.
+
+## 2026-10-05 — The second review's code-only findings fixed (step 217)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push zonder release en ga verder en check of wav nu
+  helemaal goed is"; then "akkoord, volg je advies en begin met stap 217".
+- Produced: the push of `main` (`840d992..1dcf3ee`, no tag); a second
+  code review of `840d992..HEAD`; `src/Container/ContainerException.php`
+  (parameter order), `src/Container/RiffManifestStoreExtractor.php`
+  (the pre-walk flag, the docblock, a comment); a SPEC-003 AC18 test with
+  a non-seekable stream wrapper; SPEC-003 Traceability;
+  `notes/step-217-review-b-fixed.md`; a row in `NOTES.md`.
+- Measured: CI run 37283383454 on `1dcf3ee` (eight jobs green); every WAV
+  in the repository (32 files) against both `c2patool` versions (27 equal
+  or equal in effect, 3 stricter by name, none `Valid` here where
+  `c2patool` is not); the reviewer's seven WebP files with this verifier
+  and both versions; the new test red, then green; `composer check` (exit
+  0, 679 tests); the corpus against step 216 (identical).
+- Reasoned: that finding 9 belongs with finding 2's change.
+- Decided by Maurice: no release yet; the push; the advice on the review's
+  findings 1–4.
