@@ -8653,3 +8653,25 @@ README are where the disclosure lives.
 - Measured: `composer check`; the attribution check before the push; CI.
 - Reasoned: none.
 - Decided by Maurice: both amendments confirmed; the push.
+
+## 2026-10-05 — MP3 reviewed; amendment 2; its tests, red (step 230)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ga goed na of er geen fouten of bugs inzitten. mp3 moet echt goed
+  zijn"; "akkoord, wacht op de review en stel dan voor"; "akkoord, keur
+  amendement 2 goed en ga door".
+- Produced: a code review of `cd8a954..HEAD`; SPEC-056 amendment 2
+  (AC15–AC21, approved) and Traceability rows; ten variants in
+  `bin/make-mp3-variants.php`; two c2patool-signed fixtures;
+  `tests/Fixtures/mp3-writers/` (a c2pa-ts-signed MP3, a hostile c2pa-rs
+  file, licences, the signing script); `c2patool` recordings; tests in both
+  MP3 test files; READMEs; `notes/step-230-mp3-review.md`; rows in
+  `NOTES.md` and `tests/Fixtures/README.md`.
+- Measured: CI run 37292184906 (green); the trees of nine repositories
+  for `.mp3`; three MP3s from them with both `c2patool` versions and this
+  verifier; `@trustnxt/c2pa-ts` 0.14.0 installed in scratch and used to
+  sign the fixture; the MIME types `c2patool` accepts; six real-tag files
+  signed by `c2patool` and verified code for code; a 300 MB MP3; the
+  review's findings reproduced; the new variants with both versions;
+  Pest (13 failed, 724 passed), PHPStan, Pint, `bin/spec-check.php`.
+- Reasoned: the seven points of amendment 2.
+- Decided by Maurice: amendment 2.

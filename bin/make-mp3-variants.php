@@ -174,6 +174,27 @@ $variants = [
     'unsigned-no-tag.mp3' => $unsignedAudio,
     // the unsigned file with a 128-byte ID3v1 tag appended
     'unsigned-id3v1.mp3' => $unsigned.'TAG'.str_repeat("\0", 125),
+
+    // step 230 (SPEC-056 amendment 2)
+    // the legacy JUMBF media type, which c2patool accepts too
+    'mime-legacy.mp3' => mp3Tag([$tsse, mp3Frame('GEOB', mp3Geob($store, 'application/x-c2pa-manifest-store'))]).$audio,
+    // a 200-byte TSSE whose v2.4 size is written as a plain integer (00 00 00 C8), as iTunes writes it
+    'tsse-plain-size.mp3' => mp3Tag(['TSSE'."\x00\x00\x00\xC8"."\0\0"."\x03".str_repeat('x', 199), $geob]).$audio,
+    // a frame whose id is not four capitals or digits, before the GEOB
+    'frame-id-invalid.mp3' => mp3Tag(["x\x01ab".mp3Syncsafe(4)."\0\0".'abcd', $geob]).$audio,
+    // the unsynchronisation flag, and FF 00 inside the tag (in a TXXX before the GEOB)
+    'unsync-ff00.mp3' => mp3Tag([$tsse, mp3Frame('TXXX', "\x03k\0a\xFF\x00b"), $geob], '', 0x80).$audio,
+    // a C2PA GEOB whose description is 5,000 bytes long
+    'long-description.mp3' => mp3Tag([$tsse, mp3Frame('GEOB', mp3Geob($store, 'application/c2pa', 3, 'c2pa', str_repeat('d', 5000)))]).$audio,
+    // a v2.4 GEOB with the grouping flag (0x40) and its group byte
+    'grouped-geob-v24.mp3' => mp3Tag([$tsse, mp3Frame('GEOB', "\x01".mp3Geob($store), "\0\x40")]).$audio,
+    // a v2.3 GEOB with the grouping flag (0x20) and its group byte
+    'grouped-geob-v23.mp3' => mp3Tag([$v3($tsse), $v3(mp3Frame('GEOB', "\x01".mp3Geob($store), "\0\x20"))], '', 0, null, 3).$audio,
+    // a v2.3 tag with header flag bit 0x10 set (a footer only exists in v2.4)
+    'footer-bit-v23.mp3' => mp3Tag([$v3($tsse), $v3($geob)], '', 0x10, null, 3).$audio,
+    // unsigned sources, signed with c2patool by hand (notes/step-230-mp3-review.md)
+    'unsigned-zeros-after-tag.mp3' => substr($unsigned, 0, $u['end']).str_repeat("\0", 16).$unsignedAudio,
+    'unsigned-second-empty-tag.mp3' => substr($unsigned, 0, $u['end'])."ID3\x04\0\0".mp3Syncsafe(0).$unsignedAudio,
 ];
 
 $dir = $root.'/tests/Fixtures/mp3';

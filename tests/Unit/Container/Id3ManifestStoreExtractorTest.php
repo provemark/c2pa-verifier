@@ -156,3 +156,47 @@ it('AC12: the bounds apply', function (): void {
         ->and((new Id3ManifestStoreExtractor)->maxObjectLength)->toBe(16 * 1024 * 1024)
         ->and(spec056Fault($many)?->getMessage())->toContain('more than 4096 frames');
 })->group('SPEC-056');
+
+it('AC15: the legacy JUMBF media type is a C2PA GEOB too (amendment 2)', function (): void {
+    expect(hash('sha256', spec056Extract(spec056Fixture('mp3/mime-legacy.mp3'))->bytes ?? ''))->toBe(SPEC056_STORE_SHA256)
+        // c2pa-ts writes application/x-c2pa-manifest-store
+        ->and(spec056Extract(spec056Fixture('mp3-writers/c2pa-ts-signed.mp3')))->toBeInstanceOf(ManifestStoreBytes::class);
+})->group('SPEC-056');
+
+it('AC18: an iTunes frame size is read as a plain integer; an invalid frame id is a fault (amendment 2)', function (): void {
+    $caught = spec056Fault(spec056Fixture('mp3/frame-id-invalid.mp3'));
+
+    expect(hash('sha256', spec056Extract(spec056Fixture('mp3/tsse-plain-size.mp3'))->bytes ?? ''))->toBe(SPEC056_STORE_SHA256)
+        ->and($caught?->getMessage())->toContain('frame id')
+        ->and($caught?->storeReached)->toBeFalse();
+})->group('SPEC-056');
+
+it('AC19: unsynchronisation with FF 00 inside the tag is a fault before the frames are walked (amendment 2)', function (): void {
+    $caught = spec056Fault(spec056Fixture('mp3/unsync-ff00.mp3'));
+
+    expect($caught?->getMessage())->toContain('FF 00')
+        ->and($caught?->storeReached)->toBeFalse();
+})->group('SPEC-056');
+
+it('AC20: text fields of any length, grouped frames, v2.3 header bit 0x10 (amendment 2)', function (): void {
+    expect(hash('sha256', spec056Extract(spec056Fixture('mp3/long-description.mp3'))->bytes ?? ''))->toBe(SPEC056_STORE_SHA256)
+        ->and(spec056Extract(spec056Fixture('mp3/grouped-geob-v24.mp3')))->toBeNull()
+        ->and(spec056Extract(spec056Fixture('mp3/grouped-geob-v23.mp3')))->toBeNull()
+        ->and(hash('sha256', spec056Extract(spec056Fixture('mp3/footer-bit-v23.mp3'))->bytes ?? ''))->toBe(SPEC056_STORE_SHA256);
+})->group('SPEC-056');
+
+it('AC21: a GEOB frame header at the very end of the file is a ContainerException or null, never another error (amendment 2)', function (int $tagSize): void {
+    $syncsafe = static fn (int $v): string => chr(($v >> 21) & 0x7F).chr(($v >> 14) & 0x7F).chr(($v >> 7) & 0x7F).chr($v & 0x7F);
+    $bytes = 'ID3'."\x04\0\0".$syncsafe($tagSize).'GEOB'.$syncsafe(5)."\0\0";
+
+    try {
+        $result = spec056Extract($bytes);
+        $thrown = null;
+    } catch (Throwable $e) {
+        $result = null;
+        $thrown = $e;
+    }
+
+    expect($thrown === null || $thrown instanceof ContainerException)->toBeTrue($thrown === null ? '' : $thrown::class.': '.$thrown->getMessage())
+        ->and($result)->toBeNull();
+})->with(['the tag ends there' => [10], 'the tag promises more' => [100]])->group('SPEC-056');

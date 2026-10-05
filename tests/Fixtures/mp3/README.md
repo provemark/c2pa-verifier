@@ -39,6 +39,18 @@ sometimes lists the mismatch twice.
 | `junk-before-tag.mp3` | 16 zero bytes before the tag | *No claim found* | the same | AC13 `unknown` |
 | `unsigned-no-tag.mp3` | the unsigned file without its tag | *No claim found* | the same | AC13 `mp3`, no manifest |
 | `unsigned-id3v1.mp3` | the unsigned file + an ID3v1 tag | *No claim found* | the same | AC11 no manifest |
+| `mime-legacy.mp3` | MIME `application/x-c2pa-manifest-store` (the legacy JUMBF type) | read | read | AC15 (step 230) |
+| `tsse-plain-size.mp3` | a 200-byte TSSE whose v2.4 size is a plain integer (iTunes) | read | read | AC18 (step 230) |
+| `frame-id-invalid.mp3` | a frame with id `x 01 a b` before the GEOB | read | read | AC18 error, stricter (step 230) |
+| `unsync-ff00.mp3` | the unsynchronisation flag and `FF 00` inside the tag | *No claim found* | the same | AC19 error, stricter (step 230) |
+| `long-description.mp3` | a 5,000-byte GEOB description | read | read | AC20 (step 230) |
+| `grouped-geob-v24.mp3` | a v2.4 GEOB with the grouping flag and its byte | *No claim found* | the same | AC20 no manifest (step 230) |
+| `grouped-geob-v23.mp3` | a v2.3 GEOB with the grouping flag and its byte | *No claim found* | the same | AC20 no manifest (step 230) |
+| `footer-bit-v23.mp3` | a v2.3 tag with header bit 0x10 (footers exist only in v2.4) | read | read | AC20 (step 230) |
+| `unsigned-zeros-after-tag.mp3` | the unsigned file with 16 zero bytes after its tag; the source of the next | *No claim found* | the same | — |
+| `signed-zeros-after-tag.mp3` | that file signed by `c2patool` 0.27.22 (not built by the script) | **`Valid`** | **`Valid`** | AC16 (step 230) |
+| `unsigned-second-empty-tag.mp3` | the unsigned file with an empty second ID3 tag after its tag; the source of the next | *No claim found* | the same | — |
+| `signed-second-empty-tag.mp3` | that file signed by `c2patool` 0.27.22 (not built by the script) | **`Valid`** | **`Valid`** | AC16 (step 230) |
 
 SHA-256 (as printed by the script):
 
@@ -68,4 +80,14 @@ eefdf4f1d00d84fce56a3ee365ad4509876bb2e2d3145fe74a8aaa6aef93a7ad  tag-size-plus-
 7a0fcce093f24be2f2c478efc7762f1112a1024899ebdf23fb95d49973dbaf58  junk-before-tag.mp3
 8f873b7bfe0b51615bafff17cf46b34fb9531c7bb5e9c50ba5860d40307f45c9  unsigned-no-tag.mp3
 508ae6da4216b56ef19867837f808d787fad8cbb55bd00bfef4b9c307b4fc963  unsigned-id3v1.mp3
+fd9a4b44a13c4641f9b3f936b2798c4af3923ad2fcf98930626263f1f7891761  mime-legacy.mp3
+0f3aa30a2cd226e1f1a6afd381a48c8db2559c556734b47c26ca7da44e30fb5d  tsse-plain-size.mp3
+881a9041a6d0a9126ac3c7aef71eb88514b3840eaf8b4d444e220a60a04fa07a  frame-id-invalid.mp3
+afdb0d6c0fed7a19fabc8d912dd480fd75f15a5e20c2958f2e4ef4b32a92e0cd  unsync-ff00.mp3
+95c8c4b4f2275648738568f23b4585af26b56fe9cac12ef9ad644c586073bc36  long-description.mp3
+4b4f477afeddb5bcbacf0411f3a6cd1cf3264a63d522e4b272d12462c3e81d6f  grouped-geob-v24.mp3
+c0ae20b8863acb5373607453d98e433c24175e9360bc32b673aa4958867949ea  grouped-geob-v23.mp3
+ced0ab5c13c68f331d3a16622c1786a676231d0132b9abb530da265b12178e5c  footer-bit-v23.mp3
+ab4435c59452a9b2a77df634ec467d99ea6c9163c57ed85ea9c9a8e3d515c1f8  unsigned-zeros-after-tag.mp3
+46af9d8247cd4e83f7f93cc00e2526c7928030037b36019c052e92fa1bf6e8e2  unsigned-second-empty-tag.mp3
 ```

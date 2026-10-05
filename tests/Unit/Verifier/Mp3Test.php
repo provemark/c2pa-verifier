@@ -131,3 +131,47 @@ it('AC14: one byte of the audio flipped is assertion.dataHash.mismatch', functio
     expect($report['validation_state'])->toBe('Invalid')
         ->and(spec056Codes($report, 'failure'))->toContain('assertion.dataHash.mismatch');
 })->group('SPEC-056');
+
+it('AC15: the MP3 c2pa-ts signed is read, and fails its data hash as c2patool 0.28.1 says (amendment 2)', function (): void {
+    $report = (new Verifier)->verify(spec056VerifierStream(spec056File('mp3-writers/c2pa-ts-signed.mp3')));
+    $tree = spec056Report($report);
+
+    expect($report->format)->toBe('mp3')
+        ->and($report->hasManifest)->toBeTrue()
+        ->and($tree['validation_state'])->toBe('Invalid')
+        ->and(spec056Codes($tree, 'success'))->toContain('claimSignature.validated')
+        ->and(implode(',', spec056Codes($tree, 'failure')))->toContain('assertion.dataHash.');
+})->group('SPEC-056');
+
+it('AC16: MPEG audio after zero padding or a further tag is mp3, and verifies as c2patool says (amendment 2)', function (string $recorded, string $file): void {
+    /** @var array<string, mixed> $oracle */
+    $oracle = json_decode(spec056File("c2patool/mp3/{$recorded}.json"), true, 512, JSON_THROW_ON_ERROR);
+    $report = (new Verifier)->verify(spec056VerifierStream(spec056File("mp3/{$file}.mp3")));
+    $ours = spec056Report($report);
+
+    expect($report->format)->toBe('mp3')
+        ->and($ours['validation_state'])->toBe('Valid')
+        ->and($ours['validation_state'])->toBe($oracle['validation_state'])
+        ->and(spec056Codes($ours, 'success'))->toBe(spec056Codes($oracle, 'success'))
+        ->and(spec056Codes($ours, 'failure'))->toBe(spec056Codes($oracle, 'failure'));
+})->with([
+    'zeros, 0.27.22' => ['signed-zeros-after-tag', 'signed-zeros-after-tag'],
+    'zeros, 0.28.1' => ['signed-zeros-after-tag.0.28.1', 'signed-zeros-after-tag'],
+    'second tag, 0.27.22' => ['signed-second-empty-tag', 'signed-second-empty-tag'],
+    'second tag, 0.28.1' => ['signed-second-empty-tag.0.28.1', 'signed-second-empty-tag'],
+])->group('SPEC-056');
+
+it('AC17: MPEG audio without a tag needs two frame headers (amendment 2)', function (): void {
+    $detector = new FormatDetector;
+    $untagged = spec056File('mp3/unsigned-no-tag.mp3');
+
+    expect($detector->detect(spec056VerifierStream($untagged)))->toBe('mp3')
+        // a UTF-16LE text file opens with FF FE, which passes a one-header check
+        ->and($detector->detect(spec056VerifierStream("\xFF\xFE".mb_convert_encoding("Hello world\n", 'UTF-16LE', 'UTF-8'))))->toBeNull()
+        // one valid header, then not another where the first frame ends (288 bytes on)
+        ->and($detector->detect(spec056VerifierStream(substr($untagged, 0, 4).str_repeat("\x11", 400))))->toBeNull();
+})->group('SPEC-056');
+
+it('AC20: a v2.3 tag with header bit 0x10 is followed by its audio, not by a footer (amendment 2)', function (): void {
+    expect((new FormatDetector)->detect(spec056VerifierStream(spec056File('mp3/footer-bit-v23.mp3'))))->toBe('mp3');
+})->group('SPEC-056');

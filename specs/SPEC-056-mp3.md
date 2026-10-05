@@ -256,6 +256,59 @@ constructor parameter, as WAV's.
    followed by `fLaC` an MP3 (an AAC file would be labelled `mp3`), and
    searching a few bytes past the tag for the sync word.
 
+2. **2026-10-05, step 230, approved by Maurice van Loon** — after a code
+   review and a search for other writers (`notes/step-230-mp3-review.md`).
+   No input gave a wrong `Valid`; five made a real manifest invisible, one
+   crashed, one was mis-detected. Measured with both `c2patool` versions
+   unless marked.
+
+   - **AC15 — the legacy JUMBF media type.** The C2PA GEOB is one whose
+     MIME type is exactly `application/c2pa` **or**
+     `application/x-c2pa-manifest-store`, the two `c2patool` accepts and
+     no others (`application/jumbf`, upper case and parameters are not).
+     Given `mime-legacy.mp3`: the store of AC1. Given
+     `mp3-writers/c2pa-ts-signed.mp3` (signed with c2pa-ts 0.14.0, an
+     implementation independent of `c2pa-rs`, whose exclusion covers the
+     whole tag): a store is extracted and, verified, the file is `Invalid`
+     with a data-hash failure, as in 0.28.1 (0.27.22: `Valid`).
+   - **AC16 — MPEG audio after padding and further tags.** Detection skips
+     zero bytes (up to 64 KiB) and further ID3v2 tags (up to 8) after the
+     first tag before it requires MPEG audio. Given
+     `signed-zeros-after-tag.mp3` and `signed-second-empty-tag.mp3`
+     (signed by `c2patool`, `Valid` in both versions): `mp3`, `Valid`,
+     code for code with the recordings. `tag-size-plus-one.mp3` stays
+     `unknown` (amendment 1).
+   - **AC17 — MPEG audio without a tag needs two frame headers.** A file
+     that opens with a frame header is `mp3` only if a second header
+     follows at the first frame's length. Given `unsigned-no-tag.mp3`:
+     `mp3`; given a UTF-16LE text file (`FF FE` and text): `unknown`.
+   - **AC18 — iTunes frame sizes, and frame ids.** A v2.4 frame size with a
+     byte above `7F` is read as a plain 32-bit integer. Given
+     `tsse-plain-size.mp3`: the store of AC1. A frame id that is not four
+     capitals or digits is a `ContainerException`
+     (`frame-id-invalid.mp3`; `c2patool` reads past it: stricter by name,
+     so that a walk thrown off never hides a store silently).
+   - **AC19 — unsynchronisation that changes bytes.** A tag with the
+     unsynchronisation flag that contains `FF 00` is a `ContainerException`
+     before its frames are walked (`unsync-ff00.mp3`; `c2patool`: *No claim
+     found*: stricter by name). Without `FF 00` the flag changes nothing,
+     and AC10 applies as before.
+   - **AC20 — text fields, grouping, footers.** The C2PA GEOB's file name
+     and description may be of any length within the frame
+     (`long-description.mp3`: the store of AC1); a grouped GEOB is not read
+     as C2PA in either version (`grouped-geob-v24.mp3`,
+     `grouped-geob-v23.mp3`: `null`, as `c2patool`); a footer exists only in
+     v2.4 (`footer-bit-v23.mp3`: detected as `mp3`, the store read).
+   - **AC21 — every malformed input is a `ContainerException`.** A GEOB
+     frame header that ends exactly at the end of the file, with the tag
+     ending there or promising more, raises `ContainerException` or yields
+     `null`, never another `Throwable` (it raised a `ValueError`).
+
+   The tag header is parsed by one function shared by the detector and
+   the extractor, and the scan of AC5 uses the walk's own frame reading.
+
+   Approved by Maurice van Loon, 2026-10-05 (step 230).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -277,3 +330,10 @@ least one test; every source file maps back to this spec.
 | AC12 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC12: the bounds apply / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: DEFAULT_MAX_OBJECT_LENGTH, MAX_FRAMES, walk() |
 | AC13 | tests/Unit/Verifier/Mp3Test.php :: AC13: mp3 when MPEG audio follows the tag or opens the file, and nothing else is guessed; AC13: a tagless MP3 has no manifest and no failure; an unknown file names MP3 among the formats / SPEC-056 | src/Container/FormatDetector.php :: detect(), isMpegFrame(); src/Container/Id3ManifestStoreExtractor.php :: walk() (a tagless file); src/Verifier/Verifier.php :: verify() |
 | AC14 | tests/Unit/Verifier/Mp3Test.php :: AC14: the signed fixture verifies as c2patool 0.27.22 and 0.28.1 say, without and with trust settings (four datasets); AC14: one byte of the audio flipped is assertion.dataHash.mismatch / SPEC-056 | src/Verifier/Verifier.php :: __construct() (`$mp3`), verify() (the `mp3` arm) |
+| AC15 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC15: the legacy JUMBF media type is a C2PA GEOB too (amendment 2); tests/Unit/Verifier/Mp3Test.php :: AC15: the MP3 c2pa-ts signed is read, and fails its data hash as c2patool 0.28.1 says (amendment 2) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: MIME_TYPES, walk() |
+| AC16 | tests/Unit/Verifier/Mp3Test.php :: AC16: MPEG audio after zero padding or a further tag is mp3, and verifies as c2patool says (amendment 2) (four datasets) / SPEC-056 | src/Container/FormatDetector.php :: detect(); src/Container/Id3ManifestStoreExtractor.php :: tagEnd() |
+| AC17 | tests/Unit/Verifier/Mp3Test.php :: AC17: MPEG audio without a tag needs two frame headers (amendment 2) / SPEC-056 | src/Container/FormatDetector.php :: detect(), isMpegFrame(), mpegFrameLength() |
+| AC18 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC18: an iTunes frame size is read as a plain integer; an invalid frame id is a fault (amendment 2) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: frameHeader() |
+| AC19 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC19: unsynchronisation with FF 00 inside the tag is a fault before the frames are walked (amendment 2) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: walk(), containsUnsynchronisedBytes() |
+| AC20 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC20: text fields of any length, grouped frames, v2.3 header bit 0x10 (amendment 2); tests/Unit/Verifier/Mp3Test.php :: AC20: a v2.3 tag with header bit 0x10 is followed by its audio, not by a footer (amendment 2) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: objectStart(), walk(), tagEnd(); src/Container/FormatDetector.php :: detect() |
+| AC21 | tests/Unit/Container/Id3ManifestStoreExtractorTest.php :: AC21: a GEOB frame header at the very end of the file is a ContainerException or null, never another error (amendment 2) (two datasets) / SPEC-056 | src/Container/Id3ManifestStoreExtractor.php :: mime(), walk() |

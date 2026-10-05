@@ -38,6 +38,9 @@ What may live here:
 - **MP3** — `fixture-unsigned.mp3` (the sister repository's file,
   unchanged) and `fixture-signed.mp3`, signed with c2patool 0.27.22 and the
   same certificates (step 225); variants under `mp3/`.
+- **MP3 from other writers** under `mp3-writers/`: an MP3 signed here with
+  c2pa-ts (an implementation independent of c2pa-rs) and a hostile
+  c2pa-rs file, with their licences (step 230).
 
 What never lives here, in any branch, under any name: a private key. This
 project verifies only; it has no use for one. `*.key` is gitignored
