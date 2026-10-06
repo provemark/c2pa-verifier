@@ -9167,3 +9167,21 @@ README are where the disclosure lives.
   `Valid`, each `Valid` in both `c2patool` versions).
 - Reasoned: that TIFF is rare on the web and in WordPress (not measured).
 - Decided by Maurice: 0.4.0 carries GIF; TIFF waits until asked.
+
+## 2026-10-06 — 0.4.0 released (step 263)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "weet je zeker nu dat alles functioneert?"; "akkoord, push en zet
+  de tag als CI groen is"; "akkoord, leg de release vast en zet de demo op
+  0.4.0".
+- Produced: the annotated tag `v0.4.0` on `324acf4`, pushed; a row in
+  `NOTES.md`.
+- Measured: the release commit's `git archive` installed as a Composer path
+  package in an empty project, every format's signed fixture (GIF, JPEG,
+  PNG, WebP, MP4, WAV, MP3, FLAC, AVI) `Valid` and `Trusted`, the flipped
+  GIF `Invalid`, the unsigned GIF without a manifest; CI run 37443965848
+  on `324acf4` and run 37444168379 on the tag, green; the GitHub archive
+  (386 files, as `git archive v0.4.0`); Packagist's metadata (`v0.4.0` at
+  `324acf4`). A fresh `composer require provemark/c2pa-verifier:^0.4`
+  still received the previous metadata from one CDN edge, while direct
+  requests received `v0.4.0`.
+- Decided by Maurice: push, tag after a green CI.
