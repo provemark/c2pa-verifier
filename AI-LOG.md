@@ -9134,3 +9134,21 @@ README are where the disclosure lives.
 - Reasoned: that a desynchronised walk could find a block `c2patool` does
   not see.
 - Decided by Maurice: amendment 1, A to E.
+
+## 2026-10-06 — SPEC-059 amendment 1 built (step 261)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, voer amendement 1 uit".
+- Produced: `src/Container/GifManifestStoreExtractor.php` (extensions as
+  sub-blocks after the label; sub-blocks read in 64 KiB pieces; an empty
+  block counted); `bin/fuzz.php` (GIF routing as the detector);
+  `docs/comparison.md` (the block bound, the empty first block);
+  `notes/step-261-gif-amendment-1.md`; rows in `NOTES.md`; SPEC-059
+  amendment 1 marked implemented.
+- Measured: `GifTest` 28 passed; `composer check` (833);
+  `bin/api-check.php`; the reviewer's files at 128 MB, timed; the corpus
+  against step 259 (2 of 1,440 moved, one message); 47 GIF files against
+  both `c2patool` versions with the test roots; the release set fuzzed
+  (17,109 runs) and five GIF-focused seeds (47,340 runs), 0 faults, every
+  `Valid` confirmed by both versions.
+- Reasoned: none beyond the amendment.
+- Decided by Maurice: none beyond amendment 1.

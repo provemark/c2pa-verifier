@@ -251,6 +251,7 @@ last constructor parameter; a fault before the block is reached carries
      `GIF89a`), tooling only.
 
    Approved by Maurice van Loon, 2026-10-06 (step 260).
+   Implemented in step 261.
 
 ## Traceability
 

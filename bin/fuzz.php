@@ -76,7 +76,7 @@ function fuzzStoreRanges(string $file): array
         $store = match (true) {
             str_starts_with($head, "\xFF\xD8") => (new JpegManifestStoreExtractor)->extract($stream),
             str_starts_with($head, "\x89PNG") => (new PngManifestStoreExtractor)->extract($stream),
-            str_starts_with($head, 'GIF8') => (new GifManifestStoreExtractor)->extract($stream),   // step 259
+            str_starts_with($head, 'GIF87a'), str_starts_with($head, 'GIF89a') => (new GifManifestStoreExtractor)->extract($stream),   // as FormatDetector (SPEC-059 amendment 1 E)
             substr($head, 0, 4) === 'RIFF' && substr($head, 8, 4) === 'WAVE' => (new WavManifestStoreExtractor)->extract($stream),   // step 212
             substr($head, 0, 4) === 'RIFF' && substr($head, 8, 4) === 'AVI ' => (new AviManifestStoreExtractor)->extract($stream),   // step 241
             str_starts_with($head, 'ID3') => (new Id3ManifestStoreExtractor)->extract($stream),   // step 228
