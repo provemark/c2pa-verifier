@@ -170,12 +170,22 @@ final readonly class CoseSign1
      */
     public static function ofManifest(Manifest $manifest): self
     {
+        // Decoded once per manifest, which is immutable: the checks ask for it several times (step 255).
+        // A WeakMap forgets it with the manifest; a fault is not kept, so it is thrown each time.
+        /** @var \WeakMap<Manifest, self>|null $decoded */
+        static $decoded = null;
+        $decoded ??= new \WeakMap;
+        $known = $decoded[$manifest] ?? null;
+        if ($known instanceof self) {
+            return $known;
+        }
+
         $cose = self::fromBytes($manifest->signatureBytes());
         if ($manifest->claim->version >= 2 && ! $cose->chainProtected) {
             throw new CoseException(sprintf('the claim is v%d, and its signer\'s certificate chain is not in the protected header, so the signature does not cover which certificate signed (SPEC-047)', $manifest->claim->version), StatusCode::SigningCredentialInvalid);
         }
 
-        return $cose;
+        return $decoded[$manifest] = $cose;
     }
 
     /**

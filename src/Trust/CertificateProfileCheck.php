@@ -48,11 +48,10 @@ final readonly class CertificateProfileCheck
     {
         $url = sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label);
         try {
-            $chain = CoseSign1::ofManifest($manifest)->chain;
-            if ($chain === []) {
+            $certificates = Certificate::chainOf(CoseSign1::ofManifest($manifest));   // built once per signature (step 255)
+            if ($certificates === []) {
                 return [new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, 'x5chain holds no certificate')];
             }
-            $certificates = array_map(static fn ($c): Certificate => Certificate::fromDer($c->bytes), $chain);
             $leaf = $certificates[0];
         } catch (CoseException $e) {
             return [new ValidationStatus($e->status, $url, $e->getMessage())];

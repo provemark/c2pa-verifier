@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Verifier;
 
-use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cbor\CborException;
 use Provemark\C2paVerifier\Container\AviManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\ContainerException;
@@ -463,10 +462,7 @@ final readonly class Verifier
     private function chainOf(Manifest $manifest): array
     {
         try {
-            return array_map(
-                static fn (CborBytes $c): Certificate => Certificate::fromDer($c->bytes),
-                CoseSign1::ofManifest($manifest)->chain,
-            );
+            return Certificate::chainOf(CoseSign1::ofManifest($manifest));
         } catch (CoseException|ManifestException|TrustException) {
             return [];
         }

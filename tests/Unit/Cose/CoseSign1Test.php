@@ -12,6 +12,7 @@ use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\Manifest;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
+use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\Verifier;
 
@@ -281,4 +282,28 @@ it('AC13: a one-certificate x5chain as a bare byte string is read as a chain of 
     // anything else is still refused, and says what it was
     expect(fn () => CoseSign1::fromBytes(spec008Synthetic("\xa2\x01\x26\x18\x21\x63abc")))
         ->toThrow(CoseException::class, 'x5chain is neither a byte string nor an array but');
+})->group('SPEC-008');
+
+it('ofManifest() decodes a manifest\'s signature once, and Certificate::chainOf() builds its chain once; a fault is not remembered (step 255)', function (): void {
+    $manifest = spec008Manifest('fixture-signed.jpg');
+    $first = CoseSign1::ofManifest($manifest);
+    $chain = Certificate::chainOf($first);
+
+    // a claim v2 whose chain is in the unprotected header is refused each time it is asked (SPEC-047)
+    $refused = spec008Manifest('chain-constraints/x5chain-unprotected.png');
+    $faults = 0;
+    foreach ([1, 2] as $ask) {
+        try {
+            CoseSign1::ofManifest($refused);
+        } catch (CoseException) {
+            $faults++;
+        }
+    }
+
+    expect(CoseSign1::ofManifest($manifest))->toBe($first)
+        ->and(CoseSign1::ofManifest(spec008Manifest('fixture-signed.jpg')))->not->toBe($first)
+        ->and(Certificate::chainOf($first))->toBe($chain)
+        ->and($chain)->toHaveCount(count($first->chain))
+        ->and($chain[0]->sha256)->toBe(hash('sha256', $first->chain[0]->bytes, true))
+        ->and($faults)->toBe(2);
 })->group('SPEC-008');

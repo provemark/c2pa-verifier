@@ -9031,3 +9031,19 @@ README are where the disclosure lives.
 - Reasoned: that subclasses keep the `Verifier` constructor and the class
   names, where named constructors would not.
 - Decided by Maurice: option B of three.
+
+## 2026-10-06 — The signature decoded once per manifest (step 255)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, doe stap 3"; "akkoord, voer stap 255 uit".
+- Produced: `CoseSign1::ofManifest()` remembering its result per manifest;
+  `Certificate::chainOf()`; its use in `Verifier::chainOf()`, `ChainCheck`
+  and `CertificateProfileCheck`; a test; SPEC-008's Traceability;
+  `notes/step-255-cose-once.md`; a row in `NOTES.md`.
+- Measured: the share of verification the repeated decoding took (three
+  files); the test red, then green; PHPStan; Deptrac; `composer check`
+  (805); the corpus against step 254 (0 of 1,400 moved); the release set
+  fuzzed (16,041 runs, 0 faults, the same 118 `Valid`); verification time
+  of four files with the old and the new `src/` (11 % to 46 % faster).
+- Reasoned: why `ClaimSignatureCheck` and `signatureInfo()` stay as they
+  were (their own fault handling; the leaf alone).
+- Decided by Maurice: this step as proposed.

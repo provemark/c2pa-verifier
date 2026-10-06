@@ -7,6 +7,8 @@ namespace Provemark\C2paVerifier\Trust;
 use Provemark\C2paVerifier\Asn1\Asn1Exception;
 use Provemark\C2paVerifier\Asn1\DerReader;
 use Provemark\C2paVerifier\Asn1\TagClass;
+use Provemark\C2paVerifier\Cbor\CborBytes;
+use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Support\Bytes;
 
 /**
@@ -163,6 +165,29 @@ final readonly class Certificate
             throw new TrustException(sprintf('a certificate serial number of %d octets; this verifier reads at most %d (RFC 5280 allows 20)', Bytes::decimalOctets($serialHex), Bytes::MAX_DECIMAL_OCTETS));
         }
         $this->serialDecimal = self::hexToDecimal($serialHex);
+    }
+
+    /**
+     * A signature's x5chain as certificates, leaf first, built once per signature, which is
+     * immutable: the checks ask for it several times (step 255). A WeakMap forgets it with
+     * the signature; a fault is not kept.
+     *
+     * @return list<self>
+     *
+     * @throws TrustException when a certificate cannot be read
+     */
+    public static function chainOf(CoseSign1 $cose): array
+    {
+        /** @var \WeakMap<CoseSign1, list<self>>|null $built */
+        static $built = null;
+        $built ??= new \WeakMap;
+        $known = $built[$cose] ?? null;
+        if (is_array($known)) {
+            /** @var list<self> $known only this method fills the map */
+            return $known;
+        }
+
+        return $built[$cose] = array_map(static fn (CborBytes $c): self => self::fromDer($c->bytes), $cose->chain);
     }
 
     /**

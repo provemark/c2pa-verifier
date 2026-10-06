@@ -36,7 +36,7 @@ final readonly class ChainCheck
 
         try {
             $cose = CoseSign1::ofManifest($manifest);
-            $chain = array_map(static fn ($c): Certificate => Certificate::fromDer($c->bytes), $cose->chain);
+            $chain = Certificate::chainOf($cose);   // built once per signature (step 255)
         } catch (CoseException $e) {
             return [new ValidationStatus($e->status, $url, $e->getMessage())];
         } catch (TrustException $e) {
