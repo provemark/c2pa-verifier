@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-06                      |
 | Supersedes | —                                                 |
@@ -214,15 +214,15 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1 | tests/Unit/Verifier/GifTest.php :: AC1: the fixture yields the store, byte-exact, with the block as its range / SPEC-059 | — |
-| AC2 | tests/Unit/Verifier/GifTest.php :: AC2: no C2PA_GIF block is no manifest (three datasets) / SPEC-059 | — |
-| AC3 | tests/Unit/Verifier/GifTest.php :: AC3: a block of another version is not a store (two datasets) / SPEC-059 | — |
-| AC4 | tests/Unit/Verifier/GifTest.php :: AC4: two C2PA_GIF blocks are an error (stricter than c2patool, named) / SPEC-059 | — |
-| AC5 | tests/Unit/Verifier/GifTest.php :: AC5: a malformed block is an error (three datasets) / SPEC-059 | — |
-| AC6 | tests/Unit/Verifier/GifTest.php :: AC6: a file cut inside the block is an error, after the store was reached / SPEC-059 | — |
-| AC7 | tests/Unit/Verifier/GifTest.php :: AC7: what the hash judges is read and left to the hash, as c2patool says (five datasets) / SPEC-059 | — |
-| AC8 | tests/Unit/Verifier/GifTest.php :: AC8: the range is the whole block / SPEC-059 | — |
-| AC9 | tests/Unit/Verifier/GifTest.php :: AC9: nothing after the first image is read / SPEC-059 | — |
-| AC10 | tests/Unit/Verifier/GifTest.php :: AC10: the bounds apply before memory is spent / SPEC-059 | — |
-| AC11 | tests/Unit/Verifier/GifTest.php :: AC11: detection: GIF87a and GIF89a are gif, nothing else is guessed / SPEC-059 | — |
-| AC12 | tests/Unit/Verifier/GifTest.php :: AC12: the signed fixture verifies as c2patool 0.27.22 and 0.28.1 say (four datasets); AC12: a flipped image byte and a flipped store byte fail as c2patool says / SPEC-059 | — |
+| AC1 | tests/Unit/Verifier/GifTest.php :: AC1: the fixture yields the store, byte-exact, with the block as its range / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk(), subBlocks() |
+| AC2 | tests/Unit/Verifier/GifTest.php :: AC2: no C2PA_GIF block is no manifest (three datasets) / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (no block, an empty block) |
+| AC3 | tests/Unit/Verifier/GifTest.php :: AC3: a block of another version is not a store (two datasets) / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (`IDENTIFIER`, `VERSION`) |
+| AC4 | tests/Unit/Verifier/GifTest.php :: AC4: two C2PA_GIF blocks are an error (stricter than c2patool, named) / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (two blocks) |
+| AC5 | tests/Unit/Verifier/GifTest.php :: AC5: a malformed block is an error (three datasets) / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (`APPLICATION_BLOCK_SIZE`, the LBox, an unexpected byte); extract() (`withStoreReached()`) |
+| AC6 | tests/Unit/Verifier/GifTest.php :: AC6: a file cut inside the block is an error, after the store was reached / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: subBlocks() (`StreamReader::readExactly()`); extract() |
+| AC7 | tests/Unit/Verifier/GifTest.php :: AC7: what the hash judges is read and left to the hash, as c2patool says (five datasets) / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (the end of the file ends the walk); src/Hash/DataHashCheck.php (unchanged) |
+| AC8 | tests/Unit/Verifier/GifTest.php :: AC8: the range is the whole block / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (the range from the introducer to the terminator) |
+| AC9 | tests/Unit/Verifier/GifTest.php :: AC9: nothing after the first image is read / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (stops at `0x2C` and `0x3B`) |
+| AC10 | tests/Unit/Verifier/GifTest.php :: AC10: the bounds apply before memory is spent / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: `MAX_BLOCKS`, `DEFAULT_MAX_STORE_LENGTH`, subBlocks() (the budget) |
+| AC11 | tests/Unit/Verifier/GifTest.php :: AC11: detection: GIF87a and GIF89a are gif, nothing else is guessed / SPEC-059 | src/Container/FormatDetector.php :: detect(); src/Verifier/Verifier.php :: verify() (the message) |
+| AC12 | tests/Unit/Verifier/GifTest.php :: AC12: the signed fixture verifies as c2patool 0.27.22 and 0.28.1 say (four datasets); AC12: a flipped image byte and a flipped store byte fail as c2patool says / SPEC-059 | src/Verifier/Verifier.php :: __construct() (`$gif`), verify() (the `gif` arm) |

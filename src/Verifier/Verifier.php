@@ -8,6 +8,7 @@ use Provemark\C2paVerifier\Cbor\CborException;
 use Provemark\C2paVerifier\Container\AviManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\FormatDetector;
+use Provemark\C2paVerifier\Container\GifManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\Id3ManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\IsobmffManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
@@ -89,6 +90,8 @@ final readonly class Verifier
         private Id3ManifestStoreExtractor $mp3 = new Id3ManifestStoreExtractor,
         // SPEC-058: last, for the same reason
         private AviManifestStoreExtractor $avi = new AviManifestStoreExtractor,
+        // SPEC-059: last, for the same reason
+        private GifManifestStoreExtractor $gif = new GifManifestStoreExtractor,
     ) {}
 
     /**
@@ -103,7 +106,7 @@ final readonly class Verifier
             $head = $this->formats->head($stream);
 
             return new VerificationReport('unknown', false, null, ValidationResult::fromStatuses([
-                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, WebP, WAV, AVI, MP3, FLAC or ISOBMFF signature', Bytes::hex($head))),
+                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, GIF, WebP, WAV, AVI, MP3, FLAC or ISOBMFF signature', Bytes::hex($head))),
             ], []));
         }
 
@@ -112,6 +115,7 @@ final readonly class Verifier
             $store = match ($format) {
                 'jpeg' => $this->jpeg->extract($stream),
                 'png' => $this->png->extract($stream),
+                'gif' => $this->gif->extract($stream),   // SPEC-059
                 'webp' => $this->webp->extract($stream),
                 'wav' => $this->wav->extract($stream),   // SPEC-055
                 'avi' => $this->avi->extract($stream),   // SPEC-058

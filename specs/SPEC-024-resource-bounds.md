@@ -242,6 +242,12 @@ reasoning that led to them stays readable.
    `AVI `, the same 16 MiB bound and `MemoryBudget`. The test gains the
    constant. Named in SPEC-058's open questions.
    Confirmed by Maurice van Loon, 2026-10-05 (step 242).
+5. **2026-10-06, step 259, with SPEC-059's implementation** — AC1's list
+   gains GIF: `GifManifestStoreExtractor` bounds the joined store at the
+   same 16 MiB and consults the same `MemoryBudget`, before each sub-block
+   is held. The test gains the constant.
+   Approved with SPEC-059 (its open question 4) by Maurice van Loon,
+   2026-10-06.
 
 ## Traceability
 

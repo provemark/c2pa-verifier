@@ -24,7 +24,7 @@ final readonly class FormatDetector
 
     /**
      * @param  resource  $stream  readable and seekable
-     * @return 'jpeg'|'png'|'webp'|'wav'|'avi'|'isobmff'|'mp3'|'flac'|null
+     * @return 'jpeg'|'png'|'gif'|'webp'|'wav'|'avi'|'isobmff'|'mp3'|'flac'|null
      */
     public function detect($stream): ?string
     {
@@ -34,6 +34,9 @@ final readonly class FormatDetector
         }
         if (str_starts_with($head, "\x89PNG\x0D\x0A\x1A\x0A")) {
             return 'png';
+        }
+        if (str_starts_with($head, 'GIF87a') || str_starts_with($head, 'GIF89a')) {
+            return 'gif';   // SPEC-059: c2patool reads the C2PA_GIF block under either version
         }
         if (strlen($head) === self::PROBE_LENGTH && str_starts_with($head, 'RIFF') && substr($head, 8, 4) === 'WEBP') {
             return 'webp';

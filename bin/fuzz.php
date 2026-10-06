@@ -25,6 +25,7 @@ declare(strict_types=1);
  */
 
 use Provemark\C2paVerifier\Container\AviManifestStoreExtractor;
+use Provemark\C2paVerifier\Container\GifManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\Id3ManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
@@ -43,12 +44,12 @@ $out = $argv[3] ?? sys_get_temp_dir().'/c2pa-fuzz';
 $paths = array_slice($argv, 4);
 if ($paths === []) {
     $root = dirname(__DIR__).'/tests/Fixtures';
-    $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp', $root.'/fixture-signed.mp4', $root.'/fixture-signed.wav', $root.'/wav', $root.'/wav-writers', $root.'/fixture-signed.mp3', $root.'/mp3', $root.'/fixture-signed.flac', $root.'/flac', $root.'/fixture-signed.avi', $root.'/avi'];   // MP4 and WAV since step 213, MP3 228, FLAC 237, AVI 241
+    $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp', $root.'/fixture-signed.mp4', $root.'/fixture-signed.wav', $root.'/wav', $root.'/wav-writers', $root.'/fixture-signed.mp3', $root.'/mp3', $root.'/fixture-signed.flac', $root.'/flac', $root.'/fixture-signed.avi', $root.'/avi', $root.'/fixture-signed.gif', $root.'/gif'];   // MP4 and WAV since step 213, MP3 228, FLAC 237, AVI 241, GIF 259
 }
 $files = [];
 foreach ($paths as $path) {
     if (is_dir($path)) {
-        foreach (glob($path.'/*.{jpg,jpeg,png,webp,wav,avi,mp3,flac}', GLOB_BRACE) ?: [] as $file) {
+        foreach (glob($path.'/*.{jpg,jpeg,png,gif,webp,wav,avi,mp3,flac}', GLOB_BRACE) ?: [] as $file) {
             $files[] = $file;
         }
     } elseif (is_file($path)) {
@@ -75,6 +76,7 @@ function fuzzStoreRanges(string $file): array
         $store = match (true) {
             str_starts_with($head, "\xFF\xD8") => (new JpegManifestStoreExtractor)->extract($stream),
             str_starts_with($head, "\x89PNG") => (new PngManifestStoreExtractor)->extract($stream),
+            str_starts_with($head, 'GIF8') => (new GifManifestStoreExtractor)->extract($stream),   // step 259
             substr($head, 0, 4) === 'RIFF' && substr($head, 8, 4) === 'WAVE' => (new WavManifestStoreExtractor)->extract($stream),   // step 212
             substr($head, 0, 4) === 'RIFF' && substr($head, 8, 4) === 'AVI ' => (new AviManifestStoreExtractor)->extract($stream),   // step 241
             str_starts_with($head, 'ID3') => (new Id3ManifestStoreExtractor)->extract($stream),   // step 228

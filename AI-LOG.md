@@ -9095,3 +9095,19 @@ README are where the disclosure lives.
   it does not know.
 - Reasoned: none.
 - Decided by Maurice: approve SPEC-059 with the four proposals.
+
+## 2026-10-06 — GIF built (step 259)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, bouw de lezer".
+- Produced: `src/Container/GifManifestStoreExtractor.php`; `FormatDetector`
+  and `Verifier` for `gif`; SPEC-013 amendment 22, SPEC-024 amendment 5;
+  SPEC-059 `implemented` with its Traceability; `bin/fuzz.php` for GIF;
+  README, `docs/comparison.md`, `docs/milestones.md`, CHANGELOG;
+  `notes/step-259-gif-built.md`; a row in `NOTES.md`.
+- Measured: `GifTest` 25 passed; `composer check` (830); `bin/api-check.php`;
+  the corpus against step 255 (0 of 1,400 moved, 40 GIF rows new); every
+  GIF against both `c2patool` versions; the release set fuzzed with GIF
+  (16,971 runs, 0 faults, 120 `Valid` confirmed) and without it (step
+  255's 118 exactly).
+- Reasoned: none beyond SPEC-059.
+- Decided by Maurice: build the reader.

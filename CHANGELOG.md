@@ -7,7 +7,20 @@ committed.
 
 ## Unreleased
 
+### Added
+- **GIF (SPEC-059).** A GIF whose manifest store sits in a `C2PA_GIF`
+  Application Extension (C2PA 2.4 §A.3.8) is read and verified like the
+  other formats; `format` is `gif`. The blocks before the first image are
+  walked, the block is recognised by its size, identifier and version
+  `01 00 00` together, its sub-blocks are joined, and the whole block is
+  the store's range, as the exclusion `c2patool` writes. Two blocks, a
+  malformed block or a store cut short are `general.error`. Measured
+  against `c2patool` 0.27.22 and 0.28.1 over 18 variants (step 256).
+
 ### Changed
+- Verifying is faster where a manifest is checked more than once: its
+  signature is decoded once and its certificate chain built once (steps
+  253–255, no change in what is reported).
 - **`bin/package-check.php`: the dist ceiling is 16 MB (SPEC-023 amendment
   3)**, and the check also shows the size of the zip Composer fetches;
   a zip over 5 MB is a finding that returns the question of what the

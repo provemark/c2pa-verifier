@@ -609,6 +609,15 @@ final class ManifestException extends \RuntimeException
     **Weight B: a new value in the report.**
 
     Confirmed by Maurice van Loon, 2026-10-05 (step 242).
+22. **2026-10-06, step 259, with SPEC-059's implementation** — the
+    report's `format` gains `gif`; the unknown-format message names GIF;
+    the `Verifier` constructor gains the GIF extractor as its last
+    parameter. No existing file changes verdict (the corpus has no GIF).
+
+    **Weight B: a new value in the report.**
+
+    Approved with SPEC-059 (its open question 4) by Maurice van Loon,
+    2026-10-06.
 
 ## Traceability
 
