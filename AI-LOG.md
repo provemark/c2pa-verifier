@@ -9047,3 +9047,24 @@ README are where the disclosure lives.
 - Reasoned: why `ClaimSignatureCheck` and `signatureInfo()` stay as they
   were (their own fault handling; the leaf alone).
 - Decided by Maurice: this step as proposed.
+
+## 2026-10-06 — GIF measured (step 256)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, begin met het meten van GIF".
+- Produced: `tests/Fixtures/fixture-unsigned.gif` (the sister library's
+  `fixture.gif`), `fixture-signed.gif` (signed with `c2patool` 0.27.22 and
+  the public test key, which is not in this repository) and its manifest
+  definition with placeholders; `bin/make-gif-variants.php` and 18
+  variants under `tests/Fixtures/gif/` with a README; four recordings
+  under `tests/Fixtures/c2patool/gif/`; `notes/step-256-gif-measured.md`; a
+  row in `NOTES.md`.
+- Measured: C2PA 2.4 §A.3.8 read; the block structure of the files both
+  versions signed; the data-hash exclusion; both versions on every
+  variant; this verifier on every file (`unknown`). A first variant was
+  byte for byte the signed fixture and was dropped.
+  The first commit of this step failed `composer check`: three PHPStan
+  type findings in the new script; fixed (a typed helper instead of a
+  closure) before anything was pushed, the variants byte for byte the
+  same, `composer check` exit 0.
+- Reasoned: what a GIF spec needs (see the note).
+- Decided by Maurice: measure GIF first.
