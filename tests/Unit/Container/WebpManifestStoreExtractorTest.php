@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Container\AviManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\ManifestStoreBytes;
+use Provemark\C2paVerifier\Container\RiffManifestStoreExtractor;
+use Provemark\C2paVerifier\Container\WavManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
 
 /*
@@ -347,4 +350,11 @@ it('AC20: more than 4,096 chunks at the top level is a fault (amendment 5)', fun
 
     expect($caught?->getMessage())->toContain('more than 4096 chunks')
         ->and($scanned)->toBeInstanceOf(ContainerException::class);
+})->group('SPEC-003');
+
+it('the RIFF forms are one walk: WebP, WAV and AVI are RiffManifestStoreExtractor with their form type (step 254)', function (): void {
+    foreach ([new WebpManifestStoreExtractor, new WavManifestStoreExtractor, new AviManifestStoreExtractor] as $form) {
+        expect($form)->toBeInstanceOf(RiffManifestStoreExtractor::class)
+            ->and($form->maxChunkLength)->toBe(RiffManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH);
+    }
 })->group('SPEC-003');

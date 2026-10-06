@@ -9016,3 +9016,18 @@ README are where the disclosure lives.
 - Reasoned: that a method on the fault suits walks of different shapes
   better than a callback.
 - Decided by Maurice: the clean-up, step by step; this step as proposed.
+
+## 2026-10-06 — The RIFF forms as one walk (step 254)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, doe stap 2"; "akkoord, volg je advies en doe B".
+- Produced: `RiffManifestStoreExtractor` abstract; `WebpManifestStoreExtractor`,
+  `WavManifestStoreExtractor`, `AviManifestStoreExtractor` its subclasses;
+  a test and SPEC-004's source check; SPEC-003's Traceability;
+  `notes/step-254-riff-forms.md`; a row in `NOTES.md`.
+- Measured: the two tests red, then green; PHPStan; `bin/api-check.php`;
+  `composer check` (804); the corpus against step 253 (0 of 1,400 moved);
+  the release set fuzzed with seed 20261005 (16,041 runs, 0 faults, the
+  same 118 `Valid`).
+- Reasoned: that subclasses keep the `Verifier` constructor and the class
+  names, where named constructors would not.
+- Decided by Maurice: option B of three.

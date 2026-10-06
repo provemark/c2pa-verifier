@@ -32,7 +32,7 @@ use Provemark\C2paVerifier\Support\MemoryBudget;
  * @internal SPEC-025: not part of the public API. It may change, move or be
  * removed in any release; the contract is the nine classes named in the README.
  */
-final readonly class RiffManifestStoreExtractor
+abstract readonly class RiffManifestStoreExtractor
 {
     // SPEC-024: 16 MiB, not 64. Measured in step 66 over 212 corpus stores: median
     // 45 kB, p90 241 kB, largest ever met 3.36 MB. A store at this bound peaks at

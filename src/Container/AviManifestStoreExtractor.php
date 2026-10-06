@@ -18,27 +18,12 @@ use Provemark\C2paVerifier\Support\MemoryBudget;
  * @internal SPEC-025: not part of the public API. It may change, move or be
  * removed in any release; the contract is the nine classes named in the README.
  */
-final readonly class AviManifestStoreExtractor
+final readonly class AviManifestStoreExtractor extends RiffManifestStoreExtractor
 {
-    public const DEFAULT_MAX_CHUNK_LENGTH = RiffManifestStoreExtractor::DEFAULT_MAX_CHUNK_LENGTH;
-
-    private RiffManifestStoreExtractor $riff;
-
     public function __construct(
-        public int $maxChunkLength = self::DEFAULT_MAX_CHUNK_LENGTH,
+        int $maxChunkLength = self::DEFAULT_MAX_CHUNK_LENGTH,
         MemoryBudget $budget = new MemoryBudget,
     ) {
-        $this->riff = new RiffManifestStoreExtractor('AVI ', 'AVI', $maxChunkLength, $budget);
-    }
-
-    /**
-     * @param  resource  $stream  a readable, seekable stream positioned at 0
-     * @return ManifestStoreBytes|null null when the first RIFF chunk has no C2PA chunk (AC2)
-     *
-     * @throws ContainerException on every malformed case
-     */
-    public function extract($stream): ?ManifestStoreBytes
-    {
-        return $this->riff->extract($stream);
+        parent::__construct('AVI ', 'AVI', $maxChunkLength, $budget);
     }
 }
