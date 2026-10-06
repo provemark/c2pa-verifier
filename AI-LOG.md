@@ -9183,5 +9183,18 @@ README are where the disclosure lives.
   (386 files, as `git archive v0.4.0`); Packagist's metadata (`v0.4.0` at
   `324acf4`). A fresh `composer require provemark/c2pa-verifier:^0.4`
   still received the previous metadata from one CDN edge, while direct
-  requests received `v0.4.0`.
+  requests received `v0.4.0`; tried again at 09:47 UTC, it installed
+  `v0.4.0`, which reads the signed GIF fixture `Trusted`.
 - Decided by Maurice: push, tag after a green CI.
+
+## 2026-10-06 — Three format lists brought up to date (step 264)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "is alle documentatie op orde?"
+- Produced: `composer.json` (the description names every format read);
+  `SECURITY.md` (the GIF block in the scope); a comment in
+  `src/Container/ContainerException.php`; a row in `NOTES.md`.
+- Measured: a grep of `README.md`, `SECURITY.md`, `CONTRIBUTING.md`,
+  `composer.json`, `docs/`, `src/` and `bin/` for format lists and for
+  documents naming AVI but not GIF; `composer validate --strict`;
+  `composer check`.
+- Decided by Maurice: none.

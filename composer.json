@@ -1,6 +1,6 @@
 {
     "name": "provemark/c2pa-verifier",
-    "description": "Verifier for C2PA Content Credentials in pure PHP: JPEG, PNG, WebP and ISOBMFF, with c2patool's verdict. Read and verify only; no signing, no keys, no network.",
+    "description": "Verifier for C2PA Content Credentials in pure PHP: JPEG, PNG, GIF, WebP, ISOBMFF (MP4, MOV, AVIF, HEIC), WAV, AVI, MP3 and FLAC, with c2patool's verdict. Read and verify only; no signing, no keys, no network.",
     "type": "library",
     "license": "MIT",
     "keywords": [
