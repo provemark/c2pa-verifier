@@ -9081,3 +9081,17 @@ README are where the disclosure lives.
   block recognised by size, identifier and version), and the proposals in
   the open questions.
 - Decided by Maurice: draft SPEC-059. Approval waits for him.
+
+## 2026-10-06 — SPEC-059 approved; its tests, red (step 258)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keur SPEC-059 goed met de vier voorstellen".
+- Produced: SPEC-059 `approved` with Maurice's decisions on its four open
+  questions; `tests/Unit/Verifier/GifTest.php` (AC1–AC12); the test column
+  of the Traceability; a row in `NOTES.md`.
+- Measured: the joined store's length and SHA-256 from the fixture (for
+  AC1); `vendor/bin/pest`: 25 failed (`GifManifestStoreExtractor` not
+  found), 805 passed. One expectation was corrected before this count:
+  `FormatDetector::detect()` returns `null`, not `'unknown'`, for a header
+  it does not know.
+- Reasoned: none.
+- Decided by Maurice: approve SPEC-059 with the four proposals.

@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-06                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -190,18 +190,18 @@ last constructor parameter; a fault before the block is reached carries
    as for a second RIFF `C2PA` chunk and a second ID3 GEOB. The hash
    already makes the file `Invalid` in `c2patool`, so the verdict state is
    the same; only the code differs (`general.error` against
-   `assertion.dataHash.mismatch`). Non-blocker.
+   `assertion.dataHash.mismatch`). Non-blocker. **Decided by Maurice van Loon, 2026-10-06: refuse.**
 2. **Another version (AC3) and an empty block (AC2): no manifest, as
    `c2patool`.** Proposal: yes. Neither can yield a wrong `Valid`; refusing
    them would turn a file `c2patool` calls unsigned into an error.
-   Non-blocker.
+   Non-blocker. **Decided by Maurice van Loon, 2026-10-06: no manifest, as `c2patool`.**
 3. **When the store counts as reached (`has_manifest`).** Proposal: once a
    block with block size 11, identifier `C2PA_GIF` and version `01 00 00`
    has been read; so `block-size-12` (AC5) is `hasManifest` false, and
-   `truncated-in-c2pa` (AC6) true. Non-blocker.
+   `truncated-in-c2pa` (AC6) true. Non-blocker. **Decided by Maurice van Loon, 2026-10-06: as proposed.**
 4. **Amendments this forces** (named now): SPEC-013 (the `format` value
    `gif`, the message, the constructor parameter), SPEC-024 (the GIF
-   bound in AC1's list). Non-blocker.
+   bound in AC1's list). Non-blocker. **Decided by Maurice van Loon, 2026-10-06: written with the build.**
 
 ## Amendments
 
@@ -214,15 +214,15 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
-| AC11                 | —                           | —                    |
-| AC12                 | —                           | —                    |
+| AC1 | tests/Unit/Verifier/GifTest.php :: AC1: the fixture yields the store, byte-exact, with the block as its range / SPEC-059 | — |
+| AC2 | tests/Unit/Verifier/GifTest.php :: AC2: no C2PA_GIF block is no manifest (three datasets) / SPEC-059 | — |
+| AC3 | tests/Unit/Verifier/GifTest.php :: AC3: a block of another version is not a store (two datasets) / SPEC-059 | — |
+| AC4 | tests/Unit/Verifier/GifTest.php :: AC4: two C2PA_GIF blocks are an error (stricter than c2patool, named) / SPEC-059 | — |
+| AC5 | tests/Unit/Verifier/GifTest.php :: AC5: a malformed block is an error (three datasets) / SPEC-059 | — |
+| AC6 | tests/Unit/Verifier/GifTest.php :: AC6: a file cut inside the block is an error, after the store was reached / SPEC-059 | — |
+| AC7 | tests/Unit/Verifier/GifTest.php :: AC7: what the hash judges is read and left to the hash, as c2patool says (five datasets) / SPEC-059 | — |
+| AC8 | tests/Unit/Verifier/GifTest.php :: AC8: the range is the whole block / SPEC-059 | — |
+| AC9 | tests/Unit/Verifier/GifTest.php :: AC9: nothing after the first image is read / SPEC-059 | — |
+| AC10 | tests/Unit/Verifier/GifTest.php :: AC10: the bounds apply before memory is spent / SPEC-059 | — |
+| AC11 | tests/Unit/Verifier/GifTest.php :: AC11: detection: GIF87a and GIF89a are gif, nothing else is guessed / SPEC-059 | — |
+| AC12 | tests/Unit/Verifier/GifTest.php :: AC12: the signed fixture verifies as c2patool 0.27.22 and 0.28.1 say (four datasets); AC12: a flipped image byte and a flipped store byte fail as c2patool says / SPEC-059 | — |
