@@ -34,6 +34,14 @@ failure codes, or the error):
 | `flip-image.gif` | one byte of image data flipped | `Invalid`, `assertion.dataHash.mismatch`, `signingCredential.untrusted` | the same |
 | `flip-store.gif` | one byte deep in the store flipped (the thumbnail's data) | `Invalid`, `assertion.hashedURI.mismatch`, `signingCredential.untrusted` | the same |
 
+## Added in step 260 (SPEC-059 amendment 1)
+
+| file | what it is | 0.27.22 | 0.28.1 |
+|---|---|---|---|
+| `unsigned-empty-comment.gif` | `../fixture-unsigned.gif` with an empty Comment Extension (`21 FE 00`) before NETSCAPE2.0: the source of the next | — | — |
+| `signed-empty-comment.gif` | that source signed with `c2patool` 0.27.22 and `../fixture-signed-gif.manifest.json` (the public test key, not in this repository); the `C2PA_GIF` block lands first, the empty comment after it | `Valid`, `signingCredential.untrusted`; `Trusted` with the test roots | the same |
+| `empty-then-c2pa.gif` | `../fixture-signed.gif` with an empty `C2PA_GIF` block (version 1.0, no sub-blocks) inserted before its block | Error: No claim found | the same |
+
 SHA-256:
 
 ```
@@ -55,4 +63,7 @@ ec33d437465b797e9801d176a28a7cf4ca145f86500e81063692d630c466cff4  trailing-bytes
 ee15000894c228d9d0c1ddc5a84f59bbda6dc946e98d4146316bcffb01489156  gif87a.gif
 57156ff33dd820b555fda88eb29fadb89b698a30e548b4393125bd213b58ca2a  flip-image.gif
 d3e425ff28acd0a465d6aad025e94f84cd147301eeeec9599667127c122bfb9c  flip-store.gif
+146a4158610c84e649338fce3a697357749ff7fb447b9385cc4dd2df69afab17  unsigned-empty-comment.gif
+d1a58f00c1b117a6a19d0494a368fa83f6e74d64420e40778aaf82dc6e22f040  signed-empty-comment.gif
+16c0de510292951546ba93d3fb664ce2cd890733f47c3f9fe8f4e515154aa590  empty-then-c2pa.gif
 ```

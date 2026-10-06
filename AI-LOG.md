@@ -9111,3 +9111,26 @@ README are where the disclosure lives.
   255's 118 exactly).
 - Reasoned: none beyond SPEC-059.
 - Decided by Maurice: build the reader.
+
+## 2026-10-06 — A review since v0.3.0; SPEC-059 amendment 1, tests red (step 260)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "kan je het nog heel goed reviewen en testen"; "akkoord, voer
+  amendement 1 uit".
+- Produced: SPEC-059 amendment 1 (A–E, approved); three tests;
+  `tests/Fixtures/gif/unsigned-empty-comment.gif`, `signed-empty-comment.gif`
+  (signed with `c2patool` 0.27.22 and the public test key, not in this
+  repository) and `empty-then-c2pa.gif` with their README rows; a row in
+  `NOTES.md`.
+- Measured: a code review of `src/` since v0.3.0 (nine findings; four
+  measured by the reviewer); the empty-comment finding reproduced against
+  both `c2patool` versions; five more GIF shapes signed by both versions
+  (animated, GD-made, a comment before the image, a local colour table
+  only, GIF87a) — ours equal to both, signed and with one image byte
+  flipped, 20 of 20; GIF-focused fuzzing, five seeds of 300 rounds over 29
+  files (37,950 runs, 0 faults, 322 `Valid`, each `Valid` in both
+  versions); a 100 MB comment before the image (the walk 0.77 s, the
+  hash of the file 0.26 s); the new tests red (an empty comment `Invalid`,
+  an empty block not counted, 1-byte sub-blocks 4.7 s).
+- Reasoned: that a desynchronised walk could find a block `c2patool` does
+  not see.
+- Decided by Maurice: amendment 1, A to E.

@@ -232,3 +232,51 @@ it('AC12: a flipped image byte and a flipped store byte fail as c2patool says', 
     expect(spec059Codes(spec059Verify('gif/flip-image.gif'), 'failure'))->toContain('assertion.dataHash.mismatch')
         ->and(spec059Codes(spec059Verify('gif/flip-store.gif'), 'failure'))->toContain('assertion.hashedURI.mismatch');
 })->group('SPEC-059');
+
+it('AC4 (amendment 1): an empty C2PA_GIF block before a full one is two blocks', function (): void {
+    $fault = spec059Fault('gif/empty-then-c2pa.gif');
+    $tree = spec059Verify('gif/empty-then-c2pa.gif');
+
+    expect($fault?->getMessage())->toContain('two C2PA_GIF blocks')->toContain('781')
+        ->and($tree['@hasManifest'])->toBeTrue()
+        ->and($tree['validation_state'])->toBe('Invalid')
+        ->and(spec059Codes($tree, 'failure'))->toBe(['general.error']);
+})->group('SPEC-059');
+
+it('AC13 (amendment 1): every extension is sub-blocks after its label: an empty comment is read past', function (): void {
+    expect(spec059Verify('gif/signed-empty-comment.gif')['validation_state'])->toBe('Valid')
+        ->and(spec059Verify('gif/signed-empty-comment.gif', true)['validation_state'])->toBe('Trusted');
+
+    // a comment whose data holds the bytes of a C2PA_GIF block is a comment
+    $fake = "\x21\xFF\x0BC2PA_GIF\x01\x00\x00\x08\x00\x00\x00\x08jumb\x00";
+    $comment = "\x21\xFE".chr(strlen($fake)).$fake."\x00";
+
+    expect((new GifManifestStoreExtractor)->extract(spec059Stream(spec059Gif($comment))))->toBeNull()
+        ->and((new GifManifestStoreExtractor)->extract(spec059Stream(spec059Gif("\x21\xFE\x00".$comment))))->toBeNull();
+})->group('SPEC-059');
+
+it('AC14 (amendment 1): 1-byte sub-blocks cost neither the time limit nor the memory', function (): void {
+    $ones = static fn (int $n, string $byte): string => str_repeat("\x01".$byte, $n);
+    $other = "\x21\xFF\x0BOTHERAPP1.0".$ones(4 * 1024 * 1024, 'o')."\x00";
+    $store = "\x21\xFF\x0BC2PA_GIF\x01\x00\x00".$ones(1024 * 1024, 'x')."\x00";
+    $gif = spec059Gif($other.$store);
+    unset($other, $store);
+    $stream = spec059Stream($gif);
+    unset($gif);
+
+    $before = memory_get_usage();
+    memory_reset_peak_usage();
+    $started = hrtime(true);
+    $fault = null;
+    try {
+        (new GifManifestStoreExtractor)->extract($stream);
+    } catch (ContainerException $e) {
+        $fault = $e->getMessage();
+    }
+    $seconds = (hrtime(true) - $started) / 1e9;
+    $held = memory_get_peak_usage() - $before;
+
+    expect($fault)->toContain('LBox')
+        ->and($seconds)->toBeLessThan(3.0)
+        ->and($held)->toBeLessThan(16 * 1024 * 1024);
+})->group('SPEC-059');

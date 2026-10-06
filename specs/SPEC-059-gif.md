@@ -205,7 +205,52 @@ last constructor parameter; a fault before the block is reached carries
 
 ## Amendments
 
-None.
+1. **2026-10-06, step 260, approved by Maurice van Loon** — found by the
+   review of everything since v0.3.0, measured where marked, all before
+   GIF was released.
+
+   - **A — every extension is sub-blocks after its label (GIF89a §15,
+     §23–26).** The reader read a "block size" after every label, but a
+     Comment Extension has none: the fixed blocks of the graphic control,
+     plain text and application extensions are their first sub-block. An
+     empty comment (`21 FE 00`) threw the walk out of step (measured: a GIF
+     with one, signed by `c2patool` 0.27.22, `Trusted` in both versions,
+     `Invalid` here). Now, after the label, the sub-blocks are read to their
+     terminator; an Application Extension's first sub-block must be 11
+     bytes, as AC5 says.
+     - **AC13 (new)** — given `gif/signed-empty-comment.gif`: `Valid`, and
+       `Trusted` with `trust/full.settings.json`, as both versions say; and
+       a comment whose data holds the bytes of a `C2PA_GIF` block (built in
+       the test) is not read as one.
+   - **B — sub-blocks read in pieces, the store one string.** Each
+     sub-block was its own read, and the store an array of pieces: with
+     1-byte sub-blocks a 4 MiB store ended PHP on a 128 MB host (measured),
+     and 30 MB of them took 30.5 s (measured). Now the sub-blocks are read
+     in pieces of up to 64 KiB and walked in memory, and the store is
+     appended to one string within the bound and the budget.
+     - **AC14 (new)** — given a `C2PA_GIF` block of 1 MiB in 1-byte
+       sub-blocks and an application extension of 4 MiB in 1-byte
+       sub-blocks before it (built in the test): the walk ends with the
+       store's fault (it is not JUMBF) within 3 s, and the memory it held
+       stays under 16 MB.
+   - **C — an empty `C2PA_GIF` block counts as a block.** A later block was
+     read as the only one; `c2patool` reads the first and says *No claim
+     found* (`gif/empty-then-c2pa.gif`, measured). Now an empty block counts
+     for AC4, so the file is two blocks: `general.error` (stricter than
+     `c2patool`, named, as AC4). Open question 3's decision is narrowed: the
+     store counts as reached once a `C2PA_GIF` block of version 1.0 holds
+     data, so an empty block alone is no manifest with or without a fault
+     after it.
+     - **AC4 now also** — given `gif/empty-then-c2pa.gif`: the two offsets
+       named, `hasManifest` true, `Invalid`, `general.error`.
+   - **D — the 4,096-block bound stays, and is named.** A signed GIF with
+     5,000 comments before its first image is `Trusted` in both versions and
+     refused here (measured); the same bound as ISOBMFF's boxes, RIFF's
+     chunks and ID3's frames, written in `docs/comparison.md`.
+   - **E — `bin/fuzz.php` routes a GIF as the verifier does** (`GIF87a` or
+     `GIF89a`), tooling only.
+
+   Approved by Maurice van Loon, 2026-10-06 (step 260).
 
 ## Traceability
 
@@ -217,7 +262,7 @@ least one test; every source file maps back to this spec.
 | AC1 | tests/Unit/Verifier/GifTest.php :: AC1: the fixture yields the store, byte-exact, with the block as its range / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk(), subBlocks() |
 | AC2 | tests/Unit/Verifier/GifTest.php :: AC2: no C2PA_GIF block is no manifest (three datasets) / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (no block, an empty block) |
 | AC3 | tests/Unit/Verifier/GifTest.php :: AC3: a block of another version is not a store (two datasets) / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (`IDENTIFIER`, `VERSION`) |
-| AC4 | tests/Unit/Verifier/GifTest.php :: AC4: two C2PA_GIF blocks are an error (stricter than c2patool, named) / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (two blocks) |
+| AC4 | tests/Unit/Verifier/GifTest.php :: AC4: two C2PA_GIF blocks are an error (stricter than c2patool, named); AC4 (amendment 1): an empty C2PA_GIF block before a full one is two blocks / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (two blocks) |
 | AC5 | tests/Unit/Verifier/GifTest.php :: AC5: a malformed block is an error (three datasets) / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (`APPLICATION_BLOCK_SIZE`, the LBox, an unexpected byte); extract() (`withStoreReached()`) |
 | AC6 | tests/Unit/Verifier/GifTest.php :: AC6: a file cut inside the block is an error, after the store was reached / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: subBlocks() (`StreamReader::readExactly()`); extract() |
 | AC7 | tests/Unit/Verifier/GifTest.php :: AC7: what the hash judges is read and left to the hash, as c2patool says (five datasets) / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: walk() (the end of the file ends the walk); src/Hash/DataHashCheck.php (unchanged) |
@@ -226,3 +271,5 @@ least one test; every source file maps back to this spec.
 | AC10 | tests/Unit/Verifier/GifTest.php :: AC10: the bounds apply before memory is spent / SPEC-059 | src/Container/GifManifestStoreExtractor.php :: `MAX_BLOCKS`, `DEFAULT_MAX_STORE_LENGTH`, subBlocks() (the budget) |
 | AC11 | tests/Unit/Verifier/GifTest.php :: AC11: detection: GIF87a and GIF89a are gif, nothing else is guessed / SPEC-059 | src/Container/FormatDetector.php :: detect(); src/Verifier/Verifier.php :: verify() (the message) |
 | AC12 | tests/Unit/Verifier/GifTest.php :: AC12: the signed fixture verifies as c2patool 0.27.22 and 0.28.1 say (four datasets); AC12: a flipped image byte and a flipped store byte fail as c2patool says / SPEC-059 | src/Verifier/Verifier.php :: __construct() (`$gif`), verify() (the `gif` arm) |
+| AC13 (amendment 1) | tests/Unit/Verifier/GifTest.php :: AC13 (amendment 1): every extension is sub-blocks after its label: an empty comment is read past / SPEC-059 | — |
+| AC14 (amendment 1) | tests/Unit/Verifier/GifTest.php :: AC14 (amendment 1): 1-byte sub-blocks cost neither the time limit nor the memory / SPEC-059 | — |
