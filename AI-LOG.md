@@ -9152,3 +9152,18 @@ README are where the disclosure lives.
   `Valid` confirmed by both versions.
 - Reasoned: none beyond the amendment.
 - Decided by Maurice: none beyond amendment 1.
+
+## 2026-10-06 — The check before 0.4.0, and the release commit (step 262)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "maar kan tif er niet bij?"; "En tiff wordt niet zoveel gebruikt,
+  toch?"; "akkoord, bereid v0.4.0 voor".
+- Produced: CHANGELOG `0.4.0 — 2026-10-06`; README (`v0.4.0`, coming from
+  `0.3.x`, the fuzzing figure); `docs/comparison.md` (the fuzzing
+  figures); `notes/step-262-pre-release-0.4.0.md`; a row in `NOTES.md`.
+- Measured: `bin/spec-check.php`; `composer check` (833) and CI run
+  37438432594; `bin/api-check.php` and `git diff v0.3.0` on the recorded
+  surface and `StatusCode`; `bin/package-check.php`; the same fuzz seed
+  under a `v0.3.0` worktree and this tree (16,041 runs each, the same 118
+  `Valid`, each `Valid` in both `c2patool` versions).
+- Reasoned: that TIFF is rare on the web and in WordPress (not measured).
+- Decided by Maurice: 0.4.0 carries GIF; TIFF waits until asked.

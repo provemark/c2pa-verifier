@@ -5,17 +5,28 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.4.0 — 2026-10-06
+
+One new format, GIF, read and verified like the others and measured
+against `c2patool` 0.27.22 and 0.28.1; verifying a manifest that is
+checked more than once is faster. The recorded API surface is unchanged;
+the report's `format` has a new value and the `Verifier` constructor a new
+last parameter, so this is a minor version: a caller on `^0.3` keeps 0.3.0
+until it asks for `^0.4`.
 
 ### Added
 - **GIF (SPEC-059).** A GIF whose manifest store sits in a `C2PA_GIF`
   Application Extension (C2PA 2.4 §A.3.8) is read and verified like the
   other formats; `format` is `gif`. The blocks before the first image are
-  walked, the block is recognised by its size, identifier and version
-  `01 00 00` together, its sub-blocks are joined, and the whole block is
-  the store's range, as the exclusion `c2patool` writes. Two blocks, a
-  malformed block or a store cut short are `general.error`. Measured
-  against `c2patool` 0.27.22 and 0.28.1 over 18 variants (step 256).
+  walked, each extension as sub-blocks after its label; the block is
+  recognised by its size, identifier and version `01 00 00` together, its
+  sub-blocks are joined, and the whole block is the store's range, as the
+  exclusion `c2patool` writes. Two blocks (an empty one counts), a
+  malformed block, more than 4,096 blocks before the first image or a
+  store cut short are `general.error`. Measured against `c2patool` 0.27.22
+  and 0.28.1 over 21 variants and five more GIF shapes signed by both
+  (steps 256–261). The `Verifier` constructor takes the GIF reader as its
+  new last parameter (SPEC-013 amendment 22).
 
 ### Changed
 - Verifying is faster where a manifest is checked more than once: its

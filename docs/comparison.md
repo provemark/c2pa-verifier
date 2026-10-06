@@ -204,13 +204,14 @@ without an anchor — 34 corpus files, informational, no verdict changes.
 - Test anchors and anchors cut from tokens. The production C2PA trust
   lists were used once, as a measurement (step 113): two corpus files
   reach an official anchor. The project does not bundle or fetch them.
-- Fuzzing before every release (`bin/fuzz.php`): before 0.3.0, 16 041
-  randomly mutated files over 295 corpus files, WAV, MP3, FLAC and AVI and
-  the files of other writers included, every report also written as JSON,
-  without an escaping exception (step 249); the 118 mutations that stayed
-  `Valid` were confirmed `Valid` by `c2patool` 0.27.22 and 0.28.1. The same seed over the formats 0.2.9 already read
-  leaves exactly the same 66 files `Valid` under 0.2.9 and 0.3.0 (step
-  243). Before 0.2.8, the same check found SPEC-052's fixed fault again on
+- Fuzzing before every release (`bin/fuzz.php`): before 0.4.0, 17 109
+  randomly mutated files over 317 corpus files, GIF included, every report
+  also written as JSON, without an escaping exception (step 261); the 127
+  mutations that stayed `Valid` were confirmed `Valid` by `c2patool`
+  0.27.22 and 0.28.1, as were the 471 of 47 340 GIF-focused runs. The same
+  seed over the formats 0.3.0 already read leaves exactly the same 118
+  files `Valid` under 0.3.0 and 0.4.0 (step 262); between 0.2.9 and 0.3.0
+  it was 66 (step 243). Before 0.2.8, the same check found SPEC-052's fixed fault again on
   its own (step 194).
 - Two wrong `Valid`s found by the absence audit and closed (see
   `SECURITY.md`); the method is now part of every spec.
