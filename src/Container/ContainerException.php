@@ -13,8 +13,8 @@ namespace Provemark\C2paVerifier\Container;
  * store when the container failed (SPEC-003 amendment 3, AC18). The
  * verifier reports a manifest only then (SPEC-013 amendment 16). Every
  * extractor sets it, JPEG, PNG, ISOBMFF, RIFF and ID3 alike (SPEC-013
- * amendments 16 to 18); the default `true` is what a fault outside an
- * extractor's walk reports.
+ * amendments 16 to 18), through withStoreReached() around its walk; the
+ * default `true` is what a fault outside an extractor's walk reports.
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
  * removed in any release; the contract is the nine classes named in the README.
@@ -29,5 +29,15 @@ final class ContainerException extends \RuntimeException
         public readonly bool $storeReached = true,
     ) {
         parent::__construct($message, $code, $previous);
+    }
+
+    /**
+     * This fault, saying whether the store had been reached: itself when it already
+     * says so, else a new fault with the same message and this one as its cause.
+     * The one place an extractor's walk turns what it had seen into the flag (step 253).
+     */
+    public function withStoreReached(bool $reached): self
+    {
+        return $this->storeReached === $reached ? $this : new self($this->getMessage(), previous: $this, storeReached: $reached);
     }
 }

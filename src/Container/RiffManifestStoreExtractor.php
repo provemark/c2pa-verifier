@@ -109,7 +109,7 @@ final readonly class RiffManifestStoreExtractor
             $fileEnd = $reader->end();
         } catch (ContainerException $e) {
             // a stream that cannot be measured is a fault before any C2PA chunk (SPEC-003 AC18, step 217)
-            throw new ContainerException($e->getMessage(), previous: $e, storeReached: false);
+            throw $e->withStoreReached(false);
         }
         if ($size[1] > $fileEnd - 8) {
             // still a fault, but a file cut short after its C2PA chunk header is a manifest that
@@ -134,7 +134,7 @@ final readonly class RiffManifestStoreExtractor
         try {
             $this->walk($reader, $end, $where, $store, $storeOffset, $reached);
         } catch (ContainerException $e) {
-            throw $e->storeReached === $reached ? $e : new ContainerException($e->getMessage(), previous: $e, storeReached: $reached);
+            throw $e->withStoreReached($reached);
         }
 
         if ($store === null || $storeOffset === null) {

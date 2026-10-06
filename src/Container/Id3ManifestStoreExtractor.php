@@ -97,7 +97,7 @@ final readonly class Id3ManifestStoreExtractor
         try {
             return $this->walk($stream, $reached);
         } catch (ContainerException $e) {
-            throw $e->storeReached === $reached ? $e : new ContainerException($e->getMessage(), previous: $e, storeReached: $reached);
+            throw $e->withStoreReached($reached);
         }
     }
 

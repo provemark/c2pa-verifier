@@ -9001,3 +9001,18 @@ README are where the disclosure lives.
   check` (exit 0, 802 tests).
 - Reasoned: none.
 - Decided by Maurice: amendment 3.
+
+## 2026-10-06 — `storeReached` in one place (step 253)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, begin met stap 1"; "akkoord, voer stap 253 uit".
+- Produced: `ContainerException::withStoreReached()`; the six rewraps in
+  the JPEG, PNG, ISOBMFF, RIFF and ID3 extractors replaced by it; the
+  class docblock; `tests/Unit/Container/ContainerExceptionTest.php`;
+  SPEC-013's Traceability; `notes/step-253-store-reached-once.md`; a row in
+  `NOTES.md`.
+- Measured: the new test red, then green; PHPStan; `composer check` (803);
+  the corpus against step 249 (0 of 1,400 moved); the release set fuzzed
+  with seed 20261005 (16,041 runs, 0 faults, the same 118 `Valid`).
+- Reasoned: that a method on the fault suits walks of different shapes
+  better than a callback.
+- Decided by Maurice: the clean-up, step by step; this step as proposed.
