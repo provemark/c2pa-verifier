@@ -9068,3 +9068,16 @@ README are where the disclosure lives.
   same, `composer check` exit 0.
 - Reasoned: what a GIF spec needs (see the note).
 - Decided by Maurice: measure GIF first.
+
+## 2026-10-06 — SPEC-059 (GIF) drafted (step 257)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf SPEC-059 als draft en push".
+- Produced: `specs/SPEC-059-gif.md` (draft): twelve criteria from step
+  256's measurement, an API sketch, four open questions; a row in
+  `NOTES.md`.
+- Measured: none new; every criterion cites step 256's recorded answers
+  (`tests/Fixtures/gif/README.md`).
+- Reasoned: the reader's shape (stop at the first image descriptor; the
+  block recognised by size, identifier and version), and the proposals in
+  the open questions.
+- Decided by Maurice: draft SPEC-059. Approval waits for him.
