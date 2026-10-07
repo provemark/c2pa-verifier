@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-07                      |
 | Supersedes | —                                                 |
@@ -269,17 +269,17 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1 | tests/Unit/Verifier/PlainTextTest.php :: AC1: the fixture yields the store, byte-exact, with the wrapper as its range / SPEC-060 | — |
-| AC2 | tests/Unit/Verifier/PlainTextTest.php :: AC2: text off is today\ / SPEC-060 | — |
-| AC3 | tests/Unit/Verifier/PlainTextTest.php :: AC3: no wrapper is no manifest / SPEC-060 | — |
-| AC4 | tests/Unit/Verifier/PlainTextTest.php :: AC4: another version is not a wrapper / SPEC-060 | — |
-| AC5 | tests/Unit/Verifier/PlainTextTest.php :: AC5: two wrappers are an error (stricter than the oracle, named) / SPEC-060 | — |
-| AC6 | tests/Unit/Verifier/PlainTextTest.php :: AC6: a wrapper whose store does not fit is an error (stricter than the oracle, named) / SPEC-060 | — |
-| AC7 | tests/Unit/Verifier/PlainTextTest.php :: AC7: a candidate that is not version 1 is skipped, as the oracle does / SPEC-060 | — |
-| AC8 | tests/Unit/Verifier/PlainTextTest.php :: AC8: what the hash judges is read and left to the hash, as the oracle says / SPEC-060 | — |
-| AC9 | tests/Unit/Verifier/PlainTextTest.php :: AC9: the range is the wrapper, from the marker to the end of the run / SPEC-060 | — |
-| AC10 | tests/Unit/Verifier/PlainTextTest.php :: AC10: text that is not UTF-8 is not text; AC10: a valid sequence across two pieces is text / SPEC-060 | — |
-| AC11 | tests/Unit/Verifier/PlainTextTest.php :: AC11: selectors that belong to the text are not a wrapper / SPEC-060 | — |
-| AC12 | tests/Unit/Verifier/PlainTextTest.php :: AC12: the bounds apply before memory is spent; AC12: a large text without a wrapper is read in pieces / SPEC-060 | — |
-| AC13 | tests/Unit/Verifier/PlainTextTest.php :: AC13: the other formats come first / SPEC-060 | — |
-| AC14 | tests/Unit/Verifier/PlainTextTest.php :: AC14: the signed fixtures verify as the oracle says; AC14: a changed letter and a flipped signature byte fail as the oracle says / SPEC-060 | — |
+| AC1 | tests/Unit/Verifier/PlainTextTest.php :: AC1: the fixture yields the store, byte-exact, with the wrapper as its range / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: scan(), wrapper(); src/Container/SelectorReader.php :: nextMarker(), selectors() |
+| AC2 | tests/Unit/Verifier/PlainTextTest.php :: AC2: text off is today\ / SPEC-060 | src/Verifier/Verifier.php :: __construct() (`$text` null by default), verify() |
+| AC3 | tests/Unit/Verifier/PlainTextTest.php :: AC3: no wrapper is no manifest / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: scan() (a candidate without the magic is text) |
+| AC4 | tests/Unit/Verifier/PlainTextTest.php :: AC4: another version is not a wrapper / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: scan() (`VERSION`) |
+| AC5 | tests/Unit/Verifier/PlainTextTest.php :: AC5: two wrappers are an error (stricter than the oracle, named) / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: scan() (two wrappers) |
+| AC6 | tests/Unit/Verifier/PlainTextTest.php :: AC6: a wrapper whose store does not fit is an error (stricter than the oracle, named) / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: wrapper() (the run shorter than the length), scan() (the LBox) |
+| AC7 | tests/Unit/Verifier/PlainTextTest.php :: AC7: a candidate that is not version 1 is skipped, as the oracle does / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: scan() (`continue` past a candidate of another version) |
+| AC8 | tests/Unit/Verifier/PlainTextTest.php :: AC8: what the hash judges is read and left to the hash, as the oracle says / SPEC-060 | src/Hash/DataHashCheck.php (unchanged); src/Container/PlainTextManifestStoreExtractor.php (no normalisation) |
+| AC9 | tests/Unit/Verifier/PlainTextTest.php :: AC9: the range is the wrapper, from the marker to the end of the run / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: wrapper() (the range); src/Container/SelectorReader.php :: skipSelectors(), offset() |
+| AC10 | tests/Unit/Verifier/PlainTextTest.php :: AC10: text that is not UTF-8 is not text; AC10: a valid sequence across two pieces is text / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: isText(), completeLength(); src/Verifier/Verifier.php :: verify() |
+| AC11 | tests/Unit/Verifier/PlainTextTest.php :: AC11: selectors that belong to the text are not a wrapper / SPEC-060 | src/Container/SelectorReader.php :: selector() (the two ranges only) |
+| AC12 | tests/Unit/Verifier/PlainTextTest.php :: AC12: the bounds apply before memory is spent; AC12: a large text without a wrapper is read in pieces / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: `DEFAULT_MAX_STORE_LENGTH`, `PIECE`, wrapper() (the bound, the budget, the padding); src/Container/SelectorReader.php :: fill() |
+| AC13 | tests/Unit/Verifier/PlainTextTest.php :: AC13: the other formats come first / SPEC-060 | src/Verifier/Verifier.php :: verify() (text only after `FormatDetector` answers null) |
+| AC14 | tests/Unit/Verifier/PlainTextTest.php :: AC14: the signed fixtures verify as the oracle says; AC14: a changed letter and a flipped signature byte fail as the oracle says / SPEC-060 | src/Verifier/Verifier.php :: verify() (the `text` arm) |

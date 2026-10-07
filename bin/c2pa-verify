@@ -12,4 +12,7 @@ foreach ([__DIR__.'/../vendor/autoload.php', __DIR__.'/../../../autoload.php'] a
     }
 }
 
-exit((new Provemark\C2paVerifier\Cli\Command(new Provemark\C2paVerifier\Verifier\Verifier))->run(array_slice($argv, 1), STDOUT, STDERR));
+// the second verifier reads plain text too, for `--text` (SPEC-019 amendment 3, SPEC-060)
+$text = new Provemark\C2paVerifier\Verifier\Verifier(text: new Provemark\C2paVerifier\Container\PlainTextManifestStoreExtractor);
+
+exit((new Provemark\C2paVerifier\Cli\Command(new Provemark\C2paVerifier\Verifier\Verifier, $text))->run(array_slice($argv, 1), STDOUT, STDERR));

@@ -10,7 +10,7 @@ use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\Verifier;
 
 /**
- * The command line (SPEC-019): `c2pa-verify [--settings <path>] [--] <file>`.
+ * The command line (SPEC-019): `c2pa-verify [--settings <path>] [--text] [--] <file>`.
  *
  * A thin shell around the public API. Standard output carries exactly
  * `VerificationReport::toJson()` plus one newline and nothing else, ever;
@@ -28,13 +28,15 @@ use Provemark\C2paVerifier\Verifier\Verifier;
  */
 final readonly class Command
 {
-    public const string USAGE = "Usage: c2pa-verify [--settings <path>] [--] <file>\n"
+    public const string USAGE = "Usage: c2pa-verify [--settings <path>] [--text] [--] <file>\n"
         ."  Prints the verification report as JSON on standard output.\n"
         ."  --settings <path>  trust settings in c2patool's JSON shape (anchors, EKUs, allowed list)\n"
+        ."  --text             also read plain text (C2PA 2.4 §A.8; experimental upstream, off by default)\n"
         ."  --help             this text\n"
         ."  Exit status: 0 Trusted or Valid, 1 Invalid, 2 no report (usage, unreadable file or settings).\n";
 
-    public function __construct(private Verifier $verifier) {}
+    /** @param  Verifier|null  $textVerifier  the verifier with text on, for `--text` (SPEC-019 amendment 3); the shim passes it */
+    public function __construct(private Verifier $verifier, private ?Verifier $textVerifier = null) {}
 
     /**
      * @param  list<string>  $arguments  argv without the program name
@@ -47,6 +49,7 @@ final readonly class Command
         // 1. the arguments: four cases, no short options, no repeats
         $file = null;
         $settingsPath = null;
+        $text = false;
         $optionsEnded = false;
         for ($i = 0, $n = count($arguments); $i < $n; $i++) {
             $argument = $arguments[$i];
@@ -75,6 +78,14 @@ final readonly class Command
 
                 continue;
             }
+            if (! $optionsEnded && $argument === '--text') {
+                if ($text) {
+                    return $this->usage($stderr, '--text given twice');
+                }
+                $text = true;
+
+                continue;
+            }
             if (! $optionsEnded && str_starts_with($argument, '-') && $argument !== '-') {
                 return $this->usage($stderr, sprintf('unknown option %s', $argument));
             }
@@ -85,6 +96,16 @@ final readonly class Command
         }
         if ($file === null) {
             return $this->usage($stderr, 'no file given');
+        }
+
+        $verifier = $this->verifier;
+        if ($text) {
+            if ($this->textVerifier === null) {
+                fwrite($stderr, "Error: --text: this command was made without the text reader\n");
+
+                return 2;
+            }
+            $verifier = $this->textVerifier;
         }
 
         // 2. the settings, before the file: the caller asked for trust and gets it or a refusal
@@ -121,7 +142,7 @@ final readonly class Command
 
         // 4. the report, and the verdict as the exit status
         try {
-            $report = $this->verifier->verify($stream, $settings);
+            $report = $verifier->verify($stream, $settings);
         } finally {
             fclose($stream);
         }

@@ -35,7 +35,8 @@ PHP, compiled to WebAssembly; your file never leaves your device.
 > tool.
 
 It reads the manifest store out of a JPEG, PNG, GIF, WebP, WAV, AVI, MP3, FLAC or ISOBMFF file
-(MP4, MOV, AVIF and HEIC, each held by a fixture here), checks the claim
+(MP4, MOV, AVIF and HEIC, each held by a fixture here), and out of plain
+text when you turn that on ([Plain text](#plain-text-opt-in)), checks the claim
 signature, the hash binding to the asset, the certificate chain against a
 trust list you supply, and the RFC 3161 timestamp, and returns a verdict that
 means the same as [`c2patool`](https://github.com/contentauth/c2pa-rs)'s —
@@ -177,6 +178,26 @@ settings that cannot be read or are not trust settings — one `Error: …`
 line on standard error). Two deliberate differences from `c2patool`: it
 exits 0 on an `Invalid` report, and it silently ignores a `--settings`
 file that does not exist; both are fail-open (SPEC-019).
+
+### Plain text (opt-in)
+
+Text can carry Content Credentials too: C2PA 2.4 §A.8 appends the store to
+the text as invisible Unicode variation selectors. It is experimental in
+`c2pa-rs` (behind the `unstable_plain_text` feature, not in a stock
+`c2patool`), so here it is off unless you turn it on:
+
+```php
+$verifier = new Verifier(text: new PlainTextManifestStoreExtractor);
+```
+
+```sh
+bin/c2pa-verify --text article.txt
+```
+
+With text on, a file no other format claims and that is valid UTF-8 is read
+as `text`. The text is hashed byte for byte, without Unicode normalisation,
+as `c2pa-rs` verifies it; a text whose punctuation or line ends were changed
+is `Invalid` (SPEC-060).
 
 ## Trying it, and what to send back
 

@@ -9238,3 +9238,20 @@ README are where the disclosure lives.
   unclaimed valid UTF-8 stream; a length that does not fit and two wrappers
   refused; no NFC; the amendments of SPEC-013, -019, -024 with the build);
   amendment 1.
+
+## 2026-10-07 — Plain text built (step 268)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, begin met de bouw".
+- Produced: `src/Container/PlainTextManifestStoreExtractor.php`,
+  `src/Container/SelectorReader.php`; changes to `src/Verifier/Verifier.php`,
+  `src/Cli/Command.php`, `bin/c2pa-verify`, `bin/fuzz.php`; tests for SPEC-019
+  amendment 3 and the SPEC-024 constant; SPEC-060 implemented with its
+  Traceability; amendments SPEC-013 23, SPEC-019 3, SPEC-024 6; README,
+  `docs/comparison.md`, `SECURITY.md`, `composer.json`, CHANGELOG;
+  `notes/step-268-text-built.md`; rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: `composer check` (899 passed); SPEC-019's new tests red with the
+  command's change stashed; the corpus script against the step-260 baseline
+  (0 of 1,446 moved); `bin/fuzz.php 20261005 50` and three text seeds of
+  400 rounds, every `Valid` put to `c2patool` (0.27.22 and 0.28.1, or the
+  text build for text).
+- Decided by Maurice: none beyond SPEC-060's approved decisions.

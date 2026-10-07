@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Provemark\C2paVerifier\Cli\Command;
+use Provemark\C2paVerifier\Container\PlainTextManifestStoreExtractor;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\Verifier;
@@ -209,7 +210,7 @@ test('settings that are not trust settings: no report, exit 2, SPEC-014\'s messa
 // AC9
 test('usage faults: exit 2 with the fault and the usage on stderr; --help: exit 0 with the usage on stdout', function (): void {
     $file = spec019Fixture('fixture-signed.png');
-    $usage = 'Usage: c2pa-verify [--settings <path>] [--] <file>';
+    $usage = 'Usage: c2pa-verify [--settings <path>] [--text] [--] <file>';   // amendment 3: --text
 
     foreach ([
         'no arguments' => [],
@@ -347,4 +348,64 @@ it('AC13: a file whose assertion holds NaN and Infinity gets its report, exit 1,
     expect($status)->toBe(1)
         ->and(spec019State($stdout))->toBe('Invalid')
         ->and($stderr)->toBe('');
+})->group('SPEC-019');
+
+/** @return array{int, string, string} exit status, stdout, stderr — the command as the shim makes it, text reader included */
+function spec019RunWithText(string ...$arguments): array
+{
+    $out = fopen('php://memory', 'w+b');
+    $err = fopen('php://memory', 'w+b');
+    if ($out === false || $err === false) {
+        throw new RuntimeException('cannot open php://memory');
+    }
+    $text = new Verifier(text: new PlainTextManifestStoreExtractor);
+    $status = (new Command(new Verifier, $text))->run(array_values($arguments), $out, $err);
+    rewind($out);
+    rewind($err);
+
+    return [$status, (string) stream_get_contents($out), (string) stream_get_contents($err)];
+}
+
+it('AC14: --text reads plain text, and without it a text is unknown (amendment 3, SPEC-060)', function (): void {
+    $file = spec019Fixture('fixture-signed.txt');
+    $stream = fopen($file, 'rb') ?: throw new RuntimeException('cannot open the fixture');
+    $expected = (new Verifier(text: new PlainTextManifestStoreExtractor))->verify($stream)->toJson()."\n";
+
+    [$on, $onOut, $onErr] = spec019RunWithText('--text', $file);
+    [$off, $offOut] = spec019RunWithText($file);
+    /** @var array<string, mixed> $offReport */
+    $offReport = json_decode($offOut, true, 512, JSON_THROW_ON_ERROR);
+
+    expect($on)->toBe(0)
+        ->and($onOut)->toBe($expected)
+        ->and($onErr)->toBe('')
+        ->and(spec019State($onOut))->toBe('Valid')
+        ->and($off)->toBe(1)
+        ->and($offReport['format'])->toBe('unknown');
+})->group('SPEC-019');
+
+it('AC14: --text twice is a usage fault, and a command made without the text reader refuses --text (amendment 3)', function (): void {
+    [$twice, , $twiceErr] = spec019RunWithText('--text', '--text', spec019Fixture('fixture-signed.txt'));
+    [$without, $withoutOut, $withoutErr] = spec019Run('--text', spec019Fixture('fixture-signed.txt'));
+
+    expect($twice)->toBe(2)
+        ->and($twiceErr)->toContain('--text given twice')
+        ->and($without)->toBe(2)
+        ->and($withoutOut)->toBe('')
+        ->and($withoutErr)->toStartWith('Error: --text');
+})->group('SPEC-019');
+
+it('AC14: the executable reads plain text with --text (amendment 3)', function (): void {
+    $process = proc_open([PHP_BINARY, dirname(__DIR__, 3).'/bin/c2pa-verify', '--text', spec019Fixture('fixture-signed.txt')], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    if ($process === false) {
+        throw new RuntimeException('cannot start the process');
+    }
+    $out = (string) stream_get_contents($pipes[1]);
+    $err = (string) stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+
+    expect(proc_close($process))->toBe(0)
+        ->and(spec019State($out))->toBe('Valid')
+        ->and($err)->toBe('');
 })->group('SPEC-019');

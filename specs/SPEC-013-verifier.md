@@ -618,6 +618,18 @@ final class ManifestException extends \RuntimeException
 
     Approved with SPEC-059 (its open question 4) by Maurice van Loon,
     2026-10-06.
+23. **2026-10-07, step 268, with SPEC-060's implementation** — the
+    `Verifier` constructor gains `?PlainTextManifestStoreExtractor $text`
+    as its last parameter, `null` by default: text off, every report as
+    before (SPEC-060 AC2). With text on, a stream `FormatDetector` does not
+    claim and that is valid UTF-8 is read as text, and the report's
+    `format` is `text`. The unknown-format message is unchanged. No
+    existing file changes verdict.
+
+    **Weight B: a new value in the report, only when the caller asks.**
+
+    Approved with SPEC-060 (its open question 6) by Maurice van Loon,
+    2026-10-07.
 
 ## Traceability
 

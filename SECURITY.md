@@ -37,7 +37,8 @@ There is no bug bounty.
 
 Verified: the manifest store's extraction (JPEG APP11, PNG `caBX`, the GIF
 `C2PA_GIF` Application Extension, the RIFF `C2PA` chunk of WebP, WAV and AVI, the ID3v2 GEOB frame of MP3 and FLAC, and the
-ISOBMFF `uuid` box of MP4, MOV, AVIF and HEIC), JUMBF and
+ISOBMFF `uuid` box of MP4, MOV, AVIF and HEIC, and, when the caller turns
+text on, the `C2PATextManifestWrapper` of a plain text), JUMBF and
 CBOR structure with bounds, claim v1/v2 syntax, the COSE_Sign1 signature
 under the leaf certificate, the hashed URI of every assertion the claim
 names, the hard binding over the asset — `c2pa.hash.data` and, for

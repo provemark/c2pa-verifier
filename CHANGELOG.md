@@ -5,6 +5,20 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Added
+
+- **Plain text, opt-in** (SPEC-060; C2PA 2.4 §A.8): a text that carries its
+  manifest store as invisible Unicode variation selectors is read and
+  verified when the caller turns text on — `new Verifier(text: new
+  PlainTextManifestStoreExtractor)`, or `c2pa-verify --text`. Off by
+  default: the scheme is experimental in `c2pa-rs` and stock `c2patool`
+  does not read it. Measured against `c2patool` 0.28.1 built with
+  `unstable_plain_text` (step 265). The report's `format` has a new value,
+  `text`, only when text is on; the `Verifier` constructor has a new last
+  parameter, `null` by default, and `Cli\Command` an optional second one.
+
 ## 0.4.0 — 2026-10-06
 
 One new format, GIF, read and verified like the others and measured

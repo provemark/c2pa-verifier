@@ -28,6 +28,7 @@ use Provemark\C2paVerifier\Container\AviManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\GifManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\Id3ManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
+use Provemark\C2paVerifier\Container\PlainTextManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WavManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
@@ -44,12 +45,12 @@ $out = $argv[3] ?? sys_get_temp_dir().'/c2pa-fuzz';
 $paths = array_slice($argv, 4);
 if ($paths === []) {
     $root = dirname(__DIR__).'/tests/Fixtures';
-    $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp', $root.'/fixture-signed.mp4', $root.'/fixture-signed.wav', $root.'/wav', $root.'/wav-writers', $root.'/fixture-signed.mp3', $root.'/mp3', $root.'/fixture-signed.flac', $root.'/flac', $root.'/fixture-signed.avi', $root.'/avi', $root.'/fixture-signed.gif', $root.'/gif'];   // MP4 and WAV since step 213, MP3 228, FLAC 237, AVI 241, GIF 259
+    $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp', $root.'/fixture-signed.mp4', $root.'/fixture-signed.wav', $root.'/wav', $root.'/wav-writers', $root.'/fixture-signed.mp3', $root.'/mp3', $root.'/fixture-signed.flac', $root.'/flac', $root.'/fixture-signed.avi', $root.'/avi', $root.'/fixture-signed.gif', $root.'/gif', $root.'/fixture-signed.txt', $root.'/text'];   // MP4 and WAV since step 213, MP3 228, FLAC 237, AVI 241, GIF 259, plain text 268
 }
 $files = [];
 foreach ($paths as $path) {
     if (is_dir($path)) {
-        foreach (glob($path.'/*.{jpg,jpeg,png,gif,webp,wav,avi,mp3,flac}', GLOB_BRACE) ?: [] as $file) {
+        foreach (glob($path.'/*.{jpg,jpeg,png,gif,webp,wav,avi,mp3,flac,txt}', GLOB_BRACE) ?: [] as $file) {
             $files[] = $file;
         }
     } elseif (is_file($path)) {
@@ -62,6 +63,7 @@ if (! is_dir($out)) {
 }
 mt_srand($seed);
 $verifier = new Verifier;
+$textVerifier = new Verifier(text: new PlainTextManifestStoreExtractor);   // for .txt files only, so the other files' runs are as before (step 268)
 
 /** @return list<array{start: int, length: int}> the manifest store's byte ranges in the file, or [] */
 function fuzzStoreRanges(string $file): array
@@ -74,6 +76,7 @@ function fuzzStoreRanges(string $file): array
         $head = (string) fread($stream, 12);
         rewind($stream);
         $store = match (true) {
+            str_ends_with($file, '.txt') => (new PlainTextManifestStoreExtractor)->extract($stream),   // step 268: text has no magic
             str_starts_with($head, "\xFF\xD8") => (new JpegManifestStoreExtractor)->extract($stream),
             str_starts_with($head, "\x89PNG") => (new PngManifestStoreExtractor)->extract($stream),
             str_starts_with($head, 'GIF87a'), str_starts_with($head, 'GIF89a') => (new GifManifestStoreExtractor)->extract($stream),   // as FormatDetector (SPEC-059 amendment 1 E)
@@ -190,7 +193,7 @@ foreach ($files as $file) {
         $t = microtime(true);
         $name = basename($file).'#'.$seed.'-'.$round.'-'.$kind;
         try {
-            $report = $verifier->verify($stream);
+            $report = (str_ends_with($file, '.txt') ? $textVerifier : $verifier)->verify($stream);
             $report->toJson();   // a report that cannot be written is a fault too (step 247: a NaN in an assertion)
             $state = $report->result->state;
             $states[$state->value] = ($states[$state->value] ?? 0) + 1;

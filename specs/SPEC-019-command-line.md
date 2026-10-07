@@ -369,6 +369,24 @@ files could disagree and the command would have to pick one.
 
    Approved by Maurice van Loon, 2026-10-05 (step 247).
 
+3. **2026-10-07, step 268, with SPEC-060's implementation** — plain text
+   is opt-in in the library (SPEC-060 open question 1), so the command
+   gains a flag to turn it on.
+
+   - **AC14 (new) — `--text` reads plain text.** Given
+     `fixture-signed.txt`: with `--text`, exit 0 and the report of a
+     `Verifier` with text on, byte for byte; without it, exit 1 and
+     `format` `unknown`, as before. `--text` twice is a usage fault (exit
+     2). `Command` takes the verifier with text on as an optional second
+     constructor argument, which the shim passes; a command made without
+     it answers `--text` with one `Error: …` line and exit 2. The `Cli`
+     layer's dependencies are unchanged: the shim, not the command, names
+     the text reader. The usage line names the flag: `Usage: c2pa-verify
+     [--settings <path>] [--text] [--] <file>` (AC9's test follows it).
+
+   Approved with SPEC-060 (its open question 6) by Maurice van Loon,
+   2026-10-07.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -391,3 +409,4 @@ least one test; every source file maps back to this spec.
 
 Every file under `src/Cli/` maps to this spec; `bin/c2pa-verify` is its shim; `deptrac.yaml`'s `Cli` layer (→ Verifier, Trust, Report, Support) and `composer.json`'s `bin` entry are its configuration. Measured 2026-09-22: 12 red → 12 green, `composer check` exit 0, 314 tests.
 | AC13 | tests/Unit/Cli/CommandTest.php :: AC13: a file whose assertion holds NaN and Infinity gets its report, exit 1, nothing on stderr (amendment 2, step 247) / SPEC-019 | src/Manifest/ManifestStore.php :: plain(); src/Cli/Command.php :: run() (a `JsonException` is exit 2) |
+| AC14 | tests/Unit/Cli/CommandTest.php :: AC14: --text reads plain text, and without it a text is unknown (amendment 3, SPEC-060); AC14: --text twice is a usage fault, and a command made without the text reader refuses --text (amendment 3); AC14: the executable reads plain text with --text (amendment 3) / SPEC-019 | src/Cli/Command.php :: run() (`--text`), __construct() (`$textVerifier`); bin/c2pa-verify |

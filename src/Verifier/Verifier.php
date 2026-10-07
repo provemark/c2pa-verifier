@@ -13,6 +13,7 @@ use Provemark\C2paVerifier\Container\Id3ManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\IsobmffManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\ManifestStoreBytes;
+use Provemark\C2paVerifier\Container\PlainTextManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\RemoteManifestDetector;
 use Provemark\C2paVerifier\Container\WavManifestStoreExtractor;
@@ -92,6 +93,8 @@ final readonly class Verifier
         private AviManifestStoreExtractor $avi = new AviManifestStoreExtractor,
         // SPEC-059: last, for the same reason
         private GifManifestStoreExtractor $gif = new GifManifestStoreExtractor,
+        // SPEC-060: last, for the same reason; null is text off, the default (open question 1)
+        private ?PlainTextManifestStoreExtractor $text = null,
     ) {}
 
     /**
@@ -102,6 +105,9 @@ final readonly class Verifier
     {
         // 1. the format
         $format = $this->formats->detect($stream);
+        if ($format === null && $this->text?->isText($stream) === true) {
+            $format = 'text';   // SPEC-060: with text on, a stream no other format claims and that is valid UTF-8
+        }
         if ($format === null) {
             $head = $this->formats->head($stream);
 
@@ -116,6 +122,7 @@ final readonly class Verifier
                 'jpeg' => $this->jpeg->extract($stream),
                 'png' => $this->png->extract($stream),
                 'gif' => $this->gif->extract($stream),   // SPEC-059
+                'text' => $this->text->extract($stream),   // SPEC-060: only reached with text on
                 'webp' => $this->webp->extract($stream),
                 'wav' => $this->wav->extract($stream),   // SPEC-055
                 'avi' => $this->avi->extract($stream),   // SPEC-058
