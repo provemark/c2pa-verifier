@@ -9198,3 +9198,17 @@ README are where the disclosure lives.
   documents naming AVI but not GIF; `composer validate --strict`;
   `composer check`.
 - Decided by Maurice: none.
+
+## 2026-10-07 — Plain text measured (step 265)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, begin met de meting van tekst", after the step was explained
+  ("akkoord").
+- Produced: `bin/make-text-variants.php`; `tests/Fixtures/fixture-unsigned.txt`,
+  `fixture-signed.txt`, `fixture-signed-txt.manifest.json`;
+  `tests/Fixtures/text/` (two signed-from-NFD files, 20 variants, README);
+  `notes/step-265-text-measured.md`; a line in `tests/Fixtures/README.md`; a
+  row in `NOTES.md`.
+- Measured: every file with `c2patool` 0.28.1 built with
+  `unstable_plain_text`, with stock 0.28.1 and 0.27.22, and with
+  `bin/c2pa-verify`. Read: c2pa-rs 0.91.1 `plain_text_io.rs`.
+- Decided by Maurice: measure first, no spec yet.

@@ -44,6 +44,10 @@ What may live here:
 - **FLAC** — `fixture-unsigned.flac` (the sister repository's file,
   unchanged) and `fixture-signed.flac`, signed with c2patool 0.27.22 and the
   same certificates (step 234); variants under `flac/`.
+- **Plain text** (C2PA 2.4 §A.8) — `fixture-unsigned.txt` (written here)
+  and `fixture-signed.txt`, signed with a c2patool 0.28.1 built with the
+  experimental `unstable_plain_text` feature and the same certificates
+  (step 265); variants under `text/`. A stock c2patool does not read text.
 
 What never lives here, in any branch, under any name: a private key. This
 project verifies only; it has no use for one. `*.key` is gitignored
