@@ -325,10 +325,38 @@ SPEC-033: ingredient references of the right relationship,
 binding. Since SPEC-034, icons in `softwareAgents`, `templates` and an
 action's `softwareAgent` are checked too, and since SPEC-037 a
 `c2pa.redacted` action's reference must resolve (as `c2patool` reads the
-rule: only an action with `parameters`). One
-obligation of C2PA 2.4 that this verifier does not meet has come up anyway,
-and is listed here so that a table built from the catalogue does not hide
-it.
+rule: only an action with `parameters`). Two
+obligations of C2PA 2.4 that this verifier does not meet have come up anyway,
+and are listed here so that a table built from the catalogue does not hide
+them.
+
+### §15.10.3.2.3 for version 1 claims — not applied, by decision
+
+> If the action’s parameters field contains no ingredients field (or
+> ingredient field for c2pa.actions), the claim shall be rejected with a
+> failure code of assertion.action.ingredientMismatch.
+
+The actions rules of §15.10.3.2.3 apply to every claim; the text names
+`c2pa.actions`, the version 1 assertion, and its `ingredient` field
+explicitly. This verifier applies SPEC-033's rules to version 2 claims only,
+as SPEC-018 and SPEC-033 decided after `c2pa-rs`, which skips them for
+version 1 claims unless `verify.strict_v1_validation` is set
+(`verify_actions` in `claim.rs`, read at 0.91.1). Where it does apply them,
+it accepts `ingredients` or the version 1 `ingredient` in either actions
+assertion, as `c2pa-rs` does; the letter of the rule names one field per
+version.
+
+Measured 2026-10-07 on
+`tests/Fixtures/writers/adobe-20260425-lightroom-classic-church.jpg`
+(Lightroom Classic 15.3: a version 1 claim whose `c2pa.actions` opens with
+`c2pa.opened` carrying `parameters.ingredients`, one hashed URI to a
+`parentOf` `c2pa.ingredient.v2`, and no `parameters.ingredient`): `Valid`
+here and in `c2patool` 0.27.22 and 0.28.1; with `strict_v1_validation`
+both `c2patool` versions say `Invalid`, but with
+`assertion.action.malformed` ("first action must be created or opened"),
+not `ingredientMismatch`. A reader that follows the letter fails it: Dawn
+Technology's fork of `c2pa-ts` (0.17.2, `653f2bf`) reports
+`assertion.action.ingredientMismatch`.
 
 ### §14.5.1.2: trust anchors tied to EKUs — gap, by decision
 

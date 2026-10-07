@@ -1,7 +1,8 @@
 # Step 193 — the fragmented stream measured again, on `c2patool` 0.28.1
 
-*2026-09-30. `c2patool` 0.28.1 (released 2026-09-28, still on `c2pa-rs`
-0.91.0), and 0.27.22 beside it; this verifier at `d3ad6a4`.*
+*2026-09-30. `c2patool` 0.28.1 (released 2026-09-28, on `c2pa-rs` 0.91.1
+as its `Cargo.lock` at the tag records; this note first said 0.91.0,
+corrected in step 272), and 0.27.22 beside it; this verifier at `d3ad6a4`.*
 
 ## Why
 

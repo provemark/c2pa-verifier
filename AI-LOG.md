@@ -9299,3 +9299,21 @@ README are where the disclosure lives.
   `composer require provemark/c2pa-verifier:^0.5`, retried every 30 s with
   an empty cache, installed `v0.5.0` at 08:16 UTC.
 - Decided by Maurice: push, tag after a green CI.
+
+## 2026-10-07 — Two records put right (step 272)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: from a session on the book: "moet er niet wat veranderen bij de
+  echte verifier vanwege die nieuwe c2patool of niet?", then "ja, werk punt
+  1 en 2 bij".
+- Produced: `notes/step-193-fragments-on-0.28.1.md` header corrected;
+  `docs/conformance.md`, "Outside the catalogue": a second obligation not
+  met, §15.10.3.2.3 for version 1 claims; `notes/step-272-oracle-version-and-v1-actions.md`;
+  a row in `NOTES.md`.
+- Measured: `bin/c2pa-verify` on the church fixture (`Valid`); `c2patool`
+  0.27.22 and 0.28.1 with and without `strict_v1_validation`;
+  `Dawn-Technology/c2pa-ts` at `653f2bf` in Node, with and without a
+  one-line fallback; `c2patool` trust sidecars by name (an empty settings
+  file beside the list). Reasoned: from `Cargo.lock` at `v0.28.0` and
+  `v0.28.1`, and from `c2pa-rs` 0.91.1 `verify_actions` and `c2patool`
+  `apply_trust_sidecars`; that the release binary used the lock.
+- Decided by Maurice: correct both records.
