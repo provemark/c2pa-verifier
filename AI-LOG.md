@@ -9222,3 +9222,19 @@ README are where the disclosure lives.
   `php bin/spec-check.php`. Read: `Verifier::__construct()` and
   `FormatDetector::detect()` (the verifier is given a stream, no file name).
 - Decided by Maurice: none yet; the spec waits for approval.
+
+## 2026-10-07 — SPEC-060 approved; amendment 1; tests red (step 267)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord met alle voorstellen" (SPEC-060's six open questions);
+  then "akkoord met beide correcties" (amendment 1).
+- Produced: `specs/SPEC-060-plain-text.md` (approved, the decisions, amendment
+  1, Traceability rows for the tests); `tests/Unit/Verifier/PlainTextTest.php`;
+  `tests/Fixtures/c2patool/text/` (four recordings and a README); rows in
+  `docs/milestones.md` and `NOTES.md`.
+- Measured: `vendor/bin/pest`: 39 failed (`PlainTextManifestStoreExtractor`
+  not found), 857 passed; `php bin/spec-check.php` OK; the oracle's JSON on
+  both signed texts, with and without `trust/full.settings.json`.
+- Decided by Maurice: every open question as proposed (opt-in; text is any
+  unclaimed valid UTF-8 stream; a length that does not fit and two wrappers
+  refused; no NFC; the amendments of SPEC-013, -019, -024 with the build);
+  amendment 1.

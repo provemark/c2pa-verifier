@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-07                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -218,28 +218,49 @@ constructor parameter: `null` is text off. The CLI gains `--text`.
    c2pa-rs keeps it behind `unstable_plain_text`. The scheme may still
    change (PR #2732, L2/26-042), and a verdict format that changes under a
    caller is worse than one the caller chose. Turning it on later is an
-   amendment; turning it off later would break callers.
+   amendment; turning it off later would break callers. **Decided by Maurice van Loon, 2026-10-07: as proposed.**
 2. **How text is recognised.** Proposal: with text on, any stream no other
    format claims and that is valid UTF-8 is `text` (AC10, AC13). The oracle
    picks the handler by the `.txt` extension; this verifier has no name.
    The consequence: with text on, an unsigned JSON or SVG file is `text`
-   without a manifest, not `unknown`. Neither can yield a wrong `Valid`.
+   without a manifest, not `unknown`. Neither can yield a wrong `Valid`. **Decided by Maurice van Loon, 2026-10-07: as proposed.**
 3. **A length field that does not fit (AC6): refuse, stricter than the
    oracle.** Proposal: yes. The oracle reads `length-too-long` `Valid`
    because its JUMBF reader ignores a byte after the box; here the store's
-   LBox must equal the declared length, as for every other format.
+   LBox must equal the declared length, as for every other format. **Decided by Maurice van Loon, 2026-10-07: as proposed.**
 4. **Two wrappers (AC5): refuse, stricter than the oracle.** Proposal: yes,
    as SPEC-059 AC4 and SPEC-003 AC7. The oracle says *No claim found*, so
    the state differs too (`Invalid` here); a text with two manifests is not
-   an unsigned text.
+   an unsigned text. **Decided by Maurice van Loon, 2026-10-07: as proposed.**
 5. **NFC: none, as the oracle.** Proposal: hash the raw bytes. Normalising
    first would say `Valid` where the oracle says `Invalid`, the dangerous
    direction, and needs `ext-intl`, which this project does not allow. If
-   c2pa-rs PR #2732 lands, measure again.
+   c2pa-rs PR #2732 lands, measure again. **Decided by Maurice van Loon, 2026-10-07: as proposed.**
 6. **Amendments this forces** (named now): SPEC-013 (the `format` value
    `text`, the constructor parameter), SPEC-019 (the `--text` flag),
    SPEC-024 (the text bound in AC1's list). Proposal: written with the
-   build.
+   build. **Decided by Maurice van Loon, 2026-10-07: as proposed.**
+
+## Amendments
+
+1. **2026-10-07, step 267, approved by Maurice van Loon** — found while
+   writing the tests, before any code.
+
+   - **A — ranges as start and length.** AC1 and AC9 wrote each range as
+     its start and end; everywhere else in this project (SPEC-059 AC1, the
+     `ranges` of `ManifestStoreBytes`) a range is its start and length.
+     The values are: AC1 `[60, 14165]`; AC9 `[60, 14165]`, `[60, 14174]`
+     and `[0, 14165]`. No behaviour changes.
+   - **B — `letter-in-run.txt` belongs to AC6, not AC3.** Its run holds the
+     magic, version 1 and a length field of 3,526, and ends after 87 store
+     bytes, at the `x`: a wrapper whose store does not fit, as
+     `cut-in-store.txt`. Now an error, `hasManifest` true, `general.error`
+     (the oracle: *No claim found*; stricter, named, as AC6).
+     - **AC3 now** — without `text/letter-in-run.txt`.
+     - **AC6 now also** — given `text/letter-in-run.txt`: a
+       `ContainerException` naming 3,526 and 87.
+
+   Approved by Maurice van Loon, 2026-10-07 (step 267).
 
 ## Traceability
 
@@ -248,3 +269,17 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
+| AC1 | tests/Unit/Verifier/PlainTextTest.php :: AC1: the fixture yields the store, byte-exact, with the wrapper as its range / SPEC-060 | — |
+| AC2 | tests/Unit/Verifier/PlainTextTest.php :: AC2: text off is today\ / SPEC-060 | — |
+| AC3 | tests/Unit/Verifier/PlainTextTest.php :: AC3: no wrapper is no manifest / SPEC-060 | — |
+| AC4 | tests/Unit/Verifier/PlainTextTest.php :: AC4: another version is not a wrapper / SPEC-060 | — |
+| AC5 | tests/Unit/Verifier/PlainTextTest.php :: AC5: two wrappers are an error (stricter than the oracle, named) / SPEC-060 | — |
+| AC6 | tests/Unit/Verifier/PlainTextTest.php :: AC6: a wrapper whose store does not fit is an error (stricter than the oracle, named) / SPEC-060 | — |
+| AC7 | tests/Unit/Verifier/PlainTextTest.php :: AC7: a candidate that is not version 1 is skipped, as the oracle does / SPEC-060 | — |
+| AC8 | tests/Unit/Verifier/PlainTextTest.php :: AC8: what the hash judges is read and left to the hash, as the oracle says / SPEC-060 | — |
+| AC9 | tests/Unit/Verifier/PlainTextTest.php :: AC9: the range is the wrapper, from the marker to the end of the run / SPEC-060 | — |
+| AC10 | tests/Unit/Verifier/PlainTextTest.php :: AC10: text that is not UTF-8 is not text; AC10: a valid sequence across two pieces is text / SPEC-060 | — |
+| AC11 | tests/Unit/Verifier/PlainTextTest.php :: AC11: selectors that belong to the text are not a wrapper / SPEC-060 | — |
+| AC12 | tests/Unit/Verifier/PlainTextTest.php :: AC12: the bounds apply before memory is spent; AC12: a large text without a wrapper is read in pieces / SPEC-060 | — |
+| AC13 | tests/Unit/Verifier/PlainTextTest.php :: AC13: the other formats come first / SPEC-060 | — |
+| AC14 | tests/Unit/Verifier/PlainTextTest.php :: AC14: the signed fixtures verify as the oracle says; AC14: a changed letter and a flipped signature byte fail as the oracle says / SPEC-060 | — |
