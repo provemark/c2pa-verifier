@@ -9212,3 +9212,13 @@ README are where the disclosure lives.
   `unstable_plain_text`, with stock 0.28.1 and 0.27.22, and with
   `bin/c2pa-verify`. Read: c2pa-rs 0.91.1 `plain_text_io.rs`.
 - Decided by Maurice: measure first, no spec yet.
+
+## 2026-10-07 — SPEC-060 (plain text) drafted (step 266)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, schrijf de spec".
+- Produced: `specs/SPEC-060-plain-text.md` (draft); a row in
+  `docs/milestones.md` and in `NOTES.md`.
+- Measured: the wrapper ranges of AC1 and AC9 from the fixture files;
+  `php bin/spec-check.php`. Read: `Verifier::__construct()` and
+  `FormatDetector::detect()` (the verifier is given a stream, no file name).
+- Decided by Maurice: none yet; the spec waits for approval.
