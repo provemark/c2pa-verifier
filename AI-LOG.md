@@ -9285,3 +9285,17 @@ README are where the disclosure lives.
   in this tree and in a `v0.4.0` worktree over the same files, and every
   `Valid` put to `c2patool` 0.27.22 and 0.28.1.
 - Decided by Maurice: the next version is 0.5.0.
+
+## 2026-10-07 — 0.5.0 released (step 271)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, push en zet de tag v0.5.0".
+- Produced: the annotated tag `v0.5.0` on `56ca6d2`, pushed; a row in
+  `NOTES.md`.
+- Measured: the release commit's `git archive` installed as a Composer path
+  package, every signed fixture `Valid` and `Trusted` (the text with
+  `--text`); CI run 37591487005 on `56ca6d2` and run 37591685541 on the tag,
+  green; the GitHub archive (393 files, as `git archive v0.5.0`);
+  Packagist's metadata (`v0.5.0` at `56ca6d2`); a fresh
+  `composer require provemark/c2pa-verifier:^0.5`, retried every 30 s with
+  an empty cache, installed `v0.5.0` at 08:16 UTC.
+- Decided by Maurice: push, tag after a green CI.
