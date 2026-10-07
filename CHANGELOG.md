@@ -5,7 +5,16 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.5.0 — 2026-10-07
+
+Plain text, read and verified when the caller asks for it, and measured
+against the only oracle there is: `c2patool` 0.28.1 built with `c2pa-rs`'s
+experimental `unstable_plain_text`. Nothing changes for a caller who does
+not turn it on: every report is the same as under 0.4.0 (the corpus and
+the same fuzzing seed agree). The recorded API surface is unchanged; the
+`Verifier` constructor has a new last parameter and `Cli\Command` a new
+optional one, so this is a minor version: a caller on `^0.4` keeps 0.4.0
+until it asks for `^0.5`.
 
 ### Added
 
@@ -18,6 +27,13 @@ committed.
   `unstable_plain_text` (step 265). The report's `format` has a new value,
   `text`, only when text is on; the `Verifier` constructor has a new last
   parameter, `null` by default, and `Cli\Command` an optional second one.
+  The wrapper must be the only one, of version 1, with a store that fits
+  its run and whose LBox equals the length field; anything else of its
+  magic is `general.error`, stricter than the oracle and named in
+  `docs/comparison.md`. The text is hashed byte for byte, without Unicode
+  normalisation, as `c2pa-rs` verifies it. A run is decoded a buffered
+  stretch at a time: a 16 MiB store with as much padding takes 0.4 s
+  (amendment 2, after a review).
 
 ## 0.4.0 — 2026-10-06
 

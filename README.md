@@ -83,8 +83,12 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.4.0`**, still a `0.x` on purpose. `^0.4` receives
-every 0.4.x fix, and a change that breaks the API below will be `0.5.0`.
+The current tag is **`v0.5.0`**, still a `0.x` on purpose. `^0.5` receives
+every 0.5.x fix, and a change that breaks the API below will be `0.6.0`.
+Coming from `0.4.x`: the recorded API is unchanged and, unless you turn
+plain text on, so is every report; with it on, `format` can be `text` and
+the message for an unknown file type says the file is not UTF-8 text
+either. A caller on `^0.4` keeps 0.4.0 until it asks for `^0.5`.
 Coming from `0.3.x`: the recorded API is unchanged, but the report's
 `format` can now be `gif`, and the message for an unknown file type names
 GIF; a caller on `^0.3` keeps 0.3.0 until it asks for `^0.4`.
@@ -311,8 +315,9 @@ alone.
   and closed.
 - **Bounded input.** Every parser has hard limits and acceptance criteria
   for malformed input. Before every release the corpora are fuzzed
-  (`bin/fuzz.php`, replayable); before 0.4.0, 17 109 randomly mutated files
-  went through the verifier, and their reports through `toJson()`, without
+  (`bin/fuzz.php`, replayable); before 0.5.0, 11 733 randomly mutated files
+  of the formats 0.4.0 read, and 23 100 mutated texts, went through the
+  verifier, and their reports through `toJson()`, without
   an exception escaping.
 
 ## Working on it

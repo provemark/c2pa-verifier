@@ -9272,3 +9272,16 @@ README are where the disclosure lives.
   scripts (0 mismatches after the fix); the oracle comparison (40 of 48
   equal, the 8 named); fuzzing and the corpus as in the note.
 - Decided by Maurice: amendment 2.
+
+## 2026-10-07 — The check before 0.5.0, and the release commit (step 270)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, begin met de controle voor 0.5.0".
+- Produced: CHANGELOG (`0.5.0 — 2026-10-07`), README (`v0.5.0`, coming from
+  `0.4.x`, the fuzzing figure), `docs/comparison.md` (fuzzing for 0.5.0);
+  `notes/step-270-pre-release-0.5.0.md`; a row in `NOTES.md`.
+- Measured: `php bin/spec-check.php`, `php bin/api-check.php`,
+  `git diff v0.4.0` on the surface and the status codes,
+  `php bin/package-check.php`, `composer check`; `bin/fuzz.php 20261005 60`
+  in this tree and in a `v0.4.0` worktree over the same files, and every
+  `Valid` put to `c2patool` 0.27.22 and 0.28.1.
+- Decided by Maurice: the next version is 0.5.0.
