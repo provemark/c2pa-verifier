@@ -112,7 +112,7 @@ final readonly class Verifier
             $head = $this->formats->head($stream);
 
             return new VerificationReport('unknown', false, null, ValidationResult::fromStatuses([
-                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, GIF, WebP, WAV, AVI, MP3, FLAC or ISOBMFF signature', Bytes::hex($head))),
+                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, sprintf('unsupported file type: the file starts with %s, not a JPEG, PNG, GIF, WebP, WAV, AVI, MP3, FLAC or ISOBMFF signature%s', Bytes::hex($head), $this->text === null ? '' : ', and it is not UTF-8 text')),   // SPEC-060 amendment 2 E
             ], []));
         }
 

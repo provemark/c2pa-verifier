@@ -17,6 +17,18 @@ namespace Provemark\C2paVerifier\Container;
  */
 final class SelectorReader
 {
+    /**
+     * A selector's UTF-8: `U+FE00`–`U+FE0F` (`EF B8 80`–`8F`), `U+E0100`–`U+E01EF`
+     * (`F3 A0 84 80` to `F3 A0 87 AF`).
+     */
+    private const SELECTOR = '\xEF\xB8[\x80-\x8F]|\xF3\xA0[\x84-\x86][\x80-\xBF]|\xF3\xA0\x87[\x80-\xAF]';
+
+    /** The bytes whose selector is three bytes of UTF-8 (`U+FE00`–`U+FE0F`), as count_chars() keys. */
+    private const LOW = [0 => 0, 1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0, 6 => 0, 7 => 0, 8 => 0, 9 => 0, 10 => 0, 11 => 0, 12 => 0, 13 => 0, 14 => 0, 15 => 0];
+
+    /** @var array<string, string>|null each selector's UTF-8 to its byte, built once */
+    private static ?array $bytes = null;
+
     private string $buffer = '';
 
     /** The next byte to read in $buffer. */
@@ -66,55 +78,72 @@ final class SelectorReader
     /** Up to $count bytes decoded from the selectors that follow; fewer when the run ends first. */
     public function selectors(int $count): string
     {
-        $bytes = '';
-        while (strlen($bytes) < $count && ($byte = $this->selector()) !== null) {
-            $bytes .= chr($byte);
-        }
-
-        return $bytes;
+        return $this->run($count, true)[1];
     }
 
-    /** Passes over up to $max selectors; the number passed. */
+    /** Passes over up to $max selectors; the number passed. Nothing is kept. */
     public function skipSelectors(int $max): int
     {
-        $count = 0;
-        while ($count < $max && $this->selector() !== null) {
-            $count++;
-        }
-
-        return $count;
+        return $this->run($max, false)[0];
     }
 
     /**
-     * The byte of the selector at the current position, consumed; null, and nothing consumed, when there is none.
+     * Consumes up to $max selectors from the current position, a stretch of the
+     * buffer at a time: one anchored expression finds the stretch, one strtr()
+     * translates it (SPEC-060 amendment 2 A; one selector at a time cost about
+     * 0.5 µs). Returns how many selectors were consumed and, when $keep, their
+     * bytes. A selector split over two pieces is completed from the stream
+     * before it is judged.
      *
-     * @return int<0, 255>|null
+     * @return array{int, string}
      */
-    private function selector(): ?int
+    private function run(int $max, bool $keep): array
     {
-        $this->fill(4);
-        $b = $this->buffer;
-        $i = $this->at;
-        $left = strlen($b) - $i;
-        if ($left >= 3 && $b[$i] === "\xEF" && $b[$i + 1] === "\xB8" && ord($b[$i + 2]) >= 0x80 && ord($b[$i + 2]) <= 0x8F) {
-            $this->at += 3;
-
-            return ord($b[$i + 2]) - 0x80;
-        }
-        if ($left >= 4 && $b[$i] === "\xF3" && $b[$i + 1] === "\xA0") {
-            $third = ord($b[$i + 2]);
-            $fourth = ord($b[$i + 3]);
-            if ($third >= 0x84 && $third <= 0x87 && $fourth >= 0x80 && $fourth <= 0xBF) {
-                $codePoint = 0xE0000 | (($third & 0x3F) << 6) | ($fourth & 0x3F);
-                if ($codePoint >= 0xE0100 && $codePoint <= 0xE01EF) {
-                    $this->at += 4;
-
-                    return $codePoint - 0xE0100 + 16;
-                }
+        $done = 0;
+        $bytes = '';
+        while ($done < $max) {
+            $want = $max - $done;
+            $this->fill(max(4, min(4 * $want, $this->piece)));   // at least one whole selector, whatever the piece
+            // possessive: a long run as a backtracking repeat exhausts PCRE's JIT stack
+            $found = preg_match('/\G(?:'.self::SELECTOR.')++/', $this->buffer, $match, 0, $this->at);
+            if ($found === false) {
+                throw new ContainerException(sprintf('the selectors at offset %d could not be read: %s', $this->offset(), preg_last_error_msg()));
+            }
+            if ($found === 0) {
+                break;   // no selector here: the run has ended
+            }
+            $decoded = strtr($match[0], self::bytesOf());
+            $length = strlen($match[0]);
+            if (strlen($decoded) > $want) {
+                // keep the first $want: bytes 0–15 are three bytes of UTF-8, the others four
+                $decoded = substr($decoded, 0, $want);
+                $length = 4 * $want - array_sum(array_intersect_key(count_chars($decoded, 1), self::LOW));
+            }
+            $this->at += $length;
+            $done += strlen($decoded);
+            if ($keep) {
+                $bytes .= $decoded;
+            }
+            if ($done >= $max || $this->end || strlen($this->buffer) - $this->at >= 4) {
+                break;   // enough, or the run ended inside what was buffered rather than at its edge
             }
         }
 
-        return null;
+        return [$done, $bytes];
+    }
+
+    /** @return array<string, string> each selector's UTF-8 to its byte */
+    private static function bytesOf(): array
+    {
+        if (self::$bytes === null) {
+            $map = [];
+            for ($b = 0; $b < 256; $b++) {
+                $map[(string) mb_chr($b <= 15 ? 0xFE00 + $b : 0xE0100 + $b - 16, 'UTF-8')] = chr($b);
+            }
+            self::$bytes = $map;
+        }
+
+        return self::$bytes;
     }
 
     /** Reads pieces until $need bytes are buffered after the position or the stream ends; drops what was read. */

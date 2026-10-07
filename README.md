@@ -199,6 +199,14 @@ as `text`. The text is hashed byte for byte, without Unicode normalisation,
 as `c2pa-rs` verifies it; a text whose punctuation or line ends were changed
 is `Invalid` (SPEC-060).
 
+Because there is no file name to go by, a few cases follow from that rule:
+an empty file is `text` without a manifest; a text that begins as another
+format would (`GIF89a`, `RIFF…WEBP`, `ID3`, `ftyp` at offset 4) is read as
+that format and never as text; and a wrapper whose frame does not describe
+its store — a second wrapper, a store cut short, a length field under 8
+bytes, a store with an extended LBox — is refused with `general.error`
+rather than read past (SPEC-060 amendments 1 and 2).
+
 ## Trying it, and what to send back
 
 If you are reading this because you might use it, the most valuable thing

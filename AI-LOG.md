@@ -9255,3 +9255,20 @@ README are where the disclosure lives.
   400 rounds, every `Valid` put to `c2patool` (0.27.22 and 0.28.1, or the
   text build for text).
 - Decided by Maurice: none beyond SPEC-060's approved decisions.
+
+## 2026-10-07 — A review of plain text; SPEC-060 amendment 2 (step 269)
+- Model: Claude Opus 5.5, Claude Code CLI (one review subagent, read-only)
+- Asked: "kan je de wijzigingen nogmaals testen en ook goed reviewen"; then
+  "akkoord met amendement 2".
+- Produced: SPEC-060 amendment 2 (A–E) and its Traceability;
+  `src/Container/SelectorReader.php` (per-stretch decoding, a failed match an
+  error, at least 4 bytes buffered); the unknown-format message in
+  `src/Verifier/Verifier.php`; nine tests in `PlainTextTest.php`; README,
+  `docs/comparison.md`; `notes/step-269-text-review.md`; rows in `NOTES.md`
+  and `docs/milestones.md`.
+- Measured: `composer check` (910) on PHP 8.5, and the suite on 8.3 before
+  the amendment; the new tests red first (AC15 15.8 s, AC10's message; the
+  piece-size test red with the fix reverted); the reviewer's differential
+  scripts (0 mismatches after the fix); the oracle comparison (40 of 48
+  equal, the 8 named); fuzzing and the corpus as in the note.
+- Decided by Maurice: amendment 2.

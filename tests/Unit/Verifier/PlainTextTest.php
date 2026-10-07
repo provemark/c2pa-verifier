@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\PlainTextManifestStoreExtractor;
+use Provemark\C2paVerifier\Container\SelectorReader;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\Verifier;
 
@@ -297,3 +298,121 @@ it('AC14: a changed letter and a flipped signature byte fail as the oracle says'
     expect(spec060Codes(spec060Verify('text/flip-text.txt'), 'failure'))->toContain('assertion.dataHash.mismatch')
         ->and(spec060Codes(spec060Verify('text/flip-store.txt'), 'failure'))->toContain('claimSignature.mismatch');
 })->group('SPEC-060');
+
+/** The selectors of $bytes, fast: one translation for the whole string (amendment 2). */
+function spec060FastSelectors(string $bytes): string
+{
+    $map = [];
+    for ($b = 0; $b < 256; $b++) {
+        $map[chr($b)] = (string) mb_chr($b <= 15 ? 0xFE00 + $b : 0xE0100 + $b - 16, 'UTF-8');
+    }
+
+    return strtr($bytes, $map);
+}
+
+/**
+ * @param  iterable<string>  $parts
+ * @return resource a stream that keeps at most 1 MiB in memory, holding $parts written one by one
+ */
+function spec060TempStream(iterable $parts)
+{
+    $stream = fopen('php://temp/maxmemory:1048576', 'r+b') ?: throw new RuntimeException('cannot open php://temp');
+    foreach ($parts as $part) {
+        fwrite($stream, $part);
+    }
+    rewind($stream);
+
+    return $stream;
+}
+
+it('AC15 (amendment 2): a 16 MiB store with as much padding is decoded within 3 s', function (): void {
+    $n = 16 * 1024 * 1024;
+    $stream = spec060TempStream((static function () use ($n): Generator {
+        yield 'A text.'."\u{FEFF}".spec060FastSelectors("C2PATXT\0\x01".pack('N', $n).pack('N', $n).'jumb');
+        $piece = spec060FastSelectors(str_repeat('x', 1024 * 1024));
+        for ($i = 0; $i < 16; $i++) {
+            yield $i === 15 ? substr($piece, 0, -8 * 4) : $piece;   // the store: 8 header bytes, then 16 MiB - 8 of `x`
+        }
+        $zeros = spec060FastSelectors(str_repeat("\0", 1024 * 1024));
+        for ($i = 0; $i < 16; $i++) {
+            yield $zeros;   // padding as long as the store
+        }
+    })());
+
+    // the time is measured here, not the budget (AC12): room for a 16 MiB store whatever ran before
+    $limit = (string) ini_get('memory_limit');
+    ini_set('memory_limit', '512M');
+    try {
+        $started = hrtime(true);
+        $store = (new PlainTextManifestStoreExtractor)->extract($stream);
+        $seconds = (hrtime(true) - $started) / 1e9;
+    } finally {
+        ini_set('memory_limit', $limit);
+    }
+
+    expect(strlen((string) $store?->bytes))->toBe($n)
+        ->and($seconds)->toBeLessThan(3.0);
+})->group('SPEC-060');
+
+it('AC15 (amendment 2): a million lone marks and 100,000 candidates of another version are read within 3 s', function (): void {
+    $candidate = "\u{FEFF}".spec060FastSelectors("C2PATXT\0\x02\x00\x00\x00\x10");
+    $stream = spec060TempStream([str_repeat("\u{FEFF}", 1000000), str_repeat($candidate, 100000)]);
+
+    $started = hrtime(true);
+    $store = (new PlainTextManifestStoreExtractor)->extract($stream);
+    $seconds = (hrtime(true) - $started) / 1e9;
+
+    expect($store)->toBeNull()
+        ->and($seconds)->toBeLessThan(3.0);
+})->group('SPEC-060');
+
+it('AC5 (amendment 2): a good wrapper followed by a candidate that does not fit is two wrappers', function (): void {
+    $cut = "\u{FEFF}".spec060FastSelectors("C2PATXT\0\x01".pack('N', 3526).str_repeat('y', 10));
+    $fault = spec060Fault(spec060File('fixture-signed.txt').$cut);
+
+    expect($fault?->getMessage())->toContain('two C2PA text wrappers')->toContain('60')->toContain('14225');
+})->group('SPEC-060');
+
+it('AC6 (amendment 2): a candidate that does not fit before a good wrapper is a store that does not fit', function (): void {
+    $signed = spec060File('fixture-signed.txt');
+    $cut = "\u{FEFF}".spec060FastSelectors("C2PATXT\0\x01".pack('N', 3526).str_repeat('y', 10));
+    $tree = spec060VerifyBytes(substr($signed, 0, 60).$cut.substr($signed, 60));
+
+    expect(spec060Fault(substr($signed, 0, 60).$cut.substr($signed, 60))?->getMessage())->toContain('3526')->toContain('holds 10')
+        ->and($tree['@hasManifest'])->toBeTrue()
+        ->and(spec060Codes($tree, 'failure'))->toBe(['general.error']);
+})->group('SPEC-060');
+
+it('AC16 (amendment 2): an empty file is text without a manifest; a text that begins as a GIF is a GIF', function (): void {
+    $empty = spec060VerifyBytes('');
+    $gif = spec060VerifyBytes('GIF89a, a word');
+
+    expect($empty['format'])->toBe('text')
+        ->and($empty['@hasManifest'])->toBeFalse()
+        ->and(spec060Codes($empty, 'failure'))->toBe([])
+        ->and($gif['format'])->toBe('gif');
+})->group('SPEC-060');
+
+it('AC10 (amendment 2): with text on, the unknown-format message names UTF-8 text', function (): void {
+    $explanations = static function (array $tree): string {
+        $status = $tree['validation_status'] ?? [];
+        assert(is_array($status));
+
+        return implode(' ', array_map(static fn (mixed $s): string => is_array($s) && is_string($s['explanation'] ?? null) ? $s['explanation'] : '', $status));
+    };
+
+    expect($explanations(spec060Verify('text/utf16le.txt')))->toContain('UTF-8')
+        ->and($explanations(spec060Verify('text/utf16le.txt', text: false)))->not->toContain('UTF-8');
+})->group('SPEC-060');
+
+it('AC9 (amendment 2): the run is read the same whatever the piece size', function (int $piece): void {
+    assert($piece >= 1);
+    $bytes = spec060File('fixture-signed.txt');
+    $whole = (new SelectorReader(spec060Stream($bytes), 65536));
+    $small = (new SelectorReader(spec060Stream($bytes), $piece));
+    $whole->nextMarker("\u{FEFF}");
+    $small->nextMarker("\u{FEFF}");
+
+    expect([$small->selectors(13), $small->selectors(5), $small->skipSelectors(3), $small->selectors(PHP_INT_MAX), $small->offset()])
+        ->toBe([$whole->selectors(13), $whole->selectors(5), $whole->skipSelectors(3), $whole->selectors(PHP_INT_MAX), $whole->offset()]);
+})->with([1, 2, 3, 5, 7])->group('SPEC-060');

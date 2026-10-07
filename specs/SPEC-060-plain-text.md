@@ -261,6 +261,50 @@ constructor parameter: `null` is text off. The CLI gains `--text`.
        `ContainerException` naming 3,526 and 87.
 
    Approved by Maurice van Loon, 2026-10-07 (step 267).
+2. **2026-10-07, step 269, approved by Maurice van Loon** — found by a
+   review of steps 265–268 (an independent read of the code against
+   c2pa-rs's `plain_text_io.rs`, with differential tests; no wrong `Valid`
+   found).
+
+   - **A — a run is decoded per piece, not per selector.** One selector at
+     a time cost about 0.5 µs (measured: a 4 MiB store 2.2 s; a 16 MiB
+     store about 9 s, with the largest padding about 18 s), so a large
+     wrapper could outlast a shared host's `max_execution_time` and end in
+     a fatal error instead of a report. Now each run is matched in a piece
+     with one anchored expression and translated in one call.
+     - **AC15 (new)** — given a wrapper with a 16 MiB store and padding of
+       the same length (built in the test): the store is returned within
+       3 s. And a text of one million lone marks followed by 100,000
+       candidates of version 2 (built in the test) is read within 3 s.
+   - **B — a second candidate of the magic and version 1 is a second
+     wrapper, whole or not.** AC5 named only two whole wrappers. A good
+     wrapper followed by a candidate of the magic and version 1 that does
+     not fit is two wrappers; such a candidate before a good wrapper is
+     AC6's error, the first one met. c2pa-rs reads the good one in both
+     cases. Stricter, named.
+     - **AC5 now also** — given the fixture with a cut candidate after its
+       wrapper (built in the test): the two offsets named, `general.error`.
+     - **AC6 now also** — given a cut candidate before the fixture's
+       wrapper (built in the test): the error of a store that does not fit.
+   - **C — AC12's wording.** The length field's bound applies before the
+     store is held; the padding's bound applies after the store and
+     while the padding is passed over, which is never held. AC12 said
+     "before the store is held" of both.
+   - **D — edge cases named in the README and `docs/comparison.md`**: an
+     empty file is `text` without a manifest when text is on; a text that
+     begins as another format (`GIF89a`, `RIFF…WEBP`, `ID3`, a `ftyp` at
+     offset 4) is read as that format and never as text; a store with an
+     extended LBox (`1`) is refused, as for every container; a length field
+     under 8 is an error.
+     - **AC16 (new)** — given an empty stream and the text `GIF89a, a
+       word` (built in the test), text on: `text` without a manifest, and
+       `gif`.
+   - **E — the unknown-format message names text when text is on.** A file
+     that is neither another format nor UTF-8 says so.
+     - **AC10 now also** — given `text/utf16le.txt`, text on: the message
+       contains `UTF-8`; text off, it does not.
+
+   Approved by Maurice van Loon, 2026-10-07 (step 269).
 
 ## Traceability
 
@@ -273,13 +317,15 @@ least one test; every source file maps back to this spec.
 | AC2 | tests/Unit/Verifier/PlainTextTest.php :: AC2: text off is today\ / SPEC-060 | src/Verifier/Verifier.php :: __construct() (`$text` null by default), verify() |
 | AC3 | tests/Unit/Verifier/PlainTextTest.php :: AC3: no wrapper is no manifest / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: scan() (a candidate without the magic is text) |
 | AC4 | tests/Unit/Verifier/PlainTextTest.php :: AC4: another version is not a wrapper / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: scan() (`VERSION`) |
-| AC5 | tests/Unit/Verifier/PlainTextTest.php :: AC5: two wrappers are an error (stricter than the oracle, named) / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: scan() (two wrappers) |
-| AC6 | tests/Unit/Verifier/PlainTextTest.php :: AC6: a wrapper whose store does not fit is an error (stricter than the oracle, named) / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: wrapper() (the run shorter than the length), scan() (the LBox) |
+| AC5 | tests/Unit/Verifier/PlainTextTest.php :: AC5: two wrappers are an error (stricter than the oracle, named); AC5 (amendment 2): a good wrapper followed by a candidate that does not fit is two wrappers / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: scan() (two wrappers) |
+| AC6 | tests/Unit/Verifier/PlainTextTest.php :: AC6: a wrapper whose store does not fit is an error (stricter than the oracle, named); AC6 (amendment 2): a candidate that does not fit before a good wrapper is a store that does not fit / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: wrapper() (the run shorter than the length), scan() (the LBox) |
 | AC7 | tests/Unit/Verifier/PlainTextTest.php :: AC7: a candidate that is not version 1 is skipped, as the oracle does / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: scan() (`continue` past a candidate of another version) |
 | AC8 | tests/Unit/Verifier/PlainTextTest.php :: AC8: what the hash judges is read and left to the hash, as the oracle says / SPEC-060 | src/Hash/DataHashCheck.php (unchanged); src/Container/PlainTextManifestStoreExtractor.php (no normalisation) |
-| AC9 | tests/Unit/Verifier/PlainTextTest.php :: AC9: the range is the wrapper, from the marker to the end of the run / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: wrapper() (the range); src/Container/SelectorReader.php :: skipSelectors(), offset() |
-| AC10 | tests/Unit/Verifier/PlainTextTest.php :: AC10: text that is not UTF-8 is not text; AC10: a valid sequence across two pieces is text / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: isText(), completeLength(); src/Verifier/Verifier.php :: verify() |
+| AC9 | tests/Unit/Verifier/PlainTextTest.php :: AC9: the range is the wrapper, from the marker to the end of the run; AC9 (amendment 2): the run is read the same whatever the piece size / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: wrapper() (the range); src/Container/SelectorReader.php :: skipSelectors(), offset() |
+| AC10 | tests/Unit/Verifier/PlainTextTest.php :: AC10: text that is not UTF-8 is not text; AC10: a valid sequence across two pieces is text; AC10 (amendment 2): with text on, the unknown-format message names UTF-8 text / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: isText(), completeLength(); src/Verifier/Verifier.php :: verify() |
 | AC11 | tests/Unit/Verifier/PlainTextTest.php :: AC11: selectors that belong to the text are not a wrapper / SPEC-060 | src/Container/SelectorReader.php :: selector() (the two ranges only) |
 | AC12 | tests/Unit/Verifier/PlainTextTest.php :: AC12: the bounds apply before memory is spent; AC12: a large text without a wrapper is read in pieces / SPEC-060 | src/Container/PlainTextManifestStoreExtractor.php :: `DEFAULT_MAX_STORE_LENGTH`, `PIECE`, wrapper() (the bound, the budget, the padding); src/Container/SelectorReader.php :: fill() |
 | AC13 | tests/Unit/Verifier/PlainTextTest.php :: AC13: the other formats come first / SPEC-060 | src/Verifier/Verifier.php :: verify() (text only after `FormatDetector` answers null) |
 | AC14 | tests/Unit/Verifier/PlainTextTest.php :: AC14: the signed fixtures verify as the oracle says; AC14: a changed letter and a flipped signature byte fail as the oracle says / SPEC-060 | src/Verifier/Verifier.php :: verify() (the `text` arm) |
+| AC15 (amendment 2) | tests/Unit/Verifier/PlainTextTest.php :: AC15 (amendment 2): a 16 MiB store with as much padding is decoded within 3 s; AC15 (amendment 2): a million lone marks and 100,000 candidates of another version are read within 3 s / SPEC-060 | src/Container/SelectorReader.php :: run() (`SELECTOR`, possessive, `bytesOf()`, `LOW`) |
+| AC16 (amendment 2) | tests/Unit/Verifier/PlainTextTest.php :: AC16 (amendment 2): an empty file is text without a manifest; a text that begins as a GIF is a GIF / SPEC-060 | src/Verifier/Verifier.php :: verify() (`FormatDetector` first, then `isText()`) |
