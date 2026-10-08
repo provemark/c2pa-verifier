@@ -5,7 +5,17 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.5.2 — 2026-10-08
+
+A security release, the second of the day. A certificate authority
+without a keyUsage extension could issue, and a chain through it was
+`Trusted`. It was found by the trust matrix, the first step of a
+consolidation after 0.5.1. It needs a certificate authority without
+keyUsage under one of your anchors, or as one; none of the anchors in
+the C2PA trust lists of 2026-08-14 lacks it.
+
+**A `0.5.2`, not a `0.6`:** the recorded public API is the same 126
+symbols, and there is no new status code. One file of `src/` changed.
 
 ### Security
 

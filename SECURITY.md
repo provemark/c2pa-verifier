@@ -93,7 +93,7 @@ findings, fixed in `0.2.5`, one found by reading the reference
 engine's own fixes, fixed in `0.2.6`, one found by a review of `src/`,
 fixed in `0.2.8`, one found by a review of the whole of `src/` before
 `0.3.0`, fixed in it, one reported privately, fixed in `0.5.1`, and one
-found by the trust matrix, fixed after `0.5.1` and not yet released:
+found by the trust matrix, fixed in `0.5.2`:
 
 - **2026-09-22, no hard binding** (`notes/step-47-no-hard-binding.md`).
   A correctly signed manifest with no `c2pa.hash.data` assertion — a
@@ -257,7 +257,7 @@ found by the trust matrix, fixed after `0.5.1` and not yet released:
   Not reachable, now not possible either (SPEC-014 amendment 6).
 
 - **2026-10-08, a certificate authority without keyUsage — present in
-  `0.2.2` to `0.5.1`, fixed after `0.5.1`**
+  `0.2.2` to `0.5.1`, fixed in `0.5.2`**
   (`notes/step-283-trust-matrix.md`). SPEC-014 amendment 4 asked an
   issuing certificate for `keyCertSign` only when it carried a keyUsage
   extension, so an intermediate or an anchor without one could issue.

@@ -9513,3 +9513,17 @@ README are where the disclosure lives.
   `certificate_trust/openssl.rs` (`X509_V_FLAG_X509_STRICT`).
 - Decided by Maurice: the consolidation plan, the generator, and
   amendment 7.
+
+## 2026-10-08 — The check before 0.5.2 and the release commit (step 285)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, (a), begin met de controle vóór 0.5.2".
+- Produced: `CHANGELOG.md` (0.5.2), `README.md`, `SECURITY.md`,
+  `docs/comparison.md`, `notes/step-285-pre-release-0.5.2.md`, a row in
+  `NOTES.md`.
+- Measured: `php bin/spec-check.php`; `composer check` (927 passed);
+  `php bin/api-check.php`; `git diff v0.5.1` on the surface and the status
+  codes; `php bin/package-check.php`; `bin/fuzz.php 20261005 60` in a
+  `v0.5.1` worktree and in this tree; the suspects through `c2patool`
+  0.27.22, 0.28.1 and the text-enabled 0.28.1.
+- Decided by Maurice: release now, as the rule for a wrong `Trusted` asks
+  (option a).

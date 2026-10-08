@@ -208,6 +208,16 @@ without an anchor — 34 corpus files, informational, no verdict changes.
 - Test anchors and anchors cut from tokens. The production C2PA trust
   lists were used once, as a measurement (step 113): two corpus files
   reach an official anchor. The project does not bundle or fetch them.
+- Fuzzing before 0.5.2 (step 285): the same seed over the same 249 files,
+  12 903 runs, once in a worktree at `v0.5.1` and once at 0.5.2: 0 faults
+  in both, the same 122 files `Valid`, each confirmed by the oracles as
+  before 0.5.1.
+- The trust matrix (step 283, `bin/make-trust-matrix.php`): 42 chains,
+  each one property of one certificate away from a valid one, judged by
+  both `c2patool` versions and OpenSSL. Under 0.5.2 this verifier differs
+  from 0.28.1 on two, both stricter by design: a leaf whose only extended
+  key usage is Time Stamping, and a SHA-1 signature between the anchor and
+  the leaf.
 - Fuzzing before 0.5.1 (step 277): the same seed (20261005, 60 rounds)
   over every format's corpus files, 12 903 runs over 249 files, once in a
   worktree at `v0.5.0` and once at 0.5.1: 0 faults in both, **the same 122

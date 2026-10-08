@@ -83,10 +83,11 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.5.1`**, still a `0.x` on purpose. `^0.5` receives
+The current tag is **`v0.5.2`**, still a `0.x` on purpose. `^0.5` receives
 every 0.5.x fix, and a change that breaks the API below will be `0.6.0`.
-`0.5.1` is a security release: a trust anchor outside its own validity
-period no longer vouches for a signer (see [`CHANGELOG.md`](CHANGELOG.md)).
+`0.5.1` and `0.5.2` are security releases: a trust anchor outside its own
+validity period, and a certificate authority without keyUsage, no longer
+vouch for a signer (see [`CHANGELOG.md`](CHANGELOG.md)).
 Coming from `0.4.x`: the recorded API is unchanged and, unless you turn
 plain text on, so is every report; with it on, `format` can be `text` and
 the message for an unknown file type says the file is not UTF-8 text
@@ -317,7 +318,7 @@ alone.
   and closed.
 - **Bounded input.** Every parser has hard limits and acceptance criteria
   for malformed input. Before every release the corpora are fuzzed
-  (`bin/fuzz.php`, replayable); before 0.5.1, 12 903 randomly mutated files
+  (`bin/fuzz.php`, replayable); before 0.5.2, 12 903 randomly mutated files
   of every format, and before 0.5.0 23 100 mutated texts, went through the
   verifier, and their reports through `toJson()`, without
   an exception escaping.
