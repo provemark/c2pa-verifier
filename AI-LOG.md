@@ -9527,3 +9527,16 @@ README are where the disclosure lives.
   0.27.22, 0.28.1 and the text-enabled 0.28.1.
 - Decided by Maurice: release now, as the rule for a wrong `Trusted` asks
   (option a).
+
+## 2026-10-08 — CI red on 0.5.2's commits: helper names (step 286)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en tag na groene CI" — the CI was red, so no tag.
+- Produced: the helpers of `bin/make-trust-matrix.php` and
+  `bin/make-actions-label-variants.php` prefixed (`tm…`, `al…`), two unused
+  ones removed; a row in `NOTES.md`.
+- Measured: CI run 37837257589 (`composer check` failed on PHP 8.3, 8.4
+  and 8.5 with two PHPStan errors in `make-signature-vectors.php`); the
+  same two errors from PHPStan in Docker `php:8.3-cli` on `953e32b`, none
+  locally on macOS and none in Docker after the rename; the trust matrix
+  rerun (the same two stricter-by-design differences); `composer check`.
+- Decided by Maurice: none yet; the push of this fix waits for his word.

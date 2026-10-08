@@ -51,7 +51,7 @@ register_shutdown_function(static function () use ($keys): void {
     }
 });
 
-function run(string $command): void
+function tmRun(string $command): void
 {
     $lines = [];
     $code = 0;
@@ -61,12 +61,12 @@ function run(string $command): void
     }
 }
 
-function sh(string ...$parts): string
+function tmSh(string ...$parts): string
 {
     return implode(' ', array_map('escapeshellarg', $parts));
 }
 
-function bstr(string $b): string
+function tmBstr(string $b): string
 {
     $n = strlen($b);
 
@@ -74,7 +74,7 @@ function bstr(string $b): string
 }
 
 /** A DER ECDSA signature as R‖S of 2 × $curveBytes (what COSE carries). */
-function derToRs(string $der, int $curveBytes): string
+function tmDerToRs(string $der, int $curveBytes): string
 {
     if ($der[0] !== "\x30") {
         throw new RuntimeException('not a DER ECDSA signature');
@@ -134,7 +134,7 @@ $list = static fn (string ...$entries): string => pack('C', 0x80 + count($entrie
  *
  * @param  list<array{0: int, 1: int}>  $exclusions
  */
-function absenceDataHash(string $bytes, array $exclusions): string
+function tmAbsenceDataHash(string $bytes, array $exclusions): string
 {
     usort($exclusions, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
     $ctx = hash_init('sha256');
@@ -149,7 +149,7 @@ function absenceDataHash(string $bytes, array $exclusions): string
 }
 
 /** The offset of the entry map naming $label in a CBOR list of hashed-URI maps at $list, or null. */
-function entryFor(string $s, int $list, string $label): ?int
+function tmEntryFor(string $s, int $list, string $label): ?int
 {
     $count = ord($s[$list]) & 0x1F;
     $p = $list + 1;
@@ -169,7 +169,7 @@ function entryFor(string $s, int $list, string $label): ?int
  * recomputed over the PNG that will carry the store, and the claim's hashed URI for it recomputed — so that only
  * the absence under test differs from a valid file. $shift = bytes removed before the hash.data box and the claim.
  */
-function rebind(string $store, string $png, int $shift, int $hashDataBox, int $claimAt): string
+function tmRebind(string $store, string $png, int $shift, int $hashDataBox, int $claimAt): string
 {
     $box = $hashDataBox - $shift;
     $payload = $box + 80;   // the cbor box's payload inside the assertion superbox (step 26 offsets)
@@ -181,13 +181,13 @@ function rebind(string $store, string $png, int $shift, int $hashDataBox, int $c
         throw new RuntimeException('the exclusion length is not a two-byte CBOR uint');
     }
     $store = bReplace($store, $lengthValue + 1, substr($store, $lengthValue + 1, 2), pack('n', 12 + strlen($store)));
-    $digest = absenceDataHash(pngWithStore($png, $store), [[33, 12 + strlen($store)]]);
+    $digest = tmAbsenceDataHash(pngWithStore($png, $store), [[33, 12 + strlen($store)]]);
     $hashValue = $hd['hash'][1] + 2;
     $store = bReplace($store, $hashValue, substr($store, $hashValue, 32), $digest);
     $boxLength = bU32($store, $box);
     $uri = hash('sha256', substr($store, $box + 8, $boxLength - 8), true);
     $claim = bMapPairs($store, $claimAt - $shift);
-    $entry = entryFor($store, $claim['created_assertions'][1], 'c2pa.hash.data') ?? entryFor($store, $claim['gathered_assertions'][1], 'c2pa.hash.data');
+    $entry = tmEntryFor($store, $claim['created_assertions'][1], 'c2pa.hash.data') ?? tmEntryFor($store, $claim['gathered_assertions'][1], 'c2pa.hash.data');
     if ($entry === null) {
         throw new RuntimeException('no c2pa.hash.data entry in the claim');
     }
@@ -197,49 +197,18 @@ function rebind(string $store, string $png, int $shift, int $hashDataBox, int $c
 }
 
 /** The claim's hashed URI for the assertion box at $box recomputed (sha256 over the box minus its 8-byte header, §8.4.2.3). */
-function rehashEntry(string $store, int $box, int $claimAt, string $label): string
+function tmRehashEntry(string $store, int $box, int $claimAt, string $label): string
 {
     $boxLength = bU32($store, $box);
     $uri = hash('sha256', substr($store, $box + 8, $boxLength - 8), true);
     $claim = bMapPairs($store, $claimAt);
-    $entry = entryFor($store, $claim['created_assertions'][1], $label) ?? entryFor($store, $claim['gathered_assertions'][1], $label);
+    $entry = tmEntryFor($store, $claim['created_assertions'][1], $label) ?? tmEntryFor($store, $claim['gathered_assertions'][1], $label);
     if ($entry === null) {
         throw new RuntimeException("no {$label} entry in the claim");
     }
     $claimHash = bMapPairs($store, $entry)['hash'][1] + 2;
 
     return bReplace($store, $claimHash, substr($store, $claimHash, 32), $uri);
-}
-
-/**
- * The store with the claim lists rewritten and the named boxes removed (later edits first).
- *
- * @param  array{0: int, 1: int}  $created  [start, end] of the created_assertions list in $s
- * @param  array{0: int, 1: int}  $gathered  the same for gathered_assertions
- * @param  list<int>  $claimBox  the boxes enclosing the claim
- * @param  list<array{0: int, 1: int}>  $removeBoxes  [offset, length] of assertion boxes to remove
- * @param  list<int>  $storeBox  the boxes enclosing an assertion
- */
-function absenceStore(string $s, array $created, array $gathered, string $createdList, string $gatheredList, array $claimBox, array $removeBoxes, array $storeBox): string
-{
-    $s = bSplice($s, $gathered[0], $gathered[1] - $gathered[0], $gatheredList, $claimBox);
-    $s = bSplice($s, $created[0], $created[1] - $created[0], $createdList, $claimBox);
-    rsort($removeBoxes);
-    foreach ($removeBoxes as [$at, $length]) {
-        $s = bSplice($s, $at, $length, '', $storeBox);
-    }
-
-    return $s;
-}
-
-/**
- * @param  list<int>  $claimBox
- * @param  list<int>  $storeBox
- * @param  list<array{0: int, 1: int}>  $removeBoxes
- */
-function editWith(string $s, int $createdStart, int $createdEnd, int $gatheredStart, int $gatheredEnd, array $claimBox, array $storeBox, string $createdList, string $gatheredList, array $removeBoxes): string
-{
-    return absenceStore($s, [$createdStart, $createdEnd], [$gatheredStart, $gatheredEnd], $createdList, $gatheredList, $claimBox, $removeBoxes, $storeBox);
 }
 
 /**
@@ -349,11 +318,11 @@ $variants = [
 
 $genKey = static function (string $path, string $kind): void {
     match ($kind) {
-        'p256' => run(sh('openssl', 'genpkey', '-algorithm', 'EC', '-pkeyopt', 'ec_paramgen_curve:P-256', '-out', $path)),
-        'p384' => run(sh('openssl', 'genpkey', '-algorithm', 'EC', '-pkeyopt', 'ec_paramgen_curve:P-384', '-out', $path)),
-        'rsa2048' => run(sh('openssl', 'genpkey', '-algorithm', 'RSA', '-pkeyopt', 'rsa_keygen_bits:2048', '-out', $path)),
-        'rsa1024' => run(sh('openssl', 'genpkey', '-algorithm', 'RSA', '-pkeyopt', 'rsa_keygen_bits:1024', '-out', $path)),
-        'ed25519' => run(sh('openssl', 'genpkey', '-algorithm', 'ED25519', '-out', $path)),
+        'p256' => tmRun(tmSh('openssl', 'genpkey', '-algorithm', 'EC', '-pkeyopt', 'ec_paramgen_curve:P-256', '-out', $path)),
+        'p384' => tmRun(tmSh('openssl', 'genpkey', '-algorithm', 'EC', '-pkeyopt', 'ec_paramgen_curve:P-384', '-out', $path)),
+        'rsa2048' => tmRun(tmSh('openssl', 'genpkey', '-algorithm', 'RSA', '-pkeyopt', 'rsa_keygen_bits:2048', '-out', $path)),
+        'rsa1024' => tmRun(tmSh('openssl', 'genpkey', '-algorithm', 'RSA', '-pkeyopt', 'rsa_keygen_bits:1024', '-out', $path)),
+        'ed25519' => tmRun(tmSh('openssl', 'genpkey', '-algorithm', 'ED25519', '-out', $path)),
         default => throw new RuntimeException("unknown key kind {$kind}"),
     };
 };
@@ -403,10 +372,10 @@ foreach ($variants as $probe => [$position, $field, $value]) {
         $issuerKey = $issuer[$who] === null ? $r['key'] : $recipe[$issuer[$who]]['key'];
         $md = $issuerKey === 'ed25519' ? [] : ['-'.$r['md']];
         if ($issuer[$who] === null) {
-            run(sh(...array_merge(['openssl', 'req', '-new', '-x509'], $md, ['-key', "{$keys}/{$who}.key", '-config', "{$keys}/{$who}.cnf", '-extensions', 'v3'], $dates, ['-out', "{$keys}/{$who}.pem"])));
+            tmRun(tmSh(...array_merge(['openssl', 'req', '-new', '-x509'], $md, ['-key', "{$keys}/{$who}.key", '-config', "{$keys}/{$who}.cnf", '-extensions', 'v3'], $dates, ['-out', "{$keys}/{$who}.pem"])));
         } else {
-            run(sh('openssl', 'req', '-new', '-key', "{$keys}/{$who}.key", '-config', "{$keys}/{$who}.cnf", '-out', "{$keys}/{$who}.csr"));
-            run(sh(...array_merge(['openssl', 'x509', '-req'], $md, ['-in', "{$keys}/{$who}.csr", '-CA', "{$keys}/{$issuer[$who]}.pem", '-CAkey', "{$keys}/{$issuer[$who]}.key", '-set_serial', (string) random_int(1000, 99999999)], $dates, ['-extfile', "{$keys}/{$who}.cnf", '-extensions', 'v3', '-out', "{$keys}/{$who}.pem"])));
+            tmRun(tmSh('openssl', 'req', '-new', '-key', "{$keys}/{$who}.key", '-config', "{$keys}/{$who}.cnf", '-out', "{$keys}/{$who}.csr"));
+            tmRun(tmSh(...array_merge(['openssl', 'x509', '-req'], $md, ['-in', "{$keys}/{$who}.csr", '-CA', "{$keys}/{$issuer[$who]}.pem", '-CAkey', "{$keys}/{$issuer[$who]}.key", '-set_serial', (string) random_int(1000, 99999999)], $dates, ['-extfile', "{$keys}/{$who}.cnf", '-extensions', 'v3', '-out', "{$keys}/{$who}.pem"])));
         }
         if ($set === '' || $who === 'anchor') {
             copy("{$keys}/{$who}.pem", "{$out}/{$probe}.{$who}.pem");
@@ -416,21 +385,21 @@ foreach ($variants as $probe => [$position, $field, $value]) {
     // the COSE_Sign1: {1: alg, 33: [leaf, intermediate]}, the anchor left out, signed over the claim
     $leafKey = $recipe['leaf']['key'];
     $alg = ['p256' => "\x26", 'p384' => "\x38\x22", 'rsa2048' => "\x38\x24", 'rsa1024' => "\x38\x24", 'ed25519' => "\x27"][$leafKey];
-    $protected = "\xa2\x01".$alg."\x18\x21\x82".bstr($pemToDer((string) file_get_contents("{$keys}/leaf.pem"))).bstr($pemToDer((string) file_get_contents("{$keys}/int.pem")));
+    $protected = "\xa2\x01".$alg."\x18\x21\x82".tmBstr($pemToDer((string) file_get_contents("{$keys}/leaf.pem"))).tmBstr($pemToDer((string) file_get_contents("{$keys}/int.pem")));
     $sigLength = ['p256' => 64, 'p384' => 96, 'rsa2048' => 256, 'rsa1024' => 128, 'ed25519' => 64][$leafKey];
-    $draft = "\xd2\x84".bstr($protected)."\xa1\x63pad".bstr('')."\xf6".bstr(str_repeat("\0", $sigLength));
+    $draft = "\xd2\x84".tmBstr($protected)."\xa1\x63pad".tmBstr('')."\xf6".tmBstr(str_repeat("\0", $sigLength));
     file_put_contents("{$keys}/tbs", CoseSign1::fromBytes($draft)->sigStructure($claimBytes));
     match ($leafKey) {
-        'p256', 'p384' => run(sh('openssl', 'dgst', $leafKey === 'p256' ? '-sha256' : '-sha384', '-sign', "{$keys}/leaf.key", '-out', "{$keys}/sig", "{$keys}/tbs")),
-        'rsa2048', 'rsa1024' => run(sh('openssl', 'dgst', '-sha256', '-sigopt', 'rsa_padding_mode:pss', '-sigopt', 'rsa_pss_saltlen:32', '-sigopt', 'rsa_mgf1_md:sha256', '-sign', "{$keys}/leaf.key", '-out', "{$keys}/sig", "{$keys}/tbs")),
-        'ed25519' => run(sh('openssl', 'pkeyutl', '-sign', '-rawin', '-inkey', "{$keys}/leaf.key", '-in', "{$keys}/tbs", '-out', "{$keys}/sig")),
+        'p256', 'p384' => tmRun(tmSh('openssl', 'dgst', $leafKey === 'p256' ? '-sha256' : '-sha384', '-sign', "{$keys}/leaf.key", '-out', "{$keys}/sig", "{$keys}/tbs")),
+        'rsa2048', 'rsa1024' => tmRun(tmSh('openssl', 'dgst', '-sha256', '-sigopt', 'rsa_padding_mode:pss', '-sigopt', 'rsa_pss_saltlen:32', '-sigopt', 'rsa_mgf1_md:sha256', '-sign', "{$keys}/leaf.key", '-out', "{$keys}/sig", "{$keys}/tbs")),
+        'ed25519' => tmRun(tmSh('openssl', 'pkeyutl', '-sign', '-rawin', '-inkey', "{$keys}/leaf.key", '-in', "{$keys}/tbs", '-out', "{$keys}/sig")),
         default => throw new RuntimeException("unknown key kind {$leafKey}"),
     };
     $raw = (string) file_get_contents("{$keys}/sig");
-    $signature = in_array($leafKey, ['p256', 'p384'], true) ? derToRs($raw, $leafKey === 'p256' ? 32 : 48) : $raw;
-    $fixed = 2 + strlen(bstr($protected)) + 5 + 3 + 1 + strlen(bstr($signature));
+    $signature = in_array($leafKey, ['p256', 'p384'], true) ? tmDerToRs($raw, $leafKey === 'p256' ? 32 : 48) : $raw;
+    $fixed = 2 + strlen(tmBstr($protected)) + 5 + 3 + 1 + strlen(tmBstr($signature));
     $padLength = $COSE_LENGTH - $fixed;
-    $cose = "\xd2\x84".bstr($protected)."\xa1\x63pad\x59".pack('n', $padLength).str_repeat("\0", $padLength)."\xf6".bstr($signature);
+    $cose = "\xd2\x84".tmBstr($protected)."\xa1\x63pad\x59".pack('n', $padLength).str_repeat("\0", $padLength)."\xf6".tmBstr($signature);
     if (strlen($cose) !== $COSE_LENGTH) {
         throw new RuntimeException("{$probe}: COSE is ".strlen($cose)." bytes, not {$COSE_LENGTH}");
     }
@@ -443,17 +412,17 @@ foreach ($variants as $probe => [$position, $field, $value]) {
     $row = [$probe];
     foreach (['0.27.22' => $old, '0.28.1' => $new] as $v => $tool) {
         $lines = [];
-        exec(sh($tool, "{$out}/{$probe}.png", '--settings', "{$out}/{$probe}.settings.json").' 2>&1', $lines);
+        exec(tmSh($tool, "{$out}/{$probe}.png", '--settings', "{$out}/{$probe}.settings.json").' 2>&1', $lines);
         $row[] = $state(implode("\n", $lines));
         if ($oracles !== null) {
             file_put_contents("{$oracles}/{$probe}--{$v}.json", implode("\n", $lines)."\n");
         }
     }
     $lines = [];
-    exec(sh('openssl', 'verify', '-x509_strict', '-partial_chain', '-CAfile', "{$keys}/anchor.pem", '-untrusted', "{$keys}/int.pem", "{$keys}/leaf.pem").' 2>&1', $lines, $code);
+    exec(tmSh('openssl', 'verify', '-x509_strict', '-partial_chain', '-CAfile', "{$keys}/anchor.pem", '-untrusted', "{$keys}/int.pem", "{$keys}/leaf.pem").' 2>&1', $lines, $code);
     $row[] = $code === 0 ? 'OK' : 'refused: '.trim((string) preg_replace('/^.*?error \d+ at \d+ depth lookup: /s', '', implode(' ', $lines)));
     $lines = [];
-    exec(sh(PHP_BINARY, $root.'/bin/c2pa-verify', "{$out}/{$probe}.png", '--settings', "{$out}/{$probe}.settings.json").' 2>&1', $lines);
+    exec(tmSh(PHP_BINARY, $root.'/bin/c2pa-verify', "{$out}/{$probe}.png", '--settings', "{$out}/{$probe}.settings.json").' 2>&1', $lines);
     $row[] = $state(implode("\n", $lines));
     $tsv[] = implode("\t", $row);
     printf("%-30s %s\n", $probe, implode(' | ', array_slice($row, 1)));

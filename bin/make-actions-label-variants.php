@@ -63,7 +63,7 @@ register_shutdown_function(static function () use ($keys): void {
     }
 });
 
-function run(string $command): void
+function alRun(string $command): void
 {
     $lines = [];
     $code = 0;
@@ -73,12 +73,12 @@ function run(string $command): void
     }
 }
 
-function sh(string ...$parts): string
+function alSh(string ...$parts): string
 {
     return implode(' ', array_map('escapeshellarg', $parts));
 }
 
-function bstr(string $b): string
+function alBstr(string $b): string
 {
     $n = strlen($b);
 
@@ -86,7 +86,7 @@ function bstr(string $b): string
 }
 
 /** A DER ECDSA signature as R‖S of 2 × $curveBytes (what COSE carries). */
-function derToRs(string $der, int $curveBytes): string
+function alDerToRs(string $der, int $curveBytes): string
 {
     if ($der[0] !== "\x30") {
         throw new RuntimeException('not a DER ECDSA signature');
@@ -146,7 +146,7 @@ $list = static fn (string ...$entries): string => pack('C', 0x80 + count($entrie
  *
  * @param  list<array{0: int, 1: int}>  $exclusions
  */
-function absenceDataHash(string $bytes, array $exclusions): string
+function alAbsenceDataHash(string $bytes, array $exclusions): string
 {
     usort($exclusions, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
     $ctx = hash_init('sha256');
@@ -161,7 +161,7 @@ function absenceDataHash(string $bytes, array $exclusions): string
 }
 
 /** The offset of the entry map naming $label in a CBOR list of hashed-URI maps at $list, or null. */
-function entryFor(string $s, int $list, string $label): ?int
+function alEntryFor(string $s, int $list, string $label): ?int
 {
     $count = ord($s[$list]) & 0x1F;
     $p = $list + 1;
@@ -181,7 +181,7 @@ function entryFor(string $s, int $list, string $label): ?int
  * recomputed over the PNG that will carry the store, and the claim's hashed URI for it recomputed — so that only
  * the absence under test differs from a valid file. $shift = bytes removed before the hash.data box and the claim.
  */
-function rebind(string $store, string $png, int $shift, int $hashDataBox, int $claimAt): string
+function alRebind(string $store, string $png, int $shift, int $hashDataBox, int $claimAt): string
 {
     $box = $hashDataBox - $shift;
     $payload = $box + 80;   // the cbor box's payload inside the assertion superbox (step 26 offsets)
@@ -193,13 +193,13 @@ function rebind(string $store, string $png, int $shift, int $hashDataBox, int $c
         throw new RuntimeException('the exclusion length is not a two-byte CBOR uint');
     }
     $store = bReplace($store, $lengthValue + 1, substr($store, $lengthValue + 1, 2), pack('n', 12 + strlen($store)));
-    $digest = absenceDataHash(pngWithStore($png, $store), [[33, 12 + strlen($store)]]);
+    $digest = alAbsenceDataHash(pngWithStore($png, $store), [[33, 12 + strlen($store)]]);
     $hashValue = $hd['hash'][1] + 2;
     $store = bReplace($store, $hashValue, substr($store, $hashValue, 32), $digest);
     $boxLength = bU32($store, $box);
     $uri = hash('sha256', substr($store, $box + 8, $boxLength - 8), true);
     $claim = bMapPairs($store, $claimAt - $shift);
-    $entry = entryFor($store, $claim['created_assertions'][1], 'c2pa.hash.data') ?? entryFor($store, $claim['gathered_assertions'][1], 'c2pa.hash.data');
+    $entry = alEntryFor($store, $claim['created_assertions'][1], 'c2pa.hash.data') ?? alEntryFor($store, $claim['gathered_assertions'][1], 'c2pa.hash.data');
     if ($entry === null) {
         throw new RuntimeException('no c2pa.hash.data entry in the claim');
     }
@@ -209,12 +209,12 @@ function rebind(string $store, string $png, int $shift, int $hashDataBox, int $c
 }
 
 /** The claim's hashed URI for the assertion box at $box recomputed (sha256 over the box minus its 8-byte header, §8.4.2.3). */
-function rehashEntry(string $store, int $box, int $claimAt, string $label): string
+function alRehashEntry(string $store, int $box, int $claimAt, string $label): string
 {
     $boxLength = bU32($store, $box);
     $uri = hash('sha256', substr($store, $box + 8, $boxLength - 8), true);
     $claim = bMapPairs($store, $claimAt);
-    $entry = entryFor($store, $claim['created_assertions'][1], $label) ?? entryFor($store, $claim['gathered_assertions'][1], $label);
+    $entry = alEntryFor($store, $claim['created_assertions'][1], $label) ?? alEntryFor($store, $claim['gathered_assertions'][1], $label);
     if ($entry === null) {
         throw new RuntimeException("no {$label} entry in the claim");
     }
@@ -236,7 +236,7 @@ if ($label === false || $label > $ACTIONS_BOX + 73) {
     throw new RuntimeException('the actions label is not in its description box');
 }
 $relabelled = bSplice($relabelled, $label, strlen("c2pa.actions.v2\0"), "c2pa.actions\0", [0, 38, 117, $ACTIONS_BOX, $ACTIONS_BOX + 8]);
-$relabelled = rehashEntry($relabelled, $ACTIONS_BOX, $CLAIM - 3, 'c2pa.actions');
+$relabelled = alRehashEntry($relabelled, $ACTIONS_BOX, $CLAIM - 3, 'c2pa.actions');
 // the same, with the first action c2pa.edited: do the version 2 rules (§15.10.3.2.3) still apply to it?
 $edited = $relabelled;
 $editedFirst = strpos($edited, "\x6cc2pa.created", $ACTIONS_BOX);
@@ -244,11 +244,11 @@ if ($editedFirst === false || $editedFirst > $ACTIONS_BOX + 192) {
     throw new RuntimeException('no c2pa.created in the relabelled actions box');
 }
 $edited = bSplice($edited, $editedFirst, 13, "\x6bc2pa.edited", [0, 38, 117, $ACTIONS_BOX, $ACTIONS_BOX + 70]);
-$edited = rehashEntry($edited, $ACTIONS_BOX, $CLAIM - 4, 'c2pa.actions');
+$edited = alRehashEntry($edited, $ACTIONS_BOX, $CLAIM - 4, 'c2pa.actions');
 $variants = [
-    'actions-v1-label-first-edited' => rebind($edited, $png, 4, $HASH_DATA_BOX, $CLAIM),
+    'actions-v1-label-first-edited' => alRebind($edited, $png, 4, $HASH_DATA_BOX, $CLAIM),
     'control-resigned' => $s,
-    'actions-v1-label-in-v2-claim' => rebind($relabelled, $png, 3, $HASH_DATA_BOX, $CLAIM),
+    'actions-v1-label-in-v2-claim' => alRebind($relabelled, $png, 3, $HASH_DATA_BOX, $CLAIM),
 ];
 // ---- the throw-away hierarchy: a P-256 root and a leaf on the C2PA profile ----
 $cnf = <<<'CNF'
@@ -265,11 +265,11 @@ keyUsage = critical, digitalSignature, nonRepudiation
 extendedKeyUsage = emailProtection
 CNF;
 file_put_contents("{$keys}/ext.cnf", $cnf);
-run(sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/root.key"));
-run(sh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/root.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=Throw-away Root (step 281)', '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', 'v3_root', '-out', "{$keys}/root.pem"));
-run(sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/leaf.key"));
-run(sh('openssl', 'req', '-new', '-key', "{$keys}/leaf.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=step 281 actions label', '-config', "{$keys}/ext.cnf", '-out', "{$keys}/leaf.csr"));
-run(sh('openssl', 'x509', '-req', '-in', "{$keys}/leaf.csr", '-CA', "{$keys}/root.pem", '-CAkey', "{$keys}/root.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-extfile', "{$keys}/ext.cnf", '-extensions', 'good', '-out', "{$keys}/leaf.pem"));
+alRun(alSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/root.key"));
+alRun(alSh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/root.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=Throw-away Root (step 281)', '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', 'v3_root', '-out', "{$keys}/root.pem"));
+alRun(alSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/leaf.key"));
+alRun(alSh('openssl', 'req', '-new', '-key', "{$keys}/leaf.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=step 281 actions label', '-config', "{$keys}/ext.cnf", '-out', "{$keys}/leaf.csr"));
+alRun(alSh('openssl', 'x509', '-req', '-in', "{$keys}/leaf.csr", '-CA', "{$keys}/root.pem", '-CAkey', "{$keys}/root.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-extfile', "{$keys}/ext.cnf", '-extensions', 'good', '-out', "{$keys}/leaf.pem"));
 $pemToDer = static fn (string $pem): string => (string) base64_decode(preg_replace('/-----[^-]+-----|\s/', '', $pem) ?? '', true);
 $rootPem = (string) file_get_contents("{$keys}/root.pem");
 $rootDer = $pemToDer($rootPem);
@@ -303,18 +303,18 @@ foreach ($variants as $name => $edited) {
     $COSE_LENGTH = bU32($edited, $COSE - 8) - 8;
 
     // the new COSE_Sign1: {1: -7, 33: [leaf, root]}, signed over the edited claim
-    $protected = "\xa2\x01\x26\x18\x21\x82".bstr($leafDer).bstr($rootDer);
-    $draft = "\xd2\x84".bstr($protected)."\xa1\x63pad".bstr('')."\xf6".bstr(str_repeat("\0", 64));
+    $protected = "\xa2\x01\x26\x18\x21\x82".alBstr($leafDer).alBstr($rootDer);
+    $draft = "\xd2\x84".alBstr($protected)."\xa1\x63pad".alBstr('')."\xf6".alBstr(str_repeat("\0", 64));
     $sigStructure = CoseSign1::fromBytes($draft)->sigStructure($claimBytes);
     file_put_contents("{$keys}/tbs", $sigStructure);
-    run(sh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/leaf.key", '-out', "{$keys}/sig", "{$keys}/tbs"));
-    $signature = derToRs((string) file_get_contents("{$keys}/sig"), 32);
-    $fixed = 2 + strlen(bstr($protected)) + 5 + 3 + 1 + strlen(bstr($signature));
+    alRun(alSh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/leaf.key", '-out', "{$keys}/sig", "{$keys}/tbs"));
+    $signature = alDerToRs((string) file_get_contents("{$keys}/sig"), 32);
+    $fixed = 2 + strlen(alBstr($protected)) + 5 + 3 + 1 + strlen(alBstr($signature));
     $padLength = $COSE_LENGTH - $fixed;
     if ($padLength < 256) {
         throw new RuntimeException("{$name}: the pad would be {$padLength} bytes, too short for a 3-byte head");
     }
-    $cose = "\xd2\x84".bstr($protected)."\xa1\x63pad\x59".pack('n', $padLength).str_repeat("\0", $padLength)."\xf6".bstr($signature);
+    $cose = "\xd2\x84".alBstr($protected)."\xa1\x63pad\x59".pack('n', $padLength).str_repeat("\0", $padLength)."\xf6".alBstr($signature);
     if (strlen($cose) !== $COSE_LENGTH) {
         throw new RuntimeException("{$name}: COSE is ".strlen($cose)." bytes, not {$COSE_LENGTH}");
     }
@@ -334,7 +334,7 @@ if (! is_dir($oracles) && ! mkdir($oracles, 0755, true)) {
 foreach (array_keys($variants) as $name) {
     foreach (['0.28.1' => $new, '0.27.22' => $old] as $v => $tool) {
         $lines = [];
-        exec(sh($tool, "{$dir}/{$name}.png", '--settings', "{$dir}/throw-away-root.settings.json").' 2>&1', $lines);
+        exec(alSh($tool, "{$dir}/{$name}.png", '--settings', "{$dir}/throw-away-root.settings.json").' 2>&1', $lines);
         file_put_contents("{$oracles}/{$name}--{$v}.json", implode("\n", $lines)."\n");
         $json = json_decode(implode("\n", $lines), true);
         printf("  %-30s %-8s %s\n", $name, $v, is_array($json) && is_string($json['validation_state'] ?? null) ? $json['validation_state'] : 'error');
