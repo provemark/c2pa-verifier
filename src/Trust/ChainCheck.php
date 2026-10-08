@@ -302,7 +302,11 @@ final readonly class ChainCheck
         if (! $issuer->isCa) {
             return sprintf('%s issued %s but is not a certificate authority (basicConstraints lacks CA:TRUE)', $issuer->subjectCn(), $issued->subjectCn());
         }
-        if ($issuer->keyUsage !== null && ! in_array('Certificate Sign', $issuer->keyUsage, true)) {
+        // a CA that signs certificates must carry keyUsage (RFC 5280 §4.2.1.3), as c2pa-rs's strict OpenSSL check asks (amendment 7)
+        if ($issuer->keyUsage === null) {
+            return sprintf('%s issued %s but carries no keyUsage extension, so it does not say it may sign certificates', $issuer->subjectCn(), $issued->subjectCn());
+        }
+        if (! in_array('Certificate Sign', $issuer->keyUsage, true)) {
             return sprintf('%s issued %s but its keyUsage lacks keyCertSign', $issuer->subjectCn(), $issued->subjectCn());
         }
         if ($issuer->pathLen !== null && $below > $issuer->pathLen) {

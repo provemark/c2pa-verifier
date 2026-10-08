@@ -312,7 +312,7 @@ alone.
   missing `x5chain`, no hard binding, no actions assertion: `Invalid` with
   a status code, never a silent `Valid`. A verifier that wrongly says
   `Valid` is worse than one that errors — and this project has found
-  nineteen such cases in itself, the first two by asking what happens when
+  twenty such cases in itself, the first two by asking what happens when
   something is *absent*; all are documented in [`SECURITY.md`](SECURITY.md)
   and closed.
 - **Bounded input.** Every parser has hard limits and acceptance criteria

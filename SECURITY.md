@@ -82,7 +82,7 @@ once before and was wrong: see `PRED-IMG-004` below.
 
 ## Findings so far
 
-The project keeps its own record. Nineteen cases of a wrong `Valid` or
+The project keeps its own record. Twenty cases of a wrong `Valid` or
 `Trusted` have been found in it, all by the maintainers, the last one by
 the security review of a downstream module: two before any
 release, one after `0.1.0`, five, with eight ways to crash the verifier,
@@ -92,7 +92,8 @@ in the security review of 2026-09-25, fixed in `0.2.2`, one fixed in
 findings, fixed in `0.2.5`, one found by reading the reference
 engine's own fixes, fixed in `0.2.6`, one found by a review of `src/`,
 fixed in `0.2.8`, one found by a review of the whole of `src/` before
-`0.3.0`, fixed in it, and one reported privately, fixed in `0.5.1`:
+`0.3.0`, fixed in it, one reported privately, fixed in `0.5.1`, and one
+found by the trust matrix, fixed after `0.5.1` and not yet released:
 
 - **2026-09-22, no hard binding** (`notes/step-47-no-hard-binding.md`).
   A correctly signed manifest with no `c2pa.hash.data` assertion — a
@@ -254,6 +255,21 @@ fixed in `0.2.8`, one found by a review of the whole of `src/` before
   a downstream module, with a related point: the state counted an
   ingredient's `signingCredential.trusted` as the active manifest's own.
   Not reachable, now not possible either (SPEC-014 amendment 6).
+
+- **2026-10-08, a certificate authority without keyUsage — present in
+  `0.2.2` to `0.5.1`, fixed after `0.5.1`**
+  (`notes/step-283-trust-matrix.md`). SPEC-014 amendment 4 asked an
+  issuing certificate for `keyCertSign` only when it carried a keyUsage
+  extension, so an intermediate or an anchor without one could issue.
+  Found by the trust matrix, which varies one property of one certificate
+  at a time against `c2patool` and OpenSSL: both cases `Trusted` here;
+  `c2patool` 0.27.22 and 0.28.1 `Valid` with `signingCredential.untrusted`;
+  `openssl verify -x509_strict` "CA cert does not include key usage
+  extension". RFC 5280 §4.2.1.3 requires the extension on such a
+  certificate. It needs a certificate authority without keyUsage under one
+  of your anchors, or as one (SPEC-014 amendment 7). None of the 53
+  anchors in the C2PA lists of 2026-08-14 and DigiCert Trusted Root G4
+  lacks it.
 
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now

@@ -305,6 +305,24 @@ measured in the tests-first step (Open questions).
     `trust.trust_anchors`, which anchors timestamp authorities too, at
     now, is untrusted. The timestamp check walks the same code.
 
+- **AC13 — a certificate that issues must carry keyUsage** *(amendment 7; required: error path)*
+  - Given the probes of `tests/Fixtures/trust/key-usage/`, each the PNG
+    fixture's store re-signed by a throw-away leaf, without a timestamp,
+    each under settings holding only its own anchor:
+    - `control`: leaf ← intermediate ← anchor, every CA with
+      `keyCertSign`;
+    - `int-no-key-usage`: the intermediate without a keyUsage extension;
+    - `anchor-no-key-usage`: the anchor without a keyUsage extension
+  - When verified
+  - Then `control` is `Trusted`, and the other two are
+    `signingCredential.untrusted` with `validation_state` `Valid`, as
+    both `c2patool` versions say; the explanation names the certificate
+    and says it carries no keyUsage
+  - And `ChainCheck::checkCertificates()` on the `int-no-key-usage` chain
+    under the legacy `trust.trust_anchors`, which anchors timestamp
+    authorities too, is untrusted. The timestamp check walks the same
+    code.
+
 ## References
 
 - Specification: C2PA 2.4 §14.4.1 (the validator's lists: trust anchors,
@@ -451,7 +469,7 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
    x5chain certificate that signed the one before it, and an anchor that
    signed the last one) (RFC 5280 §4.2.1.9, §4.2.1.3, §6.1.4):
    - basicConstraints `CA:TRUE`;
-   - when keyUsage is present, `keyCertSign` in it;
+   - when keyUsage is present, `keyCertSign` in it; *(amendment 7: keyUsage must be present)*
    - its `pathlen`, when present, is not smaller than the number of
      intermediate CA certificates between it and the leaf;
    - an x5chain intermediate is valid at the time the leaf is judged: a
@@ -545,6 +563,40 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
 
    Confirmed by Maurice van Loon, 2026-10-08 (step 276).
 
+7. **2026-10-08, step 284, found by the trust matrix (step 283).** Amendment
+   4 asked an issuing certificate for `keyCertSign` only *when keyUsage
+   is present*. A certificate authority without a keyUsage extension could
+   therefore issue. Measured on throw-away probes, each one property away
+   from a valid chain: an intermediate without keyUsage, and an anchor
+   without keyUsage, are `Trusted` here; `c2patool` 0.27.22 and 0.28.1
+   say `Valid` with `signingCredential.untrusted` for both; `openssl
+   verify -x509_strict -partial_chain` refuses both with *"CA cert does
+   not include key usage extension"*. RFC 5280 §4.2.1.3: a conforming CA
+   MUST include the extension in a certificate whose public key verifies
+   signatures on other certificates. Read: `c2pa-rs` 0.91.1's OpenSSL
+   trust check sets `X509_V_FLAG_X509_STRICT`
+   (`certificate_trust/openssl.rs`), which is where that refusal comes
+   from.
+
+   The rule, replacing amendment 4's "when keyUsage is present": every
+   certificate that issues another in the walk, an x5chain intermediate
+   and an anchor alike, carries keyUsage with `keyCertSign` in it.
+   Otherwise `signingCredential.untrusted`, naming the certificate, and
+   for an anchor the walk tries the next one. A leaf that is itself an
+   anchor, and a leaf on the allowed list, are unchanged: neither issues
+   anything. The timestamp authority's chain gets the same rule.
+
+   New criterion AC13. **Weight A**: chains with such a CA go from
+   `Trusted` to `Valid`, as in both `c2patool` versions; a wrong
+   `Trusted` against both oracles. Present since amendment 4 (0.2.2).
+   Measured before the build: none of the 53 anchors the plugin bundles
+   (the C2PA signer and TSA lists of 2026-08-14 and DigiCert Trusted Root
+   G4) lacks keyUsage. The corpus, the writers and the fuzz seed are
+   measured under every trust settings file before and after, and every
+   verdict that moves is named.
+
+   Confirmed by Maurice van Loon, 2026-10-08 (step 284).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -564,3 +616,4 @@ least one test; every source file maps back to this spec.
 | AC10 | tests/Unit/Trust/ChainCheckTest.php :: AC10: the codes are verbatim, and the drift alarm grows / SPEC-014 | src/Report/StatusCode.php :: SigningCredentialTrusted, SigningCredentialUntrusted, isSuccess(); tests/Pest.php :: SPEC013_CORPUS |
 | AC11 | tests/Unit/Trust/IssuerConstraintsTest.php :: AC11: a proper intermediate still leads to Trusted; AC11: a certificate that may not issue breaks the chain; AC11: the walk the timestamp check shares refuses the same chain / SPEC-014 | src/Trust/ChainCheck.php :: checkCertificates(), issuerFault(); src/Trust/Certificate.php :: $pathLen; the judged time from src/Verifier/Verifier.php, src/Verifier/IngredientManifestCheck.php and src/Timestamp/TimestampCheck.php (genTime) |
 | AC12 | tests/Unit/Trust/AnchorValidityTest.php :: AC12: an anchor valid now still leads to Trusted; AC12: an anchor outside its validity breaks the chain; AC12: the same expired intermediate under a valid root stays untrusted; AC12: the anchor is judged at the time it is given, and the timestamp walk refuses it at now / SPEC-014 | src/Trust/ChainCheck.php :: checkCertificates(), issuerFault() (the anchor judged at the leaf's time); the fixtures from bin/make-anchor-variants.php |
+| AC13 | tests/Unit/Trust/KeyUsageIssuerTest.php :: AC13: a chain whose CAs carry keyCertSign still leads to Trusted; AC13: a certificate authority without keyUsage issues nothing; AC13: the walk the timestamp check shares refuses the same chain / SPEC-014 | src/Trust/ChainCheck.php :: issuerFault() (keyUsage required); the fixtures from bin/make-trust-matrix.php (set key-usage) |

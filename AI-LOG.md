@@ -9491,3 +9491,25 @@ README are where the disclosure lives.
   project's own CI runs.
 - Decided by Maurice: close the draft (A), and publish advisories only
   once there are users outside the project.
+
+## 2026-10-08 — The trust matrix, and SPEC-014 amendment 7 (steps 283–284)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "hoe staan we ervoor nu. Er zijn steeds fixes nodig voor de
+  verifier. Wat adviseer je te doen", then "akkoord, bouw de generator en
+  doe de eerste meting", "akkoord, schrijf amendement 7 uit" and
+  "akkoord, amendement 7 bevestigd".
+- Produced: `bin/make-trust-matrix.php` (matrix and fixture modes);
+  SPEC-014 amendment 7, AC13 and its Traceability row; the fixtures
+  `tests/Fixtures/trust/key-usage/` and `tests/Fixtures/c2patool/key-usage/`;
+  `tests/Unit/Trust/KeyUsageIssuerTest.php`; `src/Trust/ChainCheck.php`;
+  `SECURITY.md` (the twentieth case), CHANGELOG *Unreleased*, the README's
+  count; `notes/step-283-trust-matrix.md`; two rows in `NOTES.md`.
+- Measured: the matrix (42 probes) through `c2patool` 0.27.22 and 0.28.1,
+  `openssl verify -x509_strict -partial_chain` and `bin/c2pa-verify`,
+  before and after the change; the 53 bundled anchors' keyUsage; the
+  tests red (3 failed, 1 passed), then `composer check` (927 passed);
+  the corpus (735 files, no settings and 67 settings files) before and
+  after; the fuzz seed before and after. Reasoned: from `c2pa-rs` 0.91.1
+  `certificate_trust/openssl.rs` (`X509_V_FLAG_X509_STRICT`).
+- Decided by Maurice: the consolidation plan, the generator, and
+  amendment 7.

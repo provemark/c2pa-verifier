@@ -5,6 +5,17 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Security
+
+- **A certificate authority without keyUsage no longer issues (SPEC-014
+  amendment 7).** An intermediate or an anchor that carried no keyUsage
+  extension could issue certificates, and the chain was `Trusted`; both
+  `c2patool` versions and OpenSSL refuse it. Every issuing certificate now
+  needs keyUsage with `keyCertSign` (RFC 5280 §4.2.1.3). Present in 0.2.2
+  to 0.5.1. Found by the trust matrix (`bin/make-trust-matrix.php`).
+
 ## 0.5.1 — 2026-10-08
 
 A security release. A trust anchor outside its own validity period still
