@@ -9403,3 +9403,15 @@ README are where the disclosure lives.
   `v0.5.0` worktree and in this tree; the suspects through `c2patool`
   0.27.22, 0.28.1 and the text-enabled 0.28.1.
 - Decided by Maurice: none in this step (the release itself waits).
+
+## 2026-10-08 — 0.5.1 released (step 278)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en tag na groene CI".
+- Produced: pushed `main` (steps 272–277), the annotated tag `v0.5.1` on
+  `3b82655`; a row in `NOTES.md`.
+- Measured: CI run 37824436105 (8 jobs green) and the tag's run
+  37824712677 (green); Packagist's metadata (`v0.5.1` at `3b82655`); a
+  fresh `composer require provemark/c2pa-verifier:^0.5` with an empty
+  Composer home installed `v0.5.1`; its `c2pa-verify` on two anchor probes
+  (`Trusted`, `Valid`).
+- Decided by Maurice: push, and tag after a green CI.
