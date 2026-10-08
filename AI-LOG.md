@@ -9317,3 +9317,23 @@ README are where the disclosure lives.
   `v0.28.1`, and from `c2pa-rs` 0.91.1 `verify_actions` and `c2patool`
   `apply_trust_sidecars`; that the release binary used the lock.
 - Decided by Maurice: correct both records.
+
+## 2026-10-08 — An expired trust anchor: measured, amendment, tests red (step 273)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "je hebt wat gekregen via de Drupal repo, is dit het?" (a private
+  report that an expired trust anchor still vouches), then "akkoord, begin
+  met de meting", "akkoord, schrijf amendement 7 uit" (it is amendment 5)
+  and "akkoord, amendement 5 bevestigd".
+- Produced: SPEC-014 amendment 5, AC12 and its Traceability row, the open
+  question answered; `bin/make-anchor-variants.php`; fixtures under
+  `tests/Fixtures/trust/anchor/` and `tests/Fixtures/c2patool/anchor/`;
+  `tests/Unit/Trust/AnchorValidityTest.php`;
+  `notes/step-273-anchor-validity.md`; a row in `NOTES.md`.
+- Measured: six probes signed by `c2patool` 0.27.22 with a throwaway PKI,
+  judged by 0.27.22, 0.28.1 and `bin/c2pa-verify`; `vendor/bin/pest
+  tests/Unit/Trust/AnchorValidityTest.php` (6 failed, 2 passed);
+  `composer check` (8 failed, 910 passed: the six, and two writers tests
+  that fail on a clean `HEAD` because Adobe's Lightroom signer expired on
+  2026-10-07). Reasoned: from `c2pa-rs` 0.91.1
+  `certificate_trust/openssl.rs` and `rust_native.rs`.
+- Decided by Maurice: amendment 5 (the anchor judged at the leaf's time).

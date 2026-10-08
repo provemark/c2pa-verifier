@@ -270,6 +270,36 @@ measured in the tests-first step (Open questions).
     authorities too, is untrusted. The timestamp check walks the same
     code.
 
+- **AC12 — an anchor outside its validity vouches for no one** *(amendment 5; required: error path)*
+  - Given the probes of `tests/Fixtures/trust/anchor/`, each
+    `fixture-unsigned.jpg` signed by a throwaway leaf, with no timestamp:
+    - `control`: leaf ← intermediate ← a root valid now, under that root;
+    - `expired-anchor`: leaf ← intermediate ← a root valid only in 2020,
+      under that root;
+    - `expired-anchor-direct`: the leaf issued by that root itself;
+    - `expired-anchor-in-x5chain`: as `expired-anchor`, the root also
+      carried in x5chain;
+    - `future-anchor`: leaf ← intermediate ← a root valid from 2090
+      (2030 in the measurement; moved so the fixture does not turn
+      valid);
+    - `expired-int-as-anchor`: leaf ← an intermediate valid only in 2020,
+      with that intermediate as the one anchor
+  - When verified
+  - Then `control` is `Trusted`, and every other case is
+    `signingCredential.untrusted` with `validation_state` `Valid`, as
+    `c2patool` 0.28.1 says for each. The explanation names the anchor,
+    the time judged and its validity period. `c2patool` 0.27.22 says
+    `Trusted` for all six.
+  - And `expired-int-as-anchor` under `root-valid` (the expired
+    intermediate in x5chain, not an anchor) stays untrusted, as today.
+  - And `ChainCheck::checkCertificates()` on the `expired-anchor-direct`
+    chain (the leaf alone, so no intermediate's validity enters) with an
+    explicit time inside the root's validity (2020-06-01) is
+    trusted: the anchor is judged at the time it is given, not now.
+  - And `checkCertificates()` on the same chain under the legacy
+    `trust.trust_anchors`, which anchors timestamp authorities too, at
+    now, is untrusted. The timestamp check walks the same code.
+
 ## References
 
 - Specification: C2PA 2.4 §14.4.1 (the validator's lists: trust anchors,
@@ -374,10 +404,9 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
   chain shows OpenSSL rendering the same DN differently on two
   certificates, the comparison moves to the DER of the Name; measured
   then.
-- Non-blocker (amendment 4): whether an anchor that is itself out of its
-  validity still anchors. RFC 5280 §6.1.1 treats a trust anchor as input;
-  no probe measures what `c2patool` does with an expired root. Unchanged
-  until one does.
+- ~~Non-blocker (amendment 4): whether an anchor that is itself out of its
+  validity still anchors.~~ Answered by amendment 5 (step 273): it does
+  not, as `c2patool` 0.28.1 measures it.
 
 ## Amendments
 
@@ -437,6 +466,52 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
 
    Confirmed by Maurice van Loon, 2026-09-25 (step 148).
 
+5. **2026-10-08, step 273, reported privately from a security review of a
+   downstream module.** An anchor is not judged against its own validity.
+   When the walk reaches an anchor that issued the current certificate,
+   `issuerFault()` is called without a time, so the anchor's `notBefore`
+   and `notAfter` are skipped. A chain under a root that expired years
+   ago, or that is not valid until 2030, is `Trusted`. So is a chain
+   under an expired intermediate configured as the anchor, and a chain
+   that also carries the expired root in x5chain: the walk meets the
+   anchor at the intermediate's issuer and never reaches the copy. The
+   flaw is present in every release up to 0.5.0.
+
+   Measured 2026-10-08 on six throwaway probes (step 273): `c2patool`
+   0.28.1 says `signingCredential.untrusted` for each, 0.27.22 says
+   `Trusted` for each, and this verifier `Trusted`. Read, not measured:
+   `c2pa-rs` 0.91.1's OpenSSL trust check (`certificate_trust/openssl.rs`)
+   lets OpenSSL check every certificate on the path it builds, the anchor
+   included, at the trusted timestamp's time, else now.
+
+   The rule, added to amendment 4's: an anchor that issues a certificate
+   in the walk is valid at the time the leaf is judged, the same time an
+   x5chain intermediate is judged at (a trusted timestamp's `genTime`,
+   else now; `genTime` for a timestamp authority's chain). Otherwise
+   `signingCredential.untrusted`, naming the anchor, the time and its
+   validity period, and the walk tries the next anchor, as it does for
+   amendment 4's other anchor faults.
+
+   Unchanged: a leaf that is itself an anchor, and a leaf on the allowed
+   list. Neither issues anything, and the leaf's own validity is SPEC-015's
+   `signingCredential.expired`. RFC 5280 §6.1.1 leaves a trust anchor's
+   validity to the relying party; the relying party here follows
+   `c2patool` 0.28.1.
+
+   New criterion AC12. **Weight A**: files whose anchor is outside its
+   validity at the judged time go from `Trusted` to `Valid`. Under
+   ADR-0005 this prevents a wrong `Trusted`; it agrees with 0.28.1 and
+   is stricter than 0.27.22. Before the build, the corpus, the writers
+   and the fuzz seed are measured under every trust settings file the
+   tests use, and every verdict that moves is named.
+
+   Not in the rule, not measured: an anchor valid at a timestamp's
+   `genTime` and expired since. The rule judges it at `genTime`, as
+   `c2pa-rs` is read to do; no probe has a timestamp from a time in the
+   past.
+
+   Confirmed by Maurice van Loon, 2026-10-08 (step 273).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -455,3 +530,4 @@ least one test; every source file maps back to this spec.
 | AC9 | tests/Unit/Trust/ChainCheckTest.php :: AC9: the three states are told apart by the rule, on paper and on files / SPEC-014 | src/Report/ValidationResult.php :: fromStatuses(); src/Report/ValidationState.php :: Trusted |
 | AC10 | tests/Unit/Trust/ChainCheckTest.php :: AC10: the codes are verbatim, and the drift alarm grows / SPEC-014 | src/Report/StatusCode.php :: SigningCredentialTrusted, SigningCredentialUntrusted, isSuccess(); tests/Pest.php :: SPEC013_CORPUS |
 | AC11 | tests/Unit/Trust/IssuerConstraintsTest.php :: AC11: a proper intermediate still leads to Trusted; AC11: a certificate that may not issue breaks the chain; AC11: the walk the timestamp check shares refuses the same chain / SPEC-014 | src/Trust/ChainCheck.php :: checkCertificates(), issuerFault(); src/Trust/Certificate.php :: $pathLen; the judged time from src/Verifier/Verifier.php, src/Verifier/IngredientManifestCheck.php and src/Timestamp/TimestampCheck.php (genTime) |
+| AC12 | tests/Unit/Trust/AnchorValidityTest.php :: AC12: an anchor valid now still leads to Trusted; AC12: an anchor outside its validity breaks the chain; AC12: the same expired intermediate under a valid root stays untrusted; AC12: the anchor is judged at the time it is given, and the timestamp walk refuses it at now / SPEC-014 | src/Trust/ChainCheck.php :: checkCertificates(), issuerFault() (the anchor judged at the leaf's time); the fixtures from bin/make-anchor-variants.php |
