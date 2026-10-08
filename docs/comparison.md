@@ -208,6 +208,12 @@ without an anchor — 34 corpus files, informational, no verdict changes.
 - Test anchors and anchors cut from tokens. The production C2PA trust
   lists were used once, as a measurement (step 113): two corpus files
   reach an official anchor. The project does not bundle or fetch them.
+- Fuzzing before 0.5.1 (step 277): the same seed (20261005, 60 rounds)
+  over every format's corpus files, 12 903 runs over 249 files, once in a
+  worktree at `v0.5.0` and once at 0.5.1: 0 faults in both, **the same 122
+  files `Valid` in both**, 120 of them `Valid` in `c2patool` 0.27.22 and
+  0.28.1 and the 2 texts `Valid` in 0.28.1 built with
+  `unstable_plain_text`.
 - Fuzzing before 0.5.0 (step 270): the same seed (20261005, 60 rounds)
   over the formats 0.4.0 read, 11 733 runs over 226 files, once under 0.4.0
   and once under 0.5.0: 0 faults in both, **the same 128 files `Valid` in

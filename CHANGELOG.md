@@ -5,6 +5,61 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.5.1 — 2026-10-08
+
+A security release. A trust anchor outside its own validity period still
+vouched for a signer: a chain under a root that had expired, or that was
+not yet valid, was `Trusted`. Present in every release up to 0.5.0;
+reported privately. It needs a configured anchor that is out of date and
+a signing key under it. Every user who configures trust anchors should
+upgrade.
+
+**A `0.5.1`, not a `0.6`:** no class, method, member or settings shape
+changes, the recorded public API is the same 126 symbols, and there is no
+new status code. What changes is the verdict on the files described below.
+
+### Security
+
+- **A trust anchor is judged at the time the signer is judged (SPEC-014
+  amendment 5).** The chain walk checked the validity of every x5chain
+  intermediate, but not of the anchor it reached. A chain under an anchor
+  that expired years ago, or one that is valid only from some date in the
+  future, was `Trusted`; so was a chain under an expired intermediate
+  configured as the anchor, and a chain that carried the expired root in
+  x5chain as well. The anchor must now be valid at a trusted timestamp's
+  time, or else now, the same time an intermediate is judged at; otherwise
+  `signingCredential.untrusted`, naming the anchor and its validity
+  period. The timestamp authority's chain gets the same rule, at the
+  timestamp's time. `c2patool` 0.28.1 says `untrusted` on each probe;
+  0.27.22 says `Trusted`. Present in 0.1.0 to 0.5.0.
+
+### Changed
+
+- **Only the active manifest's own signer makes a file `Trusted`
+  (SPEC-014 amendment 6).** The state counted a `signingCredential.trusted`
+  reported for an ingredient as much as the active manifest's own, where
+  `c2pa-rs` counts the active manifest's only. Not reachable in any
+  release, because the active manifest always reports its own trust; the
+  rule no longer depends on that.
+
+### Notes for users
+
+- If you configured DigiCert's **cross-certificate** for `DigiCert Trusted
+  Root G4` (issued by `DigiCert Assured ID Root CA`, valid from
+  2022-08-01) instead of the self-signed root that
+  [`docs/trust-settings.md`](docs/trust-settings.md) recommends, DigiCert
+  timestamps from before August 2022 are now `timeStamp.untrusted`. The
+  self-signed root (valid from 2013) is not affected. This project's own
+  test fixture was the cross-certificate and is now the root (SPEC-017
+  amendment 7).
+- Adobe's signing certificate `CN=Adobe C2PA` that Lightroom used in 2026
+  expired on 2026-10-07. Without a DigiCert anchor for its timestamps this
+  verifier judges such a file at now and reports
+  `signingCredential.expired` (`Invalid`), where `c2patool` says `Valid`
+  (ADR-0004). With the DigiCert root from `docs/trust-settings.md` it is
+  `Valid`. This is not a change in 0.5.1; it happened to 0.5.0 users on
+  that day.
+
 ## 0.5.0 — 2026-10-07
 
 Plain text, read and verified when the caller asks for it, and measured

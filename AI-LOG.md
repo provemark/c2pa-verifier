@@ -9390,3 +9390,16 @@ README are where the disclosure lives.
   `Verifier.php` and `IngredientManifestCheck.php`, why it was not
   reachable.
 - Decided by Maurice: option (2) and amendment 6.
+
+## 2026-10-08 — The check before 0.5.1 and the release commit (step 277)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, begin met de controle vóór de release".
+- Produced: `CHANGELOG.md` (0.5.1), `README.md`, `SECURITY.md`,
+  `docs/comparison.md`, `notes/step-277-pre-release-0.5.1.md`, a row in
+  `NOTES.md`.
+- Measured: `php bin/spec-check.php`; `composer check` (919 passed);
+  `php bin/api-check.php`; `git diff v0.5.0` on the surface and the status
+  codes; `php bin/package-check.php`; `bin/fuzz.php 20261005 60` in a
+  `v0.5.0` worktree and in this tree; the suspects through `c2patool`
+  0.27.22, 0.28.1 and the text-enabled 0.28.1.
+- Decided by Maurice: none in this step (the release itself waits).

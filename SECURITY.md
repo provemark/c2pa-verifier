@@ -74,16 +74,17 @@ once before and was wrong: see `PRED-IMG-004` below.
 
 ## Findings so far
 
-The project keeps its own record. Eighteen cases of a wrong `Valid` or
-`Trusted` have been found in it, all by the maintainers: two before any
+The project keeps its own record. Nineteen cases of a wrong `Valid` or
+`Trusted` have been found in it, all by the maintainers, the last one by
+the security review of a downstream module: two before any
 release, one after `0.1.0`, five, with eight ways to crash the verifier,
 in the security review of 2026-09-25, fixed in `0.2.2`, one fixed in
 `0.2.3`, two, with four ways to exhaust the verifier, in a review of
 2026-09-27, fixed in `0.2.4`, four more from that review's lower
 findings, fixed in `0.2.5`, one found by reading the reference
 engine's own fixes, fixed in `0.2.6`, one found by a review of `src/`,
-fixed in `0.2.8`, and one found by a review of the whole of `src/` before
-`0.3.0`, fixed in it:
+fixed in `0.2.8`, one found by a review of the whole of `src/` before
+`0.3.0`, fixed in it, and one reported privately, fixed in `0.5.1`:
 
 - **2026-09-22, no hard binding** (`notes/step-47-no-hard-binding.md`).
   A correctly signed manifest with no `c2pa.hash.data` assertion — a
@@ -229,6 +230,22 @@ fixed in `0.2.8`, and one found by a review of the whole of `src/` before
   with PHP's fatal error, without a key (SPEC-007 amendment 6); the fuzzer,
   once it encoded every report, found the same effect from a damaged
   KeyUsage extension quoted in an explanation (SPEC-043 amendment 3).
+
+- **2026-10-08, a trust anchor outside its own validity — present in
+  `0.1.0` to `0.5.0`, fixed in `0.5.1`**
+  (`notes/step-273-anchor-validity.md`,
+  `notes/step-275-anchor-validity-built.md`). The chain walk judged every
+  x5chain intermediate at the time the signer is judged, but never the
+  anchor it reached. Measured on a throw-away hierarchy: a root valid only
+  in 2020, a root valid only from 2090, and an expired intermediate
+  configured as the anchor each made their signer `Trusted` here, and so
+  did the expired root carried in x5chain as well; `c2patool` 0.28.1 says
+  `Valid` with `signingCredential.untrusted` for each, 0.27.22 `Trusted`.
+  It needs an out-of-date anchor in your settings and a key under it
+  (SPEC-014 amendment 5). Reported privately from the security review of
+  a downstream module, with a related point: the state counted an
+  ingredient's `signingCredential.trusted` as the active manifest's own.
+  Not reachable, now not possible either (SPEC-014 amendment 6).
 
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now
