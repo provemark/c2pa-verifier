@@ -232,6 +232,11 @@ measured in the tests-first step (Open questions).
     `Invalid` with both `signingCredential.trusted` (success) and
     `assertion.dataHash.mismatch` (failure) present — trust does not
     rescue a tampered file
+  - And *(amendment 6)* `fromStatuses()` with `claimSignature.validated`
+    for the active manifest and `signingCredential.trusted` only for an
+    ingredient (`ingredientUri` set) is `Valid`, not `Trusted`; the same
+    with the active manifest's own `signingCredential.trusted` added is
+    `Trusted`
 
 - **AC10 — the codes are verbatim, and the drift alarm grows**
   - Given `StatusCode::cases()` and SPEC-013 AC10's corpus
@@ -512,6 +517,31 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
 
    Confirmed by Maurice van Loon, 2026-10-08 (step 273).
 
+6. **2026-10-08, step 276, reported privately with amendment 5.** The
+   state rule of AC9 counted a `signingCredential.trusted` from any
+   scope. A status found while walking an ingredient (its `ingredientUri`
+   set, SPEC-020) counted as much as the active manifest's own. Read in
+   `c2pa-rs` 0.91.1 (`validation_results.rs`, `validation_state`):
+   `Trusted` needs `signingCredential.trusted` in the active manifest's
+   success list; an ingredient's does not count.
+
+   Not reachable today, reasoned from the code: with `verify_trust` on,
+   the active manifest's trust check always reports `trusted`,
+   `untrusted` or a failure, and `untrusted` or a failure keeps the
+   state from `Trusted`; with it off, neither the active manifest nor an
+   ingredient reports trust. The rule depended on that, not on itself.
+
+   The rule: only a `signingCredential.trusted` without an
+   `ingredientUri` makes the state `Trusted`. Everything else in AC9 is
+   unchanged. AC9 gains one case (`ValidationResult::fromStatuses()`, an
+   ingredient's `trusted` alone: `Valid`).
+
+   **Weight C, expected**: no file's verdict should move; the corpus is
+   measured under every trust settings file before and after, and any
+   verdict that moves is named.
+
+   Confirmed by Maurice van Loon, 2026-10-08 (step 276).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -527,7 +557,7 @@ least one test; every source file maps back to this spec.
 | AC6 | tests/Unit/Trust/ChainCheckTest.php :: AC6: verify_trust off: no credential code at all / SPEC-014 | src/Trust/ChainCheck.php :: check() (verifyTrust); src/Verifier/Verifier.php :: check() |
 | AC7 | tests/Unit/Trust/ChainCheckTest.php :: AC7: the settings are whole or absent / SPEC-014 | src/Trust/TrustSettings.php :: fromJson(), fromArray(), certificatesFromPem(), ekusFromConfig(), section(), text(); src/Trust/TrustException.php; src/Trust/Certificate.php :: __construct() |
 | AC8 | tests/Unit/Trust/ChainCheckTest.php :: AC8: the second oracle: OpenSSL agrees with the walk / SPEC-014 | src/Trust/ChainCheck.php :: check() |
-| AC9 | tests/Unit/Trust/ChainCheckTest.php :: AC9: the three states are told apart by the rule, on paper and on files / SPEC-014 | src/Report/ValidationResult.php :: fromStatuses(); src/Report/ValidationState.php :: Trusted |
+| AC9 | tests/Unit/Trust/ChainCheckTest.php :: AC9: the three states are told apart by the rule, on paper and on files; AC9: only the active manifest's own trusted makes the state Trusted (amendment 6) / SPEC-014 | src/Report/ValidationResult.php :: fromStatuses(); src/Report/ValidationState.php :: Trusted |
 | AC10 | tests/Unit/Trust/ChainCheckTest.php :: AC10: the codes are verbatim, and the drift alarm grows / SPEC-014 | src/Report/StatusCode.php :: SigningCredentialTrusted, SigningCredentialUntrusted, isSuccess(); tests/Pest.php :: SPEC013_CORPUS |
 | AC11 | tests/Unit/Trust/IssuerConstraintsTest.php :: AC11: a proper intermediate still leads to Trusted; AC11: a certificate that may not issue breaks the chain; AC11: the walk the timestamp check shares refuses the same chain / SPEC-014 | src/Trust/ChainCheck.php :: checkCertificates(), issuerFault(); src/Trust/Certificate.php :: $pathLen; the judged time from src/Verifier/Verifier.php, src/Verifier/IngredientManifestCheck.php and src/Timestamp/TimestampCheck.php (genTime) |
 | AC12 | tests/Unit/Trust/AnchorValidityTest.php :: AC12: an anchor valid now still leads to Trusted; AC12: an anchor outside its validity breaks the chain; AC12: the same expired intermediate under a valid root stays untrusted; AC12: the anchor is judged at the time it is given, and the timestamp walk refuses it at now / SPEC-014 | src/Trust/ChainCheck.php :: checkCertificates(), issuerFault() (the anchor judged at the leaf's time); the fixtures from bin/make-anchor-variants.php |

@@ -39,12 +39,14 @@ final readonly class ValidationResult
         // A status scoped to an ingredient counts here like any other, which is
         // c2pa-rs's rule: Valid tolerates an untrusted ingredient signer, Trusted
         // tolerates no failure in any delta (validation_results.rs validation_state).
+        // Except trusted itself: only the active manifest's own signer makes the
+        // state Trusted, never an ingredient's (SPEC-014 amendment 6).
         $succeeded = false;
         $trusted = false;
         $failed = false;
         foreach ($statuses as $status) {
             $succeeded = $succeeded || $status->code->isSuccess();
-            $trusted = $trusted || $status->code === StatusCode::SigningCredentialTrusted;
+            $trusted = $trusted || ($status->code === StatusCode::SigningCredentialTrusted && $status->ingredientUri === null);
             $failed = $failed || ($status->code->isFailure() && $status->code !== StatusCode::SigningCredentialUntrusted);
         }
         $untrusted = false;

@@ -9372,3 +9372,21 @@ README are where the disclosure lives.
   the OpenSSL strings in the 0.28.1 binary, which backend it uses.
 - Decided by Maurice: push later with the rest (a); the self-signed root
   in the fixtures (A); the three amendments.
+
+## 2026-10-08 — Trusted only from the active manifest (step 276)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, begin met 276" (the related point of the private
+  report), "akkoord, (2)" (align the rule with c2pa-rs rather than only
+  pin it) and "akkoord, amendement 6 bevestigd".
+- Produced: SPEC-014 amendment 6 and an AC9 case,
+  `src/Report/ValidationResult.php`, a test in
+  `tests/Unit/Trust/ChainCheckTest.php`,
+  `notes/step-276-trusted-from-the-active-manifest.md`, a row in
+  `NOTES.md`.
+- Measured: the new test red (1 failed), then `composer check` (919
+  passed); the scratch corpus run (729 files × no settings and 63
+  settings files) against step 275's: 0 of 45,927 reports differ.
+  Reasoned: from `c2pa-rs` 0.91.1 `validation_results.rs`, and from
+  `Verifier.php` and `IngredientManifestCheck.php`, why it was not
+  reachable.
+- Decided by Maurice: option (2) and amendment 6.

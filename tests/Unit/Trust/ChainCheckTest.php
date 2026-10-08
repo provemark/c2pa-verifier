@@ -354,6 +354,17 @@ it('AC9: the three states are told apart by the rule, on paper and on files', fu
         ->and(spec014OracleUrl(spec014Oracle('pixel-changed'), 'signingCredential.trusted'))->toBe($url);
 })->group('SPEC-014');
 
+it('AC9: only the active manifest\'s own trusted makes the state Trusted (amendment 6)', function (): void {
+    $url = SPEC014_PNG_SIGNATURE;
+    $validated = new ValidationStatus(StatusCode::ClaimSignatureValidated, $url, 'ok');
+    $ingredientTrusted = new ValidationStatus(StatusCode::SigningCredentialTrusted, 'self#jumbf=/c2pa/urn:uuid:ingredient/c2pa.signature', 'ok', 'self#jumbf=/c2pa/urn:uuid:active/c2pa.assertions/c2pa.ingredient.v3');
+    $activeTrusted = new ValidationStatus(StatusCode::SigningCredentialTrusted, $url, 'ok');
+
+    // c2pa-rs 0.91.1 validation_state: signingCredential.trusted in the active manifest's success list
+    expect(ValidationResult::fromStatuses([$validated, $ingredientTrusted], ['trust'])->state)->toBe(ValidationState::Valid)
+        ->and(ValidationResult::fromStatuses([$validated, $ingredientTrusted, $activeTrusted], ['trust'])->state)->toBe(ValidationState::Trusted);
+})->group('SPEC-014');
+
 it('AC10: the codes are verbatim, and the drift alarm grows', function (): void {
     $values = array_map(static fn (StatusCode $c): string => $c->value, StatusCode::cases());
     expect($values)->toContain('signingCredential.trusted')   // the exact count is SPEC-015 AC10's since it added signingCredential.expired
