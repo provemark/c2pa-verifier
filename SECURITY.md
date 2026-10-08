@@ -33,6 +33,14 @@ the report is credited in the note of that step unless you ask otherwise.
 
 There is no bug bounty.
 
+Advisories are published once the package has users outside this
+project. Until then every finding is recorded here, under *Findings so
+far*, and in the CHANGELOG of the release that fixes it, with the
+versions it affected. The finding fixed in `0.5.1` was handled this way:
+it was reported privately as a draft advisory, and that draft was closed
+unpublished on 2026-10-08, when Packagist's downloads and the plugin
+directory's installs showed no use beyond the project's own.
+
 ## Scope of what is verified
 
 Verified: the manifest store's extraction (JPEG APP11, PNG `caBX`, the GIF

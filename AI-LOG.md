@@ -9477,3 +9477,17 @@ README are where the disclosure lives.
   restored; `composer check` (923 passed); `bin/package-check.php`.
   Reasoned: from `c2pa-rs` 0.91.1 `claim.rs` and `assertion.rs`.
 - Decided by Maurice: option (B) and amendment 6.
+
+## 2026-10-08 — No advisory while there are no users (step 282)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ik weet niet of ik dat moet plaatsen er zijn nog geen
+  gebruikers", then "akkoord, (A) en zet de beleidsregel in SECURITY.md".
+- Produced: the draft advisory closed unpublished (`gh api`, state
+  `closed`); a paragraph under *Reporting* in `SECURITY.md`; a row in
+  `NOTES.md`.
+- Measured: Packagist's stats (2,007 downloads, all this month, 593
+  today; one dependent) and the plugin directory's API (0 active installs
+  reported, 626 downloads). Reasoned: that most downloads are this
+  project's own CI runs.
+- Decided by Maurice: close the draft (A), and publish advisories only
+  once there are users outside the project.
