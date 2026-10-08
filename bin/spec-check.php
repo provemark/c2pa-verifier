@@ -109,6 +109,51 @@ function specCheckUnfilledTraceability(string $text): array
 }
 
 /**
+ * The line numbers of the open questions that carry no `*Status` line (AC12,
+ * amendment 2): every item of the `## Open questions` section — a line starting
+ * `- ` or `N. ` — that is not struck through, up to the next item, the next
+ * heading or the end of the section. An indented line after a blank line still
+ * belongs to the item.
+ *
+ * @return list<int>
+ */
+function specCheckOpenQuestions(string $text): array
+{
+    $lines = explode("\n", $text);
+    $start = array_search('## Open questions', $lines, true);
+    if ($start === false) {
+        return [];
+    }
+    $missing = [];
+    $item = null;
+    $hasStatus = false;
+    $blank = false;
+    for ($i = $start + 1, $n = count($lines); $i <= $n; $i++) {
+        $line = $lines[$i] ?? '## end';
+        $isItem = preg_match('/^(- |\d+\. )/', $line) === 1;
+        $ends = $isItem || str_starts_with($line, '#') || ($blank && $line !== '' && ! str_starts_with($line, ' '));
+        if ($ends && $item !== null) {
+            if (! $hasStatus) {
+                $missing[] = $item + 1;
+            }
+            $item = null;
+        }
+        if (str_starts_with($line, '#')) {
+            break;
+        }
+        if ($isItem) {
+            $item = str_starts_with($line, '- ~~') ? null : $i;
+            $hasStatus = false;
+        } elseif ($item !== null && str_starts_with(ltrim($line), '*Status')) {
+            $hasStatus = true;
+        }
+        $blank = trim($line) === '';
+    }
+
+    return $missing;
+}
+
+/**
  * Every `*Test.php` under tests/, except tests/Fixtures/, relative to root.
  *
  * @return list<string>
@@ -309,6 +354,11 @@ function specCheck(string $root): SpecCheckResult
         if ($status === 'draft') {
             foreach ($files as $file) {
                 $findings[] = "{$id}: status draft but {$file} carries its group — tests precede approval";
+            }
+        }
+        if ($status === 'approved' || $status === 'implemented') {
+            foreach (specCheckOpenQuestions($specTexts[$id]) as $line) {
+                $findings[] = "{$id}: open question at line {$line} has no *Status line (amendment 2)";
             }
         }
         if ($status === 'implemented') {

@@ -146,6 +146,18 @@ assumption: this project fails closed.
     groups of that declaration's own statement. The file is read with
     PHP's tokenizer, so a comment or a string cannot fake a declaration.
 
+- **AC12 — every open question in an approved or implemented spec has a status** *(amendment 2)*
+  - Given a spec with status `approved` or `implemented` whose `## Open
+    questions` section holds an item (a line starting `- ` or `N. `) that
+    is not struck through (`- ~~`) and has no line starting `*Status`
+    before the next item, the next heading or the end of the section
+  - When the checker runs
+  - Then it reports one finding per such item, naming the spec and the
+    line, and exits 1. A `draft` spec may have open questions without a
+    status. The status line's content is not checked; its words
+    (answered, design, fail closed, equal to an oracle, measured or read)
+    are the reviewer's.
+
 ## References
 
 - Specification: none — this spec governs the project's own process, which is
@@ -200,6 +212,19 @@ function specCheck(string $root): array;
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 120).
 
+2. **2026-10-08, step 280, after the wrong `Trusted` fixed in 0.5.1.** That
+   flaw had been written down in SPEC-014's open questions on 2026-09-25
+   as a non-blocker, reasoned and never measured, and nothing made anyone
+   look at it again before the spec was `implemented`. Step 279 gave each
+   of the 175 open questions in the specs a status line. AC12 makes that a
+   rule: an `approved` or `implemented` spec may not hold an open question
+   without one. The checker sees only that the line is there; whether a
+   question about a verdict was measured is the review's to judge.
+
+   **Weight B: a rule about the record, no verdict involved.**
+
+   Confirmed by Maurice van Loon, 2026-10-08 (step 280).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -217,4 +242,5 @@ least one test; every source file maps back to this spec.
 | AC8 | tests/Unit/SpecCheckTest.php :: AC8: a clean tree exits 0 and says OK with the counts; AC8: a tree with several problems reports one line per finding and exits 1; AC8: this repository itself is clean, with the fixture trees skipped / SPEC-000 | bin/spec-check.php :: SpecCheckResult::exitCode(), render(); specCheckTestFiles() skips tests/Fixtures/ |
 | AC9 | tests/Unit/SpecCheckTest.php :: AC9: a multi-argument group call counts for every spec it names / SPEC-000 | bin/spec-check.php :: specCheckGroups() |
 | AC11 (amendment 1) | tests/Unit/SpecCheckTest.php :: AC11: a test naming a criterion its spec does not trace is a finding naming file, line and criterion / SPEC-000 | bin/spec-check.php :: specCheckNamedCriteria(), specCheckTracedCriteria(), specCheck() |
+| AC12 (amendment 2) | tests/Unit/SpecCheckTest.php :: AC12: an open question without a status line is a finding in an approved spec, not in a draft / SPEC-000 | bin/spec-check.php :: specCheckOpenQuestions() |
 | AC10 | measured by hand, not a Pest test (a test calling `composer check` from inside `composer check` is a loop): on a copy with SPEC-000 set to `draft`, `composer check` stopped at spec-check with exit 1 and Pint never ran — AI-LOG.md 2026-09-19, M0.3c | composer.json :: scripts.check (spec-check first) |

@@ -9445,3 +9445,17 @@ README are where the disclosure lives.
   158, SPEC-029's criteria), and `docs/comparison.md` for every status
   that says something is named there.
 - Decided by Maurice: extend step 279 to every open question.
+
+## 2026-10-08 — Open questions need a status (step 280)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf amendement 2 uit", then "akkoord, amendement 2
+  bevestigd".
+- Produced: SPEC-000 AC12 and amendment 2 with its Traceability row;
+  `specCheckOpenQuestions()` in `bin/spec-check.php`; the fixture tree
+  `tests/Fixtures/spec-check/open-question-without-status/`; a test in
+  `tests/Unit/SpecCheckTest.php`; `notes/step-280-open-questions-need-a-status.md`;
+  a row in `NOTES.md`.
+- Measured: the new test red (1 failed, 13 passed), then green;
+  `php bin/spec-check.php` on the repository (OK) and with one SPEC-048
+  status line removed (one finding); `composer check` (920 passed).
+- Decided by Maurice: SPEC-000 amendment 2.

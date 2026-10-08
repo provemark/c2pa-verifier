@@ -111,6 +111,16 @@ it('AC11: a test naming a criterion its spec does not trace is a finding naming 
     ])->and($result->exitCode())->toBe(1);
 })->group('SPEC-000');
 
+it('AC12: an open question without a status line is a finding in an approved spec, not in a draft', function (): void {
+    $result = specCheck(specCheckFixture('open-question-without-status'));
+
+    // line 18: a numbered question; line 25: a bullet; a status after a blank line counts, a struck one needs none
+    expect($result->findings)->toBe([
+        'SPEC-001: open question at line 18 has no *Status line (amendment 2)',
+        'SPEC-001: open question at line 25 has no *Status line (amendment 2)',
+    ])->and($result->exitCode())->toBe(1);
+})->group('SPEC-000');
+
 it('AC8: this repository itself is clean, with the fixture trees skipped', function (): void {
     $result = specCheck(dirname(__DIR__, 2));
 
