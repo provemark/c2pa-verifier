@@ -23,20 +23,14 @@ verdict, `c2pa-rs` 0.91.1 or a measurement. Each now carries a line
 *Status 2026-10-08 (step 279)* under it. The question itself is
 unchanged.
 
-For the first 27:
+Counted from the 174 status lines (the struck-through one has none):
 
 | status | count |
 |---|---|
-| answered by a later step, with the step named | 10 |
-| design or process, no verdict | 9 |
-| about a verdict, fail closed (at worst stricter) | 7 |
-| about a verdict, equal to `c2pa-rs`, read not measured | 1 |
-
-For the other 147, roughly: about 45 answered or decided in their own
-text or by a later step, about 50 design, process or report shape with no
-verdict, about 30 about a verdict and fail closed or stricter, and about
-20 about a verdict and equal to an oracle (each line says which, and
-whether that was measured or read).
+| answered or decided, in its own text or by a later step (named) | 64 |
+| design, process or the report's shape, no verdict | 61 |
+| about a verdict, fail closed or stricter than the oracle | 33 |
+| about a verdict, equal to an oracle (each line says measured or read) | 16 |
 
 Checked more closely, because they could have been lenient:
 
