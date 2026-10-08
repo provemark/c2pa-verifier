@@ -1,0 +1,9 @@
+{
+    "verify": {
+        "verify_trust": true
+    },
+    "trust": {
+        "trust_anchors": "-----BEGIN CERTIFICATE-----\nMIICDjCCAbSgAwIBAgIUQALcX+7BnGQ0ZOMojKN1MP3TyZkwCgYIKoZIzj0EAwIw\nZTExMC8GA1UEAwwoTWF0cml4IEFuY2hvciAoaW50LWNyaXRpY2FsLXVua25vd24t\nZXh0KTEjMCEGA1UECgwaYzJwYS12ZXJpZmllciB0cnVzdCBtYXRyaXgxCzAJBgNV\nBAYTAk5MMB4XDTI2MTAwODIwNTA1OFoXDTM2MTAwNTIwNTA1OFowZTExMC8GA1UE\nAwwoTWF0cml4IEFuY2hvciAoaW50LWNyaXRpY2FsLXVua25vd24tZXh0KTEjMCEG\nA1UECgwaYzJwYS12ZXJpZmllciB0cnVzdCBtYXRyaXgxCzAJBgNVBAYTAk5MMFkw\nEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEbfd9uxP8WrGrxMyeeMz/Xt21Xm+/NY/i\n9Ah6AEQkcuOytlT8uj+glvmD7uTR41TDQEUGHbbWve3Fju8SgBFyc6NCMEAwDwYD\nVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYEFLCFnSFGNBSl\nxivs8P+D9JxuXqPQMAoGCCqGSM49BAMCA0gAMEUCIQCeElF5qeNxtw/i76xqdFAt\nv3tHDF2TmKww/AAYzEFzzgIgHMHfjhy9pw4djmpphUQXGgboLNVAt4DtrAAmLKZ/\nd1g=\n-----END CERTIFICATE-----\n",
+        "trust_config": "\n//id-kp-emailProtection \n1.3.6.1.5.5.7.3.4\n//id-kp-documentSigning \n1.3.6.1.5.5.7.3.36\n//id-kp-timeStamping \n1.3.6.1.5.5.7.3.8\n//id-kp-OCSPSigning \n1.3.6.1.5.5.7.3.9"
+    }
+}

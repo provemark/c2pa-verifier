@@ -33,10 +33,14 @@ Against `c2patool` 0.28.1, on 42 probes:
 | stricter here, by design | `leaf-eku-time-stamping` (step 152's rule), `int-sha1` (SPEC-048) |
 | **more lenient here** | **`int-no-key-usage`, `anchor-no-key-usage`** |
 
-One difference in codes, not in verdict: for an expired or not yet valid
+Differences in codes, not in verdict: for an expired or not yet valid
 leaf, 0.28.1 adds `signingCredential.untrusted` to
-`signingCredential.expired`; 0.27.22 and this verifier do not. The state
-is `Invalid` in all three.
+`signingCredential.expired`, where 0.27.22 and this verifier do not; and
+for a leaf whose keyUsage holds `keyCertSign`, both versions add it to
+`signingCredential.invalid`, where this verifier does not. The state is
+`Invalid` in all three. *Corrected in step 288: this paragraph first named
+the expired leaf only, because this step compared states, not codes;
+SPEC-061 AC4 found the second.*
 
 ## 284 — SPEC-014 amendment 7
 

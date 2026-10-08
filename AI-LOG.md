@@ -9552,3 +9552,23 @@ README are where the disclosure lives.
   Composer home installed `v0.5.2`; its `c2pa-verify` on the three
   key-usage probes (`Trusted`, `Valid`, `Valid`).
 - Decided by Maurice: push, and tag on `91ddeaf` after a green CI.
+
+## 2026-10-08 — SPEC-061, the trust matrix as a drift alarm (step 288)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push 22f06dd en begin met SPEC-061", "akkoord, SPEC-061
+  goedgekeurd met de voorstellen", "akkoord, (a), schrijf amendement 1 uit"
+  and "akkoord, amendement 1 bevestigd".
+- Produced: `specs/SPEC-061-trust-matrix.md` (drafted, approved, amendment
+  1, implemented); `tests/Fixtures/trust/chain-matrix/` (42 probes, their
+  anchors and settings, a README with every judge's answer) and
+  `tests/Fixtures/c2patool/chain-matrix/`; `tests/Unit/Trust/TrustMatrixTest.php`;
+  a row in `docs/milestones.md`; step 283's note corrected; a row in
+  `NOTES.md`.
+- Measured: the tests red without fixtures (4 failed); the generator's
+  first fixture run refused (the probe names passed as one argument) and
+  `tests/Fixtures/c2patool/matrix/` found taken, nothing overwritten
+  (`git status` clean); the fixtures built (no private key, 2.3 MB); AC4
+  red on `leaf-ku-cert-sign`, then green with amendment 1; the alarm red
+  with amendment 7 undone in `ChainCheck` (2 failed), restored;
+  `composer check` (931 passed).
+- Decided by Maurice: SPEC-061 with the proposals, amendment 1 option (a).
