@@ -454,20 +454,25 @@ final readonly class TimestampCheck
   the Truepic root (`Trusted`) or not (`Valid`); the exact count of AC1's
   files (35 expected); the wording of each explanation, fixed in the
   tests from the first green run.
+  *Status 2026-10-08 (step 279):* answered: measured in step 42 (`notes/step-42-timestamp-check-tests.md`: the Truepic files `Trusted`).
 - Non-blocker: where the SPEC-016 test helpers move to
   (`tests/Support/Der.php`, autoloaded under
   `Provemark\C2paVerifier\Tests\Support`) so that AC3/AC4 can patch tokens;
   the SPEC-016 Traceability rows are updated in the same step.
+  *Status 2026-10-08 (step 279):* answered: the helpers are in `tests/Support/` (`DerPatch.php`).
 - Non-blocker: AC8's second shape (a doubled `tstTokens`) — through a
   rebuilt `CoseSign1` or a package-level `checkHeader()`; whichever keeps
   `TimestampCheck` without a public method the Verifier does not need.
+  *Status 2026-10-08 (step 279):* answered: AC8's test builds the doubled header (`TimestampCheckTest.php`, AC8).
 - Non-blocker: the `signingCredential.expired` explanation now names the
   time used; SPEC-015's tests that match the old text ("no timestamp
   consulted yet; M6 will supply one") are updated in the same step and
   listed in the SPEC-015 amendment.
+  *Status 2026-10-08 (step 279):* answered: done with SPEC-015's amendment in the same step.
 - Non-blocker: `timeStamp.*` on ingredient manifests (c2patool reports
   `mismatch` on the tampered ingredient of `CIE-sig-CA` beside the active
   manifest's `validated`) — M7's, when ingredient manifests are walked.
+  *Status 2026-10-08 (step 279):* answered: SPEC-021 (step 56) runs the timestamp check on every validated ingredient manifest.
 
 ## Amendments
 

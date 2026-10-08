@@ -509,17 +509,21 @@ final class TimestampException extends \RuntimeException {}
 
 - Non-blocker (tests-first step): the nesting depth and element count ceiling of AC10, and
   whether c2patool accepts a two-signer token (AC7's divergence note).
+  *Status 2026-10-08 (step 279):* about a verdict, fail closed: a token with more than one SignerInfo is refused (`SignedData::fromDer()`); whether `c2patool` accepts one is not measured, and refusing is the stricter side.
 - Non-blocker: `Der::time()` drops fractional seconds. RFC 3161 allows
   them in `genTime`; the report renders whole seconds as c2patool
   does (`2024-08-06T21:53:37+00:00`). If a corpus token carries
   fractions and c2patool renders them, an amendment keeps them.
+  *Status 2026-10-08 (step 279):* answered: SPEC-017 amendment 2 (step 44) renders the fractions as `c2patool` does.
 - Non-blocker: whether `integer()` should return `int` when it fits
   and `string` otherwise. `string` always, as SPEC-015's serial: one
   type, no overflow surprise on 32-bit hosts.
+  *Status 2026-10-08 (step 279):* a design question, no verdict.
 - Non-blocker: `TimestampHeader` refuses a header with both `sigTst`
   and `sigTst2`. c2pa-rs reads `sigTst2` first and falls back. If a
   real writer emits both, the amendment follows c2pa-rs; until then
   the stricter rule holds and is measured against the corpora (AC8).
+  *Status 2026-10-08 (step 279):* about a verdict, fail closed: both headers together are refused, the stricter side.
 
 ## Amendments
 

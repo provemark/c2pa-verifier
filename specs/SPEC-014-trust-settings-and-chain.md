@@ -402,13 +402,16 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
   `allowed-plus-wrong-root.settings.json` for AC3), written under
   `tests/Fixtures/trust/` and run through c2patool; a verdict that
   contradicts a criterion amends it before the tests.
+  *Status 2026-10-08 (step 279):* answered: the variants were made and measured in step 31 (`notes/step-31-trust-variants.md`).
 - Non-blocker: whether `Certificate` should live in `Trust` or in a
   new `X509` layer that SPEC-015 and M6 (the TSA certificate) share.
   `Trust` now; a move is a Deptrac line when M6 needs it.
+  *Status 2026-10-08 (step 279):* a design question, no verdict.
 - Non-blocker: `subject`/`issuer` compared as whole arrays — if a real
   chain shows OpenSSL rendering the same DN differently on two
   certificates, the comparison moves to the DER of the Name; measured
   then.
+  *Status 2026-10-08 (step 279):* about a verdict, fail closed: a link counts only when the name matches *and* the issuer's key verifies the signature (`signedBy()`, AC5), so two names that compare equal cannot make a wrong `Trusted` without the anchor's key; the worst case is a wrong `untrusted`. Reasoned from the code.
 - ~~Non-blocker (amendment 4): whether an anchor that is itself out of its
   validity still anchors.~~ Answered by amendment 5 (step 273): it does
   not, as `c2patool` 0.28.1 measures it.

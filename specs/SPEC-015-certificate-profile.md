@@ -341,11 +341,13 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
   `x509 -req -CA` adds SKI/AKI and so v3 — it stands as the "no KU, no
   EKU" variant (which is why c2patool refused it) and is documented as
   such; the version rule is tested on hand-built data (AC6).
+  *Status 2026-10-08 (step 279):* about a verdict, fail closed: documentation of a variant; the version rule is tested (AC6).
 - Non-blocker: OpenSSL's EKU long names could differ between OpenSSL
   versions (CI runs 8.3/8.4/8.5 on one distribution); the table is
   checked against the eight names measured, and an unknown name that is
   not a dotted OID is `.invalid` with the name in the message — fail
   closed, and visible.
+  *Status 2026-10-08 (step 279):* about a verdict, fail closed: an unknown name is `.invalid`.
 
 ## Amendments
 

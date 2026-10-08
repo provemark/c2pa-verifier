@@ -180,6 +180,7 @@ function specCheck(string $root): array;
 - Non-blocker: whether `superseded` specs should still be allowed to have
   tests carrying their group (the tests would be stale). Proposed: allowed,
   no finding; revisit when the first spec is superseded.
+  *Status 2026-10-08 (step 279):* a process question, no verdict; no spec has been superseded yet.
 
 ## Amendments
 

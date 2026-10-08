@@ -233,13 +233,16 @@ final readonly class ActionsCheck
 - Non-blocker (tests-first step): whether c2patool puts the empty-list
   fault on the assertion's url or the manifest's (AC3), and whether a
   signed v1 two-actions variant can be made without a v1 fixture (AC4).
+  *Status 2026-10-08 (step 279):* answered: measured in step 49 (`notes/step-49-actions-check.md`); AC3 records where `c2patool` puts the fault.
 - Non-blocker: `c2pa.actions` (the v1 label) inside a v2 claim —
   tolerated here as c2pa-rs tolerates it; if a corpus file ever shows
   c2patool refusing it, an amendment follows.
+  *Status 2026-10-08 (step 279):* about a verdict, equal to `c2pa-rs`, read not measured: `c2pa-rs` 0.91.1 finds actions assertions by `label_root()`, the label without its version (`assertion.rs` `assertions_eq`), so `c2pa.actions` in a version 2 claim gets the version 2 rules, as `ActionsCheck::isActionsLabel()` gives it here. `c2patool` cannot sign such a claim: 0.27.22 and 0.28.1 both rewrite the label to `c2pa.actions.v2`. A re-signed probe is step 281.
 - Non-blocker: whether `ActionsCheck` belongs under `Manifest` (it reads
   a manifest's assertions, needs `Report`) or a new `Assertions` layer
   for the content rules to come. `Manifest` now; Deptrac gets
   `Manifest → Report` if it does not have it.
+  *Status 2026-10-08 (step 279):* a design question, no verdict.
 
 ## Amendments
 

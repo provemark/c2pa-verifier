@@ -379,12 +379,15 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
   `hard-binding-bmff`, `hard-bindings-two`) are made and measured in the
   tests-first step; a c2patool answer that contradicts a criterion
   amends the criterion before the tests.
+  *Status 2026-10-08 (step 279):* answered: the variants were made and measured in step 26 (`notes/step-26-data-hash-variants.md`, `tests/Fixtures/binding/`).
 - Non-blocker: whether `ranges` should be a small value object rather
   than a shape. A shape today: three producers, one consumer, no
   behaviour.
+  *Status 2026-10-08 (step 279):* a design question, no verdict.
 - Non-blocker: the PNG and WebP extractors return `null` when no store
   is found; `ranges` is then irrelevant. The JPEG extractor's `null` the
   same.
+  *Status 2026-10-08 (step 279):* about a verdict, fail closed: no store is no manifest, `Invalid` (SPEC-013).
 
 ## Amendments
 

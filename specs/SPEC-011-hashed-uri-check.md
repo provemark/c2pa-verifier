@@ -322,9 +322,11 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report` (already), plus `Jumbf`
   and measured in the tests-first step, like step 23's; if c2patool's
   answer to one of them contradicts a criterion above, the criterion is
   amended before approval of the tests, not after.
+  *Status 2026-10-08 (step 279):* answered: the variants were made and measured in step 24 (`notes/step-24-hashed-uri-variants.md`, `tests/Fixtures/binding/`).
 - Non-blocker: `Manifest::$assertionStore` public versus a method that
   returns the children. Public property, as `$box` and `$assertions`
   already are; a method would only hide a field.
+  *Status 2026-10-08 (step 279):* a design question, no verdict.
 
 ## Amendments
 

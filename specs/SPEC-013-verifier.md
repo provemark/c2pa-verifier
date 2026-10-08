@@ -410,13 +410,16 @@ final class ManifestException extends \RuntimeException
 - Non-blocker: whether `verify()` should also accept a path. No: the
   caller opens the file, the verifier never does I/O it was not handed;
   a convenience wrapper can live in the CLI spec.
+  *Status 2026-10-08 (step 279):* a design question, no verdict.
 - Non-blocker: the name of the no-manifest outcome. `hasManifest` false
   with an `Invalid` result, rather than a third `ValidationState`: c2pa
   has no such state, and a consumer that only looks at
   `validation_state` must not see `Valid`.
+  *Status 2026-10-08 (step 279):* about a verdict, fail closed: a file without a manifest is `Invalid`, never `Valid`.
 - Non-blocker: AC10's list of "not yet emitted" codes will shrink with
   M5 and M6; each of those specs amends this criterion when it starts
   emitting one.
+  *Status 2026-10-08 (step 279):* a process question, no verdict; done as M5 and M6 emitted the codes.
 
 ## Amendments
 

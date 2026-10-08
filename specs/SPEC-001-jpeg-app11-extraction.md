@@ -249,6 +249,7 @@ checks and limits pass. It never calls `file_get_contents`.
 - Non-blocker: whether `ContainerException` should carry a machine-readable
   reason (an enum) next to the message. Deferred to the `Verifier` spec that
   first needs to map it.
+  *Status 2026-10-08 (step 279):* a design question, no verdict.
 
 ## Amendments
 

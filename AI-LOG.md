@@ -9415,3 +9415,18 @@ README are where the disclosure lives.
   Composer home installed `v0.5.1`; its `c2pa-verify` on two anchor probes
   (`Trusted`, `Valid`).
 - Decided by Maurice: push, and tag after a green CI.
+
+## 2026-10-08 — A status for every open question (step 279)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "maar waarom was dit niet eerder ontdekt?", then "akkoord, begin
+  met de 27 open vragen" and "akkoord, begin met 1, dan 2, dan 3".
+- Produced: a status line under each of the 27 open non-blockers in ten
+  specs; `notes/step-279-open-questions.md`; a row in `NOTES.md`.
+- Measured: `c2patool` 0.27.22 and 0.28.1 signing a version 2 claim with
+  the `c2pa.actions` label (both rewrite it to `c2pa.actions.v2`); the
+  three verifiers on those files (`Valid`, untrusted, in each); the
+  fixtures and notes each answered question points at. Reasoned: from
+  `c2pa-rs` 0.91.1 `claim.rs` `verify_actions` and `assertion.rs`
+  `assertions_eq`, and from `ChainCheck` and `SignedData`.
+- Decided by Maurice: mark every open question (1), then a release-check
+  rule (2), then the re-signed probe (3).
