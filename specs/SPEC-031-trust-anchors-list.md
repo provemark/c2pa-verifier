@@ -424,6 +424,14 @@ final readonly class TrustSettings
 
    Confirmed by Maurice van Loon, 2026-09-27 (step 160).
 
+4. **2026-10-08, step 275, with SPEC-017 amendment 7** — the DigiCert
+   fixture in AC6 and AC7 (`digicert-trusted-root-g4.pem` and the
+   settings built from it) is DigiCert's self-signed root, not the
+   cross-certificate. Same subject and key; no outcome of this spec
+   changes (measured, see SPEC-017 amendment 7).
+
+   Confirmed by Maurice van Loon, 2026-10-08 (step 275).
+
 ## Traceability
 
 Filled when status becomes `implemented`.

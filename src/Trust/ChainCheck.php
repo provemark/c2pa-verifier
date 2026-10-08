@@ -91,9 +91,9 @@ final readonly class ChainCheck
      * amendment 2). `verify_trust` is the caller's to honour.
      *
      * Every certificate that issues another in the walk must be allowed to
-     * (SPEC-014 amendment 4): an x5chain intermediate and an anchor alike.
-     * $at is the time the leaf is judged at (a trusted timestamp's genTime),
-     * or null for now.
+     * (SPEC-014 amendment 4) and valid at the time the leaf is judged
+     * (amendments 4 and 5): an x5chain intermediate and an anchor alike.
+     * $at is that time (a trusted timestamp's genTime), or null for now.
      *
      * @param  non-empty-list<Certificate>  $chain
      * @return list<ValidationStatus>
@@ -114,6 +114,7 @@ final readonly class ChainCheck
         }
 
         // the walk, from the leaf, through the chain the signer supplied
+        $at ??= time();
         $current = $leaf;
         $anchorFault = null;
         foreach ($chain as $depth => $_) {
@@ -129,7 +130,7 @@ final readonly class ChainCheck
                 }
                 if ($current->issuer === $anchor->subject && $current->signedBy($anchor)) {
                     // the anchor issued $current: $depth intermediates lie between it and the leaf
-                    $fault = self::issuerFault($anchor, $current, $depth, null);
+                    $fault = self::issuerFault($anchor, $current, $depth, $at, 'trust anchor');
                     if ($fault !== null) {
                         $anchorFault ??= $fault;
 
@@ -161,7 +162,7 @@ final readonly class ChainCheck
             if (! $current->signedBy($next)) {
                 return [new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: the signature of %s (depth %d) does not verify under %s', $current->subjectCn(), $depth, $next->subjectCn()))];
             }
-            $fault = self::issuerFault($next, $current, $depth, $at ?? time());
+            $fault = self::issuerFault($next, $current, $depth, $at, 'intermediate');
             if ($fault !== null) {
                 return [new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))];
             }
@@ -295,7 +296,8 @@ final readonly class ChainCheck
         return null;
     }
 
-    private static function issuerFault(Certificate $issuer, Certificate $issued, int $below, ?int $at): ?string
+    /** $role names the issuer in the explanation: an x5chain intermediate, or a trust anchor (SPEC-014 amendment 5). */
+    private static function issuerFault(Certificate $issuer, Certificate $issued, int $below, int $at, string $role): ?string
     {
         if (! $issuer->isCa) {
             return sprintf('%s issued %s but is not a certificate authority (basicConstraints lacks CA:TRUE)', $issuer->subjectCn(), $issued->subjectCn());
@@ -306,8 +308,8 @@ final readonly class ChainCheck
         if ($issuer->pathLen !== null && $below > $issuer->pathLen) {
             return sprintf('%s allows a path length of %d, but %d intermediate certificate(s) follow it', $issuer->subjectCn(), $issuer->pathLen, $below);
         }
-        if ($at !== null && ($at < $issuer->validFrom || $at > $issuer->validTo)) {
-            return sprintf('the intermediate %s is not valid at %s (valid from %s to %s)', $issuer->subjectCn(), gmdate('Y-m-d\TH:i:s\Z', $at), gmdate('Y-m-d\TH:i:s\Z', $issuer->validFrom), gmdate('Y-m-d\TH:i:s\Z', $issuer->validTo));
+        if ($at < $issuer->validFrom || $at > $issuer->validTo) {
+            return sprintf('the %s %s is not valid at %s (valid from %s to %s)', $role, $issuer->subjectCn(), gmdate('Y-m-d\TH:i:s\Z', $at), gmdate('Y-m-d\TH:i:s\Z', $issuer->validFrom), gmdate('Y-m-d\TH:i:s\Z', $issuer->validTo));
         }
 
         return null;

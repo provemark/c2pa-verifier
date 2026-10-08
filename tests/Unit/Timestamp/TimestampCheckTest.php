@@ -413,7 +413,7 @@ test('SPEC-017 AC5: the countersigned bytes equal the four imprints, and the wro
 })->group('SPEC-017');
 
 // ---------------------------------------------------------------------------
-// AC6 — trust only through an anchor: Truepic's root and DigiCert's cross-certificate
+// AC6 — trust only through an anchor: Truepic's root and DigiCert's root (the cross-certificate until SPEC-017 amendment 7)
 
 test('SPEC-017 AC6: the Truepic root as anchor: trusted, no longer expired, and c2patool\'s verdict', function (): void {
     $settings = spec017Settings('truepic-root');
@@ -444,7 +444,7 @@ test('SPEC-017 AC6: the Truepic root as anchor: trusted, no longer expired, and 
     }
 })->group('SPEC-017');
 
-test('SPEC-017 AC6: the DigiCert cross-certificate as anchor: C.jpg\'s TSA chain reaches it', function (): void {
+test('SPEC-017 AC6: the DigiCert root as anchor: C.jpg\'s TSA chain reaches it', function (): void {
     $settings = spec017Settings('digicert-trusted-root-g4');
     $report = spec017Verify('c2pa-rs/C.jpg', $settings);
     $oracle = spec017Oracle('timestamp/C-digicert-g4');
@@ -571,7 +571,7 @@ test('SPEC-017 AC10: the NO_TIMESTAMP exceptions are gone; TSA_NOT_CONFIGURED na
         ->and(SPEC013_PUBLIC_TSA_NOT_CONFIGURED)->toBe(['truepic-20230212-camera', 'truepic-20230212-landscape', 'truepic-20230212-library'])
         ->and(SPEC013_RS_TSA_NOT_CONFIGURED)->toBe(['ocsp', 'ocsp_with_assertion', 'exp-test1']);
 
-    // exp-test1.png: expired under `full` (its DigiCert TSA reaches no test anchor), not under `full` plus the cross-certificate; Invalid either way (six manifests)
+    // exp-test1.png: expired under `full` (its DigiCert TSA reaches no test anchor), not under `full` plus DigiCert's root; Invalid either way (six manifests)
     $under = spec017Verify('c2pa-rs/exp-test1.png', spec017Settings('full'));
     $with = spec017Verify('c2pa-rs/exp-test1.png', spec017Settings('full-plus-digicert-g4'));
     expect(spec017Failures($under))->toContain('signingCredential.expired')
@@ -605,7 +605,7 @@ test('SPEC-017 AC11: on the writers corpus signature_info.time equals c2patool\'
         expect($active['signature_info']['time'] ?? null)->toBe($time, $name);
     }
 
-    // Amazon: ES384, expired at now, valid at its DigiCert stamp — the cross-certificate as anchor lifts `expired`, as c2patool's Valid
+    // Amazon: ES384, expired at now, valid at its DigiCert stamp — DigiCert's root as anchor lifts `expired`, as c2patool's Valid
     $bare = spec017Verify('writers/amazon-20240925-titan-g1.png');
     expect(spec017Failures($bare))->toContain('signingCredential.expired')
         ->and($bare->result->state->value)->toBe('Invalid');

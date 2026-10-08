@@ -1,4 +1,4 @@
-# Step 274 — Adobe's Lightroom signer expired: two tests that turned red overnight
+    # Step 274 — Adobe's Lightroom signer expired: two tests that turned red overnight
 
 *2026-10-08. Found while building step 273. No code changed.*
 

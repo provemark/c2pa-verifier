@@ -76,7 +76,7 @@ const SPEC013_PUBLIC_TSA_NOT_CONFIGURED = ['truepic-20230212-camera', 'truepic-2
  * JSON — SPEC-013 AC12's third drift alarm. Named exceptions, each removed by
  * the milestone that closes it: MULTI (M7), TSA_NOT_CONFIGURED (expired at now
  * under `full`, whose anchors no DigiCert TSA reaches — SPEC-017 AC10 shows the
- * cross-certificate un-expires exp-test1), REMOTE (a manifest
+ * DigiCert root un-expires exp-test1), REMOTE (a manifest
  * c2patool fetched over the network — never here), CAWG (an identity assertion
  * this verifier does not validate; a later spec).
  */

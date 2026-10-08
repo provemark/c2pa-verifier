@@ -527,6 +527,43 @@ final readonly class TimestampCheck
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 120).
 
+7. **2026-10-08, step 275, with SPEC-014 amendment 5** — the DigiCert
+   fixture is DigiCert's self-signed root, not the cross-certificate.
+   `tests/Fixtures/trust/digicert-trusted-root-g4.pem` held the
+   `DigiCert Trusted Root G4` cross-certificate issued by `DigiCert
+   Assured ID Root CA`, valid from 2022-08-01 to 2031-11-09. Under SPEC-014
+   amendment 5 an anchor is judged at the timestamp's `genTime`, and
+   `c2pa-rs/boxhash.jpg` (2022-06-15) and `c2pa-rs/exp-test1.png`
+   (2022-07-29) were stamped before that certificate began: their TSA
+   became `timeStamp.untrusted`, and AC10's "the anchor un-expires
+   `exp-test1`" failed. OpenSSL 3.6 agrees (`openssl verify
+   -partial_chain -attime <genTime>`: "certificate is not yet valid").
+   `c2patool` is no oracle here: 0.28.1 reports `timeStamp.trusted` for
+   `boxhash.jpg` without any DigiCert anchor (ADR-0004).
+
+   The fixture is now the self-signed `DigiCert Trusted Root G4` (valid
+   2013-08-01 to 2038-01-15, SHA-256
+   `55:2F:7B:DC:F1:A7:AF:9E:6C:E6:72:01:7F:4F:12:AB:F7:72:40:C7:8E:76:1A:C2:03:D1:D9:D2:0A:C8:99:88`),
+   the root `docs/trust-settings.md` tells users to configure. It has the
+   same subject and key, so it signs `DigiCert Trusted G4 RSA4096 SHA256
+   TimeStamping CA` as the cross-certificate does. The six settings files
+   that embed it changed with it. Where this spec says "the
+   cross-certificate" as the anchor, read "DigiCert's root"; in AC6,
+   `C.jpg`'s chain reaches the root by signature (the walk's anchor
+   branch, SPEC-014 AC4), no longer by a DER-equal certificate. The
+   cross-certificates DigiCert's tokens carry stay in the tokens.
+
+   Measured: every file under `tests/Fixtures` under no settings and
+   under each of the 63 settings files, before amendment 5 with the
+   cross-certificate and after it with the root: no report under a
+   DigiCert settings file differs; the only verdicts that move are
+   SPEC-014 AC12's five probes. 918 tests pass.
+
+   **Weight C: a test fixture follows the documented recipe; no verdict
+   on a real file moves.**
+
+   Confirmed by Maurice van Loon, 2026-10-08 (step 275).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -539,7 +576,7 @@ least one test; every source file maps back to this spec.
 | AC3 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC3: the CMS signature — * (3) and SPEC-017 AC3: a signature algorithm outside the list is untrusted, naming the OID / SPEC-017 | src/Timestamp/TimestampCheck.php :: verifySignature(), SIGNATURE_ALGORITHMS, opensslVerify(); src/Cose/RsaPss.php (the PSS path, reasoned) |
 | AC4 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC4: messageDigest, sid and validity each give exactly one status; the control validates / SPEC-017 | src/Timestamp/TimestampCheck.php :: judge() (steps 2, 3, 5); src/Timestamp/SignedData.php :: signerCertificate() |
 | AC5 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC5: the countersigned bytes equal the four imprints, and the wrong payload is a mismatch / SPEC-017 | src/Timestamp/TimestampCheck.php :: countersignedBytes(), bstr() |
-| AC6 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC6: the Truepic root as anchor … and SPEC-017 AC6: the DigiCert cross-certificate as anchor … / SPEC-017 | src/Timestamp/TimestampCheck.php :: judge() (step 7), orderedChain(), tsaSettings(); src/Trust/ChainCheck.php :: checkCertificates(); src/Trust/CertificateProfileCheck.php :: check() ($at, $reason); src/Timestamp/TimestampResult.php :: trustedTime() |
+| AC6 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC6: the Truepic root as anchor … and SPEC-017 AC6: the DigiCert root as anchor … / SPEC-017 | src/Timestamp/TimestampCheck.php :: judge() (step 7), orderedChain(), tsaSettings(); src/Trust/ChainCheck.php :: checkCertificates(); src/Trust/CertificateProfileCheck.php :: check() ($at, $reason); src/Timestamp/TimestampResult.php :: trustedTime() |
 | AC7 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC7: the TSA profile accepts timeStamping alone, and tsaSettings() carries nothing else / SPEC-017 | src/Trust/CertificateProfileCheck.php :: checkLeaf() ($ekus), ekuFaults(); src/Timestamp/TimestampCheck.php :: tsaSettings(), OID_EKU_TIME_STAMPING |
 | AC8 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC8: no header … and SPEC-017 AC8: one token is judged; a doubled header … / SPEC-017 | src/Timestamp/TimestampCheck.php :: check(), checkHeader(); src/Timestamp/TimestampResult.php :: none(); src/Verifier/Verifier.php :: check() (the reason "no timestamp") |
 | AC9 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC9: the report — timeStamp entries first, signature_info with time equal to c2patool's, checks_performed / SPEC-017 | src/Verifier/Verifier.php :: check(), signatureInfo(); src/Report/ValidationResult.php :: toArray() (unchanged: informational is its own list) |

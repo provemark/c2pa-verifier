@@ -258,6 +258,14 @@ rather than a second parse.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 134).
 
+3. **2026-10-08, step 275, with SPEC-017 amendment 7** — in
+   `full-plus-digicert-g4.settings.json` the DigiCert anchor that the
+   timestamps of `video1.mp4` reach is DigiCert's self-signed root, not
+   the cross-certificate. Same subject and key; the criterion's outcome
+   does not change (measured, see SPEC-017 amendment 7).
+
+   Confirmed by Maurice van Loon, 2026-10-08 (step 275).
+
 ## Open questions
 
 1. **Whether `LABELS` changes the dispatch in `Verifier`.** Today it reads

@@ -213,7 +213,7 @@ it('AC6: every anchor counts only for its own kind', function (): void {
     $refusal = spec031Refusal((string) file_get_contents(Corpus::fixtures().'/trust/anchors/tsa-with-allowed-list.settings.json'));
     expect(str_contains($refusal, '§14.4.3'))->toBeTrue($refusal);
 
-    // the time-stamping side: the DigiCert cross-certificate trusts C.jpg's TSA as a "tsa" entry, and not as a "manifest" one
+    // the time-stamping side: DigiCert's root trusts C.jpg's TSA as a "tsa" entry, and not as a "manifest" one
     $asTsa = spec031Verify('c2pa-rs/C.jpg', spec031Settings('digicert-as-tsa'));
     expect(spec031Codes($asTsa, 'timeStamp.'))->toBe(['timeStamp.trusted', 'timeStamp.validated']);
     $asManifest = spec031Verify('c2pa-rs/C.jpg', spec031Settings('digicert-as-manifest'));

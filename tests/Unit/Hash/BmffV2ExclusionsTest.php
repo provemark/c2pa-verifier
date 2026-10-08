@@ -104,8 +104,8 @@ function spec029Exclusions(): array
 
 function spec029Verify(?string $bytes = null): VerificationReport
 {
-    // the C2PA test anchors plus the cross-certificate that signs this file's two
-    // DigiCert timestamps. Both sides need it: c2patool falls back to the operating
+    // the C2PA test anchors plus the DigiCert root that this file's two
+    // DigiCert timestamps reach. Both sides need it: c2patool falls back to the operating
     // system's trust store for a responder (step 40 §5) and this verifier never
     // does, so without the anchor the two judge the 2022 signers at different
     // moments and the comparison is not between equals (SPEC-029 amendment 1).

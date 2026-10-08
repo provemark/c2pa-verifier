@@ -9352,3 +9352,23 @@ README are where the disclosure lives.
   signed fixture's signer `notAfter`; `composer check` (6 failed, 912
   passed).
 - Decided by Maurice: SPEC-020 amendment 4.
+
+## 2026-10-08 — Amendment 5 built; DigiCert's root as the fixture (step 275)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, (a) en begin met 275" (push later, together), then
+  "akkoord, (A)" (DigiCert's self-signed root in the fixtures) and
+  "akkoord, amendementen bevestigd".
+- Produced: `src/Trust/ChainCheck.php`; `digicert-trusted-root-g4.pem`
+  and six settings files that embed it; SPEC-017 amendment 7, SPEC-031
+  amendment 4, SPEC-029 amendment 3; comments in four test files, one
+  test renamed, `tests/Fixtures/trust/README.md`;
+  `notes/step-275-anchor-validity-built.md`; a row in `NOTES.md`.
+- Measured: a scratch corpus run (729 files × no settings and 63
+  settings files) before the fix, after it, and after the fixture change;
+  `bin/fuzz.php 20261005 60` before and after; `c2patool` 0.27.22 and
+  0.28.1 on `boxhash.jpg`; `openssl verify -partial_chain -attime` on its
+  token's chain; `composer check` (918 passed). Reasoned: from `c2pa-rs`
+  0.91.1 `time_stamp/verify.rs` and `certificate_trust_policy.rs`, and
+  the OpenSSL strings in the 0.28.1 binary, which backend it uses.
+- Decided by Maurice: push later with the rest (a); the self-signed root
+  in the fixtures (A); the three amendments.
