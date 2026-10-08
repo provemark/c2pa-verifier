@@ -9337,3 +9337,18 @@ README are where the disclosure lives.
   2026-10-07). Reasoned: from `c2pa-rs` 0.91.1
   `certificate_trust/openssl.rs` and `rust_native.rs`.
 - Decided by Maurice: amendment 5 (the anchor judged at the leaf's time).
+
+## 2026-10-08 — Adobe's Lightroom signer expired (step 274)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, begin met 274" (the two tests found red in step 273),
+  then "akkoord, amendement 4 bevestigd".
+- Produced: `tests/Pest.php` (`SPEC013_WRITERS_TSA_NOT_CONFIGURED`),
+  `tests/Unit/Verifier/IngredientDeltasTest.php` (AC3's settings),
+  SPEC-020 amendment 4, `notes/step-274-lightroom-signer-expired.md`, a
+  row in `NOTES.md`.
+- Measured: `bin/c2pa-verify` on the Lightroom file without settings and
+  with two DigiCert settings files; `c2patool` 0.28.1 on it; the two
+  tests on a clean `HEAD` (`git stash`, 2 failed); a scratch scan of every
+  signed fixture's signer `notAfter`; `composer check` (6 failed, 912
+  passed).
+- Decided by Maurice: SPEC-020 amendment 4.

@@ -93,7 +93,9 @@ it('AC3: the fifteen single-manifest files: ingredientDeltas equal c2patool\'s, 
     expect(SPEC020_SINGLE)->toHaveCount(15);
     foreach (SPEC020_SINGLE as $name) {
         [$relative, $oracle] = spec020Corpus($name);
-        $report = spec020Verify($relative, 'trust/full.settings.json');
+        // the DigiCert root anchors the timestamps too: a signer that has expired since (Lightroom's, 2026-10-07)
+        // is judged at its stamp, as c2patool judges it without settings (step 274)
+        $report = spec020Verify($relative, 'trust/full-plus-digicert-g4.settings.json');
         $array = $report->toArray();
 
         expect(spec020Deltas($array))->toBe(spec020Deltas($oracle), $name)

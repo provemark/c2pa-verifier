@@ -442,6 +442,22 @@ dependency; `Report` is unchanged in its dependencies.
    assertion recorded anything the two are equal. The walk itself is a
    public field (`ManifestGraph::$walk`), which the API sketch did not
    name.
+4. **2026-10-08, step 274, measured** — AC3 runs with
+   `full-plus-digicert-g4.settings.json`, not `full.settings.json`.
+   Adobe's signing certificate in the writers Lightroom file expired on
+   2026-10-07 at 16:39 UTC. Under `full.settings.json` the timestamp's
+   DigiCert TSA reaches no anchor, so the signer is judged at now:
+   `signingCredential.expired`, `Invalid`. `c2patool` says `Valid`, and
+   AC3 failed from that moment, on an unchanged `HEAD`. With the DigiCert
+   root added the timestamp is trusted, the signer is judged at its
+   `genTime`, and the file is `Valid` again. The criterion is about
+   ingredient deltas, not about timestamp trust. Measured: the fifteen
+   files of `SPEC020_SINGLE` give the same deltas and the same
+   `validation_state` as `c2patool` under the new settings. Not decided
+   here: the same file without settings, which SPEC-013 AC13 now names
+   among the TSA-not-configured files.
+
+   Confirmed by Maurice van Loon, 2026-10-08 (step 274).
 
 ## Traceability
 
