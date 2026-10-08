@@ -199,21 +199,25 @@ proposal: an icon naming a data box is `assertion.missing`). Questions 1,
    the claim's recorded hash, as the oracle does. It is one lookup, and
    it cannot disagree with §15.10.3.3 on a file SPEC-011 accepts.
    *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about a verdict, equal whenever SPEC-011 passes, as its text shows. Reasoned.
 2. **Data boxes.** `c2pa-rs` accepts an icon that names a data box,
    without a hash check. Proposal: report `assertion.missing`. Data boxes
    are gone from 2.4, no corpus file has one, and an unchecked reference
    is exactly what this spec exists to refuse. This is stricter than the
    oracle, and it is named. *(blocker: your call)*
+   *Status 2026-10-08 (step 279):* about a verdict, stricter than `c2pa-rs`, named.
 3. **Probes built by rewriting.** A mismatching icon cannot come from
    `c2patool`'s builder. Proposal: rewrite the claim's CBOR and re-sign
    with the throwaway keys, as `make-absence-variants.php` does, and then
    let both `c2patool` versions judge the result. The oracle stays an
    oracle, and only the building is ours. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* a process question, no verdict.
 4. **v1 claims.** Actions icons in a v1 claim would need a v1 probe,
    which this project cannot sign from its v2 fixtures (SPEC-018 amendment
    1). Proposal: test the v1 exemption through the existing
    `ActionsCheck` seam. `claim_generator_info` icons in v1 claims are
    checked like v2's, and no v1 corpus file carries one. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* a process question, no verdict.
 
 ## Amendments
 

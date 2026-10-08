@@ -183,6 +183,7 @@ final readonly class BmffHashCheck
   method) as a parameter or as a check on its result is an
   implementation choice; the criterion is that no range beyond the limit
   is hashed and `remaining()` never sees more than the limit.
+  *Status 2026-10-08 (step 279):* an implementation choice, no verdict.
 
 ## Amendments
 

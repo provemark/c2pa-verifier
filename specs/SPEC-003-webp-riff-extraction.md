@@ -268,9 +268,11 @@ rest of the data, then the pad byte. Keeps walking to see a second `C2PA`
   copied a third time). Proposal: implement this spec with the copy, then
   one step that merges the three and harmonises the JPEG probe. Non-blocker
   for this spec; a blocker for nothing.
+  *Status 2026-10-08 (step 279):* a design question, no verdict.
 - Resolved before approval: `pad-missing.webp` as generated has the
   header size recomputed for the shorter file (measured: 100,947 = file −
   8), so AC5 does not fire on it and AC12 is the criterion it exercises.
+  *Status 2026-10-08 (step 279):* answered in its own text (measured).
 
 ## Amendments
 

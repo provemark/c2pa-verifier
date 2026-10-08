@@ -390,14 +390,17 @@ here, since `Jumbf` is a leaf layer and may not depend on `Container`
   `src/Support/Bytes.php` with `hex()` and `printable()`, in a `Support`
   layer that `Container`, `Jumbf`, `Cbor` and `Manifest` may use;
   `StreamReader::hex()` and the WebP extractor's `printable()` moved there.
+  *Status 2026-10-08 (step 279):* answered in its own text.
 - Resolved before approval (step 10, 2026-09-21): the 23 variants are
   built by `bin/make-jumbf-variants.php` and measured; the oracle column
   of `tests/Fixtures/jumbf/README.md` is filled.
+  *Status 2026-10-08 (step 279):* answered in its own text (measured).
 - **Whether `UnknownBox` should also wrap unknown *content* box types
   inside a known superbox** (a `zzzz` box next to a `cbor` in a claim).
   Proposal: yes for assertion superboxes (§11.1.4.3 allows any JUMBF
   content type), error for claim and signature superboxes (§11.1.4.4 says
   "a single CBOR content type box"). Non-blocker.
+  *Status 2026-10-08 (step 279):* about reading: an assertion's content is bound by the claim's hashed URI (SPEC-011), and other content in a claim or signature superbox is refused, fail closed. Reasoned.
 
 ## Amendments
 

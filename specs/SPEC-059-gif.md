@@ -191,17 +191,21 @@ last constructor parameter; a fault before the block is reached carries
    already makes the file `Invalid` in `c2patool`, so the verdict state is
    the same; only the code differs (`general.error` against
    `assertion.dataHash.mismatch`). Non-blocker. **Decided by Maurice van Loon, 2026-10-06: refuse.**
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-10-06); stricter than `c2patool`, the state is the same.
 2. **Another version (AC3) and an empty block (AC2): no manifest, as
    `c2patool`.** Proposal: yes. Neither can yield a wrong `Valid`; refusing
    them would turn a file `c2patool` calls unsigned into an error.
    Non-blocker. **Decided by Maurice van Loon, 2026-10-06: no manifest, as `c2patool`.**
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-10-06); equal to `c2patool`.
 3. **When the store counts as reached (`has_manifest`).** Proposal: once a
    block with block size 11, identifier `C2PA_GIF` and version `01 00 00`
    has been read; so `block-size-12` (AC5) is `hasManifest` false, and
    `truncated-in-c2pa` (AC6) true. Non-blocker. **Decided by Maurice van Loon, 2026-10-06: as proposed.**
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-10-06); about `has_manifest`, no verdict.
 4. **Amendments this forces** (named now): SPEC-013 (the `format` value
    `gif`, the message, the constructor parameter), SPEC-024 (the GIF
    bound in AC1's list). Non-blocker. **Decided by Maurice van Loon, 2026-10-06: written with the build.**
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-10-06); a process note.
 
 ## Amendments
 

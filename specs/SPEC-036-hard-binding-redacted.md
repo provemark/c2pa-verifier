@@ -167,6 +167,7 @@ if (str_contains($entry, $label)) {   // one of the four HARD_BINDINGS
    (`assertion.hardBinding.redacted`), and record 0.27.22's answer in
    the note as a named difference between the versions. The verdict is
    `Invalid` in both. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about the report's code; the verdict is `Invalid` in both versions.
 2. **Whose rule: `c2pa-rs`'s or §6.8's.** §6.8 forbids generators to
    redact the hard binding *of the current asset* in an *update manifest*.
    `c2pa-rs` flags any entry containing a hash label, in any claim.
@@ -175,10 +176,12 @@ if (str_contains($entry, $label)) {   // one of the four HARD_BINDINGS
    manifest. Proposal: follow `c2pa-rs`. It is the oracle, it is the
    stricter of the two, and no verdict moves. *(not a blocker, but a
    choice worth making knowingly)*
+   *Status 2026-10-08 (step 279):* about a verdict, stricter than §6.8, equal to `c2pa-rs`.
 3. **Matching by substring.** `c2pa-rs` matches `c2pa.hash.data` anywhere
    in the entry, so a label such as `com.example.c2pa.hash.data.notes`
    would match too. Proposal: copy the substring rule. It can only refuse
    more, never pass more, and the codes then compare. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about a verdict, stricter: it can only refuse more.
 
 ## Amendments
 

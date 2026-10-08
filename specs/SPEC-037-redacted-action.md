@@ -188,21 +188,25 @@ settled by adopting their proposals.
    and step 123's and step 131's probes show it. Proposal: follow the
    oracles, name it in `docs/comparison.md`, and keep the verdicts equal.
    *(blocker: your call)*
+   *Status 2026-10-08 (step 279):* about a verdict, equal to both oracles, named in `docs/comparison.md`.
 2. **A `redacted` that is not a string.** The builder refuses to write
    it. `c2pa-rs`'s reader would fail to decode the whole actions
    assertion, a different fault, and no file shows which. Proposal:
    `assertion.action.redactionMismatch` (*"not a JUMBF URI"*). It fails
    closed, and it is what 2.4's wording gives. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about a verdict, fail closed.
 3. **Data-box references.** `c2pa-rs` accepts a `redacted` naming a
    `c2pa.databoxes` URI if the claim's own `redactions` list holds it.
    Neither builder writes one, so it cannot be measured. Proposal: do not
    copy that pass route. Such a reference gets `assertion.notRedacted`,
    as any label the named claim does not list; named in
    `docs/comparison.md`. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about a verdict, stricter than `c2pa-rs`, named in `docs/comparison.md`.
 4. **`notRedacted` or `redactionMismatch` for an unlisted label.**
    `c2pa-rs` says `assertion.notRedacted`, and 2.4 says `redactionMismatch`.
    Proposal: `assertion.notRedacted`, as both oracles report it, so that
    the codes compare. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about the report's code, no verdict.
 
 ## Traceability
 

@@ -240,6 +240,7 @@ adopting their proposals.
    bare claim label and the per-action faults on the actions assertion's
    url. Proposal: copy both, measured per probe in the tests-first step,
    as SPEC-018 amendment 2 did. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about the report's urls and words, no verdict.
 2. **Resolution by label, not by hash.** `c2pa-rs` matches a reference to
    an ingredient assertion by its label only. A reference whose hash is
    wrong but whose label matches passes here as it does there. Proposal:
@@ -247,15 +248,18 @@ adopting their proposals.
    (SPEC-011) already verifies the claim's own references to its
    assertions. An action parameter's hash is a second, separate check,
    and it belongs with the icon references. *(blocker: your call)*
+   *Status 2026-10-08 (step 279):* about a verdict, equal to `c2pa-rs` by design: an action's reference resolves by label, and the assertion it names is itself bound by the claim's hashed URI (SPEC-011), so its content cannot be swapped. Reasoned.
 3. **`c2pa.removed` and "another manifest".** §15.10.3.2.3 says a removed
    action's references resolve to a `componentOf` ingredient *in another
    manifest*. `c2pa-rs` looks in the current claim, as for placed.
    Proposal: follow `c2pa-rs` and name the difference, because no
    fixture shows either reading. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about a verdict, equal to `c2pa-rs`, named in `docs/comparison.md`.
 4. **Probes the builder cannot write.** Step 123 could not embed a second
    actions assertion. Proposal: where `c2patool` will not write a shape,
    leave it to the seam `ActionsCheck::checkAssertions()` (SPEC-018
    amendment 1), and do not build it by surgery. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* a process question, no verdict.
 
 ## Amendments
 

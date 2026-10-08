@@ -349,12 +349,15 @@ messages.
   builds four claim-level variants and their PNG carriers, all measured
   (`tests/Fixtures/cbor/README.md`). The Appendix A/F vectors are short
   and live in the test file as hex.
+  *Status 2026-10-08 (step 279):* answered in its own text (measured).
 - Resolved by measurement (step 12): c2pa-rs does **not** enforce
   deterministic encoding on input — `hashdata-nonshortest-int` parses
   and fails only on the assertion's hash. Not enforcing it here is
   consistent with the oracle.
+  *Status 2026-10-08 (step 279):* answered in its own text (measured), equal to `c2pa-rs`.
 - **`CborTag` for tags 2/3 (bignums)**: passed through; whether a later
   layer should refuse them is that layer's question. Non-blocker.
+  *Status 2026-10-08 (step 279):* about a verdict, fail closed: every consumer checks the type it needs, and a tag is not the number or text it expects. Reasoned.
 
 ## Amendments
 

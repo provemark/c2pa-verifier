@@ -154,6 +154,7 @@ logic; only the four helpers move. The JPEG `readMarker`, `readUint16`,
 
 - Whether `hex()` belongs on the reader or in a `Bytes` helper of its own.
   Kept on the reader; it formats what the reader read. Non-blocker.
+  *Status 2026-10-08 (step 279):* a design question, no verdict.
 - Added while implementing: `readUpTo(int $length)`, a read that may return
   fewer bytes, for the three places where a caller wants to see a short
   read and name the fault itself (the WebP header, the PNG chunk header,
@@ -161,6 +162,7 @@ logic; only the four helpers move. The JPEG `readMarker`, `readUint16`,
   reader would not have been the one seam it is meant to be. Covered by
   the existing criteria those callers serve (SPEC-002 AC14, SPEC-003 AC3
   and AC12).
+  *Status 2026-10-08 (step 279):* an implementation note, no verdict.
 
 ## Amendments
 

@@ -355,17 +355,21 @@ actions check.
   manifest can itself be an ingredient. The rules are per manifest, so
   the check walks the store and scopes a status for a non-active manifest
   to the assertion that named it (SPEC-021's rule). *Non-blocker.*
+  *Status 2026-10-08 (step 279):* a design question about where statuses are scoped, no verdict.
 - **`checks_performed` for the update case.** `dataHash` is still the
   name, though the assertion checked belongs to another manifest; the
   report's url says which. A second name would be a second truth.
   *Decided.*
+  *Status 2026-10-08 (step 279):* decided, about the report's naming.
 - **An update manifest as the *only* manifest.** Then the `parentOf`
   chain reaches nothing and AC5's `claim.hardBindings.missing` applies —
   which is also what §15.12 says. No corpus file has one; the variant of
   AC5 makes it. *Decided.*
+  *Status 2026-10-08 (step 279):* decided; about a verdict, fail closed: `claim.hardBindings.missing`.
 - **The `c2pa.time-stamp` assertion.** Out of scope here; if a later spec
   reads it, it will need SPEC-016's token reader and a fixture whose
   timestamp is *only* in the assertion. *Non-blocker.*
+  *Status 2026-10-08 (step 279):* out of scope; about a verdict, fail closed: a timestamp only in that assertion is not read, so the signer is judged at now.
 
 ## Amendments
 

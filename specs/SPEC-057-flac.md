@@ -124,6 +124,7 @@ extractor (no new constructor parameter).
 1. **Amendments this forces** (named now): SPEC-013 (the `format` value
    `flac`, the message), SPEC-056 (its extractor's `null` for `fLaC`, and
    detection after a tag now also looking for `fLaC`). Non-blocker.
+   *Status 2026-10-08 (step 279):* a process note, done with the build.
 
 ## Amendments
 

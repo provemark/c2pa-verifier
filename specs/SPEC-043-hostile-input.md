@@ -173,6 +173,7 @@ final class CborBudget            // mutable on purpose: shared by several decod
 
 - None blocking. The budget of 65,536 items is twelve times the largest
   measured, as the per-container limit already is.
+  *Status 2026-10-08 (step 279):* about a refusal, fail closed.
 
 ## Amendments
 

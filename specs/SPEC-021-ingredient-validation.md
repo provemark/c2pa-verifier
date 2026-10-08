@@ -369,20 +369,24 @@ instead, beside the orchestration that already holds those collaborators.
   `src/Verifier/` — `Verifier\IngredientManifestCheck` — which already
   depends on everything it needs. *Non-blocker; decided in the
   tests-first step, named here so the reader is not surprised.*
+  *Status 2026-10-08 (step 279):* decided, a design question.
 - **The timestamp of an ingredient.** `TimestampCheck` supplies the time a
   signer's validity is judged at. An ingredient manifest's own timestamp
   is used for its own signer, exactly as for the active manifest; the
   active manifest's time is never borrowed. *Decided; measured in AC3
   (the DigiCert-timestamped Adobe ingredients are `Trusted` this way).*
+  *Status 2026-10-08 (step 279):* decided, and measured in SPEC-021 AC3.
 - **`ingredient.manifest.missing` twice.** c2patool reports it once
   scoped and once unscoped; SPEC-020 reports it once. Unchanged here.
   *Non-blocker.*
+  *Status 2026-10-08 (step 279):* about the report's shape, no verdict.
 - **A v3 record that disagrees with what this verifier finds.** The
   specification would have a claim generator merge both; a verifier that
   re-validates finds its own answer, and the dropping rule only removes
   what both say. Nothing is added for a record that claims a *success*
   this verifier does not find: the verifier's own failure stands.
   *Decided.*
+  *Status 2026-10-08 (step 279):* decided; about a verdict, fail closed: the verifier's own failure stands.
 
 ## Amendments
 

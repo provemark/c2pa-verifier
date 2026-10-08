@@ -207,21 +207,25 @@ final readonly class IsobmffManifestStoreExtractor
    caller who sees `isobmff` learns less than one who sees `mp4`. The
    proposal is `isobmff`, because this extractor genuinely does not know
    which brand it is looking at and should not guess. Non-blocker.
+   *Status 2026-10-08 (step 279):* about the report's `format`, no verdict.
 2. **Which `ftyp` brands are accepted.** The proposal is *any*: the brand
    list is long and grows, and a file that declares `ftyp` and holds a
    C2PA `uuid` box is one this verifier can read whatever its brand says.
    The risk is claiming support for a container whose hash rules differ.
    Non-blocker while the hash is out of scope; it becomes one with the
    next spec.
+   *Status 2026-10-08 (step 279):* about a verdict: the bytes hashed follow the BMFF hash assertion, not the brand, as in `c2pa-rs` (SPEC-027, SPEC-029). Reasoned.
 3. **Two amendments this spec forces when it is implemented.** SPEC-024
    AC1 says the bound is "in all three containers" and SPEC-013 AC6's
    unknown-format list is written against three; both need their literals
    widened to four. Naming them here so they are not discovered as
    surprises. Non-blocker.
+   *Status 2026-10-08 (step 279):* a process note, done.
 4. **The new class must be marked `@internal`** and recorded, or SPEC-025
    AC2 fails the moment the file lands. That is the drift alarm working as
    designed, and it is mentioned so that the red phase is not mistaken for
    a fault. Non-blocker.
+   *Status 2026-10-08 (step 279):* a process note, done.
 
 ## Amendments
 

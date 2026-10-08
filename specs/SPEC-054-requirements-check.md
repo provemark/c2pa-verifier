@@ -191,9 +191,11 @@ None. Both were answered at approval (Maurice van Loon, 2026-09-30):
 - *PHPStan and Pint*: the file is added to PHPStan's paths (level max)
   and formatted by Pint; the lint on 7.4–8.2 in CI guards against a formatter rule
   that introduces newer syntax.
+  *Status 2026-10-08 (step 279):* tooling, no verdict.
 - *Public API*: yes. The file and its return shape are listed in README
   "Public API" beside the classes, so a change to that shape is a broken
   promise, not a detail.
+  *Status 2026-10-08 (step 279):* about the public API, no verdict.
 
 ## Amendments
 

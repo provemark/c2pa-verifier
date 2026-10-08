@@ -168,6 +168,7 @@ final class BmffHashCheck
 
 - None blocking. Whether `assertionOf()` and the map share one constant
   or one small function is an implementation choice.
+  *Status 2026-10-08 (step 279):* an implementation choice, no verdict.
 
 ## Traceability
 

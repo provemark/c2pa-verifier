@@ -204,11 +204,13 @@ proposals.
    Proposal: fourteen, following the oracle. The extra entry can only
    refuse a reference to a label that does not exist, which is the
    fail-closed direction and costs no real file. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about a verdict, stricter than §15.10.3.2.2, equal to `c2pa-rs`.
 2. **Rule A is `c2patool`'s, not §15's.** 2.4 states it as a generator
    duty (§18.15.2), and the validation steps are silent. Proposal: follow
    `c2patool`, which is this project's first design rule, and write the
    provenance into the explanation and `docs/comparison.md`, so that
    nobody takes it for a §15 rule. *(blocker: your call)*
+   *Status 2026-10-08 (step 279):* about a verdict, decided with the spec: it follows `c2patool`, and the explanation and `docs/comparison.md` say so.
 3. **How the malformed-location probes are built.** `c2patool`'s builder
    refused an invalid `icon` outright in step 121, and may refuse a
    `location` without `url` too. Proposal: try `c2patool` first. Where it
@@ -216,11 +218,13 @@ proposals.
    signing helpers the `bin/make-*-variants.php` scripts already use,
    throwaway keys shredded. Such a probe has no oracle, and the test says
    so, as SPEC-030 AC3 did. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* a process question (building probes), no verdict.
 4. **`checks_performed`.** Rule B is a check of its own. Naming it there
    (`externalReferences`) would change the report of every file, a drift
    touching every recorded expectation for a check that finds nothing in
    the whole corpus. Proposal: name it only when the manifest carries an
    external-reference assertion. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about the report's shape, no verdict.
 
 ## Amendments
 

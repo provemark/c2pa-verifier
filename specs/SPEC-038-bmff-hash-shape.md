@@ -204,14 +204,17 @@ settled by adopting their proposals.
    it. The drift alarms compare failures only, and a test that pins
    0.27.22's informational list for a BMFF file is amended with this
    spec. *(blocker: your call)*
+   *Status 2026-10-08 (step 279):* about the report (informational), no verdict.
 2. **An absent `exclusions` key.** `c2patool` refuses to produce a report.
    Proposal: `assertion.bmffHash.malformed`, a report that says why, as
    for the empty list. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about a verdict, fail closed: `assertion.bmffHash.malformed`.
 3. **A `length` of 0 that is not the last subset.** 2.4 says the last
    entry *"may"* have length 0, which reads as *only* the last. `c2pa-rs`
    does not check it separately; such an entry covers the rest of the box,
    and so overlaps any entry after it. Proposal: treat it that way, as
    overlapping, so no rule of its own. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about a verdict, fail closed: an overlap is refused.
 
 ## Amendments
 

@@ -404,12 +404,15 @@ dependency; `Report` is unchanged in its dependencies.
   in `validation_status` (logged once outside and once inside the
   ingredient scope). This verifier reports it once, scoped; the alarms
   compare unique codes. *Non-blocker; named in `docs/comparison.md`.*
+  *Status 2026-10-08 (step 279):* about the report's shape; the verdict is equal (the alarms compare unique codes). The question says the difference is named in `docs/comparison.md`; it is not there (checked 2026-10-08).
 - **The `validationResults` map of a v3 assertion.** Decoded and carried
   as data; whether it is validated for shape (a `validation-results-map`,
   §18.16.12.4.3) belongs to SPEC-021, which consumes it. *Non-blocker.*
+  *Status 2026-10-08 (step 279):* answered by SPEC-021, which validates ingredient manifests.
 - **A store whose active manifest has no ingredient assertion but holds a
   second manifest** (`unreferenced` non-empty): the specification says
   ignore; amendment 5 refuses; SPEC-021 decides. *Non-blocker.*
+  *Status 2026-10-08 (step 279):* about a verdict, fail closed: SPEC-020 amendment 5 refuses such a store.
 
 ## Amendments
 

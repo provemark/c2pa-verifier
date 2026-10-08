@@ -140,9 +140,11 @@ No public API changes.
    rule rests on `c2pa-rs`'s behaviour, its comment, and the maintainer's
    decision, not on a quoted sentence. It is to be quoted from C2PA 2.4
    before implementation, if the text can be reached.
+   *Status 2026-10-08 (step 279):* a process question (quoting the text), no verdict.
 2. **Where a v1 claim's unprotected chain is shown** *(non-blocking).* It
    is still unsigned. A line in the report, or in `docs/comparison.md`
    only? Proposal: only the comparison row, since `c2patool` says nothing.
+   *Status 2026-10-08 (step 279):* about the report's display, no verdict.
 
 ## Amendments
 

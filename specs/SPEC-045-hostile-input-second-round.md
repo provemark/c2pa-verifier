@@ -183,13 +183,16 @@ public const int MAX_JSON_BYTES = 262144;   // open question 1
    near 18 MB, measured by scaling from the 1 MB probe (72 MB), not run.
    1 MiB would peak near 72 MB. The item charge is what bounds the store
    either way.
+   *Status 2026-10-08 (step 279):* answered by Maurice van Loon (2026-09-27).
 2. **Duplicate references: cache or refuse** *(non-blocking; proposal:
    cache).* Caching keeps every status list as it is, and matches
    `c2pa-rs`. Refusing would be stricter than `c2patool` for no gain in
    safety, which ADR-0005 does not allow.
+   *Status 2026-10-08 (step 279):* about a verdict, equal to `c2pa-rs`.
 3. **Decoding the COSE once** *(non-blocking; out of scope).* It is worth
    doing on its own, as a refactor with no change in behaviour, after this
    spec.
+   *Status 2026-10-08 (step 279):* done in step 255 (`CoseSign1::ofManifest()`).
 
 ## Amendments
 

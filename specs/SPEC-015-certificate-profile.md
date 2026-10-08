@@ -337,6 +337,7 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
 - Measured in step 34a (amendment 1): c2patool runs the profile check
   without settings and with `verify_trust: false`; `expired.png` with
   the EC test root as anchor gives `.expired` and `.untrusted` together.
+  *Status 2026-10-08 (step 279):* answered in its own text (measured, amendment 1).
 - Non-blocker: the `v1` variant of step 33 is *not* v1 — OpenSSL 3's
   `x509 -req -CA` adds SKI/AKI and so v3 — it stands as the "no KU, no
   EKU" variant (which is why c2patool refused it) and is documented as

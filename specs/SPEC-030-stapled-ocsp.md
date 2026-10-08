@@ -406,6 +406,7 @@ reader needs.
    unusable, and the specification's own answer to that case is the online
    fallback (`PRED-STRU-013`) this verifier will never make. AC6 asserts
    the `good` half; a stale `revoked` belongs to AC3.
+   *Status 2026-10-08 (step 279):* decided; about a verdict, fail closed: a stale `good` is skipped and can lower trust, never raise it.
 
 2. **The fixture for AC3** — **decided: construct it.** No public file
    carries a `revoked` stapled response and c2patool emits no OCSP code of
@@ -423,6 +424,7 @@ reader needs.
    specification text alone, and **the note for the step must say so in
    those words**: it is the first acceptance criterion in this project with
    no independent oracle behind it.
+   *Status 2026-10-08 (step 279):* decided; a fixture, measured against OpenSSL and the specification only, as the question says.
 
 3. **Whether `notRevoked` should be recorded** — **decided: record it,
    with the caveat in the explanation itself.** The catalogue names the
@@ -433,11 +435,13 @@ reader needs.
    a reader will actually meet it: the explanation text says the response
    came from an unsigned header and is not evidence that the certificate
    was never revoked.
+   *Status 2026-10-08 (step 279):* decided, about the report.
 
 4. **Where the check runs** — **decided: the trust layer**, next to
    `CertificateProfileCheck`, after the chain (it needs the issuer) and
    after the timestamp (it needs the judged time). `Verifier` gains one
    call and no new ordering rule.
+   *Status 2026-10-08 (step 279):* decided, a design question.
 
 ## Traceability
 

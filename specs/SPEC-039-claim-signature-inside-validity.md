@@ -168,10 +168,12 @@ case ClaimSignatureInsideValidity = 'claimSignature.insideValidity';
 
    Proposal: copy `c2patool`, and name the oddity in `docs/comparison.md`.
    *(blocker: your call)*
+   *Status 2026-10-08 (step 279):* about the report's codes; the verdict is not affected.
 2. **The position in the list.** `c2patool` always puts it directly
    before `claimSignature.validated`. Proposal: the same order. Tests that
    pick the first status of `ClaimSignatureCheck` are amended with this
    spec. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about the report's order, no verdict.
 
 ## Amendments
 

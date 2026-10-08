@@ -170,6 +170,7 @@ final class IngredientManifestCheck
 - None blocking. If AC5 shows `c2patool` reporting a different code
   (for example `ingredient.manifest.mismatch`), that is a proposed
   amendment for Maurice, not a silent change.
+  *Status 2026-10-08 (step 279):* a process rule, no verdict.
 
 ## Amendments
 

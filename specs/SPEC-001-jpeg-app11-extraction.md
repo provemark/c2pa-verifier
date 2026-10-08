@@ -246,6 +246,7 @@ checks and limits pass. It never calls `file_get_contents`.
 - Resolved before approval: `c2patool`'s behaviour with two En values
   (error) and with pieces after SOS (no claim found) was measured on
   2026-09-19; AC11 and AC13 carry the result.
+  *Status 2026-10-08 (step 279):* answered in its own text (measured 2026-09-19).
 - Non-blocker: whether `ContainerException` should carry a machine-readable
   reason (an enum) next to the message. Deferred to the `Verifier` spec that
   first needs to map it.

@@ -195,11 +195,14 @@ reasoning that led to them stays readable.
    rule against `exec` is unchanged where it counts — the verification
    path — and this exception is written here so that a reader who finds
    `exec` in a test knows it was a decision and where it was taken.
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-09-22); tooling, no verdict.
 2. **Reading the tar.** `PharData` is core and needs no dependency;
    extracting with the `tar` binary is one more `exec`. Proposal:
    `PharData`, and `ext-phar` named in `require-dev`. Non-blocker.
+   *Status 2026-10-08 (step 279):* a design question (tooling), no verdict.
 3. **The ceiling in AC3.** 4 MB is proposed against 1.9 MB measured. A
    tighter ceiling catches drift sooner and nags more often. Non-blocker.
+   *Status 2026-10-08 (step 279):* a design question (tooling); the ceiling is SPEC-023 amendment 3's 16 MB.
 4. **Whether `specs/` and `notes/` should ship at all.** Step 62 decided
    they should, so that the package carries its own record; AC4 turns that
    into a rule, and AC4 is meaningless if the answer changes. If the package
@@ -210,6 +213,7 @@ reasoning that led to them stays readable.
    carries its own record — `docs/`, `specs/`, `notes/` and `AI-LOG.md`
    travel with the code, and AC4 and AC5 stand as written. The cost is
    measured and small: under 2 MB in all, against 500 kB of source.
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-09-22), no verdict.
 
 ## Amendments
 

@@ -274,6 +274,7 @@ rather than a second parse.
    `c2pa.hash.bmff` as unsupported for these two. Non-blocker, but it is
    the one place a mistake would make a v2 file fall through to the wrong
    check.
+   *Status 2026-10-08 (step 279):* about a verdict, answered: both labels go to `BmffHashCheck` (`BmffHashCheck::LABELS`), measured by SPEC-029 AC1 and AC7.
 2. **Where the nested walk lives.** SPEC-026's extractor walks the top
    level and `Hash` already depends on `Container`. Either the extractor
    grows a depth-bounded child walk, or this check does its own — which
@@ -283,6 +284,7 @@ rather than a second parse.
    child walk and this check asks it; nothing parses a box in two places.
    The walk stays in `Container`, which `Hash` already depends on, so no
    Deptrac arrow moves.
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-09-22), no verdict.
 3. **How deep is deep enough.** `/moov/trak/mdia/minf/stbl/stco` is six
    segments. **Decided with question 2: eight**, named here rather than
    left in the code. Six is what the deepest real path needs, eight leaves
@@ -290,6 +292,7 @@ rather than a second parse.
    is **refused by name** rather than silently under-read — a walk that
    stops early and reports what it found would hash bytes the signer
    excluded and call the result a match.
+   *Status 2026-10-08 (step 279):* decided; about a verdict, fail closed: deeper nesting is refused by name.
 
 ## Traceability
 

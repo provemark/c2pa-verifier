@@ -237,17 +237,21 @@ Questions 2, 3 and 4 were settled by adopting their proposals.
    every claim's `redacted_assertions` in the store, because the redacting
    claim is not the redacted one. That is what `c2pa-rs`'s `has_redactions`
    reads, as far as the code shows. *(blocker: your call)*
+   *Status 2026-10-08 (step 279):* answered: SPEC-035 amendment 5 (step 158) takes the redactions only from the manifests the graph reaches from the active one, measured; it closed a wrong `Trusted`.
 2. **`ingredient.claimSignature.validated` as informational.** 0.28.0
    records it informational. In 2.4's status table it is not among the
    success codes as far as read. Proposal: informational, as the oracle
    does. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about the report (informational), no verdict.
 3. **The `c2pa.redacted` action.** §15.10.3.2.3 wants its `redacted`
    field present and resolvable (`assertion.action.redactionMismatch`),
    but no oracle refused a bare `c2pa.redacted` (step 123). Proposal:
    leave it out of this spec and name it. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about a verdict, equal to both oracles (SPEC-037 question 1), named in `docs/comparison.md`.
 4. **Hard-binding redaction.** §6.8 forbids redacting the hard binding in
    an update manifest, as a generator rule. Proposal: out of scope until a
    validation step or an oracle's behaviour is found. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* answered by SPEC-036.
 
 ## Amendments
 

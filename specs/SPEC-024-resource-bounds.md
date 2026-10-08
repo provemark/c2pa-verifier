@@ -186,15 +186,18 @@ reasoning that led to them stays readable.
    proposal is `general.error`, which is what every other container fault
    already uses, with an explanation that names the size and the bound.
    Non-blocker, but it is the caller-visible half of this spec.
+   *Status 2026-10-08 (step 279):* about a refusal, fail closed: a store too large for the host is not judged at all.
 2. **The share of remaining memory.** `DEFAULT_SHARE = 0.25` is proposed
    because the PNG path costs about 2.1× the store today and about 1.1×
    once the double copy is gone; a quarter leaves room for the box tree,
    the claim and the certificates on top. It is a judgement, not a
    measurement, and the tests-first step should measure it.
+   *Status 2026-10-08 (step 279):* about a refusal, fail closed.
 3. **16 MiB, or lower.** 16 MiB is 4.8× the largest store this project has
    ever met and 350× the median. 8 MiB would be 2.4× the largest. Neither
    is measured against the wider world — only against 212 files.
    **Blocker: it decides what AC1 asserts.**
+   *Status 2026-10-08 (step 279):* answered by AC1 as implemented; a refusal, fail closed.
 4. **Whether reading `ini_get('memory_limit')` is acceptable at all.** It
    makes behaviour depend on the host's configuration, which no other rule
    in this verifier does: the same file could be `Invalid` on one host and
@@ -208,6 +211,7 @@ reasoning that led to them stays readable.
    and read on a large one, so AC2's explanation has to say that the file
    was not judged at all — nobody may mistake a refusal for a verdict
    about the content.
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-09-22); a refusal, fail closed.
 
 ## Amendments
 

@@ -135,9 +135,11 @@ No public API changes.
    profile already makes it `Invalid`. Adding `untrusted` would change the
    status list of a leaf that `c2patool` also refuses, and it would decide
    nothing.
+   *Status 2026-10-08 (step 279):* about the report; the leaf is already `Invalid`.
 2. **A trust anchor with a weak self-signature** *(non-blocking; proposal:
    allowed).* The anchor is trusted by configuration, not by its
    signature; RFC 5280 §6.1 does not verify it either.
+   *Status 2026-10-08 (step 279):* about a verdict, measured 2026-10-08 (step 279): a root self-signed over SHA-1 as the anchor, intermediate and leaf over SHA-256, is `Trusted` in `c2patool` 0.27.22 and 0.28.1 and here; `openssl verify -x509_strict` says OK. Equal to every oracle.
 
 ## Amendments
 

@@ -181,11 +181,13 @@ No public API changes.
    OpenSSL exactly. Refusing them is simpler, and it prevents a wrong
    `Trusted` too. Nothing in the corpus carries them, which
    the AC6 run will show.
+   *Status 2026-10-08 (step 279):* about a verdict, fail closed: other name forms are refused.
 2. **Certificate policies** *(non-blocking; proposal: not now).* Both
    `c2patool` versions and OpenSSL without `-policy_check` accept
    `policy-required.png`. Enforcing policies would be stricter than every
    oracle, and it prevents nothing that a trust anchor does not already
    decide.
+   *Status 2026-10-08 (step 279):* about a verdict, equal to both `c2patool` versions and OpenSSL, measured on `policy-required.png`.
 
 ## Amendments
 

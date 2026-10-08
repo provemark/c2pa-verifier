@@ -330,6 +330,7 @@ files could disagree and the command would have to pick one.
   constructor with defaults for every collaborator (SPEC-013); `new
   Verifier` is the whole answer, and the shim stays five lines.
   *Non-blocker.*
+  *Status 2026-10-08 (step 279):* a design question, no verdict.
 - **`fopen` failures without `@`.** AC6 wants PHP's own reason in the
   message and no warning on stderr. Two ways: `@fopen` plus
   `error_get_last()`, or a temporary `set_error_handler` that turns the
@@ -337,13 +338,16 @@ files could disagree and the command would have to pick one.
   `src/`, as today) and is the proposal; a test asserts the warning text
   ("No such file or directory", "Is a directory") lands in `$err` as part
   of the `Error:` line. *Non-blocker, decided in the tests-first step.*
+  *Status 2026-10-08 (step 279):* decided in the tests-first step; the command's messages, no verdict.
 - **Exit 1 for "no manifest".** A file without a manifest is `Invalid` in
   the report (SPEC-013) and c2patool exits 1 on it; both point at 1. A
   caller who wants to tell "no manifest" from "broken manifest" reads
   `has_manifest` in the JSON, which is why the JSON is printed. *Decided
   by the report; noted so that it is not reopened.*
+  *Status 2026-10-08 (step 279):* decided; about a verdict, fail closed: no manifest is `Invalid` (SPEC-013), exit 1.
 - **`--settings` before or after the file.** Both allowed (AC2); the
   parser does not care about order. *Decided.*
+  *Status 2026-10-08 (step 279):* decided, no verdict.
 
 ## Amendments
 

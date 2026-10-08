@@ -9430,3 +9430,18 @@ README are where the disclosure lives.
   `assertions_eq`, and from `ChainCheck` and `SignedData`.
 - Decided by Maurice: mark every open question (1), then a release-check
   rule (2), then the re-signed probe (3).
+
+## 2026-10-08 — Step 279 extended to all 175 open questions
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, breid stap 279 uit naar alle 175", after the first pass
+  turned out to have counted only the 27 written `- Non-blocker`.
+- Produced: 147 more status lines in 51 specs (one in SPEC-020 corrects
+  its question's claim about `docs/comparison.md`); the step 279 note and
+  its `NOTES.md` row rewritten for the whole count.
+- Measured: a SHA-1 self-signed trust anchor (throwaway keys, deleted)
+  through `c2patool` 0.27.22 and 0.28.1, `bin/c2pa-verify` and `openssl
+  verify -x509_strict`: `Trusted`, `Trusted`, `Trusted`, OK. Read: the
+  notes and amendments each answered question points at (steps 78, 110,
+  158, SPEC-029's criteria), and `docs/comparison.md` for every status
+  that says something is named there.
+- Decided by Maurice: extend step 279 to every open question.

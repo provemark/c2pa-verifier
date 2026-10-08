@@ -150,11 +150,13 @@ beside the modulus test. No public API changes.
    oracle (c2pa-rs 0.91.1 checks the end-entity profile only), named in
    `docs/comparison.md`. The net verdict of a fully forged intermediate
    chain was not measured and is not pursued.
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-09-28), stricter than every oracle.
 2. **A negative exponent** *(non-blocking).* DER INTEGER is signed; a
    negative `e` should never parse as an RSA key. If OpenSSL reports it as
    unsigned bytes, AC1/AC2 already catch the resulting value; otherwise
    AC3 refuses it. Proposal: no separate criterion unless a probe shows a
    negative exponent reaching the profile.
+   *Status 2026-10-08 (step 279):* about a verdict, fail closed.
 
 ## Amendments
 

@@ -190,14 +190,17 @@ reasoning that led to it stays readable.
    class, because it is the one exception a caller can actually meet and
    therefore the one they may need to catch. AC1's list is nine classes,
    not eight.
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-09-22), no verdict.
 2. **Where the contract is written.** The README is where a caller looks,
    but it is also the file most likely to drift from the code. The
    alternative is a `docs/api.md` that the snapshot test can read, with the
    README pointing at it. Non-blocker.
+   *Status 2026-10-08 (step 279):* a design question, no verdict.
 3. **Whether `Cli\Command` belongs in the contract at all.** It exists for
    `bin/c2pa-verify`; a caller who wants the CLI runs the binary, and a
    caller who wants the library calls `Verifier`. Including it promises a
    shape that has no second user. Non-blocker, but it is one of the eight.
+   *Status 2026-10-08 (step 279):* a design question, no verdict.
 
 ## Amendments
 

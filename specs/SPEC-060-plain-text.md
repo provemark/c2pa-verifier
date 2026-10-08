@@ -219,27 +219,33 @@ constructor parameter: `null` is text off. The CLI gains `--text`.
    change (PR #2732, L2/26-042), and a verdict format that changes under a
    caller is worse than one the caller chose. Turning it on later is an
    amendment; turning it off later would break callers. **Decided by Maurice van Loon, 2026-10-07: as proposed.**
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-10-07); opt-in.
 2. **How text is recognised.** Proposal: with text on, any stream no other
    format claims and that is valid UTF-8 is `text` (AC10, AC13). The oracle
    picks the handler by the `.txt` extension; this verifier has no name.
    The consequence: with text on, an unsigned JSON or SVG file is `text`
    without a manifest, not `unknown`. Neither can yield a wrong `Valid`. **Decided by Maurice van Loon, 2026-10-07: as proposed.**
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-10-07); its text shows neither outcome can make a wrong `Valid`.
 3. **A length field that does not fit (AC6): refuse, stricter than the
    oracle.** Proposal: yes. The oracle reads `length-too-long` `Valid`
    because its JUMBF reader ignores a byte after the box; here the store's
    LBox must equal the declared length, as for every other format. **Decided by Maurice van Loon, 2026-10-07: as proposed.**
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-10-07); stricter than the oracle.
 4. **Two wrappers (AC5): refuse, stricter than the oracle.** Proposal: yes,
    as SPEC-059 AC4 and SPEC-003 AC7. The oracle says *No claim found*, so
    the state differs too (`Invalid` here); a text with two manifests is not
    an unsigned text. **Decided by Maurice van Loon, 2026-10-07: as proposed.**
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-10-07); stricter than the oracle.
 5. **NFC: none, as the oracle.** Proposal: hash the raw bytes. Normalising
    first would say `Valid` where the oracle says `Invalid`, the dangerous
    direction, and needs `ext-intl`, which this project does not allow. If
    c2pa-rs PR #2732 lands, measure again. **Decided by Maurice van Loon, 2026-10-07: as proposed.**
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-10-07); equal to the oracle, and the stricter side.
 6. **Amendments this forces** (named now): SPEC-013 (the `format` value
    `text`, the constructor parameter), SPEC-019 (the `--text` flag),
    SPEC-024 (the text bound in AC1's list). Proposal: written with the
    build. **Decided by Maurice van Loon, 2026-10-07: as proposed.**
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-10-07); a process note.
 
 ## Amendments
 

@@ -328,6 +328,7 @@ final readonly class TrustSettings
      avoid that divergence at low risk, since a TSA also needs the
      `timeStamping` EKU. It was declined so that the rule stays one
      sentence and mirrors the official lists.
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-09-24); about a verdict, fail closed (stricter than `c2patool`).
 2. **Per-entry `trust_config`.** **Answered by measurement, step 110
    (AC8).** An entry's EKUs are the built-in list, plus the top level, plus
    its own, and they never spill over to another entry. This is `c2patool`
@@ -335,15 +336,18 @@ final readonly class TrustSettings
    configurations per EKU). The earlier proposal, one union across all
    entries, was wrong: it would have called E5 `Trusted` where the oracle
    and §14.4.1 say `Invalid`.
+   *Status 2026-10-08 (step 279):* answered by measurement (step 110).
 3. **After 0.92.0.** *(not a blocker)* Keep reading `trust.trust_anchors`
    when `c2patool` no longer does? Proposal: yes. Refusing it would break
    every existing settings file, the sister repository's
    `certs/c2pa-trust.settings.json` included. The day `c2patool` drops it,
    `docs/comparison.md` names the difference.
+   *Status 2026-10-08 (step 279):* about a verdict, equal to `c2patool` today: the legacy string is still read, as it reads it.
 4. **The maximum number of entries.** *(not a blocker)* Proposal: 32. The
    official list's JSON has 30 signer services, but a settings file bundles
    them into one PEM string, so a realistic file holds a handful of
    entries.
+   *Status 2026-10-08 (step 279):* about a refusal, fail closed: more entries is an error in the settings.
 5. **The legacy string counts for both sides, which §14.4.2 does not
    want.** *(for the maintainer; not a blocker)* §14.4.2 says the TSA
    anchors *"shall be separate"*. A single legacy `trust.trust_anchors`
@@ -351,6 +355,7 @@ final readonly class TrustSettings
    as AC2 and AC6 say. Otherwise every existing settings file loses
    `timeStamp.trusted`. Name it in `docs/comparison.md` as a departure
    kept for compatibility; the new shape is the conformant way.
+   *Status 2026-10-08 (step 279):* about a verdict, equal to `c2patool`, and named in `docs/comparison.md` as a departure from §14.4.2 kept for compatibility.
 6. **Answered 2026-09-24 (steps 114–115): the allowed list no longer
    reaches a TSA**, through settings or through the constructor. See
    SPEC-017 amendment 5 and AC13. The text below is the question as it
@@ -362,9 +367,11 @@ final readonly class TrustSettings
    makes it unreachable for settings files, because a loose `allowed_list`
    is refused. A caller who builds `TrustSettings` in PHP could still
    reach it.
+   *Status 2026-10-08 (step 279):* answered in its own text (steps 114–115).
 7. **The sister repository's settings file** has no `allowed_list` (read
    2026-09-24), so AC4 does not refuse it. Nothing to decide; recorded so
    that nobody has to look again.
+   *Status 2026-10-08 (step 279):* nothing to decide, as its text says.
 
 ## Amendments
 

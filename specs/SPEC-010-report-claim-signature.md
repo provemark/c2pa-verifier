@@ -326,18 +326,22 @@ already); `Cose` may see `Manifest` (the arrow exists, unused until now).
   `claim-title-changed`, `signature-changed` and `json-broken` is under
   `tests/Fixtures/c2patool/variants/`; AC2's urls match exactly, AC7's
   does not (c2patool's bare label) and the criterion says so.
+  *Status 2026-10-08 (step 279):* answered in its own text (measured).
 - Added at implementation: `ClaimSignatureCheck::checkBytes($signature,
   $claim, $url)` beside `check(Manifest)`, for signatures that come
   without a manifest (the step-19 vectors); `StatusCode::isInformational()`
   (false for every code so far; M6's `timeStamp.*` will be the first).
+  *Status 2026-10-08 (step 279):* an implementation note, no verdict.
 - **Where `general.error`'s url for a store-level fault should point**:
   `self#jumbf=/c2pa` (the store) is proposed; c2patool reports such
   faults as a top-level error with no url at all. Non-blocker.
+  *Status 2026-10-08 (step 279):* about the report's shape, no verdict.
 - **Whether `explanation` should ever carry the offset-and-hex detail**
   the layers produce, or a shorter sentence with the detail elsewhere.
   Proposal: the full message; a consumer that shows it to a user should
   treat it as untrusted text (it already is hex-only for file bytes).
   Non-blocker.
+  *Status 2026-10-08 (step 279):* about the report's shape, no verdict.
 
 ## Amendments
 

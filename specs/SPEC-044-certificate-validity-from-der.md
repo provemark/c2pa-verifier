@@ -192,12 +192,15 @@ parsed by hand. It gets one exception, named with its reason.
 
 - **GeneralizedTime with fractions.** Decided in amendment 1: the fraction
   is dropped, as `Der::time()` already does for RFC 3161.
+  *Status 2026-10-08 (step 279):* answered by amendment 1.
 - **UTCTime / GeneralizedTime split** (2049/2050). Enforcing it would be
   stricter than OpenSSL. Proposal: do not enforce. It protects against no
   wrong `Valid`, and ADR-0005 then says to follow `c2pa-rs`. Not a blocker.
+  *Status 2026-10-08 (step 279):* about a verdict, equal to OpenSSL and `c2pa-rs`; its text shows it protects against no wrong `Valid`.
 - **AC4's expected code.** Measured in amendment 1: this verifier says
   `signingCredential.invalid`; `c2patool` reads the certificate and says
   `Valid` with `signingCredential.untrusted`.
+  *Status 2026-10-08 (step 279):* answered by measurement (amendment 1), stricter than `c2patool`.
 
 ## Amendments
 

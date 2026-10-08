@@ -271,14 +271,17 @@ holds a private key or signs.
   (keys deleted), each self-verified by OpenSSL and re-verified in PHP;
   the P-521 long-form DER length and the PSS-parameter refusal were found
   there and are in the criteria.
+  *Status 2026-10-08 (step 279):* answered in its own text (measured).
 - Resolved at implementation: `bool`; SPEC-010 assembles its report from
   `CoseSign1` (alg, chain) and the result.
+  *Status 2026-10-08 (step 279):* answered in its own text (design).
 - Added at implementation: `src/Cose/OpenSsl.php`, a scoped error handler
   plus a drain of OpenSSL's error queue around every `openssl_*` call, so
   a failure is an answer and never a warning or a stale error on a later
   call; and `PublicKey`, which classifies the leaf's key by the SPKI
   algorithm OID rather than by PHP's key-type constants (which do not name
   RSA-PSS, nor Ed25519 before PHP 8.4).
+  *Status 2026-10-08 (step 279):* an implementation note, no verdict.
 
 ## Amendments
 

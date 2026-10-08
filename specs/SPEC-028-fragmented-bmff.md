@@ -237,17 +237,20 @@ statuses: a fragmented stream is many files, and each status says which.
    fifty open handles. The iterable yields a name and an open stream, the
    verifier reads that fragment to the end before the next is asked for,
    and it closes nothing it did not open.
+   *Status 2026-10-08 (step 279):* decided by Maurice van Loon (2026-09-22), no verdict.
 2. **What `uniqueId` and `localId` are for.** Both are 1 in both measured
    streams. AC6 refuses more than one map, so nothing depends on the
    answer yet — but the field is a list, and a spec that refuses the plural
    should say it is refusing rather than that the plural does not exist.
    Non-blocker.
+   *Status 2026-10-08 (step 279):* about a verdict, fail closed: more than one map is refused (AC6).
 3. **Whether a missing fragment is `Invalid` or an error.** AC5 says
    failure; the alternative is refusing to answer at all, as a container
    fault. A caller who offers four of five fragments has made a mistake,
    and telling them "invalid" may point at the file when the fault is in
    the call. Non-blocker, and worth a sentence in the explanation whichever
    way it goes.
+   *Status 2026-10-08 (step 279):* about a verdict, fail closed: a missing fragment is a failure.
 
 ## Amendments
 

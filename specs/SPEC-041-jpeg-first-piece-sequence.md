@@ -167,15 +167,18 @@ questions 2 and 3 as proposed.
    SPEC-001 AC3's message (a first Z = 2 would pass, and the error would
    come at the second piece), so it would need an amendment to SPEC-001.
    Proposal: narrow. *(blocker: decides AC4)*
+   *Status 2026-10-08 (step 279):* decided with the spec (narrow); stricter, and its text shows neither choice can make a wrong `Valid`.
 2. **The fixture.** One Bing file, public domain, about 107 kB, in
    `tests/Fixtures/writers/` with a line in its README and its
    `c2patool` JSON in `../c2patool/writers/`, as the other writer files.
    Proposal: `Fast heartbeat.jpg`, the smallest. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* a fixture choice, no verdict.
 3. **The signer expires on 2026-10-01.** The Microsoft leaf is valid until
    2026-10-01 17:43:59 UTC. From then on, the file's verdict at *now*
    changes. AC1 therefore asserts on the extractor's bytes and on
    `claimSignature.validated` and the absence of `general.error`, not on
    `validation_state`. Proposal: as written. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* a test design note, no verdict.
 
 ## Amendments
 

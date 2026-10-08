@@ -241,13 +241,16 @@ calls `file_get_contents`. `fread` with a length of 0 throws in PHP 8, and
 - Resolved 2026-09-20: `truncated-between-chunks.png` added to
   `bin/make-png-variants.php` and measured (`c2patool` → `PNG out of
   range`) before the AC14 test was written.
+  *Status 2026-10-08 (step 279):* answered in its own text (measured).
 - **Chunk types that are not four ASCII letters.** Fail closed says error;
   c2patool accepts anything UTF-8. No fixture, no criterion yet. Proposal:
   leave it out of this spec, note it, and revisit if a real file ever
   shows one. Non-blocker.
+  *Status 2026-10-08 (step 279):* about reading, and it cannot make a wrong `Valid`: the data hash covers every byte outside the store, whatever a chunk is called. Reasoned.
 - **The name of the limit.** `maxChunkLength` here, `maxLBox` in SPEC-001;
   they bound the same thing (the store's size). Proposal: keep the name
   that says what is actually checked in each container. Non-blocker.
+  *Status 2026-10-08 (step 279):* a design question, no verdict.
 
 ## Amendments
 

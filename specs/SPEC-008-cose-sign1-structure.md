@@ -301,12 +301,15 @@ final readonly class CoseSign1
   AC7–AC11 are built by `bin/make-cose-variants.php` and measured; AC12's
   limit cases are synthetic in the test (a chain limit of 2 on the Adobe
   signature, a declared 20,000-byte certificate).
+  *Status 2026-10-08 (step 279):* answered in its own text (measured).
 - Resolved at implementation: bytes in, decoded here; `Cose` sees `Cbor`
   and `Support` only.
+  *Status 2026-10-08 (step 279):* answered in its own text (design).
 - Clarified at implementation (the AC4/AC11 reading): `otherHeaders`
   holds every header of both buckets except the labels 1 and 33 — a
   deprecated `"x5chain"` stays visible there whether it was the chain
   used (AC4) or a duplicate (AC11).
+  *Status 2026-10-08 (step 279):* an implementation note, no verdict.
 
 ## Amendments
 

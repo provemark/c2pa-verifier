@@ -162,6 +162,7 @@ final class Read
 - None blocking. The helper's name and place (`Container\Read`, or a
   method on `StreamReader` that `BmffHashCheck` can reach) are an
   implementation choice.
+  *Status 2026-10-08 (step 279):* an implementation choice, no verdict.
 
 ## Traceability
 

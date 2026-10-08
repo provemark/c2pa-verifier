@@ -289,17 +289,20 @@ final readonly class BmffHashCheck
    after `moov` would settle it, and the tests-first step should build one
    rather than assume. **Blocker: AC3 and AC1 assert the digest, and the
    two readings differ on any such file.**
+   *Status 2026-10-08 (step 279):* answered: measured in step 78 (`notes/step-78-bmff-hash-tests.md`, a marker before every included top-level box).
 2. **Nested exclusion paths.** Every `xpath` in both fixtures is a single
    segment. A path like `/moov/trak` resolves to a nested box in `c2pa-rs`;
    whether it contributes a marker of its own, and how it splits the
    parent's bytes, is unmeasured. AC5 refuses multi-segment paths for now,
    which is safe but may refuse files that exist in the wild. Non-blocker,
    and worth revisiting the first time such a file is seen.
+   *Status 2026-10-08 (step 279):* about a verdict, fail closed at the time; nested paths are read since SPEC-029 (AC3, measured).
 3. **Where `included()` lives.** Resolving box paths needs the box walk
    SPEC-026's extractor already has, and duplicating it would be a second
    truth. Either the extractor exposes its walk (widening `Container`'s
    surface, which SPEC-025 marks `@internal` anyway) or the walk moves to
    `Support`. Non-blocker, but it is a Deptrac arrow either way.
+   *Status 2026-10-08 (step 279):* a design question, answered by SPEC-029's question 2.
 
 ## Traceability
 

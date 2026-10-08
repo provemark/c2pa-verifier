@@ -367,13 +367,16 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
 - Resolved before approval (step 14, 2026-09-21): the fifteen variants
   are built by `bin/make-claim-variants.php` and measured; c2patool's JSON
   for the four fixtures is recorded under `tests/Fixtures/c2patool/`.
+  *Status 2026-10-08 (step 279):* answered in its own text (measured).
 - Resolved (tests-first step, 2026-09-21): `provemark/content-credentials`
   `^0.15` in `require-dev` (v0.15.1 locked; four PSR/discovery packages
   with it); `src/` does not use it.
+  *Status 2026-10-08 (step 279):* answered in its own text.
 - **Whether `toArray()` should list the hard-binding assertion.** c2patool
   leaves it out of `assertions`; the sister parser never reads it. Kept
   out for equality with the oracle; M4 reads it from the `Manifest`, not
   from the JSON. Non-blocker.
+  *Status 2026-10-08 (step 279):* about the report's shape; the hard binding is read from the `Manifest`, not from the JSON, so no verdict depends on it.
 
 ## Amendments
 

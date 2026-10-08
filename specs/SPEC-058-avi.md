@@ -114,6 +114,7 @@ constructor parameter.
 1. **Amendments this forces** (named now): SPEC-013 (`format` `avi`, the
    message, the constructor), SPEC-024 (the AVI bound in AC1's list).
    Non-blocker.
+   *Status 2026-10-08 (step 279):* a process note, done with the build.
 
 ## Amendments
 

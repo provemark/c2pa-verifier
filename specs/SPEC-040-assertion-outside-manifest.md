@@ -154,11 +154,13 @@ proposals.
 1. **Only the claim's assertion list.** `c2pa-rs`'s rule runs over the
    claim's assertion list alone. Proposal: the same. The other
    references keep the codes their own specs measured. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about a verdict, equal to `c2pa-rs`.
 2. **An entry that is both redacted and outside.** SPEC-035's
    redaction set holds only entries that name the claim's own manifest, so
    an entry naming another manifest is never excused as redacted. It gets
    `outsideManifest`, as in `c2pa-rs`, whose loop does not look at
    redactions first. Proposal: as it falls out. *(not a blocker)*
+   *Status 2026-10-08 (step 279):* about a verdict, equal to `c2pa-rs` (`outsideManifest`).
 
 ## Traceability
 

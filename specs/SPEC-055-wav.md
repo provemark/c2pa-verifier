@@ -292,11 +292,14 @@ same way, so SPEC-003's tests prove the refactor. `FormatDetector` returns
    JPEG, PNG, WebP or ISOBMFF file" gains WAV), SPEC-025 (two new
    `@internal` classes recorded, or its AC2 fails), and SPEC-003's
    Traceability (the walk's new file). Non-blocker.
+   *Status 2026-10-08 (step 279):* a process note, done with the build.
 2. **Public text** that names the formats: README (two places),
    `docs/comparison.md` (the formats row), CHANGELOG `Unreleased`. Updated
    in the build step. Non-blocker.
+   *Status 2026-10-08 (step 279):* a process note, done with the build.
 3. **The refactor as its own step.** Proposal: step 206 is the refactor
    alone, then 207 the red tests, then 208 the build. Non-blocker.
+   *Status 2026-10-08 (step 279):* a process note, done.
 
 ## Amendments
 
