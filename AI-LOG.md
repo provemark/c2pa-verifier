@@ -9459,3 +9459,21 @@ README are where the disclosure lives.
   `php bin/spec-check.php` on the repository (OK) and with one SPEC-048
   status line removed (one finding); `composer check` (920 passed).
 - Decided by Maurice: SPEC-000 amendment 2.
+
+## 2026-10-08 — The version 1 actions label, measured (step 281)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met 281", "akkoord, (B)" (a fixture and
+  a test, not only a note) and "akkoord, amendement 6 bevestigd".
+- Produced: `bin/make-actions-label-variants.php`;
+  `tests/Fixtures/actions-label/` (three PNGs, the public throw-away root,
+  its settings, a README) and `tests/Fixtures/c2patool/actions-label/`;
+  SPEC-018 amendment 6, AC7 (corrected once: the fault's url) and its
+  Traceability row, the open question's status; a test in
+  `tests/Unit/Manifest/ActionsCheckTest.php`;
+  `notes/step-281-actions-v1-label.md`; a row in `NOTES.md`.
+- Measured: `c2patool` 0.27.22 and 0.28.1 signing the v1 label (both
+  rewrite it); the three probes through both versions and
+  `bin/c2pa-verify`; the test red with `isActionsLabel()` mutated, green
+  restored; `composer check` (923 passed); `bin/package-check.php`.
+  Reasoned: from `c2pa-rs` 0.91.1 `claim.rs` and `assertion.rs`.
+- Decided by Maurice: option (B) and amendment 6.

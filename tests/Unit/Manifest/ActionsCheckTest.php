@@ -171,3 +171,30 @@ test('SPEC-018 AC6: malformed content is refused naming the field; as claim v1 t
     expect($check->checkData(['actions' => [['action' => 'c2pa.opened']]], 2))->toBe([])
         ->and($check->checkData(['actions' => array_fill(0, 10000, ['action' => 'c2pa.created'])], 2))->toBe([]);
 })->group('SPEC-018');
+
+test('SPEC-018 AC7: the version 1 label in a version 2 claim gets the version 2 rules, as both c2patool versions (amendment 6)', function (string $name, string $state): void {
+    $settings = TrustSettings::fromJson((string) file_get_contents(Corpus::fixtures().'/actions-label/throw-away-root.settings.json'));
+    $report = spec018Verify("actions-label/{$name}.png", $settings);
+    $failures = array_values(array_unique(array_map(static fn (ValidationStatus $s): string => $s->code->value, array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code->isFailure()))));
+
+    expect($report->result->state->value)->toBe($state, $name);
+    foreach (['0.27.22', '0.28.1'] as $version) {
+        /** @var array{validation_state: string, validation_results?: array{activeManifest?: array{failure?: list<array{code: string}>}}} $oracle */
+        $oracle = json_decode((string) file_get_contents(Corpus::fixtures()."/c2patool/actions-label/{$name}--{$version}.json"), true, 512, JSON_THROW_ON_ERROR);
+        $theirs = array_values(array_unique(array_column($oracle['validation_results']['activeManifest']['failure'] ?? [], 'code')));
+        expect($oracle['validation_state'])->toBe($state, "{$name} {$version}")
+            ->and($failures)->toBe($theirs, "{$name} {$version}");
+    }
+    if ($state === 'Invalid') {
+        // on the manifest, as AC1 and both oracles; the explanation names the assertion
+        /** @var array{validation_results: array{activeManifest: array{failure: list<array{url: string}>}}} $oracle */
+        $oracle = json_decode((string) file_get_contents(Corpus::fixtures()."/c2patool/actions-label/{$name}--0.28.1.json"), true, 512, JSON_THROW_ON_ERROR);
+        expect(spec018Malformed($report))->toHaveCount(1)
+            ->and(spec018Malformed($report)[0]->url)->toBe($oracle['validation_results']['activeManifest']['failure'][0]['url'])
+            ->and(spec018Malformed($report)[0]->explanation)->toContain('/c2pa.assertions/c2pa.actions)');
+    }
+})->with([
+    'the control, re-signed' => ['control-resigned', 'Trusted'],
+    'c2pa.actions in a v2 claim' => ['actions-v1-label-in-v2-claim', 'Trusted'],
+    'the same, first action c2pa.edited' => ['actions-v1-label-first-edited', 'Invalid'],
+])->group('SPEC-018');

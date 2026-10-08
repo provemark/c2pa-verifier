@@ -176,6 +176,19 @@ corpora; the variants of AC3–AC4 are made in the tests-first step with
     field (`actions`, `actions[0]`, `action`) — and the same six as claim
     v1 return nothing (rule 3 only).
 
+- **AC7 — the version 1 label in a version 2 claim gets the version 2 rules** *(amendment 6)*
+  - Given `tests/Fixtures/actions-label/`'s three re-signed PNGs under
+    `throw-away-root.settings.json`: `control-resigned` (unchanged),
+    `actions-v1-label-in-v2-claim` (the actions assertion labelled
+    `c2pa.actions`) and `actions-v1-label-first-edited` (the same, its
+    first action `c2pa.edited`)
+  - When verified
+  - Then the first two are `Trusted` and the third is `Invalid` with
+    `assertion.action.malformed` on the manifest, as AC1 (the url equal
+    to the oracle's, the explanation naming the `c2pa.actions`
+    assertion); each state and each failure code equals `c2patool`
+    0.27.22's and 0.28.1's recorded answer
+
 ## References
 
 - Specification: C2PA 2.4 §18.x actions (the `c2pa.actions.v2` assertion;
@@ -237,7 +250,7 @@ final readonly class ActionsCheck
 - Non-blocker: `c2pa.actions` (the v1 label) inside a v2 claim —
   tolerated here as c2pa-rs tolerates it; if a corpus file ever shows
   c2patool refusing it, an amendment follows.
-  *Status 2026-10-08 (step 279):* about a verdict, equal to `c2pa-rs`, read not measured: `c2pa-rs` 0.91.1 finds actions assertions by `label_root()`, the label without its version (`assertion.rs` `assertions_eq`), so `c2pa.actions` in a version 2 claim gets the version 2 rules, as `ActionsCheck::isActionsLabel()` gives it here. `c2patool` cannot sign such a claim: 0.27.22 and 0.28.1 both rewrite the label to `c2pa.actions.v2`. A re-signed probe is step 281.
+  *Status 2026-10-08 (step 279):* about a verdict, equal to `c2pa-rs`, read not measured: `c2pa-rs` 0.91.1 finds actions assertions by `label_root()`, the label without its version (`assertion.rs` `assertions_eq`), so `c2pa.actions` in a version 2 claim gets the version 2 rules, as `ActionsCheck::isActionsLabel()` gives it here. `c2patool` cannot sign such a claim: 0.27.22 and 0.28.1 both rewrite the label to `c2pa.actions.v2`. Measured in step 281 (amendment 6): equal to both `c2patool` versions.
 - Non-blocker: whether `ActionsCheck` belongs under `Manifest` (it reads
   a manifest's assertions, needs `Report`) or a new `Assertions` layer
   for the content rules to come. `Manifest` now; Deptrac gets
@@ -285,6 +298,31 @@ final readonly class ActionsCheck
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 125).
 
+6. **2026-10-08, step 281, from the open question on `c2pa.actions` in a
+   version 2 claim.** The question said such an assertion is "tolerated
+   here as c2pa-rs tolerates it", and was never measured. Read in
+   `c2pa-rs` 0.91.1: `verify_actions` finds actions assertions by
+   `label_root()`, the label without its version (`assertion.rs`,
+   `assertions_eq`), so `c2pa.actions` in a version 2 claim is checked
+   under the version 2 rules, as `ActionsCheck::isActionsLabel()` does
+   here. Measured: `c2patool` cannot write such a claim (both versions
+   rewrite the label when they sign), so three probes were made by
+   editing the PNG fixture's store and re-signing it with throw-away keys
+   (`bin/make-actions-label-variants.php`). Both `c2patool` versions and
+   this verifier answer `Trusted`, `Trusted`, and `Invalid` with
+   `assertion.action.malformed` on the probe whose first action is
+   `c2pa.edited`. New criterion AC7, the drift alarm for it.
+
+   **Weight C: no verdict moves; a reading becomes a measured, guarded
+   rule.**
+
+   Confirmed by Maurice van Loon, 2026-10-08 (step 281).
+
+   Corrected while writing the test, before it was green: AC7 first said
+   the fault sits on the `c2pa.actions` assertion. All three verifiers put
+   it on the manifest (`urn:c2pa:…`), as AC1 says; the explanation here
+   names the assertion. AC7 now says so.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -298,3 +336,4 @@ least one test; every source file maps back to this spec.
 | AC4 | tests/Unit/Manifest/ActionsCheckTest.php :: SPEC-018 AC4: a gathered actions assertion counts; two in a v1 claim do not / SPEC-018 | src/Manifest/ActionsCheck.php :: check() (created then gathered), checkAssertions() (rule 3) |
 | AC5 | tests/Unit/Manifest/ActionsCheckTest.php :: SPEC-018 AC5: an actions assertion the claim did not vouch for is not read / SPEC-018 | src/Verifier/Verifier.php :: check() ($unreadable); src/Manifest/ActionsCheck.php :: check() |
 | AC6 | tests/Unit/Manifest/ActionsCheckTest.php :: SPEC-018 AC6: malformed content is refused naming the field; as claim v1 the same six pass / SPEC-018 | src/Manifest/ActionsCheck.php :: checkData(), DEFAULT_MAX_ACTIONS |
+| AC7 (amendment 6) | tests/Unit/Manifest/ActionsCheckTest.php :: SPEC-018 AC7: the version 1 label in a version 2 claim gets the version 2 rules, as both c2patool versions (amendment 6) / SPEC-018 | src/Manifest/ActionsCheck.php :: isActionsLabel(); the fixtures from bin/make-actions-label-variants.php |
