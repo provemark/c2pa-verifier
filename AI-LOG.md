@@ -9540,3 +9540,15 @@ README are where the disclosure lives.
   locally on macOS and none in Docker after the rename; the trust matrix
   rerun (the same two stricter-by-design differences); `composer check`.
 - Decided by Maurice: none yet; the push of this fix waits for his word.
+
+## 2026-10-08 — 0.5.2 released (step 287)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push 91ddeaf en tag na groene CI".
+- Produced: `91ddeaf` pushed; the annotated tag `v0.5.2` on it; a row in
+  `NOTES.md`.
+- Measured: CI run 37837792899 (8 jobs green) and the tag's run
+  37838044207 (green); Packagist's metadata (`v0.5.2` at `91ddeaf`); a
+  fresh `composer require provemark/c2pa-verifier:^0.5` with an empty
+  Composer home installed `v0.5.2`; its `c2pa-verify` on the three
+  key-usage probes (`Trusted`, `Valid`, `Valid`).
+- Decided by Maurice: push, and tag on `91ddeaf` after a green CI.
