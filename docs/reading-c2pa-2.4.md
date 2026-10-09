@@ -54,8 +54,8 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §18.1 to §18.9 | 50 | 25 | 4 | 7 | 11 | 3 |
 | §18.10 to §18.16 | 58 | 20 | 11 | 14 | 12 | 1 |
 | §18.17 to the end of §18 | 34 | 4 | 2 | 14 | 11 | 2 (and 1 other) |
-| Appendix A | 50 | 22 | 2 | 7 | 13 | 6 |
-| **all** | **562** | **296** | **63** | **78** | **101** | **23** |
+| Appendix A | 50 | 23 | 2 | 7 | 13 | 5 |
+| **all** | **562** | **297** | **63** | **78** | **101** | **22** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -965,10 +965,10 @@ decision*, which follows `c2pa-rs` without `verify.strict_v1_validation`.
 | 15.12.1.1 | On a mismatch, try a multi-asset hash; without one, `mismatch`. | the mismatch stands; no fallback | by design: stricter (`docs/conformance.md` §3, `PRED-ASSE-021`) | read |
 | 15.12.1.2 | JPEG: the exclusion's length equals all C2PA APP11 segments together. | `DataHashCheck::check()`: the range holds exactly its pieces | covered | measured: `DataHashCheckTest` "AC3" |
 | 15.12.1.3 | Text: find the wrapper matching the exclusions; none: `assertion.dataHash.malformed`. | `PlainTextManifestStoreExtractor`, then the cover rule: an uncovered wrapper is `mismatch` | covered (code differs) | measured: `PlainTextTest` "AC9", "AC14" → P06-10 |
-| 15.12.1.3 | Two matching wrappers: `manifest.text.multipleWrappers`. | the extractor refuses two wrappers as a container error | covered (code differs) | measured: `PlainTextTest` "AC5: two wrappers are an error (stricter than the oracle, named)" |
+| 15.12.1.3 | Two matching wrappers: `manifest.text.multipleWrappers`. | the extractor refuses two wrappers with `manifest.text.multipleWrappers` (SPEC-060 amendment 3, step 329) | covered | measured: `PlainTextTest` "AC5: two wrappers are an error (stricter than the oracle, named)" |
 | 15.12.1.3 | Remove the wrapper, normalise to NFC, encode UTF-8, hash. | raw bytes are hashed, as the oracle does | by design: SPEC-060 open question 5, decided 2026-10-07 | measured: `PlainTextTest` "AC14" |
 | 15.12.1.3 | Compare: `assertion.dataHash.match` or `.mismatch`. | `DataHashCheck::check()` | covered | measured: `PlainTextTest` "AC14: a changed letter and a flipped signature byte fail as the oracle says" |
-| 15.12.1.3 | A corrupted wrapper: `manifest.text.corruptedWrapper`, with details where possible. | a wrapper whose store does not fit is a container error naming the fault; another version is not a wrapper, as the oracle | covered (code differs) | measured: `PlainTextTest` "AC6", "AC4" |
+| 15.12.1.3 | A corrupted wrapper: `manifest.text.corruptedWrapper`, with details where possible. | a wrapper of another version, or whose store does not fit its length or LBox, is `manifest.text.corruptedWrapper` naming the fault (SPEC-060 amendment 3, step 329); a limit of this verifier's own stays `general.error` | covered | measured: `PlainTextTest` "AC6", "AC4" |
 | 15.12.1.3 | A fragment of signed text is rejected; it should be detected and named as a fragment. | a fragment has no wrapper or fails the hash; it is not named a fragment | partial (the *should*) | read |
 | 15.12.2 | Validate rendered content per §9.2, signal failures, absent content fails, keep reporting failure. | `BmffHashCheck` over the whole file, one verdict | covered for a file; by design for rendering (`PRED-STREAM-001`) | measured: `BmffHashCheckTest` "AC1", "AC2" |
 | 15.12.2 | Streaming: validate each portion before rendering, in sequence; locations start at zero. | `FragmentedVerifier`: the count and each leaf's position; rendering is the player's | covered for the sequence; by design for rendering | measured: `FragmentedVerifierTest` "AC3"–"AC5", "AC8" |
@@ -1593,11 +1593,11 @@ so it is not repeated per format below.
 | A.7 | HTML: at most one `script`/`link` association; `manifest.html.multipleManifests`; whitespace stripped before Base64. | not read: *unsupported file type*. With `--text`, plain text with no manifest. `c2pa-rs` 0.91.1 has no HTML handler | n/a | measured: probe `f.html`, with and without `--text` |
 | A.8.2 | Text wrapper: magic `C2PATXT\0`, version 1, 32-bit length, JUMBF store. | `PlainTextManifestStoreExtractor::scan()`, `wrapper()`. The length must fit the run, and LBox must equal the length | covered | measured: `PlainTextTest` AC1, AC6 |
 | A.8.3.2 | Variation selector to byte: `U+FE00`–`U+FE0F` → 0–15, `U+E0100`–`U+E01EF` → 16–255. | `SelectorReader::selectors()` | covered | measured: `PlainTextTest` AC1 (byte-exact), AC9 (amendment 2, any piece size) |
-| A.8.4.1, A.8.7.1 | Validators may meet several wrappers; the exclusions select one. Yet A.8.7.1 makes more than one valid wrapper a failure. | Two wrappers are a `ContainerException`, so `general.error` (not `manifest.text.multipleWrappers` → P10-7) | by design: SPEC-060 open question 4 (decided 2026-10-07), stricter than the oracle | measured: `PlainTextTest` AC5, AC5 (amendment 2) |
+| A.8.4.1, A.8.7.1 | Validators may meet several wrappers; the exclusions select one. Yet A.8.7.1 makes more than one valid wrapper a failure. | Two wrappers are refused with `manifest.text.multipleWrappers` (SPEC-060 amendment 3) | by design: SPEC-060 open question 4 (decided 2026-10-07), stricter than the oracle; the code since step 329 | measured: `PlainTextTest` AC5, AC5 (amendment 2) |
 | A.8.4.2 | Detection: scan for `U+FEFF`, then a run of selectors, then the magic in the first 8 bytes. | `scan()` with `SelectorReader::nextMarker()`. A lone mark, an emoji's selector or another magic is text | covered | measured: `PlainTextTest` AC3, AC11 |
 | A.8.6.1, A.8.7.3 | The exclusions correspond to the wrapper exactly. | The range runs from the marker to the end of the run (AC9). The exclusion that holds it must equal it (SPEC-012 amendment 7). Another exclusion elsewhere in the text is honoured, with `assertion.dataHash.additionalExclusionsPresent` | partial → P10-6 | measured: `PlainTextTest` AC9; the extra exclusion read in `DataHashCheck::check()` |
 | A.8.6.1, A.8.7.2 | Hash the NFC-normalised UTF-8 text; offsets count in the NFC text. | Raw bytes are hashed; nothing is normalised. That is the oracle's way when verifying (`c2pa-rs` normalises only when it signs). It may call a text `Valid` that was hashed without normalising, where a validator that follows the spec would not | by design: SPEC-060 open question 5 (decided 2026-10-07; `ext-intl` is not allowed) | measured: `PlainTextTest` AC8 (`nfd-text.txt`) |
-| A.8.7.1 | Failure codes `manifest.text.corruptedWrapper` and `manifest.text.multipleWrappers`. | Not emitted. A malformed version-1 wrapper and a second wrapper are `general.error`. A candidate with the magic but another version is read as text, so the file has no manifest | candidate → P10-7 | measured: `PlainTextTest` AC4, AC5, AC6, AC7 |
+| A.8.7.1 | Failure codes `manifest.text.corruptedWrapper` and `manifest.text.multipleWrappers`. | Emitted since step 329 (SPEC-060 amendment 3): `corruptedWrapper` for another version, a length shorter than a box header, a store cut short or an LBox that differs; `multipleWrappers` for a second wrapper | covered | measured: `PlainTextTest` AC4, AC5, AC6, AC7 |
 | A.9 | Structured text: an armoured `BEGIN/END C2PA MANIFEST` block; `manifest.structuredText.*` codes. | not read: *unsupported file type*. With `--text`, plain text with no manifest. `c2pa-rs` reads it only with the `unstable_structured_text` feature | n/a | measured: probe `k.py`, with and without `--text` |
 
 ### Candidates
@@ -1657,6 +1657,7 @@ so it is not repeated per format below.
   verbatim, and these are spec codes. **Stricter than `c2patool` if adopted**
   for the version case (no manifest becomes `Invalid`); a change of code only
   for the others.
+  **Resolved in step 329** (SPEC-060 amendment 3): both codes are emitted.
 - **P10-8 — the list of formats `c2patool` can do more with.** The row
   in `docs/comparison.md` names TIFF, SVG and PDF. `c2pa-rs` 0.91.1 also
   registers `JpegXlIO` and `ZipIO` (`jumbf_io.rs`), and structured and plain

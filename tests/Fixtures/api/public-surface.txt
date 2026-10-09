@@ -48,6 +48,8 @@ Report\StatusCode :: const IngredientManifestMissing
 Report\StatusCode :: const IngredientManifestValidated
 Report\StatusCode :: const IngredientUnknownProvenance
 Report\StatusCode :: const ManifestMultipleParents
+Report\StatusCode :: const ManifestTextCorruptedWrapper
+Report\StatusCode :: const ManifestTextMultipleWrappers
 Report\StatusCode :: const ManifestUpdateInvalid
 Report\StatusCode :: const ManifestUpdateWrongParents
 Report\StatusCode :: const SigningCredentialExpired

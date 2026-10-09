@@ -10223,3 +10223,20 @@ README are where the disclosure lives.
   section, leaving out §18.6, §18.14 and §18.18; the candidate count
   recounted (23) against the tallies. `composer check` (972 passed).
 - Decided by Maurice: C7 covered through the AKI rules; point 3.
+
+## 2026-10-09 — Plain text names its two failures (step 329)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en bouw amendement 3".
+- Produced: `8f795e2` pushed; SPEC-060 amendment 3;
+  `src/Container/ContainerException.php` (`$statusCode`),
+  `src/Container/PlainTextManifestStoreExtractor.php`,
+  `src/Verifier/Verifier.php`, two codes in `src/Report/StatusCode.php`;
+  `tests/Unit/Verifier/PlainTextTest.php`; the API surface and two
+  counters; the CHANGELOG; `docs/reading-c2pa-2.4.md`;
+  `notes/step-329-text-wrapper-codes.md`; a row in `NOTES.md`.
+- Measured: the text oracle on six fixtures; the tests red (7 failed),
+  then green; the corpus (990 runs moved, six text fixtures, codes only);
+  `bin/fuzz.php` without settings and with `--trust` on two seeds (0
+  faults; none more lenient); `composer check` (972 passed).
+- Decided by Maurice: follow the specification for another version
+  (corrupted, not text).

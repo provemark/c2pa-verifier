@@ -142,12 +142,16 @@ it('AC3: no wrapper is no manifest', function (string $relative): void {
     'text/no-marker.txt', 'text/magic-other.txt',   // amendment 1 B: letter-in-run is AC6
 ])->group('SPEC-060');
 
-it('AC4: another version is not a wrapper', function (): void {
-    expect((new PlainTextManifestStoreExtractor)->extract(spec060Stream(spec060File('text/version-2.txt'))))->toBeNull()
-        ->and(spec060Verify('text/version-2.txt')['@hasManifest'])->toBeFalse();
+it('AC4: another version is a corrupted wrapper (amendment 3, C2PA 2.4 §15.12.1.3)', function (): void {
+    $tree = spec060Verify('text/version-2.txt');
+
+    expect(spec060Fault(spec060File('text/version-2.txt'))?->getMessage())->toContain('version 2')
+        ->and($tree['@hasManifest'])->toBeTrue()
+        ->and($tree['validation_state'])->toBe('Invalid')
+        ->and(spec060Codes($tree, 'failure'))->toBe(['manifest.text.corruptedWrapper']);
 })->group('SPEC-060');
 
-it('AC5: two wrappers are an error (stricter than the oracle, named)', function (): void {
+it('AC5: two wrappers are manifest.text.multipleWrappers (stricter than the oracle, named; amendment 3)', function (): void {
     $fault = spec060Fault(spec060File('text/two-wrappers.txt'));
     $tree = spec060Verify('text/two-wrappers.txt');
 
@@ -155,10 +159,10 @@ it('AC5: two wrappers are an error (stricter than the oracle, named)', function 
         ->and($tree['format'])->toBe('text')
         ->and($tree['@hasManifest'])->toBeTrue()
         ->and($tree['validation_state'])->toBe('Invalid')
-        ->and(spec060Codes($tree, 'failure'))->toBe(['general.error']);
+        ->and(spec060Codes($tree, 'failure'))->toBe(['manifest.text.multipleWrappers']);
 })->group('SPEC-060');
 
-it('AC6: a wrapper whose store does not fit is an error (stricter than the oracle, named)', function (string $relative, string $declared, string $available): void {
+it('AC6: a wrapper whose store does not fit is manifest.text.corruptedWrapper (stricter than the oracle, named; amendment 3)', function (string $relative, string $declared, string $available): void {
     $fault = spec060Fault(spec060File($relative));
     $tree = spec060Verify($relative);
 
@@ -166,7 +170,7 @@ it('AC6: a wrapper whose store does not fit is an error (stricter than the oracl
         ->and($tree['format'])->toBe('text')
         ->and($tree['@hasManifest'])->toBeTrue()
         ->and($tree['validation_state'])->toBe('Invalid')
-        ->and(spec060Codes($tree, 'failure'))->toBe(['general.error']);
+        ->and(spec060Codes($tree, 'failure'))->toBe(['manifest.text.corruptedWrapper']);
 })->with([
     // the length field longer than the run: 3,526 declared, 1,763 after the header
     'the store cut' => ['text/cut-in-store.txt', '3526', '1763'],
@@ -176,14 +180,13 @@ it('AC6: a wrapper whose store does not fit is an error (stricter than the oracl
     'a letter in the run' => ['text/letter-in-run.txt', '3526', '87'],
 ])->group('SPEC-060');
 
-it('AC7: a candidate that is not version 1 is skipped, as the oracle does', function (): void {
+it('AC7: a candidate that is not version 1 before a good wrapper is corrupted, and nothing after it is read (amendment 3)', function (): void {
     $tree = spec060Verify('text/bad-then-good.txt');
 
+    // the oracle reads the good one and calls it Invalid by its hash; here the corrupted wrapper stops the read
     expect($tree['@hasManifest'])->toBeTrue()
         ->and($tree['validation_state'])->toBe('Invalid')
-        ->and(spec060Codes($tree, 'success'))->toContain('claimSignature.validated')
-        ->and(spec060Codes($tree, 'failure'))->toContain('assertion.dataHash.mismatch')
-        ->and(spec060Codes($tree, 'failure'))->not->toContain('general.error');
+        ->and(spec060Codes($tree, 'failure'))->toBe(['manifest.text.corruptedWrapper']);
 })->group('SPEC-060');
 
 it('AC8: what the hash judges is read and left to the hash, as the oracle says', function (string $relative): void {
@@ -354,8 +357,9 @@ it('AC15 (amendment 2): a 16 MiB store with as much padding is decoded within 3 
         ->and($seconds)->toBeLessThan(3.0);
 })->group('SPEC-060');
 
-it('AC15 (amendment 2): a million lone marks and 100,000 candidates of another version are read within 3 s', function (): void {
-    $candidate = "\u{FEFF}".spec060FastSelectors("C2PATXT\0\x02\x00\x00\x00\x10");
+it('AC15 (amendment 2): a million lone marks and 100,000 candidates of another magic are read within 3 s', function (): void {
+    // another magic, not another version: since amendment 3 the first of those stops the read as a corrupted wrapper
+    $candidate = "\u{FEFF}".spec060FastSelectors("C2PATXX\0\x01\x00\x00\x00\x10");
     $stream = spec060TempStream([str_repeat("\u{FEFF}", 1000000), str_repeat($candidate, 100000)]);
 
     $started = hrtime(true);
@@ -380,7 +384,7 @@ it('AC6 (amendment 2): a candidate that does not fit before a good wrapper is a 
 
     expect(spec060Fault(substr($signed, 0, 60).$cut.substr($signed, 60))?->getMessage())->toContain('3526')->toContain('holds 10')
         ->and($tree['@hasManifest'])->toBeTrue()
-        ->and(spec060Codes($tree, 'failure'))->toBe(['general.error']);
+        ->and(spec060Codes($tree, 'failure'))->toBe(['manifest.text.corruptedWrapper']);
 })->group('SPEC-060');
 
 it('AC16 (amendment 2): an empty file is text without a manifest; a text that begins as a GIF is a GIF', function (): void {

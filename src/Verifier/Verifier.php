@@ -137,7 +137,7 @@ final readonly class Verifier
         } catch (ContainerException $e) {
             // a manifest only when the extractor had reached the store (SPEC-013 amendment 16)
             return new VerificationReport($format, $e->storeReached, null, ValidationResult::fromStatuses([
-                new ValidationStatus(StatusCode::GeneralError, self::STORE_URL, $e->getMessage()),
+                new ValidationStatus(($e->statusCode === null ? null : StatusCode::tryFrom($e->statusCode)) ?? StatusCode::GeneralError, self::STORE_URL, $e->getMessage()),
             ], []));
         }
         if ($store === null) {

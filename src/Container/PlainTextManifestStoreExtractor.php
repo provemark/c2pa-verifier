@@ -46,6 +46,11 @@ final readonly class PlainTextManifestStoreExtractor
 
     private const VERSION = 1;
 
+    /** The status codes of C2PA 2.4 A.8.7.1, verbatim (amendment 3). */
+    private const CORRUPTED_WRAPPER = 'manifest.text.corruptedWrapper';
+
+    private const MULTIPLE_WRAPPERS = 'manifest.text.multipleWrappers';
+
     /** Magic (8), version (1), length (4). */
     private const HEADER_LENGTH = 13;
 
@@ -113,12 +118,17 @@ final readonly class PlainTextManifestStoreExtractor
         $found = null;
         while (($marker = $text->nextMarker(self::MARKER)) !== null) {
             $header = $text->selectors(self::HEADER_LENGTH);
-            if (strlen($header) < self::HEADER_LENGTH || ! str_starts_with($header, self::MAGIC) || ord($header[8]) !== self::VERSION) {
-                continue;   // a lone mark, an emoji's selector, another magic or version: text (AC3, AC4, AC7)
+            if (strlen($header) < self::HEADER_LENGTH || ! str_starts_with($header, self::MAGIC)) {
+                continue;   // a lone mark, an emoji's selector, another magic: text (AC3)
+            }
+            if (ord($header[8]) !== self::VERSION) {
+                // the magic with another version: a wrapper, corrupted (C2PA 2.4 §15.12.1.3; amendment 3, AC4, AC7)
+                $reached = true;
+                throw self::corrupted(sprintf('a C2PA text wrapper of version %d at offset %d; this verifier reads version %d', ord($header[8]), $marker, self::VERSION));
             }
             if ($found !== null) {
                 $reached = true;
-                throw new ContainerException(sprintf('two C2PA text wrappers at offsets %d and %d; a text carries at most one manifest store', $found->ranges[0]['start'], $marker));
+                throw new ContainerException(sprintf('two C2PA text wrappers at offsets %d and %d; a text carries at most one manifest store', $found->ranges[0]['start'], $marker), statusCode: self::MULTIPLE_WRAPPERS);
             }
             $reached = true;
             $found = $this->wrapper($text, $marker, $header);
@@ -129,7 +139,7 @@ final readonly class PlainTextManifestStoreExtractor
         /** @var array{1: int} $lBox */
         $lBox = unpack('N', $found->bytes);
         if ($lBox[1] !== strlen($found->bytes)) {
-            throw new ContainerException(sprintf('the wrapper\'s length field declares %d bytes, but its store\'s LBox is %d (offset %d)', strlen($found->bytes), $lBox[1], $found->ranges[0]['start']));
+            throw self::corrupted(sprintf('the wrapper\'s length field declares %d bytes, but its store\'s LBox is %d (offset %d)', strlen($found->bytes), $lBox[1], $found->ranges[0]['start']));
         }
 
         return $found;
@@ -145,7 +155,7 @@ final readonly class PlainTextManifestStoreExtractor
             throw new ContainerException(sprintf('the wrapper declares a store of %d bytes, over the limit of %d bytes (offset %d)', $declared, $this->maxStoreLength, $marker));
         }
         if ($declared < self::BOX_HEADER_LENGTH) {
-            throw new ContainerException(sprintf('the wrapper declares a store of %d bytes, shorter than the %d-byte box header (offset %d)', $declared, self::BOX_HEADER_LENGTH, $marker));
+            throw self::corrupted(sprintf('the wrapper declares a store of %d bytes, shorter than the %d-byte box header (offset %d)', $declared, self::BOX_HEADER_LENGTH, $marker));
         }
         if (! $this->budget->allows($declared + self::PIECE)) {
             throw new ContainerException(sprintf(
@@ -158,7 +168,7 @@ final readonly class PlainTextManifestStoreExtractor
         }
         $store = $text->selectors($declared);
         if (strlen($store) < $declared) {
-            throw new ContainerException(sprintf('the wrapper declares a store of %d bytes, but its run holds %d after the header (offset %d)', $declared, strlen($store), $marker));
+            throw self::corrupted(sprintf('the wrapper declares a store of %d bytes, but its run holds %d after the header (offset %d)', $declared, strlen($store), $marker));
         }
         // the padding: not judged, but counted, so a run cannot grow without end (AC12)
         $limit = self::HEADER_LENGTH + $this->maxStoreLength;
@@ -168,6 +178,15 @@ final readonly class PlainTextManifestStoreExtractor
         }
 
         return new ManifestStoreBytes($store, [['start' => $marker, 'length' => $text->offset() - $marker]]);
+    }
+
+    /**
+     * A wrapper found but corrupted: its version or length (C2PA 2.4 §15.12.1.3, A.8.7.1; amendment 3). A limit of
+     * this verifier's own (store size, memory, padding) is no corruption and stays `general.error`.
+     */
+    private static function corrupted(string $message): ContainerException
+    {
+        return new ContainerException($message, statusCode: self::CORRUPTED_WRAPPER);
     }
 
     /** The length of $data up to the last complete UTF-8 sequence; what follows may continue in the next piece. */

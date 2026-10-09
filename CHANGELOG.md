@@ -15,6 +15,12 @@ committed.
   ingredient or cloud-data assertion, is refused with
   `assertion.cloud-data.malformed`, `.hardBinding` or `.actions`. These
   are three new status codes. Nothing is fetched.
+- **Plain text names its two failures (SPEC-060 amendment 3).** C2PA 2.4
+  §15.12.1.3 and A.8.7.1: a corrupted text wrapper (another version, or a
+  length that does not fit) is `manifest.text.corruptedWrapper`, and two
+  wrappers are `manifest.text.multipleWrappers`, where `general.error` was
+  reported. A wrapper of another version is no longer read as plain text.
+  These are two new status codes; no verdict changes.
 
 ### Changed
 

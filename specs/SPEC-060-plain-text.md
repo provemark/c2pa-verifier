@@ -312,6 +312,38 @@ constructor parameter: `null` is text off. The CLI gains `--text`.
 
    Approved by Maurice van Loon, 2026-10-07 (step 269).
 
+3. **2026-10-09, steps 312 and 329, decided by Maurice van Loon** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   C2PA 2.4 §15.12.1.3 and A.8.7.1 name two failure codes for text. A
+   wrapper found but corrupted, *"invalid version, algorithm, or manifest
+   length"*, is `manifest.text.corruptedWrapper`; more than one is
+   `manifest.text.multipleWrappers`. This verifier refused both shapes
+   with `general.error`, and it read a wrapper with the magic but another
+   version as text (AC4, AC7, chosen to follow the oracle). The oracle
+   (`c2patool` 0.28.1 built with `unstable_plain_text`) emits neither
+   code. It stops with *"No claim found"* on two wrappers, a cut store and
+   version 2, and reads past a bad candidate to a good one. Now:
+
+   - **AC4 (changed):** `text/version-2.txt` is `Invalid` with
+     `manifest.text.corruptedWrapper`, the version named.
+   - **AC5 (changed):** two wrappers are `manifest.text.multipleWrappers`.
+   - **AC6 (changed):** a store that does not fit its length field, a
+     length shorter than a box header, or an LBox that differs is
+     `manifest.text.corruptedWrapper`. A limit of this verifier's own (the
+     store size, the memory budget, the padding) stays `general.error`.
+     It is no corruption.
+   - **AC7 (changed):** in `text/bad-then-good.txt`, the candidate of
+     another version stops the read with `corruptedWrapper`; the good
+     wrapper after it is not read. It stays `Invalid`, as in the oracle.
+   - AC15's second stress case uses candidates of another magic, which
+     stay text, so that it still measures a long read.
+
+   `ContainerException` carries the code as a string (`$statusCode`): the
+   Container layer depends on no other, and the Verifier maps it. Two cases
+   join `StatusCode`, a contract addition.
+
+   **Weight A: no verdict changes; the report names what the
+   specification names.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
