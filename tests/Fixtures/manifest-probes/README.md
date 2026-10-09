@@ -39,7 +39,7 @@ the file valid.
 | `unlisted-certificate-status-no-ocspvals.png` | its certificate status without `ocspVals` | error: cannot decode | error | `Trusted` |
 | `unlisted-soft-binding-no-blocks.png` | its soft binding without `blocks` | `Invalid` | `Invalid` | `Trusted` |
 | `unlisted-action-when-integer.png` | its action's `when` the integer 123 | error: cannot decode | error | `Trusted` |
-| `x5chain-unprotected-too.png` | the signer's chain under label 33 in the unprotected header as well (candidate C1, §14.5) | `Trusted` | `Trusted` | `Trusted` |
+| `x5chain-unprotected-too.png` | the signer's chain under label 33 in the unprotected header as well (candidate C1, §14.5; SPEC-047 amendment 2) | `Trusted` | `Trusted` | `Invalid` |
 
 The answers are under `../c2patool/manifest-probes/<file>--<version>.json`.
 Certificates are valid for ten years from the build.

@@ -160,6 +160,25 @@ No public API changes.
 
    Confirmed by Maurice van Loon, 2026-09-27 (step 167).
 
+2. **2026-10-09, steps 309, 318 and 324, decided by Maurice van Loon (candidate C1)** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   AC2 refused a chain in both headers only when the unprotected one was
+   under `"x5chain"`. Label 33 is never read from the unprotected header
+   (AC1), so a protected chain plus one under label 33 unprotected was
+   `Trusted`. C2PA 2.4 §14.5: *"if this header appears in both the
+   protected and unprotected buckets with the same label, a validator
+   shall reject the claim signature as malformed due to the presence of
+   multiple credentials."* Measured in step 318
+   (`manifest-probes/x5chain-unprotected-too.png`): `Trusted` in both
+   `c2patool` versions and here. Now either label unprotected beside a
+   protected chain is refused, with AC2's code and reason.
+
+   - **AC6 (new) — label 33 in both headers is refused.** Given
+     `x5chain-unprotected-too.png`, the result is `Invalid` with
+     `signingCredential.invalid` naming both headers.
+
+   **Weight A: stricter than `c2patool` on purpose, by the
+   specification's own rule.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -172,3 +191,4 @@ least one test; every source file maps back to this spec.
 | AC3 | tests/Unit/Cose/X5chainPlacementTest.php :: AC3: an unprotected chain in a v2 claim is refused / SPEC-047 | src/Cose/CoseSign1.php :: ofManifest(); its callers in src/Verifier/Verifier.php (signatureInfo(), unprotectedHeader(), chainOf()), src/Trust/ChainCheck.php :: check(), src/Trust/CertificateProfileCheck.php :: check(), src/Timestamp/TimestampCheck.php :: check() |
 | AC4 | tests/Unit/Cose/X5chainPlacementTest.php :: AC4: a v1 claim keeps the older form / SPEC-047 | src/Cose/CoseSign1.php :: ofManifest() (claim version 1) |
 | AC5 | tests/Unit/Cose/X5chainPlacementTest.php :: AC5: nothing else moves / SPEC-047; the before/after run of step 167 | the whole verification path |
+| AC6 (amendment 2) | tests/Unit/Cose/X5chainPlacementTest.php :: AC6: a chain under label 33 in both headers is refused / SPEC-047 | src/Cose/CoseSign1.php :: findChain() |

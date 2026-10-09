@@ -47,7 +47,7 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §5 to §9 | 41 | 19 | 3 | 4 | 14 | 1 |
 | §10 to §11 | 55 | 35 | 6 | 4 | 8 | 2 |
 | §13, §16, §17, Appendix C | 29 | 18 | 3 | 1 | 6 | 1 |
-| §14 | 41 | 28 | 4 | 6 | 2 | 1 |
+| §14 | 41 | 29 | 3 | 6 | 2 | 1 |
 | §15.1 to §15.6 | 33 | 12 | 6 | 4 | 10 | 1 |
 | §15.7 to §15.9 | 47 | 23 | 9 | 4 | 5 | 6 |
 | §15.10 to the end of §15 | 124 | 81 | 16 | 13 | 9 | 5 |
@@ -55,7 +55,7 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §18.10 to §18.16 | 58 | 20 | 11 | 6 | 12 | 9 |
 | §18.17 to the end of §18 | 34 | 4 | 2 | 4 | 11 | 12 (and 1 other) |
 | Appendix A | 50 | 22 | 2 | 7 | 13 | 6 |
-| **all** | **562** | **285** | **66** | **59** | **101** | **50** |
+| **all** | **562** | **286** | **65** | **59** | **101** | **50** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -440,7 +440,7 @@ construct.
 |---|---|---|---|---|
 | 14.2 | The signer's credential is listed in the COSE protected header. Older versions allowed the unprotected header. | `CoseSign1::ofManifest()`: a version 2 claim whose chain is not protected is refused; a version 1 claim keeps the older form (SPEC-047) | covered | measured: `X5chainPlacementTest` AC3 |
 | 14.2 | A COSE_Sign1 with no credential is rejected. | `CoseSign1::findChain()` | covered | measured: `X5chainPlacementTest` AC1 |
-| 14.2 | Exactly one credential in the union of both headers; two or more, also the same one repeated in both headers, are rejected. | `findChain()` refuses an `x5chain` in both headers (SPEC-047). It does not refuse label 33 and `"x5chain"` together in the protected header (33 wins), and it does not read label 33 from the unprotected header, so 33 in both headers counts as one | **partial** | measured: `X5chainPlacementTest` AC2; the rest read → candidate C1 |
+| 14.2 | Exactly one credential in the union of both headers; two or more, also the same one repeated in both headers, are rejected. | `findChain()` refuses an `x5chain` in both headers (SPEC-047). It does not refuse label 33 and `"x5chain"` together in the protected header (33 wins), and it does not read label 33 from the unprotected header, so 33 in both headers counted as one until step 324; now refused (SPEC-047 amendment 2). 33 and `"x5chain"` together in the protected header use 33, as §14.5 says | covered | measured: `X5chainPlacementTest` AC2, AC6 |
 | 14.3.2 | A manifest is Well-Formed, Valid or Trusted; Trusted implies Valid, Valid implies Well-Formed. | `ValidationResult`: `Invalid`, `Valid`, `Trusted`, the vocabulary of `c2patool`; Well-Formed is not reported as a state of its own | by design: `c2patool`'s `validation_state` is the only vocabulary (README, "`c2patool`'s verdict, verbatim") | read |
 | 14.3.3 | An asset is Valid when the bytes its content bindings cover are unchanged and its active manifest is Valid or Trusted. | the hard binding's failure codes make the file `Invalid` (SPEC-012 for `c2pa.hash.data`, SPEC-027 and SPEC-029 for ISOBMFF, and each format's reader for the bytes it excludes) | covered | measured: those specs' tests |
 | 14.3.4 | Well-Formed: the normative requirements, the assertions allowed for the manifest's type, the assertion rules, the ingredient rules. | each through its own spec; §15.10 and §15.11 will be read in their own steps | covered, as far as those chapters are | read |
@@ -520,6 +520,9 @@ certificates of the path go through OpenSSL's chain verification.
   the protected case is right. What stays open is the same label in both
   buckets. With 33 in both, the unprotected one is not read and nothing is
   refused. Next: a probe, judged by both `c2patool` versions.
+  **Measured in step 318:** `Trusted` in both `c2patool` versions and
+  here. **Adopted in step 324** (SPEC-047 amendment 2): refused, stricter
+  than `c2patool` by §14.5's own rule.
 - **C4 — the profile for certificates above the leaf.** §14.5.1.1 says
   "all certificates", for the algorithm list, the PSS parameters, the
   curves, the RSA size, version 3 and the AKI. This verifier and `c2pa-rs`

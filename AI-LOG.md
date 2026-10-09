@@ -10148,3 +10148,17 @@ README are where the disclosure lives.
 - Reasoned: the section headings of the fetched C2PA 2.4 (§10.3.2.5,
   §15.8–§15.8.2, §14.5.1.2); `composer check` (971 passed).
 - Decided by Maurice: none beyond starting C3.
+
+## 2026-10-09 — A chain under label 33 in both headers is refused (step 324, C1)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push, C1 overnemen en C4, C6, C7 eerst meten".
+- Produced: `524b040` pushed; SPEC-047 amendment 2 (AC6);
+  `src/Cose/CoseSign1.php`; AC6 in `tests/Unit/Cose/X5chainPlacementTest.php`;
+  the manifest probes' README; the CHANGELOG; `docs/reading-c2pa-2.4.md`;
+  `notes/step-324-x5chain-label-33-in-both.md`; a row in `NOTES.md`.
+- Measured: the test red, then green; the corpus (875 files × 161
+  settings modes, before and after: 161 runs moved, all the probe);
+  `bin/fuzz.php` without settings and with `--trust` on two seeds, every
+  suspect judged by `c2patool` 0.28.1 (none more lenient); `composer check`
+  (972 passed).
+- Decided by Maurice: adopt C1, stricter than `c2patool`.

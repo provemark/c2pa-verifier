@@ -202,7 +202,9 @@ final readonly class CoseSign1
     {
         foreach ([self::LABEL_X5CHAIN, self::LABEL_X5CHAIN_DEPRECATED] as $label) {
             if (array_key_exists($label, $protected)) {
-                if (array_key_exists(self::LABEL_X5CHAIN_DEPRECATED, $unprotected)) {
+                // either label unprotected beside a protected chain is a second credential: C2PA 2.4 §14.5 rejects
+                // it as malformed (SPEC-047 amendment 2); label 33 is never read from there, but still counts
+                if (array_key_exists(self::LABEL_X5CHAIN_DEPRECATED, $unprotected) || array_key_exists(self::LABEL_X5CHAIN, $unprotected)) {
                     throw new CoseException('an x5chain in both the protected and the unprotected header; which certificate signed is ambiguous (SPEC-047)', StatusCode::SigningCredentialInvalid);
                 }
 

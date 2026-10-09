@@ -36,6 +36,10 @@ committed.
   Without one, an init segment alone matched as "0 of 0 fragments" and was
   `Trusted`; both `c2patool` versions refuse it. It is
   `assertion.bmffHash.malformed` now.
+- **A signer's chain under label 33 in both COSE headers is refused
+  (SPEC-047 amendment 2).** C2PA 2.4 §14.5 calls it malformed: two
+  credentials. Only the `"x5chain"` label was caught there before. Both
+  `c2patool` versions accept it.
 - **Four manifest rules from C2PA 2.4 §8.1 and §11.2.2 (SPEC-007
   amendment 7).** A manifest box of type `c2md` is read as a manifest. A
   store with two manifests of one label is `claim.malformed`. A version 2

@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use Provemark\C2paVerifier\Report\ValidationStatus;
+use Provemark\C2paVerifier\Tests\Support\Corpus;
+use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\VerificationReport;
+use Provemark\C2paVerifier\Verifier\Verifier;
 
 /*
  * SPEC-047: where the certificate chain may be. Fixtures from bin/make-chain-constraint-variants.php
@@ -71,4 +74,22 @@ it('AC4: a v1 claim keeps the older form', function (): void {
 it('AC5: nothing else moves', function (): void {
     // a guard: the protected chain of the plain probe stays Trusted
     expect(spec047Verify('plain')->result->state->value)->toBe('Trusted');
+})->group('SPEC-047');
+
+it('AC6: a chain under label 33 in both headers is refused, as C2PA 2.4 §14.5 says; c2patool accepts it (amendment 2)', function (): void {
+    $stream = fopen(Corpus::fixtures().'/manifest-probes/x5chain-unprotected-too.png', 'rb');
+    if ($stream === false) {
+        throw new RuntimeException('cannot open the probe');
+    }
+    $report = (new Verifier)->verify($stream, TrustSettings::fromJson((string) file_get_contents(Corpus::fixtures().'/manifest-probes/throw-away-root.settings.json')));
+    $invalid = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code->value === 'signingCredential.invalid'));
+
+    expect($report->result->state->value)->toBe('Invalid')
+        ->and($invalid)->not->toBe([]);
+    foreach ($invalid as $status) {
+        // the same reason wherever the COSE is read, as for x5chain-both (AC2)
+        expect($status->explanation)->toContain('both the protected and the unprotected header');
+    }
+    $oracle = json_decode((string) file_get_contents(Corpus::fixtures().'/c2patool/manifest-probes/x5chain-unprotected-too--0.28.1.json'), true);
+    expect(is_array($oracle) ? $oracle['validation_state'] ?? null : null)->toBe('Trusted');
 })->group('SPEC-047');
