@@ -9937,3 +9937,30 @@ README are where the disclosure lives.
   on two seeds, every suspect judged by `c2patool` 0.28.1 (none more
   lenient); `composer check` (955 passed); PHPStan on macOS and in Docker.
 - Decided by Maurice: the fix as proposed (the leaf only, as `c2patool`).
+
+## 2026-10-09 — Reading the whole of C2PA 2.4 (step 312)
+- Model: Claude Opus 5.5, Claude Code CLI, with ten parallel
+  general-purpose subagents (Claude Opus 5.5) for the first draft of each
+  pack.
+- Asked: "heb je nu alles uit de c2pa specs gecontroleerd?", then "push en
+  ik wil alles uit de spec in deze release. Dus alle paragrafen", then
+  "akkoord, begin met stap 312".
+- Produced: `5bebc0f` pushed; the remaining chapters cut into ten packs (a
+  scratch directory); ten agent-drafted tables, checked and merged with §14
+  into `docs/reading-c2pa-2.4.md`, with an overview and the thirteen
+  candidates L1–L13; `notes/step-312-reading-the-whole-spec.md`; a row in
+  `NOTES.md`.
+- Prompts to the agents: one shared instruction (read-only on the
+  repository; the §14 table format and verdicts; cite only tests and
+  functions verified with grep; compare with `c2pa-rs` 0.91.1; label each
+  candidate by risk; paraphrase, quote at most 15 words), and a pack and
+  chapter list for each.
+- Measured: the cited references (334, all present); ten random covered
+  rows, five followed to the code; each "more lenient" candidate re-read
+  in this verifier and in `c2pa-rs`; the verdict counts; `composer check`
+  (955 passed). The agents themselves ran `bin/c2pa-verify` and
+  `c2patool` on probe files in a scratch directory.
+- Reasoned: the thirteen candidates, from the code on both sides.
+- Decided by Maurice: read every chapter before 0.5.4, though the
+  unique-ID fix (a wrong `Trusted` against `c2patool`) then waits longer
+  than the patch-at-once rule says.
