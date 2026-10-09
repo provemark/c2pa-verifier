@@ -50,12 +50,12 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §14 | 41 | 28 | 4 | 6 | 2 | 1 |
 | §15.1 to §15.6 | 33 | 12 | 6 | 4 | 10 | 1 |
 | §15.7 to §15.9 | 47 | 23 | 9 | 4 | 5 | 6 |
-| §15.10 to the end of §15 | 124 | 77 | 16 | 13 | 9 | 9 |
+| §15.10 to the end of §15 | 124 | 81 | 16 | 13 | 9 | 5 |
 | §18.1 to §18.9 | 50 | 23 | 4 | 6 | 11 | 6 |
-| §18.10 to §18.16 | 58 | 19 | 10 | 3 | 12 | 14 |
+| §18.10 to §18.16 | 58 | 20 | 11 | 3 | 12 | 12 |
 | §18.17 to the end of §18 | 34 | 4 | 2 | 2 | 11 | 14 (and 1 other) |
 | Appendix A | 50 | 22 | 2 | 7 | 13 | 6 |
-| **all** | **562** | **280** | **65** | **54** | **101** | **61** |
+| **all** | **562** | **285** | **66** | **54** | **101** | **55** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -75,7 +75,7 @@ by both `c2patool` versions (see *Measured in step 313* below).
 | L4 | a metadata assertion without `@context` in a version 2 claim | not read | `verify_metadata()` stops the validation | P09-1 |
 | L5 | a malformed `c2pa.time-stamp` assertion | not read | `assertion.timestamp.malformed` | P09-2, P06-2 |
 | L6 | a malformed `c2pa.certificate-status` assertion | not read | the validation stops | P09-3 |
-| L7 | `c2pa.cloud-data` | not checked, though SPEC-039 says "refused by name" | `verify_cloud_data()`: decode, size, no hard binding, actions or ingredient | P08-1, P07-3, P06-1, P04-4 |
+| L7 | `c2pa.cloud-data` | not checked, though SPEC-039 says "refused by name"; **fixed: SPEC-063** | `verify_cloud_data()`: decode, size, no hard binding, actions or ingredient | P08-1, P07-3, P06-1, P04-4 |
 | L8 | a soft binding that cannot be decoded | not decoded | `verify_soft_binding_alg()` logs it | P08-2 |
 | L9 | a manifest of type `c2md` (§11.2.2: consumers shall accept it) | an unknown box: mostly `claim.missing` (stricter), but in a store `[c2ma, c2md]` the older manifest is made active; **fixed: SPEC-007 amendment 7** | read as a standard manifest | P02-1 |
 | L10 | two manifests with one label | `ManifestStore::fromTree()` keeps the first one's place and the later one's content, and makes `array_key_last()` active: `[X, Y, X']` validates `Y`; **fixed: SPEC-007 amendment 7** | the last box, `X'` | P01-1, P02-2, P04-1 |
@@ -870,10 +870,10 @@ decision*, which follows `c2pa-rs` without `verify.strict_v1_validation`.
 | 15.10.3.1 | An assertion in the store that no claim list names: `assertion.undeclared`. | `HashedUriCheck::check()`, unknown boxes included | covered | measured: `HashedUriCheckTest` "AC5", "AC6" |
 | 15.10.3.1 | The contents of a `metadata` field are not validated. | nothing reads it | covered by construction | read |
 | 15.10.3.2 | Dispatch by label to the assertion-specific steps. | `Verifier::check()`: actions, external references, icons, ingredients (via the graph). Not dispatched: `c2pa.cloud-data`, `c2pa.session-keys`, `c2pa.time-stamp`, `c2pa.alternative-content-representation` | partial | read → P06-1, P06-2, P06-8 |
-| 15.10.3.2.1 | `c2pa.cloud-data` needs `label`, `size`, `location`, else `assertion.cloud-data.malformed`. | no code reads the assertion (its label appears only in `ExternalReferenceCheck`'s forbidden list) | candidate | read → P06-1 |
-| 15.10.3.2.1 | A cloud-data label naming a hard binding (or ingredient, actions.v2, cloud-data) is `assertion.cloud-data.hardBinding`. | none | candidate | read → P06-1 |
-| 15.10.3.2.1 | In an update manifest, a cloud-data label naming actions is `assertion.cloud-data.actions`. | none | candidate | read → P06-1 |
-| 15.10.3.2.1 | The forbidden labels are `assertion.cloud-data.malformed`. | none | candidate | read → P06-1 |
+| 15.10.3.2.1 | `c2pa.cloud-data` needs `label`, `size`, `location`, else `assertion.cloud-data.malformed`. | no code reads the assertion (its label appears only in `ExternalReferenceCheck`'s forbidden list) | covered (SPEC-063, step 321) | read → P06-1 |
+| 15.10.3.2.1 | A cloud-data label naming a hard binding (or ingredient, actions.v2, cloud-data) is `assertion.cloud-data.hardBinding`. | none | covered (SPEC-063, step 321) | read → P06-1 |
+| 15.10.3.2.1 | In an update manifest, a cloud-data label naming actions is `assertion.cloud-data.actions`. | none | covered (SPEC-063, step 321) | read → P06-1 |
+| 15.10.3.2.1 | The forbidden labels are `assertion.cloud-data.malformed`. | none | covered (SPEC-063, step 321) | read → P06-1 |
 | 15.10.3.2.1 | `location` per §15.10.4.2; a retrieved box's label matches, else `.labelMismatch`. | nothing is retrieved | n/a | read |
 | 15.10.3.2.2 | `location` with a `url`, else `assertion.external-reference.malformed`. | `ExternalReferenceCheck::fault()` (SPEC-032) | covered | measured: `AssertionRulesTest` "AC5: the location must hold a url, and a hash its algorithm" |
 | 15.10.3.2.2 | `alg` without `hash`, or the reverse, is malformed. | `ExternalReferenceCheck::fault()` | covered | measured: `AssertionRulesTest` "AC5" |
@@ -1251,8 +1251,8 @@ claims*). `c2pa-rs` was read at 0.91.1 (`claim.rs`: `verify_actions`,
 | 18.10.5, 18.10.5.1 | Discovery and matching through a manifest repository: every soft binding in a found manifest must match `alg` and `value`. | no repository lookup, no network | n/a | read |
 | 18.10.4 | The algorithm list's own format (identifier, type, media types, metadata). | | n/a (writer and list maintainer) | — |
 | 18.11.1 | Cloud data is optional; its content should not be fetched during validation. | nothing is fetched (no network in the verification path) | covered by construction | read |
-| 18.11.1 | Label `c2pa.cloud-data`; must not reference the actions, cloud-data, hash or ingredient labels (twelve listed). | nothing reads the assertion | **candidate** | read → P08-1 |
-| 18.11.1–18.11.2 | `size` present and at least 1; `location` carries no `size` and no `dc:format` of its own. | nothing reads the assertion | **candidate** | read → P08-1 |
+| 18.11.1 | Label `c2pa.cloud-data`; must not reference the actions, cloud-data, hash or ingredient labels (twelve listed). | nothing reads the assertion | covered (SPEC-063, step 321) | read → P08-1 |
+| 18.11.1–18.11.2 | `size` present and at least 1; `location` carries no `size` and no `dc:format` of its own. | nothing reads the assertion | partial: `size` at least 1 is checked (SPEC-063); a `size` or `dc:format` inside `location` is not refused | read → P08-1 |
 | 18.12.1 | An embedded data assertion's label starts with `c2pa.embedded-data` (instances as usual). | not checked | **candidate** | read → P08-8 |
 | 18.12.2 | Its description box holds an IANA media type and does not set the External toggle; the data matches that type. | `Manifest::mediaType()` requires a NUL-terminated type and reads it; the toggles byte and an empty type are not judged | partial | read → P08-8 |
 | 18.13.1.1 | At most one `c2pa.thumbnail.claim` per manifest. | `ManifestStore` renders a claim thumbnail; the count is not checked | **candidate** | read → P08-8 |

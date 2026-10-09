@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * Steps 313, 315, 318 and 319: PNG probes for the manifest and its signature, from the reading of C2PA 2.4
+ * Steps 313, 315 and 318 to 321: PNG probes for the manifest and its signature, from the reading of C2PA 2.4
  * (docs/reading-c2pa-2.4.md, L2, L9, L10, L11, L13 and C1). `c2patool` 0.28.1 signs with a throw-away P-256 hierarchy;
  * a probe `c2patool` will not write is made by editing the store: the bytes replaced, every enclosing box resized,
  * the data hash's exclusion re-lengthened to the new caBX chunk and its hashed URI recomputed, the claim signed
@@ -21,6 +21,14 @@ declare(strict_types=1);
  *   parent                   fixture-unsigned.png signed with control.png as its parent: [X, Y]
  *   duplicate-label-last     the same with a copy of the parent's manifest appended: [X, Y, X'] (L10)
  *   duplicate-label-middle   the copy right after the parent's manifest: [X, X', Y]
+ *   cloud-ok                 a c2pa.cloud-data assertion as c2patool writes it, its location.hash as text (SPEC-063)
+ *   cloud-hash-bytes         the same, location.hash a byte string
+ *   cloud-hash-data          its label c2pa.hash.data (a hard binding)
+ *   cloud-size-zero          its size 0
+ *   cloud-actions            its label c2pa.actions.v2
+ *   cloud-no-location        its location key renamed
+ *   cloud-in-ingredient      fixture-unsigned.png signed with cloud-hash-data.png as its parent (0.28.1 records the failure)
+ *   cloud-in-ingredient-unrecorded  the same signed by 0.27.22, which records no cloud-data failure
  *   x5chain-unprotected-too  the signer's chain under label 33 in the unprotected header as well (C1)
  *
  * Usage: php bin/make-manifest-probe-variants.php <scratch-dir> <c2patool-0.28.1> <c2patool-0.27.22>
@@ -201,6 +209,39 @@ function mqChunk(string $png, int $chunk, string $s): string
     return substr($png, 0, $chunk).pack('N', strlen($s)).'caBX'.$s.pack('N', crc32('caBX'.$s)).substr($png, $chunk + 12 + bU32($png, $chunk));
 }
 
+/**
+ * $from replaced by $to (the same length) inside the last assertion box labelled $label, the claim's hashed URI
+ * for it re-hashed (SHA-256) and the claim signed again. The store keeps its length, so the data hash still holds.
+ */
+function mqEditAssertion(string $s, string $label, string $from, string $to, string $key): string
+{
+    if (strlen($from) !== strlen($to)) {
+        throw new RuntimeException('an edit keeps its length');
+    }
+    $at = strrpos($s, $label."\0");
+    $box = $at === false ? -1 : (int) strrpos(substr($s, 0, $at), 'jumb') - 4;
+    if ($box < 0) {
+        throw new RuntimeException("no {$label} box");
+    }
+    $length = bU32($s, $box);
+    $p = strpos($s, $from, $at);
+    if ($p === false || $p >= $box + $length) {
+        throw new RuntimeException("the bytes to change are not in {$label}");
+    }
+    $claim = mqCbor($s, 'c2pa.claim.v2');
+    $q = strpos($claim, hash('sha256', substr($s, $box + 8, $length - 8), true));
+    if ($q === false) {
+        throw new RuntimeException("the claim holds no hash of {$label}");
+    }
+    $signature = mqCbor($s, 'c2pa.signature');
+    $claimAt = (int) strrpos($s, $claim);
+    $s = substr_replace($s, $to, $p, strlen($to));
+    $newClaim = substr_replace($claim, hash('sha256', substr($s, $box + 8, $length - 8), true), $q, 32);
+    $s = substr_replace($s, $newClaim, $claimAt, strlen($newClaim));
+
+    return mqSign($s, $newClaim, $signature, $key);
+}
+
 /** A CBOR byte string head and its bytes. */
 function mqBstr(string $b): string
 {
@@ -313,8 +354,41 @@ $rebuilt = "\xd2\x84".mqBstr($cose->protectedBytes)."\xa2\x18\x21".$chain."\x63p
 $coseAt = (int) strpos($s, $signature);
 file_put_contents("{$dir}/x5chain-unprotected-too.png", mqFinish($png, $chunk, mqSplice($s, $coseAt, strlen($signature), $rebuilt), "{$keys}/leaf.key"));
 
+// ---- cloud data (SPEC-063): c2patool signs a well-formed one for a placeholder label, the probe edits it ----
+foreach (['c2pa.xxxxxxx.v2', 'c2pa.xxxx.data'] as $placeholder) {
+    file_put_contents("{$keys}/m-cloud.json", json_encode([
+        'alg' => 'es256', 'private_key' => "{$keys}/leaf.pk8", 'sign_cert' => "{$keys}/leaf.pem",
+        'claim_generator_info' => [['name' => 'c2pa-verifier manifest probes', 'version' => '1']],
+        'assertions' => [
+            ['label' => 'c2pa.actions.v2', 'data' => ['actions' => [['action' => 'c2pa.created', 'digitalSourceType' => 'http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture']]]],
+            ['label' => 'c2pa.cloud-data', 'data' => ['label' => $placeholder, 'size' => 5, 'location' => ['url' => 'https://cloud.example.invalid/remote.jumbf', 'alg' => 'sha256', 'hash' => base64_encode(hash('sha256', 'remote', true))]]],
+        ],
+    ], JSON_UNESCAPED_SLASHES));
+    mqRun(mqSh($new, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m-cloud.json", '-o', "{$keys}/cloud.png", '-f'));
+    $cloudPng = (string) file_get_contents("{$keys}/cloud.png");
+    [$cs, $cchunk] = mqStore($cloudPng);
+    $edits = $placeholder === 'c2pa.xxxx.data'
+        ? ['cloud-hash-data' => ['c2pa.xxxx.data', 'c2pa.hash.data']]
+        : [
+            'cloud-actions' => ['c2pa.xxxxxxx.v2', 'c2pa.actions.v2'],
+            'cloud-size-zero' => ["\x64size\x05", "\x64size\x00"],
+            'cloud-no-location' => ["\x68location", "\x68locatioX"],
+            'cloud-hash-bytes' => ["\x64hash\x78\x2c", "\x64hash\x58\x2c"],
+        ];
+    if ($placeholder === 'c2pa.xxxxxxx.v2') {
+        copy("{$keys}/cloud.png", "{$dir}/cloud-ok.png");
+    }
+    foreach ($edits as $name => [$from, $to]) {
+        file_put_contents("{$dir}/{$name}.png", mqChunk($cloudPng, $cchunk, mqEditAssertion($cs, 'c2pa.cloud-data', $from, $to, "{$keys}/leaf.key")));
+    }
+}
+
+mqRun(mqSh($new, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m.json", '-p', "{$dir}/cloud-hash-data.png", '-o', "{$dir}/cloud-in-ingredient.png", '-f'));
+// 0.27.22 does not check cloud data, so the ingredient it records holds no cloud-data failure: a delta for a validator
+mqRun(mqSh($old, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m.json", '-p', "{$dir}/cloud-hash-data.png", '-o', "{$dir}/cloud-in-ingredient-unrecorded.png", '-f'));
+
 // ---- the oracles ----
-foreach (['control', 'cgi-shorter', 'cgi-empty', 'label-not-urn', 'type-c2md', 'datahash-no-pad', 'datahash-pad-text', 'parent', 'duplicate-label-last', 'duplicate-label-middle', 'x5chain-unprotected-too'] as $name) {
+foreach (['control', 'cgi-shorter', 'cgi-empty', 'label-not-urn', 'type-c2md', 'datahash-no-pad', 'datahash-pad-text', 'parent', 'duplicate-label-last', 'duplicate-label-middle', 'x5chain-unprotected-too', 'cloud-ok', 'cloud-hash-bytes', 'cloud-hash-data', 'cloud-size-zero', 'cloud-actions', 'cloud-no-location', 'cloud-in-ingredient', 'cloud-in-ingredient-unrecorded'] as $name) {
     foreach (['0.28.1' => $new, '0.27.22' => $old] as $v => $tool) {
         $lines = [];
         exec(mqSh($tool, "{$dir}/{$name}.png", '--settings', "{$dir}/throw-away-root.settings.json").' 2>&1', $lines);

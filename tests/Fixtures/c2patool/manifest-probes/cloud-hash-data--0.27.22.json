@@ -1,0 +1,102 @@
+{
+  "active_manifest": "urn:c2pa:4d697430-b4ac-4aeb-bd6d-f2909a1302b6",
+  "manifests": {
+    "urn:c2pa:4d697430-b4ac-4aeb-bd6d-f2909a1302b6": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier manifest probes",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.1"
+        }
+      ],
+      "title": "cloud.png",
+      "instance_id": "xmp.iid:52caaae9-4bd1-4f13-a227-9cb773780110",
+      "thumbnail": {
+        "format": "image/jpeg",
+        "identifier": "self#jumbf=/c2pa/urn:c2pa:4d697430-b4ac-4aeb-bd6d-f2909a1302b6/c2pa.assertions/c2pa.thumbnail.claim"
+      },
+      "assertions": [
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              }
+            ]
+          }
+        },
+        {
+          "label": "c2pa.cloud-data",
+          "data": {
+            "label": "c2pa.hash.data",
+            "location": {
+              "alg": "sha256",
+              "hash": "txGZ69Bws2vqtzF5IMLC8dd3340F5VJ9hFj9pXyxeno=",
+              "url": "https://cloud.example.invalid/remote.jumbf"
+            },
+            "size": 5
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "C2PA Verifier throw-away hierarchy",
+        "common_name": "Manifest probe signer",
+        "cert_serial_number": "123789"
+      },
+      "label": "urn:c2pa:4d697430-b4ac-4aeb-bd6d-f2909a1302b6",
+      "claim_version": 2
+    }
+  },
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4d697430-b4ac-4aeb-bd6d-f2909a1302b6/c2pa.signature",
+          "explanation": "signing certificate trusted, found in System trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4d697430-b4ac-4aeb-bd6d-f2909a1302b6/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4d697430-b4ac-4aeb-bd6d-f2909a1302b6/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4d697430-b4ac-4aeb-bd6d-f2909a1302b6/c2pa.assertions/c2pa.hash.data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4d697430-b4ac-4aeb-bd6d-f2909a1302b6/c2pa.assertions/c2pa.thumbnail.claim",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4d697430-b4ac-4aeb-bd6d-f2909a1302b6/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4d697430-b4ac-4aeb-bd6d-f2909a1302b6/c2pa.assertions/c2pa.cloud-data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.cloud-data"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4d697430-b4ac-4aeb-bd6d-f2909a1302b6/c2pa.assertions/c2pa.hash.data",
+          "explanation": "data hash valid"
+        }
+      ],
+      "informational": [],
+      "failure": []
+    }
+  },
+  "validation_state": "Trusted"
+}

@@ -7,6 +7,15 @@ committed.
 
 ## Unreleased
 
+### Added
+
+- **The cloud-data assertion is checked (SPEC-063).** C2PA 2.4
+  §15.10.3.2.1: a `c2pa.cloud-data` assertion without `label`, `size` or a
+  hashed `location`, or one standing for a hard binding, an actions,
+  ingredient or cloud-data assertion, is refused with
+  `assertion.cloud-data.malformed`, `.hardBinding` or `.actions`. These
+  are three new status codes. Nothing is fetched.
+
 ### Changed
 
 - **A signer certificate with an issuerUniqueID or subjectUniqueID is

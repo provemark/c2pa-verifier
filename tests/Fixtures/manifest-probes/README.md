@@ -1,8 +1,9 @@
-# Manifest probes from the reading of C2PA 2.4 (SPEC-007 amendment 7, SPEC-012 amendment 10)
+# Manifest probes from the reading of C2PA 2.4 (SPEC-007 amendment 7, SPEC-012 amendment 10, SPEC-063)
 
 Built by `bin/make-manifest-probe-variants.php <scratch> <c2patool-0.28.1>
 <c2patool-0.27.22>` on 2026-10-09 (step 318; rebuilt with the two data-hash
-probes in step 319, with new keys). `c2patool` 0.28.1 signed
+probes in step 319 and the cloud-data probes in step 321, with new keys each
+time). `c2patool` 0.28.1 signed
 `fixture-unsigned.png` with a throw-away P-256 hierarchy; the keys lived in
 a scratch directory and were deleted. `throw-away-root.pem` is the public
 root, and `throw-away-root.settings.json` holds it as the legacy
@@ -25,6 +26,14 @@ the file valid.
 | `parent.png` | signed by `c2patool` with `control.png` as its parent: `[X, Y]` | `Trusted` | `Trusted` | `Trusted` |
 | `duplicate-label-last.png` | a copy of `X` appended: `[X, Y, X']` | `Invalid` | `Invalid` | `Invalid` |
 | `duplicate-label-middle.png` | a copy of `X` after it: `[X, X', Y]` | `Trusted` | `Trusted` | `Invalid` |
+| `cloud-ok.png` | a `c2pa.cloud-data` assertion as `c2patool` writes it (SPEC-063), its `location.hash` text | `Trusted` | `Trusted` | `Trusted` |
+| `cloud-hash-bytes.png` | the same, `location.hash` a byte string | `Trusted` | `Trusted` | `Trusted` |
+| `cloud-hash-data.png` | its `label` `c2pa.hash.data` | `Invalid` | `Trusted` | `Invalid` |
+| `cloud-size-zero.png` | its `size` 0 | `Invalid` | `Trusted` | `Invalid` |
+| `cloud-actions.png` | its `label` `c2pa.actions.v2` | `Invalid` | `Trusted` | `Invalid` |
+| `cloud-no-location.png` | its `location` key renamed | `Invalid` | `Trusted` | `Invalid` |
+| `cloud-in-ingredient.png` | signed by 0.28.1 with `cloud-hash-data.png` as its parent; the ingredient records the failure | `Trusted` | `Trusted` | `Trusted` |
+| `cloud-in-ingredient-unrecorded.png` | the same signed by 0.27.22, which records none | `Invalid` | `Trusted` | `Invalid` |
 | `x5chain-unprotected-too.png` | the signer's chain under label 33 in the unprotected header as well (candidate C1, §14.5) | `Trusted` | `Trusted` | `Trusted` |
 
 The answers are under `../c2patool/manifest-probes/<file>--<version>.json`.

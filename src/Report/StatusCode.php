@@ -39,6 +39,9 @@ enum StatusCode: string
     case AssertionActionIngredientMismatch = 'assertion.action.ingredientMismatch';   // SPEC-033
     case AssertionActionSoftBindingMissing = 'assertion.action.softBindingMissing';   // SPEC-033
     case AssertionExternalReferenceMalformed = 'assertion.external-reference.malformed';   // SPEC-032
+    case AssertionCloudDataMalformed = 'assertion.cloud-data.malformed';   // SPEC-063
+    case AssertionCloudDataHardBinding = 'assertion.cloud-data.hardBinding';   // SPEC-063
+    case AssertionCloudDataActions = 'assertion.cloud-data.actions';   // SPEC-063
     case AssertionDataHashMatch = 'assertion.dataHash.match';
     case AssertionDataHashMismatch = 'assertion.dataHash.mismatch';
     case AssertionBmffHashMatch = 'assertion.bmffHash.match';

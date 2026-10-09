@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-09                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -130,12 +130,15 @@ this verifier already checks.
   - Then it is `Trusted` as in both `c2patool` versions, the report names
     the check `cloudData`, and no status names the url's contents
 
-- **AC7 — in an ingredient manifest too**
-  - Given a malformed cloud-data assertion in a manifest validated as an
-    ingredient (unit level, through `IngredientManifestCheck`, as SPEC-032
-    AC4 is tested)
-  - When validated
-  - Then the same code is reported for that ingredient
+- **AC7 — in an ingredient manifest too** *(amendment 1)*
+  - Given `cloud-in-ingredient-unrecorded.png` (signed by `c2patool`
+    0.27.22 with `cloud-hash-data.png` as its parent, so the ingredient
+    records no cloud-data failure) and `cloud-in-ingredient.png` (the same
+    signed by 0.28.1, which records it)
+  - When the Verifier runs
+  - Then the first is `Invalid` with `assertion.cloud-data.hardBinding`
+    for that ingredient, and the second is `Trusted`: a recorded failure
+    is no delta (SPEC-021). Both as in `c2patool` 0.28.1
 
 - **AC8 — the vocabulary grows by three codes, verbatim**
   - `assertion.cloud-data.malformed`, `assertion.cloud-data.hardBinding`
@@ -180,21 +183,43 @@ final readonly class CloudDataCheck
 }
 ```
 
+## Amendments
+
+1. **2026-10-09, step 321, measured while building** *(to be confirmed by Maurice van Loon)* —
+   Two things the approved text did not foresee, as its open question
+   said the tests would follow:
+   - **`location.hash` as text.** `c2patool` 0.28.1 writes the hash from
+     a manifest definition as base64 text, not a byte string, and calls
+     the result `Trusted`; `c2pa-rs` reads either. Requiring a byte string,
+     as §18.11's CDDL says, would refuse what `c2patool` writes. The check
+     takes a byte string or non-empty text; `cloud-hash-bytes.png` covers
+     the byte string.
+   - **AC7 by probes, not a unit test.** `c2pa-rs` checks cloud data in
+     ingredient manifests too, and reports a failure the ingredient did not
+     record as a delta. One recorded at signing (0.28.1 records it) is not
+     reported again. Both probes agree with 0.28.1, so this verifier is not
+     stricter there.
+
+   **Weight B: no verdict differs from `c2patool` 0.28.1 on any probe.**
+
 ## Open questions
 
 - None blocking. If `c2patool` 0.28.1 reports a code set other than the
   one above on a probe, the tests follow the measurement and this spec
   gets an amendment before it is approved.
+  *Status 2026-10-09 (step 321):* it happened after the approval: the
+  hash as text and the ingredient case, recorded in amendment 1 for
+  Maurice van Loon to confirm.
 
 ## Traceability
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
+| AC1 | tests/Unit/Manifest/CloudDataCheckTest.php :: AC1: a hard binding stored as cloud data is refused / SPEC-063 | src/Manifest/CloudDataCheck.php :: faults(), HARD_BINDING_LABELS; bin/make-manifest-probe-variants.php |
+| AC2 | tests/Unit/Manifest/CloudDataCheckTest.php :: AC2, AC3, AC4: size 0, an actions label and a missing location are malformed / SPEC-063 | src/Manifest/CloudDataCheck.php :: faults() (size) |
+| AC3 | tests/Unit/Manifest/CloudDataCheckTest.php :: AC2, AC3, AC4 / SPEC-063 | src/Manifest/CloudDataCheck.php :: faults(), FORBIDDEN_LABELS |
+| AC4 | tests/Unit/Manifest/CloudDataCheckTest.php :: AC4: each missing or mistyped field is malformed / SPEC-063 | src/Manifest/CloudDataCheck.php :: faults() |
+| AC5 | tests/Unit/Manifest/CloudDataCheckTest.php :: AC5: an actions label in an update manifest / SPEC-063 | src/Manifest/CloudDataCheck.php :: faults() ($updateManifest) |
+| AC6 | tests/Unit/Manifest/CloudDataCheckTest.php :: AC6: a well-formed cloud-data assertion passes / SPEC-063 | src/Manifest/CloudDataCheck.php :: check(), present(); src/Verifier/Verifier.php (cloudData) |
+| AC7 | tests/Unit/Manifest/CloudDataCheckTest.php :: AC7: in an ingredient manifest too / SPEC-063 | src/Verifier/IngredientManifestCheck.php :: manifest() |
+| AC8 | tests/Unit/Manifest/CloudDataCheckTest.php :: AC8: three codes, verbatim, all failures / SPEC-063 | src/Report/StatusCode.php; tests/Fixtures/api/public-surface.txt |

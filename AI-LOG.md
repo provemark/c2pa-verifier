@@ -10095,3 +10095,25 @@ README are where the disclosure lives.
 - Decided by Maurice: cloud data fixed under a new spec; metadata
   `@context`, certificate status, soft binding and action field types by
   design.
+
+## 2026-10-09 — The cloud-data assertion's structure (step 321, SPEC-063)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, goedgekeurd, push en bouw SPEC-063", then "ok, wacht
+  maar op de meting".
+- Produced: `d767a81` pushed; SPEC-063 approved, implemented, amendment
+  1; `src/Manifest/CloudDataCheck.php`; three codes in
+  `src/Report/StatusCode.php`; calls in `src/Verifier/Verifier.php` and
+  `src/Verifier/IngredientManifestCheck.php`; eight probes in
+  `bin/make-manifest-probe-variants.php` (all its fixtures rebuilt with new
+  keys) and the fixtures' README; `tests/Unit/Manifest/CloudDataCheckTest.php`;
+  the API surface and two vocabulary counters; the CHANGELOG;
+  `docs/reading-c2pa-2.4.md` (L7, six rows, tallies); `docs/milestones.md`;
+  `notes/step-321-cloud-data.md`; a row in `NOTES.md`.
+- Measured: every probe judged by both `c2patool` versions; the tests red
+  (7 failed), then green, AC7 red again without its call; the corpus (870
+  files × 161 settings modes, before and after: 1,127 runs moved, all the
+  probes); `bin/fuzz.php` without settings and with `--trust` on two
+  seeds, every suspect judged by `c2patool` 0.28.1 (none more lenient);
+  `composer check` (970 passed); PHPStan in Docker.
+- Decided by Maurice: SPEC-063 approved. Amendment 1 awaits his
+  confirmation.

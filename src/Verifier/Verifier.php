@@ -28,6 +28,7 @@ use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfException;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\ActionsCheck;
+use Provemark\C2paVerifier\Manifest\CloudDataCheck;
 use Provemark\C2paVerifier\Manifest\ExternalReferenceCheck;
 use Provemark\C2paVerifier\Manifest\HashedUri;
 use Provemark\C2paVerifier\Manifest\IconReferenceCheck;
@@ -295,6 +296,11 @@ final readonly class Verifier
         if (ExternalReferenceCheck::present($manifest)) {
             $statuses = [...$statuses, ...(new ExternalReferenceCheck)->check($manifest, $unreadable)];
             $checks[] = 'externalReferences';
+        }
+        // SPEC-063: named only where the claim carries cloud data
+        if (CloudDataCheck::present($manifest)) {
+            $statuses = [...$statuses, ...(new CloudDataCheck)->check($manifest, $unreadable)];
+            $checks[] = 'cloudData';
         }
         // SPEC-034: icon references, named only where the manifest carries an icon
         if (IconReferenceCheck::present($manifest)) {
