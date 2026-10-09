@@ -10300,3 +10300,15 @@ README are where the disclosure lives.
   only the probes change verdict); `bin/fuzz.php` (0 faults, none more
   lenient); `composer check` (986 passed).
 - Decided by Maurice: build SPEC-064; amendment 1 to confirm.
+
+## 2026-10-09 — Session keys by design (step 334)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendement 1 bevestigd, push en begin met #8", then
+  "akkoord, leg het vast en begin met #5".
+- Produced: `2ab8298` pushed; SPEC-064 amendment 1 confirmed;
+  `docs/reading-c2pa-2.4.md` (the §15.10.3.2.5 row by design, tallies); a
+  row in `NOTES.md`.
+- Reasoned: §15.10.3.2.5, §18.25 and the §15 status table
+  (`livevideo.sessionkey.invalid`) in the fetched specification; `c2pa-rs`
+  0.91.1 searched for session keys (none); issue #8.
+- Decided by Maurice: session keys by design; issue #8 stays open.

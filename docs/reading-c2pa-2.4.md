@@ -50,12 +50,12 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §14 | 41 | 32 | 1 | 6 | 2 | 0 |
 | §15.1 to §15.6 | 33 | 13 | 6 | 4 | 10 | 0 |
 | §15.7 to §15.9 | 47 | 26 | 9 | 4 | 5 | 3 |
-| §15.10 to the end of §15 | 124 | 82 | 16 | 13 | 9 | 4 |
+| §15.10 to the end of §15 | 124 | 82 | 16 | 14 | 9 | 3 |
 | §18.1 to §18.9 | 50 | 25 | 4 | 7 | 11 | 3 |
 | §18.10 to §18.16 | 58 | 20 | 11 | 14 | 12 | 1 |
 | §18.17 to the end of §18 | 34 | 6 | 2 | 14 | 11 | 0 (and 1 other) |
 | Appendix A | 50 | 23 | 2 | 7 | 13 | 5 |
-| **all** | **562** | **303** | **63** | **78** | **101** | **16** |
+| **all** | **562** | **303** | **63** | **79** | **101** | **15** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -928,7 +928,7 @@ decision*, which follows `c2pa-rs` without `verify.strict_v1_validation`.
 | 15.10.3.2.3 | A template's `icon` is validated per §15.10.3.3. | `IconReferenceCheck::actionsIcons()` | covered, v2 only | measured: `IconReferenceTest` "AC4" |
 | 15.10.3.2.3 | All of the above for v1 claims (`c2pa.actions`, `ingredient`). | only "at most one actions assertion" is applied | by design: `docs/conformance.md`, *§15.10.3.2.3 for version 1 claims — not applied, by decision* | measured: `ActionsCheckTest` "AC4", "AC6"; `RedactedActionTest` "AC6: v1 claims are not checked" |
 | 15.10.3.2.4 | No validation for `c2pa.metadata`; unlisted fields should not be rejected. | nothing checks it | covered by construction | read |
-| 15.10.3.2.5 | `c2pa.session-keys`: verify `signerBinding` with the session key over the signer's certificate. | none | candidate | read (`PRED-CRYP-024`) → P06-8 |
+| 15.10.3.2.5 | `c2pa.session-keys`: verify `signerBinding` with the session key over the signer's certificate. | not read: session keys sign live-video segments only (§18.25.1, chapter 19), which this verifier does not validate; the only code is `livevideo.sessionkey.invalid`, part of segment validation; `c2pa-rs` 0.91.1 does not read the assertion either | by design (live video, as chapter 19; step 334, decided by Maurice) | read (`PRED-CRYP-024`) → P06-8 |
 | 15.10.3.2.6 | `c2pa.time-stamp` is one CBOR map with at least one pair, else `assertion.timestamp.malformed`. | `TimestampAssertions::collect()` reads every manifest's `c2pa.time-stamp`; `TimestampCheck::forManifest()` uses a token when the header's did not pass (SPEC-064, step 333) | covered (SPEC-064) | read → P06-2 |
 | 15.10.3.2.6 | Keep the token for §15.8.2. | not read; the signer is judged at *now* | by design: `docs/conformance.md` §3 (`PRED-TIME-002`, `-003`), stricter | read |
 | 15.10.3.2.7 | At most one `exif.originalPreservationImage` representation, else `alternativeContentRepresentation.malformed`. | none | candidate | read (`PRED-ASSE-013`) → P06-8 |
