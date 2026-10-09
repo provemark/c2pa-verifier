@@ -45,6 +45,9 @@ enum StatusCode: string
     case ManifestTextCorruptedWrapper = 'manifest.text.corruptedWrapper';   // SPEC-060 amendment 3
     case ManifestTextMultipleWrappers = 'manifest.text.multipleWrappers';   // SPEC-060 amendment 3
     case AssertionTimestampMalformed = 'assertion.timestamp.malformed';   // SPEC-064
+    case AssertionAlternativeContentRepresentationMalformed = 'assertion.alternativeContentRepresentation.malformed';   // SPEC-065
+    case AssertionAlternativeContentRepresentationHashMismatch = 'assertion.alternativeContentRepresentation.hashMismatch';   // SPEC-065
+    case AssertionAlternativeContentRepresentationMatch = 'assertion.alternativeContentRepresentation.match';   // SPEC-065
     case AssertionDataHashMatch = 'assertion.dataHash.match';
     case AssertionDataHashMismatch = 'assertion.dataHash.mismatch';
     case AssertionBmffHashMatch = 'assertion.bmffHash.match';
@@ -100,6 +103,7 @@ enum StatusCode: string
         return $this === self::ClaimSignatureValidated || $this === self::ClaimSignatureInsideValidity || $this === self::AssertionHashedUriMatch || $this === self::AssertionDataHashMatch || $this === self::AssertionBmffHashMatch || $this === self::SigningCredentialTrusted
             || $this === self::TimeStampValidated || $this === self::TimeStampTrusted
             || $this === self::IngredientManifestValidated   // SPEC-021: the ingredient's manifest box hashed as recorded
+            || $this === self::AssertionAlternativeContentRepresentationMatch   // SPEC-065
             || $this === self::SigningCredentialOcspNotRevoked;   // SPEC-030 — and its explanation says how little that proves
     }
 

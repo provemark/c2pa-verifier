@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-09                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -135,7 +135,7 @@ it says.
 namespace Provemark\C2paVerifier\Manifest;
 
 /** @internal SPEC-025 */
-final readonly class AlternativeContentCheck
+final readonly class AlternativeContentCheck   // built in Provemark\C2paVerifier\Hash: it hashes through HashedUriCheck
 {
     public const LABEL = 'c2pa.alternative-content-representation';
 
@@ -151,20 +151,22 @@ final readonly class AlternativeContentCheck
 - 1. **Ingredient manifests.** §15.10.3.2 applies to each assertion of a
   validated manifest, and this spec checks them there too, except the
   index (scope 4). Proposal: as written.
+  *Status 2026-10-09 (step 336):* decided by Maurice van Loon with the approval: as proposed.
 - 2. **A url that names nothing.** §15.10.3.2.7 says to *"resolve"* it and
   gives no code for failing to. Proposal: `hashMismatch`, since nothing
   was found to match the declared hash. `assertion.missing` would be
   another reading.
+  *Status 2026-10-09 (step 336):* decided by Maurice van Loon with the approval: as proposed.
 
 ## Traceability
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
+| AC1 | tests/Unit/Manifest/AlternativeContentCheckTest.php :: AC1: an embedded OPI that matches is match / SPEC-065 | src/Hash/AlternativeContentCheck.php :: check() (HashedUriCheck::checkEntry()) |
+| AC2 | tests/Unit/Manifest/AlternativeContentCheckTest.php :: AC2: a hash that does not match is hashMismatch / SPEC-065 | src/Hash/AlternativeContentCheck.php :: check() |
+| AC3 | tests/Unit/Manifest/AlternativeContentCheckTest.php :: AC3, AC4, AC5 (probes) and AC3, AC4 (unit) / SPEC-065 | src/Hash/AlternativeContentCheck.php :: shapeFaults() |
+| AC4 | tests/Unit/Manifest/AlternativeContentCheckTest.php :: AC3, AC4, AC5; AC3, AC4 / SPEC-065 | src/Hash/AlternativeContentCheck.php :: shapeFaults(), multiAssetParts() |
+| AC5 | tests/Unit/Manifest/AlternativeContentCheckTest.php :: AC3, AC4, AC5 / SPEC-065 | src/Hash/AlternativeContentCheck.php :: check() (the count) |
+| AC6 | tests/Unit/Manifest/AlternativeContentCheckTest.php :: AC6: a generic representation is not checked / SPEC-065 | src/Hash/AlternativeContentCheck.php :: shapeFaults() |
+| AC7 | tests/Unit/Manifest/AlternativeContentCheckTest.php :: AC7: both c2patool versions ignore the assertion / SPEC-065 | bin/make-manifest-probe-variants.php (acr-*) |
+| AC8 | tests/Unit/Manifest/AlternativeContentCheckTest.php :: AC8: three codes, verbatim / SPEC-065 | src/Report/StatusCode.php; src/Verifier/Verifier.php, IngredientManifestCheck.php |

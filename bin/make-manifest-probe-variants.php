@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * Steps 313, 315 and 318 to 322: PNG probes for the manifest and its signature, from the reading of C2PA 2.4
+ * Steps 313, 315, 318 to 322 and 336: PNG probes for the manifest and its signature, from the reading of C2PA 2.4
  * (docs/reading-c2pa-2.4.md, L2, L9, L10, L11, L13 and C1). `c2patool` 0.28.1 signs with a throw-away P-256 hierarchy;
  * a probe `c2patool` will not write is made by editing the store: the bytes replaced, every enclosing box resized,
  * the data hash's exclusion re-lengthened to the new caBX chunk and its hashed URI recomputed, the claim signed
@@ -35,6 +35,9 @@ declare(strict_types=1);
  *   unlisted-certificate-status-no-ocspvals its certificate status without ocspVals (L6)
  *   unlisted-soft-binding-no-blocks         its soft binding without blocks (L8)
  *   unlisted-action-when-integer            its action's when the integer 123 (P08-3)
+ *   acr-*                    c2pa.alternative-content-representation probes (SPEC-065): an embedded OPI that matches,
+ *                            one that does not, one without hash, both fields, neither, an index without a
+ *                            multi-asset hash, two OPI assertions, a generic representation
  *   x5chain-unprotected-too  the signer's chain under label 33 in the unprotected header as well (C1)
  *
  * Usage: php bin/make-manifest-probe-variants.php <scratch-dir> <c2patool-0.28.1> <c2patool-0.27.22>
@@ -438,8 +441,48 @@ mqRun(mqSh($new, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m.
 // 0.27.22 does not check cloud data, so the ingredient it records holds no cloud-data failure: a delta for a validator
 mqRun(mqSh($old, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m.json", '-p', "{$dir}/cloud-hash-data.png", '-o', "{$dir}/cloud-in-ingredient-unrecorded.png", '-f'));
 
+// ---- the alternative content representation (SPEC-065): an original preservation image, its rules one by one ----
+/** @param list<array<string, mixed>> $acrs */
+$acrSign = static function (string $name, array $acrs) use ($keys, $new, $root, $dir): string {
+    file_put_contents("{$keys}/m-acr.json", json_encode([
+        'alg' => 'es256', 'private_key' => "{$keys}/leaf.pk8", 'sign_cert' => "{$keys}/leaf.pem",
+        'claim_generator_info' => [['name' => 'c2pa-verifier manifest probes', 'version' => '1']],
+        'assertions' => [
+            ['label' => 'c2pa.actions.v2', 'data' => ['actions' => [['action' => 'c2pa.created', 'digitalSourceType' => 'http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture']]]],
+            ...array_map(static fn (mixed $data): array => ['label' => 'c2pa.alternative-content-representation', 'data' => $data], $acrs),
+        ],
+    ], JSON_UNESCAPED_SLASHES));
+    mqRun(mqSh($new, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m-acr.json", '-o', "{$dir}/{$name}.png", '-f'));
+
+    return (string) file_get_contents("{$dir}/{$name}.png");
+};
+$opi = static fn (array $parameters): array => ['type' => 'exif.originalPreservationImage', 'parameters' => $parameters];
+$embedded = ['url' => 'self#jumbf=c2pa.assertions/c2pa.actions.v2', 'hash' => str_repeat('A', 32)];
+// the embedded reference, its hash a 32-character placeholder made a 32-byte string afterwards
+$base = $acrSign('acr-embedded-ok', [$opi(['embeddedOriginalPreservationImage' => $embedded])]);
+[$as, $achunk] = mqStore($base);
+$actionsHash = null;
+$acrClaim = ManifestStore::fromTree((new JumbfParser)->parse($as))->active->claim;
+foreach ([...$acrClaim->createdAssertions, ...$acrClaim->gatheredAssertions] as $entry) {
+    if (str_ends_with($entry->url, '/c2pa.actions.v2')) {
+        $actionsHash = $entry->hash->bytes;
+    }
+}
+if (! is_string($actionsHash) || strlen($actionsHash) !== 32) {
+    throw new RuntimeException('no SHA-256 hash for c2pa.actions.v2 in the claim');
+}
+$placeholder = "\x64hash\x78\x20".str_repeat('A', 32);
+file_put_contents("{$dir}/acr-embedded-ok.png", mqChunk($base, $achunk, mqEditAssertion($as, 'c2pa.alternative-content-representation', $placeholder, "\x64hash\x58\x20".$actionsHash, "{$keys}/leaf.key")));
+file_put_contents("{$dir}/acr-embedded-mismatch.png", mqChunk($base, $achunk, mqEditAssertion($as, 'c2pa.alternative-content-representation', $placeholder, "\x64hash\x58\x20".str_repeat("\x01", 32), "{$keys}/leaf.key")));
+file_put_contents("{$dir}/acr-embedded-no-hash.png", mqChunk($base, $achunk, mqEditAssertion($as, 'c2pa.alternative-content-representation', "\x64hash\x78\x20", "\x64hasX\x78\x20", "{$keys}/leaf.key")));
+$acrSign('acr-both', [$opi(['multiAssetPartIndex' => 0, 'embeddedOriginalPreservationImage' => $embedded])]);
+$acrSign('acr-neither', [$opi([])]);
+$acrSign('acr-index-no-multi-asset', [$opi(['multiAssetPartIndex' => 0])]);
+$acrSign('acr-two', [$opi(['multiAssetPartIndex' => 0]), $opi(['multiAssetPartIndex' => 1])]);
+$acrSign('acr-generic', [['type' => 'com.example.secureCapture', 'parameters' => []]]);
+
 // ---- the oracles ----
-foreach (['control', 'cgi-shorter', 'cgi-empty', 'label-not-urn', 'label-urn-uuid', 'type-c2md', 'datahash-no-pad', 'datahash-pad-text', 'parent', 'duplicate-label-last', 'duplicate-label-middle', 'x5chain-unprotected-too', 'cloud-ok', 'cloud-hash-bytes', 'cloud-hash-data', 'cloud-size-zero', 'cloud-actions', 'cloud-no-location', 'cloud-in-ingredient', 'cloud-in-ingredient-unrecorded', 'unlisted-control', 'unlisted-metadata-no-context', 'unlisted-certificate-status-no-ocspvals', 'unlisted-soft-binding-no-blocks', 'unlisted-action-when-integer'] as $name) {
+foreach (['control', 'cgi-shorter', 'cgi-empty', 'label-not-urn', 'label-urn-uuid', 'type-c2md', 'datahash-no-pad', 'datahash-pad-text', 'parent', 'duplicate-label-last', 'duplicate-label-middle', 'x5chain-unprotected-too', 'cloud-ok', 'cloud-hash-bytes', 'cloud-hash-data', 'cloud-size-zero', 'cloud-actions', 'cloud-no-location', 'cloud-in-ingredient', 'cloud-in-ingredient-unrecorded', 'unlisted-control', 'unlisted-metadata-no-context', 'unlisted-certificate-status-no-ocspvals', 'unlisted-soft-binding-no-blocks', 'unlisted-action-when-integer', 'acr-embedded-ok', 'acr-embedded-mismatch', 'acr-embedded-no-hash', 'acr-both', 'acr-neither', 'acr-index-no-multi-asset', 'acr-two', 'acr-generic'] as $name) {
     foreach (['0.28.1' => $new, '0.27.22' => $old] as $v => $tool) {
         $lines = [];
         exec(mqSh($tool, "{$dir}/{$name}.png", '--settings', "{$dir}/throw-away-root.settings.json").' 2>&1', $lines);

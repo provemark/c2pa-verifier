@@ -10322,3 +10322,22 @@ README are where the disclosure lives.
   in the fetched specification; `c2pa-rs` 0.91.1 searched (no code for the
   assertion); issue #5.
 - Decided by Maurice: none yet; the draft awaits approval.
+
+## 2026-10-09 — The original preservation image is checked (step 336)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, goedgekeurd zoals voorgesteld, push en begin met de
+  probes".
+- Produced: `649b072` pushed; SPEC-065 approved and implemented;
+  `src/Hash/AlternativeContentCheck.php` (new), three codes in
+  `src/Report/StatusCode.php`, calls in `src/Verifier/Verifier.php` and
+  `IngredientManifestCheck.php`; eight `acr-*` probes in
+  `bin/make-manifest-probe-variants.php` (all its fixtures rebuilt with new
+  keys) and the README; `tests/Unit/Manifest/AlternativeContentCheckTest.php`;
+  the API surface, two counters and two success lists; the CHANGELOG;
+  `docs/reading-c2pa-2.4.md`; `notes/step-336-alternative-content.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: every probe judged by both `c2patool` versions; the tests red
+  (9 failed), then green; the corpus (1,400 runs moved, all the probes);
+  `bin/fuzz.php` (0 faults, none more lenient); `composer check` (997
+  passed).
+- Decided by Maurice: SPEC-065 approved with both proposals.

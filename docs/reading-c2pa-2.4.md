@@ -50,12 +50,12 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §14 | 41 | 32 | 1 | 6 | 2 | 0 |
 | §15.1 to §15.6 | 33 | 13 | 6 | 4 | 10 | 0 |
 | §15.7 to §15.9 | 47 | 26 | 9 | 4 | 5 | 3 |
-| §15.10 to the end of §15 | 124 | 82 | 16 | 14 | 9 | 3 |
+| §15.10 to the end of §15 | 124 | 85 | 16 | 14 | 9 | 0 |
 | §18.1 to §18.9 | 50 | 25 | 4 | 7 | 11 | 3 |
-| §18.10 to §18.16 | 58 | 20 | 11 | 14 | 12 | 1 |
+| §18.10 to §18.16 | 58 | 21 | 11 | 14 | 12 | 0 |
 | §18.17 to the end of §18 | 34 | 6 | 2 | 14 | 11 | 0 (and 1 other) |
 | Appendix A | 50 | 23 | 2 | 7 | 13 | 5 |
-| **all** | **562** | **303** | **63** | **79** | **101** | **15** |
+| **all** | **562** | **307** | **63** | **79** | **101** | **11** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -931,9 +931,9 @@ decision*, which follows `c2pa-rs` without `verify.strict_v1_validation`.
 | 15.10.3.2.5 | `c2pa.session-keys`: verify `signerBinding` with the session key over the signer's certificate. | not read: session keys sign live-video segments only (§18.25.1, chapter 19), which this verifier does not validate; the only code is `livevideo.sessionkey.invalid`, part of segment validation; `c2pa-rs` 0.91.1 does not read the assertion either | by design (live video, as chapter 19; step 334, decided by Maurice) | read (`PRED-CRYP-024`) → P06-8 |
 | 15.10.3.2.6 | `c2pa.time-stamp` is one CBOR map with at least one pair, else `assertion.timestamp.malformed`. | `TimestampAssertions::collect()` reads every manifest's `c2pa.time-stamp`; `TimestampCheck::forManifest()` uses a token when the header's did not pass (SPEC-064, step 333) | covered (SPEC-064) | read → P06-2 |
 | 15.10.3.2.6 | Keep the token for §15.8.2. | not read; the signer is judged at *now* | by design: `docs/conformance.md` §3 (`PRED-TIME-002`, `-003`), stricter | read |
-| 15.10.3.2.7 | At most one `exif.originalPreservationImage` representation, else `alternativeContentRepresentation.malformed`. | none | candidate | read (`PRED-ASSE-013`) → P06-8 |
-| 15.10.3.2.7 | Exactly one of `multiAssetPartIndex` / `embeddedOriginalPreservationImage`; the index needs a multi-asset hash and must be in bounds. | none | candidate | read (`PRED-ASSE-026`) → P06-8 |
-| 15.10.3.2.7 | The embedded image's hashed URI has a hash that matches, else `.hashMismatch`; otherwise record `.match`. | none | candidate | read (`PRED-ASSE-014`) → P06-8 |
+| 15.10.3.2.7 | At most one `exif.originalPreservationImage` representation, else `alternativeContentRepresentation.malformed`. | `Hash\AlternativeContentCheck` (SPEC-065, step 336); the index is checked in the active manifest only (§18.14.2.1) | covered (SPEC-065) | read (`PRED-ASSE-013`) → P06-8 |
+| 15.10.3.2.7 | Exactly one of `multiAssetPartIndex` / `embeddedOriginalPreservationImage`; the index needs a multi-asset hash and must be in bounds. | `Hash\AlternativeContentCheck` (SPEC-065, step 336); the index is checked in the active manifest only (§18.14.2.1) | covered (SPEC-065) | read (`PRED-ASSE-026`) → P06-8 |
+| 15.10.3.2.7 | The embedded image's hashed URI has a hash that matches, else `.hashMismatch`; otherwise record `.match`. | `Hash\AlternativeContentCheck` (SPEC-065, step 336); the index is checked in the active manifest only (§18.14.2.1) | covered (SPEC-065) | read (`PRED-ASSE-014`) → P06-8 |
 | 15.10.3.3 | A `hashed_ext_uri` the validator retrieves goes through §15.10.4.2. | nothing is retrieved | n/a | read |
 | 15.10.3.3 | A `hashed_uri` with no `url` or no destination: `hashedURI.missing`. | icons: `assertion.missing` (`IconReferenceCheck`); an ingredient's manifest: `ingredient.manifest.missing` (`ManifestGraph::descend()`); ingredient thumbnails and `data`, action references: resolved by label or not at all | partial | measured: `IconReferenceTest` "AC3", `IngredientDeltasTest` "AC6"; the rest read → P06-5 |
 | 15.10.3.3 | No `hash` field, or a hash that differs: `hashedURI.mismatch`. | icons: compared with the hash the claim records (`IconReferenceCheck::check()`); ingredient `activeManifest`/`claimSignature`: `IngredientManifestCheck`; ingredient thumbnail and `data`, action ingredient references, `relatedAssertions`: not compared, as `c2pa-rs` | partial | measured: `IconReferenceTest` "AC2"; the rest read → P06-5 |
@@ -1287,7 +1287,7 @@ claims*). `c2pa-rs` was read at 0.91.1 (`claim.rs`: `verify_actions`,
 | 18.12.2 | Its description box holds an IANA media type and does not set the External toggle; the data matches that type. | `Manifest::mediaType()` requires a NUL-terminated type and reads it; the toggles byte and an empty type are not judged | partial | read → P08-8 |
 | 18.13.1.1 | At most one `c2pa.thumbnail.claim` per manifest. | `ManifestStore` renders a claim thumbnail; the count is not checked | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P08-8 |
 | 18.13.1.2 | An ingredient thumbnail's label starts with `c2pa.thumbnail.ingredient`. | used for rendering only (`ManifestStore`) | n/a (writer; nothing depends on it) | read |
-| 18.14.1–18.14.2 | Label `c2pa.alternative-content-representation`; at most one with type `exif.originalPreservationImage`; its parameters use `multiAssetPartIndex` or `embeddedOriginalPreservationImage`, never both; a part index is validated only in the manifest holding the current hard binding. | not read; `c2pa.hash.multi-asset` is not a supported hard binding | **candidate** | read → P08-8 |
+| 18.14.1–18.14.2 | Label `c2pa.alternative-content-representation`; at most one with type `exif.originalPreservationImage`; its parameters use `multiAssetPartIndex` or `embeddedOriginalPreservationImage`, never both; a part index is validated only in the manifest holding the current hard binding. | `Hash\AlternativeContentCheck` (SPEC-065, step 336); the index is checked in the active manifest only (§18.14.2.1) | covered (SPEC-065) | read → P08-8 |
 | 18.15.1 | The v2 assertion is labelled `c2pa.actions.v2`; a v2 action may come from a template. | `ActionsCheck::isActionsLabel()`; the v1 label in a v2 claim gets the v2 rules (SPEC-018 amendment 6) | covered | measured: `ActionsCheckTest` "SPEC-018 AC7" |
 | 18.15.1 | Each `action` (in `actions` or `templates`) is a pre-defined name or an entity-specific namespaced name. | `checkData()` requires non-empty text; the syntax is not checked | partial | measured: `ActionsCheckTest` "SPEC-018 AC6"; syntax read → P08-6 |
 | 18.15.2 | A standard manifest has at least one actions assertion in `created_assertions`. | required (`checkAssertions()` rule 1), but one in `gathered_assertions` counts too, as in `c2pa-rs` (SPEC-018 AC4) | partial | measured: `ActionsCheckTest` "SPEC-018 AC3", "SPEC-018 AC4" → P08-4 |

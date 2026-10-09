@@ -3,7 +3,7 @@
 Built by `bin/make-manifest-probe-variants.php <scratch> <c2patool-0.28.1>
 <c2patool-0.27.22>` on 2026-10-09 (step 318; rebuilt with the two data-hash
 probes in step 319 and the cloud-data probes in step 321 the unlisted ones in step 322 and `label-urn-uuid` in
-step 330, with new keys each time). `c2patool` 0.28.1 signed
+step 330 and the `acr-*` probes in step 336, with new keys each time). `c2patool` 0.28.1 signed
 `fixture-unsigned.png` with a throw-away P-256 hierarchy; the keys lived in
 a scratch directory and were deleted. `throw-away-root.pem` is the public
 root, and `throw-away-root.settings.json` holds it as the legacy
@@ -40,6 +40,14 @@ the file valid.
 | `unlisted-certificate-status-no-ocspvals.png` | its certificate status without `ocspVals` | error: cannot decode | error | `Trusted` |
 | `unlisted-soft-binding-no-blocks.png` | its soft binding without `blocks` | `Invalid` | `Invalid` | `Trusted` |
 | `unlisted-action-when-integer.png` | its action's `when` the integer 123 | error: cannot decode | error | `Trusted` |
+| `acr-embedded-ok.png` | an original preservation image embedded by reference to `c2pa.actions.v2`, its hash correct (SPEC-065) | `Trusted` | `Trusted` | `Trusted`, `match` |
+| `acr-embedded-mismatch.png` | the same, another 32-byte hash | `Trusted` | `Trusted` | `Invalid`, `hashMismatch` |
+| `acr-embedded-no-hash.png` | the same, the hash key renamed | `Trusted` | `Trusted` | `Invalid`, `malformed` |
+| `acr-both.png` | both an index and an embedded reference | `Trusted` | `Trusted` | `Invalid`, `malformed` |
+| `acr-neither.png` | neither | `Trusted` | `Trusted` | `Invalid`, `malformed` |
+| `acr-index-no-multi-asset.png` | an index, no multi-asset hash | `Trusted` | `Trusted` | `Invalid`, `malformed` |
+| `acr-two.png` | two original preservation image representations | `Trusted` | `Trusted` | `Invalid`, `malformed` |
+| `acr-generic.png` | a representation of another type | `Trusted` | `Trusted` | `Trusted`, not checked |
 | `x5chain-unprotected-too.png` | the signer's chain under label 33 in the unprotected header as well (candidate C1, §14.5; SPEC-047 amendment 2) | `Trusted` | `Trusted` | `Invalid` |
 
 The answers are under `../c2patool/manifest-probes/<file>--<version>.json`.

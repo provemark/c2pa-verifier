@@ -21,6 +21,7 @@ use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
 use Provemark\C2paVerifier\Cose\ClaimSignatureCheck;
 use Provemark\C2paVerifier\Cose\CoseException;
 use Provemark\C2paVerifier\Cose\CoseSign1;
+use Provemark\C2paVerifier\Hash\AlternativeContentCheck;
 use Provemark\C2paVerifier\Hash\BmffHashCheck;
 use Provemark\C2paVerifier\Hash\DataHashCheck;
 use Provemark\C2paVerifier\Hash\HardBindings;
@@ -303,6 +304,11 @@ final readonly class Verifier
         if (CloudDataCheck::present($manifest)) {
             $statuses = [...$statuses, ...(new CloudDataCheck)->check($manifest, $unreadable)];
             $checks[] = 'cloudData';
+        }
+        // SPEC-065: named only where the claim carries an alternative content representation
+        if (AlternativeContentCheck::present($manifest)) {
+            $statuses = [...$statuses, ...(new AlternativeContentCheck)->check($manifest, true, $unreadable)];
+            $checks[] = 'alternativeContent';
         }
         // SPEC-034: icon references, named only where the manifest carries an icon
         if (IconReferenceCheck::present($manifest)) {

@@ -28,6 +28,13 @@ committed.
   A header token that passed still stands. A malformed time-stamp assertion,
   or a second one in a manifest, is `assertion.timestamp.malformed` (a new
   status code), and its tokens are not used.
+- **The original preservation image is checked (SPEC-065).** C2PA 2.4
+  §15.10.3.2.7: a `c2pa.alternative-content-representation` of type
+  `exif.originalPreservationImage` holds exactly one of a multi-asset part
+  index (inside the parts of the active manifest's multi-asset hash) and an
+  embedded reference whose hash matches; at most one per manifest. Three
+  new status codes: `assertion.alternativeContentRepresentation.malformed`,
+  `.hashMismatch` and `.match`. `c2patool` does not check the assertion.
 
 ### Changed
 

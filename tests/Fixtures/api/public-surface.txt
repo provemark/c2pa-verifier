@@ -7,6 +7,9 @@ Report\StatusCode :: const AssertionActionMalformed
 Report\StatusCode :: const AssertionActionRedacted
 Report\StatusCode :: const AssertionActionRedactionMismatch
 Report\StatusCode :: const AssertionActionSoftBindingMissing
+Report\StatusCode :: const AssertionAlternativeContentRepresentationHashMismatch
+Report\StatusCode :: const AssertionAlternativeContentRepresentationMalformed
+Report\StatusCode :: const AssertionAlternativeContentRepresentationMatch
 Report\StatusCode :: const AssertionBmffHashAdditionalExclusionsPresent
 Report\StatusCode :: const AssertionBmffHashMalformed
 Report\StatusCode :: const AssertionBmffHashMatch

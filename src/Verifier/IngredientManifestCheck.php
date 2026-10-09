@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Provemark\C2paVerifier\Verifier;
 
 use Provemark\C2paVerifier\Cose\ClaimSignatureCheck;
+use Provemark\C2paVerifier\Hash\AlternativeContentCheck;
 use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Manifest\ActionsCheck;
 use Provemark\C2paVerifier\Manifest\CloudDataCheck;
@@ -213,6 +214,7 @@ final readonly class IngredientManifestCheck
         $statuses = [...$statuses, ...$this->actions->check($manifest, $unreadable, $storeLabels)];
         $statuses = [...$statuses, ...(new ExternalReferenceCheck)->check($manifest, $unreadable)];   // SPEC-032 rule B
         $statuses = [...$statuses, ...(new CloudDataCheck)->check($manifest, $unreadable)];   // SPEC-063
+        $statuses = [...$statuses, ...(new AlternativeContentCheck)->check($manifest, false, $unreadable)];   // SPEC-065
         $statuses = [...$statuses, ...(new IconReferenceCheck)->check($manifest)];   // SPEC-034
 
         // the hard binding is not checked: it covers the ingredient's own asset, not this file (§15.11.3.3.1)

@@ -413,7 +413,7 @@ it('AC9: M5\'s "done when": with and without the trust file, the verdicts are c2
 
 it('AC10: the codes are verbatim, and the drift alarm grows', function (): void {
     $values = array_map(static fn (StatusCode $c): string => $c->value, StatusCode::cases());
-    expect($values)->toHaveCount(66)   // SPEC-027 two bmffHash codes; SPEC-017 six timeStamp codes, SPEC-018 one, SPEC-020 three ingredient codes, SPEC-021 two, SPEC-022 three manifest codes, SPEC-030 four signingCredential.ocsp codes, SPEC-032 one, SPEC-033 two, SPEC-035 six, SPEC-036 one, SPEC-037 one, SPEC-038 two, SPEC-039 one, SPEC-040 one; SPEC-063 three cloud-data codes; SPEC-060 amendment 3 two text codes; SPEC-064 one
+    expect($values)->toHaveCount(69)   // SPEC-027 two bmffHash codes; SPEC-017 six timeStamp codes, SPEC-018 one, SPEC-020 three ingredient codes, SPEC-021 two, SPEC-022 three manifest codes, SPEC-030 four signingCredential.ocsp codes, SPEC-032 one, SPEC-033 two, SPEC-035 six, SPEC-036 one, SPEC-037 one, SPEC-038 two, SPEC-039 one, SPEC-040 one; SPEC-063 three cloud-data codes; SPEC-060 amendment 3 two text codes; SPEC-064 one; SPEC-065 three
         ->and($values)->toContain('signingCredential.expired')
         ->and(StatusCode::SigningCredentialExpired->isFailure())->toBeTrue();
 
