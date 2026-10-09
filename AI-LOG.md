@@ -9843,3 +9843,20 @@ README are where the disclosure lives.
   `composer check` (953 passed); PHPStan on macOS and in Docker.
 - Decided by Maurice: refuse the defaulted MGF1 under a SHA-256 PSS hash,
   and refuse two copies of the algorithm that differ.
+
+## 2026-10-09 — The check before 0.5.3 (step 306)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "bereid 0.5.3 voor en bekijk in welke repos deze verifier wordt
+  gebruikt", then "Het gaat er vooral om dat mijn plugins de nieuwste
+  krijgen".
+- Produced: CHANGELOG `0.5.3 — 2026-10-09`; README `v0.5.3`;
+  `docs/comparison.md`; `notes/step-306-pre-release-0.5.3.md`; a row in
+  `NOTES.md`.
+- Measured: `php bin/spec-check.php`; `composer check` (953 passed);
+  PHPStan in Docker; `php bin/api-check.php`; `git diff v0.5.2` on the
+  surface and the status codes; `php bin/package-check.php`;
+  `bin/fuzz.php` with today's fuzzer and fixtures in a worktree at
+  `v0.5.2` and in this tree; Packagist's dependents; `gh search code` for
+  the package name and the namespace; each provemark repository's
+  `composer.json`.
+- Decided by Maurice: prepare 0.5.3 so that the plugins get it.

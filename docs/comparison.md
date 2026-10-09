@@ -212,6 +212,17 @@ without an anchor — 34 corpus files, informational, no verdict changes.
 - Test anchors and anchors cut from tokens. The production C2PA trust
   lists were used once, as a measurement (step 113): two corpus files
   reach an official anchor. The project does not bundle or fetch them.
+- Fuzzing before 0.5.3 (step 306): the same fuzzer (per-file seeds since
+  step 297, ISOBMFF since step 299) and the same fixtures, once in a
+  worktree at `v0.5.2` and once at 0.5.3. Seed 20261005, 60 rounds, over
+  287 files: 15 036 runs, the same 238 files `Valid`, and 1 fault under
+  0.5.2 (the negative serial number's PHP notice, SPEC-015 amendment 7),
+  0 under 0.5.3. With trust settings (`--trust`, 233 file and settings
+  pairs, 160 `Trusted` unmutated), 0.5.3 has 0 faults and 0 raised states,
+  and none of its suspects is more lenient than `c2patool` 0.28.1 (steps
+  303 and 305). Under 0.5.2 that run stops at the negative serial.
+- The trust matrix since step 305: 54 chains. This verifier differs from
+  0.28.1 on seven, all stricter by design (SPEC-061 `SPEC061_STRICTER`).
 - Fuzzing before 0.5.2 (step 285): the same seed over the same 249 files,
   12 903 runs, once in a worktree at `v0.5.1` and once at 0.5.2: 0 faults
   in both, the same 122 files `Valid`, each confirmed by the oracles as

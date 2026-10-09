@@ -5,7 +5,19 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.5.3 — 2026-10-09
+
+A consolidation release. Four rules that a trust matrix, a timestamp
+matrix and fuzzing with trust settings found too lenient now agree with
+`c2patool` 0.28.1, or are stricter where named in `docs/comparison.md`.
+Two of them gave `Trusted` for a certificate issued as it is, with no byte
+changed: a leaf signed with RSASSA-PSS over SHA-224, or with an MGF1 hash
+other than its PSS hash. Both `c2patool` versions say `Invalid`. The
+others need a certificate or a manifest box that breaks a rule of
+RFC 5280 or of the C2PA specification.
+
+**A `0.5.3`, not a `0.6`:** the recorded public API is the same 126
+symbols, and there is no new status code. Seven files of `src/` changed.
 
 ### Changed
 
