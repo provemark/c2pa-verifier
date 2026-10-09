@@ -35,6 +35,12 @@ committed.
   embedded reference whose hash matches; at most one per manifest. Three
   new status codes: `assertion.alternativeContentRepresentation.malformed`,
   `.hashMismatch` and `.match`. `c2patool` does not check the assertion.
+- **Revocation beyond the signer's own staple (SPEC-066).** C2PA 2.4 §15.9:
+  a stapled OCSP response that verifiably reports a CA of the path revoked
+  leaves the signer untrusted (`signingCredential.untrusted`). The OCSP
+  responses of `c2pa.certificate-status` assertions in the store are used
+  for the signers they name, the active manifest's and an ingredient's.
+  Nothing is fetched; `c2patool` uses neither.
 
 ### Changed
 

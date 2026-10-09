@@ -46,7 +46,7 @@ final readonly class ChainCheck
             return [new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, 'x5chain holds no certificate')];
         }
 
-        $statuses = $this->checkCertificates($chain, $settings, $url, $at);
+        $statuses = $this->checkCertificates($chain, $settings, $url, $at, $cose->unprotected);
         $statuses = $this->timeStampingSigner($chain, $settings, $url, $at, $statuses);
         $note = self::kindNote($settings, TrustAnchorSet::MANIFEST, $chain);
         if ($note === '') {
@@ -96,9 +96,10 @@ final readonly class ChainCheck
      * $at is that time (a trusted timestamp's genTime), or null for now.
      *
      * @param  non-empty-list<Certificate>  $chain
+     * @param  array<int|string, mixed>  $unprotected  the signature's unprotected header, for stapled responses about a CA (SPEC-066)
      * @return list<ValidationStatus>
      */
-    public function checkCertificates(array $chain, TrustSettings $settings, string $url, ?int $at = null): array
+    public function checkCertificates(array $chain, TrustSettings $settings, string $url, ?int $at = null, array $unprotected = []): array
     {
         $leaf = $chain[0];
 
@@ -121,7 +122,8 @@ final readonly class ChainCheck
             foreach ($anchors as $anchor) {
                 // depth = links walked from the leaf to the anchor: the leaf itself an anchor is 0, the leaf signed by one is 1
                 if ($current->sameAs($anchor)) {
-                    $fault = self::pathFault(array_reverse(array_slice($chain, 0, $depth + 1)));
+                    $path = array_reverse(array_slice($chain, 0, $depth + 1));
+                    $fault = self::pathFault($path) ?? (new OcspCheck)->revokedCa($unprotected, $path, $at);
                     if ($fault !== null) {
                         return [new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))];
                     }
@@ -136,7 +138,9 @@ final readonly class ChainCheck
 
                         continue;
                     }
-                    $fault = self::pathFault([$anchor, ...array_reverse(array_slice($chain, 0, $depth + 1))]);
+                    // the path, then a stapled OCSP response about a CA of it (SPEC-066)
+                    $path = [$anchor, ...array_reverse(array_slice($chain, 0, $depth + 1))];
+                    $fault = self::pathFault($path) ?? (new OcspCheck)->revokedCa($unprotected, $path, $at);
                     if ($fault !== null) {
                         return [new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))];
                     }

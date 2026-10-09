@@ -278,6 +278,7 @@ final readonly class Verifier
             $this->chainOf($manifest),
             $at,
             sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label),
+            OcspCheck::assertionResponses($manifestStore),   // SPEC-066: certificate-status assertions of the store
         )];
         $checks[] = 'revocation';
 

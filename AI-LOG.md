@@ -10352,3 +10352,24 @@ README are where the disclosure lives.
   fetched specification; `c2pa-rs` 0.91.1 `crypto/ocsp/mod.rs`, `store.rs`,
   `settings/builder.rs`; `src/Trust/OcspCheck.php` and SPEC-030.
 - Decided by Maurice: write the draft; it awaits approval.
+
+## 2026-10-09 — Revocation beyond the signer's own staple (step 338)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, goedgekeurd zoals voorgesteld, push en begin met de
+  probes".
+- Produced: `fdf0dda` pushed; SPEC-066 approved, implemented, amendment 1;
+  `src/Trust/OcspCheck.php` (`revokedCa()`, `assertionResponses()`, the
+  pool), `src/Trust/ChainCheck.php`, `src/Verifier/Verifier.php`,
+  `src/Verifier/IngredientManifestCheck.php`;
+  `bin/make-revocation-variants.php` and eleven probes in
+  `tests/Fixtures/revocation/` with a README and both `c2patool` versions'
+  answers; `tests/Unit/Trust/RevocationBeyondStapleTest.php`; the
+  CHANGELOG; `docs/reading-c2pa-2.4.md`;
+  `notes/step-338-revocation-beyond-the-staple.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: every probe judged by both `c2patool` versions; the tests red
+  (5 failed), then green; the corpus (881 runs moved: the probes, and one
+  real file's codes); `bin/fuzz.php` (0 faults, none more lenient);
+  `composer check` (1008 passed).
+- Decided by Maurice: SPEC-066 approved with both proposals; amendment 1
+  to confirm.

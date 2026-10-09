@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-09                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -147,23 +147,39 @@ final readonly class OcspCheck
 }
 ```
 
+## Amendments
+
+1. **2026-10-09, step 338, measured while building** *(to be confirmed by Maurice van Loon)* —
+   For an ingredient manifest, the revocation check runs only where the
+   store carries certificate-status responses. The signer's own stapled
+   responses join them then. Without any, an ingredient's report stays as
+   it was: SPEC-030 reads the active manifest's staple only. Running it
+   for every ingredient with an `rVals` added a `signingCredential.ocsp.notRevoked`
+   delta to `c2pa-rs/ocsp.jpg` that `c2patool` 0.28.1 does not report,
+   with the same state. AC7 asks that nothing that passed change its
+   codes, so that broader reading is left for its own spec.
+
+   **Weight B: no verdict changes.**
+
 ## Open questions
 
 - 1. **The anchor.** Excluded: an anchor is trusted by configuration, and
   its revocation is the operator's to manage. Proposal: as written.
+  *Status 2026-10-09 (step 338):* decided by Maurice van Loon with the approval: as proposed.
 - 2. **A response in a certificate-status assertion about the manifest's
   own signer.** §15.9 speaks of *"other C2PA Manifests"*. `c2pa-rs` binds
   the assertion to its own manifest's signer. Matching by CertID covers
   both readings. Proposal: as written.
+  *Status 2026-10-09 (step 338):* decided by Maurice van Loon with the approval: as proposed.
 
 ## Traceability
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
+| AC1 | tests/Unit/Trust/RevocationBeyondStapleTest.php :: AC1: a revoked intermediate leaves the path untrusted / SPEC-066 | src/Trust/OcspCheck.php :: revokedCa(); src/Trust/ChainCheck.php :: checkCertificates() |
+| AC2 | tests/Unit/Trust/RevocationBeyondStapleTest.php :: AC2: a good, removed, unverifiable or foreign answer about a CA changes nothing / SPEC-066 | src/Trust/OcspCheck.php :: revokedCa(), usable() |
+| AC3 | tests/Unit/Trust/RevocationBeyondStapleTest.php :: AC3: a certificate-status assertion's revoked is a failure / SPEC-066 | src/Trust/OcspCheck.php :: assertionResponses(), check() ($extra); src/Verifier/IngredientManifestCheck.php :: manifest() |
+| AC4 | tests/Unit/Trust/RevocationBeyondStapleTest.php :: AC4: a certificate-status assertion's good is notRevoked / SPEC-066 | src/Trust/OcspCheck.php :: statusOf() ($from) |
+| AC5 | tests/Unit/Trust/RevocationBeyondStapleTest.php :: AC5: several responses: each is tried; open question 2 / SPEC-066 | src/Trust/OcspCheck.php :: check() (the pool) |
+| AC6 | tests/Unit/Trust/RevocationBeyondStapleTest.php :: AC6: both c2patool versions ignore all of it / SPEC-066 | bin/make-revocation-variants.php |
+| AC7 | the corpus before and after (notes/step-338-revocation-beyond-the-staple.md); tests/Unit/Trust/OcspCheckTest.php (SPEC-030) unchanged | src/Verifier/IngredientManifestCheck.php (amendment 1) |

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Provemark\C2paVerifier\Verifier;
 
 use Provemark\C2paVerifier\Cose\ClaimSignatureCheck;
+use Provemark\C2paVerifier\Cose\CoseException;
+use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Hash\AlternativeContentCheck;
 use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Manifest\ActionsCheck;
@@ -19,8 +21,11 @@ use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Timestamp\TimestampAssertions;
 use Provemark\C2paVerifier\Timestamp\TimestampCheck;
+use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\ChainCheck;
+use Provemark\C2paVerifier\Trust\OcspCheck;
+use Provemark\C2paVerifier\Trust\TrustException;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 
 /**
@@ -76,6 +81,7 @@ final readonly class IngredientManifestCheck
         }
         $statuses = [];
         $assertions = TimestampAssertions::collect($store);   // SPEC-064: a later manifest's token for this one
+        $responses = OcspCheck::assertionResponses($store);   // SPEC-066: certificate-status assertions of the store
         foreach ($graph->referenced as $label => $urls) {
             $ingredient = $byUrl[$urls[0]] ?? null;
             if ($ingredient === null || ! array_key_exists($label, $store->manifests)) {
@@ -83,7 +89,7 @@ final readonly class IngredientManifestCheck
             }
             $manifest = $store->manifests[$label];
             $mine = $this->hash($manifest, $ingredient);
-            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests), $assertions)];
+            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests), $assertions, $responses)];
             $statuses = [...$statuses, ...$mine];
         }
 
@@ -181,9 +187,10 @@ final readonly class IngredientManifestCheck
      * The ingredient manifest itself: everything the active manifest gets except the data hash.
      *
      * @param  array<string, list<string>>  $storeLabels  the store's claims, for SPEC-037's c2pa.redacted rule
+     * @param  list<array{0: string, 1: string}>  $responses  the store's certificate-status responses (SPEC-066)
      * @return list<ValidationStatus>
      */
-    private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings, array $storeLabels, ?TimestampAssertions $assertions = null): array
+    private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings, array $storeLabels, ?TimestampAssertions $assertions = null, array $responses = []): array
     {
         $timestamp = $this->timestamp->forManifest($manifest, $settings, $assertions ?? TimestampAssertions::none());
         $statuses = $timestamp->present ? $timestamp->statuses : [];
@@ -201,6 +208,19 @@ final readonly class IngredientManifestCheck
         $trustSettings = $settings ?? new TrustSettings([], []);
         if ($trustSettings->verifyTrust) {
             $statuses = [...$statuses, ...$this->trust->check($manifest, $trustSettings, $at)];
+        }
+        // revocation of this manifest's signer (SPEC-066): only where the store carries certificate-status
+        // responses, which may name it; its own stapled responses join them then. Without any, an ingredient's
+        // report stays as it was (SPEC-030 reads the active manifest's staple only), as c2patool reports it
+        try {
+            $cose = CoseSign1::ofManifest($manifest);
+            $chain = Certificate::chainOf($cose);
+        } catch (CoseException|TrustException) {
+            $cose = null;
+            $chain = [];
+        }
+        if ($cose !== null && $responses !== []) {
+            $statuses = [...$statuses, ...(new OcspCheck)->check($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses)];
         }
 
         $hashedUris = $this->hashedUris->check($manifest);

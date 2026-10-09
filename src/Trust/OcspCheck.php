@@ -12,6 +12,7 @@ use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cose\CoseException;
 use Provemark\C2paVerifier\Cose\OpenSsl;
 use Provemark\C2paVerifier\Cose\PublicKey;
+use Provemark\C2paVerifier\Manifest\ManifestStore;
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 
@@ -101,18 +102,24 @@ final readonly class OcspCheck
      * @param  array<int|string, mixed>  $unprotected  the COSE unprotected header
      * @param  list<Certificate>  $chain  the signer's chain, leaf first
      * @param  int|null  $at  the judged time — a trusted timestamp's, else null for now
+     * @param  list<array{0: string, 1: string}>  $extra  responses from certificate-status assertions, each with the
+     *                                                    url of the assertion that holds it (SPEC-066): offered after
+     *                                                    the stapled ones; a CertID names the certificate it is about
      * @return list<ValidationStatus>
      */
-    public function check(array $unprotected, array $chain, ?int $at, string $url): array
+    public function check(array $unprotected, array $chain, ?int $at, string $url, array $extra = []): array
     {
         $time = $at ?? time();
         $skipped = fn (string $why): array => [new ValidationStatus(StatusCode::SigningCredentialOcspSkipped, $url, 'revocation not checked: '.$why)];
 
-        $ders = $this->responseBytes($unprotected);
-        if (is_string($ders)) {
-            return $skipped($ders);
+        $stapled = $this->responseBytes($unprotected);
+        if (is_string($stapled) && $extra === []) {
+            return $skipped($stapled);
         }
-        if ($ders === []) {
+        $stapledReason = is_string($stapled) ? [$stapled] : [];
+        /** @var list<array{0: string, 1: string|null}> $pool */
+        $pool = [...array_map(static fn (string $der): array => [$der, null], is_string($stapled) ? [] : $stapled), ...array_slice($extra, 0, self::DEFAULT_MAX_RESPONSES)];
+        if ($pool === []) {
             return $skipped('the signature staples no OCSP response, and this verifier makes no network request (SPEC-014); absence is not evidence that the certificate was never revoked');
         }
         if (count($chain) < 2) {
@@ -121,9 +128,15 @@ final readonly class OcspCheck
         $leaf = $chain[0];
         $issuer = $chain[1];
 
-        $reasons = [];
+        $reasons = $stapledReason;
         $best = null;
-        foreach ($ders as $i => $der) {
+        $bestFrom = null;
+        foreach ($pool as $i => [$der, $from]) {
+            if (strlen($der) > self::DEFAULT_MAX_RESPONSE_BYTES) {
+                $reasons[] = sprintf('response %d is %d bytes, over the limit of %d', $i, strlen($der), self::DEFAULT_MAX_RESPONSE_BYTES);
+
+                continue;
+            }
             $single = $this->usable($der, $leaf, $issuer, $i);
             if (is_string($single)) {
                 $reasons[] = $single;
@@ -132,17 +145,83 @@ final readonly class OcspCheck
             }
             // a revoked answer wins over any other, whichever order they were stapled in
             if ($single['status'] === 'revoked') {
-                $best = $single;
+                [$best, $bestFrom] = [$single, $from];
                 break;
             }
-            $best ??= $single;
+            if ($best === null) {
+                [$best, $bestFrom] = [$single, $from];
+            }
         }
 
         if ($best === null) {
             return $skipped(implode('; ', $reasons));
         }
 
-        return [$this->statusOf($best, $leaf, $time, $url, $skipped)];
+        return [$this->statusOf($best, $leaf, $time, $url, $skipped, $bestFrom)];
+    }
+
+    /**
+     * The OCSP responses of every `c2pa.certificate-status` assertion the claim of any manifest in the store lists
+     * (SPEC-066; C2PA 2.4 §15.9, §18.19), each with the url of the assertion that holds it. An assertion that does
+     * not decode as `{"ocspVals": [bstr, ...]}` adds nothing: its shape is not judged (SPEC-063 amendment 2).
+     *
+     * @return list<array{0: string, 1: string}>
+     */
+    public static function assertionResponses(ManifestStore $store): array
+    {
+        $found = [];
+        foreach ($store->manifests as $manifest) {
+            foreach ([...$manifest->claim->createdAssertions, ...$manifest->claim->gatheredAssertions] as $entry) {
+                $label = substr($entry->url, strrpos($entry->url, '/') + 1);
+                if ((preg_replace('/__\d+\z/', '', $label) ?? $label) !== 'c2pa.certificate-status' || ! isset($manifest->assertions[$label])) {
+                    continue;
+                }
+                $data = $manifest->assertions[$label]->data;
+                $values = is_array($data) ? ($data['ocspVals'] ?? null) : null;
+                if (! is_array($values) || ! array_is_list($values)) {
+                    continue;
+                }
+                foreach ($values as $value) {
+                    if ($value instanceof CborBytes && $value->bytes !== '') {
+                        $found[] = [$value->bytes, sprintf('self#jumbf=/c2pa/%s/c2pa.assertions/%s', $manifest->label, $label)];
+                    }
+                }
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * Why a CA of the path was revoked at the judged time, by a stapled response about it, or null (SPEC-066; C2PA
+     * 2.4 §15.9). Every CA below the anchor is offered each stapled response, with the certificate above it as its
+     * issuer; only a response that verifies under that issuer's responder counts, as for the signer. A good,
+     * removeFromCRL or unverifiable answer adds nothing: §15.9 has no code for it, and rVals is unsigned.
+     *
+     * @param  array<int|string, mixed>  $unprotected
+     * @param  list<Certificate>  $path  the anchor first, the leaf last
+     */
+    public function revokedCa(array $unprotected, array $path, int $time): ?string
+    {
+        $ders = $this->responseBytes($unprotected);
+        if (is_string($ders) || $ders === []) {
+            return null;
+        }
+        $when = static fn (?int $t): string => $t === null ? 'an unknown time' : gmdate('Y-m-d\TH:i:s\Z', $t);
+        for ($i = 1; $i < count($path) - 1; $i++) {
+            foreach ($ders as $n => $der) {
+                $single = $this->usable($der, $path[$i], $path[$i - 1], $n);
+                if (is_array($single) && $single['status'] === 'revoked' && $single['reason'] !== self::REASON_REMOVE_FROM_CRL
+                    && ($single['revokedAt'] === null || $single['revokedAt'] <= $time)) {
+                    return sprintf(
+                        'the CA certificate %s was revoked at %s (%s), as %s answered in a stapled OCSP response on %s (C2PA 2.4 §15.9)',
+                        $path[$i]->subjectCn(), $when($single['revokedAt']), self::reasonName($single['reason'], 'unspecified'), $single['responder'], $when($single['producedAt']),
+                    );
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -417,10 +496,12 @@ final readonly class OcspCheck
      * @param  array{status: string, revokedAt: int|null, reason: int|null, thisUpdate: int, nextUpdate: int|null, responder: string, producedAt: int}  $single
      * @param  callable(string): list<ValidationStatus>  $skipped
      */
-    private function statusOf(array $single, Certificate $leaf, int $time, string $url, callable $skipped): ValidationStatus
+    private function statusOf(array $single, Certificate $leaf, int $time, string $url, callable $skipped, ?string $from = null): ValidationStatus
     {
         $when = static fn (?int $t): string => $t === null ? 'never' : gmdate('Y-m-d\TH:i:s\Z', $t);
-        $source = 'the response comes from the unsigned rVals header, so it is not evidence the certificate was never revoked';
+        $source = $from === null
+            ? 'the response comes from the unsigned rVals header, so it is not evidence the certificate was never revoked'
+            : sprintf('the response comes from the certificate-status assertion %s (C2PA 2.4 §15.9, SPEC-066)', $from);
 
         if ($single['status'] === 'revoked' && $single['reason'] !== self::REASON_REMOVE_FROM_CRL
             && ($single['revokedAt'] === null || $single['revokedAt'] <= $time)) {

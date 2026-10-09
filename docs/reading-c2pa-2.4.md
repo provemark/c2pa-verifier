@@ -49,13 +49,13 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §13, §16, §17, Appendix C | 29 | 19 | 3 | 1 | 6 | 0 |
 | §14 | 41 | 32 | 1 | 6 | 2 | 0 |
 | §15.1 to §15.6 | 33 | 13 | 6 | 4 | 10 | 0 |
-| §15.7 to §15.9 | 47 | 26 | 9 | 4 | 5 | 3 |
+| §15.7 to §15.9 | 47 | 29 | 9 | 4 | 5 | 0 |
 | §15.10 to the end of §15 | 124 | 85 | 16 | 14 | 9 | 0 |
 | §18.1 to §18.9 | 50 | 25 | 4 | 7 | 11 | 3 |
 | §18.10 to §18.16 | 58 | 21 | 11 | 14 | 12 | 0 |
 | §18.17 to the end of §18 | 34 | 6 | 2 | 14 | 11 | 0 (and 1 other) |
 | Appendix A | 50 | 23 | 2 | 7 | 13 | 5 |
-| **all** | **562** | **307** | **63** | **79** | **101** | **11** |
+| **all** | **562** | **310** | **63** | **79** | **101** | **8** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -763,11 +763,11 @@ period. `c2pa-rs` here means 0.91.1, the engine of `c2patool` 0.28.1.
 | 15.8.2 | No usable time-stamp: the signer and every CA at now; `claimSignature.insideValidity`, or reject with `claimSignature.outsideValidity`. | the signer at now, `signingCredential.expired` when outside (SPEC-017 AC8, Nikon). `insideValidity` is issued with every verified signature, an expired signer included, as `c2patool` (SPEC-039). CAs as in the row two above | **partial**: the codes by design (SPEC-039), the CAs → P05-4 | measured: `TimestampCheckTest` SPEC-017 AC8; `InsideValidityTest` AC2 |
 | 15.8.3 | A validator may check the `iat` header against the signer's validity and the time-stamp; if it does, `timeOfSigning.insideValidity` / `outsideValidity`. | `iat` is not read; `c2pa-rs` defines the two codes but issues neither | n/a (the option is not taken) | read |
 | 15.9 | For CA certificates, revocation should be determined as their AIA indicates. | no network in the verification path (`OcspCheck` class comment, SPEC-030) | by design | read |
-| 15.9 | For CA certificates, stapled OCSP responses should be used where AIA offers OCSP. | `OcspCheck::matching()` matches the leaf's `CertID` only; a response about an intermediate is skipped | **candidate** | read → P05-5 |
-| 15.9 | A CA revoked at the judged time rejects the claim with `signingCredential.untrusted`. | never determined (see above) | **candidate** | read → P05-5 |
+| 15.9 | For CA certificates, stapled OCSP responses should be used where AIA offers OCSP. | stapled responses about a CA of the path, and certificate-status assertions, read since step 338 (SPEC-066); online OCSP and AIA stay out | covered (SPEC-066) | read → P05-5 |
+| 15.9 | A CA revoked at the judged time rejects the claim with `signingCredential.untrusted`. | stapled responses about a CA of the path, and certificate-status assertions, read since step 338 (SPEC-066); online OCSP and AIA stay out | covered (SPEC-066) | read → P05-5 |
 | 15.9 | A certificate with no revocation method is treated as not revoked. | no `rVals`: one `signingCredential.ocsp.skipped`, no failure | covered | measured: `OcspCheckTest` AC5 |
 | 15.9 | Stapled `rVals` responses are decoded and validated per §15.9.1. | `OcspCheck::check()` | covered | measured: `OcspCheckTest` AC1–AC4 |
-| 15.9 | Certificate status assertions in other manifests are used; several responses, each tried until one passes. | no `c2pa.certificate-status` assertion is read anywhere in `src/` | **candidate** | read → P05-6 |
+| 15.9 | Certificate status assertions in other manifests are used; several responses, each tried until one passes. | stapled responses about a CA of the path, and certificate-status assertions, read since step 338 (SPEC-066); online OCSP and AIA stay out | covered (SPEC-066) | read → P05-6 |
 | 15.9 | Nothing in the store and online: should query the OCSP responder. | no network | by design | read |
 | 15.9.1 | Decode responses per RFC 6960 §3.2 requirements 1 to 4. | `OcspCheck::usable()`: the `CertID` names the leaf under its issuer, the signature verifies, the signer is the issuer or a responder it issued with id-kp-OCSPSigning. Not checked: the delegated responder's own validity (requirement 4, "currently authorized") | **partial** | measured: `OcspCheckTest` AC2, AC4; the rest read → P05-7 |
 | 15.9.1 | Not revoked is established only with a trusted time-stamp, `thisUpdate` not after now, the stamped time before `thisUpdate` or inside the window (`producedAt` + 24 h without `nextUpdate`), `good`, an authorized responder. | `OcspCheck::statusOf()`: `good` inside `[thisUpdate, nextUpdate]` at the judged time, which is now when there is no trusted time-stamp; no 24-hour bound without `nextUpdate`; a stamped time before `thisUpdate` is skipped | **partial** | measured: `OcspCheckTest` AC1, AC6; the rest read → P05-7 |
