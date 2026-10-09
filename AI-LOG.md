@@ -9643,3 +9643,19 @@ README are where the disclosure lives.
 - Reasoned: the shape follows SPEC-061; AC2 rests on 0.28.1 alone because
   0.27.22 does not read `trust.anchors`.
 - Decided by Maurice: push step 292; draft the spec.
+
+## 2026-10-09 — SPEC-062 approved and built (step 294)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, goedgekeurd zoals voorgesteld".
+- Produced: SPEC-062 `approved`, then `implemented` with its Traceability
+  and a status line on each open question;
+  `tests/Unit/Timestamp/TsaMatrixTest.php`; the 29 probes under
+  `tests/Fixtures/timestamp/tsa-matrix/` with a README and both `c2patool`
+  versions' answers under `tests/Fixtures/c2patool/tsa-matrix/`; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: the tests red without fixtures (5 failed); `php
+  bin/make-tsa-matrix.php <scratch> <c2patool-0.28.1> <c2patool-0.27.22>
+  tsa-matrix <29 probes>` (the same table as step 292); the tests green (5
+  passed); with SPEC-017 amendment 8 switched off in `TimestampCheck` the
+  alarm red (2 failed), the file restored; `composer check`.
+- Decided by Maurice: SPEC-062 approved, every open question as proposed.

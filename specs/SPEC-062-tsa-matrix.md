@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-09                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -162,26 +162,32 @@ const SPEC062_CODES_DIFFER = [
   leaves) were made by the same generator. Proposal: keep both. AC14 tests
   the amendment's rule, this spec watches the oracle, and the four PNGs
   cost 190 KB.
+  *Status 2026-10-09 (step 294):* decided by Maurice van Loon with the approval: as proposed.
 - Non-blocker: the expired-signer probes. Their signers live for 2.5
   minutes and the generator waits until they have expired before
   `c2patool` records its answer. Once built, they stay expired, so the
   fixtures are stable. Their tokens are stamped at build time, inside the
   TSA's validity of ten years. Proposal: accept, and name it in the README.
+  *Status 2026-10-09 (step 294):* decided by Maurice van Loon with the approval: as proposed.
 - Non-blocker: the probes' validity. As in SPEC-061, certificates valid
   "now" are made valid for ten years, so the control stops being `Trusted`
   around 2036. Proposal: accept, and name it in the README.
+  *Status 2026-10-09 (step 294):* decided by Maurice van Loon with the approval: as proposed.
 - Non-blocker: a non-critical `timeStamping` EKU (`tsa-leaf-eku-not-critical`).
   RFC 3161 §2.3 says the extension MUST be critical. 0.28.1 and this
   verifier accept it, and OpenSSL refuses it. The alarm records today's
   equality. Refusing it would be a choice to be stricter than `c2patool`
   (ADR-0005) and an amendment to SPEC-017, not part of this spec.
   Proposal: out of scope here; decide separately.
+  *Status 2026-10-09 (step 294):* decided by Maurice van Loon with the approval: as proposed.
 - Non-blocker: size. 29 PNGs of about 47 KB, 1.4 MB in all, plus 116
   small JSON files; `tests/` is not in the package.
+  *Status 2026-10-09 (step 294):* decided by Maurice van Loon with the approval: as proposed.
 - Non-blocker: re-recording. When `c2patool` moves past 0.28.1, the
   generator is run again in fixture mode, and every changed answer is named
   before the pinned version moves. A rerun makes new keys and tokens, so
   the PNGs change byte for byte while the answers should not.
+  *Status 2026-10-09 (step 294):* decided by Maurice van Loon with the approval: as proposed.
 
 ## Amendments
 
@@ -194,10 +200,10 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1 | | |
-| AC2 | | |
-| AC3 | | |
-| AC4 | | |
-| AC5 | | |
-| AC6 | | |
-| AC7 | | |
+| AC1 | tests/Unit/Timestamp/TsaMatrixTest.php :: AC1, AC2, AC3: every probe as c2patool 0.28.1 judges it, stricter only by name, never more lenient / SPEC-062 | SPEC062_STRICTER; the fixtures from bin/make-tsa-matrix.php (set tsa-matrix) |
+| AC2 | tests/Unit/Timestamp/TsaMatrixTest.php :: AC1, AC2, AC3: every probe as c2patool 0.28.1 judges it, stricter only by name, never more lenient / SPEC-062 | SPEC062_RANK; src/Timestamp/TimestampCheck.php, src/Trust/CertificateProfileCheck.php (the rules the alarm watches) |
+| AC3 | tests/Unit/Timestamp/TsaMatrixTest.php :: AC1, AC2, AC3: …; AC4, AC3: where the state agrees, the timeStamp and failure codes agree, except the named probes / SPEC-062 | SPEC062_STRICTER, SPEC062_CODES_DIFFER |
+| AC4 | tests/Unit/Timestamp/TsaMatrixTest.php :: AC4, AC3: where the state agrees, the timeStamp and failure codes agree, except the named probes / SPEC-062 | SPEC062_CODES_DIFFER |
+| AC5 | tests/Unit/Timestamp/TsaMatrixTest.php :: AC5: without settings no probe is trusted and no timestamp is trusted / SPEC-062 | src/Timestamp/TimestampCheck.php :: judge() (no TSA anchors: timeStamp.untrusted) |
+| AC6 | tests/Unit/Timestamp/TsaMatrixTest.php :: AC6: an expired signer is kept only by a trusted timestamp / SPEC-062 | src/Trust/ChainCheck.php (the signer judged at the trusted timestamp's time, ADR-0004) |
+| AC7 | tests/Unit/Timestamp/TsaMatrixTest.php :: AC7: every probe the generator defines has a fixture and four answers, and no fixture is left over / SPEC-062 | bin/make-tsa-matrix.php ($variants, fixture mode) |

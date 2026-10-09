@@ -1,0 +1,18 @@
+{
+    "verify": {
+        "verify_trust": true
+    },
+    "trust": {
+        "anchors": [
+            {
+                "trust_anchors": "-----BEGIN CERTIFICATE-----\nMIIB+DCCAZ6gAwIBAgIUK76wxZuihL3j4s6sXwJYFGWNuL8wCgYIKoZIzj0EAwIw\nWjEiMCAGA1UEAwwZVFNBIE1hdHJpeCByb290IChjb250cm9sKTEnMCUGA1UECgwe\nYzJwYS12ZXJpZmllciB0aW1lc3RhbXAgbWF0cml4MQswCQYDVQQGEwJOTDAeFw0y\nNjEwMDkwNTMwMjRaFw0zNjEwMDYwNTMwMjRaMFoxIjAgBgNVBAMMGVRTQSBNYXRy\naXggcm9vdCAoY29udHJvbCkxJzAlBgNVBAoMHmMycGEtdmVyaWZpZXIgdGltZXN0\nYW1wIG1hdHJpeDELMAkGA1UEBhMCTkwwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNC\nAAQQQLjZLEQI0GqfofGWDtEpVRwd/mvc6s25QbeIampL1wZ1ChiEf4Vxm+HYrS8c\ni9zJNFvaQ8Falvod33VFs0gzo0IwQDAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB\n/wQEAwIBBjAdBgNVHQ4EFgQUiTpAFzxFv4rKR2jSbwc2leK8svUwCgYIKoZIzj0E\nAwIDSAAwRQIhAN6zIFtLToH5k9jXaTeOv5L2+1NS3GCrGQuMRptPBgWvAiAqAahw\nV9qZPprTZEiyJyix9tzHT2ganup5k4wZ758Zpg==\n-----END CERTIFICATE-----\n",
+                "trust_kind": "manifest"
+            },
+            {
+                "trust_anchors": "-----BEGIN CERTIFICATE-----\nMIICATCCAaagAwIBAgIUXlYWqCD0+RPtP1meV0fqaZt16hMwCgYIKoZIzj0EAwIw\nXjEmMCQGA1UEAwwdVFNBIE1hdHJpeCB0c2Etcm9vdCAoY29udHJvbCkxJzAlBgNV\nBAoMHmMycGEtdmVyaWZpZXIgdGltZXN0YW1wIG1hdHJpeDELMAkGA1UEBhMCTkww\nHhcNMjYxMDA5MDUzMDI0WhcNMzYxMDA2MDUzMDI0WjBeMSYwJAYDVQQDDB1UU0Eg\nTWF0cml4IHRzYS1yb290IChjb250cm9sKTEnMCUGA1UECgweYzJwYS12ZXJpZmll\nciB0aW1lc3RhbXAgbWF0cml4MQswCQYDVQQGEwJOTDBZMBMGByqGSM49AgEGCCqG\nSM49AwEHA0IABOwovh0cu+0TuY8Jw8PArItFk38KAPFO4JOWJioqsGSwP8jXlQyW\nipAS9LlWN7fc9xKW9h1O8+fsikR6Q1eq4cajQjBAMA8GA1UdEwEB/wQFMAMBAf8w\nDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBQ6Q07sH9f3sjcjezlnb93/co9oPTAK\nBggqhkjOPQQDAgNJADBGAiEA1vHixt2gsRNQnWZWFM2++5qHttktM3Sq/O47MKq/\naxwCIQDJy+VoRT5frX4Du5noODd3X0m2hld9Eo//CRfe8Akt8w==\n-----END CERTIFICATE-----\n",
+                "trust_kind": "tsa"
+            }
+        ],
+        "trust_config": "\n//id-kp-emailProtection \n1.3.6.1.5.5.7.3.4\n//id-kp-documentSigning \n1.3.6.1.5.5.7.3.36\n//id-kp-timeStamping \n1.3.6.1.5.5.7.3.8\n//id-kp-OCSPSigning \n1.3.6.1.5.5.7.3.9"
+    }
+}

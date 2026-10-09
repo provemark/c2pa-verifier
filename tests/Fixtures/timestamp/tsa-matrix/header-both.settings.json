@@ -1,0 +1,18 @@
+{
+    "verify": {
+        "verify_trust": true
+    },
+    "trust": {
+        "anchors": [
+            {
+                "trust_anchors": "-----BEGIN CERTIFICATE-----\nMIICADCCAaagAwIBAgIUChRCYjod/c+ipJsz24wr/ezcEPYwCgYIKoZIzj0EAwIw\nXjEmMCQGA1UEAwwdVFNBIE1hdHJpeCByb290IChoZWFkZXItYm90aCkxJzAlBgNV\nBAoMHmMycGEtdmVyaWZpZXIgdGltZXN0YW1wIG1hdHJpeDELMAkGA1UEBhMCTkww\nHhcNMjYxMDA5MDUzMDI3WhcNMzYxMDA2MDUzMDI3WjBeMSYwJAYDVQQDDB1UU0Eg\nTWF0cml4IHJvb3QgKGhlYWRlci1ib3RoKTEnMCUGA1UECgweYzJwYS12ZXJpZmll\nciB0aW1lc3RhbXAgbWF0cml4MQswCQYDVQQGEwJOTDBZMBMGByqGSM49AgEGCCqG\nSM49AwEHA0IABGYruLps9pO3mWRInVFcBz33KPxTP71cwZA47YR+ldTMH/w1A0OM\nTJk9Tn8Cz/FvMqQCUXlWn2EEXFXeOWcNjiejQjBAMA8GA1UdEwEB/wQFMAMBAf8w\nDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBTbnSoVbPM2w1gJl1OONJfB34Xm8TAK\nBggqhkjOPQQDAgNIADBFAiEA4e+vRGHmdu0nCoxt4sEbwMLjpgO/Sgb4TYgegWaK\nosoCIGUn49kHinbGfn9GQAY709rO35KDwLyu7t2bVTJa9zRL\n-----END CERTIFICATE-----\n",
+                "trust_kind": "manifest"
+            },
+            {
+                "trust_anchors": "-----BEGIN CERTIFICATE-----\nMIICCTCCAa6gAwIBAgIULa9P2kvNbaha8NnVPDD1LDWBlL0wCgYIKoZIzj0EAwIw\nYjEqMCgGA1UEAwwhVFNBIE1hdHJpeCB0c2Etcm9vdCAoaGVhZGVyLWJvdGgpMScw\nJQYDVQQKDB5jMnBhLXZlcmlmaWVyIHRpbWVzdGFtcCBtYXRyaXgxCzAJBgNVBAYT\nAk5MMB4XDTI2MTAwOTA1MzAyN1oXDTM2MTAwNjA1MzAyN1owYjEqMCgGA1UEAwwh\nVFNBIE1hdHJpeCB0c2Etcm9vdCAoaGVhZGVyLWJvdGgpMScwJQYDVQQKDB5jMnBh\nLXZlcmlmaWVyIHRpbWVzdGFtcCBtYXRyaXgxCzAJBgNVBAYTAk5MMFkwEwYHKoZI\nzj0CAQYIKoZIzj0DAQcDQgAEWCj9/REJlYNqpryXA3303OBvpObx8C0C55sxQSA6\nV6y1Nssj2Dsndx5opi0eQZqbOmuagilPqpDFj3sylLRkYKNCMEAwDwYDVR0TAQH/\nBAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYEFOCyzX1DR+MKEdnFtc3I\nQ2CgXTLcMAoGCCqGSM49BAMCA0kAMEYCIQDpGvnwQ7iBPvq9lhdj4qGouQVHBAOu\nYlKbu6d8LiFhfQIhAJfwE5rl16Mz7Mms45uSrLWR/fFyF46wfs4iIjPT9ihl\n-----END CERTIFICATE-----\n",
+                "trust_kind": "tsa"
+            }
+        ],
+        "trust_config": "\n//id-kp-emailProtection \n1.3.6.1.5.5.7.3.4\n//id-kp-documentSigning \n1.3.6.1.5.5.7.3.36\n//id-kp-timeStamping \n1.3.6.1.5.5.7.3.8\n//id-kp-OCSPSigning \n1.3.6.1.5.5.7.3.9"
+    }
+}
