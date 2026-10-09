@@ -104,6 +104,20 @@ fix.
 | version 2 manifest labelled `urx:c2pa:…` | `Invalid` | `Invalid` | **`Trusted`** | L11, confirmed |
 | an action whose `when` is an integer | error | error | **`Trusted`** | P08-3, confirmed |
 
+### Measured in step 314
+
+The timestamp matrix (`bin/make-tsa-matrix.php`, scratch mode) with two
+tokens in `sigTst2`'s `tstTokens`, both from the trusted TSA:
+
+| probe | `c2patool` 0.27.22 | 0.28.1 | here | candidate |
+|---|---|---|---|---|
+| two tokens, the signer valid | `Valid`, `timeStamp.malformed` | `Trusted`, `timeStamp.malformed` | `Trusted`, `timeStamp.trusted` | — |
+| two tokens, the signer expired after it was stamped | **`Invalid`**, `timeStamp.malformed`, `signingCredential.expired` | **`Invalid`**, the same | **`Trusted`** | L3, confirmed |
+
+`c2pa-rs` drops a header with more than one token as malformed, so an
+expired signer is judged at the current time. This verifier used the
+first token's time (SPEC-017 AC8) and kept the signer `Trusted`.
+
 L13 (an empty `claim_generator_info` map) needs a claim of another
 length, so it moves to the ISOBMFF probes, where a length-changing edit is
 needed anyway. A metadata assertion *with* `@context` is `Invalid`

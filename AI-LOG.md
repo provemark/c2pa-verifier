@@ -9977,3 +9977,15 @@ README are where the disclosure lives.
   each judged by `c2patool` 0.28.1 and 0.27.22 under the throw-away root and
   by `bin/c2pa-verify`; `c2patool`'s refusals to write the shapes.
 - Decided by Maurice: none in this step.
+
+## 2026-10-09 — Two timestamp tokens, measured (step 314)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met stap 314".
+- Produced: `39be89d` pushed; the measured table in
+  `docs/reading-c2pa-2.4.md`; `notes/step-314-two-timestamp-tokens.md`; a
+  row in `NOTES.md`. The generator change (a two-token option and two
+  probes) was measured and set aside for the fix.
+- Measured: `php bin/make-tsa-matrix.php <scratch> <c2patool-0.28.1>
+  <c2patool-0.27.22>` with the two probes (the short-lived signer judged
+  after it expired); `composer check` (955 passed).
+- Decided by Maurice: none in this step.
