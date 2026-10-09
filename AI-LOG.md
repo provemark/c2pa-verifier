@@ -10240,3 +10240,20 @@ README are where the disclosure lives.
   faults; none more lenient); `composer check` (972 passed).
 - Decided by Maurice: follow the specification for another version
   (corrupted, not text).
+
+## 2026-10-09 — Appendix C row by row, and the urn:uuid label (step 330)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en bouw amendement 8", then "ok, wacht maar op de
+  meting".
+- Produced: `813e4cc` pushed; SPEC-007 amendment 8 (AC20);
+  `src/Manifest/Manifest.php` (`UUID_URN`); the probe `label-urn-uuid` in
+  `bin/make-manifest-probe-variants.php` (which now builds the
+  Sig_structure itself; all its fixtures rebuilt with new keys) and the
+  README; AC20 in `ManifestProbesTest.php`; the CHANGELOG;
+  `docs/reading-c2pa-2.4.md` (C.1 resolved, P03-4, tallies);
+  `notes/step-330-appendix-c.md`; a row in `NOTES.md`.
+- Measured: the Appendix C table extracted from the fetched HTML; the probe
+  judged by both `c2patool` versions; the test red, then green; the corpus
+  (330 runs moved, the probe and a reworded reason); `bin/fuzz.php` (0
+  faults, none more lenient); `composer check` (973 passed).
+- Decided by Maurice: accept the deprecated urn:uuid label on version 2.

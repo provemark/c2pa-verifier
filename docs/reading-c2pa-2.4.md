@@ -46,7 +46,7 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 |---|---|---|---|---|---|---|
 | §5 to §9 | 41 | 20 | 3 | 4 | 14 | 0 |
 | §10 to §11 | 55 | 37 | 6 | 4 | 8 | 0 |
-| §13, §16, §17, Appendix C | 29 | 18 | 3 | 1 | 6 | 1 |
+| §13, §16, §17, Appendix C | 29 | 19 | 3 | 1 | 6 | 0 |
 | §14 | 41 | 32 | 1 | 6 | 2 | 0 |
 | §15.1 to §15.6 | 33 | 13 | 6 | 4 | 10 | 0 |
 | §15.7 to §15.9 | 47 | 24 | 9 | 4 | 5 | 5 |
@@ -55,7 +55,7 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §18.10 to §18.16 | 58 | 20 | 11 | 14 | 12 | 1 |
 | §18.17 to the end of §18 | 34 | 4 | 2 | 14 | 11 | 2 (and 1 other) |
 | Appendix A | 50 | 23 | 2 | 7 | 13 | 5 |
-| **all** | **562** | **297** | **63** | **78** | **101** | **22** |
+| **all** | **562** | **298** | **63** | **78** | **101** | **21** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -262,7 +262,7 @@ and run through `bin/c2pa-verify` and `c2patool` 0.28.1.
 | 11.1.4.2 | Store and manifest may hold boxes of other UUIDs. | ignored | covered | measured: `JumbfParserTest` AC7 |
 | 11.1.4.2, 11.2.1 | Each manifest holds an assertion store with at least one assertion, a claim and a claim signature. | `Manifest::read()`: exactly one of each; the store's assertions are those `created_assertions` (non-empty) must resolve to | covered | measured: `ManifestStoreTest` AC9, AC10, AC12 |
 | 11.1.4.2 | A manifest's UUID is `c2ma`, `c2cm` or `c2um`. | `c2ma` and `c2um` read, `c2cm` refused (row above) | covered | measured: `JumbfParserTest` AC13 |
-| 11.1.4.2 | A manifest is labelled with a `urn:c2pa` identifier. | `Manifest::read()` checks a version 2 label against §8.1's ABNF (`claim.malformed`); version 1 labels are not checked, as in `c2pa-rs` | covered (SPEC-007 amendment 7, step 318) | read → candidate P02-3 |
+| 11.1.4.2 | A manifest is labelled with a `urn:c2pa` identifier. | `Manifest::read()` checks a version 2 label against §8.1's ABNF (`claim.malformed`); version 1 labels are not checked, and a version 2 label may also take the deprecated `urn:uuid` form (Appendix C; SPEC-007 amendment 8), as in `c2pa-rs` | covered (SPEC-007 amendment 7, step 318) | read → candidate P02-3 |
 | 11.1.4.3 | The assertion store is labelled `c2pa.assertions` with UUID `c2as`. | `Manifest::theOne()` matches UUID and label | covered | measured: `ManifestStoreTest` AC12 |
 | 11.1.4.3 | An assertion superbox holds a description and one or more content boxes; CBOR, JSON, embedded file or UUID content, though any JUMBF content type (and a Protection box) is permitted. | `Manifest::assertionData()` decodes those four kinds; any other kind, or none, is refused | by design: fail closed; c2pa-rs also refuses another assertion type (`get_assertion_from_jumbf_store`, `JumbfCreationError`) | measured: `ManifestStoreTest` AC3; the rest read |
 | 11.1.4.4 | The claim box: label `c2pa.claim.v2` (or the v1 label), UUID `c2cl`, one CBOR content box. | `Manifest::read()`, `singleCbor()` | covered | measured: `ManifestStoreTest` AC8, AC12 |
@@ -392,7 +392,7 @@ construct.
 | 16 | User interfaces follow the context; four disclosure levels. Recommendations, not mandates. | for user interfaces. Level 1 (present, and its validation status) is what the report's `validation_state` and status list give | n/a | — |
 | 17 | Threat modelling and harms assessment. | the C2PA's own process; no rule for a validator | n/a | — |
 | C.1 | A deprecated construct: generators shall not write it, validators are encouraged to accept it. | accepted: `sigTst`, claim v1, `c2pa.actions`, `c2pa.ingredient` v1/v2, `c2pa.hash.bmff.v2` (`BmffHashCheck::LABELS`). Refused: a data box as an icon (SPEC-034 amendment 1, `docs/comparison.md`), `c2pa.hash.bmff` without a version (`general.error`) | **partial** | read → P03-4 |
-| C.1 | A construct not defined in a version is ignored by validators. | not read version by version | **candidate** | read → P03-4 |
+| C.1 | A construct not defined in a version is ignored by validators. | read row by row in step 330: deprecated constructs accepted; undefined ones ignored or refused with the same verdict; the `urn:uuid` label accepted again (SPEC-007 amendment 8); undefined-for-version-1 constructs read, as in `c2pa-rs` | covered (the version 1 case by design) | read → P03-4 |
 | C.1 | A fully supported construct shall be accepted. | `c2pa.hash.boxes`, `c2pa.hash.collection.data` and `c2pa.hash.multi-asset` are refused (`general.error`): those formats are not supported (`docs/comparison.md`, `PRED-CONT-006`) | by design (formats not yet supported; fail closed) | read |
 
 ### Candidates
@@ -431,6 +431,19 @@ construct.
   (`general.error`), which fails closed. Next: read the table from the HTML
   and check each row. **Documentation only**, unless a row shows an
   undefined construct that changes a verdict here.
+  **Resolved in step 330.** The table, read from the HTML: 52 constructs.
+  Every DEPRECATED one is accepted here (`sigTst`, claim and actions
+  version 1, ingredient versions 1 and 2, `c2pa.hash.bmff.v2`, the old
+  field and action names, `specVersion`, the data boxes), except one. The
+  `urn:uuid` label of a version 2 manifest had been refused since step 318.
+  It is accepted again (SPEC-007 amendment 8), as `c2pa-rs` does. What 2.4
+  marks UNDEFINED is ignored (a Time-Stamp manifest box is skipped as
+  unknown) or refused with the same verdict (`c2pa.hash.bmff` without a
+  version: `general.error`, where ignoring it gives
+  `claim.hardBindings.missing`; TIFF box hashes fail closed). A construct
+  UNDEFINED for version 1 claims (`sigTst2`, `c2pa.hash.bmff.v3` and the
+  like in a version 1 claim) is read here, not ignored, as `c2pa-rs` reads
+  it. That is by design: no such file has been seen.
 
 ## §14 Trust Model — §14.1 to §14.4 (step 308)
 

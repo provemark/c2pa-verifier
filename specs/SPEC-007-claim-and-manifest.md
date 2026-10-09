@@ -469,6 +469,24 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
    `Invalid` to `Trusted`, each towards `c2patool` except
    `duplicate-label-middle`.**
 
+8. **2026-10-09, step 330, found by reading Appendix C (candidate C.1), decided by Maurice van Loon** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   Amendment 7 (AC18) refused a version 2 label that is not a C2PA URN,
+   reading §8.1 (*"URN identifier (urn:c2pa): REQUIRED"*). Appendix C.1
+   marks the `urn:uuid` namespace DEPRECATED from 2.1 on: *"validators are
+   encouraged to accept it"*. `c2pa-rs` accepts it on a version 2 claim
+   (`manifest_label_to_parts()` reads it as the version 1 form). Measured with
+   `manifest-probes/label-urn-uuid.png` (the label of `control.png` with
+   `urn:c2pa:` made `urn:uuid:`): `Trusted` in both `c2patool` versions,
+   `Invalid` here since step 318. A version 2 label may now also be
+   `urn:uuid:<UUID>`, optionally after a claim generator's prefix, as in
+   version 1; anything else stays `claim.malformed`.
+
+   - **AC20 (new) — the deprecated form is accepted.** `label-urn-uuid.png`
+     is `Trusted`; `label-not-urn.png` stays `Invalid` (AC18).
+
+   **Weight A: one probe moves from `Invalid` to `Trusted`, as in
+   `c2patool`; AC18 stays for every other form.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -495,3 +513,4 @@ least one test; every source file maps back to this spec.
 | AC17 | tests/Unit/Manifest/ManifestProbesTest.php :: AC17: two manifests with one label make the store malformed / SPEC-007 | src/Manifest/ManifestStore.php :: fromTree() (the label) |
 | AC18 | tests/Unit/Manifest/ManifestProbesTest.php :: AC18: a version 2 manifest whose label is not a C2PA URN is claim.malformed / SPEC-007 | src/Manifest/Manifest.php :: read(), C2PA_URN |
 | AC19 | tests/Unit/Manifest/ManifestProbesTest.php :: AC19: a version 2 claim whose claim_generator_info is an empty map is claim.malformed / SPEC-007 | src/Manifest/Claim.php :: fromMap() |
+| AC20 (amendment 8) | tests/Unit/Manifest/ManifestProbesTest.php :: AC20: a version 2 manifest labelled in the deprecated urn:uuid form is accepted / SPEC-007 | src/Manifest/Manifest.php :: read(), UUID_URN |

@@ -96,3 +96,11 @@ it('AC12: the pad of a data hash is ignored, missing or of another type, as C2PA
         ->and(spec007ProbeOracle('datahash-no-pad', '0.27.22'))->toBeNull()
         ->and(spec007ProbeOracle('datahash-pad-text', '0.28.1'))->toBe('Trusted');
 })->group('SPEC-012');
+
+it('AC20: a version 2 manifest labelled in the deprecated urn:uuid form is accepted, as c2patool does (SPEC-007 amendment 8)', function (): void {
+    expect(spec007Probe('label-urn-uuid')->result->state->value)->toBe('Trusted')
+        ->and(spec007ProbeOracle('label-urn-uuid', '0.28.1'))->toBe('Trusted')
+        ->and(spec007ProbeOracle('label-urn-uuid', '0.27.22'))->toBe('Trusted')
+        // anything else stays refused (AC18)
+        ->and(spec007Probe('label-not-urn')->result->state->value)->toBe('Invalid');
+})->group('SPEC-007');

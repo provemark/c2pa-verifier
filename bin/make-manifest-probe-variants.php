@@ -14,6 +14,7 @@ declare(strict_types=1);
  *   control                  fixture-unsigned.png signed by c2patool
  *   cgi-shorter              claim_generator_info replaced by a shorter valid map {name: p}: the edit itself
  *   cgi-empty                claim_generator_info replaced by an empty map (L13)
+ *   label-urn-uuid           the label urn:c2pa:… changed to the deprecated urn:uuid:… form (SPEC-007 amendment 8)
  *   label-not-urn            the manifest label urn:c2pa:… changed to urx:c2pa:…, the claim's signature reference too (L11)
  *   type-c2md                the manifest box's type UUID c2ma changed to c2md, which §11.2.2 says to accept (L9)
  *   datahash-no-pad          the data hash's pad key renamed paX: no pad (L2, §18.5.2)
@@ -195,7 +196,8 @@ function mqSign(string $s, string $claim, string $signature, string $key): strin
     if ($coseAt === false || substr($signature, -66, 2) !== "\x58\x40") {
         throw new RuntimeException('the COSE_Sign1 does not end in a 64-byte signature');
     }
-    file_put_contents(dirname($key).'/tbs', CoseSign1::fromBytes($signature)->sigStructure($claim));
+    // the Sig_structure built here (RFC 9052 §4.4), not through CoseSign1, which refuses some of the probes this builds
+    file_put_contents(dirname($key).'/tbs', "\x84\x6aSignature1".mqBstr(mqProtected($signature))."\x40".mqBstr($claim));
     mqRun(mqSh('openssl', 'dgst', '-sha256', '-sign', $key, '-out', dirname($key).'/sig', dirname($key).'/tbs'));
     $der = (string) file_get_contents(dirname($key).'/sig');
     $rs = '';
@@ -245,6 +247,23 @@ function mqEditAssertion(string $s, string $label, string $from, string $to, str
     $s = substr_replace($s, $newClaim, $claimAt, strlen($newClaim));
 
     return mqSign($s, $newClaim, $signature, $key);
+}
+
+/** The protected header's bytes of a COSE_Sign1: tag 18, an array of four, then a byte string. */
+function mqProtected(string $cose): string
+{
+    if (substr($cose, 0, 2) !== "\xd2\x84") {
+        throw new RuntimeException('not a tagged COSE_Sign1');
+    }
+    $head = ord($cose[2]);
+    [$length, $at] = match (true) {
+        $head >= 0x40 && $head <= 0x57 => [$head - 0x40, 3],
+        $head === 0x58 => [ord($cose[3]), 4],
+        $head === 0x59 => [bU32("\0\0".substr($cose, 3, 2), 0), 5],
+        default => throw new RuntimeException('the protected header is not a byte string'),
+    };
+
+    return substr($cose, $at, $length);
 }
 
 /** A CBOR byte string head and its bytes. */
@@ -329,6 +348,9 @@ if ($newClaim === $claim) {
     throw new RuntimeException('the claim does not name its own manifest');
 }
 file_put_contents("{$dir}/label-not-urn.png", mqChunk($png, $chunk, mqSign($renamed, $newClaim, $active->signatureBytes(), "{$keys}/leaf.key")));
+// the deprecated urn:uuid form (C2PA 2.4 Appendix C: validators are encouraged to accept it), the same length
+$uuidLabel = 'urn:uuid:'.substr($label, 9);
+file_put_contents("{$dir}/label-urn-uuid.png", mqChunk($png, $chunk, mqSign(str_replace($label, $uuidLabel, $s), str_replace($label, $uuidLabel, $claim), $active->signatureBytes(), "{$keys}/leaf.key")));
 
 // ---- the manifest box typed c2md (L9): outside the claim, so no signature changes ----
 $c2ma = hex2bin('63326d6100110010800000aa00389b71');
@@ -417,7 +439,7 @@ mqRun(mqSh($new, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m.
 mqRun(mqSh($old, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m.json", '-p', "{$dir}/cloud-hash-data.png", '-o', "{$dir}/cloud-in-ingredient-unrecorded.png", '-f'));
 
 // ---- the oracles ----
-foreach (['control', 'cgi-shorter', 'cgi-empty', 'label-not-urn', 'type-c2md', 'datahash-no-pad', 'datahash-pad-text', 'parent', 'duplicate-label-last', 'duplicate-label-middle', 'x5chain-unprotected-too', 'cloud-ok', 'cloud-hash-bytes', 'cloud-hash-data', 'cloud-size-zero', 'cloud-actions', 'cloud-no-location', 'cloud-in-ingredient', 'cloud-in-ingredient-unrecorded', 'unlisted-control', 'unlisted-metadata-no-context', 'unlisted-certificate-status-no-ocspvals', 'unlisted-soft-binding-no-blocks', 'unlisted-action-when-integer'] as $name) {
+foreach (['control', 'cgi-shorter', 'cgi-empty', 'label-not-urn', 'label-urn-uuid', 'type-c2md', 'datahash-no-pad', 'datahash-pad-text', 'parent', 'duplicate-label-last', 'duplicate-label-middle', 'x5chain-unprotected-too', 'cloud-ok', 'cloud-hash-bytes', 'cloud-hash-data', 'cloud-size-zero', 'cloud-actions', 'cloud-no-location', 'cloud-in-ingredient', 'cloud-in-ingredient-unrecorded', 'unlisted-control', 'unlisted-metadata-no-context', 'unlisted-certificate-status-no-ocspvals', 'unlisted-soft-binding-no-blocks', 'unlisted-action-when-integer'] as $name) {
     foreach (['0.28.1' => $new, '0.27.22' => $old] as $v => $tool) {
         $lines = [];
         exec(mqSh($tool, "{$dir}/{$name}.png", '--settings', "{$dir}/throw-away-root.settings.json").' 2>&1', $lines);

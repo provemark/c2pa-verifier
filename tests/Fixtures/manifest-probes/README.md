@@ -2,8 +2,8 @@
 
 Built by `bin/make-manifest-probe-variants.php <scratch> <c2patool-0.28.1>
 <c2patool-0.27.22>` on 2026-10-09 (step 318; rebuilt with the two data-hash
-probes in step 319 and the cloud-data probes in step 321 and the unlisted ones in step 322, with new
-keys each time). `c2patool` 0.28.1 signed
+probes in step 319 and the cloud-data probes in step 321 the unlisted ones in step 322 and `label-urn-uuid` in
+step 330, with new keys each time). `c2patool` 0.28.1 signed
 `fixture-unsigned.png` with a throw-away P-256 hierarchy; the keys lived in
 a scratch directory and were deleted. `throw-away-root.pem` is the public
 root, and `throw-away-root.settings.json` holds it as the legacy
@@ -20,6 +20,7 @@ the file valid.
 | `cgi-shorter.png` | `claim_generator_info` replaced by `{name: "p"}` | `Trusted` | `Trusted` | `Trusted` |
 | `cgi-empty.png` | `claim_generator_info` replaced by `{}` | error | error | `Invalid` |
 | `label-not-urn.png` | the label `urn:c2pa:…` made `urx:c2pa:…`, in the claim's signature reference too | `Invalid` | `Invalid` | `Invalid` |
+| `label-urn-uuid.png` | the label `urn:c2pa:…` made the deprecated `urn:uuid:…`, in the claim's signature reference too (SPEC-007 amendment 8) | `Trusted` | `Trusted` | `Trusted` |
 | `type-c2md.png` | the manifest box's type `c2ma` made `c2md` | `Trusted` | `Trusted` | `Trusted` |
 | `datahash-no-pad.png` | the data hash's `pad` key renamed `paX` (SPEC-012 amendment 10) | error: cannot decode | error | `Trusted` |
 | `datahash-pad-text.png` | the data hash's `pad` a text string | `Trusted` | `Trusted` | `Trusted` |

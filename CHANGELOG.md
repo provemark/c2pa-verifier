@@ -60,8 +60,10 @@ committed.
 - **Four manifest rules from C2PA 2.4 §8.1 and §11.2.2 (SPEC-007
   amendment 7).** A manifest box of type `c2md` is read as a manifest. A
   store with two manifests of one label is `claim.malformed`. A version 2
-  manifest whose label is not a C2PA URN is `claim.malformed`. So is a
-  version 2 claim whose `claim_generator_info` is an empty map.
+  manifest whose label is neither a C2PA URN nor the deprecated `urn:uuid`
+  form (Appendix C: validators are encouraged to accept it; SPEC-007
+  amendment 8) is `claim.malformed`. So is a version 2 claim whose
+  `claim_generator_info` is an empty map.
 
 ## 0.5.3 — 2026-10-09
 
