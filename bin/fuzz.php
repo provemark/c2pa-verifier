@@ -27,8 +27,11 @@ declare(strict_types=1);
  *
  * With --trust (step 295), every file is verified under trust settings, so that
  * the chain walk, the TSA's trust and an expired signer kept by a timestamp are
- * reached: each fixture beside its own <name>.settings.json, and the signed
- * fixtures and the c2pa-rs corpus under trust/full-plus-digicert-g4.settings.json.
+ * reached. Since step 303 each fixture with a manifest is paired with the first
+ * settings file that makes it Trusted unmutated: its own <name>.settings.json, one
+ * in its folder, then one of trust/. A file none makes Trusted keeps the pairing of
+ * step 295: its own settings, or trust/full-plus-digicert-g4.settings.json for the
+ * signed fixtures and the c2pa-rs corpus.
  * Each pair is verified unmutated first; a mutation that raises the state above
  * that (Invalid < Valid < Trusted) is reported as RAISED, beside the suspects.
  * Without --trust the runs are the same as before.
@@ -74,6 +77,7 @@ $trust = in_array('--trust', $paths, true);
 $paths = array_values(array_filter($paths, static fn (string $p): bool => $p !== '--trust'));
 $extensions = '{jpg,jpeg,png,gif,webp,wav,avi,mp3,flac,txt,mp4,mov,avif,heic}';   // ISOBMFF since step 299
 $pairs = null;
+$pairingSeconds = null;
 if ($paths === [] && $trust) {
     // step 295: every fixture beside its own settings, and the signed corpus under the test and DigiCert roots
     $root = dirname(__DIR__).'/tests/Fixtures';
@@ -89,6 +93,72 @@ if ($paths === [] && $trust) {
     foreach (glob($root.'/bmff-shape/*.mp4') ?: [] as $file) {
         $pairs[] = [$file, $root.'/bmff-shape/probe-root.settings.json'];   // step 299: the re-signed BMFF probes and their root
     }
+    // step 303: every fixture with a manifest under the first settings file that makes it Trusted unmutated — its
+    // own, then one in its folder, then one of trust/ — so that a mutation can start from Trusted; the pairs above
+    // remain for a file no settings file trusts
+    $fallback = [];
+    foreach ($pairs as [$file, $settingsFile]) {
+        $fallback[$file] ??= $settingsFile;
+    }
+    $loaded = [];
+    $load = static function (string $path) use (&$loaded): ?TrustSettings {
+        if (! array_key_exists($path, $loaded)) {
+            try {
+                $loaded[$path] = TrustSettings::fromJson((string) file_get_contents($path));
+            } catch (Throwable) {
+                $loaded[$path] = null;
+            }
+        }
+
+        return $loaded[$path];
+    };
+    $trustDir = glob($root.'/trust/*.settings.json') ?: [];
+    $candidates = [];
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)) as $entry) {
+        if (! $entry instanceof SplFileInfo) {
+            continue;
+        }
+        $path = $entry->getPathname();
+        if (preg_match('/\.(jpe?g|png|gif|webp|wav|avi|mp3|flac|mp4|mov|avif|heic)$/i', $path) === 1
+            || (str_ends_with($path, '.txt') && (str_contains($path, '/text/') || str_ends_with($path, '/fixture-signed.txt')))) {
+            $candidates[] = $path;
+        }
+    }
+    sort($candidates);
+    $pairingStart = microtime(true);
+    $pairs = [];
+    foreach ($candidates as $file) {
+        if (fuzzStore($file) === null) {
+            continue;
+        }
+        $own = substr($file, 0, (int) strrpos($file, '.')).'.settings.json';
+        $folder = glob(dirname($file).'/*.settings.json') ?: [];
+        sort($folder);
+        $chosen = null;
+        foreach (array_values(array_unique([...(is_file($own) ? [$own] : []), ...$folder, ...$trustDir])) as $settingsFile) {
+            $settings = $load($settingsFile);
+            $stream = $settings === null ? false : fopen($file, 'rb');
+            if ($stream === false) {
+                continue;
+            }
+            try {
+                $state = (str_ends_with($file, '.txt') ? new Verifier(text: new PlainTextManifestStoreExtractor) : new Verifier)->verify($stream, $settings)->result->state;
+            } catch (Throwable) {
+                $state = null;
+            } finally {
+                fclose($stream);
+            }
+            if ($state === ValidationState::Trusted) {
+                $chosen = $settingsFile;
+                break;
+            }
+        }
+        $chosen ??= $fallback[$file] ?? null;
+        if ($chosen !== null) {
+            $pairs[] = [$file, $chosen];
+        }
+    }
+    $pairingSeconds = microtime(true) - $pairingStart;
     usort($pairs, static fn (array $a, array $b): int => [$a[0], $a[1]] <=> [$b[0], $b[1]]);
 } elseif ($paths === []) {
     $root = dirname(__DIR__).'/tests/Fixtures';
@@ -383,7 +453,7 @@ printf(
     $rounds,
     $faults,
     $suspects,
-    $trust ? sprintf(', %d raised (unmutated: %s; %d pairs with an unprotected value, %d values split and skipped)', $raised, json_encode($baselines), $withUnprotected, $unprotectedSkipped) : '',
+    $trust ? sprintf(', %d raised (unmutated: %s; %d pairs with an unprotected value, %d values split and skipped%s)', $raised, json_encode($baselines), $withUnprotected, $unprotectedSkipped, $pairingSeconds === null ? '' : sprintf('; pairing %.0fs', $pairingSeconds)) : '',
     json_encode($states),
     $slowest,
     intdiv($peak, 1048576),

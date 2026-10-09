@@ -9793,3 +9793,20 @@ README are where the disclosure lives.
   passed); PHPStan in Docker.
 - Decided by Maurice: refuse serials that are not positive (choice A),
   not read them signed.
+
+## 2026-10-09 — Every fixture under the settings that make it Trusted (step 303)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push en begin met de fuzz-ronde op tekst, audio en GIF", then,
+  after the measured correction that those folders hold few signed files,
+  "akkoord, begin met stap 303".
+- Produced: `0a8e617` pushed; `bin/fuzz.php` pairing each fixture with the
+  settings that make it `Trusted`; `notes/step-303-fuzz-trusted-pairs.md`;
+  a row in `NOTES.md`.
+- Measured: which fixtures are `Trusted` under which settings (step 302's
+  corpus run); `php bin/fuzz.php 20261005 60 <out>` (unchanged);
+  `--trust` with seeds 20261005 × 60 (twice) and 20261009 × 200; every
+  suspect judged by `c2patool` 0.28.1 under the same settings; the two
+  lenient cases judged by 0.27.22 too and located with `openssl
+  asn1parse`; `composer check` (949 passed); PHPStan in Docker.
+- Decided by Maurice: this step instead of a round on text, audio and GIF
+  only.
