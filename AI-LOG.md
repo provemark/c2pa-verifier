@@ -9678,3 +9678,20 @@ README are where the disclosure lives.
   unprotected header is where trust can move without breaking either.
 - Decided by Maurice: the `--trust` mode as proposed; the unprotected
   header as a separate step.
+
+## 2026-10-09 — Fuzzing the COSE unprotected header (step 296)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push en werk stap 296 uit", then "akkoord".
+- Produced: `1dc0c68` pushed; `bin/fuzz.php` with the kinds `unprot1` and
+  `unprot8` under `--trust`, and their suspect rule;
+  `notes/step-296-fuzz-unprotected-header.md`; a row in `NOTES.md`.
+- Measured: `php bin/fuzz.php 20261005 60 <out>` (unchanged, 122
+  suspects); `php bin/fuzz.php 20261005 60 <out> --trust` and `php
+  bin/fuzz.php 20261009 200 <out> --trust` (0 faults, 0 raised, 90 and 337
+  suspects); every suspect judged by `c2patool` 0.28.1 with the same
+  settings on the state and the `timeStamp.*` codes (427, none more
+  lenient here); each flip located in the token with `openssl asn1parse`;
+  `composer check` (943 passed); PHPStan in Docker `php:8.3-cli`.
+- Reasoned: from step 290, why version 1 claims differ.
+- Decided by Maurice: the step as proposed; the note kept to this
+  verifier's side.

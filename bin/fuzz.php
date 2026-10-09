@@ -29,6 +29,14 @@ declare(strict_types=1);
  * Each pair is verified unmutated first; a mutation that raises the state above
  * that (Invalid < Valid < Trusted) is reported as RAISED, beside the suspects.
  * Without --trust the runs are the same as before.
+ *
+ * With --trust two more kinds (step 296), unprot1 and unprot8, flip bits only in
+ * the values of the active manifest's COSE unprotected header — the timestamp
+ * tokens, and x5chain where it is unprotected — which the claim signature does
+ * not cover. A file that stays Trusted after such a flip is often right (its
+ * signer needs no timestamp), so for these kinds a suspect is a run that still
+ * reports timeStamp.validated or timeStamp.trusted (the changed token accepted),
+ * or one that stays Valid or Trusted after a flip in an unprotected x5chain.
  * Prints one line per finding and a summary; exit code 1 on any fault.
  */
 
@@ -36,11 +44,17 @@ use Provemark\C2paVerifier\Container\AviManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\GifManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\Id3ManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
+use Provemark\C2paVerifier\Container\ManifestStoreBytes;
 use Provemark\C2paVerifier\Container\PlainTextManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WavManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
+use Provemark\C2paVerifier\Cose\CoseSign1;
+use Provemark\C2paVerifier\Jumbf\JumbfParser;
+use Provemark\C2paVerifier\Manifest\ManifestStore;
 use Provemark\C2paVerifier\Report\ValidationState;
+use Provemark\C2paVerifier\Report\ValidationStatus;
+use Provemark\C2paVerifier\Timestamp\TimestampHeader;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\Verifier;
 
@@ -98,9 +112,57 @@ $textVerifier = new Verifier(text: new PlainTextManifestStoreExtractor);   // fo
 /** @return list<array{start: int, length: int}> the manifest store's byte ranges in the file, or [] */
 function fuzzStoreRanges(string $file): array
 {
+    return fuzzStore($file)->ranges ?? [];
+}
+
+/**
+ * The values of the active manifest's unprotected header, found in the file: each timestamp token, and each
+ * x5chain certificate when the chain is unprotected (step 296). A value split across container segments is not
+ * found and counted as skipped.
+ *
+ * @return array{0: list<array{start: int, length: int, what: string}>, 1: int} the ranges, the values skipped
+ */
+function fuzzUnprotectedRanges(string $file, string $bytes): array
+{
+    try {
+        $store = fuzzStore($file);
+        if ($store === null) {
+            return [[], 0];
+        }
+        $cose = CoseSign1::ofManifest(ManifestStore::fromTree((new JumbfParser)->parse($store->bytes))->active);
+        $values = [];
+        foreach (TimestampHeader::fromUnprotected($cose->unprotected)->tokens ?? [] as $token) {
+            $values[] = ['token', $token];
+        }
+        if (! $cose->chainProtected) {
+            foreach ($cose->chain as $certificate) {
+                $values[] = ['x5chain', $certificate->bytes];
+            }
+        }
+    } catch (Throwable) {
+        return [[], 0];
+    }
+    $ranges = [];
+    $skipped = 0;
+    foreach ($values as [$what, $value]) {
+        $at = $value === '' ? false : strpos($bytes, $value);
+        if ($at === false) {
+            $skipped++;
+
+            continue;
+        }
+        $ranges[] = ['start' => $at, 'length' => strlen($value), 'what' => $what];
+    }
+
+    return [$ranges, $skipped];
+}
+
+/** The manifest store as the verifier's extractor for the format reads it, or null. */
+function fuzzStore(string $file): ?ManifestStoreBytes
+{
     $stream = fopen($file, 'rb');
     if ($stream === false) {
-        return [];
+        return null;
     }
     try {
         $head = (string) fread($stream, 12);
@@ -117,9 +179,9 @@ function fuzzStoreRanges(string $file): array
             default => null,
         };
 
-        return $store === null ? [] : $store->ranges;
+        return $store;
     } catch (Throwable) {
-        return [];
+        return null;
     } finally {
         fclose($stream);
     }
@@ -133,9 +195,10 @@ function fuzzFlip(string $byte): string
 
 /**
  * @param  list<array{start: int, length: int}>  $ranges
+ * @param  list<array{start: int, length: int, what: string}>  $unprotected
  * @return array{0: string, 1: list<int>, 2: string} the mutated bytes, the offsets touched, a reason to skip (or '')
  */
-function fuzzMutate(string $bytes, string $kind, array $ranges): array
+function fuzzMutate(string $bytes, string $kind, array $ranges, array $unprotected = []): array
 {
     $n = strlen($bytes);
     $where = [];
@@ -174,6 +237,20 @@ function fuzzMutate(string $bytes, string $kind, array $ranges): array
             $bytes = substr_replace($bytes, $block, $at, 16);
             $where[] = $at;
             break;
+        case 'unprot1':
+        case 'unprot8':
+            // flips in the unprotected header's values, which the claim signature does not cover (step 296)
+            if ($unprotected === []) {
+                return [$bytes, [], 'no unprotected value'];
+            }
+            $count = (int) substr($kind, 6);
+            for ($i = 0; $i < $count; $i++) {
+                $range = $unprotected[mt_rand(0, count($unprotected) - 1)];
+                $at = $range['start'] + mt_rand(0, max(0, $range['length'] - 1));
+                $bytes[$at] = fuzzFlip($bytes[$at]);
+                $where[] = $at;
+            }
+            break;
         case 'store8':
         case 'store64':
             // flips inside the manifest store: the parsers, not the hash
@@ -199,6 +276,11 @@ function fuzzMutate(string $bytes, string $kind, array $ranges): array
 /** @var array<string, int> $rank */
 $rank = ['Invalid' => 0, 'Valid' => 1, 'Trusted' => 2];
 $kinds = ['flip1', 'flip8', 'flip64', 'truncate', 'block', 'store8', 'store64', 'storecut'];
+if ($trust) {
+    $kinds = [...$kinds, 'unprot1', 'unprot8'];   // step 296: only with --trust, so the runs without it are as before
+}
+$withUnprotected = 0;
+$unprotectedSkipped = 0;
 $runs = 0;
 $faults = 0;
 $suspects = 0;
@@ -211,6 +293,9 @@ $start = microtime(true);
 foreach ($pairs as [$file, $settingsFile]) {
     $original = (string) file_get_contents($file);
     $ranges = fuzzStoreRanges($file);
+    [$unprotected, $skippedValues] = $trust ? fuzzUnprotectedRanges($file, $original) : [[], 0];
+    $withUnprotected += $unprotected === [] ? 0 : 1;
+    $unprotectedSkipped += $skippedValues;
     $settings = $settingsFile === null ? null : TrustSettings::fromJson((string) file_get_contents($settingsFile));
     $baseline = null;
     if ($settings !== null) {
@@ -225,7 +310,7 @@ foreach ($pairs as [$file, $settingsFile]) {
     $under = $settingsFile === null ? '' : ' under '.substr($settingsFile, strlen(dirname(__DIR__)) + 1);
     for ($round = 0; $round < $rounds; $round++) {
         $kind = $kinds[$round % count($kinds)];
-        [$mutated, $where, $skip] = fuzzMutate($original, $kind, $ranges);
+        [$mutated, $where, $skip] = fuzzMutate($original, $kind, $ranges, $unprotected);
         if ($skip !== '') {
             continue;
         }
@@ -248,6 +333,15 @@ foreach ($pairs as [$file, $settingsFile]) {
                 $target = $out.'/raised-'.$name.'.'.pathinfo($file, PATHINFO_EXTENSION);
                 file_put_contents($target, $mutated);
                 printf("RAISED  %-60s %s at %s: %s -> %s%s -> %s\n", $name, $kind, implode(',', $where), $baseline, $state->value, $under, $target);
+            } elseif (str_starts_with($kind, 'unprot')) {
+                $accepted = array_intersect(['timeStamp.validated', 'timeStamp.trusted'], array_map(static fn (ValidationStatus $s): string => $s->code->value, array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->ingredientUri === null)));
+                $chainTouched = array_filter($unprotected, static fn (array $r): bool => $r['what'] === 'x5chain' && array_filter($where, static fn (int $at): bool => $at >= $r['start'] && $at < $r['start'] + $r['length']) !== []) !== [];
+                if ($accepted !== [] || ($chainTouched && $state !== ValidationState::Invalid)) {
+                    $suspects++;
+                    $target = $out.'/suspect-'.$name.'.'.pathinfo($file, PATHINFO_EXTENSION);
+                    file_put_contents($target, $mutated);
+                    printf("SUSPECT %-60s %s at %s: %s, %s%s -> %s\n", $name, $kind, implode(',', $where), $state->value, $accepted === [] ? 'x5chain changed' : implode('+', $accepted), $under, $target);
+                }
             } elseif ($state === ValidationState::Valid || $state === ValidationState::Trusted) {
                 $suspects++;
                 $target = $out.'/suspect-'.$name.'.'.pathinfo($file, PATHINFO_EXTENSION);
@@ -275,7 +369,7 @@ printf(
     $rounds,
     $faults,
     $suspects,
-    $trust ? sprintf(', %d raised (unmutated: %s)', $raised, json_encode($baselines)) : '',
+    $trust ? sprintf(', %d raised (unmutated: %s; %d pairs with an unprotected value, %d values split and skipped)', $raised, json_encode($baselines), $withUnprotected, $unprotectedSkipped) : '',
     json_encode($states),
     $slowest,
     intdiv($peak, 1048576),
