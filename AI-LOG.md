@@ -9745,3 +9745,15 @@ README are where the disclosure lives.
   stapled OCSP response.
 - Decided by Maurice: step 298 recorded as a change, not as a security
   finding, and released with 0.5.3 (choice (a)); this step as proposed.
+
+## 2026-10-09 — A PHP notice while verifying is a fault (step 300)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met stap 300" (the order: notices as
+  faults, then measure negative serials, then the fix).
+- Produced: `e7a9824` pushed; an error handler in `bin/fuzz.php`;
+  `notes/step-300-fuzz-notices-are-faults.md`; a row in `NOTES.md`.
+- Measured: `php bin/fuzz.php 20261005 60 <out>` (1 fault, exit 1, the
+  suspects the same by name); `--trust` with seeds 20261005 × 60 and
+  20261009 × 200 (0 faults, the suspects the same by name); `composer
+  check` (945 passed); PHPStan in Docker.
+- Decided by Maurice: the three steps in this order.

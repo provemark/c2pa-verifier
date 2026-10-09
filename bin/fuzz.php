@@ -10,7 +10,8 @@ declare(strict_types=1);
  * Verifier::verify(). Two things are never allowed, whatever the input:
  *
  *   1. an exception escaping the verifier, or its report's toJson() (every
- *      fault must be a report that can be written; step 247);
+ *      fault must be a report that can be written; step 247), or a PHP
+ *      warning, notice or deprecation raised while verifying (step 300);
  *   2. a Valid or Trusted verdict on a mutated file, unless the mutation
  *      provably touched nothing the verdict covers — those few are written
  *      out so that c2patool can be asked the same question (the note).
@@ -281,6 +282,10 @@ function fuzzMutate(string $bytes, string $kind, array $ranges, array $unprotect
 
 /** @var array<string, int> $rank */
 $rank = ['Invalid' => 0, 'Valid' => 1, 'Trusted' => 2];
+// step 300: a warning, notice or deprecation is a fault too — it was a line on stderr and a run with 0 faults (step 299)
+set_error_handler(static function (int $level, string $message, string $file, int $line): never {
+    throw new ErrorException($message, 0, $level, $file, $line);
+});
 $kinds = ['flip1', 'flip8', 'flip64', 'truncate', 'block', 'store8', 'store64', 'storecut'];
 if ($trust) {
     $kinds = [...$kinds, 'unprot1', 'unprot8'];   // step 296: only with --trust, so the runs without it are as before
