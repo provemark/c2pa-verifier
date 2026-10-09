@@ -46,7 +46,7 @@ byte-identical reports except for two groups:
 The validity window decides four checks:
 - the signer's validity (C2PA 2.4 §14.5, `CertificateProfileCheck`);
 - an intermediate's validity (`ChainCheck`);
-- the TSA signer's validity at `genTime` (C2PA 2.4 §14.6, `TimestampCheck`);
+- the TSA signer's validity at `genTime` (C2PA 2.4 §15.8.2, `TimestampCheck`);
 - the same for an OCSP responder.
 
 A window shifted by up to fourteen hours makes an expired certificate valid
@@ -155,7 +155,7 @@ check, stays with OpenSSL. ADR-0003 gets an amendment that says so.
 
 - Specification: RFC 5280 §4.1.2.5 (Validity), §4.1.2.5.1 (UTCTime),
   §4.1.2.5.2 (GeneralizedTime); C2PA 2.4 §14.5 (signer certificate),
-  §14.6 (time-stamps).
+  §15.8 (time-stamps).
 - Oracle: native PHP 8.5.8 with OpenSSL 3.6.3 (`openssl_x509_parse()`),
   and `openssl x509 -noout -startdate -enddate` for AC1 to AC3. For AC5,
   `@php-wasm/node` 3.1.55 (PHP 8.3.33, OpenSSL 1.1.1t) against native.
@@ -237,6 +237,12 @@ parsed by hand. It gets one exception, named with its reason.
    measured.
 
    **Weight A: one variant goes from `Trusted` to `Invalid`.**
+
+2. **2026-10-09, step 323, editorial** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   Section numbers only: C2PA 2.4 has no §14.6. The timestamp, `sigTst2`
+   and the CounterSignature are in §10.3.2.5, their validation in §15.8,
+   and the rule that a signer is judged at a trusted timestamp's time, else
+   now, in §15.8.2. The citations are corrected; no rule changes.
 
 ## Traceability
 

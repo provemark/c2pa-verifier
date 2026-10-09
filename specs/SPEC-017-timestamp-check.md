@@ -23,7 +23,7 @@ where c2patool says `Valid` (step 37). This spec closes M6: it decides
 whether the token is a valid RFC 3161 timestamp over *this* signature,
 whether its TSA is trusted, and — only then — hands the token's time to
 SPEC-015 as the moment the signer's certificate validity is judged at
-(C2PA 2.4 §14.6.1).
+(C2PA 2.4 §15.8.2).
 
 What the check must establish, in c2pa-rs's order (`time_stamp/verify.rs`
 0.90.22, read in step 40 §4) and with §15's codes:
@@ -108,7 +108,7 @@ and is named in the drift alarms.
 - `Timestamp\TimestampResult` — `present`, `statuses`, `time` (the
   `genTime` when `validated`, for `signature_info.time`), `trusted`, and
   `trustedTime()`: the epoch SPEC-015 judges at, non-null only when
-  `validated` *and* `trusted` (§14.6.1: "a trusted timestamp").
+  `validated` *and* `trusted` (§15.8.2: "a trusted timestamp").
 - `Report\StatusCode` gains the six cases (SPEC-010 amendment):
   `timeStamp.validated` and `timeStamp.trusted` as successes,
   `timeStamp.malformed`, `.mismatch`, `.outsideValidity`, `.untrusted` as
@@ -369,8 +369,8 @@ to `tests/Support/` so both files share them.
 
 ## References
 
-- Specification: C2PA 2.4 §14.6 (time-stamps: `sigTst`/`sigTst2`, the
-  countersigned data), §14.6.1 (validity judged at a *trusted*
+- Specification: C2PA 2.4 §10.3.2.5 and §15.8 (time-stamps: `sigTst`/`sigTst2`, the
+  countersigned data), §15.8.2 (validity judged at a *trusted*
   timestamp's time, else now), §15.2.2 / §15.7 (`timeStamp.validated`,
   `.mismatch`, `.malformed`, `.outsideValidity`, `.trusted`,
   `.untrusted`; informational); RFC 3161 §2.4.2 (`TSTInfo`, "the
@@ -638,6 +638,12 @@ final readonly class TimestampCheck
 
    **Weight A: an expired signer with two tokens moves from `Trusted` to
    `Invalid`, as in `c2patool`.**
+
+10. **2026-10-09, step 323, editorial** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   Section numbers only: C2PA 2.4 has no §14.6. The timestamp, `sigTst2`
+   and the CounterSignature are in §10.3.2.5, their validation in §15.8,
+   and the rule that a signer is judged at a trusted timestamp's time, else
+   now, in §15.8.2. The citations are corrected; no rule changes.
 
 ## Traceability
 

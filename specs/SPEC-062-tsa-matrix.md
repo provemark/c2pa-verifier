@@ -130,7 +130,7 @@ will be covered by a Pest test tagged `->group('SPEC-062')`.
 
 - Specification: RFC 3161 §2.3 (the TSA certificate), §2.4.2 (the
   response); RFC 5816 (signingCertificateV2); C2PA 2.4 §14.5 (the
-  certificate profile), §14.6 (the timestamp and the CounterSignature),
+  certificate profile), §10.3.2.5 and §15.8 (the timestamp and the CounterSignature),
   §14.4 (trust lists).
 - Oracle: `c2patool` 0.28.1 (the alarm), 0.27.22 (recorded beside it);
   `openssl ts -verify` 3.6 (information).
@@ -202,6 +202,12 @@ const SPEC062_CODES_DIFFER = [
    other expired signers.
 
    **Weight C: no verdict of the existing probes moves.**
+
+2. **2026-10-09, step 323, editorial** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   Section numbers only: C2PA 2.4 has no §14.6. The timestamp, `sigTst2`
+   and the CounterSignature are in §10.3.2.5, their validation in §15.8,
+   and the rule that a signer is judged at a trusted timestamp's time, else
+   now, in §15.8.2. The citations are corrected; no rule changes.
 
 ## Traceability
 

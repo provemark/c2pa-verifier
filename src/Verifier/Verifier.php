@@ -246,7 +246,7 @@ final readonly class Verifier
         $checks[] = 'signature';
 
         // the certificate's profile, always: it is the signature's, not the operator's (SPEC-015);
-        // validity at a validated, trusted timestamp's time, else at now (C2PA 2.4 §14.6.1)
+        // validity at a validated, trusted timestamp's time, else at now (C2PA 2.4 §15.8.2)
         $at = $timestamp->trustedTime();
         $reason = match (true) {
             $at !== null => 'from the trusted timestamp',

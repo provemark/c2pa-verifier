@@ -14,7 +14,7 @@ reader or `phpseclib` is the smaller risk." Step 40 is that
 measurement (`notes/step-40-timestamp-measured.md`); this ADR rests on
 it and quotes nothing that was not measured or read there.
 
-What M6 has to do (C2PA 2.4 §14.6, §15; c2pa-rs `time_stamp/verify.rs`):
+What M6 has to do (C2PA 2.4 §10.3.2.5, §15.8; c2pa-rs `time_stamp/verify.rs`):
 
 1. take the `sigTst` (claim v1: a whole `TimeStampResp`) or `sigTst2`
    (claim v2: the `TimeStampToken`) value out of the COSE unprotected
@@ -108,7 +108,7 @@ c2pa-rs's profile check rejects.
    an `untrusted` stamp is `Trusted`). A *validated* timestamp whose TSA
    chain is trusted supplies the epoch SPEC-015 judges the signer's
    validity at; any other outcome leaves it at now, and the report
-   says which time it used. §14.6.1 asks for a *trusted* timestamp
+   says which time it used. §15.8.2 asks for a *trusted* timestamp
    before its time may be used — the letter is followed, so a
    timestamp from an unconfigured TSA does not rescue an expired
    signer. (c2patool's `Valid` on the Truepic files rests on its
@@ -172,7 +172,7 @@ c2pa-rs's profile check rejects.
   The Truepic files reach `Valid` only with Truepic's root as an
   anchor (it is inside the token; the alarm's settings file may carry
   it, since it is a public certificate); without it they stay
-  `expired` at now, correctly by §14.6.1, and the alarm names them as
+  `expired` at now, correctly by §15.8.2, and the alarm names them as
   the one place our reading is stricter than c2patool's `trusted`. A
   new named list, `_TIMESTAMP_UNTRUSTED` or similar, carries the 34
   files whose informational code differs.

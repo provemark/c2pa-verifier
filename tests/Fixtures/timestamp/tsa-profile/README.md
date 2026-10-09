@@ -6,7 +6,7 @@ tsa-leaf-ca-true tsa-leaf-sha1` on 2026-10-09 (step 290). Each PNG is
 `../../fixture-signed.png` with its version 2 claim re-signed by a
 throw-away signer and an RFC 3161 token from a throw-away timestamp
 authority (`openssl ts -reply`) in `sigTst2`, over the CounterSignature
-structure of C2PA 2.4 §14.6. The keys lived in a scratch directory while
+structure of C2PA 2.4 §10.3.2.5. The keys lived in a scratch directory while
 the script ran and were deleted. No private key is here.
 `<probe>.settings.json` holds the signer's root as a `"manifest"` entry and
 the TSA's root as a `"tsa"` entry.

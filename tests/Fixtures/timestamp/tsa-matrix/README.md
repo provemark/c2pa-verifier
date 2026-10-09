@@ -8,7 +8,7 @@ Built by `bin/make-tsa-matrix.php <scratch> <c2patool-0.28.1>
 differs. Each PNG is `../../fixture-signed.png` with its version 2 claim
 re-signed by a throw-away signer and an RFC 3161 token in `sigTst2` (or
 `sigTst`, or both, where the probe says so), over the CounterSignature
-structure of C2PA 2.4 §14.6. The tokens come from `openssl ts -reply`; the
+structure of C2PA 2.4 §10.3.2.5. The tokens come from `openssl ts -reply`; the
 EKU probes and `control-cms` were signed again by the probe's TSA
 certificate with `openssl cms -sign -cades` (step 292). The keys lived in a
 scratch directory while the script ran and were deleted. No private key is

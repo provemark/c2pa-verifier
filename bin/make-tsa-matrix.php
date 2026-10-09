@@ -9,7 +9,7 @@ declare(strict_types=1);
  * a certificate of the TSA chain, the trust settings, or the token itself. Each probe
  * is the PNG fixture's store with its claim re-signed by a throw-away signer and an
  * RFC 3161 token from `openssl ts -reply` in the unprotected header (`sigTst2`, over
- * the CounterSignature structure of C2PA 2.4 §14.6, as `TimestampCheck` builds it).
+ * the CounterSignature structure of C2PA 2.4 §10.3.2.5, as `TimestampCheck` builds it).
  * `openssl ts -reply` refuses a TSA certificate whose extended key usage is not the
  * critical timeStamping alone, so those variants (step 292) are signed another way:
  * `openssl ts -reply` makes the TSTInfo with a helper certificate for the same key and

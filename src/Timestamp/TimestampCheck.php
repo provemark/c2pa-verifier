@@ -23,7 +23,7 @@ use Provemark\C2paVerifier\Trust\TrustException;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 
 /**
- * The timestamp check (SPEC-017, C2PA 2.4 §14.6, RFC 3161): is the token in
+ * The timestamp check (SPEC-017, C2PA 2.4 §15.8, RFC 3161): is the token in
  * the sigTst / sigTst2 header a valid time-stamp over *this* signature, and
  * is its TSA trusted? Seven steps in c2pa-rs's order — parse, the signer by
  * sid, messageDigest, the CMS signature, the TSA certificate's validity at
@@ -211,7 +211,7 @@ final readonly class TimestampCheck
     /**
      * ["CounterSignature", protected, h'', payload] (RFC 9052 §4.4; c2pa-rs
      * `cose_countersign_data`): the payload is the claim bytes for `sigTst`
-     * and the signature as a CBOR byte string for `sigTst2` (C2PA 2.4 §14.6).
+     * and the signature as a CBOR byte string for `sigTst2` (C2PA 2.4 §10.3.2.5).
      */
     public static function countersignedBytes(CoseSign1 $cose, string $header, string $claimBytes): string
     {

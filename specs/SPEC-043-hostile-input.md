@@ -139,7 +139,7 @@ Measured on 2026-09-25, before any change:
 ## References
 
 - Specification: RFC 8949 §5.1 (a decoder's limits are the application's);
-  ISO/IEC 14496-12 §4.2 (box sizes); C2PA 2.4 §14.6 and §A.5 (the C2PA
+  ISO/IEC 14496-12 §4.2 (box sizes); C2PA 2.4 §10.3.2.5 and §A.5 (the C2PA
   `uuid` box, its purpose and its `merkle` data).
 - Oracle: `c2patool` 0.27.22 and 0.28.0, `--settings
   tests/Fixtures/trust/full.settings.json`, on the two files of
@@ -226,6 +226,12 @@ final class CborBudget            // mutable on purpose: shared by several decod
      own encoding stays strict, so that the fuzzer finds any other source.
 
    Approved by Maurice van Loon, 2026-10-05 (step 249).
+
+4. **2026-10-09, step 323, editorial** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   Section numbers only: C2PA 2.4 has no §14.6. The timestamp, `sigTst2`
+   and the CounterSignature are in §10.3.2.5, their validation in §15.8,
+   and the rule that a signer is judged at a trusted timestamp's time, else
+   now, in §15.8.2. The citations are corrected; no rule changes.
 
 ## Traceability
 

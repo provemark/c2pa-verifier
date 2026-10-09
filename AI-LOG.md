@@ -10133,3 +10133,18 @@ README are where the disclosure lives.
   run.
 - Decided by Maurice: the four by design, the differences named (step
   320's choice 2); amendment 1 of SPEC-063 confirmed.
+
+## 2026-10-09 — Section numbers for timestamps (step 323, C3)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met C3".
+- Produced: `48190f0` pushed; citations corrected in
+  `src/Verifier/Verifier.php`, `src/Trust/CertificateProfileCheck.php`,
+  `src/Timestamp/TimestampHeader.php`, `TimestampCheck.php`,
+  `TimestampResult.php`, `bin/make-tsa-matrix.php`, two fixture READMEs,
+  ADR-0004, `docs/comparison.md`; editorial amendments in SPEC-016, -017,
+  -043, -044 and -062; `docs/reading-c2pa-2.4.md` (C3 resolved, its
+  second half withdrawn); `notes/step-323-section-numbers.md`; a row in
+  `NOTES.md`.
+- Reasoned: the section headings of the fetched C2PA 2.4 (§10.3.2.5,
+  §15.8–§15.8.2, §14.5.1.2); `composer check` (971 passed).
+- Decided by Maurice: none beyond starting C3.

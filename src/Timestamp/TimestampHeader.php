@@ -7,7 +7,7 @@ namespace Provemark\C2paVerifier\Timestamp;
 use Provemark\C2paVerifier\Cbor\CborBytes;
 
 /**
- * The `sigTst` / `sigTst2` header of a COSE_Sign1 as C2PA 2.4 §14.6 shapes
+ * The `sigTst` / `sigTst2` header of a COSE_Sign1 as C2PA 2.4 §10.3.2.5 shapes
  * it — `{tstTokens: [{val: bstr}, …]}` — read out of the decoded unprotected
  * header (SPEC-016 AC8). Which name a claim version may carry is SPEC-017's
  * rule; here both are read, and a header carrying both is refused.

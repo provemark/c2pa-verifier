@@ -17,7 +17,7 @@
 The COSE signature's unprotected header carries, in `sigTst` (claim v1)
 or `sigTst2` (claim v2), an RFC 3161 timestamp: proof from a
 time-stamping authority that the signature existed at a moment in time
-(C2PA 2.4 §14.6). Without it a signer's certificate can only be judged
+(C2PA 2.4 §10.3.2.5). Without it a signer's certificate can only be judged
 at *now*, and every certificate that has expired since signing is
 `signingCredential.expired` — the three Truepic files of the official
 corpus, signed with one-day certificates, are `expired` here and `Valid`
@@ -284,7 +284,7 @@ scratch script did. Byte vectors for AC1–AC2 are literals in the test.
     that is CBOR text rather than bytes
   - When `Timestamp\TimestampHeader::fromUnprotected(array $header)` (the
     small reader of the CBOR shape `{tstTokens: [{val: bstr}, …]}`,
-    C2PA 2.4 §14.6) runs
+    C2PA 2.4 §15.8) runs
   - Then each is refused with `TimestampException` naming the limit or
     the field; a header with neither `sigTst` nor `sigTst2` yields
     `null` (no timestamp — our three fixtures and Nikon); a header with
@@ -347,7 +347,7 @@ scratch script did. Byte vectors for AC1–AC2 are literals in the test.
   RFC 5652 §5.1 (`SignedData`), §5.3 (`SignerInfo`), §5.4 (the `SET OF`
   re-tagging of `signedAttrs` for the signature), §11.1–11.3
   (`contentType`, `messageDigest`, `signingTime`); RFC 5280 §4.1.2.5
-  (UTCTime and GeneralizedTime rules); C2PA 2.4 §14.6 (`sigTst` /
+  (UTCTime and GeneralizedTime rules); C2PA 2.4 §10.3.2.5 (`sigTst` /
   `sigTst2`, `tstTokens`). Read 2026-09-22 (step 40).
 - Oracle: `openssl asn1parse`, `openssl ts -reply -text`, `openssl cms
   -cmsout -print`, OpenSSL 3.6.3, on the five tokens (step 40 and its
@@ -580,6 +580,12 @@ final class TimestampException extends \RuntimeException {}
    `signingCredential.ocsp.skipped`, which is what `c2patool` answers on
    the review's token. **Weight B**: a denial of service becomes a
    status. New criterion AC12.
+
+6. **2026-10-09, step 323, editorial** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   Section numbers only: C2PA 2.4 has no §14.6. The timestamp, `sigTst2`
+   and the CounterSignature are in §10.3.2.5, their validation in §15.8,
+   and the rule that a signer is judged at a trusted timestamp's time, else
+   now, in §15.8.2. The citations are corrected; no rule changes.
 
 ## Traceability
 

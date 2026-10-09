@@ -474,6 +474,10 @@ construct.
   §15.8. `docs/conformance.md` names the anchors-per-EKU rule §14.5.1.2,
   but it is §14.4.1. No behaviour depends on it; a reader following the
   reference finds nothing.
+  **Resolved, step 323:** the §14.6 citations now name §10.3.2.5, §15.8 or
+  §15.8.2, with an editorial amendment in each approved spec. The second
+  half was wrong: the sentence `docs/conformance.md` quotes is in
+  §14.5.1.2 (it points to §14.4.1 itself), so that heading stays.
 
 ## §14 Trust Model — §14.5 X.509 Certificates (step 309)
 
