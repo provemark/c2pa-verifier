@@ -9713,3 +9713,18 @@ README are where the disclosure lives.
 - Reasoned: SPEC-005 already asks for Requestable; the parser never reads
   it.
 - Decided by Maurice: steps 297 and 298 as proposed.
+
+## 2026-10-09 — Requestable enforced (SPEC-005 amendment 2, step 298)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met stap 298", then "ok, wacht maar op
+  de meting".
+- Produced: `240e3a5` pushed; SPEC-005 amendment 2, AC18 and its
+  Traceability row; two AC18 tests in `tests/Unit/Jumbf/JumbfParserTest.php`;
+  the Requestable check in `src/Jumbf/JumbfParser.php`; a CHANGELOG entry
+  under *Unreleased*; `notes/step-298-requestable.md`; a row in `NOTES.md`.
+- Measured: the AC18 tests red (2 failed), then green; every fixture (829)
+  under no settings and every settings file (142 modes), before (a
+  worktree of `240e3a5` with its own `vendor/`) and after: 0 of 117,718
+  runs moved; `bin/fuzz.php` with step 297's three seed runs, compared by
+  name; `composer check` (945 passed); PHPStan in Docker `php:8.3-cli`.
+- Decided by Maurice: the fix and amendment 2 as proposed.

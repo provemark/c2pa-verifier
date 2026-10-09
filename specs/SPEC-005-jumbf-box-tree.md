@@ -274,6 +274,16 @@ steps 02/04/06). Every offset below is measured in step 09.
   - When it runs on the three M1 stores and the Adobe store
   - Then it succeeds, and its limits are readable as 16 and 4,096
 
+- **AC18 — a description box without Requestable is an error** *(amendment 2; oracle: both `c2patool` versions refuse the file)*
+  - Given the PNG fixture's store with Requestable (toggles bit 0) cleared
+    in each description box in turn; and the signed JPEG, PNG and FLAC
+    with it cleared in the store's own description box
+  - When the parser runs; when the files are verified under
+    `trust/full.settings.json`
+  - Then the parser throws `JumbfException` naming the description box's
+    offset and that Requestable is not set; each file is `Invalid` where
+    its unchanged copy is `Trusted`
+
 ## References
 
 - Specification: C2PA 2.4 §11.1 "Use of JUMBF" — §11.1.2 Processing Rules
@@ -412,6 +422,20 @@ here, since `Jumbf` is a leaf layer and may not depend on `Container`
    C2PA 2.4 §11.2.5 deprecates and says are "not to be … read by
    manifest consumers".
 
+2. **2026-10-09, step 298, found by fuzzing with trust settings (step 297)** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   The Behavior section already said that within a C2PA manifest every
+   description box shall have Label Present and Requestable set
+   (§11.1.4.1.2), but the parser checked Label Present only. A box with
+   toggles `02` was read, so a signed file whose store, manifest,
+   assertion store, claim or signature box had Requestable cleared stayed
+   `Trusted`. Both `c2patool` versions refuse such a file ("unexpected end
+   of file"). No signed byte went unchecked: these boxes are outside the
+   claim signature and the assertion hashes. New AC18; `description()`
+   refuses a box without Requestable, as it refuses one without a label.
+
+   **Weight A: a verdict moves from `Trusted` to `Invalid` on files the
+   oracle refuses; no real file moves.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -436,3 +460,4 @@ least one test; every source file maps back to this spec.
 | AC15 | tests/Unit/Jumbf/JumbfParserTest.php :: AC15: the root must be a c2pa superbox labelled c2pa / SPEC-005 | src/Jumbf/JumbfParser.php :: parse() |
 | AC16 | tests/Unit/Jumbf/JumbfParserTest.php :: AC16: the depth limit is enforced at the level that exceeds it; AC16: the box limit is enforced at the box that exceeds it / SPEC-005 | src/Jumbf/JumbfParser.php :: superbox() (depth); src/Jumbf/JumbfWalk.php :: header() (count) |
 | AC17 | tests/Unit/Jumbf/JumbfParserTest.php :: AC17: the default limits are 16 and 4096, and sufficient for the four stores / SPEC-005 | src/Jumbf/JumbfParser.php :: DEFAULT_MAX_DEPTH, DEFAULT_MAX_BOXES, __construct() |
+| AC18 | tests/Unit/Jumbf/JumbfParserTest.php :: AC18: a description box without Requestable is an error naming the box (amendment 2); AC18: a signed file whose store box is not requestable is not trusted (amendment 2) / SPEC-005 | src/Jumbf/JumbfParser.php :: description() (`TOGGLE_REQUESTABLE`) |

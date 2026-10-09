@@ -10,6 +10,8 @@ use Provemark\C2paVerifier\Jumbf\JumbfException;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Jumbf\Superbox;
 use Provemark\C2paVerifier\Jumbf\UnknownBox;
+use Provemark\C2paVerifier\Trust\TrustSettings;
+use Provemark\C2paVerifier\Verifier\Verifier;
 
 /*
  * SPEC-005: JUMBF, the manifest store as a tree of boxes. Every offset,
@@ -345,5 +347,61 @@ it('AC17: the default limits are 16 and 4096, and sufficient for the four stores
         ->and($parser->maxBoxes)->toBe(4096);
     foreach (['fixture-signed.jpg', 'fixture-signed.png', 'fixture-signed.webp', 'public-testfiles/adobe-20220124-C.jpg'] as $fixture) {
         expect($parser->parse(spec005Store($fixture))->description->label)->toBe('c2pa', $fixture);
+    }
+})->group('SPEC-005');
+
+/**
+ * A copy of a signed fixture with Requestable cleared in the first description box (the store's), the PNG
+ * chunk's CRC recomputed so that only the toggles differ (amendment 2).
+ */
+function spec005NotRequestable(string $fixture): string
+{
+    $bytes = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/'.$fixture);
+    $at = strpos($bytes, 'jumd');
+    if ($at === false) {
+        throw new RuntimeException("no description box in {$fixture}");
+    }
+    $bytes[$at + 4 + 16] = chr(ord($bytes[$at + 4 + 16]) & ~0x01);
+    for ($o = 8; str_starts_with($bytes, "\x89PNG") && $o < strlen($bytes);) {
+        $length = (ord($bytes[$o]) << 24) | (ord($bytes[$o + 1]) << 16) | (ord($bytes[$o + 2]) << 8) | ord($bytes[$o + 3]);
+        if ($at >= $o + 8 && $at < $o + 8 + $length) {
+            $bytes = substr_replace($bytes, pack('N', crc32(substr($bytes, $o + 4, 4 + $length))), $o + 8 + $length, 4);
+        }
+        $o += 12 + $length;
+    }
+
+    return $bytes;
+}
+
+it('AC18: a description box without Requestable is an error naming the box (amendment 2)', function (): void {
+    $store = spec005Store('fixture-signed.png');
+    $boxes = 0;
+    for ($at = strpos($store, 'jumd'); $at !== false; $at = strpos($store, 'jumd', $at + 4)) {
+        $variant = $store;
+        $variant[$at + 4 + 16] = chr(ord($variant[$at + 4 + 16]) & ~0x01);
+        $offset = $at - 4;
+        expect(fn () => spec005Parse($variant))
+            ->toThrow(JumbfException::class, "offset {$offset}: Requestable is not set");
+        $boxes++;
+    }
+    expect($boxes)->toBeGreaterThan(5);
+})->group('SPEC-005');
+
+it('AC18: a signed file whose store box is not requestable is not trusted (amendment 2)', function (): void {
+    $settings = TrustSettings::fromJson((string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/trust/full.settings.json'));
+    foreach (['fixture-signed.jpg', 'fixture-signed.png', 'fixture-signed.flac'] as $fixture) {
+        $verify = static function (string $bytes) use ($settings): string {
+            $stream = fopen('php://memory', 'w+b');
+            if ($stream === false) {
+                throw new RuntimeException('no memory stream');
+            }
+            fwrite($stream, $bytes);
+            rewind($stream);
+
+            return (new Verifier)->verify($stream, $settings)->result->state->value;
+        };
+
+        expect($verify((string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/'.$fixture)))->toBe('Trusted', $fixture)
+            ->and($verify(spec005NotRequestable($fixture)))->toBe('Invalid', $fixture);
     }
 })->group('SPEC-005');

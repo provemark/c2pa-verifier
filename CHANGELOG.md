@@ -17,6 +17,13 @@ committed.
   `signingCredential.invalid`, and so does this verifier now, naming the
   timestamp authority in the explanation. Found by the timestamp matrix
   (`bin/make-tsa-matrix.php`). No file of the corpus moves.
+- **A JUMBF description box without Requestable is an error (SPEC-005
+  amendment 2).** The parser checked Label Present but not Requestable,
+  though SPEC-005 asked for both (C2PA 2.4 §11.1.4.1.2). A signed file
+  whose store, manifest, assertion store, claim or signature box had
+  Requestable cleared stayed `Trusted`; both `c2patool` versions refuse
+  such a file. No signed byte went unchecked. Found by fuzzing with trust
+  settings (`bin/fuzz.php --trust`). No file of the corpus moves.
 
 ## 0.5.2 — 2026-10-08
 

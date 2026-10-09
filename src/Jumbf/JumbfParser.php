@@ -224,6 +224,10 @@ final readonly class JumbfParser
         if (($toggles & DescriptionBox::TOGGLE_LABEL) === 0) {
             throw new JumbfException(sprintf('description box at offset %d: Label Present is not set', $offset));
         }
+        if (($toggles & DescriptionBox::TOGGLE_REQUESTABLE) === 0) {
+            // C2PA 2.4 §11.1.4.1.2: every description box in a manifest is requestable (SPEC-005 amendment 2)
+            throw new JumbfException(sprintf('description box at offset %d: Requestable is not set', $offset));
+        }
         $nul = strpos($walk->bytes(), "\0", $p);
         if ($nul === false || $nul >= $end) {
             throw new JumbfException(sprintf('description box at offset %d: label is not NUL-terminated', $offset));
