@@ -44,18 +44,18 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 
 | part | rules | covered | partial | by design | n/a | candidate |
 |---|---|---|---|---|---|---|
-| §5 to §9 | 41 | 19 | 3 | 4 | 14 | 1 |
-| §10 to §11 | 55 | 35 | 6 | 4 | 8 | 2 |
+| §5 to §9 | 41 | 20 | 3 | 4 | 14 | 0 |
+| §10 to §11 | 55 | 37 | 6 | 4 | 8 | 0 |
 | §13, §16, §17, Appendix C | 29 | 18 | 3 | 1 | 6 | 1 |
 | §14 | 41 | 29 | 3 | 6 | 2 | 1 |
-| §15.1 to §15.6 | 33 | 12 | 6 | 4 | 10 | 1 |
-| §15.7 to §15.9 | 47 | 23 | 9 | 4 | 5 | 6 |
+| §15.1 to §15.6 | 33 | 13 | 6 | 4 | 10 | 0 |
+| §15.7 to §15.9 | 47 | 24 | 9 | 4 | 5 | 5 |
 | §15.10 to the end of §15 | 124 | 81 | 16 | 13 | 9 | 5 |
-| §18.1 to §18.9 | 50 | 23 | 4 | 6 | 11 | 6 |
+| §18.1 to §18.9 | 50 | 25 | 4 | 6 | 11 | 4 |
 | §18.10 to §18.16 | 58 | 20 | 11 | 6 | 12 | 9 |
 | §18.17 to the end of §18 | 34 | 4 | 2 | 4 | 11 | 12 (and 1 other) |
 | Appendix A | 50 | 22 | 2 | 7 | 13 | 6 |
-| **all** | **562** | **286** | **65** | **59** | **101** | **50** |
+| **all** | **562** | **293** | **65** | **59** | **101** | **43** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -180,7 +180,7 @@ These five chapters are mostly about how a claim generator writes things: labels
 | 6.9 | Date/time values are CBOR tag 0 with an explicit zone; the claimed signing time is tag 1. | the verifier does not judge assertion dates | n/a (data format) | read |
 | 7 | Data boxes are deprecated in favour of embedded-data assertions; a validator should read them (§5.1). | not read: an icon naming a data box is `assertion.missing` (`IconReferenceCheck`). `c2pa-rs` accepts such an icon without a hash check (`claim.rs`, `get_databox`) | by design: SPEC-034 decision 2 | read |
 | 8.1 | The `urn:c2pa:` form: UUID v4, optional generator id of at most 32 visible characters, optional version-and-reason. | binds whoever labels a manifest. Neither this verifier nor `c2pa-rs` checks the form; the label is a JUMBF label (`JumbfParser::LABEL_FORBIDDEN`) | n/a (generator) | read |
-| 8.1 | A manifest is uniquely identified by its label. | `ManifestStore::fromTree()` keys manifests by label; a second manifest with the same label replaces the first in the map but keeps the first's position, so the active manifest is not the last box in the store | **candidate** → P01-1 | measured: a probe appending a copy of the first manifest to `m7-absence/two-manifests.bin` (scratch script, `ManifestStore::fromTree()`): the active label stays `…c5d0`, though the last box is `…c5d1` |
+| 8.1 | A manifest is uniquely identified by its label. | until step 318 a second manifest with the same label replaced the first in the map but kept its position; `ManifestStore::fromTree()` now refuses a store with two manifests of one label (`claim.malformed`) | covered (SPEC-007 amendment 7, step 318) | measured: a probe appending a copy of the first manifest to `m7-absence/two-manifests.bin` (scratch script, `ManifestStore::fromTree()`): the active label stays `…c5d0`, though the last box is `…c5d1` |
 | 8.2, 8.3 | Re-labelling a conflicting manifest (`:n_1`); identifiers for assets without a manifest. | — | n/a (generator) | read |
 | 8.4.1 | References into the manifest are JUMBF URIs (ISO 19566-5, C.2). | `Manifest::resolve()`: `self#jumbf=` only, each segment a superbox label; anything else → `assertion.missing` | covered | measured: `ManifestStoreTest` "AC4: URIs resolve to boxes, relative and absolute", AC10 |
 | 8.4.1 | A URI to a compressed manifest leaves out the `brob` and `c2cm` labels. | compressed manifests are refused | n/a (refused) | measured: `JumbfParserTest` AC13 |
@@ -262,14 +262,14 @@ and run through `bin/c2pa-verify` and `c2patool` 0.28.1.
 | 11.1.4.2 | Store and manifest may hold boxes of other UUIDs. | ignored | covered | measured: `JumbfParserTest` AC7 |
 | 11.1.4.2, 11.2.1 | Each manifest holds an assertion store with at least one assertion, a claim and a claim signature. | `Manifest::read()`: exactly one of each; the store's assertions are those `created_assertions` (non-empty) must resolve to | covered | measured: `ManifestStoreTest` AC9, AC10, AC12 |
 | 11.1.4.2 | A manifest's UUID is `c2ma`, `c2cm` or `c2um`. | `c2ma` and `c2um` read, `c2cm` refused (row above) | covered | measured: `JumbfParserTest` AC13 |
-| 11.1.4.2 | A manifest is labelled with a `urn:c2pa` identifier. | not checked; any permitted label is accepted | **candidate** | read → candidate P02-3 |
+| 11.1.4.2 | A manifest is labelled with a `urn:c2pa` identifier. | `Manifest::read()` checks a version 2 label against §8.1's ABNF (`claim.malformed`); version 1 labels are not checked, as in `c2pa-rs` | covered (SPEC-007 amendment 7, step 318) | read → candidate P02-3 |
 | 11.1.4.3 | The assertion store is labelled `c2pa.assertions` with UUID `c2as`. | `Manifest::theOne()` matches UUID and label | covered | measured: `ManifestStoreTest` AC12 |
 | 11.1.4.3 | An assertion superbox holds a description and one or more content boxes; CBOR, JSON, embedded file or UUID content, though any JUMBF content type (and a Protection box) is permitted. | `Manifest::assertionData()` decodes those four kinds; any other kind, or none, is refused | by design: fail closed; c2pa-rs also refuses another assertion type (`get_assertion_from_jumbf_store`, `JumbfCreationError`) | measured: `ManifestStoreTest` AC3; the rest read |
 | 11.1.4.4 | The claim box: label `c2pa.claim.v2` (or the v1 label), UUID `c2cl`, one CBOR content box. | `Manifest::read()`, `singleCbor()` | covered | measured: `ManifestStoreTest` AC8, AC12 |
 | 11.1.4.4 | The claim signature box: label `c2pa.signature`, UUID `c2cs`, one CBOR content box. | `Manifest::theOne()`, `singleCbor()` (`claim.signature.missing`) | covered | read |
 | 11.1.4.6 | Historical `c2pa.databoxes` store (`c2db`). | not walked (unknown UUID) | n/a (deprecated) | read |
 | 11.2.2 | A standard manifest has exactly one hard binding. | `Verifier::check()`: two or more (any kind, any instance label) is `assertion.multipleHardBindings`; none is `claim.hardBindings.missing`. A standard manifest without its own binding follows `parentOf` to its parent's, as c2pa-rs (SPEC-022 amendment 6) | **partial** | measured: `DataHashCheckTest` AC8, AC11, `VerifierTest` AC15, `UpdateManifestTest` AC10 → candidate P02-4 |
-| 11.2.2 | Consumers accept standard manifests with the `c2md` UUID. | `c2md` is not in `JumbfParser::KNOWN_SUPERBOXES`, so it is an `UnknownBox` and `ManifestStore::fromTree()` skips it | **candidate** | measured: probe (see P02-1) |
+| 11.2.2 | Consumers accept standard manifests with the `c2md` UUID. | `JumbfParser::UUID_MANIFEST_C2MD` is read as a manifest by `ManifestStore::fromTree()` | covered (SPEC-007 amendment 7, step 318) | measured: probe (see P02-1) |
 | 11.2.3 | An update manifest carries no hard binding and no `c2pa.hash.multi-asset`. | `UpdateManifestCheck::rules()`: any `c2pa.hash.*` label is `manifest.update.invalid` | covered (stricter than `c2patool`, whose rule cannot fire: SPEC-022 amendment 2) | measured: `UpdateManifestTest` AC4 |
 | 11.2.3 | Its actions are only `c2pa.edited.metadata`, `c2pa.opened`, `c2pa.published`, `c2pa.redacted`. | `UpdateManifestCheck::rules()` | covered | measured: `UpdateManifestTest` AC4 |
 | 11.2.3 | It carries no thumbnail assertion. | `UpdateManifestCheck::rules()`: any `c2pa.thumbnail.claim*` label | covered | read → candidate P02-7 |
@@ -571,7 +571,7 @@ Link header) get one row each. `c2pa-rs` means 0.91.1, read in its source.
 | 15.4.3 | A `hashed_ext_uri` uses its own `alg`; without one, `algorithm.unsupported`. | `ExternalReferenceCheck::fault()`: a `hash` without `alg` is `assertion.external-reference.malformed`, a failure under another code. Nothing is fetched, so the `alg` is never used | **partial** | measured: `AssertionRulesTest` AC5 (`reference-hash-without-alg`) → P04-5 |
 | 15.4.4 | The algorithm must be on §13.1's allowed or deprecated list, else `algorithm.unsupported`. | data hash and hashed URIs: `algorithm.unsupported`. BMFF assertion and merkle map: refused as `assertion.bmffHash.mismatch` (`BmffHashCheck::check()` catches the `HashException`) | **partial** | measured: `DataHashCheckTest` AC7, `HashedUriCheckTest` AC7, `BmffHashCheckTest` AC6 → P04-5 |
 | 15.4.4 | A deprecated algorithm earns `algorithm.deprecated` (informational). | 2.4's deprecated list is empty (§13.1, pack p03), so there is nothing to report | n/a | read |
-| 15.5.1 | The last manifest superbox in the store is the active manifest. | `ManifestStore::fromTree()` keys the manifests by label and takes `array_key_last()`. With a label repeated, a later box replaces the earlier one *in its old position*: in a store `[X, Y, X']` the active manifest is `Y`. `c2pa-rs` takes `X'` | **candidate** | measured: probe (store `[X, Y, X']` from `fixture-signed.png`, `ManifestStore::fromTree()`: active `Y`); the same on `fixture-signed.mp4`, `c2patool` 0.28.1 names `X'` active → P04-1 |
+| 15.5.1 | The last manifest superbox in the store is the active manifest. | `ManifestStore::fromTree()` takes the last box; a repeated label is refused (`claim.malformed`), so no earlier box can stand in for a later one | covered (SPEC-007 amendment 7, step 318) | measured: probe (store `[X, Y, X']` from `fixture-signed.png`, `ManifestStore::fromTree()`: active `Y`); the same on `fixture-signed.mp4`, `c2patool` 0.28.1 names `X'` active → P04-1 |
 | 15.5.2.1 | The validator finds the store embedded at the standard place for the format. | one extractor per format (`Verifier::verify()`, step 2) | covered | measured: each extractor's AC1, e.g. `JpegManifestStoreExtractorTest` AC1 (byte-exact) |
 | 15.5.2.1 | Without an embedded store, an asset fetched over HTTP may be checked for a Link header. | no HTTP: the verifier reads a stream | n/a | — |
 | 15.5.2.1 | Several embedded stores are all invalid; the validation should act as if none was found. | every extractor refuses a second store (`general.error`, `Invalid`). That is fail-closed, not "no manifest" | covered | measured: `JpegManifestStoreExtractorTest` AC11, `PngManifestStoreExtractorTest` AC5, `WebpManifestStoreExtractorTest` AC7, `WavManifestStoreExtractorTest` AC6, `Id3ManifestStoreExtractorTest` AC6, `IsobmffManifestStoreExtractorTest` AC4, `GifTest` AC4, `PlainTextTest` AC5 |
@@ -719,7 +719,7 @@ period. `c2pa-rs` here means 0.91.1, the engine of `c2patool` 0.28.1.
 | 15.7 | No chain: `signingCredential.untrusted`, the claim rejected; else `signingCredential.trusted`. | both codes, verbatim. The rejection is not a state of its own: untrusted leaves the file `Valid`, as `c2patool` (§14.3.2 row) | covered; the state by design | measured: `ChainCheckTest` AC2 ("untrusted, and the state is Valid") |
 | 15.7 | Verify the signature per §13.2: failure `claimSignature.mismatch`, success `claimSignature.validated`. | `ClaimSignatureCheck::checkBytes()` | covered | measured: `SignatureVerifierTest` AC2, AC3 |
 | 15.7 | Headers are the union of both buckets unless §13.2 or §14.5 says otherwise. | `alg` protected (`CoseSign1`; `CoseSign1Test` AC9, SPEC-008); `x5chain` per §14.5 (SPEC-047); `sigTst`, `sigTst2`, `rVals` read from the unprotected bucket, where §10.3.2.5 and §14.5 place them (`TimestampHeader::fromUnprotected()`, `OcspCheck::responseBytes()`), as `c2pa-rs` | covered | read |
-| 15.8.1.1 | More than one token in `tstTokens`: `timeStamp.malformed`, and the time-stamps are ignored. | `TimestampCheck::checkHeader()` judges the first token and only counts the rest (SPEC-017 AC8); nine or more are malformed (`TimestampHeader::DEFAULT_MAX_TOKENS`) | **candidate** | measured: `TimestampCheckTest` "SPEC-017 AC8: one token is judged; a doubled header judges the first only" → P05-1 |
+| 15.8.1.1 | More than one token in `tstTokens`: `timeStamp.malformed`, and the time-stamps are ignored. | `TimestampCheck::checkHeader()`: more than one token is `timeStamp.malformed` and gives no time | covered (SPEC-017 amendment 9, step 316) | measured: `TimestampCheckTest` "SPEC-017 AC8: one token is judged; a doubled header judges the first only" → P05-1 |
 | 15.8.1.1 | `sigTst`: the value is a `TimeStampResp`; a status other than 0 or 1 is `timeStamp.malformed` and ignored. | `TimeStampToken::status()` refuses, `checkHeader()` turns it into `timeStamp.malformed` | covered | measured: `TimeStampTokenTest` SPEC-016 AC6 (status 1 accepted, status 2 refused) |
 | 15.8.1.1 | `sigTst`: take the `timeStampToken` from the response. | `TimeStampToken::fromHeaderValue()` | covered | measured: `TimeStampTokenTest` SPEC-016 AC6 (both wrappers) |
 | 15.8.1.1 | `sigTst2`: the value is a bare `TimeStampToken`. | the same reader; either shape is read from either header, told apart by the first child | covered | measured: the same test |
@@ -1131,7 +1131,7 @@ binding and is not read. `c2pa-rs` 0.91.1 was read beside it
 | 18.5.1 | Consumers ignore a deprecated `url`, which still counts in the assertion's hashed URI. | `DataHashCheck` never reads `url`; `HashedUriCheck` hashes the whole assertion box | covered by construction | read |
 | 18.5.1 | The data hash's label is `c2pa.hash.data`. | `HardBindings` (instances `__n` by base label, SPEC-012 amendment 9) | covered | measured: `DataHashCheckTest` AC11 |
 | 18.5.1, 18.6.1, 18.7.1 | A data, BMFF or box hash is not in an external reference assertion. | `ExternalReferenceCheck::FORBIDDEN_LABELS` → `assertion.external-reference.malformed` (SPEC-032) | covered | measured: `AssertionRulesTest` AC4 |
-| 18.5.1, 18.6.1, 18.7.1 | ... nor in a cloud data assertion. | `c2pa.cloud-data` is not read anywhere in `src/`; only its hashed URI is checked | **candidate** | read: `grep -i cloud src` finds only the external-reference list; → P07-3 |
+| 18.5.1, 18.6.1, 18.7.1 | ... nor in a cloud data assertion. | `CloudDataCheck` refuses a hard binding as the label of cloud data (`assertion.cloud-data.hardBinding`) | covered (SPEC-063, step 321) | read: `grep -i cloud src` finds only the external-reference list; → P07-3 |
 | 18.5.1 | A data hash is not used with a compressed manifest. | compressed manifests (`c2cm`) and boxes (`brob`) are refused before any assertion is read | covered by construction | measured: `JumbfParserTest` AC13 |
 | 18.5.2 | `start` and `length` are written as short as possible, or as 32-bit placeholders. | the decoder reads either form | n/a (writer guidance) | read |
 | 18.5.2 | `pad` is present and zero-filled; `pad2`, when present, is zero-filled. | `DataHashCheck` reads past both and does not require `pad`. `c2pa-rs` requires `pad` (its `DataHash` has no serde default) but does not check the zeros | **by design** (§15.12.1.1: the validator ignores `pad` and `pad2`; SPEC-012 amendment 10) | read: `DataHashCheck::check()`, SPEC-012 *Behavior* 2 (`name` and `pad` are read past); `data_hash.rs`; → P07-1 |
@@ -1143,7 +1143,7 @@ binding and is not read. `c2pa-rs` 0.91.1 was read beside it
 | 18.6.1 | Validators ignore a `c2pa.hash.bmff` (no version), as if absent. | not ignored: alone it gets `general.error` (verdict `Invalid`, as the spec's `claim.hardBindings.missing` would be); beside a v3 it counts as a second hard binding. `c2pa-rs` counts it and verifies it as version 1 | partial | read: `HardBindings::FAMILIES`, `DataHashCheck::check()`; `labels.rs` `is_hard_binding_label`; → P07-4 |
 | 18.6.1 | Consumers ignore a deprecated `url`, which still counts in the hashed URI. | `BmffHashCheck` never reads `url` | covered by construction | read |
 | 18.6.2 | The BMFF hash's `alg`, when present, is an allowed algorithm and is the one used; also in a merkle map. | `BmffHashCheck::assertionOf()`, `merkleMapOf()`, `digest()` (SPEC-051) | covered | measured: `MerkleHashAlgorithmTest` AC1 to AC4 |
-| 18.6.2 | Without `alg`, the claim's `alg` decides. | `assertionOf()` falls back to `sha256`, never to the claim's `alg`. `c2pa-rs` uses the assertion's, else the claim's, else `sha256` | **candidate** | read: `BmffHashCheck::assertionOf()`; `bmff_hash.rs` `verify_stream_hash_with_progress`; → P07-2 |
+| 18.6.2 | Without `alg`, the claim's `alg` decides. | `assertionOf()` takes the assertion's `alg`, else the claim's, else `sha256`, as `c2pa-rs` does | covered (SPEC-027 amendment 8, step 317) | read: `BmffHashCheck::assertionOf()`; `bmff_hash.rs` `verify_stream_hash_with_progress`; → P07-2 |
 | 18.6.2 | All bytes are hashed except boxes matching an exclusion; a box included or excluded whole carries its header with it. | `BmffHashCheck::plan()`, `withTail()` | covered | measured: `BmffHashCheckTest` AC1, AC2, AC8 |
 | 18.6.2 | `subset` offsets count from the box start, header included; subsets are ordered by offset and do not overlap. | `ranges()`; `shapeFault()` → `assertion.bmffHash.malformed` (SPEC-038) | covered | measured: `BmffShapeTest` AC2, `BmffV2ExclusionsTest` AC4 |
 | 18.6.2 | v2 and v3: each root box not wholly excluded is hashed as its 8-byte offset followed by its data. | `plan()` markers (SPEC-027, SPEC-038) | covered | measured: `BmffHashCheckTest` AC3, `BmffShapeTest` AC3 |

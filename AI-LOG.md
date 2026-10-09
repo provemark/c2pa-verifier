@@ -10162,3 +10162,17 @@ README are where the disclosure lives.
   suspect judged by `c2patool` 0.28.1 (none more lenient); `composer check`
   (972 passed).
 - Decided by Maurice: adopt C1, stricter than `c2patool`.
+
+## 2026-10-09 — The reading document caught up (step 325)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met punt 1 tot en met 3" (1: correct the
+  reading document; 2: C4, C6, C7; 3: the shape rules of §18 and two small
+  rows).
+- Produced: `9819b99` pushed; `docs/reading-c2pa-2.4.md` (seven rows,
+  tallies); `notes/step-325-reading-document-caught-up.md`; a row in
+  `NOTES.md`.
+- Reasoned: each row against the step that closed it; the tallies summed
+  per section. Measured (step 324's session): C4, C4 with the anchor, C6
+  and C7 as switches in a scratch copy of `src/`, over the corpus under
+  every settings file — no real file moves under any of them.
+- Decided by Maurice: the overview's points 1 to 3.
