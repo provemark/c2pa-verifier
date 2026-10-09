@@ -45,6 +45,7 @@ declare(strict_types=1);
 use Provemark\C2paVerifier\Container\AviManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\GifManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\Id3ManifestStoreExtractor;
+use Provemark\C2paVerifier\Container\IsobmffManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\ManifestStoreBytes;
 use Provemark\C2paVerifier\Container\PlainTextManifestStoreExtractor;
@@ -70,7 +71,7 @@ $out = $argv[3] ?? sys_get_temp_dir().'/c2pa-fuzz';
 $paths = array_slice($argv, 4);
 $trust = in_array('--trust', $paths, true);
 $paths = array_values(array_filter($paths, static fn (string $p): bool => $p !== '--trust'));
-$extensions = '{jpg,jpeg,png,gif,webp,wav,avi,mp3,flac,txt}';
+$extensions = '{jpg,jpeg,png,gif,webp,wav,avi,mp3,flac,txt,mp4,mov,avif,heic}';   // ISOBMFF since step 299
 $pairs = null;
 if ($paths === [] && $trust) {
     // step 295: every fixture beside its own settings, and the signed corpus under the test and DigiCert roots
@@ -84,10 +85,13 @@ if ($paths === [] && $trust) {
     foreach (array_merge(glob($root.'/fixture-signed.'.$extensions, GLOB_BRACE) ?: [], glob($root.'/c2pa-rs/*.'.$extensions, GLOB_BRACE) ?: []) as $file) {
         $pairs[] = [$file, $root.'/trust/full-plus-digicert-g4.settings.json'];
     }
+    foreach (glob($root.'/bmff-shape/*.mp4') ?: [] as $file) {
+        $pairs[] = [$file, $root.'/bmff-shape/probe-root.settings.json'];   // step 299: the re-signed BMFF probes and their root
+    }
     usort($pairs, static fn (array $a, array $b): int => [$a[0], $a[1]] <=> [$b[0], $b[1]]);
 } elseif ($paths === []) {
     $root = dirname(__DIR__).'/tests/Fixtures';
-    $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp', $root.'/fixture-signed.mp4', $root.'/fixture-signed.wav', $root.'/wav', $root.'/wav-writers', $root.'/fixture-signed.mp3', $root.'/mp3', $root.'/fixture-signed.flac', $root.'/flac', $root.'/fixture-signed.avi', $root.'/avi', $root.'/fixture-signed.gif', $root.'/gif', $root.'/fixture-signed.txt', $root.'/text'];   // MP4 and WAV since step 213, MP3 228, FLAC 237, AVI 241, GIF 259, plain text 268
+    $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp', $root.'/fixture-signed.mp4', $root.'/fixture-signed.wav', $root.'/wav', $root.'/wav-writers', $root.'/fixture-signed.mp3', $root.'/mp3', $root.'/fixture-signed.flac', $root.'/flac', $root.'/fixture-signed.avi', $root.'/avi', $root.'/fixture-signed.gif', $root.'/gif', $root.'/fixture-signed.txt', $root.'/text', $root.'/fixture-signed.mov', $root.'/fixture-signed.avif', $root.'/fixture-signed.heic', $root.'/isobmff', $root.'/bmff', $root.'/bmff-shape', $root.'/bmff-tail', $root.'/bmff-fragmented', $root.'/bmff-fragmented/broken'];   // MP4 and WAV since step 213, MP3 228, FLAC 237, AVI 241, GIF 259, plain text 268, the ISOBMFF sets 299
 }
 $files = [];
 foreach ($paths as $path) {
@@ -176,6 +180,7 @@ function fuzzStore(string $file): ?ManifestStoreBytes
             substr($head, 0, 4) === 'RIFF' && substr($head, 8, 4) === 'WAVE' => (new WavManifestStoreExtractor)->extract($stream),   // step 212
             substr($head, 0, 4) === 'RIFF' && substr($head, 8, 4) === 'AVI ' => (new AviManifestStoreExtractor)->extract($stream),   // step 241
             str_starts_with($head, 'ID3') => (new Id3ManifestStoreExtractor)->extract($stream),   // step 228
+            substr($head, 4, 4) === 'ftyp' => (new IsobmffManifestStoreExtractor)->extract($stream),   // step 299, as FormatDetector (SPEC-026)
             substr($head, 0, 4) === 'RIFF' => (new WebpManifestStoreExtractor)->extract($stream),
             default => null,
         };

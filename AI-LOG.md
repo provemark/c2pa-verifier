@@ -9728,3 +9728,20 @@ README are where the disclosure lives.
   runs moved; `bin/fuzz.php` with step 297's three seed runs, compared by
   name; `composer check` (945 passed); PHPStan in Docker `php:8.3-cli`.
 - Decided by Maurice: the fix and amendment 2 as proposed.
+
+## 2026-10-09 — ISOBMFF in the fuzzer (step 299)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push, (a), en begin met stap 299", then "ok, wacht maar op de
+  meting".
+- Produced: `5082d13` pushed; `bin/fuzz.php` with the ISOBMFF extensions,
+  the `ftyp` branch and the ISOBMFF sets; `notes/step-299-fuzz-isobmff.md`;
+  a row in `NOTES.md`.
+- Measured: `php bin/fuzz.php 20261005 60 <out>` (238 suspects, judged by
+  `c2patool` 0.28.1 and 0.27.22); `--trust` with seeds 20261005 × 60 and
+  20261009 × 200 (judged by 0.28.1 under the same settings, none more
+  lenient here); the deprecation traced to `Certificate::__construct()`
+  with an error handler; `composer check` (945 passed); PHPStan in Docker.
+- Reasoned: from `OcspCheck::matching()`, what a wrong serial does to a
+  stapled OCSP response.
+- Decided by Maurice: step 298 recorded as a change, not as a security
+  finding, and released with 0.5.3 (choice (a)); this step as proposed.
