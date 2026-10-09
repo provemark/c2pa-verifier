@@ -83,13 +83,21 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.5.3`**, still a `0.x` on purpose. `^0.5` receives
-every 0.5.x fix, and a change that breaks the API below will be `0.6.0`.
+The current tag is **`v0.6.0`**, still a `0.x` on purpose. `^0.6` receives
+every 0.6.x fix. `0.6.0` follows the whole of C2PA 2.4, read rule by rule
+(`docs/reading-c2pa-2.4.md`), and adds nine status codes to `StatusCode`
+for rules it now checks: cloud data, the time-stamp assertion, the original
+preservation image, and the text wrapper. It also checks the revocation of
+a CA and certificate-status assertions. Where the specification is
+stricter than `c2patool`, it follows the specification (see
+[`CHANGELOG.md`](CHANGELOG.md) and [`docs/comparison.md`](docs/comparison.md)).
 `0.5.1` and `0.5.2` are security releases: a trust anchor outside its own
 validity period, and a certificate authority without keyUsage, no longer
-vouch for a signer. `0.5.3` refuses four kinds of certificate or manifest
-box that `0.5.2` accepted, among them a leaf signed with RSASSA-PSS over a
-hash C2PA does not allow (see [`CHANGELOG.md`](CHANGELOG.md)).
+vouch for a signer. A caller on `^0.5` keeps 0.5.3 until it asks for
+`^0.6`.
+Coming from `0.5.x`: `StatusCode` has nine more cases, a report can carry
+them, and a few files that 0.5.3 accepted are refused, each by a rule of
+the specification named in `docs/comparison.md`.
 Coming from `0.4.x`: the recorded API is unchanged and, unless you turn
 plain text on, so is every report; with it on, `format` can be `text` and
 the message for an unknown file type says the file is not UTF-8 text
@@ -320,8 +328,8 @@ alone.
   and closed.
 - **Bounded input.** Every parser has hard limits and acceptance criteria
   for malformed input. Before every release the corpora are fuzzed
-  (`bin/fuzz.php`, replayable); before 0.5.3, 15 036 randomly mutated files
-  of every format and 11 916 mutated files under trust settings, and before
+  (`bin/fuzz.php`, replayable); before 0.6.0, 15 015 randomly mutated files
+  of every format and 14 004 mutated files under trust settings, and before
   0.5.0 23 100 mutated texts, went through the
   verifier, and their reports through `toJson()`, without
   an exception escaping.

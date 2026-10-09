@@ -136,7 +136,7 @@ files with the same trust anchors.
 | difference | why | where named |
 |---|---|---|
 | Plain text (C2PA 2.4 §A.8) is read only when the caller turns it on (`Verifier(text: …)`, `--text`); stock `c2patool` does not read text at all, and the oracle is `c2patool` 0.28.1 built with `unstable_plain_text` | experimental upstream, and Unicode's L2/26-042 objects to the scheme: a verdict format a caller chose, not one that appears under them (step 265) | SPEC-060 open question 1 |
-| Plain text: two wrappers, a length field longer than the run (a store cut short, or a run broken by a letter), and a length field that differs from the store's LBox are refused (`general.error`); the oracle says *No claim found* to the first three and `Valid` to the last, reading the store with a padding byte after it | a text carries one store, and its frame must describe it; none can make a `Valid` here that the oracle does not give (step 265) | SPEC-060 AC5, AC6, amendment 1 B |
+| Plain text: two wrappers, a length field longer than the run (a store cut short, or a run broken by a letter), and a length field that differs from the store's LBox are refused (`manifest.text.multipleWrappers`, `manifest.text.corruptedWrapper` since 0.6.0, SPEC-060 amendment 3; `general.error` before); the oracle says *No claim found* to the first three and `Valid` to the last, reading the store with a padding byte after it | a text carries one store, and its frame must describe it; none can make a `Valid` here that the oracle does not give (step 265) | SPEC-060 AC5, AC6, amendment 1 B |
 | Plain text: a candidate of the magic and version 1 whose store does not fit counts as a wrapper — before a good wrapper it is AC6's error, after one it makes two wrappers — where the oracle skips it and reads the good one. A length field under 8, and a store with an extended LBox (`1`), are refused; the oracle fails in its JUMBF reader or reads the extended size | a frame of this text's own magic that contradicts itself is not passed over in silence (step 269) | SPEC-060 amendment 2 B, D |
 | Plain text, with text on: an empty file is `text` without a manifest, and a text that begins with another format's signature (`GIF89a`, `RIFF…WEBP`, `ID3`, `ftyp` at offset 4) is read as that format; the oracle picks its reader by the `.txt` extension | this verifier is given a stream, not a file name (SPEC-060 open question 2) | SPEC-060 AC16 (amendment 2) |
 | MP3: a C2PA GEOB frame that is compressed, encrypted or under unsynchronisation, that runs past its tag, whose LBox differs from its object, or that appears twice, is refused (`general.error`); `c2patool` finds no claim, or reads the first and judges by the hash, or (LBox) says `Valid` | strict about the store, as for RIFF: each makes the store's bytes or extent uncertain (step 225, both versions) | SPEC-056 AC6–AC10 |
@@ -195,6 +195,14 @@ files with the same trust anchors.
 | A hash assertion in an update manifest is `manifest.update.invalid`; `c2patool` reports nothing and validates the assertion as the asset's binding (`Trusted`) — its rule for this sits in unreachable code (`c2pa-rs claim.rs verify_internal`) | C2PA 2.4 §11.2.3: "An Update Manifest shall not contain assertions of types `c2pa.hash.data` …"; otherwise an update manifest could rebind the asset to other bytes | SPEC-022 amendment 2 |
 | A manifest in the store that **no ingredient assertion names** is never validated — its signature may be broken and the file is still `Trusted` — while both this verifier and `c2patool` still render it under `manifests` | C2PA 2.4 §15.11.3.3: "Validators should ignore any additional C2PA Manifests that appear in the C2PA Manifest Store but are not in the list of ingredient manifests"; §15's vocabulary has no code for one, and this project invents none | step 60, `tests/Fixtures/m7-absence/unreferenced-broken.png` |
 | A v3 ingredient assertion **without `claimSignature`** is read, though §18.16.12.3 says both hashed URIs shall be stored (`c2patool` reads it too) | the second URI is needed only for the claim-signature method, which redactions force; when they do and it is absent, the ingredient is `ingredient.claimSignature.missing` (SPEC-035) | step 60, `no-claim-signature.png` |
+| A signer's chain under label 33 in both COSE headers is refused (`signingCredential.invalid`); both `c2patool` versions call it `Trusted` | C2PA 2.4 §14.5: the same label in both buckets is two credentials, and *"a validator shall reject the claim signature as malformed"* | SPEC-047 amendment 2 (0.6.0) |
+| Every certificate above the signer, the trust anchor included, is held to the certificate profile (algorithm, RSASSA-PSS parameters, curve, RSA of 2048 bits or more, version 3, an Authority Key Identifier unless self-signed); `c2pa-rs` holds only the signer's to it, so an RSA-1024 or secp256k1 intermediate, or an RSA-1024 or SHA-1-signed anchor, is `Trusted` there and `Valid` (untrusted) here | C2PA 2.4 §14.5.1.1: *"All certificates shall fulfill"* the profile; no real file in the corpus moves | SPEC-014 amendment 8 (0.6.0) |
+| A manifest signer's KeyUsage must assert Digital Signature; Non Repudiation alone is `Trusted` in `c2patool`, `signingCredential.invalid` here (a timestamp authority keeps the old rule) | C2PA 2.4 §14.5.1.1: certificates that sign C2PA manifests *"shall assert the digitalSignature bit"* | SPEC-015 amendment 10 (0.6.0) |
+| A store with two manifests of one label is `claim.malformed`; `c2patool` takes the last box as active, so `[X, X', Y]` is `Trusted` there | C2PA 2.4 §8.1: a label identifies one manifest; which one an ingredient means is a guess | SPEC-007 amendment 7 (0.6.0) |
+| The original preservation image of a `c2pa.alternative-content-representation` is checked (count, shape, part index, embedded hash); `c2pa-rs` has no code for it, so `c2patool` is `Trusted` on every probe | C2PA 2.4 §15.10.3.2.7 | SPEC-065 (0.6.0) |
+| A stapled OCSP response that verifiably reports a CA of the path revoked leaves the signer untrusted, and `c2pa.certificate-status` assertions in the store are used for the signers they name; `c2pa-rs` matches the end-entity only and leaves the assertions off by default | C2PA 2.4 §15.9 | SPEC-066 (0.6.0) |
+| An earlier manifest whose signer has expired is judged again here, and kept alive only by a trusted timestamp (its header's, or since 0.6.0 a later manifest's `c2pa.time-stamp` assertion); `c2patool` 0.28.1 does not judge it again once the ingredient recorded its validation | C2PA 2.4 §15.8.1.2, §15.11; a token from an assertion replaces a passed header token in `c2pa-rs`, not here | SPEC-021, SPEC-064 (0.6.0) |
+| A data hash without `pad`, and four assertion shapes `c2pa-rs` cannot decode (metadata without `@context`, certificate status without `ocspVals`, soft binding without `blocks`, an action's `when` as an integer), are not refused here; `c2patool` stops or says `Invalid` | C2PA 2.4 §15.12.1.1 (*"ignore the presence and contents of pad and pad2"*) and §15.10.3.2 (no validation for unlisted assertions); none of them feeds a verdict | SPEC-012 amendment 10, SPEC-063 amendment 2 (0.6.0) |
 | `assertion.action.malformed` on the manifest carries the bare manifest label as its url — `c2patool`'s inconsistency, copied so that code and url compare | drift-alarm equality | SPEC-018 amendment 2 |
 | The command's exit status carries the verdict (0 `Trusted`/`Valid`, 1 `Invalid`, 2 no report); `c2patool` exits 0 on an `Invalid` report and 1 only when it prints no JSON. A `--settings` file that cannot be read is a refusal (exit 2); `c2patool` ignores it and reports without trust | fail closed: `c2pa-verify "$f" && publish "$f"` must not publish a tampered file, and a mistyped settings path must not turn `Trusted` into an unexamined `Valid` | SPEC-019 (exit status measured 2026-09-22) |
 
@@ -212,6 +220,16 @@ without an anchor — 34 corpus files, informational, no verdict changes.
 - Test anchors and anchors cut from tokens. The production C2PA trust
   lists were used once, as a measurement (step 113): two corpus files
   reach an official anchor. The project does not bundle or fetch them.
+- Fuzzing before 0.6.0 (step 339): the same fuzzer and the same fixtures,
+  once in a worktree at `v0.5.3` and once at 0.6.0. Seed 20261005, 60
+  rounds, over 287 files: 15 036 and 15 015 runs (the store mutations of
+  a text file that now stops at a corrupted wrapper fall away), 0 faults
+  in both, the same 238 files `Valid`. With trust settings, 0.6.0 has 0
+  faults and 0 raised states over 276 pairs, and none of its suspects is
+  more lenient than `c2patool` 0.28.1 (judged in every step from 316 to
+  338). The corpus under every settings file, 0.5.3 against 0.6.0: 38
+  files change their verdict, all probes made for the new rules; no real
+  file does.
 - Fuzzing before 0.5.3 (step 306): the same fuzzer (per-file seeds since
   step 297, ISOBMFF since step 299) and the same fixtures, once in a
   worktree at `v0.5.2` and once at 0.5.3. Seed 20261005, 60 rounds, over
@@ -221,8 +239,8 @@ without an anchor — 34 corpus files, informational, no verdict changes.
   pairs, 160 `Trusted` unmutated), 0.5.3 has 0 faults and 0 raised states,
   and none of its suspects is more lenient than `c2patool` 0.28.1 (steps
   303 and 305). Under 0.5.2 that run stops at the negative serial.
-- The trust matrix since step 305: 54 chains. This verifier differs from
-  0.28.1 on seven, all stricter by design (SPEC-061 `SPEC061_STRICTER`).
+- The trust matrix since step 327: 61 chains. This verifier differs from
+  0.28.1 on eleven, all stricter by design (SPEC-061 `SPEC061_STRICTER`).
 - Fuzzing before 0.5.2 (step 285): the same seed over the same 249 files,
   12 903 runs, once in a worktree at `v0.5.1` and once at 0.5.2: 0 faults
   in both, the same 122 files `Valid`, each confirmed by the oracles as

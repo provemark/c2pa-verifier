@@ -10373,3 +10373,17 @@ README are where the disclosure lives.
   `composer check` (1008 passed).
 - Decided by Maurice: SPEC-066 approved with both proposals; amendment 1
   to confirm.
+
+## 2026-10-09 — The check before 0.6.0, and the release commit (step 339)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendement 1 bevestigd, push en (a)" — (a): release
+  0.6.0 now, the ISOBMFF details after.
+- Produced: `2a80de1` pushed (SPEC-066 amendment 1 confirmed); the
+  CHANGELOG (0.6.0 with an introduction), the README, `docs/comparison.md`;
+  `notes/step-339-pre-release-0.6.0.md`; a row in `NOTES.md`.
+- Measured: `bin/spec-check.php`, `bin/api-check.php`,
+  `bin/package-check.php`; `composer check` (1,008 passed); CI on
+  `fdf0dda`; the corpus under every settings file and `bin/fuzz.php`
+  (with and without `--trust`) in a worktree at `v0.5.3` and in this tree.
+- Decided by Maurice: release 0.6.0 before the ISOBMFF details. The tag,
+  the release and Packagist wait for his word.

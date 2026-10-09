@@ -5,7 +5,26 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.6.0 — 2026-10-09
+
+The whole of C2PA 2.4 read against the verifier (`docs/reading-c2pa-2.4.md`):
+562 rules, each now covered, partly covered, not applicable or different by
+design, except eight ISOBMFF details that stay open. What the reading found
+too lenient was measured with probes against `c2patool` 0.27.22 and 0.28.1
+and now agrees with the specification. Where the specification is stricter
+than `c2patool`, this verifier follows the specification, and
+`docs/comparison.md` names each case. Five validator rules that neither
+this verifier nor `c2patool` applied are now checked: cloud data, the
+time-stamp assertion, the original preservation image, the revocation of a
+CA, and certificate-status assertions.
+
+No real file in the test corpus changes its verdict; 38 probes made for
+these rules do.
+
+**A `0.6`, not a `0.5.4`:** the public `StatusCode` grows by nine cases
+(the recorded API, 126 symbols in 0.5.3, is 135). A caller that matches
+every case of `StatusCode` needs to know the new ones. `^0.5` keeps 0.5.3.
+
 
 ### Added
 
