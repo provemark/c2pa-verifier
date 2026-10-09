@@ -31,6 +31,9 @@ final readonly class JumbfParser
 
     public const UUID_MANIFEST = '63326d61-0011-0010-8000-00aa00389b71';         // c2ma
 
+    /** A standard manifest of the c2md type, which consumers shall accept as one (C2PA 2.4 §11.2.2; SPEC-007 amendment 7). */
+    public const UUID_MANIFEST_C2MD = '63326d64-0011-0010-8000-00aa00389b71';    // c2md
+
     public const UUID_COMPRESSED_MANIFEST = '6332636d-0011-0010-8000-00aa00389b71'; // c2cm
 
     public const UUID_UPDATE_MANIFEST = '6332756d-0011-0010-8000-00aa00389b71';  // c2um
@@ -53,7 +56,7 @@ final readonly class JumbfParser
 
     /** The superbox types this parser walks into. */
     private const KNOWN_SUPERBOXES = [
-        self::UUID_MANIFEST_STORE, self::UUID_MANIFEST, self::UUID_UPDATE_MANIFEST, self::UUID_ASSERTION_STORE,
+        self::UUID_MANIFEST_STORE, self::UUID_MANIFEST, self::UUID_MANIFEST_C2MD, self::UUID_UPDATE_MANIFEST, self::UUID_ASSERTION_STORE,
         self::UUID_CLAIM, self::UUID_CLAIM_SIGNATURE,
         self::UUID_CBOR_ASSERTION, self::UUID_JSON_ASSERTION, self::UUID_EMBEDDED_FILE, self::UUID_UUID_ASSERTION,
     ];

@@ -41,7 +41,7 @@ final readonly class ManifestStore
         $budget = new CborBudget;
         $read = [];
         foreach ($root->superboxes() as $child) {
-            if (in_array($child->description->uuid, [JumbfParser::UUID_MANIFEST, JumbfParser::UUID_UPDATE_MANIFEST], true)) {
+            if (in_array($child->description->uuid, [JumbfParser::UUID_MANIFEST, JumbfParser::UUID_MANIFEST_C2MD, JumbfParser::UUID_UPDATE_MANIFEST], true)) {
                 try {
                     $read[] = Manifest::read($child, $budget);
                 } catch (ManifestException|CborException $e) {
@@ -55,6 +55,11 @@ final readonly class ManifestStore
         foreach ($read as $manifest) {
             if (! $manifest instanceof Manifest) {
                 throw $manifest;
+            }
+            // a label names one manifest: with two, which one an ingredient or the active slot means is
+            // a guess, so the store is refused (C2PA 2.4 §8.1; SPEC-007 amendment 7)
+            if (isset($manifests[$manifest->label])) {
+                throw new ManifestException(sprintf('the store holds two manifests labelled %s; a label identifies one manifest (C2PA 2.4 §8.1)', $manifest->label), StatusCode::ClaimMalformed);
             }
             $manifest = $manifest->withRedactions($redactions);
             $manifests[$manifest->label] = $manifest;

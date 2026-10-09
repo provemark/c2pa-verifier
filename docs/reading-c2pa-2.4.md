@@ -77,11 +77,11 @@ by both `c2patool` versions (see *Measured in step 313* below).
 | L6 | a malformed `c2pa.certificate-status` assertion | not read | the validation stops | P09-3 |
 | L7 | `c2pa.cloud-data` | not checked, though SPEC-039 says "refused by name" | `verify_cloud_data()`: decode, size, no hard binding, actions or ingredient | P08-1, P07-3, P06-1, P04-4 |
 | L8 | a soft binding that cannot be decoded | not decoded | `verify_soft_binding_alg()` logs it | P08-2 |
-| L9 | a manifest of type `c2md` (§11.2.2: consumers shall accept it) | an unknown box: mostly `claim.missing` (stricter), but in a store `[c2ma, c2md]` the older manifest is made active | read as a standard manifest | P02-1 |
-| L10 | two manifests with one label | `ManifestStore::fromTree()` keeps the first one's place and the later one's content, and makes `array_key_last()` active: `[X, Y, X']` validates `Y` | the last box, `X'` | P01-1, P02-2, P04-1 |
-| L11 | a version 2 manifest whose label is not a C2PA URN | not checked | `claim.malformed` | P02-3 |
+| L9 | a manifest of type `c2md` (§11.2.2: consumers shall accept it) | an unknown box: mostly `claim.missing` (stricter), but in a store `[c2ma, c2md]` the older manifest is made active; **fixed: SPEC-007 amendment 7** | read as a standard manifest | P02-1 |
+| L10 | two manifests with one label | `ManifestStore::fromTree()` keeps the first one's place and the later one's content, and makes `array_key_last()` active: `[X, Y, X']` validates `Y`; **fixed: SPEC-007 amendment 7** | the last box, `X'` | P01-1, P02-2, P04-1 |
+| L11 | a version 2 manifest whose label is not a C2PA URN | not checked; **fixed: SPEC-007 amendment 7** | `claim.malformed` | P02-3 |
 | L12 | a merkle map on a single, unfragmented file | no `count` read as 0, and 0 of 0 was a match; **fixed: SPEC-028 amendment 2** | refuses an `initHash` on unfragmented media (read by the pack) | P06-4 |
-| L13 | a version 2 claim whose `claim_generator_info` is an empty map | taken as the empty list SPEC-007 amendment 4 allows for version 1; no `name` check | `claim.malformed` | P04-2 |
+| L13 | a version 2 claim whose `claim_generator_info` is an empty map | taken as the empty list SPEC-007 amendment 4 allows for version 1; no `name` check; **fixed: SPEC-007 amendment 7** | `claim.malformed` | P04-2 |
 
 ### Measured in step 313
 

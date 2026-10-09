@@ -63,8 +63,9 @@ final readonly class Claim
         $info = null;
         // a null claim_generator_info is one that is not there (c2pa-rs writes it so in some v1 claims —
         // ocsp.jpg); an *empty list* is one that is there and says nothing, and c2patool renders it as
-        // such (update_manifest.jpg's parent). Neither is malformed (SPEC-007 amendment 4, SPEC-022)
-        if (($map['claim_generator_info'] ?? null) !== null && $map['claim_generator_info'] !== []) {
+        // such (update_manifest.jpg's parent). Neither is malformed in version 1 (SPEC-007 amendment 4,
+        // SPEC-022); in version 2 it is one map with a name, and an empty one is malformed (amendment 7)
+        if (($map['claim_generator_info'] ?? null) !== null && ($map['claim_generator_info'] !== [] || $version === 2)) {
             $info = self::generatorInfo($map['claim_generator_info'], $version);
         } elseif (($map['claim_generator_info'] ?? null) === []) {
             $info = [];

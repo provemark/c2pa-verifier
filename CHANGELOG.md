@@ -27,6 +27,11 @@ committed.
   Without one, an init segment alone matched as "0 of 0 fragments" and was
   `Trusted`; both `c2patool` versions refuse it. It is
   `assertion.bmffHash.malformed` now.
+- **Four manifest rules from C2PA 2.4 §8.1 and §11.2.2 (SPEC-007
+  amendment 7).** A manifest box of type `c2md` is read as a manifest. A
+  store with two manifests of one label is `claim.malformed`. A version 2
+  manifest whose label is not a C2PA URN is `claim.malformed`. So is a
+  version 2 claim whose `claim_generator_info` is an empty map.
 
 ## 0.5.3 — 2026-10-09
 

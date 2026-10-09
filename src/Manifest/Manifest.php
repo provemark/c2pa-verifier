@@ -26,6 +26,9 @@ use Provemark\C2paVerifier\Report\StatusCode;
  */
 final readonly class Manifest
 {
+    /** The ABNF of C2PA 2.4 §8.1: a UUID, then an optional generator of up to 32 visible ASCII characters, then an optional version and reason. */
+    private const C2PA_URN = '/^urn:c2pa:[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}(?::[\x21-\x39\x3B-\x7E]{0,32}(?::[0-9]+_[0-9]+)?)?$/D';
+
     private const URI_PREFIX = 'self#jumbf=';
 
     /** The largest JSON content box decoded (SPEC-045 AC1): 128 times the largest measured, 2,031 bytes. */
@@ -155,6 +158,11 @@ final readonly class Manifest
             return Claim::fromMap($version, $claimMap);
         });
         self::at($signatureUrl, static fn (): string => self::singleCbor($signatureBox, 'signature box', $label, StatusCode::ClaimSignatureMissing));
+        // a version 2 manifest is labelled with a C2PA URN, as c2pa-rs checks too; a version 1 label had other forms
+        // (C2PA 2.4 §8.1; SPEC-007 amendment 7)
+        if ($claim->version === 2 && preg_match(self::C2PA_URN, $label) !== 1) {
+            throw new ManifestException(sprintf('manifest label %s is not a C2PA URN (urn:c2pa:<UUID>[:<generator>[:<version>_<reason>]], C2PA 2.4 §8.1)', $label), StatusCode::ClaimMalformed, null, $manifestUrl);
+        }
 
         $assertions = [];
         foreach ($assertionStore->superboxes() as $assertionBox) {

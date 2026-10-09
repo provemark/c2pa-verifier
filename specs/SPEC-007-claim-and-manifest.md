@@ -432,6 +432,43 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
 
    Approved by Maurice van Loon, 2026-10-05 (step 247).
 
+7. **2026-10-09, steps 312, 313, 315 and 318, found by reading C2PA 2.4 §8.1 and §11.2.2** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   Four rules about the manifest, each measured with a probe that
+   `bin/make-manifest-probe-variants.php` builds under
+   `tests/Fixtures/manifest-probes/`, judged by both `c2patool` versions:
+
+   - **AC16 (new) — a `c2md` manifest is a manifest.** §11.2.2: consumers
+     shall accept a manifest box of type `c2md` as a standard manifest.
+     It was an unknown box here, so `type-c2md.png` was `Invalid`
+     (`claim.missing`), where `c2patool` says `Trusted`. Now `Trusted`.
+   - **AC17 (new) — one label, one manifest.** §8.1: a URN identifies one
+     manifest. A store with two manifests of one label kept the first's
+     place and the later one's content. `[X, Y, X']` validated `Y` where
+     `c2patool` makes `X'` active (`Invalid`); `[X, X', Y]` is `Trusted`
+     in `c2patool`. Both are now `claim.malformed`. For the second shape
+     this is stricter than `c2patool` on purpose: which manifest an
+     ingredient's URI means is a guess.
+   - **AC18 (new) — a version 2 manifest is labelled with a C2PA URN.**
+     §8.1's ABNF: `urn:c2pa:`, a UUID, an optional generator of up to 32
+     visible ASCII characters, an optional `<version>_<reason>`.
+     `label-not-urn.png` (`urx:c2pa:…`) was `Trusted` here and is
+     `claim.malformed` in both `c2patool` versions ("claim box label
+     invalid"). A version 1 label is not checked, as in `c2pa-rs`.
+   - **AC19 (new) — a version 2 `claim_generator_info` has a name.** An
+     empty map was read as the empty list amendment 4 allows in version 1,
+     so `cgi-empty.png` was `Trusted`. `c2patool` cannot read the claim
+     ("claim_generator_info is missing or invalid"). Now `claim.malformed`;
+     version 1 keeps amendment 4.
+
+   The same builder writes `x5chain-unprotected-too.png` (the signer's
+   chain under label 33 in both headers, §14.5) for candidate C1; both
+   `c2patool` versions and this verifier call it `Trusted`, and it is not
+   decided here.
+
+   **Weight A: three probes move from `Trusted` to `Invalid`, one from
+   `Invalid` to `Trusted`, each towards `c2patool` except
+   `duplicate-label-middle`.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -454,3 +491,7 @@ least one test; every source file maps back to this spec.
 | AC13 | tests/Unit/Manifest/ManifestStoreTest.php :: AC13: invalid JSON in a json box is an error naming the assertion, never the bytes / SPEC-007 | src/Manifest/Manifest.php :: assertionData() (json) |
 | AC14 | tests/Unit/Manifest/ManifestStoreTest.php :: AC14: a claim_generator_info without a name is an error / SPEC-007 | src/Manifest/Claim.php :: generatorInfo() |
 | AC15 | tests/Unit/Manifest/ManifestStoreTest.php :: AC15: a float JSON cannot hold is rendered as its name, and the report encodes (amendment 6, step 247) / SPEC-007 | src/Manifest/ManifestStore.php :: plain() |
+| AC16 | tests/Unit/Manifest/ManifestProbesTest.php :: AC16: a manifest box of type c2md is read as a standard manifest (SPEC-007 amendment 7) / SPEC-007 | src/Jumbf/JumbfParser.php :: UUID_MANIFEST_C2MD; src/Manifest/ManifestStore.php :: fromTree() |
+| AC17 | tests/Unit/Manifest/ManifestProbesTest.php :: AC17: two manifests with one label make the store malformed / SPEC-007 | src/Manifest/ManifestStore.php :: fromTree() (the label) |
+| AC18 | tests/Unit/Manifest/ManifestProbesTest.php :: AC18: a version 2 manifest whose label is not a C2PA URN is claim.malformed / SPEC-007 | src/Manifest/Manifest.php :: read(), C2PA_URN |
+| AC19 | tests/Unit/Manifest/ManifestProbesTest.php :: AC19: a version 2 claim whose claim_generator_info is an empty map is claim.malformed / SPEC-007 | src/Manifest/Claim.php :: fromMap() |

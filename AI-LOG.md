@@ -10041,3 +10041,25 @@ README are where the disclosure lives.
   suspect judged by `c2patool` 0.28.1 (none more lenient); `composer check`
   (957 passed); PHPStan in Docker.
 - Decided by Maurice: this fix.
+
+## 2026-10-09 — Four manifest rules (step 318, fix F3)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met F3", then "ok, wacht maar op de
+  meting".
+- Produced: `451898f` pushed; SPEC-007 amendment 7 (AC16–AC19);
+  `src/Jumbf/JumbfParser.php`, `src/Manifest/ManifestStore.php`,
+  `src/Manifest/Manifest.php`, `src/Manifest/Claim.php`;
+  `bin/make-manifest-probe-variants.php`; nine fixtures in
+  `tests/Fixtures/manifest-probes/` with a README and both `c2patool`
+  versions' answers; `tests/Unit/Manifest/ManifestProbesTest.php`; the
+  CHANGELOG; `docs/reading-c2pa-2.4.md`;
+  `notes/step-318-four-manifest-rules.md`; a row in `NOTES.md`.
+- Measured: the builder's run (each probe judged by both `c2patool`
+  versions); the tests red (4 failed), then green; the corpus (860 files ×
+  161 settings modes, before and after: 805 runs moved, all the probes);
+  `bin/fuzz.php` without settings and with `--trust` on two seeds, every
+  suspect judged by `c2patool` 0.28.1 (none more lenient); the URN ABNF
+  read in §8.1 and the `c2md` rule in §11.2.2 of the fetched
+  specification, and `c2pa-rs` 0.91.1's label check; `composer check` (962
+  passed); PHPStan in Docker.
+- Decided by Maurice: this fix. Not decided: C1 (label 33 in both headers).
