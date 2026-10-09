@@ -149,7 +149,7 @@ final readonly class OcspCheck
 
 ## Amendments
 
-1. **2026-10-09, step 338, measured while building** *(to be confirmed by Maurice van Loon)* —
+1. **2026-10-09, step 338, measured while building** *(confirmed by Maurice van Loon, 2026-10-09)* —
    For an ingredient manifest, the revocation check runs only where the
    store carries certificate-status responses. The signer's own stapled
    responses join them then. Without any, an ingredient's report stays as
