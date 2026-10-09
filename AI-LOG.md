@@ -9632,3 +9632,14 @@ README are where the disclosure lives.
 - Reasoned: RFC 3161 §2.3 (one EKU, `timeStamping`, critical);
   `CertificateProfileCheck::ekuFaults()` does not look at criticality.
 - Decided by Maurice: measure the EKU variants this way (akkoord).
+
+## 2026-10-09 — SPEC-062 drafted (step 293)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push en schrijf de spec als draft".
+- Produced: `f13d9db` (step 292) pushed; `specs/SPEC-062-tsa-matrix.md`
+  (status `draft`); rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: `php bin/spec-check.php` (62 specs, SPEC-062 draft). The code
+  differences AC4 names are read from step 292's run of the generator.
+- Reasoned: the shape follows SPEC-061; AC2 rests on 0.28.1 alone because
+  0.27.22 does not read `trust.anchors`.
+- Decided by Maurice: push step 292; draft the spec.
