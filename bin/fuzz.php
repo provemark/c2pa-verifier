@@ -16,7 +16,9 @@ declare(strict_types=1);
  *      out so that c2patool can be asked the same question (the note).
  *
  * Deterministic: the seed is the first argument; the same seed replays the
- * same mutations. Usage:
+ * same mutations. Each file draws from its own stream, seeded by the seed and
+ * the file's path (step 297), so adding or changing one file moves no other
+ * file's mutations. Usage:
  *
  *   php bin/fuzz.php <seed> <rounds-per-file> <out-dir> [--trust] [file-or-dir …]
  *
@@ -105,7 +107,6 @@ if ($pairs === null) {
 if (! is_dir($out)) {
     mkdir($out, 0777, true);
 }
-mt_srand($seed);
 $verifier = new Verifier;
 $textVerifier = new Verifier(text: new PlainTextManifestStoreExtractor);   // for .txt files only, so the other files' runs are as before (step 268)
 
@@ -291,6 +292,9 @@ $slowest = 0.0;
 $peak = 0;
 $start = microtime(true);
 foreach ($pairs as [$file, $settingsFile]) {
+    // step 297: one stream per file, from the seed and the path inside the repository (or the path as given)
+    $repo = dirname(__DIR__).'/';
+    mt_srand(crc32($seed.':'.(str_starts_with($file, $repo) ? substr($file, strlen($repo)) : $file)));
     $original = (string) file_get_contents($file);
     $ranges = fuzzStoreRanges($file);
     [$unprotected, $skippedValues] = $trust ? fuzzUnprotectedRanges($file, $original) : [[], 0];

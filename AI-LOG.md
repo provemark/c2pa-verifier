@@ -9695,3 +9695,21 @@ README are where the disclosure lives.
 - Reasoned: from step 290, why version 1 claims differ.
 - Decided by Maurice: the step as proposed; the note kept to this
   verifier's side.
+
+## 2026-10-09 — One random stream per fuzzed file (step 297)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, doe dat" (soften step 296's note, push, propose ISOBMFF
+  fuzzing), then "ja" to steps 297 and 298 as proposed.
+- Produced: step 296's note kept to this verifier's side, amended and
+  pushed (`b87fcf9`); `bin/fuzz.php` seeded per file;
+  `notes/step-297-fuzz-seed-per-file.md`; a row in `NOTES.md`.
+- Measured: a replay and a subset run compared by name; the new baseline
+  (`php bin/fuzz.php 20261005 60 <out>`, 126 suspects) judged by `c2patool`
+  0.28.1 and 0.27.22; `--trust` with seeds 20261005 × 60 and 20261009 ×
+  200 judged by 0.28.1 under the same settings; the FLAC case located (the
+  store's description-box toggles `03` → `02`) and probed on JPEG, PNG and
+  FLAC with toggles `01`, `02`, `07`, `0b` and `13` on every description
+  box; `composer check` (943 passed); PHPStan in Docker.
+- Reasoned: SPEC-005 already asks for Requestable; the parser never reads
+  it.
+- Decided by Maurice: steps 297 and 298 as proposed.
