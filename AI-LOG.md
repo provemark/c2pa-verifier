@@ -10341,3 +10341,14 @@ README are where the disclosure lives.
   `bin/fuzz.php` (0 faults, none more lenient); `composer check` (997
   passed).
 - Decided by Maurice: SPEC-065 approved with both proposals.
+
+## 2026-10-09 — SPEC-066 drafted: revocation beyond the signer's own staple (step 337)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met §15.9", then "akkoord, schrijf SPEC-066
+  als draft".
+- Produced: `282bd80` pushed; `specs/SPEC-066-revocation-beyond-the-staple.md`
+  (draft); rows in `NOTES.md` and `docs/milestones.md`.
+- Reasoned: C2PA 2.4 §15.9, §15.9.1, §15.9.2, §14.5.2, §18.19 in the
+  fetched specification; `c2pa-rs` 0.91.1 `crypto/ocsp/mod.rs`, `store.rs`,
+  `settings/builder.rs`; `src/Trust/OcspCheck.php` and SPEC-030.
+- Decided by Maurice: write the draft; it awaits approval.
