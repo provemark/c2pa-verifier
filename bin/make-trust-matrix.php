@@ -231,15 +231,15 @@ function matrixReplace(array $ext, string $prefix, ?string $with): array
 }
 
 /**
- * One certificate's recipe: extensions, key, signature digest (by its issuer), validity.
+ * One certificate's recipe: extensions, key, signature digest (by its issuer), validity, serial (null: random).
  *
  * @param  list<string>  $ext
  * @param  array{0: string, 1: string}|null  $validity
- * @return array{ext: list<string>, key: string, md: string, validity: array{0: string, 1: string}|null}
+ * @return array{ext: list<string>, key: string, md: string, validity: array{0: string, 1: string}|null, serial: string|null}
  */
-function matrixCert(array $ext, string $key = 'p256', string $md = 'sha256', ?array $validity = null): array
+function matrixCert(array $ext, string $key = 'p256', string $md = 'sha256', ?array $validity = null, ?string $serial = null): array
 {
-    return ['ext' => $ext, 'key' => $key, 'md' => $md, 'validity' => $validity];
+    return ['ext' => $ext, 'key' => $key, 'md' => $md, 'validity' => $validity, 'serial' => $serial];
 }
 
 // ---- the matrix ----------------------------------------------------------------------------------
@@ -267,7 +267,7 @@ $PAST = ['20200101000000Z', '20210101000000Z'];
 $FUTURE = ['20900101000000Z', '21000101000000Z'];
 $int = [...$CA, 'authorityKeyIdentifier=keyid'];
 $base = ['anchor' => matrixCert($CA), 'int' => matrixCert($int), 'leaf' => matrixCert($LEAF)];
-/** @var array<string, array{0: 'anchor'|'int'|'leaf'|null, 1: 'ext'|'key'|'md'|'validity'|null, 2: list<string>|string|null}> $variants  probe => [position, field, value] */
+/** @var array<string, array{0: 'anchor'|'int'|'leaf'|null, 1: 'ext'|'key'|'md'|'validity'|'serial'|null, 2: list<string>|string|null}> $variants  probe => [position, field, value] */
 $variants = [
     'control' => [null, null, null],
     // the leaf
@@ -314,6 +314,10 @@ $variants = [
     'anchor-critical-unknown-ext' => ['anchor', 'ext', [...$CA, '1.3.6.1.4.1.99999.8=critical,ASN1:NULL']],
     'anchor-sha1-self-signed' => ['anchor', 'md', 'sha1'],
     'anchor-rsa1024' => ['anchor', 'key', 'rsa1024'],
+    // the serial number (RFC 5280 §4.1.2.2: a positive integer; step 301)
+    'leaf-serial-negative' => ['leaf', 'serial', '-0x0FDB19DB89FA0E'],
+    'leaf-serial-zero' => ['leaf', 'serial', '0'],
+    'int-serial-negative' => ['int', 'serial', '-0x0FDB19DB89FA0F'],
 ];
 
 $genKey = static function (string $path, string $kind): void {
@@ -355,10 +359,11 @@ foreach ($variants as $probe => [$position, $field, $value]) {
     if ($position !== null && $field !== null && $value !== null) {
         $was = $recipe[$position];
         $recipe[$position] = match ($field) {
-            'ext' => matrixCert(is_array($value) ? $value : [$value], $was['key'], $was['md'], $was['validity']),
-            'validity' => matrixCert($was['ext'], $was['key'], $was['md'], is_array($value) && count($value) === 2 ? [$value[0], $value[1]] : throw new RuntimeException("{$probe}: a validity is two dates")),
-            'key' => matrixCert($was['ext'], is_string($value) ? $value : throw new RuntimeException("{$probe}: a key is a name"), $was['md'], $was['validity']),
-            'md' => matrixCert($was['ext'], $was['key'], is_string($value) ? $value : throw new RuntimeException("{$probe}: a digest is a name"), $was['validity']),
+            'ext' => matrixCert(is_array($value) ? $value : [$value], $was['key'], $was['md'], $was['validity'], $was['serial']),
+            'validity' => matrixCert($was['ext'], $was['key'], $was['md'], is_array($value) && count($value) === 2 ? [$value[0], $value[1]] : throw new RuntimeException("{$probe}: a validity is two dates"), $was['serial']),
+            'key' => matrixCert($was['ext'], is_string($value) ? $value : throw new RuntimeException("{$probe}: a key is a name"), $was['md'], $was['validity'], $was['serial']),
+            'md' => matrixCert($was['ext'], $was['key'], is_string($value) ? $value : throw new RuntimeException("{$probe}: a digest is a name"), $was['validity'], $was['serial']),
+            'serial' => matrixCert($was['ext'], $was['key'], $was['md'], $was['validity'], is_string($value) ? $value : throw new RuntimeException("{$probe}: a serial is a string")),
         };
     }
     $cn = ['anchor' => "Matrix Anchor ({$probe})", 'int' => "Matrix Intermediate ({$probe})", 'leaf' => "Matrix Signer ({$probe})"];
@@ -375,7 +380,7 @@ foreach ($variants as $probe => [$position, $field, $value]) {
             tmRun(tmSh(...array_merge(['openssl', 'req', '-new', '-x509'], $md, ['-key', "{$keys}/{$who}.key", '-config', "{$keys}/{$who}.cnf", '-extensions', 'v3'], $dates, ['-out', "{$keys}/{$who}.pem"])));
         } else {
             tmRun(tmSh('openssl', 'req', '-new', '-key', "{$keys}/{$who}.key", '-config', "{$keys}/{$who}.cnf", '-out', "{$keys}/{$who}.csr"));
-            tmRun(tmSh(...array_merge(['openssl', 'x509', '-req'], $md, ['-in', "{$keys}/{$who}.csr", '-CA', "{$keys}/{$issuer[$who]}.pem", '-CAkey', "{$keys}/{$issuer[$who]}.key", '-set_serial', (string) random_int(1000, 99999999)], $dates, ['-extfile', "{$keys}/{$who}.cnf", '-extensions', 'v3', '-out', "{$keys}/{$who}.pem"])));
+            tmRun(tmSh(...array_merge(['openssl', 'x509', '-req'], $md, ['-in', "{$keys}/{$who}.csr", '-CA', "{$keys}/{$issuer[$who]}.pem", '-CAkey', "{$keys}/{$issuer[$who]}.key", '-set_serial', $r['serial'] ?? (string) random_int(1000, 99999999)], $dates, ['-extfile', "{$keys}/{$who}.cnf", '-extensions', 'v3', '-out', "{$keys}/{$who}.pem"])));
         }
         if ($set === '' || $who === 'anchor') {
             copy("{$keys}/{$who}.pem", "{$out}/{$probe}.{$who}.pem");

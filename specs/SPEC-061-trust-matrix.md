@@ -176,6 +176,18 @@ const SPEC061_CODES_DIFFER = [/* probe => [0.28.1's codes, 0.27.22's, this verif
 
    Confirmed by Maurice van Loon, 2026-10-08 (step 288).
 
+2. **2026-10-09, step 302, with SPEC-015 amendment 7** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   The generator gives each certificate a serial (random unless the
+   probe sets one). There are three new probes: `leaf-serial-negative`,
+   `leaf-serial-zero` and `int-serial-negative`. The matrix holds 45
+   probes, not 42; AC6 counts 45. All three are `Trusted` in both
+   `c2patool` versions and OpenSSL, and stricter here by SPEC-015
+   amendment 7, so they join `SPEC061_STRICTER`: the leaves `Invalid`,
+   the intermediate's file `Valid` with `signingCredential.untrusted`.
+   The folder's README lists OpenSSL's answer for each.
+
+   **Weight C: no verdict of the existing probes moves.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

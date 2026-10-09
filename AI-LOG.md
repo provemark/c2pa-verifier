@@ -9773,3 +9773,23 @@ README are where the disclosure lives.
   check` (945 passed).
 - Reasoned: from `Der::integer()`, why the response is unreadable.
 - Decided by Maurice: none in this step.
+
+## 2026-10-09 — A certificate serial number is a positive integer (step 302)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "A, push en begin met stap 302".
+- Produced: `0ed5f45` pushed; SPEC-015 amendment 7 and AC12, SPEC-061
+  amendment 2; `src/Support/Bytes.php`, `src/Trust/Certificate.php`,
+  `src/Trust/CertificateProfileCheck.php`, `src/Trust/ChainCheck.php`;
+  `bin/make-trust-matrix.php` with a serial per certificate and three
+  probes; their fixtures and `c2patool` answers in `chain-matrix`;
+  `tests/Unit/Trust/SerialNumberTest.php`; `TrustMatrixTest.php` (45
+  probes, three stricter); `docs/comparison.md`; the folder's README; the
+  CHANGELOG; `notes/step-302-positive-serial.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: the tests red (4 failed), then green (8 passed); the corpus
+  (832 files × 145 settings modes, before and after: 291 of 120,640 runs
+  moved, all the three probes); `bin/fuzz.php` with the three seed runs
+  (0 faults, the suspects the same by name); `composer check` (949
+  passed); PHPStan in Docker.
+- Decided by Maurice: refuse serials that are not positive (choice A),
+  not read them signed.

@@ -266,6 +266,18 @@ are still to be taken before the tests (Open questions).
     naming the bound, where both `c2patool` versions say `Trusted`: a
     resource bound, recorded in `docs/comparison.md`.
 
+- **AC12 — a serial number is a positive integer** *(amendment 7; stricter than the oracle: both `c2patool` versions and OpenSSL say `Trusted`)*
+  - Given the trust matrix's probes (SPEC-061 amendment 2): a leaf with
+    serial `-0x0FDB19DB89FA0E`, a leaf with serial `0`, an intermediate
+    with serial `-0x0FDB19DB89FA0F`, and the control
+  - When the Verifier runs under each probe's settings, with every PHP
+    notice turned into a failure
+  - Then the two leaves are `Invalid` with `signingCredential.invalid`
+    naming the serial (`-4463028754577934`, `0`); the intermediate's chain
+    is `signingCredential.untrusted` naming it, the file `Valid`; the
+    control stays `Trusted`; and `Bytes::hexToDecimal('-0FDB19DB89FA0E')`
+    is `-4463028754577934`, without a notice
+
 ## References
 
 - Specification: C2PA 2.4 §14.5 (the certificate profile: v3,
@@ -407,6 +419,29 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
    the 78 current-writer files). Decided by Maurice van Loon: 256 with
    the faster conversion. New criterion AC11.
 
+7. **2026-10-09, steps 299–302, found by fuzzing ISOBMFF** *(confirmed by Maurice van Loon, 2026-10-09, choice A)* —
+   RFC 5280 §4.1.2.2: the serial number "MUST be a positive integer".
+   OpenSSL writes a negative one as `-0F…`. `Bytes::hexToDecimal()` did
+   not know the sign: a PHP deprecation, and `cert_serial_number` without
+   its minus. Worse, `Der::integer()` refuses a negative INTEGER, so a
+   stapled OCSP response about such a certificate could not be read and
+   was skipped: a revoked certificate with a negative serial stayed
+   `Trusted` (measured in step 301 at `OcspCheck`'s seam). Both `c2patool`
+   versions and OpenSSL accept negative and zero serials (`Trusted`).
+
+   Maurice van Loon chose to refuse them rather than read them signed.
+   The conversion keeps a leading minus sign. A leaf whose serial is not
+   positive is a profile fault (`signingCredential.invalid`; for a version
+   2 claim's TSA leaf, also through SPEC-017 amendment 8). Any other
+   certificate of a path that reached an anchor with such a serial makes
+   the chain untrusted (`ChainCheck::pathFault()`, beside SPEC-048 and
+   SPEC-049). The revocation gap closes with it. A leaf that cannot carry
+   a usable serial is no longer trusted at all. New AC12; the three probes
+   join SPEC-061's stricter list.
+
+   **Weight A: three probes move from `Trusted` to `Invalid` or `Valid`;
+   stricter than both `c2patool` versions.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -426,3 +461,4 @@ least one test; every source file maps back to this spec.
 | AC11 (amendment 5) | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC11: an Ed25519 signer is recognised on every PHP, from the SPKI algorithm OID / SPEC-015 | src/Trust/Certificate.php :: keyFacts() (the SPKI algorithm OID) |
 | AC10 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC10: the codes are verbatim, and the drift alarm grows / SPEC-015 | src/Report/StatusCode.php :: SigningCredentialExpired; tests/Pest.php :: SPEC013_CORPUS |
 | AC11 | tests/Unit/Asn1/IntegerBoundTest.php :: AC11 / SPEC-015 | src/Trust/Certificate.php (the serial bound); bin/make-integer-bound-variants.php; docs/comparison.md |
+| AC12 (amendment 7) | tests/Unit/Trust/SerialNumberTest.php :: AC12 (four tests) / SPEC-015; tests/Unit/Trust/TrustMatrixTest.php :: SPEC061_STRICTER / SPEC-061 | src/Support/Bytes.php :: hexToDecimal(), decimalOctets(); src/Trust/Certificate.php :: \$serialPositive; src/Trust/CertificateProfileCheck.php :: checkLeaf(); src/Trust/ChainCheck.php :: pathFault() |

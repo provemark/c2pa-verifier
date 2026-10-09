@@ -3,7 +3,7 @@
 Built by `bin/make-trust-matrix.php <scratch> <c2patool-0.28.1>
 <c2patool-0.27.22> chain-matrix <probe>…` on 2026-10-08 (step 288). One
 valid chain (leaf ← intermediate ← anchor: P-256, SHA-256, the C2PA leaf
-profile) and 41 variants, each one property of one certificate away from it.
+profile) and 41 variants (44 since step 302), each one property of one certificate away from it.
 Each PNG is `../../fixture-signed.png` with its claim re-signed by the
 probe's throw-away leaf; x5chain holds the leaf and the intermediate, the
 anchor is left out. The keys lived in a scratch directory while the script
@@ -65,3 +65,12 @@ its failure codes.
 | `anchor-critical-unknown-ext` | Valid, signingCredential.untrusted | Valid, signingCredential.untrusted | refused: unhandled critical extension | Valid, signingCredential.untrusted |
 | `anchor-sha1-self-signed` | Trusted | Trusted | OK | Trusted |
 | `anchor-rsa1024` | Trusted | Trusted | OK | Trusted |
+| `leaf-serial-negative` | Trusted | Trusted | OK | Invalid, signingCredential.invalid |
+| `leaf-serial-zero` | Trusted | Trusted | OK | Invalid, signingCredential.invalid |
+| `int-serial-negative` | Trusted | Trusted | OK | Valid, signingCredential.untrusted |
+
+The last three were added on 2026-10-09 (step 302, SPEC-061 amendment 2)
+with the same command and these probe names. Their serials are set, not
+random: `-0x0FDB19DB89FA0E`, `0`, and `-0x0FDB19DB89FA0F` on the
+intermediate. This verifier refuses them by SPEC-015 amendment 7 (RFC 5280
+§4.1.2.2).

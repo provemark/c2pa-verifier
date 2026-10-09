@@ -18,6 +18,9 @@ use Provemark\C2paVerifier\Verifier\Verifier;
 const SPEC061_STRICTER = [
     'leaf-eku-time-stamping' => 'step 152: a leaf whose only extended key usage is Time Stamping signs nothing',
     'int-sha1' => 'SPEC-048: no SHA-1 signature between the anchor and the leaf',
+    'leaf-serial-negative' => 'SPEC-015 amendment 7: a serial number is a positive integer (RFC 5280 §4.1.2.2)',
+    'leaf-serial-zero' => 'SPEC-015 amendment 7: a serial number is a positive integer (RFC 5280 §4.1.2.2)',
+    'int-serial-negative' => 'SPEC-015 amendment 7: a serial number is a positive integer (RFC 5280 §4.1.2.2)',
 ];
 
 /**
@@ -94,7 +97,7 @@ it('AC6: every probe the generator defines has a fixture and both answers, and n
     $defined = spec061GeneratorProbes();
     sort($defined);
 
-    expect($defined)->toHaveCount(42)
+    expect($defined)->toHaveCount(45)
         ->and(spec061FixtureProbes())->toBe($defined);
     foreach ($defined as $probe) {
         foreach (['0.27.22', '0.28.1'] as $version) {

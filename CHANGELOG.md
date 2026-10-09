@@ -24,6 +24,16 @@ committed.
   Requestable cleared stayed `Trusted`; both `c2patool` versions refuse
   such a file. No signed byte went unchecked. Found by fuzzing with trust
   settings (`bin/fuzz.php --trust`). No file of the corpus moves.
+- **A certificate serial number that is not positive is refused (SPEC-015
+  amendment 7).** RFC 5280 §4.1.2.2 asks for a positive integer. A leaf
+  with a negative or zero serial is now `signingCredential.invalid`; any
+  other certificate of the path with one makes the chain untrusted. Before,
+  such a serial was converted without its sign (with a PHP deprecation
+  notice, which broke the command's JSON when `display_errors` was on).
+  A stapled OCSP response about such a certificate could not be read, so
+  a revocation was skipped. Both `c2patool` versions accept these serials;
+  this verifier is stricter here (`docs/comparison.md`). Found by fuzzing
+  ISOBMFF. No file of the corpus moves.
 
 ## 0.5.2 — 2026-10-08
 

@@ -91,6 +91,9 @@ final readonly class Certificate
 
     public string $serialDecimal;
 
+    /** RFC 5280 §4.1.2.2: the serial number is a positive integer (SPEC-015 amendment 7). */
+    public bool $serialPositive;
+
     /** The extensions with their critical flag, the subject's RDNs, the e-mail addresses, the name constraints (SPEC-046). */
     public CertificateExtensions $x509;
 
@@ -165,6 +168,7 @@ final readonly class Certificate
             throw new TrustException(sprintf('a certificate serial number of %d octets; this verifier reads at most %d (RFC 5280 allows 20)', Bytes::decimalOctets($serialHex), Bytes::MAX_DECIMAL_OCTETS));
         }
         $this->serialDecimal = self::hexToDecimal($serialHex);
+        $this->serialPositive = $this->serialDecimal !== '0' && ! str_starts_with($this->serialDecimal, '-');
     }
 
     /**

@@ -259,6 +259,12 @@ final readonly class ChainCheck
             }
         }
         $last = count($path) - 1;
+        // every certificate above the leaf has a positive serial (SPEC-015 amendment 7; RFC 5280 §4.1.2.2); the leaf's is the profile's
+        for ($i = 0; $i < $last; $i++) {
+            if (! $path[$i]->serialPositive) {
+                return sprintf('%s has serial number %s, which is not a positive integer (RFC 5280 §4.1.2.2)', $path[$i]->subjectCn(), $path[$i]->serialDecimal);
+            }
+        }
         // no signature over MD5 or SHA-1 between the anchor and the leaf (SPEC-048): the anchor is trusted by
         // configuration, and the leaf's algorithm is SPEC-015's
         for ($i = 1; $i < $last; $i++) {

@@ -27,21 +27,27 @@ final class Bytes
      */
     public const MAX_DECIMAL_OCTETS = 256;
 
-    /** The octets of magnitude a hex string holds, leading zeros ignored. */
+    /** The octets of magnitude a hex string holds, a leading minus sign and leading zeros ignored. */
     public static function decimalOctets(string $hex): int
     {
-        return intdiv(strlen(ltrim($hex, '0')) + 1, 2);
+        return intdiv(strlen(ltrim($hex, '-0')) + 1, 2);
     }
 
     /**
      * Base 16 → base 10 on strings: no gmp, no bcmath. Seven hex digits at a time over limbs of 10^9
      * (16^7 · 10^9 stays inside a 64-bit integer); the callers check MAX_DECIMAL_OCTETS first, with
-     * their own exception, and this guard only keeps an unchecked caller from hanging.
+     * their own exception, and this guard only keeps an unchecked caller from hanging. A leading minus
+     * sign, as OpenSSL writes a negative serial number, is kept (SPEC-015 amendment 7).
      *
      * @throws \LengthException past MAX_DECIMAL_OCTETS
      */
     public static function hexToDecimal(string $hex): string
     {
+        if (str_starts_with($hex, '-')) {
+            $magnitude = self::hexToDecimal(substr($hex, 1));
+
+            return $magnitude === '0' ? '0' : '-'.$magnitude;
+        }
         $hex = ltrim(strtolower($hex), '0');
         if ($hex === '') {
             return '0';

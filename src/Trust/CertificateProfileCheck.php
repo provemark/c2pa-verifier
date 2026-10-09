@@ -106,6 +106,10 @@ final readonly class CertificateProfileCheck
         if ($leaf->version !== 3) {
             $faults[] = $invalid(sprintf('X.509 version %d; a C2PA signing certificate is version 3', $leaf->version));
         }
+        if (! $leaf->serialPositive) {
+            // SPEC-015 amendment 7: stricter than c2patool, which reads such a serial; the DER reader refuses it (an OCSP CertID)
+            $faults[] = $invalid(sprintf('serial number %s is not a positive integer (RFC 5280 §4.1.2.2)', $leaf->serialDecimal));
+        }
         // 3. validity at the signing time: a trusted timestamp's time, else now (C2PA 2.4 §14.6.1; SPEC-017)
         $time = $at ?? time();
         if ($time < $leaf->validFrom || $time > $leaf->validTo) {
