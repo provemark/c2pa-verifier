@@ -9810,3 +9810,16 @@ README are where the disclosure lives.
   asn1parse`; `composer check` (949 passed); PHPStan in Docker.
 - Decided by Maurice: this step instead of a round on text, audio and GIF
   only.
+
+## 2026-10-09 — The leaf's RSASSA-PSS parameters, measured (step 304)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met stap 304".
+- Produced: `ea1a15d` pushed; `notes/step-304-pss-parameters-measured.md`;
+  a row in `NOTES.md`. The generator change (nine PSS probes) was
+  measured and set aside for the fix.
+- Measured: `php bin/make-trust-matrix.php <scratch> <c2patool-0.28.1>
+  <c2patool-0.27.22>` with the nine probes; both `c2patool` versions,
+  `openssl verify` and `bin/c2pa-verify` on each, with their failure
+  explanations.
+- Reasoned: from `c2pa-rs` 0.91.1 `src/crypto/cose/certificate_profile.rs`.
+- Decided by Maurice: none in this step.
