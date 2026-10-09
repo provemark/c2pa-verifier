@@ -1,0 +1,172 @@
+{
+  "active_manifest": "urn:c2pa:4e478ee2-6114-429e-909a-06f6a8581611",
+  "manifests": {
+    "urn:c2pa:4e478ee2-6114-429e-909a-06f6a8581611": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier BMFF probes",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.1"
+        }
+      ],
+      "instance_id": "xmp.iid:a2f11e9a-044f-41ab-83a8-b1c932ef7dbc",
+      "assertions": [
+        {
+          "label": "c2pa.hash.bmff.v3",
+          "data": {
+            "exclusions": [
+              {
+                "xpath": "/uuid",
+                "data": [
+                  {
+                    "offset": 8,
+                    "value": "2P7D1hsOSDySl1goh37EgQ=="
+                  }
+                ]
+              },
+              {
+                "xpath": "/ftyp"
+              },
+              {
+                "xpath": "/mfra"
+              },
+              {
+                "xpath": "/free"
+              },
+              {
+                "xpath": "/skip"
+              }
+            ],
+            "alg": "sha256",
+            "merkle": [
+              {
+                "uniqueId": 1,
+                "localId": 1,
+                "count": 0,
+                "alg": "sha256",
+                "initHash": "589Q2ekSmLqvTP2CE8xlJ5RSmPzMN1smoMzuwfCRsPo=",
+                "hashes": [
+                  [
+                    76,
+                    105,
+                    82,
+                    117,
+                    15,
+                    216,
+                    64,
+                    136,
+                    69,
+                    176,
+                    159,
+                    121,
+                    1,
+                    65,
+                    13,
+                    55,
+                    193,
+                    245,
+                    176,
+                    168,
+                    224,
+                    238,
+                    84,
+                    24,
+                    105,
+                    126,
+                    19,
+                    55,
+                    54,
+                    65,
+                    125,
+                    196
+                  ]
+                ]
+              }
+            ],
+            "name": "jumbf manifest"
+          },
+          "created": true
+        },
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              }
+            ]
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "C2PA Verifier throw-away hierarchy",
+        "common_name": "BMFF probe signer",
+        "cert_serial_number": "568829"
+      },
+      "label": "urn:c2pa:4e478ee2-6114-429e-909a-06f6a8581611",
+      "claim_version": 2
+    }
+  },
+  "validation_status": [
+    {
+      "code": "assertion.bmffHash.mismatch",
+      "url": "self#jumbf=/c2pa/urn:c2pa:4e478ee2-6114-429e-909a-06f6a8581611/c2pa.assertions/c2pa.hash.bmff.v3",
+      "explanation": "asset hash error, name: jumbf manifest, error: hash verification( BMFF inithash must not be present for non-fragmented media )"
+    }
+  ],
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4e478ee2-6114-429e-909a-06f6a8581611/c2pa.signature",
+          "explanation": "signing certificate trusted, found in [system_anchors] trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4e478ee2-6114-429e-909a-06f6a8581611/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4e478ee2-6114-429e-909a-06f6a8581611/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4e478ee2-6114-429e-909a-06f6a8581611/c2pa.assertions/c2pa.hash.bmff.v3",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.bmff.v3"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4e478ee2-6114-429e-909a-06f6a8581611/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4e478ee2-6114-429e-909a-06f6a8581611/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        },
+        {
+          "code": "assertion.bmffHash.additionalExclusionsPresent",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4e478ee2-6114-429e-909a-06f6a8581611/c2pa.assertions/c2pa.hash.bmff.v3",
+          "explanation": "extra BMFF hash exclusion(s) found"
+        }
+      ],
+      "failure": [
+        {
+          "code": "assertion.bmffHash.mismatch",
+          "url": "self#jumbf=/c2pa/urn:c2pa:4e478ee2-6114-429e-909a-06f6a8581611/c2pa.assertions/c2pa.hash.bmff.v3",
+          "explanation": "asset hash error, name: jumbf manifest, error: hash verification( BMFF inithash must not be present for non-fragmented media )"
+        }
+      ]
+    },
+    "specVersion": "2.4.0",
+    "trustListUri": "system_anchors"
+  },
+  "validation_state": "Invalid"
+}

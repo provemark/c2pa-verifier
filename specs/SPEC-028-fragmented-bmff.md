@@ -160,6 +160,16 @@ init segment and an iterable yielding one fragment stream at a time.
     A location is a leaf's place in a tree of `count` leaves: it is at
     least 0 and less than `count`, or the fragment has no place.
 
+- **AC9 — a merkle map has a count of at least 1** *(amendment 2; oracle: both `c2patool` versions)*
+  - Given `bmff-probes/init-alone.mp4`, `init-no-count.mp4` and
+    `init-count-zero.mp4`: a signed init segment without its fragments,
+    the second with the merkle map's `count` removed, the third with it 0
+  - When the Verifier runs under the probes' settings
+  - Then all three are `Invalid` and none reports `assertion.bmffHash.match`;
+    the second and third are `assertion.bmffHash.malformed` naming the
+    count. `c2patool` cannot decode the second and calls the others
+    `Invalid`
+
 ## References
 
 - Measured, step 82 (`notes/step-82-fragmented-bmff.md`): the box layout
@@ -270,6 +280,19 @@ statuses: a fragmented stream is many files, and each status says which.
    is `Trusted`. This is a correction toward `c2patool`, not a
    difference from it. New criterion AC8.
 
+2. **2026-10-09, steps 312, 315 and 317, found by reading C2PA 2.4 §15.12** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   A merkle map without `count` read it as 0. With no fragments offered,
+   0 of 0 was `assertion.bmffHash.match`, and an init segment alone was
+   `Trusted` ("all 0 fragment(s) reach the merkle root"), checked against
+   its `initHash` only. Both `c2patool` versions refuse it: they cannot
+   decode the map without `count`, and they call a count of 0 `Invalid`.
+   `checkMerkle()` now requires an integer `count` of at least 1, else
+   `assertion.bmffHash.malformed`. A tree of no leaves binds nothing. New
+   AC9.
+
+   **Weight A: two probes move from `Trusted` to `Invalid`, as in
+   `c2patool`.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -290,3 +313,4 @@ All tests are in `tests/Unit/Verifier/FragmentedVerifierTest.php`, group
 | AC6 | `AC6: more than one merkle map is refused by name` | `FragmentedVerifier::merkleMapOf()`, `BmffHashCheck::merkleMapOf()` |
 | AC7 | `AC7: a whole file still behaves exactly as it did` | `Verifier` (unchanged), `BmffHashCheck::check()` |
 | AC8 | `AC8: a location outside the tree does not fill a place in it` | `BmffHashCheck::checkFragment()` (the range check); `bin/make-fragmented-variants.php` |
+| AC9 (amendment 2) | tests/Unit/Hash/BmffProbesTest.php :: AC9: a merkle map without a count, or with a count of 0, is malformed / SPEC-028 | src/Hash/BmffHashCheck.php :: checkMerkle() (the count); bin/make-bmff-probe-variants.php |

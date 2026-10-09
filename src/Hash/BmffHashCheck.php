@@ -105,7 +105,7 @@ final readonly class BmffHashCheck
             return [new ValidationStatus(StatusCode::AssertionBmffHashMalformed, $url, $shape)];
         }
         try {
-            $assertion = $this->assertionOf($data);
+            $assertion = $this->assertionOf($data, $manifest->claim->alg);
             $this->bound($assertion['exclusions']);
             // the checks before this one have read the stream to its end; the box walk
             // reads forward from wherever it is told to start
@@ -209,7 +209,16 @@ final readonly class BmffHashCheck
         if (! $root instanceof CborBytes) {
             return [new ValidationStatus(StatusCode::AssertionBmffHashMismatch, $url, self::LABEL.': the merkle map has no root hash')];
         }
-        $count = is_int($map['count'] ?? null) ? $map['count'] : 0;
+        // a tree of no leaves binds nothing: the count is required and at least 1 (SPEC-028 amendment 2; c2pa-rs
+        // cannot decode a map without it and refuses a count of 0)
+        $count = $map['count'] ?? null;
+        if (! is_int($count) || $count < 1) {
+            return [new ValidationStatus(StatusCode::AssertionBmffHashMalformed, $url, sprintf(
+                '%s: the merkle map has %s; a tree needs at least one fragment',
+                self::LABEL,
+                $count === null ? 'no count' : (is_int($count) ? 'a count of '.$count : 'a count that is not an integer'),
+            ))];
+        }
 
         $seen = [];
         foreach ($this->fragments as $name => $fragment) {
@@ -469,18 +478,20 @@ final readonly class BmffHashCheck
     }
 
     /**
-     * The assertion, read whole before a byte of the asset is touched.
+     * The assertion, read whole before a byte of the asset is touched. Without its own `alg`, the
+     * claim's applies, as for a data hash and as c2pa-rs does (C2PA 2.4 §13.1, §15.4.1;
+     * SPEC-027 amendment 8); SHA-256 only when the claim names none either.
      *
      * @return array{alg: string, hash: string|null, merkle: mixed, exclusions: list<array<string, mixed>>}
      *
      * @throws HashException
      */
-    public function assertionOf(mixed $data): array
+    public function assertionOf(mixed $data, ?string $claimAlg = null): array
     {
         if (! is_array($data) || array_is_list($data)) {
             throw new HashException(self::LABEL.' is not a CBOR map');
         }
-        $alg = $data['alg'] ?? 'sha256';
+        $alg = $data['alg'] ?? $claimAlg ?? 'sha256';
         if (! is_string($alg) || ! in_array($alg, self::ALGORITHMS, true)) {
             throw new HashException(sprintf('%s: hash algorithm %s is not one this verifier implements', self::LABEL, is_string($alg) ? $alg : gettype($alg)));
         }

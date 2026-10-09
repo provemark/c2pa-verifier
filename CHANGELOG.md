@@ -20,6 +20,13 @@ committed.
   used the first token, so a signer that had expired stayed `Trusted` on a
   trusted token; both `c2patool` versions say `Invalid`. Now the header is
   `timeStamp.malformed` and the signer is judged at the current time.
+- **A BMFF hash without its own `alg` uses the claim's (SPEC-027 amendment
+  8).** It fell back to SHA-256, unlike a data hash, the specification and
+  `c2patool`.
+- **A merkle map needs a `count` of at least 1 (SPEC-028 amendment 2).**
+  Without one, an init segment alone matched as "0 of 0 fragments" and was
+  `Trusted`; both `c2patool` versions refuse it. It is
+  `assertion.bmffHash.malformed` now.
 
 ## 0.5.3 — 2026-10-09
 

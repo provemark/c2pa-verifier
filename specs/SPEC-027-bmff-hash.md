@@ -161,6 +161,13 @@ range — none of which any fixture here exercises.
     `assertion.bmffHash.mismatch`, the two signed files `Trusted`, and
     the fragmented stream `Invalid` with `assertion.bmffHash.mismatch`.
 
+- **AC9 — without its own `alg`, the claim's applies** *(amendment 8; oracle: both `c2patool` versions)*
+  - Given `bmff-probes/sha384-control.mp4` and `sha384-bmff-no-alg.mp4`,
+    signed with a SHA-384 claim, the second with its BMFF hash's `alg`
+    removed
+  - When the Verifier runs under the probes' settings
+  - Then both are `Trusted`, as in `c2patool` 0.27.22 and 0.28.1
+
 ## References
 
 - Specification: C2PA 2.4 §11.3 and the BMFF hash section; ISO/IEC
@@ -279,6 +286,20 @@ final readonly class BmffHashCheck
    `Invalid` becomes `Trusted`, which is a correction toward `c2patool`,
    not a leniency. New criterion AC8.
 
+8. **2026-10-09, steps 312, 315 and 317, found by reading C2PA 2.4 §13.1 and §15.4.1** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   A BMFF hash without its own `alg` fell back to SHA-256 here, where the
+   specification and `c2pa-rs` use the claim's algorithm, and where
+   `DataHashCheck` already did. Measured in step 315: an MP4 with a SHA-384
+   claim and a BMFF hash without `alg` was `Invalid` here and `Trusted` in
+   both `c2patool` versions. The other direction is read, not built: a
+   SHA-256 hash under a SHA-384 claim would have been `Trusted` here and
+   `Invalid` there. `assertionOf()` now takes the claim's `alg` and falls
+   back to SHA-256 only when neither names one, as `c2pa-rs`'s
+   `Claim::alg()` does. New AC9.
+
+   **Weight A: the probe moves from `Invalid` to `Trusted`, as in
+   `c2patool`.**
+
 ## Open questions
 
 1. **A file whose first top-level box is included.** Both fixtures begin
@@ -322,3 +343,4 @@ the source is `src/Hash/BmffHashCheck.php` unless another file is named.
 | AC6 | `AC6: the assertion's own shape is checked before a digest is computed` | `assertionOf()` |
 | AC7 | `AC7: no image fixture changes its answer because ISOBMFF gained a hard binding` | `src/Verifier/Verifier.php` (the dispatch), `DataHashCheck` unchanged |
 | AC8 | tests/Unit/Hash/BmffHashCheckTest.php :: AC8 / SPEC-027 | src/Hash/BmffHashCheck.php (`withTail()`, in `check()` and `checkFragment()`); bin/make-bmff-tail-variants.php |
+| AC9 (amendment 8) | tests/Unit/Hash/BmffProbesTest.php :: AC9: a BMFF hash without alg uses the claim's algorithm / SPEC-027 | src/Hash/BmffHashCheck.php :: assertionOf() (\$claimAlg), check(); bin/make-bmff-probe-variants.php |

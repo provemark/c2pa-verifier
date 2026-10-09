@@ -10023,3 +10023,21 @@ README are where the disclosure lives.
   found in §15.8.1.1 of the fetched specification; `composer check` (955
   passed); PHPStan in Docker.
 - Decided by Maurice: the fix order F1–F5; this fix.
+
+## 2026-10-09 — A BMFF hash's algorithm, and a merkle map's count (step 317, fix F2)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met F2".
+- Produced: `a2ad9a4` pushed; SPEC-027 amendment 8 and AC9, SPEC-028
+  amendment 2 and AC9; `src/Hash/BmffHashCheck.php`;
+  `bin/make-bmff-probe-variants.php`; five fixtures in
+  `tests/Fixtures/bmff-probes/` with a README and both `c2patool`
+  versions' answers; `tests/Unit/Hash/BmffProbesTest.php`; the CHANGELOG;
+  `docs/reading-c2pa-2.4.md`; `notes/step-317-bmff-alg-and-merkle-count.md`;
+  a row in `NOTES.md`.
+- Measured: the builder's run (each probe judged by both `c2patool`
+  versions); the tests red (2 failed), then green; the corpus (851 files ×
+  160 settings modes, before and after: 480 runs moved, all the probes);
+  `bin/fuzz.php` without settings and with `--trust` on two seeds, every
+  suspect judged by `c2patool` 0.28.1 (none more lenient); `composer check`
+  (957 passed); PHPStan in Docker.
+- Decided by Maurice: this fix.

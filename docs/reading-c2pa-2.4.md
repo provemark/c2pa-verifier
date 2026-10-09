@@ -69,7 +69,7 @@ by both `c2patool` versions (see *Measured in step 313* below).
 
 | # | what | here | `c2pa-rs` 0.91.1 | packs |
 |---|---|---|---|---|
-| L1 | a BMFF hash without `alg` | `BmffHashCheck::assertionOf()` falls back to SHA-256 | the claim's `alg` (§13.1, §15.4.1) | P03-1, P07-2, P06-12 |
+| L1 | a BMFF hash without `alg` | fell back to SHA-256; **fixed: SPEC-027 amendment 8** | the claim's `alg` (§13.1, §15.4.1) | P03-1, P07-2, P06-12 |
 | L2 | a data hash without `pad` (§18.5.2 requires it) | accepted | `DataHash::pad` is required; the assertion cannot be decoded | P07-1 |
 | L3 | two tokens in `tstTokens` | the first was judged and its time used; **fixed: SPEC-017 amendment 9** | `timeStamp.malformed`, the timestamp dropped (`sigtst.rs`) | P05-1 |
 | L4 | a metadata assertion without `@context` in a version 2 claim | not read | `verify_metadata()` stops the validation | P09-1 |
@@ -80,7 +80,7 @@ by both `c2patool` versions (see *Measured in step 313* below).
 | L9 | a manifest of type `c2md` (§11.2.2: consumers shall accept it) | an unknown box: mostly `claim.missing` (stricter), but in a store `[c2ma, c2md]` the older manifest is made active | read as a standard manifest | P02-1 |
 | L10 | two manifests with one label | `ManifestStore::fromTree()` keeps the first one's place and the later one's content, and makes `array_key_last()` active: `[X, Y, X']` validates `Y` | the last box, `X'` | P01-1, P02-2, P04-1 |
 | L11 | a version 2 manifest whose label is not a C2PA URN | not checked | `claim.malformed` | P02-3 |
-| L12 | a merkle map on a single, unfragmented file | no `count` reads as 0; with no fragments offered, 0 of 0 is a match and only `initHash` is checked | refuses an `initHash` on unfragmented media (read by the pack) | P06-4 |
+| L12 | a merkle map on a single, unfragmented file | no `count` read as 0, and 0 of 0 was a match; **fixed: SPEC-028 amendment 2** | refuses an `initHash` on unfragmented media (read by the pack) | P06-4 |
 | L13 | a version 2 claim whose `claim_generator_info` is an empty map | taken as the empty list SPEC-007 amendment 4 allows for version 1; no `name` check | `claim.malformed` | P04-2 |
 
 ### Measured in step 313
