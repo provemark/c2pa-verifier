@@ -51,11 +51,11 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §15.1 to §15.6 | 33 | 12 | 6 | 4 | 10 | 1 |
 | §15.7 to §15.9 | 47 | 23 | 9 | 4 | 5 | 6 |
 | §15.10 to the end of §15 | 124 | 77 | 16 | 13 | 9 | 9 |
-| §18.1 to §18.9 | 50 | 23 | 4 | 5 | 11 | 7 |
+| §18.1 to §18.9 | 50 | 23 | 4 | 6 | 11 | 6 |
 | §18.10 to §18.16 | 58 | 19 | 10 | 3 | 12 | 14 |
 | §18.17 to the end of §18 | 34 | 4 | 2 | 2 | 11 | 14 (and 1 other) |
 | Appendix A | 50 | 22 | 2 | 7 | 13 | 6 |
-| **all** | **562** | **280** | **65** | **53** | **101** | **62** |
+| **all** | **562** | **280** | **65** | **54** | **101** | **61** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -70,7 +70,7 @@ by both `c2patool` versions (see *Measured in step 313* below).
 | # | what | here | `c2pa-rs` 0.91.1 | packs |
 |---|---|---|---|---|
 | L1 | a BMFF hash without `alg` | fell back to SHA-256; **fixed: SPEC-027 amendment 8** | the claim's `alg` (§13.1, §15.4.1) | P03-1, P07-2, P06-12 |
-| L2 | a data hash without `pad` (§18.5.2 requires it) | accepted | `DataHash::pad` is required; the assertion cannot be decoded | P07-1 |
+| L2 | a data hash without `pad` (§18.5.2 requires it of the claim generator) | accepted; **by design: §15.12.1.1 tells the validator to ignore the presence and contents of `pad` and `pad2` (SPEC-012 amendment 10)** | `DataHash::pad` is required; the assertion cannot be decoded | P07-1 |
 | L3 | two tokens in `tstTokens` | the first was judged and its time used; **fixed: SPEC-017 amendment 9** | `timeStamp.malformed`, the timestamp dropped (`sigtst.rs`) | P05-1 |
 | L4 | a metadata assertion without `@context` in a version 2 claim | not read | `verify_metadata()` stops the validation | P09-1 |
 | L5 | a malformed `c2pa.time-stamp` assertion | not read | `assertion.timestamp.malformed` | P09-2, P06-2 |
@@ -94,7 +94,7 @@ fix.
 | probe | `c2patool` 0.28.1 | 0.27.22 | here | candidate |
 |---|---|---|---|---|
 | control, and control signed again | `Trusted` | `Trusted` | `Trusted` | — |
-| data hash without `pad` | error: missing field `pad` | error | **`Trusted`** | L2, confirmed |
+| data hash without `pad` | error: missing field `pad` | error | **`Trusted`** | L2: by design, §15.12.1.1 (SPEC-012 amendment 10) |
 | metadata assertion without `@context` | error: could not decode | error | **`Trusted`** | L4, confirmed |
 | `c2pa.time-stamp` whose value is text, not a token | `Trusted` | `Trusted` | `Trusted` | L5, **not confirmed**: no difference |
 | `c2pa.certificate-status` without `ocspVals` | error: missing field `ocspVals` | error | **`Trusted`** | L6, confirmed |
@@ -1127,7 +1127,7 @@ binding and is not read. `c2pa-rs` 0.91.1 was read beside it
 | 18.5.1, 18.6.1, 18.7.1 | ... nor in a cloud data assertion. | `c2pa.cloud-data` is not read anywhere in `src/`; only its hashed URI is checked | **candidate** | read: `grep -i cloud src` finds only the external-reference list; → P07-3 |
 | 18.5.1 | A data hash is not used with a compressed manifest. | compressed manifests (`c2cm`) and boxes (`brob`) are refused before any assertion is read | covered by construction | measured: `JumbfParserTest` AC13 |
 | 18.5.2 | `start` and `length` are written as short as possible, or as 32-bit placeholders. | the decoder reads either form | n/a (writer guidance) | read |
-| 18.5.2 | `pad` is present and zero-filled; `pad2`, when present, is zero-filled. | `DataHashCheck` reads past both and does not require `pad`. `c2pa-rs` requires `pad` (its `DataHash` has no serde default) but does not check the zeros | **candidate** | read: `DataHashCheck::check()`, SPEC-012 *Behavior* 2 (`name` and `pad` are read past); `data_hash.rs`; → P07-1 |
+| 18.5.2 | `pad` is present and zero-filled; `pad2`, when present, is zero-filled. | `DataHashCheck` reads past both and does not require `pad`. `c2pa-rs` requires `pad` (its `DataHash` has no serde default) but does not check the zeros | **by design** (§15.12.1.1: the validator ignores `pad` and `pad2`; SPEC-012 amendment 10) | read: `DataHashCheck::check()`, SPEC-012 *Behavior* 2 (`name` and `pad` are read past); `data_hash.rs`; → P07-1 |
 | 18.5.3 | JPEG: the APP11 marker and `Lp` of every C2PA segment are inside the exclusion; the segments are contiguous, so one range is enough. | `ManifestStoreBytes::$ranges` include each segment's framing; every piece must sit inside an exclusion that holds only the store | covered | measured: `DataHashCheckTest` AC3 |
 | 18.5.4 | PNG: the chunk's length and `caBX` type are inside the exclusion. | as above (PNG ranges start at the length field) | covered | measured: `DataHashCheckTest` AC3 |
 | 18.5.5 | TIFF: the IFD entry's count should be excluded. | no TIFF reader | n/a | — |
@@ -1172,6 +1172,9 @@ binding and is not read. `c2pa-rs` 0.91.1 was read beside it
   (`PRED-CROSS-006`, `PRED-CONT-005`) reads "pad and pad2 are never read"
   as meeting the rule; §18.5.2 also requires `pad` to be there.
   **Possibly more lenient than c2patool.**
+  **Resolved, step 319:** §15.12.1.1 says *"The validator shall ignore
+  the presence and contents of pad and pad2 fields"*; §18.5.2 binds the
+  claim generator. By design, SPEC-012 amendment 10 (Maurice's choice A).
 - **P07-2 — BMFF `alg` fallback (§18.6.2).** `BmffHashCheck::assertionOf()`
   uses `sha256` when the assertion has no `alg`. It never uses the claim's
   `alg`, though `DataHashCheck` does. `c2pa-rs` uses the assertion's

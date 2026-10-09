@@ -1,7 +1,8 @@
-# Manifest probes from the reading of C2PA 2.4 (SPEC-007 amendment 7)
+# Manifest probes from the reading of C2PA 2.4 (SPEC-007 amendment 7, SPEC-012 amendment 10)
 
 Built by `bin/make-manifest-probe-variants.php <scratch> <c2patool-0.28.1>
-<c2patool-0.27.22>` on 2026-10-09 (step 318). `c2patool` 0.28.1 signed
+<c2patool-0.27.22>` on 2026-10-09 (step 318; rebuilt with the two data-hash
+probes in step 319, with new keys). `c2patool` 0.28.1 signed
 `fixture-unsigned.png` with a throw-away P-256 hierarchy; the keys lived in
 a scratch directory and were deleted. `throw-away-root.pem` is the public
 root, and `throw-away-root.settings.json` holds it as the legacy
@@ -19,6 +20,8 @@ the file valid.
 | `cgi-empty.png` | `claim_generator_info` replaced by `{}` | error | error | `Invalid` |
 | `label-not-urn.png` | the label `urn:c2pa:…` made `urx:c2pa:…`, in the claim's signature reference too | `Invalid` | `Invalid` | `Invalid` |
 | `type-c2md.png` | the manifest box's type `c2ma` made `c2md` | `Trusted` | `Trusted` | `Trusted` |
+| `datahash-no-pad.png` | the data hash's `pad` key renamed `paX` (SPEC-012 amendment 10) | error: cannot decode | error | `Trusted` |
+| `datahash-pad-text.png` | the data hash's `pad` a text string | `Trusted` | `Trusted` | `Trusted` |
 | `parent.png` | signed by `c2patool` with `control.png` as its parent: `[X, Y]` | `Trusted` | `Trusted` | `Trusted` |
 | `duplicate-label-last.png` | a copy of `X` appended: `[X, Y, X']` | `Invalid` | `Invalid` | `Invalid` |
 | `duplicate-label-middle.png` | a copy of `X` after it: `[X, X', Y]` | `Trusted` | `Trusted` | `Invalid` |

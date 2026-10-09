@@ -1,0 +1,4 @@
+Error: could not decode assertion c2pa.hash.data (version (no version), content type application/cbor): missing field `pad`
+
+Caused by:
+    missing field `pad`

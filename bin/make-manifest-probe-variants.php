@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 /*
- * Steps 313, 315 and 318: PNG probes for the manifest and its signature, from the reading of C2PA 2.4
- * (docs/reading-c2pa-2.4.md, L9, L10, L11, L13 and C1). `c2patool` 0.28.1 signs with a throw-away P-256 hierarchy;
+ * Steps 313, 315, 318 and 319: PNG probes for the manifest and its signature, from the reading of C2PA 2.4
+ * (docs/reading-c2pa-2.4.md, L2, L9, L10, L11, L13 and C1). `c2patool` 0.28.1 signs with a throw-away P-256 hierarchy;
  * a probe `c2patool` will not write is made by editing the store: the bytes replaced, every enclosing box resized,
  * the data hash's exclusion re-lengthened to the new caBX chunk and its hashed URI recomputed, the claim signed
  * again with the throw-away leaf, and the chunk's length and CRC set. Each edit is first run on a change that keeps
@@ -16,6 +16,8 @@ declare(strict_types=1);
  *   cgi-empty                claim_generator_info replaced by an empty map (L13)
  *   label-not-urn            the manifest label urn:c2pa:… changed to urx:c2pa:…, the claim's signature reference too (L11)
  *   type-c2md                the manifest box's type UUID c2ma changed to c2md, which §11.2.2 says to accept (L9)
+ *   datahash-no-pad          the data hash's pad key renamed paX: no pad (L2, §18.5.2)
+ *   datahash-pad-text        the data hash's pad a text string of the same length
  *   parent                   fixture-unsigned.png signed with control.png as its parent: [X, Y]
  *   duplicate-label-last     the same with a copy of the parent's manifest appended: [X, Y, X'] (L10)
  *   duplicate-label-middle   the copy right after the parent's manifest: [X, X', Y]
@@ -128,10 +130,10 @@ function mqSplice(string $s, int $at, int $length, string $with): string
  * The store put back into the PNG with the active manifest made whole again: its data hash's exclusion
  * re-lengthened to the new chunk, its hashed URI for the data hash recomputed, its claim signed again.
  */
-function mqFinish(string $png, int $chunk, string $s, string $key): string
+function mqFinish(string $png, int $chunk, string $s, string $key, ?Closure $editDataHash = null): string
 {
-    $manifest = ManifestStore::fromTree((new JumbfParser)->parse($s))->active;
-    $claim = $manifest->claimBytes();
+    // found in the bytes, not through ManifestStore, which refuses some of the probes this builds
+    [$claim, $signature] = [mqCbor($s, 'c2pa.claim.v2'), mqCbor($s, 'c2pa.signature')];
     $claimAt = (int) strrpos($s, $claim);
     $label = (int) strrpos(substr($s, 0, $claimAt), "c2pa.hash.data\0");
     $box = (int) strrpos(substr($s, 0, $label), 'jumb') - 4;
@@ -144,6 +146,13 @@ function mqFinish(string $png, int $chunk, string $s, string $key): string
         0x1A => substr_replace($s, pack('N', $total), $lengthAt + 1, 4),
         default => throw new RuntimeException('the exclusion length is neither a 2- nor a 4-byte CBOR uint'),
     };
+    if ($editDataHash !== null) {
+        $content = $editDataHash(substr($s, $box + 8, $boxLength - 8));
+        if (! is_string($content) || strlen($content) !== $boxLength - 8) {
+            throw new RuntimeException('an edit of the data hash keeps its length');
+        }
+        $s = substr_replace($s, $content, $box + 8, $boxLength - 8);
+    }
     $q = strpos($claim, hash('sha256', $before, true));
     if ($q === false) {
         throw new RuntimeException('the claim holds no hash of its data hash');
@@ -151,7 +160,19 @@ function mqFinish(string $png, int $chunk, string $s, string $key): string
     $claim = substr_replace($claim, hash('sha256', substr($s, $box + 8, $boxLength - 8), true), $q, 32);
     $s = substr_replace($s, $claim, $claimAt, strlen($claim));
 
-    return mqChunk($png, $chunk, mqSign($s, $claim, $manifest->signatureBytes(), $key));
+    return mqChunk($png, $chunk, mqSign($s, $claim, $signature, $key));
+}
+
+/** The content of the cbor box of the last superbox labelled $label: the active manifest's, the store's last. */
+function mqCbor(string $s, string $label): string
+{
+    $at = strrpos($s, $label."\0");
+    $cbor = $at === false ? false : strpos($s, 'cbor', $at);
+    if ($cbor === false) {
+        throw new RuntimeException("no cbor box after {$label}");
+    }
+
+    return substr($s, $cbor + 4, bU32($s, $cbor - 4) - 8);
 }
 
 /** The COSE_Sign1 $signature inside $s signed again (ES256) over $claim with $key. */
@@ -233,6 +254,26 @@ $valueLength = bCborEnd($s, $value) - $value;
 file_put_contents("{$dir}/cgi-shorter.png", mqFinish($png, $chunk, mqSplice($s, $value, $valueLength, "\xa1\x64name\x61p"), "{$keys}/leaf.key"));
 file_put_contents("{$dir}/cgi-empty.png", mqFinish($png, $chunk, mqSplice($s, $value, $valueLength, "\xa0"), "{$keys}/leaf.key"));
 
+// ---- the data hash's pad (L2): removed (its key renamed), and given as text ----
+$padKey = static function (string $content): int {
+    $at = strpos($content, "\x63pad");
+    if ($at === false || strpos($content, "\x63pad", $at + 1) !== false) {
+        throw new RuntimeException('the data hash does not hold one pad key');
+    }
+
+    return $at;
+};
+file_put_contents("{$dir}/datahash-no-pad.png", mqFinish($png, $chunk, $s, "{$keys}/leaf.key", static fn (string $c): string => substr_replace($c, "\x63paX", $padKey($c), 4)));
+file_put_contents("{$dir}/datahash-pad-text.png", mqFinish($png, $chunk, $s, "{$keys}/leaf.key", static function (string $c) use ($padKey): string {
+    $at = $padKey($c) + 4;
+    $head = ord($c[$at]);
+    if ($head < 0x40 || $head > 0x57) {
+        throw new RuntimeException('the pad is not a short byte string');
+    }
+
+    return substr_replace($c, chr($head + 0x20), $at, 1);
+}));
+
 // ---- the manifest label (L11): every occurrence, the claim's own reference to its signature too ----
 $active = ManifestStore::fromTree((new JumbfParser)->parse($s))->active;
 $label = $active->label;
@@ -273,7 +314,7 @@ $coseAt = (int) strpos($s, $signature);
 file_put_contents("{$dir}/x5chain-unprotected-too.png", mqFinish($png, $chunk, mqSplice($s, $coseAt, strlen($signature), $rebuilt), "{$keys}/leaf.key"));
 
 // ---- the oracles ----
-foreach (['control', 'cgi-shorter', 'cgi-empty', 'label-not-urn', 'type-c2md', 'parent', 'duplicate-label-last', 'duplicate-label-middle', 'x5chain-unprotected-too'] as $name) {
+foreach (['control', 'cgi-shorter', 'cgi-empty', 'label-not-urn', 'type-c2md', 'datahash-no-pad', 'datahash-pad-text', 'parent', 'duplicate-label-last', 'duplicate-label-middle', 'x5chain-unprotected-too'] as $name) {
     foreach (['0.28.1' => $new, '0.27.22' => $old] as $v => $tool) {
         $lines = [];
         exec(mqSh($tool, "{$dir}/{$name}.png", '--settings', "{$dir}/throw-away-root.settings.json").' 2>&1', $lines);

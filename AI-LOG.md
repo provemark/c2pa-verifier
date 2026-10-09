@@ -10063,3 +10063,19 @@ README are where the disclosure lives.
   specification, and `c2pa-rs` 0.91.1's label check; `composer check` (962
   passed); PHPStan in Docker.
 - Decided by Maurice: this fix. Not decided: C1 (label 33 in both headers).
+
+## 2026-10-09 — A data hash's pad is ignored, by design (step 319, F4)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met F4"; after the finding below, "A,
+  leg het vast en ga door met F5".
+- Produced: `5b4624e` pushed; SPEC-012 amendment 10 (AC12); two probes in
+  `bin/make-manifest-probe-variants.php` (all its fixtures rebuilt with new
+  keys); AC12 in `tests/Unit/Manifest/ManifestProbesTest.php`; the
+  fixtures' README; `docs/reading-c2pa-2.4.md` (L2 and the §18.5.2 row by
+  design, tallies); `notes/step-319-pad-is-ignored.md`; a row in
+  `NOTES.md`.
+- Measured: both probes judged by both `c2patool` versions and here;
+  §15.12.1.1 read in the fetched specification; `composer check` (963
+  passed); PHPStan in Docker.
+- Decided by Maurice: choice A — follow §15.12.1.1, no code change, name
+  the difference with `c2patool`.

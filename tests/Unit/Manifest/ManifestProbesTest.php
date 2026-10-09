@@ -83,3 +83,16 @@ it('AC19: a version 2 claim whose claim_generator_info is an empty map is claim.
         ->and(spec007ProbeOracle('cgi-empty', '0.28.1'))->toBeNull()
         ->and(spec007ProbeOracle('cgi-empty', '0.27.22'))->toBeNull();
 })->group('SPEC-007');
+
+it('AC12: the pad of a data hash is ignored, missing or of another type, as C2PA 2.4 §15.12.1.1 says (SPEC-012 amendment 10)', function (): void {
+    foreach (['datahash-no-pad', 'datahash-pad-text'] as $name) {
+        $report = spec007Probe($name);
+
+        expect($report->result->state->value)->toBe('Trusted', $name)
+            ->and(spec007ProbeFailure($report, 'assertion.dataHash.match'))->not->toBe('', $name);
+    }
+    // the named difference: c2patool cannot decode a data hash without pad; it reads a text pad
+    expect(spec007ProbeOracle('datahash-no-pad', '0.28.1'))->toBeNull()
+        ->and(spec007ProbeOracle('datahash-no-pad', '0.27.22'))->toBeNull()
+        ->and(spec007ProbeOracle('datahash-pad-text', '0.28.1'))->toBe('Trusted');
+})->group('SPEC-012');

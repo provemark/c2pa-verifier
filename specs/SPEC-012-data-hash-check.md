@@ -508,6 +508,26 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
 
    Approved by Maurice van Loon, 2026-10-05 (step 247).
 
+10. **2026-10-09, steps 312, 313 and 319, decided by Maurice van Loon (choice A)** —
+    The reading of C2PA 2.4 listed a data hash without `pad` as lenient
+    (candidate L2): §18.5.2's schema has `"pad": bstr` as required. That
+    schema binds the claim generator. For the validator, §15.12.1.1 says
+    *"The validator shall ignore the presence and contents of pad and pad2
+    fields."* This verifier already does. Measured with two probes from
+    `bin/make-manifest-probe-variants.php`: `datahash-no-pad.png` (the
+    key renamed) is `Trusted` here, and both `c2patool` versions cannot
+    decode the assertion. `datahash-pad-text.png` (the pad a text string)
+    is `Trusted` here and in both. A pad lies inside the signed assertion
+    and outside what the hash covers, so neither its presence nor its type
+    changes what is bound. No change to the code.
+
+    - **AC12 (new) — the pad is ignored.** Both probes are `Trusted`
+      under the probes' settings; the difference with `c2patool` on the
+      first is named in the test.
+
+    **Weight B: a named difference with `c2patool`, from the
+    specification's own validator rule.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -526,3 +546,4 @@ least one test; every source file maps back to this spec.
 | AC9 | tests/Unit/Hash/DataHashCheckTest.php :: AC9: streamed, not slurped / SPEC-012 | src/Hash/DataHashCheck.php :: hashExcept() (StreamReader, $chunkSize) |
 | AC10 | tests/Unit/Hash/DataHashCheckTest.php :: AC10: the codes are verbatim, and informational is a third kind / SPEC-012 | src/Report/StatusCode.php :: the six cases, isSuccess(), isInformational(), isFailure(); src/Report/ValidationResult.php :: fromStatuses() |
 | AC11 | tests/Unit/Hash/DataHashCheckTest.php :: AC11: a hard binding is known by its base label: c2pa.hash.data__1 alone is verified, as c2patool verifies it (amendment 9, step 247); AC11: c2pa.hash.data beside c2pa.hash.data__1 is two hard bindings, as c2patool says (amendment 9, step 247) / SPEC-012 | src/Hash/HardBindings.php; src/Hash/DataHashCheck.php :: check(); src/Hash/BmffHashCheck.php :: labelOf(); src/Verifier/Verifier.php :: verify() (the count) |
+| AC12 | tests/Unit/Manifest/ManifestProbesTest.php :: AC12: the pad of a data hash is ignored, missing or of another type / SPEC-012 | src/Hash/DataHashCheck.php :: check() (pad not read) |
