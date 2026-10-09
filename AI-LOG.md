@@ -10212,3 +10212,14 @@ README are where the disclosure lives.
   seeds, every suspect judged by `c2patool` 0.28.1 (none more lenient);
   `composer check` (972 passed).
 - Decided by Maurice: adopt C4, the anchor included.
+
+## 2026-10-09 — The shape rules of §18 by design, and C7 (step 328)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push, C7 via AKI en begin met punt 3 en wat is punt 3?"
+- Produced: `79549c5` pushed; `docs/reading-c2pa-2.4.md` (nineteen §18
+  rows by design, the C7 row covered, C7 resolved, tallies);
+  `notes/step-328-section-18-shapes-by-design.md`; a row in `NOTES.md`.
+- Reasoned: §15.10.3.2 of the fetched specification; the rows selected by
+  section, leaving out §18.6, §18.14 and §18.18; the candidate count
+  recounted (23) against the tallies. `composer check` (972 passed).
+- Decided by Maurice: C7 covered through the AKI rules; point 3.

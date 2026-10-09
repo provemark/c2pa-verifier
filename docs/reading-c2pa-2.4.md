@@ -47,15 +47,15 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §5 to §9 | 41 | 20 | 3 | 4 | 14 | 0 |
 | §10 to §11 | 55 | 37 | 6 | 4 | 8 | 0 |
 | §13, §16, §17, Appendix C | 29 | 18 | 3 | 1 | 6 | 1 |
-| §14 | 41 | 31 | 1 | 6 | 2 | 1 |
+| §14 | 41 | 32 | 1 | 6 | 2 | 0 |
 | §15.1 to §15.6 | 33 | 13 | 6 | 4 | 10 | 0 |
 | §15.7 to §15.9 | 47 | 24 | 9 | 4 | 5 | 5 |
 | §15.10 to the end of §15 | 124 | 81 | 16 | 13 | 9 | 5 |
-| §18.1 to §18.9 | 50 | 25 | 4 | 6 | 11 | 4 |
-| §18.10 to §18.16 | 58 | 20 | 11 | 6 | 12 | 9 |
-| §18.17 to the end of §18 | 34 | 4 | 2 | 4 | 11 | 12 (and 1 other) |
+| §18.1 to §18.9 | 50 | 25 | 4 | 7 | 11 | 3 |
+| §18.10 to §18.16 | 58 | 20 | 11 | 14 | 12 | 1 |
+| §18.17 to the end of §18 | 34 | 4 | 2 | 14 | 11 | 2 (and 1 other) |
 | Appendix A | 50 | 22 | 2 | 7 | 13 | 6 |
-| **all** | **562** | **295** | **63** | **59** | **101** | **43** |
+| **all** | **562** | **296** | **63** | **78** | **101** | **23** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -502,7 +502,7 @@ certificates of the path go through OpenSSL's chain verification.
 | 14.5.1.1 | No `issuerUniqueID` or `subjectUniqueID`. | not checked for any certificate. `c2pa-rs` refuses them on the end-entity certificate ("certificate issuer/subject unique ids are not allowed") | covered for the leaf since step 311 (SPEC-015 amendment 9); not checked above it | measured: step 310 found a leaf with either field `Trusted` here, `Invalid` in both `c2patool` versions; `UniqueIdTest` → C4 for the others |
 | 14.5.1.1 | A key that signs certificates has `cA`; one that signs claims, timestamps or OCSP responses has neither `cA` nor `keyCertSign`; only end entities sign those. | issuers: `ChainCheck::issuerFault()` (SPEC-014 amendments 4 and 7); the leaf and the TSA leaf: `checkLeaf()` | covered | measured: trust matrix (`leaf-ca-true`, `leaf-ku-cert-sign`, `int-ca-false`), SPEC-017 amendment 8 |
 | 14.5.1.1 | Authority Key Identifier in every certificate that is not self-signed. | the leaf; every certificate above it that is not self-signed since step 327 (SPEC-014 amendment 8) | covered | measured: SPEC-015 → C4 |
-| 14.5.1.1 | Subject Key Identifier in every certificate that acts as a CA (should, for end entities). | read (`Certificate::$hasSubjectKeyIdentifier`) but required nowhere | **candidate** | read → C7 |
+| 14.5.1.1 | Subject Key Identifier in every certificate that acts as a CA (should, for end entities). | not required on its own; a CA without one leaves the certificate below it without an AKI keyid, which the AKI rules refuse (the leaf: SPEC-015; above it: SPEC-014 amendment 8), as `c2patool` and OpenSSL do | covered through the AKI rules (step 328, decided by Maurice) | measured: `int-no-ski`, `anchor-no-ski` in the trust matrix |
 | 14.5.1.1 | Key Usage present; a manifest signer asserts digitalSignature; keyCertSign only with `cA`. | present: the leaf (SPEC-015), issuers (SPEC-014 amendment 7). Digital Signature is required of a manifest signer since step 326 (SPEC-015 amendment 10); `c2pa-rs` also takes Non Repudiation alone | covered | measured: `CertificateProfileCheckTest` AC4 |
 | 14.5.1.1 | End entities carry a non-empty EKU, never anyExtendedKeyUsage; a TSA has timeStamping, an OCSP responder OCSPSigning, exactly one of the two and nothing else; unknown EKUs do not reject. | `ekuFaults()`; the TSA's list (SPEC-017 AC7); `OcspCheck` for the responder | covered | measured: SPEC-015, SPEC-062 EKU probes, SPEC-030 |
 | 14.5.1.2 | A certificate in the private credential store is accepted; that store is not used for timestamps. | as in §14.4.3 | covered | as there |
@@ -549,6 +549,11 @@ certificates of the path go through OpenSSL's chain verification.
   §14.5.1.1 and RFC 5280 §4.2.1.2. Checked nowhere here; `c2pa-rs` checks
   it only on a certificate it is about to reject as a CA anyway. Stricter
   than `c2patool` if adopted.
+  **Resolved in step 328** (Maurice): covered through the AKI rules. The
+  probes of step 327 show it: below a CA without a SKI, the next
+  certificate has no AKI keyid and is refused, here, by `c2patool` and by
+  OpenSSL. A separate rule would only act on a chain whose next AKI uses
+  the issuer-and-serial form, which no tool in this repository builds.
 
 ## §15.1 to §15.6 — Validation: process, results, status codes, the active manifest and the claim
 
@@ -1121,7 +1126,7 @@ binding and is not read. `c2pa-rs` 0.91.1 was read beside it
 | § | rule (paraphrased) | where | verdict | how known |
 |---|---|---|---|---|
 | 18.1 | Every assertion has a label as §6.2 says and is versioned as chapter 5 says. | read in those chapters' own steps | n/a here | — |
-| 18.1 | No C2PA assertion uses the Codestream JUMBF content type. | `JumbfParser`: a superbox whose type is not a known one is kept as an `UnknownBox`, neither walked nor refused; the claim's hashed URI still covers it. `c2pa-rs` does not check it either | **candidate** | measured: `JumbfParserTest` AC7 (unknown type kept); → P07-8 |
+| 18.1 | No C2PA assertion uses the Codestream JUMBF content type. | `JumbfParser`: a superbox whose type is not a known one is kept as an `UnknownBox`, neither walked nor refused; the claim's hashed URI still covers it. `c2pa-rs` does not check it either | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | measured: `JumbfParserTest` AC7 (unknown type kept); → P07-8 |
 | 18.1 | Standard assertions are CBOR, in Core Deterministic Encoding (RFC 8949 §4.2.1). | `CborDecoder` reads any well-formed CBOR and does not enforce deterministic form | by design: SPEC-006 *Out of scope* (a writer's obligation; the signature covers the bytes as they are; refusing would diverge from `c2patool`) | read |
 | 18.2 | Regions of interest: range types, the time, frame and text rules, and `role` no longer written. | regions are not interpreted; the assertions that carry them are kept as decoded | n/a (writer guidance; nothing here depends on a region) | read |
 | 18.3 | Assertion metadata: namespaced custom keys, `dataSource`, `reviewRatings` (value 1 to 5, none beside a `humanEntry` source), `dateTime` format, localization dictionaries. | not read. §18.3.1 says a consumer need not read any of it | n/a | read |
@@ -1264,9 +1269,9 @@ claims*). `c2pa-rs` was read at 0.91.1 (`claim.rs`: `verify_actions`,
 | 18.11.1 | Cloud data is optional; its content should not be fetched during validation. | nothing is fetched (no network in the verification path) | covered by construction | read |
 | 18.11.1 | Label `c2pa.cloud-data`; must not reference the actions, cloud-data, hash or ingredient labels (twelve listed). | nothing reads the assertion | covered (SPEC-063, step 321) | read → P08-1 |
 | 18.11.1–18.11.2 | `size` present and at least 1; `location` carries no `size` and no `dc:format` of its own. | nothing reads the assertion | partial: `size` at least 1 is checked (SPEC-063); a `size` or `dc:format` inside `location` is not refused | read → P08-1 |
-| 18.12.1 | An embedded data assertion's label starts with `c2pa.embedded-data` (instances as usual). | not checked | **candidate** | read → P08-8 |
+| 18.12.1 | An embedded data assertion's label starts with `c2pa.embedded-data` (instances as usual). | not checked | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P08-8 |
 | 18.12.2 | Its description box holds an IANA media type and does not set the External toggle; the data matches that type. | `Manifest::mediaType()` requires a NUL-terminated type and reads it; the toggles byte and an empty type are not judged | partial | read → P08-8 |
-| 18.13.1.1 | At most one `c2pa.thumbnail.claim` per manifest. | `ManifestStore` renders a claim thumbnail; the count is not checked | **candidate** | read → P08-8 |
+| 18.13.1.1 | At most one `c2pa.thumbnail.claim` per manifest. | `ManifestStore` renders a claim thumbnail; the count is not checked | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P08-8 |
 | 18.13.1.2 | An ingredient thumbnail's label starts with `c2pa.thumbnail.ingredient`. | used for rendering only (`ManifestStore`) | n/a (writer; nothing depends on it) | read |
 | 18.14.1–18.14.2 | Label `c2pa.alternative-content-representation`; at most one with type `exif.originalPreservationImage`; its parameters use `multiAssetPartIndex` or `embeddedOriginalPreservationImage`, never both; a part index is validated only in the manifest holding the current hard binding. | not read; `c2pa.hash.multi-asset` is not a supported hard binding | **candidate** | read → P08-8 |
 | 18.15.1 | The v2 assertion is labelled `c2pa.actions.v2`; a v2 action may come from a template. | `ActionsCheck::isActionsLabel()`; the v1 label in a v2 claim gets the v2 rules (SPEC-018 amendment 6) | covered | measured: `ActionsCheckTest` "SPEC-018 AC7" |
@@ -1279,13 +1284,13 @@ claims*). `c2pa-rs` was read at 0.91.1 (`claim.rs`: `verify_actions`,
 | 18.15.2 | Update manifests are exempt from the opening rule. | `checkAssertions()` (`$isUpdateManifest`) | covered | measured: `UpdateManifestTest` "AC4: an update manifest that breaks §11.2.3" |
 | 18.15.2 | No more than one `c2pa.created` or `c2pa.opened` across all actions assertions. | `contentRules()`: the opening count | covered | measured: `ActionsContentTest` "AC1: one opening" |
 | 18.15.3 | Validators should read an absent `allActionsIncluded` as "more actions may have happened". | the report states nothing about completeness; the assertion is rendered as data | n/a | read |
-| 18.15.4.2 | `reason` is one of four `c2pa.` values or a namespaced custom value. | not checked | **candidate** | read → P08-6 |
+| 18.15.4.2 | `reason` is one of four `c2pa.` values or a namespaced custom value. | not checked | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P08-6 |
 | 18.15.4.2 | A `c2pa.redacted` action carries a `reason`. | not checked | by design: SPEC-037 *Out of scope* (no validation step names it, no oracle checks it) | read |
 | 18.15.4.3 | `when` is a CBOR date/time (RFC 8949 §3.4.1). | not checked | **by design** (§15.10.3.2: no validation listed; SPEC-063 amendment 2) | read → P08-3 |
-| 18.15.4.4 | An action has at most one of `softwareAgent` and `softwareAgentIndex`; the index points into `softwareAgents`. | not checked | **candidate** | read → P08-5 |
-| 18.15.4.5 | `digitalSourceType` is an IPTC term or one of the C2PA values. | only presence on `c2pa.created` (SPEC-032); the value is not checked | **candidate** | read → P08-5 |
+| 18.15.4.4 | An action has at most one of `softwareAgent` and `softwareAgentIndex`; the index points into `softwareAgents`. | not checked | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P08-5 |
+| 18.15.4.5 | `digitalSourceType` is an IPTC term or one of the C2PA values. | only presence on `c2pa.created` (SPEC-032); the value is not checked | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P08-5 |
 | 18.15.4.6 | In v2, `changes` is a list of region maps. | not checked | **by design** (§15.10.3.2: no validation listed; SPEC-063 amendment 2) | read → P08-3 |
-| 18.15.4.7 | Custom `parameters` keys use entity-specific namespacing. | not checked | **candidate** | read → P08-6 |
+| 18.15.4.7 | Custom `parameters` keys use entity-specific namespacing. | not checked | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P08-6 |
 | 18.15.4.7 | `c2pa.opened` and `c2pa.placed` carry hashed URIs to their ingredient assertions. | `contentRules()`: present, non-empty, of the right relationship; resolved by label, not by hash | covered (by label; by design: `docs/comparison.md`, SPEC-033 open question 2) | measured: `ActionsContentTest` "AC2", "AC3" |
 | 18.15.4.7 | `c2pa.removed` references a `componentOf` ingredient in a different manifest. | `contentRules()` looks it up in the current claim, as `c2pa-rs` | by design: `docs/comparison.md` (SPEC-033 open questions 2–3) | measured: `ActionsContentTest` "AC2" |
 | 18.15.4.7 | (earlier versions) `c2pa.transcoded` / `c2pa.repackaged` reference the `parentOf` ingredient. | `contentRules()`: a reference, if present, must be `parentOf` (§15.10.3.2.3, `c2pa-rs` 2.c) | covered | measured: `ActionsContentTest` "AC4" |
@@ -1307,9 +1312,9 @@ claims*). `c2pa-rs` was read at 0.91.1 (`claim.rs`: `verify_actions`,
 | 18.16.11–18.16.12.2 | Which ingredient manifests are copied, deduplicated or relabelled. | | n/a (writer) | — |
 | 18.16.12.3 | `activeManifest` and `claimSignature` are hashed URIs. | `fromAssertion()` (a hash that is not bytes is malformed); a v3 without `claimSignature` is read | covered (the missing `claimSignature` by design: `docs/comparison.md`, SPEC-035) | measured: `IngredientAssertionTest` "AC2" (`hash-text`) |
 | 18.16.12.3 | Never both `activeManifest` and `digitalSourceType`. | `fromAssertion()`; stricter than `c2pa-rs`, which enforces it only when writing | covered | measured: `IngredientAssertionTest` "AC2" (`manifest-and-dst`); `docs/conformance.md` `PRED-ASSE-018` |
-| 18.16.12.3 | An ingredient's `digitalSourceType` takes a value allowed for the action field. | read as text; the value is not checked | **candidate** | read → P08-5 |
+| 18.16.12.3 | An ingredient's `digitalSourceType` takes a value allowed for the action field. | read as text; the value is not checked | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P08-5 |
 | 18.16.12.4 | A v3 ingredient with `activeManifest` records `validationResults`. | `fromAssertion()` | covered | measured: `IngredientAssertionTest` "AC2" (`manifest-no-results`) |
-| 18.16.12.4 | A v3 ingredient without `activeManifest` carries no `validationResults`. | not checked | **candidate** | read → P08-7 |
+| 18.16.12.4 | A v3 ingredient without `activeManifest` carries no `validationResults`. | not checked | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P08-7 |
 | 18.16.12.4 | A recorded failure is the writer's acknowledgement; the validator drops what was recorded, never for the active manifest. | `IngredientManifestCheck::recorded()`, `drop()` | covered | measured: `IngredientManifestCheckTest` "AC4", "AC5" |
 | 18.16.12.4 | Each status map holds a `code`; custom codes are namespaced (with `success` in v2); deltas are compared on type, code and url. | `recorded()` ignores entries without a text `code` and `url` (so they excuse nothing); the recorded type is not compared, as in `c2pa-rs` (`validation_results.rs`, `from_store`, which re-derives the kind from the code); custom-code syntax by decision (`docs/conformance.md`, `PRED-STRU-002`) | partial | read → P08-7 |
 | 18.16.12.4 | `specVersion` is SemVer; `trustListURI` is absent when the C2PA Trust List was used. | | n/a (writer; informational) | — |
@@ -1424,14 +1429,14 @@ to the live-video method of §19.4, which this verifier does not read.
 | 18.18.3 | A map with at least one entry; each key a manifest label (`urn:c2pa:…`), each value a byte string. | not read: no `assertion.timestamp.malformed` code exists here | **candidate** | read → P09-2 |
 | 18.18.3 | Each value is an RFC 3161 token over the `signature` field of the named manifest's COSE_Sign1. | not read: the token is never verified and never used, so a manifest is judged at its own `sigTst`/`sigTst2`, or at now | by design: stricter, not laxer, in the usual case (`docs/conformance.md` §3, `PRED-TIME-002`/`003`; `notes/step-128-more-for-0.3.md` §3); see P09-2 for two cases where it is laxer | measured: `php bin/c2pa-verify tests/Fixtures/c2pa-rs/update_manifest.jpg` reports `Valid` and lists a `c2pa.time-stamp` assertion; `c2patool` also `Valid` (`notes/step-140-gaps-counted.md`) |
 | 18.19.1 | A validator may need to go online for revocation status. | no network in the verification path; only stapled responses are read (SPEC-030) | by design (`docs/comparison.md`, the OCSP row) | read |
-| 18.19.3 | Label `c2pa.certificate-status`; at most one per manifest. | not checked | **candidate** | read → P09-4 |
+| 18.19.3 | Label `c2pa.certificate-status`; at most one per manifest. | not checked | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P09-4 |
 | 18.19.3 | At least one entry in `ocspVals`, each an OCSP response in the `rVals` form. | not read: the responses are neither decoded nor used for revocation | **by design** (§15.10.3.2: no validation listed; SPEC-063 amendment 2) | read → P09-3 |
-| 18.20 | Label `c2pa.asset-ref`; at least one reference, each with a `uri`. | not read; `c2pa-rs` defines the type (`assertions/asset_reference.rs`) but does not validate it | **candidate** | read → P09-5 |
-| 18.21.1 | Label `c2pa.asset-type.v2`; at most one; `dc:format` an IANA media type; each `type` from Tables 11/12 or an entity-specific name. | not read; `c2pa-rs` does not validate it in `claim.rs` or `store.rs` | **candidate** | read → P09-4, P09-5 |
+| 18.20 | Label `c2pa.asset-ref`; at least one reference, each with a `uri`. | not read; `c2pa-rs` defines the type (`assertions/asset_reference.rs`) but does not validate it | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P09-5 |
+| 18.21.1 | Label `c2pa.asset-type.v2`; at most one; `dc:format` an IANA media type; each `type` from Tables 11/12 or an entity-specific name. | not read; `c2pa-rs` does not validate it in `claim.rs` or `store.rs` | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P09-4, P09-5 |
 | 18.21.3 | Which `dc:format` to choose. | writer guidance | n/a | read |
 | 18.22.1 | Label starts `c2pa.depthmap.`; captured optically, not inferred from one 2D image. | the label is a writer rule; how a depth map was made cannot be checked from the file | n/a | read |
-| 18.22.2–3 | `c2pa.depthmap.GDepth` follows the GDepth schema; `Format`, `Near`, `Far`, `Mime`, `Data` are required. | not read; `c2pa-rs` has only the label constants (`assertions/labels.rs`) | **candidate** | read → P09-5 |
-| 18.23 | Label `font.info`; at most one; the schema's required fields (`fullName`, `familyName`, `style`, `weight`, `postScriptName`, `format`, `copyrightNotice`). | not read; nothing in `c2pa-rs` | **candidate** | read → P09-4, P09-5 |
+| 18.22.2–3 | `c2pa.depthmap.GDepth` follows the GDepth schema; `Format`, `Near`, `Far`, `Mime`, `Data` are required. | not read; `c2pa-rs` has only the label constants (`assertions/labels.rs`) | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P09-5 |
+| 18.23 | Label `font.info`; at most one; the schema's required fields (`fullName`, `familyName`, `style`, `weight`, `postScriptName`, `format`, `copyrightNotice`). | not read; nothing in `c2pa-rs` | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P09-4, P09-5 |
 | 18.24.1 | Label `c2pa.external-reference`. | `ExternalReferenceCheck::LABEL`; every instance, created or gathered (`references()`) | covered | measured: `AssertionRulesTest` "AC6: a well-formed external reference passes, and nothing is fetched" (SPEC-032) |
 | 18.24.1 | It should sit in `gathered_assertions`; in `created_assertions` the signer answers for the data. | a should, and attribution; both lists are checked alike, as in `c2pa-rs` | n/a | read |
 | 18.24.1 | When it references an assertion, `label` is present; it never names one of the thirteen listed labels. | `ExternalReferenceCheck::FORBIDDEN_LABELS` and `fault()`: the thirteen plus `c2pa.action`, as `c2pa-rs` (`assertions/external_reference.rs`, `validate`). Whether data *is* an assertion cannot be known without fetching it, so a missing `label` is not a fault | covered | measured: `AssertionRulesTest` "AC4: a forbidden external-reference label is malformed" (SPEC-032) |
@@ -1439,14 +1444,14 @@ to the live-video method of §19.4, which this verifier does not read.
 | 18.24.1 | Leave `size` out when the data may change. | writer guidance | n/a | read |
 | 18.24.1 | Referenced data is optional and not fetched during validation; fetched unhashed data is advisory. | nothing is ever fetched; the `url` is data | covered | measured: `AssertionRulesTest` "AC6: a well-formed external reference passes, and nothing is fetched" (a source scan for network calls) |
 | 18.24.1 | Hashed references are validated per §15.10.3.2.2. | that section's pack | — | — |
-| 18.24.2 | Entity-specific evidence types follow the namespace syntax; `processStart`/`processEnd` are advisory. | not checked; the times are not used | **candidate** (the syntax); n/a (the times) | read → P09-5 |
+| 18.24.2 | Entity-specific evidence types follow the namespace syntax; `processStart`/`processEnd` are advisory. | not checked; the times are not used | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) ; n/a (the times) | read → P09-5 |
 | 18.25 | `c2pa.session-keys`: at most one; each key a COSE key with a `kid`, a `minSequenceNumber`, `createdAt`, `validityPeriod` and a `signerBinding`; keys used only within their validity. | the live-video method of §19.4 is not read, so no session key is ever used; `c2pa-rs` has no such assertion | n/a | read; the `signerBinding` gap is `docs/conformance.md` `PRED-CRYP-024` |
 | 18.26.1 | An action's `relatedAssertions` reference is a hashed JUMBF URI that resolves in the same manifest. | `ActionsCheck`: non-empty, resolvable in the current manifest, never actions or ingredients (SPEC-033), as `c2pa-rs` (`claim.rs`, rule 2.f) | covered | measured: `ActionsContentTest` "AC6: related assertions" (SPEC-033) |
-| 18.26.1 | `energy_kwh`, `carbon_kgco2e`, `water_litres` each hold a mandatory non-negative `value`; `measurementMethod` is reverse-DNS. | not read; nothing in `c2pa-rs` | **candidate** | read → P09-5 |
-| 18.27.1 | A repository receipt appears only in an update manifest. | not checked: `UpdateManifestCheck` checks what an update manifest may not carry, not where this assertion may appear | **candidate** | read → P09-6 |
-| 18.27.1–2 | Label `c2pa.repository-receipt`; one JSON box with `@context`, `@type`, `repository` (`uri`, `manifestId`) and `anchor` (`uri`, `proof`). | the JSON box decodes (SPEC-013); its content is not read; nothing in `c2pa-rs` | **candidate** | read → P09-5 |
+| 18.26.1 | `energy_kwh`, `carbon_kgco2e`, `water_litres` each hold a mandatory non-negative `value`; `measurementMethod` is reverse-DNS. | not read; nothing in `c2pa-rs` | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P09-5 |
+| 18.27.1 | A repository receipt appears only in an update manifest. | not checked: `UpdateManifestCheck` checks what an update manifest may not carry, not where this assertion may appear | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P09-6 |
+| 18.27.1–2 | Label `c2pa.repository-receipt`; one JSON box with `@context`, `@type`, `repository` (`uri`, `manifestId`) and `anchor` (`uri`, `proof`). | the JSON box decodes (SPEC-013); its content is not read; nothing in `c2pa-rs` | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P09-5 |
 | 18.28.1, 18.28.3 | Descriptive: purpose, and how `humanOversightLevel` relates to `digitalSourceType`. | — | n/a | read |
-| 18.28.2 | Label `c2pa.ai-disclosure`; `modelType` present, from Table 12; `scientificDomain` from the arXiv taxonomy; other fields typed as the schema says. | not read; nothing in `c2pa-rs` | **candidate** | read → P09-5 |
+| 18.28.2 | Label `c2pa.ai-disclosure`; `modelType` present, from Table 12; `scientificDomain` from the arXiv taxonomy; other fields typed as the schema says. | not read; nothing in `c2pa-rs` | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P09-5 |
 
 ### Candidates
 
