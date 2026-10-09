@@ -9964,3 +9964,16 @@ README are where the disclosure lives.
 - Decided by Maurice: read every chapter before 0.5.4, though the
   unique-ID fix (a wrong `Trusted` against `c2patool`) then waits longer
   than the patch-at-once rule says.
+
+## 2026-10-09 — Probes for the assertion candidates (step 313)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met stap 313".
+- Produced: `54cce65` pushed; the measured table in
+  `docs/reading-c2pa-2.4.md`; `notes/step-313-probes-for-assertions.md`; a
+  row in `NOTES.md`. The probes, a throw-away hierarchy and a same-length
+  edit-and-re-sign tool live in a scratch directory.
+- Measured: a control and a re-signed control; nine probes signed by
+  `c2patool` 0.28.1 (directly, or as a well-formed version then edited),
+  each judged by `c2patool` 0.28.1 and 0.27.22 under the throw-away root and
+  by `bin/c2pa-verify`; `c2patool`'s refusals to write the shapes.
+- Decided by Maurice: none in this step.

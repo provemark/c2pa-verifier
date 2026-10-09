@@ -63,9 +63,9 @@ several rows share.
 
 ### Candidates that may be more lenient than `c2patool`
 
-Each was re-read by hand in this verifier and in `c2pa-rs` 0.91.1; none
-is measured yet. Each needs a probe judged by both `c2patool` versions
-before anything changes.
+Each was re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Step
+313 measured seven of them, and one action-field case, with probes judged
+by both `c2patool` versions (see *Measured in step 313* below).
 
 | # | what | here | `c2pa-rs` 0.91.1 | packs |
 |---|---|---|---|---|
@@ -82,6 +82,33 @@ before anything changes.
 | L11 | a version 2 manifest whose label is not a C2PA URN | not checked | `claim.malformed` | P02-3 |
 | L12 | a merkle map on a single, unfragmented file | no `count` reads as 0; with no fragments offered, 0 of 0 is a match and only `initHash` is checked | refuses an `initHash` on unfragmented media (read by the pack) | P06-4 |
 | L13 | a version 2 claim whose `claim_generator_info` is an empty map | taken as the empty list SPEC-007 amendment 4 allows for version 1; no `name` check | `claim.malformed` | P04-2 |
+
+### Measured in step 313
+
+Each probe is a PNG signed by `c2patool` 0.28.1 with a throw-away
+hierarchy. Most were then changed in a few bytes of the same length and
+the claim signed again, because `c2patool` refuses to write these shapes.
+The probes are in a scratch directory; they become fixtures with their
+fix.
+
+| probe | `c2patool` 0.28.1 | 0.27.22 | here | candidate |
+|---|---|---|---|---|
+| control, and control signed again | `Trusted` | `Trusted` | `Trusted` | — |
+| data hash without `pad` | error: missing field `pad` | error | **`Trusted`** | L2, confirmed |
+| metadata assertion without `@context` | error: could not decode | error | **`Trusted`** | L4, confirmed |
+| `c2pa.time-stamp` whose value is text, not a token | `Trusted` | `Trusted` | `Trusted` | L5, **not confirmed**: no difference |
+| `c2pa.certificate-status` without `ocspVals` | error: missing field `ocspVals` | error | **`Trusted`** | L6, confirmed |
+| `c2pa.cloud-data` pointing at `c2pa.hash.data` | `Invalid` | `Trusted` | **`Trusted`** | L7, confirmed against 0.28.1 |
+| `c2pa.cloud-data` with `size` 0 | `Invalid` | `Trusted` | **`Trusted`** | L7, confirmed against 0.28.1 |
+| soft binding without `blocks` | `Invalid` | `Trusted` | **`Trusted`** | L8, confirmed against 0.28.1 |
+| version 2 manifest labelled `urx:c2pa:…` | `Invalid` | `Invalid` | **`Trusted`** | L11, confirmed |
+| an action whose `when` is an integer | error | error | **`Trusted`** | P08-3, confirmed |
+
+L13 (an empty `claim_generator_info` map) needs a claim of another
+length, so it moves to the ISOBMFF probes, where a length-changing edit is
+needed anyway. A metadata assertion *with* `@context` is `Invalid`
+(`assertion.metadata.disallowed`) in 0.27.22 and `Trusted` in 0.28.1 and
+here: an old difference in 0.27.22.
 
 Two more need a measurement before they are candidates of this kind: the
 field types inside an actions assertion (P08-3), and stapled OCSP
