@@ -1,0 +1,18 @@
+{
+    "verify": {
+        "verify_trust": true
+    },
+    "trust": {
+        "anchors": [
+            {
+                "trust_anchors": "-----BEGIN CERTIFICATE-----\nMIIB/jCCAaSgAwIBAgIUVSK1Tp7JALg5nMh/BxiR/N2UxeUwCgYIKoZIzj0EAwIw\nXTElMCMGA1UEAwwcVFNBIE1hdHJpeCByb290ICh0d28tdG9rZW5zKTEnMCUGA1UE\nCgweYzJwYS12ZXJpZmllciB0aW1lc3RhbXAgbWF0cml4MQswCQYDVQQGEwJOTDAe\nFw0yNjEwMDkwOTUyMDdaFw0zNjEwMDYwOTUyMDdaMF0xJTAjBgNVBAMMHFRTQSBN\nYXRyaXggcm9vdCAodHdvLXRva2VucykxJzAlBgNVBAoMHmMycGEtdmVyaWZpZXIg\ndGltZXN0YW1wIG1hdHJpeDELMAkGA1UEBhMCTkwwWTATBgcqhkjOPQIBBggqhkjO\nPQMBBwNCAASYk86eg8/9p41PNlZZa+Pk2jEch028R+g0EeWBVIufzaXpr+4dHACO\nR1b6qgfnGO7MjqeQjk0je3GdMOfgvCZRo0IwQDAPBgNVHRMBAf8EBTADAQH/MA4G\nA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUOSsSQlkpFT+etdSWVVLESdIRu0UwCgYI\nKoZIzj0EAwIDSAAwRQIhAPFpYA0PDevzY6EB1v4CnqHCjay9wkf48VYc34DvP9Oa\nAiBeV2GPayWsTFcvIObNPdiz5NUqzm8QhqHWa0/PFbhyEg==\n-----END CERTIFICATE-----\n",
+                "trust_kind": "manifest"
+            },
+            {
+                "trust_anchors": "-----BEGIN CERTIFICATE-----\nMIICBjCCAaygAwIBAgIUEEpHSTu/I+WPJJQcs2zzZSZG7ZgwCgYIKoZIzj0EAwIw\nYTEpMCcGA1UEAwwgVFNBIE1hdHJpeCB0c2Etcm9vdCAodHdvLXRva2VucykxJzAl\nBgNVBAoMHmMycGEtdmVyaWZpZXIgdGltZXN0YW1wIG1hdHJpeDELMAkGA1UEBhMC\nTkwwHhcNMjYxMDA5MDk1MjA3WhcNMzYxMDA2MDk1MjA3WjBhMSkwJwYDVQQDDCBU\nU0EgTWF0cml4IHRzYS1yb290ICh0d28tdG9rZW5zKTEnMCUGA1UECgweYzJwYS12\nZXJpZmllciB0aW1lc3RhbXAgbWF0cml4MQswCQYDVQQGEwJOTDBZMBMGByqGSM49\nAgEGCCqGSM49AwEHA0IABFYsQ+fpDQeIf7Gt6lkwXtdvvhGCQtM6wRzhAajGwlND\ndIHPGSgOmkSHqxi7sZhcTTEdpw+PJj958RW5I84AC9ijQjBAMA8GA1UdEwEB/wQF\nMAMBAf8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBQGVbtKEE4eeeVLzTXhS9Y8\nQQoSXTAKBggqhkjOPQQDAgNIADBFAiB/miy+vVmslhjUy9htOW8GdQdsdXAZAcc5\nf8qxtpu2+gIhAJE2jDOFIkQL0QT3hoeBjVlC3CK/9JQF79r7oN6bk3tT\n-----END CERTIFICATE-----\n",
+                "trust_kind": "tsa"
+            }
+        ],
+        "trust_config": "\n//id-kp-emailProtection \n1.3.6.1.5.5.7.3.4\n//id-kp-documentSigning \n1.3.6.1.5.5.7.3.36\n//id-kp-timeStamping \n1.3.6.1.5.5.7.3.8\n//id-kp-OCSPSigning \n1.3.6.1.5.5.7.3.9"
+    }
+}

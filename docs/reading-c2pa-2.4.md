@@ -71,7 +71,7 @@ by both `c2patool` versions (see *Measured in step 313* below).
 |---|---|---|---|---|
 | L1 | a BMFF hash without `alg` | `BmffHashCheck::assertionOf()` falls back to SHA-256 | the claim's `alg` (§13.1, §15.4.1) | P03-1, P07-2, P06-12 |
 | L2 | a data hash without `pad` (§18.5.2 requires it) | accepted | `DataHash::pad` is required; the assertion cannot be decoded | P07-1 |
-| L3 | two tokens in `tstTokens` | the first is judged and its time used (SPEC-017 AC8) | `timeStamp.malformed`, the timestamp dropped (`sigtst.rs`) | P05-1 |
+| L3 | two tokens in `tstTokens` | the first was judged and its time used; **fixed: SPEC-017 amendment 9** | `timeStamp.malformed`, the timestamp dropped (`sigtst.rs`) | P05-1 |
 | L4 | a metadata assertion without `@context` in a version 2 claim | not read | `verify_metadata()` stops the validation | P09-1 |
 | L5 | a malformed `c2pa.time-stamp` assertion | not read | `assertion.timestamp.malformed` | P09-2, P06-2 |
 | L6 | a malformed `c2pa.certificate-status` assertion | not read | the validation stops | P09-3 |
@@ -116,7 +116,8 @@ tokens in `sigTst2`'s `tstTokens`, both from the trusted TSA:
 
 `c2pa-rs` drops a header with more than one token as malformed, so an
 expired signer is judged at the current time. This verifier used the
-first token's time (SPEC-017 AC8) and kept the signer `Trusted`.
+first token's time (SPEC-017 AC8) and kept the signer `Trusted`. **Fixed
+by SPEC-017 amendment 9.**
 
 L13 (an empty `claim_generator_info` map) needs a claim of another
 length, so it moves to the ISOBMFF probes, where a length-changing edit is

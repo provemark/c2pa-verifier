@@ -62,9 +62,9 @@ and is named in the drift alarms.
 - `Timestamp\TimestampCheck::check(Manifest $manifest, ?TrustSettings $settings): TimestampResult`
   — the whole of the list above on the active manifest's COSE_Sign1.
   No header → an empty result (`present` false, no statuses, no time).
-  Only the first token of the header is judged, as c2pa-rs does ("we only
-  pay attention to the first time stamp header"); further tokens are
-  counted in the `validated` explanation, never judged. Every
+  A header with exactly one token is judged; a header with more than one
+  is `timeStamp.malformed` and gives no time (amendment 9; C2PA 2.4
+  §15.8.1.1, as c2pa-rs 0.91.1). Every
   `TimestampException` and `Asn1Exception` becomes one
   `timeStamp.malformed` status carrying the message; the check never
   throws. Every status carries the signature box's url
@@ -290,8 +290,9 @@ to `tests/Support/` so both files share them.
   - Then the four report `present` false, no statuses, no `timestamp` in
     `checks_performed`, no `time`, and Nikon keeps
     `signingCredential.expired` with "at now; no timestamp"; `C.jpg`
-    judges one token; the doubled header judges the first only and its
-    `validated` explanation says "1 of 2 tokens judged".
+    judges one token; the doubled header is `timeStamp.malformed`
+    naming the count, `present` true, no time (amendment 9; it judged
+    the first token and said "1 of 2 tokens judged" before).
 
 - **AC9 — the report: order, keys, and the time SPEC-015 used** *(the shape)*
   - Given `c2pa-rs/C.jpg` with the DigiCert settings, and
@@ -619,6 +620,24 @@ final readonly class TimestampCheck
    after, and every verdict that moves is named.
 
    Confirmed by Maurice van Loon, 2026-10-09 (step 290).
+
+9. **2026-10-09, steps 314 and F1, found by reading C2PA 2.4 §15.8.1.1** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   §15.8.1.1 says a header holding more than one token makes the validator
+   issue `timeStamp.malformed` and ignore the time-stamps. `c2pa-rs` 0.91.1
+   does that (`sigtst.rs`: "only a single timestamp response is allowed").
+   This spec followed an older `c2pa-rs`, which judged the first token.
+   Measured in step 314 with the timestamp matrix: a signer that had
+   expired, with two valid tokens from a trusted TSA, was `Trusted` here
+   and `Invalid` in both `c2patool` versions. The first token's time kept
+   it valid.
+
+   `checkHeader()` now returns one `timeStamp.malformed`, naming the
+   header and the count, with `present` true and no time, before any token
+   is read. The scope paragraph and AC8 are rewritten; the two probes join
+   SPEC-062 (amendment 1).
+
+   **Weight A: an expired signer with two tokens moves from `Trusted` to
+   `Invalid`, as in `c2patool`.**
 
 ## Traceability
 

@@ -15,6 +15,11 @@ committed.
   (`signingCredential.invalid`) in both `c2patool` versions. Found by
   reading the specification beside the verifier
   (`docs/reading-c2pa-2.4.md`).
+- **A timestamp header with more than one token gives no time (SPEC-017
+  amendment 9).** C2PA 2.4 §15.8.1.1 calls it malformed. This verifier
+  used the first token, so a signer that had expired stayed `Trusted` on a
+  trusted token; both `c2patool` versions say `Invalid`. Now the header is
+  `timeStamp.malformed` and the signer is judged at the current time.
 
 ## 0.5.3 — 2026-10-09
 

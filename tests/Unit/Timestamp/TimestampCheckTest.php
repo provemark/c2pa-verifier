@@ -516,7 +516,7 @@ test('SPEC-017 AC8: no header: nothing reported, no time, Nikon stays expired at
     expect($expired?->explanation)->toContain('now')->toContain('no timestamp');
 })->group('SPEC-017');
 
-test('SPEC-017 AC8: one token is judged; a doubled header judges the first only and says so', function (): void {
+test('SPEC-017 AC8: one token is judged; a doubled header is malformed and gives no time (amendment 9)', function (): void {
     $manifest = spec017Manifest('c2pa-rs/C.jpg');
     $cose = CoseSign1::fromBytes($manifest->signatureBytes());
     $value = Corpus::headerValue('c2pa-rs/C.jpg');
@@ -528,8 +528,11 @@ test('SPEC-017 AC8: one token is judged; a doubled header judges the first only 
         ->and(spec017Status($one, StatusCode::TimeStampValidated)?->explanation)->not->toContain('of 2');
 
     $two = $check->checkHeader(new TimestampHeader('sigTst', [$value, $value]), $cose, $manifest->claimBytes(), null, $url);
-    expect(spec017Codes($two))->toBe(['timeStamp.validated', 'timeStamp.untrusted'])
-        ->and(spec017Status($two, StatusCode::TimeStampValidated)?->explanation)->toContain('1 of 2 tokens');
+    expect(spec017Codes($two))->toBe(['timeStamp.malformed'])
+        ->and(spec017Status($two, StatusCode::TimeStampMalformed)?->explanation)->toContain('2 tokens')
+        ->and($two->present)->toBeTrue()
+        ->and($two->time)->toBeNull()
+        ->and($two->trustedTime())->toBeNull();
 })->group('SPEC-017');
 
 // ---------------------------------------------------------------------------

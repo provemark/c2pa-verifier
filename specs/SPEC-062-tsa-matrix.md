@@ -191,7 +191,17 @@ const SPEC062_CODES_DIFFER = [
 
 ## Amendments
 
-None yet.
+1. **2026-10-09, step F1, with SPEC-017 amendment 9** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   Two new probes put two tokens from the trusted TSA into `sigTst2`'s
+   `tstTokens`: `two-tokens` (a valid signer) and
+   `expired-signer-two-tokens` (a signer that expired after it was
+   stamped). The matrix holds 31 probes; AC7 counts 31. With SPEC-017
+   amendment 9 both agree with 0.28.1 on the state. `expired-signer-two-tokens`
+   joins `SPEC062_CODES_DIFFER`, because 0.28.1 adds
+   `signingCredential.untrusted` to `signingCredential.expired`, as for the
+   other expired signers.
+
+   **Weight C: no verdict of the existing probes moves.**
 
 ## Traceability
 

@@ -46,6 +46,11 @@ const SPEC062_CODES_DIFFER = [
         [[], ['signingCredential.expired', 'signingCredential.untrusted']],
         [[], ['signingCredential.expired']],
     ],
+    'expired-signer-two-tokens' => [
+        '0.28.1 adds signingCredential.untrusted to signingCredential.expired (SPEC-017 amendment 9: two tokens drop the timestamp)',
+        [['timeStamp.malformed'], ['signingCredential.expired', 'signingCredential.untrusted']],
+        [['timeStamp.malformed'], ['signingCredential.expired']],
+    ],
 ];
 
 const SPEC062_RANK = ['Invalid' => 0, 'Valid' => 1, 'Trusted' => 2];
@@ -119,7 +124,7 @@ function spec062Codes(VerificationReport $report): array
 it('AC7: every probe the generator defines has a fixture and four answers, and no fixture is left over', function (): void {
     $defined = spec062GeneratorProbes();
 
-    expect($defined)->toHaveCount(29)
+    expect($defined)->toHaveCount(31)
         ->and(spec062FixtureProbes())->toBe($defined);
     foreach ($defined as $probe) {
         foreach (['0.27.22', '0.28.1'] as $version) {

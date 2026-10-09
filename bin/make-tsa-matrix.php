@@ -311,6 +311,9 @@ $variants = [
     'expired-signer-trusted-tsa' => [['leaf' => ['validity', $SHORT]], []],
     'expired-signer-untrusted-tsa' => [['leaf' => ['validity', $SHORT]], ['trust' => 'signer-only']],
     'expired-signer-no-timestamp' => [['leaf' => ['validity', $SHORT]], ['header' => 'none']],
+    // two tokens in sigTst2's tstTokens (step 314): the second made right after the first, by the same TSA
+    'two-tokens' => [[], ['tokens' => '2']],
+    'expired-signer-two-tokens' => [['leaf' => ['validity', $SHORT]], ['tokens' => '2']],
     // the TSA leaf's extended key usage (step 292), signed through cms
     'control-cms' => [[], ['sign' => 'cms']],
     'tsa-leaf-eku-not-critical' => [['tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', 'timeStamping')]], ['sign' => 'cms']],
@@ -410,9 +413,11 @@ foreach ($variants as $probe => [$changes, $options]) {
         return (string) file_get_contents("{$keys}/tok.der");
     };
     $unprotected = [];
+    $second = null;
     try {
         if ($header === 'sigTst2' || $header === 'both') {
             $unprotected['sigTst2'] = $tokenFor(txBstr($signature));
+            $second = ($options['tokens'] ?? '1') === '2' ? $tokenFor(txBstr($signature)) : null;
         }
         if ($header === 'sigTst' || $header === 'both') {
             $unprotected['sigTst'] = $tokenFor($claimBytes);
@@ -427,7 +432,8 @@ foreach ($variants as $probe => [$changes, $options]) {
     // {"sigTst2": {"tstTokens": [{"val": token}]}, …, "pad": h'00…'}
     $map = '';
     foreach ($unprotected as $name => $token) {
-        $map .= ($name === 'sigTst2' ? "\x67sigTst2" : "\x66sigTst")."\xa1\x69tstTokens\x81\xa1\x63val".txBstr($token);
+        $tokens = $name === 'sigTst2' && ($second ?? null) !== null ? "\x82\xa1\x63val".txBstr($token)."\xa1\x63val".txBstr($second) : "\x81\xa1\x63val".txBstr($token);
+        $map .= ($name === 'sigTst2' ? "\x67sigTst2" : "\x66sigTst")."\xa1\x69tstTokens".$tokens;
     }
     $count = count($unprotected) + 1;
     $fixed = 2 + strlen(txBstr($protected)) + 1 + strlen($map) + 4 + 3 + 1 + strlen(txBstr($signature));

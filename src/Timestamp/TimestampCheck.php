@@ -80,29 +80,25 @@ final readonly class TimestampCheck
     }
 
     /**
-     * A header's first token judged against the manifest's countersigned
-     * bytes; further tokens are counted, not judged (c2pa-rs: "we only pay
-     * attention to the first time stamp header").
+     * A header's one token judged against the manifest's countersigned
+     * bytes. A header with more than one token is malformed and gives no time,
+     * as c2pa-rs 0.91.1 drops it (`sigtst.rs`: "only a single timestamp
+     * response is allowed") and C2PA 2.4 §15.8.1.1 says; judging the first let an expired signer stay
+     * trusted on a second token's company (SPEC-017 amendment 9).
      */
     public function checkHeader(TimestampHeader $header, CoseSign1 $cose, string $claimBytes, ?TrustSettings $settings, string $url, int $claimVersion = 2): TimestampResult
     {
+        if (count($header->tokens) > 1) {
+            return new TimestampResult(true, [$this->status(StatusCode::TimeStampMalformed, $url, sprintf('the %s header carries %d tokens; a claim signature has one timestamp, so none is used (C2PA 2.4 §15.8.1.1)', $header->header, count($header->tokens)))], null, false);
+        }
         try {
             $token = TimeStampToken::fromHeaderValue($header->tokens[0], $this->reader);
         } catch (TimestampException $e) {
             return new TimestampResult(true, [$this->status(StatusCode::TimeStampMalformed, $url, $e->getMessage())], null, false);
         }
         $tbs = self::countersignedBytes($cose, $header->header, $claimBytes);
-        $result = $this->judge($token, $tbs, $settings, $url, $claimVersion);
-        if (count($header->tokens) > 1) {
-            $result = new TimestampResult($result->present, array_map(
-                static fn (ValidationStatus $s): ValidationStatus => $s->code === StatusCode::TimeStampValidated
-                    ? new ValidationStatus($s->code, $s->url, sprintf('%s (1 of %d tokens judged)', $s->explanation, count($header->tokens)))
-                    : $s,
-                $result->statuses,
-            ), $result->time, $result->trusted, $result->timeFraction);
-        }
 
-        return $result;
+        return $this->judge($token, $tbs, $settings, $url, $claimVersion);
     }
 
     /**

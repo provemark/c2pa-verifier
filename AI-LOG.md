@@ -10004,3 +10004,22 @@ README are where the disclosure lives.
   `claim_generator_info`; each tool's control first; all judged by
   `c2patool` 0.28.1 and 0.27.22 and `bin/c2pa-verify`.
 - Decided by Maurice: none in this step.
+
+## 2026-10-09 — A timestamp header holds one token (step 316, fix F1)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met F1", then "ok, wacht maar op de
+  meting".
+- Produced: `1184183` pushed; SPEC-017 amendment 9 (scope and AC8),
+  SPEC-062 amendment 1; `src/Timestamp/TimestampCheck.php`;
+  `bin/make-tsa-matrix.php` with a two-token option; two fixtures in
+  `tsa-matrix` with both `c2patool` versions' answers; the AC8 test and
+  `TsaMatrixTest.php` (31 probes); the folder's README; the CHANGELOG;
+  `docs/reading-c2pa-2.4.md`; `notes/step-316-one-timestamp-token.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: the tests red (3 failed), then green; the corpus (846 files ×
+  159 settings modes, before and after: 318 runs moved, all the two
+  probes); `bin/fuzz.php` without settings and with `--trust` on two seeds,
+  every suspect judged by `c2patool` 0.28.1 (none more lenient); the rule
+  found in §15.8.1.1 of the fetched specification; `composer check` (955
+  passed); PHPStan in Docker.
+- Decided by Maurice: the fix order F1–F5; this fix.

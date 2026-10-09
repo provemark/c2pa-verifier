@@ -41,3 +41,9 @@ at build time), as information:
 | `tsa-leaf-eku-not-critical`, `tsa-leaf-eku-plus-email`, `tsa-leaf-eku-email-only`, `tsa-leaf-no-eku`, `tsa-leaf-eku-any`, `tsa-leaf-eku-plus-ocsp` | refused: certificate verify error (unsuitable certificate purpose) |
 | `header-both` | refused: message imprint mismatch. This is the generator's doing: it checks the `sigTst2` token against the digest of the `sigTst` token, the last one it made |
 | every other probe | OK |
+
+Added on 2026-10-09 (SPEC-062 amendment 1), with the same command and
+these probe names: `two-tokens` and `expired-signer-two-tokens`. They hold
+two tokens from the trusted TSA in `sigTst2`'s `tstTokens`, the second made
+right after the first. `openssl ts -verify` accepts the first token of
+each.
