@@ -29,6 +29,7 @@ Report\StatusCode :: const AssertionMultipleHardBindings
 Report\StatusCode :: const AssertionNotRedacted
 Report\StatusCode :: const AssertionOutsideManifest
 Report\StatusCode :: const AssertionSelfRedacted
+Report\StatusCode :: const AssertionTimestampMalformed
 Report\StatusCode :: const AssertionUndeclared
 Report\StatusCode :: const ClaimCborInvalid
 Report\StatusCode :: const ClaimHardBindingsMissing

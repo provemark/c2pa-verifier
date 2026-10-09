@@ -21,6 +21,13 @@ committed.
   wrappers are `manifest.text.multipleWrappers`, where `general.error` was
   reported. A wrapper of another version is no longer read as plain text.
   These are two new status codes; no verdict changes.
+- **The time-stamp assertion is read (SPEC-064).** C2PA 2.4 §15.8.1.2: a
+  later manifest's `c2pa.time-stamp` assertion gives an earlier manifest a
+  trusted time when its own header token is absent or did not pass, so a
+  manifest stamped while its signer was valid is no longer called expired.
+  A header token that passed still stands. A malformed time-stamp assertion,
+  or a second one in a manifest, is `assertion.timestamp.malformed` (a new
+  status code), and its tokens are not used.
 
 ### Changed
 

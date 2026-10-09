@@ -16,6 +16,7 @@ use Provemark\C2paVerifier\Manifest\ManifestGraph;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationStatus;
+use Provemark\C2paVerifier\Timestamp\TimestampAssertions;
 use Provemark\C2paVerifier\Timestamp\TimestampCheck;
 use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\ChainCheck;
@@ -73,6 +74,7 @@ final readonly class IngredientManifestCheck
             }
         }
         $statuses = [];
+        $assertions = TimestampAssertions::collect($store);   // SPEC-064: a later manifest's token for this one
         foreach ($graph->referenced as $label => $urls) {
             $ingredient = $byUrl[$urls[0]] ?? null;
             if ($ingredient === null || ! array_key_exists($label, $store->manifests)) {
@@ -80,7 +82,7 @@ final readonly class IngredientManifestCheck
             }
             $manifest = $store->manifests[$label];
             $mine = $this->hash($manifest, $ingredient);
-            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests))];
+            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests), $assertions)];
             $statuses = [...$statuses, ...$mine];
         }
 
@@ -180,9 +182,9 @@ final readonly class IngredientManifestCheck
      * @param  array<string, list<string>>  $storeLabels  the store's claims, for SPEC-037's c2pa.redacted rule
      * @return list<ValidationStatus>
      */
-    private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings, array $storeLabels): array
+    private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings, array $storeLabels, ?TimestampAssertions $assertions = null): array
     {
-        $timestamp = $this->timestamp->check($manifest, $settings);
+        $timestamp = $this->timestamp->forManifest($manifest, $settings, $assertions ?? TimestampAssertions::none());
         $statuses = $timestamp->present ? $timestamp->statuses : [];
         $statuses = [...$statuses, ...$this->signature->check($manifest)];
 

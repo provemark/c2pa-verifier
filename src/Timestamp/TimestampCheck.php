@@ -80,6 +80,55 @@ final readonly class TimestampCheck
     }
 
     /**
+     * A manifest's timestamp in C2PA 2.4 §15.8.1's order (SPEC-064): its own header's token when that passed,
+     * validated and trusted; otherwise each token a time-stamp assertion offers for its label, the first that
+     * passes giving the time. A token from an assertion is reported with that assertion's url. It is judged
+     * over the COSE signature field itself, as c2pa-rs 0.91 writes and reads it; on a mismatch, over the
+     * whole COSE_Sign1, as earlier c2pa-rs wrote it, then over the CounterSignature structure a sigTst2
+     * header token covers (§18.18.3 reads that way; amendment 1). The
+     * malformed time-stamp assertions the manifest itself holds are part of its result.
+     */
+    public function forManifest(Manifest $manifest, ?TrustSettings $settings, TimestampAssertions $assertions): TimestampResult
+    {
+        $header = $this->check($manifest, $settings);
+        $faults = $assertions->faultsOf($manifest->label);
+        $offered = $assertions->tokensFor($manifest->label);
+        if ($header->trustedTime() !== null || $offered === []) {
+            return $faults === [] ? $header : new TimestampResult(true, [...$header->statuses, ...$faults], $header->time, $header->trusted, $header->timeFraction);
+        }
+        try {
+            $cose = CoseSign1::ofManifest($manifest);
+        } catch (CoseException) {
+            return $faults === [] ? $header : new TimestampResult(true, [...$header->statuses, ...$faults], $header->time, $header->trusted, $header->timeFraction);
+        }
+        $tried = [];
+        foreach ($offered as [$der, $url]) {
+            try {
+                $token = TimeStampToken::fromHeaderValue($der, $this->reader);
+            } catch (TimestampException $e) {
+                $tried[] = $this->status(StatusCode::TimeStampMalformed, $url, sprintf('the token for %s: %s', $manifest->label, $e->getMessage()));
+
+                continue;
+            }
+            // the three forms a token has been taken over, each binding the same signature (amendment 1): the
+            // signature field (c2pa-rs 0.91), the whole COSE_Sign1 (earlier c2pa-rs, Claim::signature_val();
+            // c2pa-rs/update_manifest.jpg), the CounterSignature structure of a sigTst2 header (§18.18.3)
+            foreach ([$cose->signature, $manifest->signatureBytes(), self::countersignedBytes($cose, 'sigTst2', $manifest->claimBytes())] as $i => $covered) {
+                $result = $this->judge($token, $covered, $settings, $url, $manifest->claim->version);
+                if ($result->trustedTime() !== null || ! in_array(StatusCode::TimeStampMismatch, array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $result->statuses), true)) {
+                    break;
+                }
+            }
+            if ($result->trustedTime() !== null) {
+                return new TimestampResult(true, [...$header->statuses, ...$tried, ...$result->statuses, ...$faults], $result->time, true, $result->timeFraction);
+            }
+            $tried = [...$tried, ...$result->statuses];
+        }
+
+        return new TimestampResult(true, [...$header->statuses, ...$tried, ...$faults], $header->time, $header->trusted, $header->timeFraction);
+    }
+
+    /**
      * A header's one token judged against the manifest's countersigned
      * bytes. A header with more than one token is malformed and gives no time,
      * as c2pa-rs 0.91.1 drops it (`sigtst.rs`: "only a single timestamp

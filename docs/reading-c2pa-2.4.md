@@ -49,13 +49,13 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §13, §16, §17, Appendix C | 29 | 19 | 3 | 1 | 6 | 0 |
 | §14 | 41 | 32 | 1 | 6 | 2 | 0 |
 | §15.1 to §15.6 | 33 | 13 | 6 | 4 | 10 | 0 |
-| §15.7 to §15.9 | 47 | 24 | 9 | 4 | 5 | 5 |
-| §15.10 to the end of §15 | 124 | 81 | 16 | 13 | 9 | 5 |
+| §15.7 to §15.9 | 47 | 26 | 9 | 4 | 5 | 3 |
+| §15.10 to the end of §15 | 124 | 82 | 16 | 13 | 9 | 4 |
 | §18.1 to §18.9 | 50 | 25 | 4 | 7 | 11 | 3 |
 | §18.10 to §18.16 | 58 | 20 | 11 | 14 | 12 | 1 |
-| §18.17 to the end of §18 | 34 | 4 | 2 | 14 | 11 | 2 (and 1 other) |
+| §18.17 to the end of §18 | 34 | 6 | 2 | 14 | 11 | 0 (and 1 other) |
 | Appendix A | 50 | 23 | 2 | 7 | 13 | 5 |
-| **all** | **562** | **298** | **63** | **78** | **101** | **21** |
+| **all** | **562** | **303** | **63** | **78** | **101** | **16** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -745,8 +745,8 @@ period. `c2pa-rs` here means 0.91.1, the engine of `c2patool` 0.28.1.
 | 15.8.1.1 | `sigTst`: the value is a `TimeStampResp`; a status other than 0 or 1 is `timeStamp.malformed` and ignored. | `TimeStampToken::status()` refuses, `checkHeader()` turns it into `timeStamp.malformed` | covered | measured: `TimeStampTokenTest` SPEC-016 AC6 (status 1 accepted, status 2 refused) |
 | 15.8.1.1 | `sigTst`: take the `timeStampToken` from the response. | `TimeStampToken::fromHeaderValue()` | covered | measured: `TimeStampTokenTest` SPEC-016 AC6 (both wrappers) |
 | 15.8.1.1 | `sigTst2`: the value is a bare `TimeStampToken`. | the same reader; either shape is read from either header, told apart by the first child | covered | measured: the same test |
-| 15.8.1.2 | Skip the time-stamp assertion step when a header token passed; follow it otherwise. | no `c2pa.time-stamp` assertion is read anywhere in `src/` | **candidate** | read → P05-2 |
-| 15.8.1.2 | Look the manifest up in the map built from time-stamp assertions; try each token until one passes. | as above | **candidate** | read → P05-2 |
+| 15.8.1.2 | Skip the time-stamp assertion step when a header token passed; follow it otherwise. | `TimestampAssertions::collect()` reads every manifest's `c2pa.time-stamp`; `TimestampCheck::forManifest()` uses a token when the header's did not pass (SPEC-064, step 333) | covered (SPEC-064) | read → P05-2 |
+| 15.8.1.2 | Look the manifest up in the map built from time-stamp assertions; try each token until one passes. | `TimestampAssertions::collect()` reads every manifest's `c2pa.time-stamp`; `TimestampCheck::forManifest()` uses a token when the header's did not pass (SPEC-064, step 333) | covered (SPEC-064) | read → P05-2 |
 | 15.8.2 | The token's signature algorithm not on the §13.2 lists: `timeStamp.untrusted`, ignored. | an OID outside `TimestampCheck::SIGNATURE_ALGORITHMS` is `timeStamp.untrusted` naming it. That table holds RSA PKCS#1 v1.5 (`rsaEncryption`, `sha*WithRSAEncryption`), which §13.2.1 does not list (its deprecated list is empty) | **partial** | measured: `TimestampCheckTest` SPEC-017 AC3; the rest read → P05-3 |
 | 15.8.2 | The token's signature does not validate (RFC 2630 §5.6): `timeStamp.mismatch`, ignored. | a `messageDigest` that does not match the TSTInfo is `timeStamp.mismatch`; a CMS signature that does not verify is `timeStamp.untrusted`, as `c2pa-rs` (`time_stamp/verify.rs`). Ignored either way | partial (the code only) | measured: `TimestampCheckTest` SPEC-017 AC4 → P05-9 |
 | 15.8.2 | No `messageImprint`: `timeStamp.malformed`, ignored. | `TstInfo::fromDer()` requires it and its two fields | covered | read |
@@ -805,6 +805,7 @@ period. `c2pa-rs` here means 0.91.1, the engine of `c2patool` 0.28.1.
   fails a time-stamp assertion that does not parse with
   `assertion.timestamp.malformed` (a failure), and this verifier does not
   look at it. That is a §18 rule; pass it to that pack.
+  **Resolved in step 333** (SPEC-064): the assertion is read and used when the header's token did not pass; `c2patool` 0.28.1 cannot show it (it does not judge the parent again).
 - **P05-3 — TSA signature algorithms (§15.8.2, §13.2.1).** RSA PKCS#1
   v1.5 is accepted for the token's signature, although §13.2.1 lists only
   ECDSA, RSASSA-PSS and Ed25519 and its deprecated list is empty.
@@ -928,7 +929,7 @@ decision*, which follows `c2pa-rs` without `verify.strict_v1_validation`.
 | 15.10.3.2.3 | All of the above for v1 claims (`c2pa.actions`, `ingredient`). | only "at most one actions assertion" is applied | by design: `docs/conformance.md`, *§15.10.3.2.3 for version 1 claims — not applied, by decision* | measured: `ActionsCheckTest` "AC4", "AC6"; `RedactedActionTest` "AC6: v1 claims are not checked" |
 | 15.10.3.2.4 | No validation for `c2pa.metadata`; unlisted fields should not be rejected. | nothing checks it | covered by construction | read |
 | 15.10.3.2.5 | `c2pa.session-keys`: verify `signerBinding` with the session key over the signer's certificate. | none | candidate | read (`PRED-CRYP-024`) → P06-8 |
-| 15.10.3.2.6 | `c2pa.time-stamp` is one CBOR map with at least one pair, else `assertion.timestamp.malformed`. | none: the assertion is never read | candidate | read → P06-2 |
+| 15.10.3.2.6 | `c2pa.time-stamp` is one CBOR map with at least one pair, else `assertion.timestamp.malformed`. | `TimestampAssertions::collect()` reads every manifest's `c2pa.time-stamp`; `TimestampCheck::forManifest()` uses a token when the header's did not pass (SPEC-064, step 333) | covered (SPEC-064) | read → P06-2 |
 | 15.10.3.2.6 | Keep the token for §15.8.2. | not read; the signer is judged at *now* | by design: `docs/conformance.md` §3 (`PRED-TIME-002`, `-003`), stricter | read |
 | 15.10.3.2.7 | At most one `exif.originalPreservationImage` representation, else `alternativeContentRepresentation.malformed`. | none | candidate | read (`PRED-ASSE-013`) → P06-8 |
 | 15.10.3.2.7 | Exactly one of `multiAssetPartIndex` / `embeddedOriginalPreservationImage`; the index needs a multi-asset hash and must be in bounds. | none | candidate | read (`PRED-ASSE-026`) → P06-8 |
@@ -1438,8 +1439,8 @@ to the live-video method of §19.4, which this verifier does not read.
 | 18.17.3 | `c2pa.metadata` holds only the fields of Appendix B. | a rule for the claim generator; `c2pa-rs` no longer checks the field list in validation (`claim.rs`, `verify_metadata`) | n/a | read; `docs/conformance.md` `PRED-STRU-017` |
 | 18.17.4 | Partial redaction by an update manifest; the new assertion is shown with the update manifest's signer. | descriptive and a user-experience rule; the verifier has no user interface. Update manifests themselves: SPEC-022 | n/a | read |
 | 18.18.1 | Descriptive: a later time-stamp keeps a manifest valid after its certificate expires. | — | n/a | read |
-| 18.18.3 | Label `c2pa.time-stamp`; at most one per manifest. | not checked | **candidate** | read → P09-4 |
-| 18.18.3 | A map with at least one entry; each key a manifest label (`urn:c2pa:…`), each value a byte string. | not read: no `assertion.timestamp.malformed` code exists here | **candidate** | read → P09-2 |
+| 18.18.3 | Label `c2pa.time-stamp`; at most one per manifest. | `TimestampAssertions::collect()` reads every manifest's `c2pa.time-stamp`; `TimestampCheck::forManifest()` uses a token when the header's did not pass (SPEC-064, step 333) | covered (SPEC-064) | read → P09-4 |
+| 18.18.3 | A map with at least one entry; each key a manifest label (`urn:c2pa:…`), each value a byte string. | `TimestampAssertions::collect()` reads every manifest's `c2pa.time-stamp`; `TimestampCheck::forManifest()` uses a token when the header's did not pass (SPEC-064, step 333) | covered (SPEC-064) | read → P09-2 |
 | 18.18.3 | Each value is an RFC 3161 token over the `signature` field of the named manifest's COSE_Sign1. | not read: the token is never verified and never used, so a manifest is judged at its own `sigTst`/`sigTst2`, or at now | by design: stricter, not laxer, in the usual case (`docs/conformance.md` §3, `PRED-TIME-002`/`003`; `notes/step-128-more-for-0.3.md` §3); see P09-2 for two cases where it is laxer | measured: `php bin/c2pa-verify tests/Fixtures/c2pa-rs/update_manifest.jpg` reports `Valid` and lists a `c2pa.time-stamp` assertion; `c2patool` also `Valid` (`notes/step-140-gaps-counted.md`) |
 | 18.19.1 | A validator may need to go online for revocation status. | no network in the verification path; only stapled responses are read (SPEC-030) | by design (`docs/comparison.md`, the OCSP row) | read |
 | 18.19.3 | Label `c2pa.certificate-status`; at most one per manifest. | not checked | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P09-4 |

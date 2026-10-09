@@ -10283,3 +10283,20 @@ README are where the disclosure lives.
   parent's signer expired, and by this verifier; `c2pa-rs` 0.91.1 read for
   what the token covers (`timestamp.rs`, `verify.rs`). `composer check`.
 - Decided by Maurice: SPEC-064 approved with both proposals.
+
+## 2026-10-09 — The time-stamp assertion is read (step 333)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en bouw SPEC-064".
+- Produced: `ce3a2f5` pushed; SPEC-064 implemented with amendment 1;
+  `src/Timestamp/TimestampAssertions.php` (new), `TimestampCheck.php`
+  (`forManifest()`), `src/Verifier/Verifier.php`,
+  `src/Verifier/IngredientManifestCheck.php`, `src/Report/StatusCode.php`;
+  `tests/Unit/Timestamp/TimestampAssertionTest.php`; the API surface and
+  two counters; the CHANGELOG; `docs/reading-c2pa-2.4.md`;
+  `notes/step-333-time-stamp-assertion.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: the tests red (9 failed), then green; the corpus twice (the
+  first found a real file's token over the whole COSE_Sign1; after the fix
+  only the probes change verdict); `bin/fuzz.php` (0 faults, none more
+  lenient); `composer check` (986 passed).
+- Decided by Maurice: build SPEC-064; amendment 1 to confirm.

@@ -44,6 +44,7 @@ enum StatusCode: string
     case AssertionCloudDataActions = 'assertion.cloud-data.actions';   // SPEC-063
     case ManifestTextCorruptedWrapper = 'manifest.text.corruptedWrapper';   // SPEC-060 amendment 3
     case ManifestTextMultipleWrappers = 'manifest.text.multipleWrappers';   // SPEC-060 amendment 3
+    case AssertionTimestampMalformed = 'assertion.timestamp.malformed';   // SPEC-064
     case AssertionDataHashMatch = 'assertion.dataHash.match';
     case AssertionDataHashMismatch = 'assertion.dataHash.mismatch';
     case AssertionBmffHashMatch = 'assertion.bmffHash.match';

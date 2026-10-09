@@ -41,6 +41,7 @@ use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationResult;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Support\Bytes;
+use Provemark\C2paVerifier\Timestamp\TimestampAssertions;
 use Provemark\C2paVerifier\Timestamp\TimestampCheck;
 use Provemark\C2paVerifier\Timestamp\TimestampResult;
 use Provemark\C2paVerifier\Trust\Certificate;
@@ -169,7 +170,8 @@ final readonly class Verifier
             $graphStatuses = [new ValidationStatus($e->status, $e->url ?? self::STORE_URL, $e->getMessage())];
         }
 
-        $timestamp = $this->timestamp->check($manifestStore->active, $settings);
+        // the header's token, else a time-stamp assertion's from any manifest of the store (SPEC-064)
+        $timestamp = $this->timestamp->forManifest($manifestStore->active, $settings, TimestampAssertions::collect($manifestStore));
         $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp, $graphStatuses, $graph);
         $refusals = [];
         // a CAWG identity assertion carries a credential of its own that c2pa-rs validates; this verifier

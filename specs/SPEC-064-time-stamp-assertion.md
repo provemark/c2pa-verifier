@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-09                      |
 | Supersedes | —                                                 |
@@ -167,6 +167,37 @@ final readonly class TimestampAssertions
 `TimestampCheck` gains a path that takes a token and an url instead of
 the header.
 
+## Amendments
+
+1. **2026-10-09, steps 332 and 333, measured while building** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   - **The oracle cannot show the rule.** `c2patool` 0.28.1 does not
+     judge an earlier manifest's signer again once its validation was
+     recorded at signing. It is `Trusted` with a valid token, a useless one
+     and none at all, in a standard and an update manifest. Only the
+     malformed shape is refused. AC6 therefore asserts *never more lenient
+     than 0.28.1*, and the control (AC2) leans on 0.27.22, which shows the
+     expired parent on every probe. AC5's difference with `c2pa-rs` (its
+     assertion token replaces a passed header token) cannot be seen
+     through 0.28.1 either. It stays read, from `cose_validator.rs`.
+   - **Three forms of the token.** `c2pa-rs` 0.91.1 writes and reads a
+     token over the COSE `signature` field itself (`timestamp.rs`,
+     `verify.rs`). The corpus's real `c2pa-rs/update_manifest.jpg` holds a
+     token over the parent's whole COSE_Sign1, as earlier `c2pa-rs` took it
+     (`Claim::signature_val()`). §18.18.3 describes a Sig_structure whose
+     payload is the field. All three prove that the same signature existed
+     at that time, so all are accepted, in that order: the field, the
+     whole COSE_Sign1, the CounterSignature structure a `sigTst2` header
+     token covers. The probes `raw` and `structure` carry the first and
+     the last; `update_manifest.jpg` the second, whose token now validates
+     (its DigiCert TSA is no `tsa` anchor in the corpus settings, so its
+     time is not used, and no verdict changes).
+   - **Hashed URIs.** Scope 1 said an assertion whose hashed URI did not
+     match is left unread. Tokens are collected before the hashed URIs are
+     checked. A mismatch already makes that manifest's claim fail, and a
+     token proves only what the TSA signed, so the clause is dropped.
+
+   **Weight B: no rule changes; what the oracle can show is recorded.**
+
 ## Open questions
 
 - 1. **A second time-stamp assertion in one manifest.** §18.18.3 says *"at
@@ -183,10 +214,10 @@ the header.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
+| AC1 | tests/Unit/Timestamp/TimestampAssertionTest.php :: AC1: a later token keeps an earlier manifest alive; AC1 (amendment 1): a real update manifest's token / SPEC-064 | src/Timestamp/TimestampCheck.php :: forManifest(); src/Timestamp/TimestampAssertions.php :: collect(), tokensFor() |
+| AC2 | tests/Unit/Timestamp/TimestampAssertionTest.php :: AC2: without a token for its label, the same parent is expired / SPEC-064 | src/Timestamp/TimestampAssertions.php :: tokensFor() |
+| AC3 | tests/Unit/Timestamp/TimestampAssertionTest.php :: AC3: an untrusted or mismatched token does not help / SPEC-064 | src/Timestamp/TimestampCheck.php :: forManifest(), judge() |
+| AC4 | tests/Unit/Timestamp/TimestampAssertionTest.php :: AC4: a malformed time-stamp assertion, or a second one / SPEC-064 | src/Timestamp/TimestampAssertions.php :: collect(), fault(), faultsOf() |
+| AC5 | tests/Unit/Timestamp/TimestampAssertionTest.php :: AC5: a header token that passed is not replaced / SPEC-064 | src/Timestamp/TimestampCheck.php :: forManifest() (the header first) |
+| AC6 | tests/Unit/Timestamp/TimestampAssertionTest.php :: AC6: never more lenient than c2patool 0.28.1 / SPEC-064 | bin/make-timestamp-assertion-variants.php |
+| AC7 | tests/Unit/Timestamp/TimestampAssertionTest.php :: AC7: one code, verbatim, a failure / SPEC-064 | src/Report/StatusCode.php; tests/Fixtures/api/public-surface.txt |
