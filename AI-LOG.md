@@ -10079,3 +10079,19 @@ README are where the disclosure lives.
   passed); PHPStan in Docker.
 - Decided by Maurice: choice A — follow §15.12.1.1, no code change, name
   the difference with `c2patool`.
+
+## 2026-10-09 — SPEC-063 drafted: the cloud-data assertion's structure (step 320)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord met 1 en 2, push en begin met SPEC-063" — 1: fix cloud
+  data; 2: the four other F5 candidates by design, named in a separate
+  step.
+- Produced: `739d030` pushed; `specs/SPEC-063-cloud-data.md` (draft); rows
+  in `NOTES.md` and `docs/milestones.md`.
+- Reasoned: C2PA 2.4 §15.10.3.2 and §15.10.3.2.1–.4, §18.11, read in the
+  fetched specification; `c2pa-rs` 0.91.1 `verify_cloud_data()`,
+  `CloudData`, `HashedExtUri`, `is_hard_binding_label()`. Measured earlier
+  (step 313): two cloud-data probes `Invalid` in `c2patool` 0.28.1,
+  `Trusted` here.
+- Decided by Maurice: cloud data fixed under a new spec; metadata
+  `@context`, certificate status, soft binding and action field types by
+  design.
