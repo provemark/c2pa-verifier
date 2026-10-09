@@ -56,7 +56,7 @@ register_shutdown_function(static function () use ($keys): void {
     }
 });
 
-function run(string $command): void
+function abRun(string $command): void
 {
     $lines = [];
     $code = 0;
@@ -66,12 +66,12 @@ function run(string $command): void
     }
 }
 
-function sh(string ...$parts): string
+function abSh(string ...$parts): string
 {
     return implode(' ', array_map('escapeshellarg', $parts));
 }
 
-function bstr(string $b): string
+function abBstr(string $b): string
 {
     $n = strlen($b);
 
@@ -79,7 +79,7 @@ function bstr(string $b): string
 }
 
 /** A DER ECDSA signature as R‖S of 2 × $curveBytes (what COSE carries). */
-function derToRs(string $der, int $curveBytes): string
+function abDerToRs(string $der, int $curveBytes): string
 {
     if ($der[0] !== "\x30") {
         throw new RuntimeException('not a DER ECDSA signature');
@@ -290,11 +290,11 @@ keyUsage = critical, digitalSignature, nonRepudiation
 extendedKeyUsage = emailProtection
 CNF;
 file_put_contents("{$keys}/ext.cnf", $cnf);
-run(sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/root.key"));
-run(sh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/root.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=Throw-away Root (no hard binding)', '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', 'v3_root', '-out', "{$keys}/root.pem"));
-run(sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/leaf.key"));
-run(sh('openssl', 'req', '-new', '-key', "{$keys}/leaf.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=no hard binding', '-config', "{$keys}/ext.cnf", '-out', "{$keys}/leaf.csr"));
-run(sh('openssl', 'x509', '-req', '-in', "{$keys}/leaf.csr", '-CA', "{$keys}/root.pem", '-CAkey', "{$keys}/root.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-extfile', "{$keys}/ext.cnf", '-extensions', 'good', '-out', "{$keys}/leaf.pem"));
+abRun(abSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/root.key"));
+abRun(abSh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/root.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=Throw-away Root (no hard binding)', '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', 'v3_root', '-out', "{$keys}/root.pem"));
+abRun(abSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/leaf.key"));
+abRun(abSh('openssl', 'req', '-new', '-key', "{$keys}/leaf.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=no hard binding', '-config', "{$keys}/ext.cnf", '-out', "{$keys}/leaf.csr"));
+abRun(abSh('openssl', 'x509', '-req', '-in', "{$keys}/leaf.csr", '-CA', "{$keys}/root.pem", '-CAkey', "{$keys}/root.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-extfile', "{$keys}/ext.cnf", '-extensions', 'good', '-out', "{$keys}/leaf.pem"));
 $pemToDer = static fn (string $pem): string => (string) base64_decode(preg_replace('/-----[^-]+-----|\s/', '', $pem) ?? '', true);
 $rootPem = (string) file_get_contents("{$keys}/root.pem");
 $rootDer = $pemToDer($rootPem);
@@ -328,18 +328,18 @@ foreach ($variants as $name => $edited) {
     $COSE_LENGTH = bU32($edited, $COSE - 8) - 8;
 
     // the new COSE_Sign1: {1: -7, 33: [leaf, root]}, signed over the edited claim
-    $protected = "\xa2\x01\x26\x18\x21\x82".bstr($leafDer).bstr($rootDer);
-    $draft = "\xd2\x84".bstr($protected)."\xa1\x63pad".bstr('')."\xf6".bstr(str_repeat("\0", 64));
+    $protected = "\xa2\x01\x26\x18\x21\x82".abBstr($leafDer).abBstr($rootDer);
+    $draft = "\xd2\x84".abBstr($protected)."\xa1\x63pad".abBstr('')."\xf6".abBstr(str_repeat("\0", 64));
     $sigStructure = CoseSign1::fromBytes($draft)->sigStructure($claimBytes);
     file_put_contents("{$keys}/tbs", $sigStructure);
-    run(sh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/leaf.key", '-out', "{$keys}/sig", "{$keys}/tbs"));
-    $signature = derToRs((string) file_get_contents("{$keys}/sig"), 32);
-    $fixed = 2 + strlen(bstr($protected)) + 5 + 3 + 1 + strlen(bstr($signature));
+    abRun(abSh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/leaf.key", '-out', "{$keys}/sig", "{$keys}/tbs"));
+    $signature = abDerToRs((string) file_get_contents("{$keys}/sig"), 32);
+    $fixed = 2 + strlen(abBstr($protected)) + 5 + 3 + 1 + strlen(abBstr($signature));
     $padLength = $COSE_LENGTH - $fixed;
     if ($padLength < 256) {
         throw new RuntimeException("{$name}: the pad would be {$padLength} bytes, too short for a 3-byte head");
     }
-    $cose = "\xd2\x84".bstr($protected)."\xa1\x63pad\x59".pack('n', $padLength).str_repeat("\0", $padLength)."\xf6".bstr($signature);
+    $cose = "\xd2\x84".abBstr($protected)."\xa1\x63pad\x59".pack('n', $padLength).str_repeat("\0", $padLength)."\xf6".abBstr($signature);
     if (strlen($cose) !== $COSE_LENGTH) {
         throw new RuntimeException("{$name}: COSE is ".strlen($cose)." bytes, not {$COSE_LENGTH}");
     }

@@ -64,7 +64,7 @@ register_shutdown_function(static function () use ($keys): void {
     echo "keys deleted\n";
 });
 
-function imRun(string $command): void
+function s38Run(string $command): void
 {
     $lines = [];
     $code = 0;
@@ -74,7 +74,7 @@ function imRun(string $command): void
     }
 }
 
-function imSh(string ...$parts): string
+function s38Sh(string ...$parts): string
 {
     return implode(' ', array_map('escapeshellarg', $parts));
 }
@@ -86,7 +86,7 @@ final class ImBytes
 }
 
 /** The CBOR head for major type $mt and argument $n. */
-function imHead(int $mt, int $n): string
+function s38Head(int $mt, int $n): string
 {
     $mt <<= 5;
 
@@ -99,22 +99,22 @@ function imHead(int $mt, int $n): string
 }
 
 /** A small CBOR encoder: ints, text, bytes (ImBytes), null, bool, lists and text-keyed maps in the order given. */
-function imCbor(mixed $v): string
+function s38Cbor(mixed $v): string
 {
     return match (true) {
-        $v instanceof ImBytes => imHead(2, strlen($v->bytes)).$v->bytes,
-        is_string($v) => imHead(3, strlen($v)).$v,
-        is_int($v) => $v >= 0 ? imHead(0, $v) : imHead(1, -1 - $v),
+        $v instanceof ImBytes => s38Head(2, strlen($v->bytes)).$v->bytes,
+        is_string($v) => s38Head(3, strlen($v)).$v,
+        is_int($v) => $v >= 0 ? s38Head(0, $v) : s38Head(1, -1 - $v),
         $v === null => "\xf6",
         is_bool($v) => $v ? "\xf5" : "\xf4",
-        is_array($v) && array_is_list($v) => imHead(4, count($v)).implode('', array_map('imCbor', $v)),
-        is_array($v) => imHead(5, count($v)).implode('', array_map(static fn (string $k, mixed $x): string => imCbor($k).imCbor($x), array_keys($v), array_values($v))),
+        is_array($v) && array_is_list($v) => s38Head(4, count($v)).implode('', array_map('s38Cbor', $v)),
+        is_array($v) => s38Head(5, count($v)).implode('', array_map(static fn (string $k, mixed $x): string => s38Cbor($k).s38Cbor($x), array_keys($v), array_values($v))),
         default => throw new RuntimeException('cannot encode '.get_debug_type($v)),
     };
 }
 
 /** An assertion superbox: jumd (cbor UUID, toggles 3: requestable + label) and a cbor content box. */
-function imAssertionBox(string $label, string $payload): string
+function s38AssertionBox(string $label, string $payload): string
 {
     $uuid = (string) hex2bin('63626f72001100108000'.'00aa00389b71');
     $jumd = 'jumd'.$uuid."\x03".$label."\0";
@@ -126,7 +126,7 @@ function imAssertionBox(string $label, string $payload): string
 }
 
 /** A DER ECDSA signature as R‖S of 2 × $curveBytes (what COSE carries). */
-function imDerToRs(string $der, int $curveBytes): string
+function s38DerToRs(string $der, int $curveBytes): string
 {
     if ($der[0] !== "\x30") {
         throw new RuntimeException('not a DER ECDSA signature');
@@ -151,7 +151,7 @@ function imDerToRs(string $der, int $curveBytes): string
  *
  * @param  list<array{0: int, 1: int}>  $exclusions
  */
-function imDataHash(string $bytes, array $exclusions): string
+function s38DataHash(string $bytes, array $exclusions): string
 {
     usort($exclusions, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
     $ctx = hash_init('sha256');
@@ -166,7 +166,7 @@ function imDataHash(string $bytes, array $exclusions): string
 }
 
 /** The offset of the entry map naming $label in a CBOR list of hashed-URI maps at $list, or null. */
-function imEntryFor(string $s, int $list, string $label): ?int
+function s38EntryFor(string $s, int $list, string $label): ?int
 {
     $count = ord($s[$list]) & 0x1F;
     $p = $list + 1;
@@ -182,7 +182,7 @@ function imEntryFor(string $s, int $list, string $label): ?int
 }
 
 /** The PNG fixture's hard binding re-bound after the store grew by $grown bytes before the hash.data box. */
-function imRebind(string $store, string $png, int $grown, int $hashDataBox, int $claimAt): string
+function s38Rebind(string $store, string $png, int $grown, int $hashDataBox, int $claimAt): string
 {
     $box = $hashDataBox + $grown;
     $hd = bMapPairs($store, $box + 80);
@@ -192,12 +192,12 @@ function imRebind(string $store, string $png, int $grown, int $hashDataBox, int 
         throw new RuntimeException('the exclusion length is not a two-byte CBOR uint');
     }
     $store = bReplace($store, $lengthValue + 1, substr($store, $lengthValue + 1, 2), pack('n', 12 + strlen($store)));
-    $digest = imDataHash(pngWithStore($png, $store), [[33, 12 + strlen($store)]]);
+    $digest = s38DataHash(pngWithStore($png, $store), [[33, 12 + strlen($store)]]);
     $hashValue = $hd['hash'][1] + 2;
     $store = bReplace($store, $hashValue, substr($store, $hashValue, 32), $digest);
     $uri = hash('sha256', substr($store, $box + 8, bU32($store, $box) - 8), true);
     $claim = bMapPairs($store, $claimAt + $grown);
-    $entry = imEntryFor($store, $claim['created_assertions'][1], 'c2pa.hash.data');
+    $entry = s38EntryFor($store, $claim['created_assertions'][1], 'c2pa.hash.data');
     if ($entry === null) {
         throw new RuntimeException('no c2pa.hash.data entry in the claim');
     }
@@ -222,11 +222,11 @@ keyUsage = critical, digitalSignature, nonRepudiation
 extendedKeyUsage = emailProtection
 CNF;
 file_put_contents("{$keys}/ext.cnf", $cnf);
-imRun(imSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/root.key"));
-imRun(imSh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/root.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=Throw-away Root (SPEC-038)', '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', 'v3_root', '-out', "{$keys}/root.pem"));
-imRun(imSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/leaf.key"));
-imRun(imSh('openssl', 'req', '-new', '-key', "{$keys}/leaf.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=SPEC-038 probes', '-config', "{$keys}/ext.cnf", '-out', "{$keys}/leaf.csr"));
-imRun(imSh('openssl', 'x509', '-req', '-in', "{$keys}/leaf.csr", '-CA', "{$keys}/root.pem", '-CAkey', "{$keys}/root.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-extfile', "{$keys}/ext.cnf", '-extensions', 'good', '-out', "{$keys}/leaf.pem"));
+s38Run(s38Sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/root.key"));
+s38Run(s38Sh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/root.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=Throw-away Root (SPEC-038)', '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', 'v3_root', '-out', "{$keys}/root.pem"));
+s38Run(s38Sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/leaf.key"));
+s38Run(s38Sh('openssl', 'req', '-new', '-key', "{$keys}/leaf.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=SPEC-038 probes', '-config', "{$keys}/ext.cnf", '-out', "{$keys}/leaf.csr"));
+s38Run(s38Sh('openssl', 'x509', '-req', '-in', "{$keys}/leaf.csr", '-CA', "{$keys}/root.pem", '-CAkey', "{$keys}/root.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-extfile', "{$keys}/ext.cnf", '-extensions', 'good', '-out', "{$keys}/leaf.pem"));
 $pemToDer = static fn (string $pem): string => (string) base64_decode((string) preg_replace('/-----[^-]+-----|\s/', '', $pem), true);
 $rootPem = (string) file_get_contents("{$keys}/root.pem");
 $rootDer = $pemToDer($rootPem);
@@ -247,19 +247,19 @@ file_put_contents($settings, json_encode([
 ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
 
 /** Sign $claimBytes with the throw-away leaf and pad the COSE_Sign1 to exactly $length bytes. */
-function imCose(string $claimBytes, int $length, string $leafDer, string $rootDer, string $keys, string $name): string
+function s38Cose(string $claimBytes, int $length, string $leafDer, string $rootDer, string $keys, string $name): string
 {
-    $protected = "\xa2\x01\x26\x18\x21\x82".imCbor(new ImBytes($leafDer)).imCbor(new ImBytes($rootDer));
-    $draft = "\xd2\x84".imCbor(new ImBytes($protected))."\xa1\x63pad".imCbor(new ImBytes(''))."\xf6".imCbor(new ImBytes(str_repeat("\0", 64)));
+    $protected = "\xa2\x01\x26\x18\x21\x82".s38Cbor(new ImBytes($leafDer)).s38Cbor(new ImBytes($rootDer));
+    $draft = "\xd2\x84".s38Cbor(new ImBytes($protected))."\xa1\x63pad".s38Cbor(new ImBytes(''))."\xf6".s38Cbor(new ImBytes(str_repeat("\0", 64)));
     file_put_contents("{$keys}/tbs", CoseSign1::fromBytes($draft)->sigStructure($claimBytes));
-    imRun(imSh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/leaf.key", '-out', "{$keys}/sig", "{$keys}/tbs"));
-    $signature = imDerToRs((string) file_get_contents("{$keys}/sig"), 32);
-    $fixed = 2 + strlen(imCbor(new ImBytes($protected))) + 5 + 3 + 1 + strlen(imCbor(new ImBytes($signature)));
+    s38Run(s38Sh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/leaf.key", '-out', "{$keys}/sig", "{$keys}/tbs"));
+    $signature = s38DerToRs((string) file_get_contents("{$keys}/sig"), 32);
+    $fixed = 2 + strlen(s38Cbor(new ImBytes($protected))) + 5 + 3 + 1 + strlen(s38Cbor(new ImBytes($signature)));
     $padLength = $length - $fixed;
     if ($padLength < 256) {
         throw new RuntimeException("{$name}: the pad would be {$padLength} bytes, too short for a 3-byte head");
     }
-    $cose = "\xd2\x84".imCbor(new ImBytes($protected))."\xa1\x63pad\x59".pack('n', $padLength).str_repeat("\0", $padLength)."\xf6".imCbor(new ImBytes($signature));
+    $cose = "\xd2\x84".s38Cbor(new ImBytes($protected))."\xa1\x63pad\x59".pack('n', $padLength).str_repeat("\0", $padLength)."\xf6".s38Cbor(new ImBytes($signature));
     if (strlen($cose) !== $length) {
         throw new RuntimeException("{$name}: COSE is ".strlen($cose)." bytes, not {$length}");
     }
@@ -509,7 +509,7 @@ foreach ($variants as $name => $edit) {
     if (! is_array($data) || (bMaps($data['exclusions'] ?? null)[3]['xpath'] ?? null) !== '/free') {
         throw new RuntimeException('the bmff assertion is not the one measured');
     }
-    $newBox = imAssertionBox($LABEL, imCbor($toIm($edit($data))));
+    $newBox = s38AssertionBox($LABEL, s38Cbor($toIm($edit($data))));
     $delta = strlen($newBox) - $box->length;
     $store = bSplice($p, $box->offset, $box->length, $newBox, [0, $m->box->offset, $m->assertionStore->offset]);
 
@@ -518,7 +518,7 @@ foreach ($variants as $name => $edit) {
     $claimBytes = $m->claimBytes();
     $claimAt = strpos($store, $claimBytes) ?: throw new RuntimeException('the claim is not in the store');
     $claim = bMapPairs($store, $claimAt);
-    $entry = imEntryFor($store, $claim['created_assertions'][1], $LABEL) ?? throw new RuntimeException('no claim entry');
+    $entry = s38EntryFor($store, $claim['created_assertions'][1], $LABEL) ?? throw new RuntimeException('no claim entry');
     $hashAt = bMapPairs($store, $entry)['hash'][1] + 2;
     $newBoxNow = $m->assertionStore->child($LABEL) ?? throw new RuntimeException('lost the assertion');
     $store = bReplace($store, $hashAt, substr($store, $hashAt, 32), hash('sha256', $newBoxNow->payload(), true));
@@ -529,7 +529,7 @@ foreach ($variants as $name => $edit) {
     $cbor = $signatureBox->contentBoxes()[0];
     $oldCose = $m->signatureBytes();
     $coseAt = strpos($store, $oldCose) ?: throw new RuntimeException('the COSE_Sign1 is not in the store');
-    $cose = imCose($m->claimBytes(), strlen($oldCose) - $delta, $leafDer, $rootDer, $keys, $name);
+    $cose = s38Cose($m->claimBytes(), strlen($oldCose) - $delta, $leafDer, $rootDer, $keys, $name);
     $store = bSplice($store, $coseAt, strlen($oldCose), $cose, [0, $m->box->offset, $signatureBox->offset, $cbor->offset]);
     if (strlen($store) !== strlen($p)) {
         throw new RuntimeException("{$name}: the store changed length");
@@ -546,7 +546,7 @@ foreach (array_keys($variants) as $name) {
     $file = "{$out}/{$name}.mp4";
     foreach (['0.28.0' => $new, '0.27.22' => $old] as $tag => $tool) {
         $lines = [];
-        exec(imSh($tool, $file, '--settings', $settings).' 2>&1', $lines, $code);
+        exec(s38Sh($tool, $file, '--settings', $settings).' 2>&1', $lines, $code);
         file_put_contents("{$oracles}/{$name}--{$tag}".($code === 0 ? '.json' : '.error.txt'), implode("\n", $lines)."\n");
         $report = $code === 0 ? json_decode(implode("\n", $lines), true) : null;
         printf("%-26s %-8s %s\n", $name, $tag, is_array($report) && is_string($report['validation_state'] ?? null) ? $report['validation_state'] : "exit {$code}");
@@ -567,7 +567,7 @@ foreach (['0.28.0' => $new, '0.27.22' => $old] as $tag => $tool) {
     $reported = [];
     foreach ($corpus as $relative) {
         $lines = [];
-        exec(imSh($tool, $root.'/tests/Fixtures/'.$relative).' 2>/dev/null', $lines, $code);
+        exec(s38Sh($tool, $root.'/tests/Fixtures/'.$relative).' 2>/dev/null', $lines, $code);
         $report = $code === 0 ? json_decode(implode("\n", $lines), true) : null;
         $results = is_array($report) && is_array($report['validation_results'] ?? null) ? $report['validation_results'] : [];
         $active = is_array($results['activeManifest'] ?? null) ? $results['activeManifest'] : [];

@@ -90,7 +90,7 @@ function jumbfNested(int $depth): string
 }
 
 /** The fixture PNG with $store in place of its caBX chunk's data, CRC recomputed. */
-function pngWithStore(string $png, string $store): string
+function jbfPngWithStore(string $png, string $store): string
 {
     $cabxOffset = 33; // after the signature (8) and IHDR (25)
     $oldLength = jumbfU32($png, $cabxOffset);
@@ -183,6 +183,6 @@ if (! is_dir($dir) && ! mkdir($dir, 0755, true)) {
 }
 foreach ($variants as $name => $bytes) {
     file_put_contents("{$dir}/{$name}.bin", $bytes);
-    file_put_contents("{$dir}/{$name}.png", pngWithStore($png, $bytes));
+    file_put_contents("{$dir}/{$name}.png", jbfPngWithStore($png, $bytes));
     printf("%s  %6d  %s.bin\n", hash('sha256', $bytes), strlen($bytes), $name);
 }

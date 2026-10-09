@@ -125,7 +125,7 @@ function cborCutPair(string $bytes, int $p, string $key, array $enclosing): stri
 }
 
 /** The fixture PNG with $store in place of its caBX chunk's data, CRC recomputed. */
-function pngWithStore(string $png, string $store): string
+function clmPngWithStore(string $png, string $store): string
 {
     $oldLength = claimU32($png, 33);
     $chunk = pack('N', strlen($store)).'caBX'.$store.pack('N', crc32('caBX'.$store));
@@ -213,6 +213,6 @@ if (! is_dir($dir) && ! mkdir($dir, 0755, true)) {
 }
 foreach ($variants as $name => $bytes) {
     file_put_contents("{$dir}/{$name}.bin", $bytes);
-    file_put_contents("{$dir}/{$name}.png", pngWithStore($png, $bytes));
+    file_put_contents("{$dir}/{$name}.png", clmPngWithStore($png, $bytes));
     printf("%s  %6d  %s.bin\n", hash('sha256', $bytes), strlen($bytes), $name);
 }

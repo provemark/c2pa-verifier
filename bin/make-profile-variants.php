@@ -10,7 +10,7 @@ declare(strict_types=1);
  * (alg, x5chain = leaf + root), a new signature over the Sig_structure, and
  * the unprotected pad resized so that the store keeps its length and nothing
  * but the signature box changes. Keys live in a directory outside the
- * repository for the duration of the run (the openssl CLI needs files) and
+ * repository for the duration of the pfRun (the openssl CLI needs files) and
  * are deleted before the script ends; only public certificates, the
  * re-signed variants and the settings that name the root as anchor are
  * written under tests/. Decided by Maurice van Loon on 2026-09-21: tooling
@@ -49,7 +49,7 @@ register_shutdown_function(static function () use ($keys): void {
     }
 });
 
-function run(string $command): string
+function pfRun(string $command): string
 {
     $lines = [];
     $code = 0;
@@ -61,7 +61,7 @@ function run(string $command): string
     return implode("\n", $lines);
 }
 
-function sh(string ...$parts): string
+function pfSh(string ...$parts): string
 {
     return implode(' ', array_map(escapeshellarg(...), $parts));
 }
@@ -71,7 +71,7 @@ function sh(string ...$parts): string
  *
  * @param  int<0, 7>  $mt
  */
-function head(int $mt, int $n): string
+function pfHead(int $mt, int $n): string
 {
     if ($n < 0) {
         throw new RuntimeException('a CBOR argument cannot be negative');
@@ -86,13 +86,13 @@ function head(int $mt, int $n): string
     };
 }
 
-function bstr(string $b): string
+function pfBstr(string $b): string
 {
-    return head(2, strlen($b)).$b;
+    return pfHead(2, strlen($b)).$b;
 }
 
 /** DER ECDSA-Sig-Value → R || S, each $curveBytes wide. */
-function derToRs(string $der, int $curveBytes): string
+function pfDerToRs(string $der, int $curveBytes): string
 {
     $p = 2;
     if (ord($der[1]) & 0x80) {
@@ -172,8 +172,8 @@ $variants = [
 ];
 
 // ---- the throw-away root ----
-run(sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/root.key"));
-run(sh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/root.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=Throw-away Root', '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', 'v3_root', '-out', "{$keys}/root.pem"));
+pfRun(pfSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/root.key"));
+pfRun(pfSh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/root.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=Throw-away Root', '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', 'v3_root', '-out', "{$keys}/root.pem"));
 $rootPem = (string) file_get_contents("{$keys}/root.pem");
 $rootDer = (string) base64_decode(preg_replace('/-----[^-]+-----|\s/', '', $rootPem) ?? '', true);
 
@@ -208,11 +208,11 @@ $verifier = new SignatureVerifier;
 foreach ($variants as $name => [$kind, $section, $alg, $notAfter]) {
     $key = "{$keys}/{$name}.key";
     match ($kind) {
-        'p256' => run(sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', $key)),
-        'secp256k1' => run(sh('openssl', 'ecparam', '-genkey', '-name', 'secp256k1', '-noout', '-out', $key)),
-        'rsa1024' => run(sh('openssl', 'genrsa', '-out', $key, '1024')),
+        'p256' => pfRun(pfSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', $key)),
+        'secp256k1' => pfRun(pfSh('openssl', 'ecparam', '-genkey', '-name', 'secp256k1', '-noout', '-out', $key)),
+        'rsa1024' => pfRun(pfSh('openssl', 'genrsa', '-out', $key, '1024')),
     };
-    run(sh('openssl', 'req', '-new', '-key', $key, '-subj', "/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=profile {$name}", '-config', "{$keys}/ext.cnf", '-out', "{$keys}/{$name}.csr"));
+    pfRun(pfSh('openssl', 'req', '-new', '-key', $key, '-subj', "/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=profile {$name}", '-config', "{$keys}/ext.cnf", '-out', "{$keys}/{$name}.csr"));
     $sign = ['openssl', 'x509', '-req', '-in', "{$keys}/{$name}.csr", '-CA', "{$keys}/root.pem", '-CAkey', "{$keys}/root.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-out', "{$keys}/{$name}.pem"];
     if ($section !== null) {
         $sign = [...$sign, '-extfile', "{$keys}/ext.cnf", '-extensions', $section];
@@ -221,31 +221,31 @@ foreach ($variants as $name => [$kind, $section, $alg, $notAfter]) {
         [$from, $to] = explode(':', $notAfter);
         $sign = [...$sign, '-not_before', $from, '-not_after', $to];
     }
-    run(sh(...$sign));
+    pfRun(pfSh(...$sign));
     $leafPem = (string) file_get_contents("{$keys}/{$name}.pem");
     $leafDer = (string) base64_decode(preg_replace('/-----[^-]+-----|\s/', '', $leafPem) ?? '', true);
     file_put_contents("{$dir}/{$name}.leaf.pem", $leafPem);
 
     // the protected header: {1: alg, 33: [leaf, root]}
-    $protected = "\xa2\x01".head(1, -1 - $alg)."\x18\x21\x82".bstr($leafDer).bstr($rootDer);   // every C2PA alg is negative
+    $protected = "\xa2\x01".pfHead(1, -1 - $alg)."\x18\x21\x82".pfBstr($leafDer).pfBstr($rootDer);   // every C2PA alg is negative
     // a first COSE with an empty signature, to borrow sigStructure() from the verifier's own parser
-    $draft = "\xd2\x84".bstr($protected)."\xa1\x63pad".bstr('')."\xf6".bstr(str_repeat("\0", 64));
+    $draft = "\xd2\x84".pfBstr($protected)."\xa1\x63pad".pfBstr('')."\xf6".pfBstr(str_repeat("\0", 64));
     $sigStructure = CoseSign1::fromBytes($draft)->sigStructure($claimBytes);
     file_put_contents("{$keys}/{$name}.tbs", $sigStructure);
     if ($alg === -37) {
-        run(sh('openssl', 'dgst', '-sha256', '-sigopt', 'rsa_padding_mode:pss', '-sigopt', 'rsa_pss_saltlen:32', '-sigopt', 'rsa_mgf1_md:sha256', '-sign', $key, '-out', "{$keys}/{$name}.sig", "{$keys}/{$name}.tbs"));
+        pfRun(pfSh('openssl', 'dgst', '-sha256', '-sigopt', 'rsa_padding_mode:pss', '-sigopt', 'rsa_pss_saltlen:32', '-sigopt', 'rsa_mgf1_md:sha256', '-sign', $key, '-out', "{$keys}/{$name}.sig", "{$keys}/{$name}.tbs"));
         $signature = (string) file_get_contents("{$keys}/{$name}.sig");
     } else {
-        run(sh('openssl', 'dgst', '-sha256', '-sign', $key, '-out', "{$keys}/{$name}.sig", "{$keys}/{$name}.tbs"));
-        $signature = derToRs((string) file_get_contents("{$keys}/{$name}.sig"), 32);
+        pfRun(pfSh('openssl', 'dgst', '-sha256', '-sign', $key, '-out', "{$keys}/{$name}.sig", "{$keys}/{$name}.tbs"));
+        $signature = pfDerToRs((string) file_get_contents("{$keys}/{$name}.sig"), 32);
     }
     // the pad fills the box to the original length: 2 + protected + (a1 63 pad + 59 xxxx + pad) + f6 + signature
-    $fixed = 2 + strlen(bstr($protected)) + 5 + 3 + 1 + strlen(bstr($signature));
+    $fixed = 2 + strlen(pfBstr($protected)) + 5 + 3 + 1 + strlen(pfBstr($signature));
     $padLength = $COSE_LENGTH - $fixed;
     if ($padLength < 256) {
         throw new RuntimeException("{$name}: the pad would be {$padLength} bytes, too short for a 3-byte head");
     }
-    $cose = "\xd2\x84".bstr($protected)."\xa1\x63pad\x59".pack('n', $padLength).str_repeat("\0", $padLength)."\xf6".bstr($signature);
+    $cose = "\xd2\x84".pfBstr($protected)."\xa1\x63pad\x59".pack('n', $padLength).str_repeat("\0", $padLength)."\xf6".pfBstr($signature);
     if (strlen($cose) !== $COSE_LENGTH) {
         throw new RuntimeException("{$name}: COSE is ".strlen($cose)." bytes, not {$COSE_LENGTH}");
     }

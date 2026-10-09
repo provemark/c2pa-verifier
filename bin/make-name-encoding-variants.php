@@ -47,7 +47,7 @@ register_shutdown_function(static function () use ($keys): void {
     }
 });
 
-function ccRun(string $command, bool $mayFail = false): string
+function neRun(string $command, bool $mayFail = false): string
 {
     $lines = [];
     $code = 0;
@@ -59,13 +59,13 @@ function ccRun(string $command, bool $mayFail = false): string
     return implode("\n", $lines);
 }
 
-function ccSh(string ...$parts): string
+function neSh(string ...$parts): string
 {
     return implode(' ', array_map(escapeshellarg(...), $parts));
 }
 
 /** @param  int<0, 7>  $mt */
-function ccHead(int $mt, int $n): string
+function neHead(int $mt, int $n): string
 {
     $ib = $mt << 5;
 
@@ -77,18 +77,18 @@ function ccHead(int $mt, int $n): string
     };
 }
 
-function ccBstr(string $b): string
+function neBstr(string $b): string
 {
-    return ccHead(2, strlen($b)).$b;
+    return neHead(2, strlen($b)).$b;
 }
 
-function ccDer(string $pem): string
+function neDer(string $pem): string
 {
     return (string) base64_decode(preg_replace('/-----[^-]+-----|\s/', '', $pem) ?? '', true);
 }
 
 /** DER ECDSA-Sig-Value → R || S, each 32 bytes wide. */
-function ccDerToRs(string $der): string
+function neDerToRs(string $der): string
 {
     $p = 2;
     $rs = '';
@@ -102,9 +102,9 @@ function ccDerToRs(string $der): string
 }
 
 /** The x5chain value: an array of DER certificates. */
-function ccChain(string ...$ders): string
+function neChain(string ...$ders): string
 {
-    return ccHead(4, count($ders)).implode('', array_map(ccBstr(...), $ders));
+    return neHead(4, count($ders)).implode('', array_map(neBstr(...), $ders));
 }
 
 /**
@@ -113,14 +113,14 @@ function ccChain(string ...$ders): string
  *
  * @param  list<string>  $unprotectedPairs  encoded key/value pairs before the pad
  */
-function ccCose(string $protected, array $unprotectedPairs, string $signature, int $length): string
+function neCose(string $protected, array $unprotectedPairs, string $signature, int $length): string
 {
-    $fixed = 2 + strlen(ccBstr($protected)) + 1 + strlen(implode('', $unprotectedPairs)) + 4 + 3 + 1 + strlen(ccBstr($signature));
+    $fixed = 2 + strlen(neBstr($protected)) + 1 + strlen(implode('', $unprotectedPairs)) + 4 + 3 + 1 + strlen(neBstr($signature));
     $pad = $length - $fixed;
     if ($pad < 256 || $pad > 65535) {
         throw new RuntimeException("the pad would be {$pad} bytes");
     }
-    $cose = "\xd2\x84".ccBstr($protected).ccHead(5, count($unprotectedPairs) + 1).implode('', $unprotectedPairs)."\x63pad\x59".pack('n', $pad).str_repeat("\0", $pad)."\xf6".ccBstr($signature);
+    $cose = "\xd2\x84".neBstr($protected).neHead(5, count($unprotectedPairs) + 1).implode('', $unprotectedPairs)."\x63pad\x59".pack('n', $pad).str_repeat("\0", $pad)."\xf6".neBstr($signature);
     if (strlen($cose) !== $length) {
         throw new RuntimeException('the COSE is '.strlen($cose)." bytes, not {$length}");
     }
@@ -167,12 +167,12 @@ authorityKeyIdentifier = keyid
 CNF);
 
 $issue = static function (string $name, string $subject, string $section, ?string $issuer) use ($keys): string {
-    ccRun(ccSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/{$name}.key"));
+    neRun(neSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/{$name}.key"));
     if ($issuer === null) {
-        ccRun(ccSh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/{$name}.key", '-subj', $subject, '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', $section, '-out', "{$keys}/{$name}.pem"));
+        neRun(neSh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/{$name}.key", '-subj', $subject, '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', $section, '-out', "{$keys}/{$name}.pem"));
     } else {
-        ccRun(ccSh('openssl', 'req', '-new', '-key', "{$keys}/{$name}.key", '-subj', $subject, '-config', "{$keys}/ext.cnf", '-out', "{$keys}/{$name}.csr"));
-        ccRun(ccSh('openssl', 'x509', '-req', '-in', "{$keys}/{$name}.csr", '-CA', "{$keys}/{$issuer}.pem", '-CAkey', "{$keys}/{$issuer}.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-sha256', '-extfile', "{$keys}/ext.cnf", '-extensions', $section, '-out', "{$keys}/{$name}.pem"));
+        neRun(neSh('openssl', 'req', '-new', '-key', "{$keys}/{$name}.key", '-subj', $subject, '-config', "{$keys}/ext.cnf", '-out', "{$keys}/{$name}.csr"));
+        neRun(neSh('openssl', 'x509', '-req', '-in', "{$keys}/{$name}.csr", '-CA', "{$keys}/{$issuer}.pem", '-CAkey', "{$keys}/{$issuer}.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-sha256', '-extfile', "{$keys}/ext.cnf", '-extensions', $section, '-out', "{$keys}/{$name}.pem"));
     }
 
     return (string) file_get_contents("{$keys}/{$name}.pem");
@@ -184,7 +184,7 @@ $pem['int-t61'] = $issue('int-t61', "{$org}/CN=T61-constrained Intermediate", 'v
 $pem['t61-inside'] = $issue('t61-inside', "/O=Caf\xE9/CN=Inside, T61", 'v3_leaf', 'int-t61');
 $pem['t61-outside'] = $issue('t61-outside', "/O=Other\xFF/CN=Outside, T61", 'v3_leaf', 'int-t61');
 foreach (['t61-inside' => "Caf\xE9", 't61-outside' => "Other\xFF"] as $leaf => $o) {
-    if (! str_contains(ccDer($pem[$leaf]), neTlv(0x14, $o))) {
+    if (! str_contains(neDer($pem[$leaf]), neTlv(0x14, $o))) {
         throw new RuntimeException("{$leaf}: the subject's O is not the T61String asked for");
     }
 }
@@ -218,15 +218,15 @@ $settings = ['trust' => ['trust_anchors' => $pem['root'], 'trust_config' => (str
 file_put_contents("{$dir}/root.settings.json", json_encode($settings, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
 
 foreach (['t61-inside', 't61-outside'] as $leaf) {
-    $protected = "\xa2\x01\x26\x18\x21".ccChain(ccDer($pem[$leaf]), ccDer($pem['int-t61']));
-    file_put_contents("{$keys}/tbs", "\x84\x6aSignature1".ccBstr($protected).ccBstr('').ccBstr($claimBytes));
-    ccRun(ccSh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/{$leaf}.key", '-out', "{$keys}/sig", "{$keys}/tbs"));
-    $cose = ccCose($protected, [], ccDerToRs((string) file_get_contents("{$keys}/sig")), $COSE_LENGTH);
+    $protected = "\xa2\x01\x26\x18\x21".neChain(neDer($pem[$leaf]), neDer($pem['int-t61']));
+    file_put_contents("{$keys}/tbs", "\x84\x6aSignature1".neBstr($protected).neBstr('').neBstr($claimBytes));
+    neRun(neSh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/{$leaf}.key", '-out', "{$keys}/sig", "{$keys}/tbs"));
+    $cose = neCose($protected, [], neDerToRs((string) file_get_contents("{$keys}/sig")), $COSE_LENGTH);
     file_put_contents("{$dir}/{$leaf}.png", pngWithStore($png, substr($s, 0, $COSE).$cose.substr($s, $COSE + $COSE_LENGTH)));
     // RFC 5280 path validation by OpenSSL, as a reference
-    echo $leaf, ': openssl verify: ', trim(ccRun(ccSh('openssl', 'verify', '-CAfile', "{$dir}/root.pem", '-untrusted', "{$dir}/int-t61.pem", "{$dir}/{$leaf}.pem").' 2>&1', true)), "\n";
+    echo $leaf, ': openssl verify: ', trim(neRun(neSh('openssl', 'verify', '-CAfile', "{$dir}/root.pem", '-untrusted', "{$dir}/int-t61.pem", "{$dir}/{$leaf}.pem").' 2>&1', true)), "\n";
     foreach (['0.28.1' => $new, '0.27.22' => $old] as $version => $tool) {
-        $json = ccRun(ccSh($tool, '--settings', "{$dir}/root.settings.json", "{$dir}/{$leaf}.png").' 2>&1', true);
+        $json = neRun(neSh($tool, '--settings', "{$dir}/root.settings.json", "{$dir}/{$leaf}.png").' 2>&1', true);
         file_put_contents("{$oracles}/{$leaf}--{$version}.json", $json);
         $decoded = json_decode($json, true);
         $state = is_array($decoded) && is_string($decoded['validation_state'] ?? null) ? $decoded['validation_state'] : trim($json);

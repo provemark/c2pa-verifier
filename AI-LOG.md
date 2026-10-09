@@ -9598,3 +9598,19 @@ README are where the disclosure lives.
   `crypto/cose/certificate_profile.rs` and `claim.rs`.
 - Decided by Maurice: the TSA matrix first; follow `c2patool` (a);
   amendment 8.
+
+## 2026-10-09 — No duplicate global functions in bin/ (step 291)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, (b), push 04408c0 en begin met de test", then
+  "akkoord, amendement 4 bevestigd".
+- Produced: SPEC-023 amendment 4, AC9 and its Traceability row;
+  `tests/Unit/BinFunctionNamesTest.php`; the colliding helpers of 14
+  builders renamed with a prefix per script (`ab`, `nh`, `pf`, `s44`, `sv`,
+  `ne`, `s36`, `s38`, `s40`, `ah`, `cbv`, `clm`, `cos`, `jbf`); a row in
+  `NOTES.md`.
+- Measured: the test red (37 colliding names), then green; string callables
+  checked (one, `array_map('imCbor', …)`, renamed with its function);
+  `php -l` on every script; PHPStan on macOS and in Docker `php:8.3-cli`
+  (0 errors); `composer check` (938 passed). Not run: the renamed builders
+  themselves, since they write into `tests/Fixtures`.
+- Decided by Maurice: amendment 4.

@@ -69,7 +69,7 @@ function cborFind(string $bytes, string $needle, int $from, int $to): int
 }
 
 /** The fixture PNG with $store in place of its caBX chunk's data, CRC recomputed. */
-function pngWithStore(string $png, string $store): string
+function cbvPngWithStore(string $png, string $store): string
 {
     $cabxOffset = 33;
     $oldLength = cborU32($png, $cabxOffset);
@@ -124,6 +124,6 @@ foreach ($variants as $name => $build) {
     $boxOffset = str_starts_with($name, 'claim') ? 33073 : 32903;
     $data = substr($store, $boxOffset + 8, cborU32($store, $boxOffset) - 8);
     file_put_contents("{$dir}/{$name}.cbor", $data);
-    file_put_contents("{$dir}/{$name}.png", pngWithStore($png, $store));
+    file_put_contents("{$dir}/{$name}.png", cbvPngWithStore($png, $store));
     printf("%s  %5d  %s.cbor\n", hash('sha256', $data), strlen($data), $name);
 }

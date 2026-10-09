@@ -26,7 +26,7 @@ use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
 
-function run(string $command): string
+function svRun(string $command): string
 {
     $lines = [];
     $status = 1;
@@ -39,7 +39,7 @@ function run(string $command): string
 }
 
 /** A CBOR head, shortest form (major type 0..5). */
-function head(int $majorType, int $n): string
+function svHead(int $majorType, int $n): string
 {
     $mt = $majorType << 5;
 
@@ -54,11 +54,11 @@ function head(int $majorType, int $n): string
 /** A negative CBOR integer (major type 1). */
 function negative(int $value): string
 {
-    return head(1, -1 - $value);
+    return svHead(1, -1 - $value);
 }
 
 /** DER ECDSA-Sig-Value → R||S of 2 × $bytes. */
-function derToRs(string $der, int $bytes): string
+function svDerToRs(string $der, int $bytes): string
 {
     $p = 2 + (ord($der[1]) & 0x80 ? (ord($der[1]) & 0x7F) : 0);
     $ints = [];
@@ -78,7 +78,7 @@ function derToRs(string $der, int $bytes): string
 /** The protected header {1: alg, 33: [cert]} as bytes. */
 function protectedHeader(int $alg, string $certDer): string
 {
-    return "\xa2\x01".negative($alg)."\x18\x21\x81".head(2, strlen($certDer)).$certDer;
+    return "\xa2\x01".negative($alg)."\x18\x21\x81".svHead(2, strlen($certDer)).$certDer;
 }
 
 $root = dirname(__DIR__);
@@ -110,8 +110,8 @@ function makeVector(string $name, array $v, string $tmp, string $dir, string $cl
 {
     $key = "{$tmp}/{$name}.key";
     $cert = "{$tmp}/{$name}.crt";
-    run($v['genkey'].' -out '.escapeshellarg($key));
-    run('openssl req -x509 -new -key '.escapeshellarg($key).' -subj /CN=SPEC-009-'.escapeshellarg($name).' -days 30 -out '.escapeshellarg($cert));
+    svRun($v['genkey'].' -out '.escapeshellarg($key));
+    svRun('openssl req -x509 -new -key '.escapeshellarg($key).' -subj /CN=SPEC-009-'.escapeshellarg($name).' -days 30 -out '.escapeshellarg($cert));
     $pem = (string) file_get_contents($cert);
     $der = base64_decode((string) preg_replace('/-----[^-]+-----|\s/', '', $pem), true);
     if ($der === false) {
@@ -127,16 +127,16 @@ function makeVector(string $name, array $v, string $tmp, string $dir, string $cl
     $sign = $v['sign'] ?? "openssl dgst -{$v['hash']} -sign %key% -out %sig% %msg%";
     $verify = $v['verify'] ?? "openssl dgst -{$v['hash']} -verify %pub% -signature %sig% %msg%";
     $pub = "{$tmp}/{$name}.pub";
-    run('openssl x509 -in '.escapeshellarg($cert).' -pubkey -noout -out '.escapeshellarg($pub));
+    svRun('openssl x509 -in '.escapeshellarg($cert).' -pubkey -noout -out '.escapeshellarg($pub));
     $fill = static fn (string $t): string => strtr($t, ['%key%' => escapeshellarg($key), '%pub%' => escapeshellarg($pub), '%sig%' => escapeshellarg($sigFile), '%msg%' => escapeshellarg($msgFile)]);
-    run($fill($sign));
-    $check = trim(run($fill($verify)));
+    svRun($fill($sign));
+    $check = trim(svRun($fill($verify)));
     if (! str_contains($check, 'Verified OK') && ! str_contains($check, 'Signature Verified Successfully')) {
         throw new RuntimeException("{$name}: OpenSSL does not verify its own signature: {$check}");
     }
     $signature = (string) file_get_contents($sigFile);
     if (isset($v['rsBytes'])) {
-        $signature = derToRs($signature, $v['rsBytes']);
+        $signature = svDerToRs($signature, $v['rsBytes']);
     }
 
     $record = [
@@ -198,7 +198,7 @@ foreach ($vectors as $name => $v) {
 
 // ---- the PNG's real chain reversed: the intermediate's key cannot verify the signature ----
 $reversedChain = array_reverse($realCose->chain);
-$protected = "\xa2\x01".negative(-7)."\x18\x21\x82".implode('', array_map(static fn (CborBytes $c): string => head(2, strlen($c->bytes)).$c->bytes, $reversedChain));
+$protected = "\xa2\x01".negative(-7)."\x18\x21\x82".implode('', array_map(static fn (CborBytes $c): string => svHead(2, strlen($c->bytes)).$c->bytes, $reversedChain));
 file_put_contents("{$dir}/chain-reversed.json", json_encode([
     'name' => 'chain-reversed',
     'purpose' => 'the PNG fixture\'s real signature with its x5chain reversed: the leaf must be read from chain[0], which is now the intermediate, whose key does not verify',

@@ -131,6 +131,16 @@ package.
     file, a namespace the declared map does not reach, or a `bin` entry that
     was `export-ignore`d fails here and nowhere else.
 
+- **AC9 — no two scripts under `bin/` declare the same global function** *(amendment 4)*
+  - Given every `*.php` file under `bin/`, read with PHP's tokenizer (a
+    declaration is `function name(` outside a class and outside an
+    expression; a method or a closure is not one)
+  - When the names are collected
+  - Then each name is declared in one file only, and a name declared in
+    two or more files is a finding naming every file that declares it.
+    `bin/variant-helpers.php`, which several builders `require`, counts as
+    one file like any other
+
 ## References
 
 - Specification: none. This spec governs the package, not the format; it is
@@ -269,6 +279,23 @@ reasoning that led to them stays readable.
      such finding is made; given 5 MB and one byte, the finding names open
      question 4; given exactly 5 MB, none.
 
+4. **2026-10-09, step 291, confirmed by Maurice van Loon** — the scripts
+   under `bin/` define their helpers as global functions, and PHPStan,
+   which reads `bin/` at level max, binds a call to one declaration of a
+   name when several scripts declare it. Which one depends on the order it
+   reads the files, and that order differs between macOS and Linux. Three
+   times in two days a new builder's helper took a name another script
+   already used (steps 286 and 290): `composer check` stayed green on
+   macOS and CI went red on Linux, once on a release commit. AC9 refuses
+   two scripts declaring the same function, so the collision is found
+   where it is made. Every builder's helpers get a prefix of their own, as
+   `cc…` and `im…` already had; no builder's behaviour changes and no
+   fixture is rebuilt.
+
+   **Weight B: a rule about the repository's tooling, no verdict involved.**
+
+   Confirmed by Maurice van Loon, 2026-10-09 (step 291).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -286,3 +313,4 @@ is `bin/package-check.php`, which is tooling and outside the Deptrac layers.
 | AC5 | `AC5: the disclosure travels with the package` | `packageDistCheck()`, `PACKAGE_DISCLOSURE_SECTION` |
 | AC6 | `AC6: the package, installed where Composer would put it and nothing else, verifies a file` | `packageInstall()`, `packageRun()`, `PackageTarArchive::extractTo()` |
 | AC8 (amendment 3) | tests/Unit/PackageTest.php :: AC8 (amendment 3): the zip's size is measured, and over 5 MB it names open question 4 | bin/package-check.php :: packageGitZipSize(), packageZipFinding(), the script's dist line |
+| AC9 (amendment 4) | tests/Unit/BinFunctionNamesTest.php :: AC9: the reader finds global functions, and not methods, closures or names in strings and comments; AC9: no two scripts under bin/ declare the same global function / SPEC-023 | the helpers of bin/make-*.php and bin/variant-helpers.php, each script with its own prefix |

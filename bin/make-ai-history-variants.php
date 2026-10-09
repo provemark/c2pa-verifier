@@ -56,7 +56,7 @@ register_shutdown_function(static function () use ($keys): void {
     }
 });
 
-function m7Run(string $command): void
+function ahRun(string $command): void
 {
     $lines = [];
     $code = 0;
@@ -66,13 +66,13 @@ function m7Run(string $command): void
     }
 }
 
-function m7Sh(string ...$parts): string
+function ahSh(string ...$parts): string
 {
     return implode(' ', array_map('escapeshellarg', $parts));
 }
 
 /** A CBOR byte string: head plus bytes. */
-function m7Bstr(string $b): string
+function ahBstr(string $b): string
 {
     $n = strlen($b);
 
@@ -80,7 +80,7 @@ function m7Bstr(string $b): string
 }
 
 /** A CBOR text string: head plus text. */
-function m7Tstr(string $t): string
+function ahTstr(string $t): string
 {
     $n = strlen($t);
 
@@ -88,13 +88,13 @@ function m7Tstr(string $t): string
 }
 
 /** A hashed-uri map {url, hash}. */
-function m7HashedUri(string $url, string $hash): string
+function ahHashedUri(string $url, string $hash): string
 {
-    return "\xa2".m7Tstr('url').m7Tstr($url).m7Tstr('hash').m7Bstr($hash);
+    return "\xa2".ahTstr('url').ahTstr($url).ahTstr('hash').ahBstr($hash);
 }
 
 /** An assertion superbox: jumd (cbor UUID, toggles 3) and a cbor content box. */
-function m7AssertionBox(string $label, string $payload): string
+function ahAssertionBox(string $label, string $payload): string
 {
     $uuid = (string) hex2bin('63626f72001100108000'.'00aa00389b71');
     $jumd = 'jumd'.$uuid."\x03".$label."\0";
@@ -106,7 +106,7 @@ function m7AssertionBox(string $label, string $payload): string
 }
 
 /** A DER ECDSA signature as R‖S of 2 × 32 bytes. */
-function m7DerToRs(string $der): string
+function ahDerToRs(string $der): string
 {
     $p = ord($der[1]) & 0x80 ? 2 + (ord($der[1]) & 0x7F) : 2;
     $rs = '';
@@ -135,11 +135,11 @@ keyUsage = critical, digitalSignature, nonRepudiation
 extendedKeyUsage = emailProtection
 CNF;
 file_put_contents("{$keys}/ext.cnf", $cnf);
-m7Run(m7Sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/root.key"));
-m7Run(m7Sh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/root.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=Throw-away Root (AI history)', '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', 'v3_root', '-out', "{$keys}/root.pem"));
-m7Run(m7Sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/leaf.key"));
-m7Run(m7Sh('openssl', 'req', '-new', '-key', "{$keys}/leaf.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=AI history', '-config', "{$keys}/ext.cnf", '-out', "{$keys}/leaf.csr"));
-m7Run(m7Sh('openssl', 'x509', '-req', '-in', "{$keys}/leaf.csr", '-CA', "{$keys}/root.pem", '-CAkey', "{$keys}/root.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-extfile', "{$keys}/ext.cnf", '-extensions', 'good', '-out', "{$keys}/leaf.pem"));
+ahRun(ahSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/root.key"));
+ahRun(ahSh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/root.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=Throw-away Root (AI history)', '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', 'v3_root', '-out', "{$keys}/root.pem"));
+ahRun(ahSh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/leaf.key"));
+ahRun(ahSh('openssl', 'req', '-new', '-key', "{$keys}/leaf.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=AI history', '-config', "{$keys}/ext.cnf", '-out', "{$keys}/leaf.csr"));
+ahRun(ahSh('openssl', 'x509', '-req', '-in', "{$keys}/leaf.csr", '-CA', "{$keys}/root.pem", '-CAkey', "{$keys}/root.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-extfile', "{$keys}/ext.cnf", '-extensions', 'good', '-out', "{$keys}/leaf.pem"));
 $pemToDer = static fn (string $pem): string => (string) base64_decode((string) preg_replace('/-----[^-]+-----|\s/', '', $pem), true);
 $rootPem = (string) file_get_contents("{$keys}/root.pem");
 $rootDer = $pemToDer($rootPem);
@@ -186,7 +186,7 @@ $claimBox = [0, 38, 33026, 33073];
  * fixture's claim names its signature box by an **absolute** URI, so the label has to be replaced
  * there too — and that changes the claim, which is why the copy is re-signed below.
  */
-function m7Relabel(string $box, string $label): string
+function ahRelabel(string $box, string $label): string
 {
     $at = 33;                        // the label inside the manifest box's description box
     $old = substr($box, $at, (int) strpos($box, "\0", $at) - $at);
@@ -202,7 +202,7 @@ function m7Relabel(string $box, string $label): string
  * A store of two manifests: $ingredient first (so that the active manifest is the last, §11.1.4.2),
  * then $active, under a store superbox whose LBox counts them both.
  */
-function m7Store(string $header, string $ingredient, string $active): string
+function ahStore(string $header, string $ingredient, string $active): string
 {
     $store = $ingredient.$active;
 
@@ -215,7 +215,7 @@ function m7Store(string $header, string $ingredient, string $active): string
  *
  * @return array{0: string, 1: int} the manifest box and how much it grew
  */
-function m7WithIngredient(string $manifestBox, string $assertionBox, string $entry, int $createdStart, int $createdEnd, int $firstAssertion): array
+function ahWithIngredient(string $manifestBox, string $assertionBox, string $entry, int $createdStart, int $createdEnd, int $firstAssertion): array
 {
     // the manifest box's own offsets are 38 less than the store's (this box starts at 0 here)
     $inBox = static fn (int $storeOffset): int => $storeOffset - 38;
@@ -229,7 +229,7 @@ $claim = bMapPairs($s, $CLAIM);
 [, $createdStart, $createdEnd] = $claim['created_assertions'];
 
 /** The store with the hard binding re-bound to it, and the claim's hashed URI for the binding updated. */
-function m7Rebind(string $store, string $png, int $hashDataBox, int $claimAt): string
+function ahRebind(string $store, string $png, int $hashDataBox, int $claimAt): string
 {
     $hd = bMapPairs($store, $hashDataBox + 80);
     $ex = bMapPairs($store, $hd['exclusions'][1] + 1);
@@ -262,7 +262,7 @@ function m7Rebind(string $store, string $png, int $hashDataBox, int $claimAt): s
 }
 
 /** The store with one manifest's claim re-signed by the throw-away leaf (the active one by default). */
-function m7Resign(string $store, string $leafDer, string $rootDer, string $keys, string $name, ?string $label = null): string
+function ahResign(string $store, string $leafDer, string $rootDer, string $keys, string $name, ?string $label = null): string
 {
     $parsed = ManifestStore::fromTree((new JumbfParser)->parse($store));
     $active = $label === null ? $parsed->active : $parsed->manifests[$label];
@@ -272,16 +272,16 @@ function m7Resign(string $store, string $leafDer, string $rootDer, string $keys,
         throw new RuntimeException("{$name}: no COSE_Sign1 for the active manifest");
     }
     $length = strlen($active->signatureBytes());
-    $protected = "\xa2\x01\x26\x18\x21\x82".m7Bstr($leafDer).m7Bstr($rootDer);
-    $draft = "\xd2\x84".m7Bstr($protected)."\xa1\x63pad".m7Bstr('')."\xf6".m7Bstr(str_repeat("\0", 64));
+    $protected = "\xa2\x01\x26\x18\x21\x82".ahBstr($leafDer).ahBstr($rootDer);
+    $draft = "\xd2\x84".ahBstr($protected)."\xa1\x63pad".ahBstr('')."\xf6".ahBstr(str_repeat("\0", 64));
     file_put_contents("{$keys}/tbs", CoseSign1::fromBytes($draft)->sigStructure($claimBytes));
-    m7Run(m7Sh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/leaf.key", '-out', "{$keys}/sig", "{$keys}/tbs"));
-    $signature = m7DerToRs((string) file_get_contents("{$keys}/sig"));
-    $pad = $length - (2 + strlen(m7Bstr($protected)) + 5 + 3 + 1 + strlen(m7Bstr($signature)));
+    ahRun(ahSh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/leaf.key", '-out', "{$keys}/sig", "{$keys}/tbs"));
+    $signature = ahDerToRs((string) file_get_contents("{$keys}/sig"));
+    $pad = $length - (2 + strlen(ahBstr($protected)) + 5 + 3 + 1 + strlen(ahBstr($signature)));
     if ($pad < 256) {
         throw new RuntimeException("{$name}: the pad would be {$pad} bytes");
     }
-    $cose = "\xd2\x84".m7Bstr($protected)."\xa1\x63pad\x59".pack('n', $pad).str_repeat("\0", $pad)."\xf6".m7Bstr($signature);
+    $cose = "\xd2\x84".ahBstr($protected)."\xa1\x63pad\x59".pack('n', $pad).str_repeat("\0", $pad)."\xf6".ahBstr($signature);
     if (strlen($cose) !== $length || ! (new SignatureVerifier)->verify(CoseSign1::fromBytes($cose), $claimBytes)) {
         throw new RuntimeException("{$name}: the new signature does not fit or does not verify");
     }
@@ -304,7 +304,7 @@ $hashDataEntry = substr($s, $createdStart + 1, $createdEnd - $createdStart - 1);
  * A copy of the fixture's manifest box: no thumbnail, no `gathered_assertions` pair, and the actions
  * assertion kept or dropped. Offsets are the store's; inside the box they are 38 lower.
  */
-function m7Copy(string $manifestBox, bool $withActions, string $hashDataEntry, string $actionsEntry, int $createdStart, int $createdEnd, int $gatheredKey, int $gatheredEnd, int $claim, int $thumbnailBox, int $actionsBox): string
+function ahCopy(string $manifestBox, bool $withActions, string $hashDataEntry, string $actionsEntry, int $createdStart, int $createdEnd, int $gatheredKey, int $gatheredEnd, int $claim, int $thumbnailBox, int $actionsBox): string
 {
     $inBox = static fn (int $offset): int => $offset - 38;
     $box = $manifestBox;
@@ -330,7 +330,7 @@ if (bU32($actionsBox, $CONTENT) + $CONTENT !== 195 || substr($actionsBox, $CONTE
     throw new RuntimeException('the actions assertion is not the one measured in step 09');
 }
 $payload = substr($actionsBox, $CONTENT + 8);
-$trainedPayload = str_replace(m7Tstr($ALGORITHMIC), m7Tstr($TRAINED), $payload);
+$trainedPayload = str_replace(ahTstr($ALGORITHMIC), ahTstr($TRAINED), $payload);
 if ($trainedPayload === $payload) {
     throw new RuntimeException('no algorithmicMedia in the actions assertion');
 }
@@ -339,7 +339,7 @@ $trainedBox = pack('N', 8 + ($CONTENT - $JUMD) + strlen($content)).'jumb'.substr
 $oldHash = hash('sha256', substr($actionsBox, 8), true);
 $newHash = hash('sha256', substr($trainedBox, 8), true);
 
-$copy = m7Copy($manifestBox, true, $hashDataEntry, $actionsEntry, $createdStart, $createdEnd, $gatheredKey, $gatheredEnd, $CLAIM, $THUMBNAIL_BOX, $ACTIONS_BOX);
+$copy = ahCopy($manifestBox, true, $hashDataEntry, $actionsEntry, $createdStart, $createdEnd, $gatheredKey, $gatheredEnd, $CLAIM, $THUMBNAIL_BOX, $ACTIONS_BOX);
 $at = strpos($copy, $actionsBox);
 if ($at === false || substr_count($copy, $oldHash) !== 1) {
     throw new RuntimeException('the copy does not hold the actions assertion and its hash exactly once');
@@ -347,30 +347,30 @@ if ($at === false || substr_count($copy, $oldHash) !== 1) {
 // the actions box sits inside the manifest box (0) and its assertion store (117 in the store, 79 here)
 $copy = bSplice($copy, $at, 195, $trainedBox, [0, 117 - 38]);
 $copy = str_replace($oldHash, $newHash, $copy);
-$copy = m7Relabel($copy, $ingredientLabel);
+$copy = ahRelabel($copy, $ingredientLabel);
 
 // ---- from here on, step 60's two-manifests control, unchanged ----
-$signed = m7Resign(m7Store(substr($s, 0, $HEADER), $copy, $manifestBox), $leafDer, $rootDer, $keys, 'parent-chain', $ingredientLabel);
+$signed = ahResign(ahStore(substr($s, 0, $HEADER), $copy, $manifestBox), $leafDer, $rootDer, $keys, 'parent-chain', $ingredientLabel);
 $copy = substr($signed, $HEADER, strlen($copy));
 $ingredientParsed = ManifestStore::fromTree((new JumbfParser)->parse($signed))->manifests[$ingredientLabel];
 $manifestHash = hash('sha256', substr($copy, 8), true);
 $signatureHash = hash('sha256', $ingredientParsed->resolve(sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $ingredientLabel))->payload(), true);
 $payload = "\xa6"
-    .m7Tstr('dc:title').m7Tstr('the ingredient')
-    .m7Tstr('dc:format').m7Tstr('image/png')
-    .m7Tstr('relationship').m7Tstr('parentOf')
-    .m7Tstr('activeManifest').m7HashedUri('self#jumbf=/c2pa/'.$ingredientLabel, $manifestHash)
-    .m7Tstr('claimSignature').m7HashedUri('self#jumbf=/c2pa/'.$ingredientLabel.'/c2pa.signature', $signatureHash)
-    .m7Tstr('validationResults')."\xa2".m7Tstr('activeManifest')."\xa3".m7Tstr('success')."\x80".m7Tstr('informational')."\x80".m7Tstr('failure')."\x80".m7Tstr('ingredientDeltas')."\x80";
-$assertionBox = m7AssertionBox('c2pa.ingredient.v3', $payload);
-$entry = m7HashedUri('self#jumbf=c2pa.assertions/c2pa.ingredient.v3', hash('sha256', substr($assertionBox, 8), true));
-[$activeBox] = m7WithIngredient($manifestBox, $assertionBox, $entry, $createdStart, $createdEnd, $THUMBNAIL_BOX);
+    .ahTstr('dc:title').ahTstr('the ingredient')
+    .ahTstr('dc:format').ahTstr('image/png')
+    .ahTstr('relationship').ahTstr('parentOf')
+    .ahTstr('activeManifest').ahHashedUri('self#jumbf=/c2pa/'.$ingredientLabel, $manifestHash)
+    .ahTstr('claimSignature').ahHashedUri('self#jumbf=/c2pa/'.$ingredientLabel.'/c2pa.signature', $signatureHash)
+    .ahTstr('validationResults')."\xa2".ahTstr('activeManifest')."\xa3".ahTstr('success')."\x80".ahTstr('informational')."\x80".ahTstr('failure')."\x80".ahTstr('ingredientDeltas')."\x80";
+$assertionBox = ahAssertionBox('c2pa.ingredient.v3', $payload);
+$entry = ahHashedUri('self#jumbf=c2pa.assertions/c2pa.ingredient.v3', hash('sha256', substr($assertionBox, 8), true));
+[$activeBox] = ahWithIngredient($manifestBox, $assertionBox, $entry, $createdStart, $createdEnd, $THUMBNAIL_BOX);
 $shift = strlen($assertionBox);
 
-$store = m7Store(substr($s, 0, $HEADER), $copy, $activeBox);
+$store = ahStore(substr($s, 0, $HEADER), $copy, $activeBox);
 $activeAt = $HEADER + strlen($copy);
-$store = m7Rebind($store, $png, $activeAt + ($HASH_DATA_BOX - 38) + $shift, $activeAt + ($CLAIM - 38) + $shift);
-$store = m7Resign($store, $leafDer, $rootDer, $keys, 'parent-chain');
+$store = ahRebind($store, $png, $activeAt + ($HASH_DATA_BOX - 38) + $shift, $activeAt + ($CLAIM - 38) + $shift);
+$store = ahResign($store, $leafDer, $rootDer, $keys, 'parent-chain');
 
 $parsed = ManifestStore::fromTree((new JumbfParser)->parse($store));
 file_put_contents("{$dir}/parent-chain.bin", $store);

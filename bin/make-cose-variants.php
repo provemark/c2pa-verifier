@@ -75,7 +75,7 @@ function cborBstrHead(int $length): string
     };
 }
 
-function pngWithStore(string $png, string $store): string
+function cosPngWithStore(string $png, string $store): string
 {
     $oldLength = coseU32($png, 33);
     $chunk = pack('N', strlen($store)).'caBX'.$store.pack('N', crc32('caBX'.$store));
@@ -151,6 +151,6 @@ if (! is_dir($dir) && ! mkdir($dir, 0755, true)) {
 }
 foreach ($variants as $name => $bytes) {
     file_put_contents("{$dir}/{$name}.bin", $bytes);
-    file_put_contents("{$dir}/{$name}.png", pngWithStore($png, $bytes));
+    file_put_contents("{$dir}/{$name}.png", cosPngWithStore($png, $bytes));
     printf("%s  %6d  %s.bin\n", hash('sha256', $bytes), strlen($bytes), $name);
 }

@@ -55,7 +55,7 @@ register_shutdown_function(static function () use ($keys): void {
     }
 });
 
-function run(string $command): string
+function s44Run(string $command): string
 {
     $lines = [];
     $code = 0;
@@ -67,7 +67,7 @@ function run(string $command): string
     return implode("\n", $lines);
 }
 
-function sh(string ...$parts): string
+function s44Sh(string ...$parts): string
 {
     return implode(' ', array_map(escapeshellarg(...), $parts));
 }
@@ -77,7 +77,7 @@ function sh(string ...$parts): string
  *
  * @param  int<0, 7>  $mt
  */
-function head(int $mt, int $n): string
+function s44Head(int $mt, int $n): string
 {
     $ib = $mt << 5;
 
@@ -89,13 +89,13 @@ function head(int $mt, int $n): string
     };
 }
 
-function bstr(string $b): string
+function s44Bstr(string $b): string
 {
-    return head(2, strlen($b)).$b;
+    return s44Head(2, strlen($b)).$b;
 }
 
 /** DER ECDSA-Sig-Value → R || S, each $curveBytes wide. */
-function derToRs(string $der, int $curveBytes): string
+function s44DerToRs(string $der, int $curveBytes): string
 {
     $p = 2;
     if (ord($der[1]) & 0x80) {
@@ -198,8 +198,8 @@ $variants = [
 ];
 
 // ---- the throw-away root ----
-run(sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/root.key"));
-run(sh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/root.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=Throw-away Root', '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', 'v3_root', '-out', "{$keys}/root.pem"));
+s44Run(s44Sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', "{$keys}/root.key"));
+s44Run(s44Sh('openssl', 'req', '-x509', '-new', '-key', "{$keys}/root.key", '-subj', '/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=Throw-away Root', '-days', '3650', '-config', "{$keys}/ext.cnf", '-extensions', 'v3_root', '-out', "{$keys}/root.pem"));
 $rootPem = (string) file_get_contents("{$keys}/root.pem");
 $rootDer = pemToDer($rootPem);
 
@@ -238,9 +238,9 @@ $verifier = new SignatureVerifier;
 foreach ($variants as $name => [$from, $to]) {
     // the SPEC-015 `good` leaf, as OpenSSL makes it
     $key = "{$keys}/{$name}.key";
-    run(sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', $key));
-    run(sh('openssl', 'req', '-new', '-key', $key, '-subj', "/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=validity {$name}", '-config', "{$keys}/ext.cnf", '-out', "{$keys}/{$name}.csr"));
-    run(sh('openssl', 'x509', '-req', '-in', "{$keys}/{$name}.csr", '-CA', "{$keys}/root.pem", '-CAkey', "{$keys}/root.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-extfile', "{$keys}/ext.cnf", '-extensions', 'good', '-out', "{$keys}/{$name}.made.pem"));
+    s44Run(s44Sh('openssl', 'ecparam', '-genkey', '-name', 'prime256v1', '-noout', '-out', $key));
+    s44Run(s44Sh('openssl', 'req', '-new', '-key', $key, '-subj', "/O=C2PA Verifier throw-away hierarchy/OU=FOR TESTING ONLY/CN=validity {$name}", '-config', "{$keys}/ext.cnf", '-out', "{$keys}/{$name}.csr"));
+    s44Run(s44Sh('openssl', 'x509', '-req', '-in', "{$keys}/{$name}.csr", '-CA', "{$keys}/root.pem", '-CAkey', "{$keys}/root.key", '-set_serial', (string) random_int(1000, 999999), '-days', '3650', '-extfile', "{$keys}/ext.cnf", '-extensions', 'good', '-out', "{$keys}/{$name}.made.pem"));
 
     // its validity rewritten, and the tbsCertificate signed again by the root
     [$tbs, $signatureAlgorithm] = children(pemToDer((string) file_get_contents("{$keys}/{$name}.made.pem")));
@@ -249,28 +249,28 @@ foreach ($variants as $name => [$from, $to]) {
     $fields[$validity] = tlv(0x30, $from.$to);
     $tbs = tlv(0x30, implode('', $fields));
     file_put_contents("{$keys}/{$name}.tbs-cert", $tbs);
-    run(sh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/root.key", '-out', "{$keys}/{$name}.cert-sig", "{$keys}/{$name}.tbs-cert"));
+    s44Run(s44Sh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/root.key", '-out', "{$keys}/{$name}.cert-sig", "{$keys}/{$name}.tbs-cert"));
     $leafDer = tlv(0x30, $tbs.$signatureAlgorithm.tlv(0x03, "\0".file_get_contents("{$keys}/{$name}.cert-sig")));
     $leafPem = derToPem($leafDer);
     file_put_contents("{$keys}/{$name}.pem", $leafPem);
     // OpenSSL's own opinion of the certificate, recorded, not required: it may refuse to read it at all
-    exec(sh('openssl', 'verify', '-CAfile', "{$keys}/root.pem", '-no_check_time', "{$keys}/{$name}.pem").' 2>&1', $said);
+    exec(s44Sh('openssl', 'verify', '-CAfile', "{$keys}/root.pem", '-no_check_time', "{$keys}/{$name}.pem").' 2>&1', $said);
     $chain = implode(' ', $said);
     unset($said);
     file_put_contents("{$dir}/{$name}.leaf.pem", $leafPem);
 
     // the protected header: {1: alg, 33: [leaf, root]}; ES256
-    $protected = "\xa2\x01\x26\x18\x21\x82".bstr($leafDer).bstr($rootDer);
+    $protected = "\xa2\x01\x26\x18\x21\x82".s44Bstr($leafDer).s44Bstr($rootDer);
     // Sig_structure (RFC 9052 §4.4) by hand: CoseSign1 refuses a leaf OpenSSL cannot read, which is the point
-    file_put_contents("{$keys}/{$name}.tbs", "\x84".head(3, 10).'Signature1'.bstr($protected).bstr('').bstr($claimBytes));
-    run(sh('openssl', 'dgst', '-sha256', '-sign', $key, '-out', "{$keys}/{$name}.sig", "{$keys}/{$name}.tbs"));
-    $signature = derToRs((string) file_get_contents("{$keys}/{$name}.sig"), 32);
-    $fixed = 2 + strlen(bstr($protected)) + 5 + 3 + 1 + strlen(bstr($signature));
+    file_put_contents("{$keys}/{$name}.tbs", "\x84".s44Head(3, 10).'Signature1'.s44Bstr($protected).s44Bstr('').s44Bstr($claimBytes));
+    s44Run(s44Sh('openssl', 'dgst', '-sha256', '-sign', $key, '-out', "{$keys}/{$name}.sig", "{$keys}/{$name}.tbs"));
+    $signature = s44DerToRs((string) file_get_contents("{$keys}/{$name}.sig"), 32);
+    $fixed = 2 + strlen(s44Bstr($protected)) + 5 + 3 + 1 + strlen(s44Bstr($signature));
     $padLength = $COSE_LENGTH - $fixed;
     if ($padLength < 256) {
         throw new RuntimeException("{$name}: the pad would be {$padLength} bytes, too short for a 3-byte head");
     }
-    $cose = "\xd2\x84".bstr($protected)."\xa1\x63pad\x59".pack('n', $padLength).str_repeat("\0", $padLength)."\xf6".bstr($signature);
+    $cose = "\xd2\x84".s44Bstr($protected)."\xa1\x63pad\x59".pack('n', $padLength).str_repeat("\0", $padLength)."\xf6".s44Bstr($signature);
     $store = substr($s, 0, $COSE).$cose.substr($s, $COSE + $COSE_LENGTH);
     if (strlen($cose) !== $COSE_LENGTH || strlen($store) !== strlen($s)) {
         throw new RuntimeException("{$name}: the store changed length");
@@ -286,7 +286,7 @@ foreach ($variants as $name => [$from, $to]) {
     printf("%s  %-15s %s; chain: %s\n", hash('sha256', $store), $name, $verifies, str_contains($chain, ': OK') ? 'OK' : 'refused ('.substr(trim($chain), 0, 60).'…)');
 
     foreach (['0.28.0' => $new, '0.27.22' => $old] as $v => $tool) {
-        exec(sh($tool, "{$dir}/{$name}.png", '--settings', "{$dir}/throw-away-root.settings.json").' 2>&1', $lines, $exit);
+        exec(s44Sh($tool, "{$dir}/{$name}.png", '--settings', "{$dir}/throw-away-root.settings.json").' 2>&1', $lines, $exit);
         $text = implode("\n", $lines)."\n";
         foreach (glob("{$oracles}/{$name}--{$v}.*") ?: [] as $stale) {
             unlink($stale);
