@@ -99,7 +99,7 @@ it('AC6: every probe the generator defines has a fixture and both answers, and n
     $defined = spec061GeneratorProbes();
     sort($defined);
 
-    expect($defined)->toHaveCount(54)
+    expect($defined)->toHaveCount(57)
         ->and(spec061FixtureProbes())->toBe($defined);
     foreach ($defined as $probe) {
         foreach (['0.27.22', '0.28.1'] as $version) {

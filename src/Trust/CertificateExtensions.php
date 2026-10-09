@@ -99,6 +99,7 @@ final readonly class CertificateExtensions
      * @param  string|null  $pssHashOid  for RSASSA-PSS, the hash; SHA-1 when the parameter is absent (RFC 4055 §3.1)
      * @param  string|null  $pssMgf1HashOid  for RSASSA-PSS, MGF1's hash; SHA-1 when absent; the mask generation function's own OID when it is not MGF1 (SPEC-015 amendment 8)
      * @param  bool  $algorithmMatchesTbs  the outer signatureAlgorithm is byte-equal to tbsCertificate's signature (RFC 5280 §4.1.1.2)
+     * @param  list<'issuerUniqueID'|'subjectUniqueID'>  $uniqueIds  the optional unique-ID fields the tbsCertificate carries (SPEC-015 amendment 9)
      */
     private function __construct(
         public array $extensions,
@@ -109,6 +110,7 @@ final readonly class CertificateExtensions
         public ?string $pssHashOid,
         public ?string $pssMgf1HashOid = null,
         public bool $algorithmMatchesTbs = true,
+        public array $uniqueIds = [],
     ) {}
 
     /** @throws TrustException when the DER does not hold a readable tbsCertificate */
@@ -144,6 +146,15 @@ final readonly class CertificateExtensions
             $fields = $tbs->sequence();
             $versioned = $fields !== [] && $fields[0]->is(TagClass::ContextSpecific, 0);
             $algorithmMatchesTbs = $tbs->element($versioned ? 2 : 1)->encoded() === $algorithm->encoded();
+            $uniqueIds = [];
+            foreach ($fields as $field) {
+                if ($field->is(TagClass::ContextSpecific, 1)) {
+                    $uniqueIds[] = 'issuerUniqueID';
+                }
+                if ($field->is(TagClass::ContextSpecific, 2)) {
+                    $uniqueIds[] = 'subjectUniqueID';
+                }
+            }
             $subject = $tbs->element($versioned ? 5 : 4);
 
             $extensions = [];
@@ -182,7 +193,7 @@ final readonly class CertificateExtensions
                 }
             }
 
-            return new self($extensions, $rdns, array_values(array_unique($emails)), $constraints, $signatureOid, $pssHashOid, $pssMgf1HashOid, $algorithmMatchesTbs);
+            return new self($extensions, $rdns, array_values(array_unique($emails)), $constraints, $signatureOid, $pssHashOid, $pssMgf1HashOid, $algorithmMatchesTbs, $uniqueIds);
         } catch (Asn1Exception $e) {
             throw new TrustException(sprintf('the extensions or names of a certificate of %d bytes could not be read: %s', strlen($der), $e->getMessage()));
         }

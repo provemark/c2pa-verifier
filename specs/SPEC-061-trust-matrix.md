@@ -200,6 +200,17 @@ const SPEC061_CODES_DIFFER = [/* probe => [0.28.1's codes, 0.27.22's, this verif
 
    **Weight C: no verdict of the existing probes moves.**
 
+4. **2026-10-09, step 311, with SPEC-015 amendment 9** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   Three new probes, made by inserting an `issuerUniqueID` or a
+   `subjectUniqueID` into the tbsCertificate after OpenSSL has issued it,
+   and signing the tbsCertificate again with the issuer's throw-away key:
+   `leaf-issuer-unique-id`, `leaf-subject-unique-id` and
+   `int-subject-unique-id`. OpenSSL cannot write these fields. The matrix
+   holds 57 probes; AC6 counts 57. All three agree with 0.28.1 after the
+   amendment: the leaves `Invalid`, the intermediate `Trusted`.
+
+   **Weight C: no verdict of the existing probes moves.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

@@ -5,6 +5,17 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Changed
+
+- **A signer certificate with an issuerUniqueID or subjectUniqueID is
+  refused (SPEC-015 amendment 9).** C2PA 2.4 §14.5.1.1 does not allow these
+  fields. A leaf that carried one was `Trusted` here and `Invalid`
+  (`signingCredential.invalid`) in both `c2patool` versions. Found by
+  reading the specification beside the verifier
+  (`docs/reading-c2pa-2.4.md`).
+
 ## 0.5.3 — 2026-10-09
 
 A consolidation release. Four rules that a trust matrix, a timestamp

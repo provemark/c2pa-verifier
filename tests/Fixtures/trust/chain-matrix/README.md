@@ -3,7 +3,7 @@
 Built by `bin/make-trust-matrix.php <scratch> <c2patool-0.28.1>
 <c2patool-0.27.22> chain-matrix <probe>…` on 2026-10-08 (step 288). One
 valid chain (leaf ← intermediate ← anchor: P-256, SHA-256, the C2PA leaf
-profile) and 41 variants (44 since step 302, 53 since step 305), each one property of one certificate away from it.
+profile) and 41 variants (44 since step 302, 53 since step 305, 56 since step 311), each one property of one certificate away from it.
 Each PNG is `../../fixture-signed.png` with its claim re-signed by the
 probe's throw-away leaf; x5chain holds the leaf and the intermediate, the
 anchor is left out. The keys lived in a scratch directory while the script
@@ -92,3 +92,14 @@ leaf with `openssl x509 -sigopt rsa_padding_mode:pss` and the probe's
 digest, MGF1 digest and salt length. The two `outer` probes then have the
 last byte of the outer `signatureAlgorithm`'s MGF1 hash OID changed (to
 `02`, SHA-384, and to `7F`, unknown), which no signature covers.
+
+| probe (step 311) | c2patool 0.27.22 | c2patool 0.28.1 | OpenSSL | this verifier |
+|---|---|---|---|---|
+| `leaf-issuer-unique-id` | Invalid, signingCredential.invalid | Invalid, signingCredential.invalid | OK | Invalid, signingCredential.invalid |
+| `leaf-subject-unique-id` | Invalid, signingCredential.invalid | Invalid, signingCredential.invalid | OK | Invalid, signingCredential.invalid |
+| `int-subject-unique-id` | Trusted | Trusted | OK | Trusted |
+
+OpenSSL issues these certificates without the field. The generator then
+inserts an `issuerUniqueID` (`[1]`) or a `subjectUniqueID` (`[2]`) before
+the extensions and signs the tbsCertificate again with the issuer's
+throw-away key.

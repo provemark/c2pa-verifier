@@ -290,6 +290,15 @@ are still to be taken before the tests (Open questions).
     `signatureAlgorithm` was changed after signing is `Invalid`, naming the
     difference from tbsCertificate's `signature` (RFC 5280 §4.1.1.2)
 
+- **AC14 — a signer certificate carries no unique IDs** *(amendment 9; oracle: both `c2patool` versions measured in step 310)*
+  - Given the trust matrix's probes (SPEC-061 amendment 4): a leaf with an
+    `issuerUniqueID`, a leaf with a `subjectUniqueID`, an intermediate with
+    a `subjectUniqueID`, and the control
+  - When the Verifier runs under each probe's settings
+  - Then the two leaves are `Invalid` with `signingCredential.invalid`
+    naming the field. The intermediate and the control stay `Trusted`, as
+    in `c2patool`
+
 ## References
 
 - Specification: C2PA 2.4 §14.5 (the certificate profile: v3,
@@ -482,6 +491,25 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
    **Weight A: four probes move from `Trusted` or `Valid` to `Invalid`, as
    in `c2patool`; one more is stricter than it.**
 
+9. **2026-10-09, steps 309–311, found by reading C2PA 2.4 §14.5.1.1** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   §14.5.1.1 says the optional `issuerUniqueID` and `subjectUniqueID`
+   fields of the tbsCertificate (RFC 5280 §4.1.2.8) shall not be present.
+   `c2pa-rs` 0.91.1 refuses them on the end-entity certificate ("certificate
+   issuer/subject unique ids are not allowed"). This verifier did not look
+   at them. Measured in step 310: a leaf with either field was `Trusted`
+   here and `Invalid` in both `c2patool` versions.
+
+   `CertificateExtensions` now records which of the two fields the
+   tbsCertificate carries, and `checkLeaf()` reports each as
+   `signingCredential.invalid`. For a version 2 claim's TSA leaf this
+   happens too, through SPEC-017 amendment 8. Certificates above the leaf
+   are left as `c2patool` leaves them (candidate C4 in
+   `docs/reading-c2pa-2.4.md`). New AC14; the probes join SPEC-061
+   (amendment 4).
+
+   **Weight A: two probes move from `Trusted` to `Invalid`, as in
+   `c2patool`.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -503,3 +531,4 @@ least one test; every source file maps back to this spec.
 | AC11 | tests/Unit/Asn1/IntegerBoundTest.php :: AC11 / SPEC-015 | src/Trust/Certificate.php (the serial bound); bin/make-integer-bound-variants.php; docs/comparison.md |
 | AC12 (amendment 7) | tests/Unit/Trust/SerialNumberTest.php :: AC12 (four tests) / SPEC-015; tests/Unit/Trust/TrustMatrixTest.php :: SPEC061_STRICTER / SPEC-061 | src/Support/Bytes.php :: hexToDecimal(), decimalOctets(); src/Trust/Certificate.php :: \$serialPositive; src/Trust/CertificateProfileCheck.php :: checkLeaf(); src/Trust/ChainCheck.php :: pathFault() |
 | AC13 (amendment 8) | tests/Unit/Trust/PssParametersTest.php :: AC13 (four tests) / SPEC-015; tests/Unit/Trust/TrustMatrixTest.php :: SPEC061_STRICTER / SPEC-061 | src/Trust/CertificateExtensions.php :: fromDer() (\$pssMgf1HashOid, \$algorithmMatchesTbs), algorithmFaults(); src/Trust/CertificateProfileCheck.php :: checkLeaf() |
+| AC14 (amendment 9) | tests/Unit/Trust/UniqueIdTest.php :: AC14 (two tests) / SPEC-015; tests/Unit/Trust/TrustMatrixTest.php / SPEC-061 | src/Trust/CertificateExtensions.php :: fromDer() (\$uniqueIds); src/Trust/CertificateProfileCheck.php :: checkLeaf() |

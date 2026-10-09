@@ -94,7 +94,7 @@ certificates of the path go through OpenSSL's chain verification.
 | 14.5.1.1 | For RSASSA-PSS: the hash present and SHA-256/384/512, the MGF present and over the same hash. | the leaf (SPEC-015 amendment 8); not other certificates | covered for the leaf | measured: `PssParametersTest` → C4 |
 | 14.5.1.1 | EC keys on P-256, P-384 or P-521; RSA keys of at least 2048 bits. | the leaf (`keyFaults()`); not other certificates. Both `c2patool` versions trust an RSA-1024 intermediate or anchor, as this verifier does | covered for the leaf | measured: trust matrix `int-rsa1024`, `anchor-rsa1024` → C4 |
 | 14.5.1.1 | Version 3. | the leaf; not other certificates | covered for the leaf | measured: SPEC-015 → C4 |
-| 14.5.1.1 | No `issuerUniqueID` or `subjectUniqueID`. | not checked for any certificate. `c2pa-rs` refuses them on the end-entity certificate ("certificate issuer/subject unique ids are not allowed") | **not met: more lenient than `c2patool`** | measured (step 310): a leaf with either field is `Trusted` here, `Invalid` in both `c2patool` versions → C5 |
+| 14.5.1.1 | No `issuerUniqueID` or `subjectUniqueID`. | not checked for any certificate. `c2pa-rs` refuses them on the end-entity certificate ("certificate issuer/subject unique ids are not allowed") | covered for the leaf since step 311 (SPEC-015 amendment 9); not checked above it | measured: step 310 found a leaf with either field `Trusted` here, `Invalid` in both `c2patool` versions; `UniqueIdTest` → C4 for the others |
 | 14.5.1.1 | A key that signs certificates has `cA`; one that signs claims, timestamps or OCSP responses has neither `cA` nor `keyCertSign`; only end entities sign those. | issuers: `ChainCheck::issuerFault()` (SPEC-014 amendments 4 and 7); the leaf and the TSA leaf: `checkLeaf()` | covered | measured: trust matrix (`leaf-ca-true`, `leaf-ku-cert-sign`, `int-ca-false`), SPEC-017 amendment 8 |
 | 14.5.1.1 | Authority Key Identifier in every certificate that is not self-signed. | the leaf; not intermediates | covered for the leaf | measured: SPEC-015 → C4 |
 | 14.5.1.1 | Subject Key Identifier in every certificate that acts as a CA (should, for end entities). | read (`Certificate::$hasSubjectKeyIdentifier`) but required nowhere | **candidate** | read → C7 |
@@ -128,7 +128,8 @@ certificates of the path go through OpenSSL's chain verification.
   this verifier checks neither. **Measured in step 310: more lenient than
   `c2patool`.** A leaf with either field is `Trusted` here and `Invalid`
   (`signingCredential.invalid`) in both `c2patool` versions. An
-  intermediate with one is `Trusted` everywhere.
+  intermediate with one is `Trusted` everywhere. **Closed for the leaf in
+  step 311** (SPEC-015 amendment 9).
 - **C6 — digitalSignature.** A manifest signer asserts digitalSignature.
   This verifier, like `c2pa-rs`, also accepts Non Repudiation alone.
   Stricter than `c2patool` if adopted.

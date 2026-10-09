@@ -66,6 +66,43 @@ function tmSh(string ...$parts): string
     return implode(' ', array_map('escapeshellarg', $parts));
 }
 
+/** A DER length (X.690 §8.1.3, definite form). */
+function tmDerLength(int $n): string
+{
+    if ($n < 0x80) {
+        return pack('C', $n);
+    }
+    $bytes = ltrim(pack('N', $n), "\0");
+
+    return pack('C', 0x80 | strlen($bytes)).$bytes;
+}
+
+/**
+ * The elements of a DER constructed value's contents, each as its whole encoding (definite lengths only).
+ *
+ * @return list<string>
+ */
+function tmDerChildren(string $tlv): array
+{
+    $at = 1;
+    $first = ord($tlv[$at]);
+    $at += $first < 0x80 ? 1 : 1 + ($first & 0x7F);
+    $children = [];
+    while ($at < strlen($tlv)) {
+        $len = ord($tlv[$at + 1]);
+        $head = 2;
+        if ($len >= 0x80) {
+            $n = $len & 0x7F;
+            $len = (int) hexdec(bin2hex(substr($tlv, $at + 2, $n)));
+            $head += $n;
+        }
+        $children[] = substr($tlv, $at, $head + $len);
+        $at += $head + $len;
+    }
+
+    return $children;
+}
+
 function tmBstr(string $b): string
 {
     $n = strlen($b);
@@ -328,6 +365,10 @@ $variants = [
     'leaf-pss-saltlen-20' => [null, null, null],
     'leaf-pss-outer-mgf1-sha384' => [null, null, null],
     'leaf-pss-outer-mgf1-unknown' => [null, null, null],
+    // a unique ID in the tbsCertificate (step 310; $uids below)
+    'leaf-issuer-unique-id' => [null, null, null],
+    'leaf-subject-unique-id' => [null, null, null],
+    'int-subject-unique-id' => [null, null, null],
 ];
 /**
  * The PSS probes: the intermediate becomes RSA-2048 and signs the leaf with these digest, MGF1 digest and salt
@@ -335,6 +376,18 @@ $variants = [
  *
  * @var array<string, array{md: string, mgf1: string, salt: int, edit: int<0, 255>|null}> $pss
  */
+/**
+ * The unique-ID probes (step 310): after OpenSSL has issued the certificate, an issuerUniqueID ([1]) or a
+ * subjectUniqueID ([2]) is inserted into its tbsCertificate before the extensions (RFC 5280 §4.1), and the
+ * tbsCertificate is signed again with the issuer's throw-away key. OpenSSL cannot write these fields.
+ *
+ * @var array<string, array{0: 'leaf'|'int', 1: 1|2}> $uids
+ */
+$uids = [
+    'leaf-issuer-unique-id' => ['leaf', 1],
+    'leaf-subject-unique-id' => ['leaf', 2],
+    'int-subject-unique-id' => ['int', 2],
+];
 $pss = [
     'leaf-pss-control' => ['md' => 'sha256', 'mgf1' => 'sha256', 'salt' => 32, 'edit' => null],
     'leaf-pss-sha384' => ['md' => 'sha384', 'mgf1' => 'sha384', 'salt' => 48, 'edit' => null],
@@ -415,6 +468,29 @@ foreach ($variants as $probe => [$position, $field, $value]) {
         } else {
             tmRun(tmSh('openssl', 'req', '-new', '-key', "{$keys}/{$who}.key", '-config', "{$keys}/{$who}.cnf", '-out', "{$keys}/{$who}.csr"));
             tmRun(tmSh(...array_merge(['openssl', 'x509', '-req'], $md, ['-in', "{$keys}/{$who}.csr", '-CA', "{$keys}/{$issuer[$who]}.pem", '-CAkey', "{$keys}/{$issuer[$who]}.key", '-set_serial', $r['serial'] ?? (string) random_int(1000, 99999999)], $dates, ['-extfile', "{$keys}/{$who}.cnf", '-extensions', 'v3', '-out', "{$keys}/{$who}.pem"])));
+        }
+        if (($uids[$probe][0] ?? null) === $who) {
+            // Certificate ::= SEQUENCE { tbsCertificate, signatureAlgorithm, signatureValue }
+            [$tbs, $algorithm] = tmDerChildren($pemToDer((string) file_get_contents("{$keys}/{$who}.pem")));
+            $fields = tmDerChildren($tbs);
+            $bits = "\0".'matrixuid';   // a BIT STRING's contents: no unused bits, then the ID
+            $uid = chr(0x80 | $uids[$probe][1]).tmDerLength(strlen($bits)).$bits;   // [n] IMPLICIT BIT STRING
+            $at = count($fields);
+            foreach ($fields as $i => $field) {
+                if (ord($field[0]) === 0xA3) {
+                    $at = $i;
+                }
+            }
+            array_splice($fields, $at, 0, [$uid]);
+            $content = implode('', $fields);
+            $tbs = "\x30".tmDerLength(strlen($content)).$content;
+            file_put_contents("{$keys}/tbs.der", $tbs);
+            $issuerKey = $who === 'leaf' ? 'int' : 'anchor';
+            tmRun(tmSh('openssl', 'dgst', '-sha256', '-sign', "{$keys}/{$issuerKey}.key", '-out', "{$keys}/tbs.sig", "{$keys}/tbs.der"));
+            $signature = "\0".(string) file_get_contents("{$keys}/tbs.sig");
+            $certificate = $tbs.$algorithm."\x03".tmDerLength(strlen($signature)).$signature;
+            $der = "\x30".tmDerLength(strlen($certificate)).$certificate;
+            file_put_contents("{$keys}/{$who}.pem", "-----BEGIN CERTIFICATE-----\n".chunk_split(base64_encode($der), 64, "\n")."-----END CERTIFICATE-----\n");
         }
         if ($who === 'leaf' && ($pss[$probe]['edit'] ?? null) !== null) {
             // the last SHA-256 OID in the certificate is the outer signatureAlgorithm's MGF1 hash

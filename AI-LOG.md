@@ -9918,3 +9918,22 @@ README are where the disclosure lives.
   with the three probes (the first run refused for a wrong length, then
   fixed); 0.28.1's explanation; `composer check` (953 passed).
 - Decided by Maurice: none in this step.
+
+## 2026-10-09 — A signer certificate carries no unique IDs (step 311)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met stap 311", then "ok, wacht maar op de
+  meting".
+- Produced: `f05e6b8` pushed; SPEC-015 amendment 9 and AC14, SPEC-061
+  amendment 4; `src/Trust/CertificateExtensions.php`,
+  `src/Trust/CertificateProfileCheck.php`; `bin/make-trust-matrix.php` with
+  three unique-ID probes; their fixtures and `c2patool` answers in
+  `chain-matrix`; `tests/Unit/Trust/UniqueIdTest.php`;
+  `TrustMatrixTest.php` (57 probes); the folder's README; the CHANGELOG;
+  `docs/reading-c2pa-2.4.md`; `notes/step-311-unique-ids.md`; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: the tests red (3 failed), then green (6 passed); the corpus
+  (844 files × 157 settings modes, before and after: 314 runs moved, all
+  the two leaf probes); `bin/fuzz.php` without settings and with `--trust`
+  on two seeds, every suspect judged by `c2patool` 0.28.1 (none more
+  lenient); `composer check` (955 passed); PHPStan on macOS and in Docker.
+- Decided by Maurice: the fix as proposed (the leaf only, as `c2patool`).
