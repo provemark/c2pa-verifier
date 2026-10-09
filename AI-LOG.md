@@ -9614,3 +9614,21 @@ README are where the disclosure lives.
   (0 errors); `composer check` (938 passed). Not run: the renamed builders
   themselves, since they write into `tests/Fixtures`.
 - Decided by Maurice: amendment 4.
+
+## 2026-10-09 — The TSA's extended key usage, measured (step 292)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ga maar verder het staat in het geheugen wat je moet doen", then
+  "akkoord" on the proposal to measure the TSA leaf's EKU variants.
+- Produced: `bin/make-tsa-matrix.php` with a `sign => cms` route and seven
+  probes (`control-cms` and six EKU variants);
+  `notes/step-292-tsa-eku.md`; a row in `NOTES.md`.
+- Measured: CI run 37887980768 green on `ee27f93`; in a scratch directory,
+  `openssl ts -reply` refusing a TSA leaf with `timeStamping,emailProtection`
+  and `openssl cms -sign -cades -econtent_type id-smime-ct-TSTInfo` signing
+  it, its control verifying; `php bin/make-tsa-matrix.php <scratch>
+  <c2patool-0.28.1> <c2patool-0.27.22>` (29 probes, both c2patool versions,
+  `openssl ts -verify`, `bin/c2pa-verify`); `composer check` (938 passed);
+  PHPStan in Docker `php:8.3-cli` (no errors).
+- Reasoned: RFC 3161 §2.3 (one EKU, `timeStamping`, critical);
+  `CertificateProfileCheck::ekuFaults()` does not look at criticality.
+- Decided by Maurice: measure the EKU variants this way (akkoord).

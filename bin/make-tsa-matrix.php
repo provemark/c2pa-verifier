@@ -11,7 +11,10 @@ declare(strict_types=1);
  * RFC 3161 token from `openssl ts -reply` in the unprotected header (`sigTst2`, over
  * the CounterSignature structure of C2PA 2.4 §14.6, as `TimestampCheck` builds it).
  * `openssl ts -reply` refuses a TSA certificate whose extended key usage is not the
- * critical timeStamping alone, so those variants are not here.
+ * critical timeStamping alone, so those variants (step 292) are signed another way:
+ * `openssl ts -reply` makes the TSTInfo with a helper certificate for the same key and
+ * the base TSA extensions, and `openssl cms -sign -cades` signs that TSTInfo again
+ * with the probe's TSA certificate (`sign => cms`; `control-cms` checks the route).
  *
  * Every probe is judged by c2patool 0.27.22 and 0.28.1, by `openssl ts -verify` and
  * by this verifier. The probes whose signer is short-lived are judged only after the
@@ -276,7 +279,8 @@ $base = [
 ];
 /**
  * probe => [certificate changes [who => [field, value]], options]
- * options: trust (both|signer-only|tsa-as-manifest|legacy), header (sigTst2|sigTst|both|none), over (right|wrong)
+ * options: trust (both|signer-only|tsa-as-manifest|legacy), header (sigTst2|sigTst|both|none), over (right|wrong),
+ * sign (ts|cms)
  *
  * @var array<string, array{0: array<string, array{0: 'ext'|'key'|'md'|'validity', 1: list<string>|string}>, 1: array<string, string>}> $variants
  */
@@ -307,6 +311,14 @@ $variants = [
     'expired-signer-trusted-tsa' => [['leaf' => ['validity', $SHORT]], []],
     'expired-signer-untrusted-tsa' => [['leaf' => ['validity', $SHORT]], ['trust' => 'signer-only']],
     'expired-signer-no-timestamp' => [['leaf' => ['validity', $SHORT]], ['header' => 'none']],
+    // the TSA leaf's extended key usage (step 292), signed through cms
+    'control-cms' => [[], ['sign' => 'cms']],
+    'tsa-leaf-eku-not-critical' => [['tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', 'timeStamping')]], ['sign' => 'cms']],
+    'tsa-leaf-eku-plus-email' => [['tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', 'critical,timeStamping,emailProtection')]], ['sign' => 'cms']],
+    'tsa-leaf-eku-email-only' => [['tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', 'critical,emailProtection')]], ['sign' => 'cms']],
+    'tsa-leaf-no-eku' => [['tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', null)]], ['sign' => 'cms']],
+    'tsa-leaf-eku-any' => [['tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', 'critical,anyExtendedKeyUsage')]], ['sign' => 'cms']],
+    'tsa-leaf-eku-plus-ocsp' => [['tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', 'critical,timeStamping,OCSPSigning')]], ['sign' => 'cms']],
 ];
 
 $genKey = static function (string $path, string $kind): void {
@@ -374,12 +386,25 @@ foreach ($variants as $probe => [$changes, $options]) {
 
     // the timestamp: an RFC 3161 token over the CounterSignature structure (sigTst2: the signature; sigTst: the claim)
     $header = $options['header'] ?? 'sigTst2';
-    $tokenFor = static function (string $payload) use ($keys, $protected, $options): string {
+    $tokenFor = static function (string $payload) use ($keys, $protected, $options, $TSA): string {
         $countersigned = "\x84\x70CounterSignature".txBstr($protected)."\x40".txBstr($payload);
         $digest = hash('sha256', ($options['over'] ?? 'right') === 'wrong' ? $countersigned.'!' : $countersigned);
         txRun(txSh('openssl', 'ts', '-query', '-digest', $digest, '-sha256', '-cert', '-out', "{$keys}/q.tsq"));
         file_put_contents("{$keys}/tsa-chain.pem", (string) file_get_contents("{$keys}/tsa-int.pem"));
-        txRun(txSh('openssl', 'ts', '-reply', '-config', "{$keys}/tsa.cnf", '-queryfile', "{$keys}/q.tsq", '-signer', "{$keys}/tsa-leaf.pem", '-inkey', "{$keys}/tsa-leaf.key", '-chain', "{$keys}/tsa-chain.pem", '-token_out', '-out', "{$keys}/tok.der"));
+        $cms = ($options['sign'] ?? 'ts') === 'cms';
+        $tsSigner = "{$keys}/tsa-leaf.pem";
+        if ($cms) {
+            // a helper certificate for the same key with the base TSA extensions, only for openssl ts to make the TSTInfo
+            file_put_contents("{$keys}/tsa-helper.cnf", "[v3]\n".implode("\n", $TSA)."\n");
+            txRun(txSh('openssl', 'x509', '-req', '-sha256', '-in', "{$keys}/tsa-leaf.csr", '-CA', "{$keys}/tsa-int.pem", '-CAkey', "{$keys}/tsa-int.key", '-set_serial', (string) random_int(1000, 99999999), '-days', '1', '-extfile', "{$keys}/tsa-helper.cnf", '-extensions', 'v3', '-out', "{$keys}/tsa-helper.pem"));
+            $tsSigner = "{$keys}/tsa-helper.pem";
+        }
+        txRun(txSh('openssl', 'ts', '-reply', '-config', "{$keys}/tsa.cnf", '-queryfile', "{$keys}/q.tsq", '-signer', $tsSigner, '-inkey', "{$keys}/tsa-leaf.key", '-chain', "{$keys}/tsa-chain.pem", '-token_out', '-out', "{$keys}/tok.der"));
+        if ($cms) {
+            // the same TSTInfo, signed again by the probe's TSA certificate, with signingCertificateV2 (-cades)
+            txRun(txSh('openssl', 'cms', '-verify', '-inform', 'DER', '-in', "{$keys}/tok.der", '-noverify', '-binary', '-out', "{$keys}/tstinfo.der"));
+            txRun(txSh('openssl', 'cms', '-sign', '-binary', '-nodetach', '-cades', '-md', 'sha256', '-econtent_type', 'id-smime-ct-TSTInfo', '-signer', "{$keys}/tsa-leaf.pem", '-inkey', "{$keys}/tsa-leaf.key", '-certfile', "{$keys}/tsa-chain.pem", '-in', "{$keys}/tstinfo.der", '-outform', 'DER', '-out', "{$keys}/tok.der"));
+        }
         file_put_contents("{$keys}/digest", $digest);
 
         return (string) file_get_contents("{$keys}/tok.der");
