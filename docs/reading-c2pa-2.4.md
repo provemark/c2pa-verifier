@@ -124,6 +124,24 @@ needed anyway. A metadata assertion *with* `@context` is `Invalid`
 (`assertion.metadata.disallowed`) in 0.27.22 and `Trusted` in 0.28.1 and
 here: an old difference in 0.27.22.
 
+### Measured in step 315
+
+ISOBMFF and structure probes, made the same way. `c2patool` 0.28.1 signed
+with the throw-away hierarchy (an MP4 with `hash_alg: sha384`, a
+fragmented stream from `ffmpeg`, a PNG with a parent). Edits of the same
+length, or tools that also fix every enclosing box, the data hash's
+exclusion length and the PNG chunk, then signed again. Each tool was first
+run on a change that keeps the file valid, and that file stayed `Trusted`
+(or, for the lone init segment, `Invalid` in all three).
+
+| probe | `c2patool` 0.28.1 | 0.27.22 | here | candidate |
+|---|---|---|---|---|
+| MP4, claim `sha384`, BMFF hash without `alg` | `Trusted` | `Trusted` | **`Invalid`** | L1: this verifier hashes with SHA-256; the lenient direction (a SHA-256 hash under a `sha384` claim) is read, not built |
+| PNG manifest typed `c2md` | `Trusted` | `Trusted` | **`Invalid`** | L9: stricter, against §11.2.2's "shall accept" |
+| PNG store `[X, Y, X']`, X' a copy of the parent manifest | `Invalid` (X' active) | `Invalid` | **`Trusted`** (Y active) | L10, confirmed |
+| fragmented init segment alone, merkle map without `count` | error | error | **`Trusted`** ("all 0 fragment(s) reach the merkle root") | L12, confirmed |
+| PNG, version 2 claim with `claim_generator_info: {}` | error | error | **`Trusted`** | L13, confirmed |
+
 Two more need a measurement before they are candidates of this kind: the
 field types inside an actions assertion (P08-3), and stapled OCSP
 responses of ingredient manifests (P06-3). Separately, a claim without

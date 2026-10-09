@@ -9989,3 +9989,18 @@ README are where the disclosure lives.
   <c2patool-0.27.22>` with the two probes (the short-lived signer judged
   after it expired); `composer check` (955 passed).
 - Decided by Maurice: none in this step.
+
+## 2026-10-09 — Probes for the ISOBMFF and structure candidates (step 315)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met stap 315".
+- Produced: `60b0a09` pushed; the measured table in
+  `docs/reading-c2pa-2.4.md`; `notes/step-315-probes-for-structure.md`; a
+  row in `NOTES.md`. Probes and tools (same-length edit, claim shrink,
+  duplicate label) live in a scratch directory.
+- Measured: an MP4 signed with `hash_alg: sha384` and its BMFF `alg`
+  renamed; a `c2md` PNG; a PNG with a parent and the parent manifest
+  appended; a fragmented stream from `ffmpeg` signed by `c2patool
+  fragment`, its init segment alone with `count` renamed; an empty
+  `claim_generator_info`; each tool's control first; all judged by
+  `c2patool` 0.28.1 and 0.27.22 and `bin/c2pa-verify`.
+- Decided by Maurice: none in this step.
