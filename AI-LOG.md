@@ -10312,3 +10312,13 @@ README are where the disclosure lives.
   (`livevideo.sessionkey.invalid`) in the fetched specification; `c2pa-rs`
   0.91.1 searched for session keys (none); issue #8.
 - Decided by Maurice: session keys by design; issue #8 stays open.
+
+## 2026-10-09 — SPEC-065 drafted: the alternative content representation (step 335)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, leg het vast en begin met #5".
+- Produced: `specs/SPEC-065-alternative-content-representation.md`
+  (draft); rows in `NOTES.md` and `docs/milestones.md`.
+- Reasoned: C2PA 2.4 §15.10.3.2.7, §18.14, §18.9 and the §15 status table
+  in the fetched specification; `c2pa-rs` 0.91.1 searched (no code for the
+  assertion); issue #5.
+- Decided by Maurice: none yet; the draft awaits approval.
