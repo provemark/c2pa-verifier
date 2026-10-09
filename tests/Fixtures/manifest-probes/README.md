@@ -2,8 +2,8 @@
 
 Built by `bin/make-manifest-probe-variants.php <scratch> <c2patool-0.28.1>
 <c2patool-0.27.22>` on 2026-10-09 (step 318; rebuilt with the two data-hash
-probes in step 319 and the cloud-data probes in step 321, with new keys each
-time). `c2patool` 0.28.1 signed
+probes in step 319 and the cloud-data probes in step 321 and the unlisted ones in step 322, with new
+keys each time). `c2patool` 0.28.1 signed
 `fixture-unsigned.png` with a throw-away P-256 hierarchy; the keys lived in
 a scratch directory and were deleted. `throw-away-root.pem` is the public
 root, and `throw-away-root.settings.json` holds it as the legacy
@@ -34,6 +34,11 @@ the file valid.
 | `cloud-no-location.png` | its `location` key renamed | `Invalid` | `Trusted` | `Invalid` |
 | `cloud-in-ingredient.png` | signed by 0.28.1 with `cloud-hash-data.png` as its parent; the ingredient records the failure | `Trusted` | `Trusted` | `Trusted` |
 | `cloud-in-ingredient-unrecorded.png` | the same signed by 0.27.22, which records none | `Invalid` | `Trusted` | `Invalid` |
+| `unlisted-control.png` | well-formed actions (`when` "123"), metadata, certificate status and soft binding (SPEC-063 amendment 2) | `Trusted` | `Invalid` (`@context`) | `Trusted` |
+| `unlisted-metadata-no-context.png` | its metadata without `@context` | error: cannot decode | error | `Trusted` |
+| `unlisted-certificate-status-no-ocspvals.png` | its certificate status without `ocspVals` | error: cannot decode | error | `Trusted` |
+| `unlisted-soft-binding-no-blocks.png` | its soft binding without `blocks` | `Invalid` | `Invalid` | `Trusted` |
+| `unlisted-action-when-integer.png` | its action's `when` the integer 123 | error: cannot decode | error | `Trusted` |
 | `x5chain-unprotected-too.png` | the signer's chain under label 33 in the unprotected header as well (candidate C1, §14.5) | `Trusted` | `Trusted` | `Trusted` |
 
 The answers are under `../c2patool/manifest-probes/<file>--<version>.json`.

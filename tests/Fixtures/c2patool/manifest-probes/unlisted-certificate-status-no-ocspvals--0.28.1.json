@@ -1,0 +1,4 @@
+Error: could not decode assertion c2pa.certificate-status (version (no version), content type application/cbor): missing field `ocspVals`
+
+Caused by:
+    missing field `ocspVals`

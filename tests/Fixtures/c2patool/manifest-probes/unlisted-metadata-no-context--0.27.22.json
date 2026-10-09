@@ -1,0 +1,4 @@
+Error: could not decode assertion c2pa.metadata (version (no version), content type application/json): the assertion had an unexpected data type: expected cbor, found json
+
+Caused by:
+    the assertion had an unexpected data type: expected cbor, found json

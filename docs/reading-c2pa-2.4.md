@@ -52,10 +52,10 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §15.7 to §15.9 | 47 | 23 | 9 | 4 | 5 | 6 |
 | §15.10 to the end of §15 | 124 | 81 | 16 | 13 | 9 | 5 |
 | §18.1 to §18.9 | 50 | 23 | 4 | 6 | 11 | 6 |
-| §18.10 to §18.16 | 58 | 20 | 11 | 3 | 12 | 12 |
-| §18.17 to the end of §18 | 34 | 4 | 2 | 2 | 11 | 14 (and 1 other) |
+| §18.10 to §18.16 | 58 | 20 | 11 | 6 | 12 | 9 |
+| §18.17 to the end of §18 | 34 | 4 | 2 | 4 | 11 | 12 (and 1 other) |
 | Appendix A | 50 | 22 | 2 | 7 | 13 | 6 |
-| **all** | **562** | **285** | **66** | **54** | **101** | **55** |
+| **all** | **562** | **285** | **66** | **59** | **101** | **50** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -72,11 +72,11 @@ by both `c2patool` versions (see *Measured in step 313* below).
 | L1 | a BMFF hash without `alg` | fell back to SHA-256; **fixed: SPEC-027 amendment 8** | the claim's `alg` (§13.1, §15.4.1) | P03-1, P07-2, P06-12 |
 | L2 | a data hash without `pad` (§18.5.2 requires it of the claim generator) | accepted; **by design: §15.12.1.1 tells the validator to ignore the presence and contents of `pad` and `pad2` (SPEC-012 amendment 10)** | `DataHash::pad` is required; the assertion cannot be decoded | P07-1 |
 | L3 | two tokens in `tstTokens` | the first was judged and its time used; **fixed: SPEC-017 amendment 9** | `timeStamp.malformed`, the timestamp dropped (`sigtst.rs`) | P05-1 |
-| L4 | a metadata assertion without `@context` in a version 2 claim | not read | `verify_metadata()` stops the validation | P09-1 |
+| L4 | a metadata assertion without `@context` in a version 2 claim | not read; **by design: §15.10.3.2 (SPEC-063 amendment 2)** | `verify_metadata()` stops the validation | P09-1 |
 | L5 | a malformed `c2pa.time-stamp` assertion | not read | `assertion.timestamp.malformed` | P09-2, P06-2 |
-| L6 | a malformed `c2pa.certificate-status` assertion | not read | the validation stops | P09-3 |
+| L6 | a malformed `c2pa.certificate-status` assertion | not read; **by design: §15.10.3.2 (SPEC-063 amendment 2)** | the validation stops | P09-3 |
 | L7 | `c2pa.cloud-data` | not checked, though SPEC-039 says "refused by name"; **fixed: SPEC-063** | `verify_cloud_data()`: decode, size, no hard binding, actions or ingredient | P08-1, P07-3, P06-1, P04-4 |
-| L8 | a soft binding that cannot be decoded | not decoded | `verify_soft_binding_alg()` logs it | P08-2 |
+| L8 | a soft binding that cannot be decoded | not decoded; **by design: §15.10.3.2 (SPEC-063 amendment 2)** | `verify_soft_binding_alg()` logs it | P08-2 |
 | L9 | a manifest of type `c2md` (§11.2.2: consumers shall accept it) | an unknown box: mostly `claim.missing` (stricter), but in a store `[c2ma, c2md]` the older manifest is made active; **fixed: SPEC-007 amendment 7** | read as a standard manifest | P02-1 |
 | L10 | two manifests with one label | `ManifestStore::fromTree()` keeps the first one's place and the later one's content, and makes `array_key_last()` active: `[X, Y, X']` validates `Y`; **fixed: SPEC-007 amendment 7** | the last box, `X'` | P01-1, P02-2, P04-1 |
 | L11 | a version 2 manifest whose label is not a C2PA URN | not checked; **fixed: SPEC-007 amendment 7** | `claim.malformed` | P02-3 |
@@ -95,14 +95,14 @@ fix.
 |---|---|---|---|---|
 | control, and control signed again | `Trusted` | `Trusted` | `Trusted` | — |
 | data hash without `pad` | error: missing field `pad` | error | **`Trusted`** | L2: by design, §15.12.1.1 (SPEC-012 amendment 10) |
-| metadata assertion without `@context` | error: could not decode | error | **`Trusted`** | L4, confirmed |
+| metadata assertion without `@context` | error: could not decode | error | **`Trusted`** | L4: by design, §15.10.3.2 (SPEC-063 amendment 2) |
 | `c2pa.time-stamp` whose value is text, not a token | `Trusted` | `Trusted` | `Trusted` | L5, **not confirmed**: no difference |
-| `c2pa.certificate-status` without `ocspVals` | error: missing field `ocspVals` | error | **`Trusted`** | L6, confirmed |
-| `c2pa.cloud-data` pointing at `c2pa.hash.data` | `Invalid` | `Trusted` | **`Trusted`** | L7, confirmed against 0.28.1 |
-| `c2pa.cloud-data` with `size` 0 | `Invalid` | `Trusted` | **`Trusted`** | L7, confirmed against 0.28.1 |
-| soft binding without `blocks` | `Invalid` | `Trusted` | **`Trusted`** | L8, confirmed against 0.28.1 |
-| version 2 manifest labelled `urx:c2pa:…` | `Invalid` | `Invalid` | **`Trusted`** | L11, confirmed |
-| an action whose `when` is an integer | error | error | **`Trusted`** | P08-3, confirmed |
+| `c2pa.certificate-status` without `ocspVals` | error: missing field `ocspVals` | error | **`Trusted`** | L6: by design, §15.10.3.2 (SPEC-063 amendment 2) |
+| `c2pa.cloud-data` pointing at `c2pa.hash.data` | `Invalid` | `Trusted` | **`Trusted`** | L7: fixed, SPEC-063 |
+| `c2pa.cloud-data` with `size` 0 | `Invalid` | `Trusted` | **`Trusted`** | L7: fixed, SPEC-063 |
+| soft binding without `blocks` | `Invalid` | `Trusted` | **`Trusted`** | L8: by design, §15.10.3.2 (SPEC-063 amendment 2) |
+| version 2 manifest labelled `urx:c2pa:…` | `Invalid` | `Invalid` | **`Trusted`** | L11: fixed, SPEC-007 amendment 7 |
+| an action whose `when` is an integer | error | error | **`Trusted`** | P08-3: by design, §15.10.3.2 (SPEC-063 amendment 2) |
 
 ### Measured in step 314
 
@@ -1245,7 +1245,7 @@ claims*). `c2pa-rs` was read at 0.91.1 (`claim.rs`: `verify_actions`,
 | § | rule (paraphrased) | where | verdict | how known |
 |---|---|---|---|---|
 | 18.10.1 | Consumers ignore the deprecated `url` field, and should ignore the deprecated `extent` field, of a soft binding (the hash over them still counts). | no code reads a soft binding's fields; the assertion's hashed URI is checked as for every assertion (`HashedUriCheck`) | covered by construction | read |
-| 18.10.1, 18.10.3 | Label `c2pa.soft-binding`; `alg` and `blocks` present (no default `alg`); `pad` and `pad2` zero-filled. | `ActionsCheck::contentRules()` only looks for the label (for the watermark rule); the content is never decoded | **candidate** | read → P08-2 |
+| 18.10.1, 18.10.3 | Label `c2pa.soft-binding`; `alg` and `blocks` present (no default `alg`); `pad` and `pad2` zero-filled. | `ActionsCheck::contentRules()` only looks for the label (for the watermark rule); the content is never decoded | **by design** (§15.10.3.2: no validation listed; SPEC-063 amendment 2) | read → P08-2 |
 | 18.10.3.1 | A validator should not use `bindingMetadata` when validating a soft binding. | nothing reads it | covered by construction | read |
 | 18.10.4 | `alg` should be on the C2PA soft binding algorithm list; a validator should not resolve bindings with deprecated algorithms. | no soft-binding resolution; the list is not bundled. `c2pa-rs` 0.91.1 has its registry check commented out | n/a | read |
 | 18.10.5, 18.10.5.1 | Discovery and matching through a manifest repository: every soft binding in a found manifest must match `alg` and `value`. | no repository lookup, no network | n/a | read |
@@ -1270,10 +1270,10 @@ claims*). `c2pa-rs` was read at 0.91.1 (`claim.rs`: `verify_actions`,
 | 18.15.3 | Validators should read an absent `allActionsIncluded` as "more actions may have happened". | the report states nothing about completeness; the assertion is rendered as data | n/a | read |
 | 18.15.4.2 | `reason` is one of four `c2pa.` values or a namespaced custom value. | not checked | **candidate** | read → P08-6 |
 | 18.15.4.2 | A `c2pa.redacted` action carries a `reason`. | not checked | by design: SPEC-037 *Out of scope* (no validation step names it, no oracle checks it) | read |
-| 18.15.4.3 | `when` is a CBOR date/time (RFC 8949 §3.4.1). | not checked | **candidate** | read → P08-3 |
+| 18.15.4.3 | `when` is a CBOR date/time (RFC 8949 §3.4.1). | not checked | **by design** (§15.10.3.2: no validation listed; SPEC-063 amendment 2) | read → P08-3 |
 | 18.15.4.4 | An action has at most one of `softwareAgent` and `softwareAgentIndex`; the index points into `softwareAgents`. | not checked | **candidate** | read → P08-5 |
 | 18.15.4.5 | `digitalSourceType` is an IPTC term or one of the C2PA values. | only presence on `c2pa.created` (SPEC-032); the value is not checked | **candidate** | read → P08-5 |
-| 18.15.4.6 | In v2, `changes` is a list of region maps. | not checked | **candidate** | read → P08-3 |
+| 18.15.4.6 | In v2, `changes` is a list of region maps. | not checked | **by design** (§15.10.3.2: no validation listed; SPEC-063 amendment 2) | read → P08-3 |
 | 18.15.4.7 | Custom `parameters` keys use entity-specific namespacing. | not checked | **candidate** | read → P08-6 |
 | 18.15.4.7 | `c2pa.opened` and `c2pa.placed` carry hashed URIs to their ingredient assertions. | `contentRules()`: present, non-empty, of the right relationship; resolved by label, not by hash | covered (by label; by design: `docs/comparison.md`, SPEC-033 open question 2) | measured: `ActionsContentTest` "AC2", "AC3" |
 | 18.15.4.7 | `c2pa.removed` references a `componentOf` ingredient in a different manifest. | `contentRules()` looks it up in the current claim, as `c2pa-rs` | by design: `docs/comparison.md` (SPEC-033 open questions 2–3) | measured: `ActionsContentTest` "AC2" |
@@ -1405,7 +1405,7 @@ to the live-video method of §19.4, which this verifier does not read.
 | 18.17.1 | Descriptive: why metadata lives in a signed assertion. | — | n/a | read |
 | 18.17.2 | A metadata assertion's label ends in `.metadata`, after `c2pa` or an entity-specific namespace. | a label rule for the writer; the verifier gives no `.metadata` label a meaning of its own | n/a | read |
 | 18.17.2 | One JSON content box holding JSON-LD. | `Manifest::assertionData()` and `only()`: one content box of one kind, else an error; JSON that does not decode is `assertion.json.invalid`. A CBOR box is accepted too, as `c2pa-rs` falls back to CBOR (`assertions/metadata.rs`, `from_assertion`) | partial | measured: `VerifierTest` "AC7: the parsers' faults become statuses with their codes and urls" (SPEC-013, `claim/json-broken.png`) |
-| 18.17.2 | The JSON-LD object includes `@context`. | not checked: no `.metadata` assertion is read | **candidate** | read → P09-1 |
+| 18.17.2 | The JSON-LD object includes `@context`. | not checked: no `.metadata` assertion is read | **by design** (§15.10.3.2: no validation listed; SPEC-063 amendment 2) | read → P09-1 |
 | 18.17.3 | `c2pa.metadata` holds only the fields of Appendix B. | a rule for the claim generator; `c2pa-rs` no longer checks the field list in validation (`claim.rs`, `verify_metadata`) | n/a | read; `docs/conformance.md` `PRED-STRU-017` |
 | 18.17.4 | Partial redaction by an update manifest; the new assertion is shown with the update manifest's signer. | descriptive and a user-experience rule; the verifier has no user interface. Update manifests themselves: SPEC-022 | n/a | read |
 | 18.18.1 | Descriptive: a later time-stamp keeps a manifest valid after its certificate expires. | — | n/a | read |
@@ -1414,7 +1414,7 @@ to the live-video method of §19.4, which this verifier does not read.
 | 18.18.3 | Each value is an RFC 3161 token over the `signature` field of the named manifest's COSE_Sign1. | not read: the token is never verified and never used, so a manifest is judged at its own `sigTst`/`sigTst2`, or at now | by design: stricter, not laxer, in the usual case (`docs/conformance.md` §3, `PRED-TIME-002`/`003`; `notes/step-128-more-for-0.3.md` §3); see P09-2 for two cases where it is laxer | measured: `php bin/c2pa-verify tests/Fixtures/c2pa-rs/update_manifest.jpg` reports `Valid` and lists a `c2pa.time-stamp` assertion; `c2patool` also `Valid` (`notes/step-140-gaps-counted.md`) |
 | 18.19.1 | A validator may need to go online for revocation status. | no network in the verification path; only stapled responses are read (SPEC-030) | by design (`docs/comparison.md`, the OCSP row) | read |
 | 18.19.3 | Label `c2pa.certificate-status`; at most one per manifest. | not checked | **candidate** | read → P09-4 |
-| 18.19.3 | At least one entry in `ocspVals`, each an OCSP response in the `rVals` form. | not read: the responses are neither decoded nor used for revocation | **candidate** | read → P09-3 |
+| 18.19.3 | At least one entry in `ocspVals`, each an OCSP response in the `rVals` form. | not read: the responses are neither decoded nor used for revocation | **by design** (§15.10.3.2: no validation listed; SPEC-063 amendment 2) | read → P09-3 |
 | 18.20 | Label `c2pa.asset-ref`; at least one reference, each with a `uri`. | not read; `c2pa-rs` defines the type (`assertions/asset_reference.rs`) but does not validate it | **candidate** | read → P09-5 |
 | 18.21.1 | Label `c2pa.asset-type.v2`; at most one; `dc:format` an IANA media type; each `type` from Tables 11/12 or an entity-specific name. | not read; `c2pa-rs` does not validate it in `claim.rs` or `store.rs` | **candidate** | read → P09-4, P09-5 |
 | 18.21.3 | Which `dc:format` to choose. | writer guidance | n/a | read |

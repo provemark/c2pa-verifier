@@ -83,7 +83,8 @@ this verifier already checks.
 - The four other candidates of the same reading (L4 metadata `@context`,
   L6 certificate status, L8 soft binding, P08-3 action field types): by
   design. §15.10.3.2 lists no validation for them. Maurice decided on
-  2026-10-09 to name the difference with `c2patool` in a separate step.
+  2026-10-09 to name the difference with `c2patool` in a separate step
+  (amendment 2, AC9).
 
 ## Behavior
 
@@ -185,7 +186,7 @@ final readonly class CloudDataCheck
 
 ## Amendments
 
-1. **2026-10-09, step 321, measured while building** *(to be confirmed by Maurice van Loon)* —
+1. **2026-10-09, step 321, measured while building** *(confirmed by Maurice van Loon, 2026-10-09)* —
    Two things the approved text did not foresee, as its open question
    said the tests would follow:
    - **`location.hash` as text.** `c2patool` 0.28.1 writes the hash from
@@ -202,14 +203,36 @@ final readonly class CloudDataCheck
 
    **Weight B: no verdict differs from `c2patool` 0.28.1 on any probe.**
 
+2. **2026-10-09, step 322, decided by Maurice van Loon** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   The four other candidates of the reading, out of scope above, are
+   named. §15.10.3.2 says an assertion not on its list *"does not require
+   any additional validation steps"*, and §15.10.3.2.4 says *"No
+   assertion-specific validation is required for c2pa.metadata"*. None of
+   the four feeds a verdict here: not the binding, not the signer, not
+   the timestamp. So their shape is not judged, and `c2patool`'s
+   stricter decoding is a named difference.
+
+   - **AC9 (new) — unlisted shapes are not judged.** Given
+     `unlisted-control.png` (a well-formed actions `when`, metadata,
+     certificate status and soft binding, signed by `c2patool` 0.28.1) and
+     four probes that break one each: metadata without `@context` (L4),
+     certificate status without `ocspVals` (L6), soft binding without
+     `blocks` (L8), an action's `when` as the integer 123 (P08-3). Then all
+     five are `Trusted` here. 0.28.1 cannot decode three and calls the
+     soft binding `Invalid`; 0.27.22 also refuses the control (its old
+     `@context` rule).
+
+   **Weight B: four named differences, from the specification's own
+   validator rule.**
+
 ## Open questions
 
 - None blocking. If `c2patool` 0.28.1 reports a code set other than the
   one above on a probe, the tests follow the measurement and this spec
   gets an amendment before it is approved.
   *Status 2026-10-09 (step 321):* it happened after the approval: the
-  hash as text and the ingredient case, recorded in amendment 1 for
-  Maurice van Loon to confirm.
+  hash as text and the ingredient case, recorded in amendment 1, confirmed
+  by Maurice van Loon on 2026-10-09.
 
 ## Traceability
 
@@ -223,3 +246,4 @@ final readonly class CloudDataCheck
 | AC6 | tests/Unit/Manifest/CloudDataCheckTest.php :: AC6: a well-formed cloud-data assertion passes / SPEC-063 | src/Manifest/CloudDataCheck.php :: check(), present(); src/Verifier/Verifier.php (cloudData) |
 | AC7 | tests/Unit/Manifest/CloudDataCheckTest.php :: AC7: in an ingredient manifest too / SPEC-063 | src/Verifier/IngredientManifestCheck.php :: manifest() |
 | AC8 | tests/Unit/Manifest/CloudDataCheckTest.php :: AC8: three codes, verbatim, all failures / SPEC-063 | src/Report/StatusCode.php; tests/Fixtures/api/public-surface.txt |
+| AC9 (amendment 2) | tests/Unit/Manifest/CloudDataCheckTest.php :: AC9: assertions §15.10.3.2 lists no validation for are not judged by shape / SPEC-063 | — (no code: nothing reads those shapes); bin/make-manifest-probe-variants.php |

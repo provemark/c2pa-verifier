@@ -10117,3 +10117,19 @@ README are where the disclosure lives.
   `composer check` (970 passed); PHPStan in Docker.
 - Decided by Maurice: SPEC-063 approved. Amendment 1 awaits his
   confirmation.
+
+## 2026-10-09 — Assertions §15.10.3.2 does not list, by design (step 322)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendement 1 bevestigd, push en begin met punt 1".
+- Produced: `9de99f0` pushed; SPEC-063 amendment 1 marked confirmed,
+  amendment 2 (AC9); five probes in `bin/make-manifest-probe-variants.php`
+  (all its fixtures rebuilt with new keys) and the fixtures' README; AC9 in
+  `tests/Unit/Manifest/CloudDataCheckTest.php`; `docs/reading-c2pa-2.4.md`
+  (four candidates and five rule rows by design, L7 and L11 marked fixed,
+  tallies); `notes/step-322-unlisted-assertions.md`; a row in `NOTES.md`.
+- Measured: every probe judged by both `c2patool` versions and here;
+  §15.10.3.2 and §15.10.3.2.3–.4 read in the fetched specification;
+  `composer check` (971 passed). No `src/` change, so no corpus or fuzz
+  run.
+- Decided by Maurice: the four by design, the differences named (step
+  320's choice 2); amendment 1 of SPEC-063 confirmed.

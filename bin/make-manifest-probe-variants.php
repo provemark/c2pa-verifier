@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * Steps 313, 315 and 318 to 321: PNG probes for the manifest and its signature, from the reading of C2PA 2.4
+ * Steps 313, 315 and 318 to 322: PNG probes for the manifest and its signature, from the reading of C2PA 2.4
  * (docs/reading-c2pa-2.4.md, L2, L9, L10, L11, L13 and C1). `c2patool` 0.28.1 signs with a throw-away P-256 hierarchy;
  * a probe `c2patool` will not write is made by editing the store: the bytes replaced, every enclosing box resized,
  * the data hash's exclusion re-lengthened to the new caBX chunk and its hashed URI recomputed, the claim signed
@@ -29,6 +29,11 @@ declare(strict_types=1);
  *   cloud-no-location        its location key renamed
  *   cloud-in-ingredient      fixture-unsigned.png signed with cloud-hash-data.png as its parent (0.28.1 records the failure)
  *   cloud-in-ingredient-unrecorded  the same signed by 0.27.22, which records no cloud-data failure
+ *   unlisted-control         actions (when "123"), metadata, certificate status and soft binding, well-formed
+ *   unlisted-metadata-no-context            its metadata without @context (L4)
+ *   unlisted-certificate-status-no-ocspvals its certificate status without ocspVals (L6)
+ *   unlisted-soft-binding-no-blocks         its soft binding without blocks (L8)
+ *   unlisted-action-when-integer            its action's when the integer 123 (P08-3)
  *   x5chain-unprotected-too  the signer's chain under label 33 in the unprotected header as well (C1)
  *
  * Usage: php bin/make-manifest-probe-variants.php <scratch-dir> <c2patool-0.28.1> <c2patool-0.27.22>
@@ -383,12 +388,36 @@ foreach (['c2pa.xxxxxxx.v2', 'c2pa.xxxx.data'] as $placeholder) {
     }
 }
 
+// ---- by design (§15.10.3.2: no validation beyond the listed assertions): c2patool signs well-formed ones, the
+// probe breaks one shape each; c2patool cannot read three of them and refuses the fourth ----
+file_put_contents("{$keys}/m-unlisted.json", json_encode([
+    'alg' => 'es256', 'private_key' => "{$keys}/leaf.pk8", 'sign_cert' => "{$keys}/leaf.pem",
+    'claim_generator_info' => [['name' => 'c2pa-verifier manifest probes', 'version' => '1']],
+    'assertions' => [
+        ['label' => 'c2pa.actions.v2', 'data' => ['actions' => [['action' => 'c2pa.created', 'when' => '123', 'digitalSourceType' => 'http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture']]]],
+        ['label' => 'c2pa.metadata', 'data' => ['@context' => ['dc' => 'http://purl.org/dc/elements/1.1/'], 'dc:title' => 'probe']],
+        ['label' => 'c2pa.certificate-status', 'data' => ['ocspVals' => ['AAECAwQF']]],
+        ['label' => 'c2pa.soft-binding', 'data' => ['alg' => 'com.example.watermark', 'blocks' => [['scope' => (object) [], 'value' => 'AAECAwQF']]]],
+    ],
+], JSON_UNESCAPED_SLASHES));
+mqRun(mqSh($new, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m-unlisted.json", '-o', "{$dir}/unlisted-control.png", '-f'));
+$unlistedPng = (string) file_get_contents("{$dir}/unlisted-control.png");
+[$us, $uchunk] = mqStore($unlistedPng);
+foreach ([
+    'unlisted-metadata-no-context' => ['c2pa.metadata', '"@context"', '"@contexX"'],
+    'unlisted-certificate-status-no-ocspvals' => ['c2pa.certificate-status', "\x68ocspVals", "\x68ocspValX"],
+    'unlisted-soft-binding-no-blocks' => ['c2pa.soft-binding', "\x66blocks", "\x66blockX"],
+    'unlisted-action-when-integer' => ['c2pa.actions.v2', "\x64when\xc0\x63123", "\x64when\x1a\x00\x00\x00\x7b"],
+] as $name => [$label, $from, $to]) {
+    file_put_contents("{$dir}/{$name}.png", mqChunk($unlistedPng, $uchunk, mqEditAssertion($us, $label, $from, $to, "{$keys}/leaf.key")));
+}
+
 mqRun(mqSh($new, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m.json", '-p', "{$dir}/cloud-hash-data.png", '-o', "{$dir}/cloud-in-ingredient.png", '-f'));
 // 0.27.22 does not check cloud data, so the ingredient it records holds no cloud-data failure: a delta for a validator
 mqRun(mqSh($old, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m.json", '-p', "{$dir}/cloud-hash-data.png", '-o', "{$dir}/cloud-in-ingredient-unrecorded.png", '-f'));
 
 // ---- the oracles ----
-foreach (['control', 'cgi-shorter', 'cgi-empty', 'label-not-urn', 'type-c2md', 'datahash-no-pad', 'datahash-pad-text', 'parent', 'duplicate-label-last', 'duplicate-label-middle', 'x5chain-unprotected-too', 'cloud-ok', 'cloud-hash-bytes', 'cloud-hash-data', 'cloud-size-zero', 'cloud-actions', 'cloud-no-location', 'cloud-in-ingredient', 'cloud-in-ingredient-unrecorded'] as $name) {
+foreach (['control', 'cgi-shorter', 'cgi-empty', 'label-not-urn', 'type-c2md', 'datahash-no-pad', 'datahash-pad-text', 'parent', 'duplicate-label-last', 'duplicate-label-middle', 'x5chain-unprotected-too', 'cloud-ok', 'cloud-hash-bytes', 'cloud-hash-data', 'cloud-size-zero', 'cloud-actions', 'cloud-no-location', 'cloud-in-ingredient', 'cloud-in-ingredient-unrecorded', 'unlisted-control', 'unlisted-metadata-no-context', 'unlisted-certificate-status-no-ocspvals', 'unlisted-soft-binding-no-blocks', 'unlisted-action-when-integer'] as $name) {
     foreach (['0.28.1' => $new, '0.27.22' => $old] as $v => $tool) {
         $lines = [];
         exec(mqSh($tool, "{$dir}/{$name}.png", '--settings', "{$dir}/throw-away-root.settings.json").' 2>&1', $lines);

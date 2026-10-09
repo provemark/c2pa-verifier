@@ -1,0 +1,4 @@
+Error: could not decode assertion c2pa.actions.v2 (version 2, content type application/cbor): invalid type: integer `123`, expected a string
+
+Caused by:
+    invalid type: integer `123`, expected a string

@@ -158,3 +158,25 @@ it('AC8: three codes, verbatim, all failures', function (): void {
         expect(StatusCode::from($code)->isFailure())->toBeTrue($code);
     }
 })->group('SPEC-063');
+
+it('AC9: assertions §15.10.3.2 lists no validation for are not judged by shape; the differences with c2patool are named (amendment 2)', function (): void {
+    $theirs = static function (string $name, string $version): ?string {
+        $json = json_decode((string) file_get_contents(Corpus::fixtures()."/c2patool/manifest-probes/{$name}--{$version}.json"), true);
+
+        return is_array($json) && is_string($json['validation_state'] ?? null) ? $json['validation_state'] : null;
+    };
+    // probe => 0.28.1's answer (null: it cannot decode the assertion); here every one is Trusted
+    $named = [
+        'unlisted-control' => 'Trusted',
+        'unlisted-metadata-no-context' => null,                 // §15.10.3.2.4: no assertion-specific validation
+        'unlisted-certificate-status-no-ocspvals' => null,      // not listed; this verifier reads OCSP from rVals only
+        'unlisted-soft-binding-no-blocks' => 'Invalid',         // not listed
+        'unlisted-action-when-integer' => null,                 // §15.10.3.2.3 names no field types
+    ];
+    foreach ($named as $name => $state) {
+        expect(spec063Probe($name)->result->state->value)->toBe('Trusted', $name)
+            ->and($theirs($name, '0.28.1'))->toBe($state, $name);
+    }
+    // 0.27.22 still refuses a metadata assertion with @context, an old difference (step 313)
+    expect($theirs('unlisted-control', '0.27.22'))->toBe('Invalid');
+})->group('SPEC-063');
