@@ -9873,3 +9873,20 @@ README are where the disclosure lives.
   probes.
 - Decided by Maurice: release 0.5.3; the RSASSA-PSS findings stay under
   *Changed*, not *Security*.
+
+## 2026-10-09 — Reading C2PA 2.4 §14.1 to §14.4 (step 308)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "is het een goed idee om de nieuwste c2pa spec naast de verifier
+  te leggen", "zoek op wat de nieuwste versie is", then "push en begin met
+  de leesronde van §14. Wat is die leesronde?" and "akkoord, begin met stap
+  308".
+- Produced: `8d48303` (demo) pushed; `docs/reading-c2pa-2.4.md` with the
+  table for §14.1 to §14.4 and three candidates;
+  `notes/step-308-reading-14-1-to-4.md`; a row in `NOTES.md`.
+- Measured: the 2.4 page fetched once (SHA-256 recorded) and §14 cut out by
+  heading; every fixture under no settings and each settings file (103,796
+  runs) for the success codes §14.3.5 and §14.3.6 name; `git grep` for the
+  section numbers this project cites; `composer check` (953 passed).
+- Reasoned: from `CoseSign1`, `ValidationResult`, `ChainCheck`,
+  `TrustAnchorSet`, `TimestampCheck` and the specs they name.
+- Decided by Maurice: the reading round, §14 first.
