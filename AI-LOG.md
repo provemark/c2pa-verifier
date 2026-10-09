@@ -10268,3 +10268,18 @@ README are where the disclosure lives.
   `cose_validator.rs` (an assertion's token overrides the header's);
   issue #6.
 - Decided by Maurice: group 1 now; the draft awaits approval.
+
+## 2026-10-09 — Probes for the time-stamp assertion (step 332)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, goedgekeurd zoals voorgesteld, push en begin met de
+  builder".
+- Produced: `32fb8f3` pushed; SPEC-064 approved (both open questions as
+  proposed); `bin/make-timestamp-assertion-variants.php`; ten fixtures,
+  their settings and README in `tests/Fixtures/timestamp/assertion/`; both
+  `c2patool` versions' answers in `tests/Fixtures/c2patool/timestamp-assertion/`;
+  `notes/step-332-time-stamp-assertion-probes.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: each probe judged by both `c2patool` versions after the
+  parent's signer expired, and by this verifier; `c2pa-rs` 0.91.1 read for
+  what the token covers (`timestamp.rs`, `verify.rs`). `composer check`.
+- Decided by Maurice: SPEC-064 approved with both proposals.

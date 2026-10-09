@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-09                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -172,10 +172,12 @@ the header.
 - 1. **A second time-stamp assertion in one manifest.** §18.18.3 says *"at
   most one"*; `c2pa-rs` reads every instance and refuses none. Proposal:
   malformed, fail closed. That is stricter than `c2patool`, and named.
+  *Status 2026-10-09 (step 332):* decided by Maurice van Loon with the approval: as proposed.
 - 2. **The codes for a token from an assertion.** `c2pa-rs` reports none
   (the assertion's tokens are checked into a scratch log that is
   dropped). Proposal: report them, with the assertion's url, as §15.8.2
   says a validator *"shall issue"* them.
+  *Status 2026-10-09 (step 332):* decided by Maurice van Loon with the approval: as proposed.
 
 ## Traceability
 
