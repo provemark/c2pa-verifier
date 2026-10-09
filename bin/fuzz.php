@@ -18,9 +18,17 @@ declare(strict_types=1);
  * Deterministic: the seed is the first argument; the same seed replays the
  * same mutations. Usage:
  *
- *   php bin/fuzz.php <seed> <rounds-per-file> <out-dir> [file-or-dir …]
+ *   php bin/fuzz.php <seed> <rounds-per-file> <out-dir> [--trust] [file-or-dir …]
  *
  * With no files, the four corpora and the three signed fixtures are used.
+ *
+ * With --trust (step 295), every file is verified under trust settings, so that
+ * the chain walk, the TSA's trust and an expired signer kept by a timestamp are
+ * reached: each fixture beside its own <name>.settings.json, and the signed
+ * fixtures and the c2pa-rs corpus under trust/full-plus-digicert-g4.settings.json.
+ * Each pair is verified unmutated first; a mutation that raises the state above
+ * that (Invalid < Valid < Trusted) is reported as RAISED, beside the suspects.
+ * Without --trust the runs are the same as before.
  * Prints one line per finding and a summary; exit code 1 on any fault.
  */
 
@@ -33,6 +41,7 @@ use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WavManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
 use Provemark\C2paVerifier\Report\ValidationState;
+use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\Verifier;
 
 require __DIR__.'/../vendor/autoload.php';
@@ -43,14 +52,31 @@ $seed = (int) ($argv[1] ?? 1);
 $rounds = (int) ($argv[2] ?? 10);
 $out = $argv[3] ?? sys_get_temp_dir().'/c2pa-fuzz';
 $paths = array_slice($argv, 4);
-if ($paths === []) {
+$trust = in_array('--trust', $paths, true);
+$paths = array_values(array_filter($paths, static fn (string $p): bool => $p !== '--trust'));
+$extensions = '{jpg,jpeg,png,gif,webp,wav,avi,mp3,flac,txt}';
+$pairs = null;
+if ($paths === [] && $trust) {
+    // step 295: every fixture beside its own settings, and the signed corpus under the test and DigiCert roots
+    $root = dirname(__DIR__).'/tests/Fixtures';
+    $pairs = [];
+    foreach (array_merge(glob($root.'/*/*.settings.json') ?: [], glob($root.'/*/*/*.settings.json') ?: []) as $settingsFile) {
+        foreach (glob(substr($settingsFile, 0, -strlen('.settings.json')).'.'.$extensions, GLOB_BRACE) ?: [] as $file) {
+            $pairs[] = [$file, $settingsFile];
+        }
+    }
+    foreach (array_merge(glob($root.'/fixture-signed.'.$extensions, GLOB_BRACE) ?: [], glob($root.'/c2pa-rs/*.'.$extensions, GLOB_BRACE) ?: []) as $file) {
+        $pairs[] = [$file, $root.'/trust/full-plus-digicert-g4.settings.json'];
+    }
+    usort($pairs, static fn (array $a, array $b): int => [$a[0], $a[1]] <=> [$b[0], $b[1]]);
+} elseif ($paths === []) {
     $root = dirname(__DIR__).'/tests/Fixtures';
     $paths = [$root.'/public-testfiles', $root.'/c2pa-rs', $root.'/writers', $root.'/binding', $root.'/fixture-signed.jpg', $root.'/fixture-signed.png', $root.'/fixture-signed.webp', $root.'/fixture-signed.mp4', $root.'/fixture-signed.wav', $root.'/wav', $root.'/wav-writers', $root.'/fixture-signed.mp3', $root.'/mp3', $root.'/fixture-signed.flac', $root.'/flac', $root.'/fixture-signed.avi', $root.'/avi', $root.'/fixture-signed.gif', $root.'/gif', $root.'/fixture-signed.txt', $root.'/text'];   // MP4 and WAV since step 213, MP3 228, FLAC 237, AVI 241, GIF 259, plain text 268
 }
 $files = [];
 foreach ($paths as $path) {
     if (is_dir($path)) {
-        foreach (glob($path.'/*.{jpg,jpeg,png,gif,webp,wav,avi,mp3,flac,txt}', GLOB_BRACE) ?: [] as $file) {
+        foreach (glob($path.'/*.'.$extensions, GLOB_BRACE) ?: [] as $file) {
             $files[] = $file;
         }
     } elseif (is_file($path)) {
@@ -58,6 +84,10 @@ foreach ($paths as $path) {
     }
 }
 sort($files);
+if ($pairs === null) {
+    // without --trust, or with files named: each file without settings, or (with --trust) under the default settings
+    $pairs = array_map(static fn (string $f): array => [$f, $trust ? dirname(__DIR__).'/tests/Fixtures/trust/full-plus-digicert-g4.settings.json' : null], $files);
+}
 if (! is_dir($out)) {
     mkdir($out, 0777, true);
 }
@@ -166,17 +196,33 @@ function fuzzMutate(string $bytes, string $kind, array $ranges): array
     return [$bytes, $where, ''];
 }
 
+/** @var array<string, int> $rank */
+$rank = ['Invalid' => 0, 'Valid' => 1, 'Trusted' => 2];
 $kinds = ['flip1', 'flip8', 'flip64', 'truncate', 'block', 'store8', 'store64', 'storecut'];
 $runs = 0;
 $faults = 0;
 $suspects = 0;
+$raised = 0;
+$baselines = [];
 $states = [];
 $slowest = 0.0;
 $peak = 0;
 $start = microtime(true);
-foreach ($files as $file) {
+foreach ($pairs as [$file, $settingsFile]) {
     $original = (string) file_get_contents($file);
     $ranges = fuzzStoreRanges($file);
+    $settings = $settingsFile === null ? null : TrustSettings::fromJson((string) file_get_contents($settingsFile));
+    $baseline = null;
+    if ($settings !== null) {
+        $stream = fopen($file, 'rb');
+        if ($stream === false) {
+            throw new RuntimeException("cannot open {$file}");
+        }
+        $baseline = (str_ends_with($file, '.txt') ? $textVerifier : $verifier)->verify($stream, $settings)->result->state->value;
+        fclose($stream);
+        $baselines[$baseline] = ($baselines[$baseline] ?? 0) + 1;
+    }
+    $under = $settingsFile === null ? '' : ' under '.substr($settingsFile, strlen(dirname(__DIR__)) + 1);
     for ($round = 0; $round < $rounds; $round++) {
         $kind = $kinds[$round % count($kinds)];
         [$mutated, $where, $skip] = fuzzMutate($original, $kind, $ranges);
@@ -191,17 +237,22 @@ foreach ($files as $file) {
         rewind($stream);
         $runs++;
         $t = microtime(true);
-        $name = basename($file).'#'.$seed.'-'.$round.'-'.$kind;
+        $name = basename($file).'#'.$seed.'-'.$round.'-'.$kind.($settingsFile === null ? '' : '@'.basename(dirname($settingsFile)).'-'.basename($settingsFile, '.settings.json'));
         try {
-            $report = (str_ends_with($file, '.txt') ? $textVerifier : $verifier)->verify($stream);
+            $report = (str_ends_with($file, '.txt') ? $textVerifier : $verifier)->verify($stream, $settings);
             $report->toJson();   // a report that cannot be written is a fault too (step 247: a NaN in an assertion)
             $state = $report->result->state;
             $states[$state->value] = ($states[$state->value] ?? 0) + 1;
-            if ($state === ValidationState::Valid || $state === ValidationState::Trusted) {
+            if ($baseline !== null && $rank[$state->value] > $rank[$baseline]) {
+                $raised++;
+                $target = $out.'/raised-'.$name.'.'.pathinfo($file, PATHINFO_EXTENSION);
+                file_put_contents($target, $mutated);
+                printf("RAISED  %-60s %s at %s: %s -> %s%s -> %s\n", $name, $kind, implode(',', $where), $baseline, $state->value, $under, $target);
+            } elseif ($state === ValidationState::Valid || $state === ValidationState::Trusted) {
                 $suspects++;
                 $target = $out.'/suspect-'.$name.'.'.pathinfo($file, PATHINFO_EXTENSION);
                 file_put_contents($target, $mutated);
-                printf("SUSPECT %-60s %s at %s -> %s\n", $name, $kind, implode(',', $where), $target);
+                printf("SUSPECT %-60s %s at %s%s -> %s\n", $name, $kind, implode(',', $where), $under, $target);
             }
         } catch (Throwable $e) {
             $faults++;
@@ -216,13 +267,15 @@ foreach ($files as $file) {
     }
 }
 printf(
-    "\n%d runs over %d files, seed %d, %d rounds each: %d faults, %d suspects; states %s; slowest run %.2fs; peak memory %d MiB; %.1fs total\n",
+    "\n%d runs over %d %s, seed %d, %d rounds each: %d faults, %d suspects%s; states %s; slowest run %.2fs; peak memory %d MiB; %.1fs total\n",
     $runs,
-    count($files),
+    count($pairs),
+    $trust ? 'file and settings pairs' : 'files',
     $seed,
     $rounds,
     $faults,
     $suspects,
+    $trust ? sprintf(', %d raised (unmutated: %s)', $raised, json_encode($baselines)) : '',
     json_encode($states),
     $slowest,
     intdiv($peak, 1048576),

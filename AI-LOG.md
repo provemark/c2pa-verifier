@@ -9659,3 +9659,22 @@ README are where the disclosure lives.
   passed); with SPEC-017 amendment 8 switched off in `TimestampCheck` the
   alarm red (2 failed), the file restored; `composer check`.
 - Decided by Maurice: SPEC-062 approved, every open question as proposed.
+
+## 2026-10-09 — The fuzzer with trust settings (step 295)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push en begin met de fuzzer", then "akkoord" on the proposal.
+- Produced: `98cc17b` and `ccf3101` pushed; `bin/fuzz.php` with `--trust`
+  (pairs of a file and a settings file, an unmutated baseline per pair,
+  `RAISED` findings, the settings path on every line);
+  `notes/step-295-fuzz-with-trust.md`; a row in `NOTES.md`.
+- Measured: `php bin/fuzz.php 20261005 60 <out>` before and after (the same
+  122 suspects); `php bin/fuzz.php 20261005 60 <out> --trust` and `php
+  bin/fuzz.php 20261009 200 <out> --trust` (0 faults, 0 raised, 53 and 163
+  suspects); every suspect judged by `c2patool` 0.28.1 with the same
+  settings (the text suspect by the text-enabled build, with `--text`
+  here): 216 of 216 the same state; `composer check` (943 passed); PHPStan
+  in Docker `php:8.3-cli`.
+- Reasoned: random mutations break the hash or the signature first; the
+  unprotected header is where trust can move without breaking either.
+- Decided by Maurice: the `--trust` mode as proposed; the unprotected
+  header as a separate step.
