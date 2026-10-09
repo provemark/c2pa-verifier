@@ -47,7 +47,7 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §5 to §9 | 41 | 20 | 3 | 4 | 14 | 0 |
 | §10 to §11 | 55 | 37 | 6 | 4 | 8 | 0 |
 | §13, §16, §17, Appendix C | 29 | 18 | 3 | 1 | 6 | 1 |
-| §14 | 41 | 29 | 3 | 6 | 2 | 1 |
+| §14 | 41 | 30 | 2 | 6 | 2 | 1 |
 | §15.1 to §15.6 | 33 | 13 | 6 | 4 | 10 | 0 |
 | §15.7 to §15.9 | 47 | 24 | 9 | 4 | 5 | 5 |
 | §15.10 to the end of §15 | 124 | 81 | 16 | 13 | 9 | 5 |
@@ -55,7 +55,7 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §18.10 to §18.16 | 58 | 20 | 11 | 6 | 12 | 9 |
 | §18.17 to the end of §18 | 34 | 4 | 2 | 4 | 11 | 12 (and 1 other) |
 | Appendix A | 50 | 22 | 2 | 7 | 13 | 6 |
-| **all** | **562** | **293** | **65** | **59** | **101** | **43** |
+| **all** | **562** | **294** | **64** | **59** | **101** | **43** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -503,7 +503,7 @@ certificates of the path go through OpenSSL's chain verification.
 | 14.5.1.1 | A key that signs certificates has `cA`; one that signs claims, timestamps or OCSP responses has neither `cA` nor `keyCertSign`; only end entities sign those. | issuers: `ChainCheck::issuerFault()` (SPEC-014 amendments 4 and 7); the leaf and the TSA leaf: `checkLeaf()` | covered | measured: trust matrix (`leaf-ca-true`, `leaf-ku-cert-sign`, `int-ca-false`), SPEC-017 amendment 8 |
 | 14.5.1.1 | Authority Key Identifier in every certificate that is not self-signed. | the leaf; not intermediates | covered for the leaf | measured: SPEC-015 → C4 |
 | 14.5.1.1 | Subject Key Identifier in every certificate that acts as a CA (should, for end entities). | read (`Certificate::$hasSubjectKeyIdentifier`) but required nowhere | **candidate** | read → C7 |
-| 14.5.1.1 | Key Usage present; a manifest signer asserts digitalSignature; keyCertSign only with `cA`. | present: the leaf (SPEC-015), issuers (SPEC-014 amendment 7). The leaf passes with Non Repudiation alone, as in `c2pa-rs` | **partial** | read → C6 |
+| 14.5.1.1 | Key Usage present; a manifest signer asserts digitalSignature; keyCertSign only with `cA`. | present: the leaf (SPEC-015), issuers (SPEC-014 amendment 7). Digital Signature is required of a manifest signer since step 326 (SPEC-015 amendment 10); `c2pa-rs` also takes Non Repudiation alone | covered | measured: `CertificateProfileCheckTest` AC4 |
 | 14.5.1.1 | End entities carry a non-empty EKU, never anyExtendedKeyUsage; a TSA has timeStamping, an OCSP responder OCSPSigning, exactly one of the two and nothing else; unknown EKUs do not reject. | `ekuFaults()`; the TSA's list (SPEC-017 AC7); `OcspCheck` for the responder | covered | measured: SPEC-015, SPEC-062 EKU probes, SPEC-030 |
 | 14.5.1.2 | A certificate in the private credential store is accepted; that store is not used for timestamps. | as in §14.4.3 | covered | as there |
 | 14.5.1.2 | Otherwise the chain is built and validated by RFC 5280 §6 for the purpose and that purpose's anchors; any failure rejects it. | `ChainCheck` (SPEC-014, SPEC-046, SPEC-048, SPEC-049); separate TSA anchors (SPEC-031) | covered | measured: the trust and timestamp matrices (SPEC-061, SPEC-062) |
@@ -541,6 +541,8 @@ certificates of the path go through OpenSSL's chain verification.
 - **C6 — digitalSignature.** A manifest signer asserts digitalSignature.
   This verifier, like `c2pa-rs`, also accepts Non Repudiation alone.
   Stricter than `c2patool` if adopted.
+  **Adopted in step 326** (SPEC-015 amendment 10), after step 324 measured
+  that no real file in the corpus moves.
 - **C7 — the CA's Subject Key Identifier.** Required for every CA by
   §14.5.1.1 and RFC 5280 §4.2.1.2. Checked nowhere here; `c2pa-rs` checks
   it only on a certificate it is about to reject as a CA anyway. Stricter

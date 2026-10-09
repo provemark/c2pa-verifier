@@ -91,9 +91,10 @@ final readonly class CertificateProfileCheck
      *
      * @param  list<string>|null  $ekus  non-null replaces the accepted EKU list (built-in + trust_config) — SPEC-017: a TSA needs timeStamping alone
      * @param  string|null  $reason  why $at is what it is, for the `.expired` message
+     * @param  bool  $manifestSigner  false for a TSA: §14.5.1.1 asks digitalSignature of a manifest signer only
      * @return list<ValidationStatus>
      */
-    public function checkLeaf(Certificate $leaf, ?TrustSettings $settings, ?int $at, string $url, ?array $ekus = null, ?string $reason = null): array
+    public function checkLeaf(Certificate $leaf, ?TrustSettings $settings, ?int $at, string $url, ?array $ekus = null, ?string $reason = null, bool $manifestSigner = true): array
     {
         $faults = [];
         $invalid = static fn (string $reason): ValidationStatus => new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, 'signing certificate invalid: '.$reason);
@@ -139,16 +140,18 @@ final readonly class CertificateProfileCheck
         // SPEC-015 amendment 8: the RSASSA-PSS hash and its MGF1, and the two copies of the algorithm agreeing
         $faults = [...$faults, ...array_map($invalid, $leaf->x509->algorithmFaults())];
         $faults = [...$faults, ...array_map($invalid, $this->keyFaults($leaf))];
-        // 6. KeyUsage, as c2pa-rs keeps it
+        // 6. KeyUsage: digitalSignature asserted (C2PA 2.4 §14.5.1.1; SPEC-015 amendment 10, stricter than c2pa-rs,
+        // which also takes Non Repudiation alone), and never beside Certificate Sign on an end-entity
         if ($leaf->keyUsage === null) {
             $faults[] = $invalid('no KeyUsage extension; a C2PA signing certificate carries one with digitalSignature');
         } else {
             $digital = in_array('Digital Signature', $leaf->keyUsage, true);
             $certSign = in_array('Certificate Sign', $leaf->keyUsage, true);
-            $nonRepudiation = in_array('Non Repudiation', $leaf->keyUsage, true);
             if ($digital && $certSign && ! $leaf->isCa) {
                 $faults[] = $invalid('KeyUsage carries Digital Signature together with Certificate Sign on an end-entity certificate');
-            } elseif (! $digital && ! $certSign && ! $nonRepudiation) {
+            } elseif ($manifestSigner && ! $digital) {
+                $faults[] = $invalid(sprintf('KeyUsage (%s) does not assert Digital Signature, which C2PA 2.4 §14.5.1.1 requires of a certificate that signs C2PA manifests', implode(', ', $leaf->keyUsage)));
+            } elseif (! $digital && ! $certSign && ! in_array('Non Repudiation', $leaf->keyUsage, true)) {
                 $faults[] = $invalid(sprintf('KeyUsage (%s) permits no signing: neither Digital Signature nor Non Repudiation', implode(', ', $leaf->keyUsage)));
             }
         }

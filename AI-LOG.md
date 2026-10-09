@@ -10176,3 +10176,20 @@ README are where the disclosure lives.
   and C7 as switches in a scratch copy of `src/`, over the corpus under
   every settings file — no real file moves under any of them.
 - Decided by Maurice: the overview's points 1 to 3.
+
+## 2026-10-09 — A manifest signer asserts Digital Signature (step 326, C6)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met punt 1 tot en met 3"; during the
+  measurement, "kan het niet sneller die tests?".
+- Produced: `1fabea5` pushed; SPEC-015 amendment 10;
+  `src/Trust/CertificateProfileCheck.php` (`manifestSigner`),
+  `src/Timestamp/TimestampCheck.php`; AC4 and AC10 in
+  `tests/Unit/Trust/CertificateProfileCheckTest.php`; the CHANGELOG;
+  `docs/reading-c2pa-2.4.md`; `notes/step-326-digital-signature.md`; a row
+  in `NOTES.md`. A parallel measurement script (scratch, not in the
+  repository).
+- Measured: AC4 red, then green, and its TSA case red with the flag
+  flipped; the corpus (483 runs moved, one fixture's verdict); `bin/fuzz.php`
+  without settings and with `--trust` on two seeds, every suspect judged by
+  `c2patool` 0.28.1 (none more lenient); `composer check` (972 passed).
+- Decided by Maurice: adopt C6.

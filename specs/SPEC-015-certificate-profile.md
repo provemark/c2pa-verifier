@@ -510,6 +510,27 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
    **Weight A: two probes move from `Trusted` to `Invalid`, as in
    `c2patool`.**
 
+10. **2026-10-09, steps 309, 324 and 326, decided by Maurice van Loon (candidate C6)** *(confirmed by Maurice van Loon, 2026-10-09)* —
+    AC4 followed `c2pa-rs` (option a): a signer's KeyUsage with
+    `Non Repudiation` alone passed. C2PA 2.4 §14.5.1.1: *"Certificates used
+    to sign C2PA manifests shall assert the digitalSignature bit."* Measured
+    in step 324 with the rule switched on in a scratch copy, over the
+    corpus under every settings file: only `profile/no-digital-signature.png`
+    changes its verdict (`Trusted` → `Invalid`); no real file moves.
+    `CertificateProfileCheck::checkLeaf()` now requires `Digital Signature`
+    of a manifest signer (`signingCredential.invalid`). A TSA is not a
+    manifest signer: `TimestampCheck` passes `manifestSigner: false` and
+    keeps the old rule (Digital Signature or Non Repudiation).
+
+    - **AC4 (changed):** `profile/no-digital-signature.png` is `Invalid`
+      with one `signingCredential.invalid` naming Digital Signature; both
+      `c2patool` versions say `Trusted`, a named difference. The same leaf
+      checked as a TSA's has no KeyUsage fault. AC10's equality with the
+      oracle leaves this variant out.
+
+    **Weight A: stricter than `c2patool` on purpose, by the
+    specification's own rule.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

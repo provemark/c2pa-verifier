@@ -178,7 +178,7 @@ final readonly class TimestampCheck
             return new TimestampResult(true, $statuses, $tst->genTime, false, $tst->genTimeFraction);
         }
         $trusted = false;
-        $faults = $this->profile->checkLeaf($signer, $tsaSettings, $tst->genTime, $url, ekus: [self::OID_EKU_TIME_STAMPING]);
+        $faults = $this->profile->checkLeaf($signer, $tsaSettings, $tst->genTime, $url, ekus: [self::OID_EKU_TIME_STAMPING], manifestSigner: false);
         if ($faults !== []) {
             $statuses[] = $this->status(StatusCode::TimeStampUntrusted, $url, sprintf('timestamp cert untrusted: %s — %s', $tsaName, implode('; ', array_map(static fn (ValidationStatus $s): string => $s->explanation, $faults))));
             // c2pa-rs logs a TSA leaf's profile faults as signingCredential.invalid into the manifest's own log, for a

@@ -40,6 +40,10 @@ committed.
   (SPEC-047 amendment 2).** C2PA 2.4 §14.5 calls it malformed: two
   credentials. Only the `"x5chain"` label was caught there before. Both
   `c2patool` versions accept it.
+- **A manifest signer's certificate must assert Digital Signature (SPEC-015
+  amendment 10).** C2PA 2.4 §14.5.1.1. A KeyUsage of Non Repudiation alone
+  was accepted, as `c2patool` accepts it; it is `signingCredential.invalid`
+  now. A timestamp authority's certificate keeps the old rule.
 - **Four manifest rules from C2PA 2.4 §8.1 and §11.2.2 (SPEC-007
   amendment 7).** A manifest box of type `c2md` is read as a manifest. A
   store with two manifests of one label is `claim.malformed`. A version 2

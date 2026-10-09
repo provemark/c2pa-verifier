@@ -249,11 +249,15 @@ it('AC3: expired: its own code, and the time used is named', function (): void {
     expect(array_map(static fn (ValidationStatus $s): string => $s->code->value, $inside))->not->toContain('signingCredential.expired');
 })->group('SPEC-015');
 
-it('AC4: KeyUsage as c2pa-rs keeps it', function (): void {
+it('AC4: KeyUsage asserts Digital Signature, as C2PA 2.4 §14.5.1.1 requires (amendment 10: stricter than c2patool)', function (): void {
     $report = spec015Verify('profile/no-digital-signature.png', spec015ThrowAway());
-    expect(spec015Codes($report, 'signingCredential'))->toBe(['signingCredential.trusted'])
-        ->and($report->result->state)->toBe(ValidationState::Trusted)
+    $invalid = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code->value === 'signingCredential.invalid'));
+    expect($report->result->state)->toBe(ValidationState::Invalid)
+        ->and($invalid)->toHaveCount(1)
+        ->and($invalid[0]->explanation)->toContain('Digital Signature')
         ->and(spec015Oracle('profile/no-digital-signature')['validation_state'])->toBe('Trusted')
+        // a TSA is no manifest signer: Non Repudiation alone stays enough there, as before
+        ->and(array_map(static fn (ValidationStatus $s): string => $s->explanation, (new CertificateProfileCheck)->checkLeaf(spec015Leaf('no-digital-signature'), spec015ThrowAway(), null, 'u', ekus: ['1.3.6.1.5.5.7.3.4'], manifestSigner: false)))->toBe([])
         ->and(spec015Leaf('no-digital-signature')->keyUsage)->toBe(['Non Repudiation']);
 
     $check = new CertificateProfileCheck;
@@ -427,7 +431,8 @@ it('AC10: the codes are verbatim, and the drift alarm grows', function (): void 
         }
     }
     $throwAway = spec015ThrowAway();
-    foreach (['good', 'no-digital-signature', 'expired', 'ca-as-leaf', 'eku-outside-list', 'eku-any', 'eku-mixed', 'eku-c2pa', 'no-eku', 'v1', 'rsa-1024', 'curve-secp256k1'] as $variant) {
+    // no-digital-signature: stricter than c2patool by amendment 10, asserted in AC4
+    foreach (['good', 'expired', 'ca-as-leaf', 'eku-outside-list', 'eku-any', 'eku-mixed', 'eku-c2pa', 'no-eku', 'v1', 'rsa-1024', 'curve-secp256k1'] as $variant) {
         $oracle = spec015Oracle("profile/{$variant}");
         $report = spec015Verify("profile/{$variant}.png", $throwAway);
         expect($report->result->state->value)->toBe($oracle['validation_state'], $variant)
