@@ -9757,3 +9757,19 @@ README are where the disclosure lives.
   20261009 × 200 (0 faults, the suspects the same by name); `composer
   check` (945 passed); PHPStan in Docker.
 - Decided by Maurice: the three steps in this order.
+
+## 2026-10-09 — Negative and zero certificate serials, measured (step 301)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met stap 301".
+- Produced: `5b88f07` pushed; `notes/step-301-negative-serial-measured.md`;
+  a row in `NOTES.md`. The generator change (a serial per certificate and
+  three probes) was measured and set aside for step 302.
+- Measured: `openssl x509 -set_serial` with `-12345`, `0` and
+  `-0x0FDB19DB89FA0E`; `php bin/make-trust-matrix.php <scratch>
+  <c2patool-0.28.1> <c2patool-0.27.22>` with the three probes;
+  `bin/c2pa-verify` and `c2patool` 0.28.1 on their `cert_serial_number`; a
+  `revoked` OCSP response from `openssl ocsp` for a leaf with serial 1 and
+  one with a negative serial, judged by `OcspCheck::check()`; `composer
+  check` (945 passed).
+- Reasoned: from `Der::integer()`, why the response is unreadable.
+- Decided by Maurice: none in this step.
