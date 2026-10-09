@@ -9890,3 +9890,17 @@ README are where the disclosure lives.
 - Reasoned: from `CoseSign1`, `ValidationResult`, `ChainCheck`,
   `TrustAnchorSet`, `TimestampCheck` and the specs they name.
 - Decided by Maurice: the reading round, §14 first.
+
+## 2026-10-09 — Reading C2PA 2.4 §14.5 (step 309)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push en begin met stap 309".
+- Produced: `8a841f5` pushed; the §14.5 table and candidates C4 to C7 in
+  `docs/reading-c2pa-2.4.md`; `notes/step-309-reading-14-5.md`; a row in
+  `NOTES.md`.
+- Measured: §14.5 cut out of the fetched 2.4 page by heading; `composer
+  check` (953 passed). The RSA-1024 figures are the trust matrix's
+  (step 283).
+- Reasoned: from `CoseSign1`, `CertificateProfileCheck`, `ChainCheck`,
+  `CertificateExtensions`, and `c2pa-rs` 0.91.1
+  `src/crypto/cose/certificate_profile.rs`.
+- Decided by Maurice: none in this step.
