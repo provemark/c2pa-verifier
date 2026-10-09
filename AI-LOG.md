@@ -10257,3 +10257,14 @@ README are where the disclosure lives.
   (330 runs moved, the probe and a reworded reason); `bin/fuzz.php` (0
   faults, none more lenient); `composer check` (973 passed).
 - Decided by Maurice: accept the deprecated urn:uuid label on version 2.
+
+## 2026-10-09 — SPEC-064 drafted: the time-stamp assertion (step 331)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push en begin met groep 1".
+- Produced: `8f716f6` pushed; `specs/SPEC-064-time-stamp-assertion.md`
+  (draft); rows in `NOTES.md` and `docs/milestones.md`.
+- Reasoned: C2PA 2.4 §15.8.1.2, §15.8.2, §15.10.3.2.6 and §18.18 in the
+  fetched specification; `c2pa-rs` 0.91.1 `store.rs`, `claim.rs`,
+  `cose_validator.rs` (an assertion's token overrides the header's);
+  issue #6.
+- Decided by Maurice: group 1 now; the draft awaits approval.
