@@ -44,6 +44,13 @@ committed.
   amendment 10).** C2PA 2.4 §14.5.1.1. A KeyUsage of Non Repudiation alone
   was accepted, as `c2patool` accepts it; it is `signingCredential.invalid`
   now. A timestamp authority's certificate keeps the old rule.
+- **Every certificate above the signer meets the C2PA certificate profile
+  (SPEC-014 amendment 8).** C2PA 2.4 §14.5.1.1 says "all certificates".
+  An intermediate or trust anchor with an RSA key under 2048 bits, a curve
+  outside P-256/384/521, a signature algorithm outside the list, a version
+  other than 3, or no Authority Key Identifier (unless self-signed) now
+  reaches no anchor: `signingCredential.untrusted`. `c2patool` checks the
+  signer's certificate only. No real file in the test corpus moves.
 - **Four manifest rules from C2PA 2.4 §8.1 and §11.2.2 (SPEC-007
   amendment 7).** A manifest box of type `c2md` is read as a manifest. A
   store with two manifests of one label is `claim.malformed`. A version 2

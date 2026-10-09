@@ -340,6 +340,9 @@ $variants = [
     'int-sha1' => ['int', 'md', 'sha1'],
     'int-rsa1024' => ['int', 'key', 'rsa1024'],
     'int-rsa2048' => ['int', 'key', 'rsa2048'],
+    'int-no-aki' => ['int', 'ext', matrixReplace($int, 'authorityKeyIdentifier', 'none')],   // SPEC-014 amendment 8 (C4); OpenSSL 3 adds one unless told none
+    'int-secp256k1' => ['int', 'key', 'secp256k1'],                                        // SPEC-014 amendment 8 (C4)
+    'int-no-ski' => ['int', 'ext', matrixReplace($int, 'subjectKeyIdentifier', 'none')],     // SPEC-014 amendment 9 (C7); OpenSSL 3 adds one unless told none
     // the anchor
     'anchor-expired' => ['anchor', 'validity', $PAST],
     'anchor-not-yet-valid' => ['anchor', 'validity', $FUTURE],
@@ -351,6 +354,7 @@ $variants = [
     'anchor-critical-unknown-ext' => ['anchor', 'ext', [...$CA, '1.3.6.1.4.1.99999.8=critical,ASN1:NULL']],
     'anchor-sha1-self-signed' => ['anchor', 'md', 'sha1'],
     'anchor-rsa1024' => ['anchor', 'key', 'rsa1024'],
+    'anchor-no-ski' => ['anchor', 'ext', matrixReplace($CA, 'subjectKeyIdentifier', 'none')], // SPEC-014 amendment 9 (C7); OpenSSL 3 adds one unless told none
     // the serial number (RFC 5280 §4.1.2.2: a positive integer; step 301)
     'leaf-serial-negative' => ['leaf', 'serial', '-0x0FDB19DB89FA0E'],
     'leaf-serial-zero' => ['leaf', 'serial', '0'],
@@ -407,6 +411,7 @@ $genKey = static function (string $path, string $kind): void {
         'rsa2048' => tmRun(tmSh('openssl', 'genpkey', '-algorithm', 'RSA', '-pkeyopt', 'rsa_keygen_bits:2048', '-out', $path)),
         'rsa1024' => tmRun(tmSh('openssl', 'genpkey', '-algorithm', 'RSA', '-pkeyopt', 'rsa_keygen_bits:1024', '-out', $path)),
         'ed25519' => tmRun(tmSh('openssl', 'genpkey', '-algorithm', 'ED25519', '-out', $path)),
+        'secp256k1' => tmRun(tmSh('openssl', 'genpkey', '-algorithm', 'EC', '-pkeyopt', 'ec_paramgen_curve:secp256k1', '-out', $path)),
         default => throw new RuntimeException("unknown key kind {$kind}"),
     };
 };

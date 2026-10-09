@@ -68,16 +68,20 @@ it('AC3: RSASSA-PSS with its default hash is weak', function (): void {
         ->and(spec048Explained($intermediate, 'signingCredential.untrusted'))->toContain('SHA-1');
     $leaf = spec048Verify('pss-sha1-leaf');
     expect($leaf->result->state->value)->toBe('Invalid')
-        ->and(spec048Failures($leaf))->toBe(['signingCredential.invalid'])
+        // its intermediate is RSA-1024, refused since SPEC-014 amendment 8 (amendment 3)
+        ->and(spec048Failures($leaf))->toBe(['signingCredential.invalid', 'signingCredential.untrusted'])
         ->and(spec048Explained($leaf, 'signingCredential.invalid'))->toContain('SHA-1');
 })->group('SPEC-048');
 
 it('AC4: what stays as it was', function (): void {
-    // guards, green before and after: an RSA-1024 intermediate (decided: as the oracles) and the plain leaf
-    foreach (['rsa1024-intermediate', 'plain'] as $name) {
-        expect(spec048Verify($name)->result->state->value)->toBe('Trusted', $name)
-            ->and(spec048Oracles($name))->toBe(['Trusted', 'Trusted'], $name);
-    }
+    // a guard: the plain leaf
+    expect(spec048Verify('plain')->result->state->value)->toBe('Trusted')
+        ->and(spec048Oracles('plain'))->toBe(['Trusted', 'Trusted']);
+    // the RSA-1024 intermediate, once Trusted as the oracles, is refused for its size since SPEC-014 amendment 8 (amendment 3)
+    $small = spec048Verify('rsa1024-intermediate');
+    expect($small->result->state->value)->toBe('Valid')
+        ->and(spec048Explained($small, 'signingCredential.untrusted'))->toContain('RSA key of 1024 bits')
+        ->and(spec048Oracles('rsa1024-intermediate'))->toBe(['Trusted', 'Trusted']);
 })->group('SPEC-048');
 
 it('AC5: nothing else moves', function (): void {

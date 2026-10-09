@@ -156,6 +156,14 @@ No public API changes.
 
    Confirmed by Maurice van Loon, 2026-09-27 (step 171).
 
+2. **2026-10-09, step 327, follows SPEC-014 amendment 8** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   AC4 kept the RSA-1024 intermediate `Trusted`, as the oracles have it
+   (decided then). SPEC-014 amendment 8 now refuses it for its size. AC4
+   asserts that it is `Valid` with the size named, the oracles still
+   `Trusted`. In AC3, `pss-sha1-leaf`, whose intermediate is the same
+   RSA-1024 one, gains `signingCredential.untrusted` beside its
+   `signingCredential.invalid`. The rule of this spec is unchanged.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

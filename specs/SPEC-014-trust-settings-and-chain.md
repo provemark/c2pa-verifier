@@ -323,6 +323,14 @@ measured in the tests-first step (Open questions).
     authorities too, is untrusted. The timestamp check walks the same
     code.
 
+- **AC14 — every certificate above the leaf meets the profile** *(amendment 8; required: error path)*
+  - Given the trust matrix's `int-rsa1024`, `int-secp256k1`, `int-no-aki`,
+    `anchor-rsa1024` and `anchor-sha1-self-signed`, each under its own
+    settings
+  - When verified
+  - Then each is `Valid` with `signingCredential.untrusted` naming the
+    certificate and the rule of §14.5.1.1 it breaks
+
 ## References
 
 - Specification: C2PA 2.4 §14.4.1 (the validator's lists: trust anchors,
@@ -597,6 +605,29 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
 
    Confirmed by Maurice van Loon, 2026-10-08 (step 284).
 
+8. **2026-10-09, steps 309, 324 and 327, decided by Maurice van Loon (candidate C4)** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   C2PA 2.4 §14.5.1.1 says *"All certificates shall fulfill"* the
+   profile: the signature algorithm from its list, the RSASSA-PSS
+   parameters, a curve from P-256/384/521, RSA of at least 2048 bits, X.509
+   version 3, and an Authority Key Identifier in any certificate that is
+   not self-signed. This verifier, like `c2pa-rs`, held only the leaf to
+   it. Above the leaf it refused MD5 and SHA-1 (SPEC-048), an unreal RSA
+   exponent (SPEC-049) and unknown critical extensions. Measured in step 324
+   with the rule switched on in a scratch copy, over the corpus under
+   every settings file: only crafted fixtures move, no real file. Now
+   `ChainCheck::pathFault()` holds every certificate above the leaf, the
+   anchor included, to the profile (`profileFault()`), after the SPEC-048
+   and SPEC-049 checks so those keep their reasons. A path that fails
+   reaches no anchor: `signingCredential.untrusted`.
+
+   Four probes join the trust matrix (SPEC-061 amendment 5). `int-secp256k1`
+   is stricter than `c2patool`, as are the existing `int-rsa1024`,
+   `anchor-rsa1024` and `anchor-sha1-self-signed`. `int-no-aki` is refused
+   by both `c2patool` versions and OpenSSL too, so it is no difference.
+
+   **Weight A: stricter than `c2patool` on purpose, by the
+   specification's own rule.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -617,3 +648,4 @@ least one test; every source file maps back to this spec.
 | AC11 | tests/Unit/Trust/IssuerConstraintsTest.php :: AC11: a proper intermediate still leads to Trusted; AC11: a certificate that may not issue breaks the chain; AC11: the walk the timestamp check shares refuses the same chain / SPEC-014 | src/Trust/ChainCheck.php :: checkCertificates(), issuerFault(); src/Trust/Certificate.php :: $pathLen; the judged time from src/Verifier/Verifier.php, src/Verifier/IngredientManifestCheck.php and src/Timestamp/TimestampCheck.php (genTime) |
 | AC12 | tests/Unit/Trust/AnchorValidityTest.php :: AC12: an anchor valid now still leads to Trusted; AC12: an anchor outside its validity breaks the chain; AC12: the same expired intermediate under a valid root stays untrusted; AC12: the anchor is judged at the time it is given, and the timestamp walk refuses it at now / SPEC-014 | src/Trust/ChainCheck.php :: checkCertificates(), issuerFault() (the anchor judged at the leaf's time); the fixtures from bin/make-anchor-variants.php |
 | AC13 | tests/Unit/Trust/KeyUsageIssuerTest.php :: AC13: a chain whose CAs carry keyCertSign still leads to Trusted; AC13: a certificate authority without keyUsage issues nothing; AC13: the walk the timestamp check shares refuses the same chain / SPEC-014 | src/Trust/ChainCheck.php :: issuerFault() (keyUsage required); the fixtures from bin/make-trust-matrix.php (set key-usage) |
+| AC14 (amendment 8) | tests/Unit/Trust/TrustMatrixTest.php :: AC1, AC2, AC3 (SPEC061_STRICTER) / SPEC-061; tests/Unit/Trust/WeakHashTest.php :: AC4 / SPEC-048 | src/Trust/ChainCheck.php :: pathFault(), profileFault(); src/Trust/CertificateProfileCheck.php :: SIGNATURE_ALGORITHMS, CURVES |

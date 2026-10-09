@@ -231,6 +231,14 @@ beside the modulus test. No public API changes.
 
    Confirmed by Maurice van Loon, 2026-09-28.
 
+4. **2026-10-09, step 327, follows SPEC-014 amendment 8** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   AC4 and AC6 used `chain-constraints/rsa1024-intermediate.png` as the
+   control that stays `Trusted` with its own exponent. SPEC-014 amendment 8
+   refuses that intermediate for its 1024 bits. The controls now assert
+   what this spec is about: no exponent fault is named. The file is
+   `Valid`, its untrusted status naming the size. The rule of this spec is
+   unchanged.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

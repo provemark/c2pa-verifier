@@ -47,7 +47,7 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §5 to §9 | 41 | 20 | 3 | 4 | 14 | 0 |
 | §10 to §11 | 55 | 37 | 6 | 4 | 8 | 0 |
 | §13, §16, §17, Appendix C | 29 | 18 | 3 | 1 | 6 | 1 |
-| §14 | 41 | 30 | 2 | 6 | 2 | 1 |
+| §14 | 41 | 31 | 1 | 6 | 2 | 1 |
 | §15.1 to §15.6 | 33 | 13 | 6 | 4 | 10 | 0 |
 | §15.7 to §15.9 | 47 | 24 | 9 | 4 | 5 | 5 |
 | §15.10 to the end of §15 | 124 | 81 | 16 | 13 | 9 | 5 |
@@ -55,7 +55,7 @@ re-read by hand in this verifier and in `c2pa-rs` 0.91.1. Chapters 1 to
 | §18.10 to §18.16 | 58 | 20 | 11 | 6 | 12 | 9 |
 | §18.17 to the end of §18 | 34 | 4 | 2 | 4 | 11 | 12 (and 1 other) |
 | Appendix A | 50 | 22 | 2 | 7 | 13 | 6 |
-| **all** | **562** | **294** | **64** | **59** | **101** | **43** |
+| **all** | **562** | **295** | **63** | **59** | **101** | **43** |
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -495,13 +495,13 @@ certificates of the path go through OpenSSL's chain verification.
 | 14.5 | Validators accept `"x5chain"` or 33; with both, they use 33 and ignore `"x5chain"`. | `CoseSign1::findChain()`: 33 wins within the protected header | covered (this answers half of C1) | read |
 | 14.5 | Validators accept the header from either bucket, for older versions. | label 33 is not read from the unprotected header, and a version 2 claim's chain must be protected (SPEC-047) | by design: stricter than §14.5, as both `c2patool` versions | measured: `X5chainPlacementTest` AC1, AC3 |
 | 14.5 | The same label in both buckets is two credentials: the signature is rejected as malformed. | `"x5chain"` in both is refused; 33 in both is not, because the unprotected 33 is not read | **partial** | measured for `"x5chain"`; read for 33 → C1 |
-| 14.5.1.1 | Every certificate's signature algorithm is one of eight (ECDSA SHA-256/384/512, RSA PKCS#1 SHA-256/384/512, RSASSA-PSS, Ed25519). | the leaf: `CertificateProfileCheck::SIGNATURE_ALGORITHMS`. Other certificates: only MD5 and SHA-1 are refused (SPEC-048) | **partial** | measured: SPEC-015, SPEC-048, trust matrix → C4 |
-| 14.5.1.1 | For RSASSA-PSS: the hash present and SHA-256/384/512, the MGF present and over the same hash. | the leaf (SPEC-015 amendment 8); not other certificates | covered for the leaf | measured: `PssParametersTest` → C4 |
-| 14.5.1.1 | EC keys on P-256, P-384 or P-521; RSA keys of at least 2048 bits. | the leaf (`keyFaults()`); not other certificates. Both `c2patool` versions trust an RSA-1024 intermediate or anchor, as this verifier does | covered for the leaf | measured: trust matrix `int-rsa1024`, `anchor-rsa1024` → C4 |
-| 14.5.1.1 | Version 3. | the leaf; not other certificates | covered for the leaf | measured: SPEC-015 → C4 |
+| 14.5.1.1 | Every certificate's signature algorithm is one of eight (ECDSA SHA-256/384/512, RSA PKCS#1 SHA-256/384/512, RSASSA-PSS, Ed25519). | the leaf: `CertificateProfileCheck::SIGNATURE_ALGORITHMS`; every certificate above it, the anchor included, since step 327 (`ChainCheck::profileFault()`, SPEC-014 amendment 8) | covered | measured: SPEC-015, SPEC-048, trust matrix → C4 |
+| 14.5.1.1 | For RSASSA-PSS: the hash present and SHA-256/384/512, the MGF present and over the same hash. | the leaf (SPEC-015 amendment 8); every certificate above it since step 327 (SPEC-014 amendment 8) | covered | measured: `PssParametersTest` → C4 |
+| 14.5.1.1 | EC keys on P-256, P-384 or P-521; RSA keys of at least 2048 bits. | the leaf (`keyFaults()`); every certificate above it since step 327 (SPEC-014 amendment 8). Both `c2patool` versions trust an RSA-1024 intermediate or anchor; this verifier no longer does | covered | measured: trust matrix `int-rsa1024`, `anchor-rsa1024` → C4 |
+| 14.5.1.1 | Version 3. | the leaf; every certificate above it since step 327 (SPEC-014 amendment 8) | covered | measured: SPEC-015 → C4 |
 | 14.5.1.1 | No `issuerUniqueID` or `subjectUniqueID`. | not checked for any certificate. `c2pa-rs` refuses them on the end-entity certificate ("certificate issuer/subject unique ids are not allowed") | covered for the leaf since step 311 (SPEC-015 amendment 9); not checked above it | measured: step 310 found a leaf with either field `Trusted` here, `Invalid` in both `c2patool` versions; `UniqueIdTest` → C4 for the others |
 | 14.5.1.1 | A key that signs certificates has `cA`; one that signs claims, timestamps or OCSP responses has neither `cA` nor `keyCertSign`; only end entities sign those. | issuers: `ChainCheck::issuerFault()` (SPEC-014 amendments 4 and 7); the leaf and the TSA leaf: `checkLeaf()` | covered | measured: trust matrix (`leaf-ca-true`, `leaf-ku-cert-sign`, `int-ca-false`), SPEC-017 amendment 8 |
-| 14.5.1.1 | Authority Key Identifier in every certificate that is not self-signed. | the leaf; not intermediates | covered for the leaf | measured: SPEC-015 → C4 |
+| 14.5.1.1 | Authority Key Identifier in every certificate that is not self-signed. | the leaf; every certificate above it that is not self-signed since step 327 (SPEC-014 amendment 8) | covered | measured: SPEC-015 → C4 |
 | 14.5.1.1 | Subject Key Identifier in every certificate that acts as a CA (should, for end entities). | read (`Certificate::$hasSubjectKeyIdentifier`) but required nowhere | **candidate** | read → C7 |
 | 14.5.1.1 | Key Usage present; a manifest signer asserts digitalSignature; keyCertSign only with `cA`. | present: the leaf (SPEC-015), issuers (SPEC-014 amendment 7). Digital Signature is required of a manifest signer since step 326 (SPEC-015 amendment 10); `c2pa-rs` also takes Non Repudiation alone | covered | measured: `CertificateProfileCheckTest` AC4 |
 | 14.5.1.1 | End entities carry a non-empty EKU, never anyExtendedKeyUsage; a TSA has timeStamping, an OCSP responder OCSPSigning, exactly one of the two and nothing else; unknown EKUs do not reject. | `ekuFaults()`; the TSA's list (SPEC-017 AC7); `OcspCheck` for the responder | covered | measured: SPEC-015, SPEC-062 EKU probes, SPEC-030 |
@@ -531,6 +531,8 @@ certificates of the path go through OpenSSL's chain verification.
   Measured: an RSA-1024 intermediate or anchor is `Trusted` in both
   `c2patool` versions, in OpenSSL and here. Stricter than `c2patool` if
   adopted; Maurice decides.
+  **Adopted in step 327** (SPEC-014 amendment 8), anchor included, after
+  step 324 measured that no real file in the corpus moves.
 - **C5 — unique IDs.** No certificate may carry `issuerUniqueID` or
   `subjectUniqueID`. `c2pa-rs` refuses them on the end-entity certificate;
   this verifier checks neither. **Measured in step 310: more lenient than

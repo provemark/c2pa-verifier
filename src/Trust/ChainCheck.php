@@ -241,11 +241,41 @@ final readonly class ChainCheck
      * keyCertSign when keyUsage is present, allow $below intermediates under it,
      * and, when $at is given (an x5chain intermediate, not an anchor), be valid then.
      */
+    /** The first way a certificate above the leaf falls outside §14.5.1.1's profile, or null. */
+    private static function profileFault(Certificate $certificate): ?string
+    {
+        if ($certificate->version !== 3) {
+            return sprintf('X.509 version %d, not 3', $certificate->version);
+        }
+        if (! in_array($certificate->signatureAlgorithm, CertificateProfileCheck::SIGNATURE_ALGORITHMS, true)) {
+            return sprintf('signature algorithm %s is not one of %s', $certificate->signatureAlgorithm, implode(', ', CertificateProfileCheck::SIGNATURE_ALGORITHMS));
+        }
+        $pss = $certificate->x509->algorithmFaults();
+        if ($pss !== []) {
+            return $pss[0];
+        }
+        $key = match ($certificate->keyType) {
+            'EC' => in_array($certificate->curve, CertificateProfileCheck::CURVES, true) ? null : sprintf('EC key on %s; the profile allows %s', $certificate->curve ?? '(unknown curve)', implode(', ', CertificateProfileCheck::CURVES)),
+            'RSA' => $certificate->keyBits >= 2048 ? null : sprintf('RSA key of %d bits; the profile requires at least 2048', $certificate->keyBits),
+            'Ed25519' => null,
+            default => sprintf('key of type %s; the profile allows EC on P-256/384/521, RSA of 2048 bits or more, Ed25519', $certificate->keyType),
+        };
+        if ($key !== null) {
+            return $key;
+        }
+        if (! $certificate->hasAuthorityKeyIdentifier && $certificate->subject !== $certificate->issuer) {
+            return 'no AuthorityKeyIdentifier, and it is not self-signed';
+        }
+
+        return null;
+    }
+
     /**
      * What RFC 5280 path processing refuses in a path that reached an anchor (SPEC-046): a critical
      * extension this verifier does not understand, in any certificate of the path (§4.2), and a name
      * outside the constraints of a CA above it (§6.1.3 (b), (c)); and, stricter than RFC 5280, an
-     * intermediate signed over MD5 or SHA-1 (SPEC-048). A self-issued intermediate's own
+     * intermediate signed over MD5 or SHA-1 (SPEC-048), and any certificate above the leaf outside the
+     * profile of C2PA 2.4 §14.5.1.1 (SPEC-014 amendment 8). A self-issued intermediate's own
      * subject is exempt, as §6.1.3 (b) says; the leaf's never is.
      *
      * @param  list<Certificate>  $path  the anchor or the first certificate first, the leaf last
@@ -281,6 +311,14 @@ final readonly class ChainCheck
                 if ($fault !== null) {
                     return sprintf('%s has an RSA key this verifier does not trust a certificate path through: %s', $path[$i]->subjectCn(), $fault);
                 }
+            }
+        }
+        // C2PA 2.4 §14.5.1.1: "All certificates shall fulfill" the profile, the anchor included (SPEC-014
+        // amendment 8, stricter than c2pa-rs, which holds only the leaf to it); the leaf's is SPEC-015's
+        for ($i = 0; $i < $last; $i++) {
+            $fault = self::profileFault($path[$i]);
+            if ($fault !== null) {
+                return sprintf('%s does not meet the certificate profile of C2PA 2.4 §14.5.1.1: %s', $path[$i]->subjectCn(), $fault);
             }
         }
         foreach ($path as $i => $constraining) {

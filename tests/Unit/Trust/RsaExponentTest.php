@@ -153,15 +153,18 @@ it('AC6: an intermediate with a bad exponent is untrusted', function (string $by
     '2' => ["\x02", '2'],
 ])->group('SPEC-049');
 
-it('AC6: the same intermediate with its own exponent is trusted', function (): void {
+it('AC6: the same intermediate with its own exponent has no exponent fault; its 1024 bits are refused since SPEC-014 amendment 8 (amendment 4)', function (): void {
     $chain = spec049Chain('chain-constraints/rsa1024-intermediate.png');
     $statuses = (new ChainCheck)->checkCertificates($chain, spec049Settings('chain-constraints/root.settings.json'), 'self#jumbf=/probe');
-    expect(array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $statuses))->toBe([StatusCode::SigningCredentialTrusted]);
+    expect(array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $statuses))->toBe([StatusCode::SigningCredentialUntrusted])
+        ->and(spec049Mentions($statuses, StatusCode::SigningCredentialUntrusted))->toContain('1024')
+        ->and(spec049Mentions($statuses, StatusCode::SigningCredentialUntrusted))->not->toContain('exponent');
 })->group('SPEC-049');
 
 it('AC4: real RSA files keep their verdicts', function (): void {
     expect(spec020Verify('matrix/ps256.jpg', 'trust/full.settings.json')->result->state->value)->toBe('Trusted')
-        ->and(spec020Verify('chain-constraints/rsa1024-intermediate.png', 'chain-constraints/root.settings.json')->result->state->value)->toBe('Trusted');
+        // the RSA-1024 intermediate is refused for its size since SPEC-014 amendment 8 (amendment 4), never for its exponent
+        ->and(spec020Verify('chain-constraints/rsa1024-intermediate.png', 'chain-constraints/root.settings.json')->result->state->value)->toBe('Valid');
     // an id-RSASSA-PSS leaf, for which PHP reports no RSA details (amendment 3): Valid, only untrusted
     $report = spec020Verify('c2pa-rs/CA_ct.jpg');
     $failures = array_map(static fn (ValidationStatus $s): string => $s->code->value, array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->ingredientUri === null && $s->code->isFailure())));

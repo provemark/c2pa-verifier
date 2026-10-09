@@ -211,6 +211,16 @@ const SPEC061_CODES_DIFFER = [/* probe => [0.28.1's codes, 0.27.22's, this verif
 
    **Weight C: no verdict of the existing probes moves.**
 
+5. **2026-10-09, step 327, with SPEC-014 amendments 8 and 9** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   Four probes join (61; AC6 counts 61): `int-no-aki`, `int-secp256k1`,
+   `int-no-ski`, `anchor-no-ski`, built with `authorityKeyIdentifier=none`
+   or `subjectKeyIdentifier=none` (OpenSSL 3 adds both by default).
+   `SPEC061_STRICTER` grows by `int-rsa1024`, `int-secp256k1`,
+   `anchor-rsa1024` and `anchor-sha1-self-signed` (SPEC-014 amendment 8).
+   `SPEC061_CODES_DIFFER` grows by `int-no-ski`: the leaf below a CA without
+   SKI has no AKI keyid; it is `signingCredential.invalid` everywhere, and
+   `c2patool` adds `signingCredential.untrusted`.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

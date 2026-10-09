@@ -23,6 +23,10 @@ const SPEC061_STRICTER = [
     'int-serial-negative' => 'SPEC-015 amendment 7: a serial number is a positive integer (RFC 5280 §4.1.2.2)',
     'leaf-pss-sha1' => 'SPEC-015: no RSASSA-PSS over SHA-1 (C2PA 2.4 §14.5); c2pa-rs cannot read the defaulted parameters and logs nothing',
     'leaf-pss-mgf1-sha1' => 'SPEC-015 amendment 8: the MGF1 hash equals the PSS hash; c2pa-rs cannot read the defaulted MGF1 and logs nothing',
+    'int-rsa1024' => 'SPEC-014 amendment 8: the profile holds for every certificate (C2PA 2.4 §14.5.1.1): RSA of at least 2048 bits',
+    'int-secp256k1' => 'SPEC-014 amendment 8: the profile holds for every certificate: P-256, P-384 or P-521',
+    'anchor-rsa1024' => 'SPEC-014 amendment 8: the profile holds for the anchor too: RSA of at least 2048 bits',
+    'anchor-sha1-self-signed' => 'SPEC-014 amendment 8: the profile holds for the anchor too: its own signature algorithm from the list',
 ];
 
 /**
@@ -34,6 +38,8 @@ const SPEC061_CODES_DIFFER = [
     'leaf-expired' => [['signingCredential.expired', 'signingCredential.untrusted'], ['signingCredential.expired'], ['signingCredential.expired']],
     'leaf-not-yet-valid' => [['signingCredential.expired', 'signingCredential.untrusted'], ['signingCredential.expired'], ['signingCredential.expired']],
     'leaf-ku-cert-sign' => [['signingCredential.invalid', 'signingCredential.untrusted'], ['signingCredential.invalid', 'signingCredential.untrusted'], ['signingCredential.invalid']],
+    // an intermediate without SKI leaves the leaf without an AKI keyid: invalid everywhere, untrusted beside it in c2patool
+    'int-no-ski' => [['signingCredential.invalid', 'signingCredential.untrusted'], ['signingCredential.invalid', 'signingCredential.untrusted'], ['signingCredential.invalid']],
 ];
 
 const SPEC061_RANK = ['Invalid' => 0, 'Valid' => 1, 'Trusted' => 2];
@@ -99,7 +105,7 @@ it('AC6: every probe the generator defines has a fixture and both answers, and n
     $defined = spec061GeneratorProbes();
     sort($defined);
 
-    expect($defined)->toHaveCount(57)
+    expect($defined)->toHaveCount(61)
         ->and(spec061FixtureProbes())->toBe($defined);
     foreach ($defined as $probe) {
         foreach (['0.27.22', '0.28.1'] as $version) {

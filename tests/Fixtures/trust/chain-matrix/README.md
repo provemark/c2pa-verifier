@@ -53,8 +53,11 @@ its failure codes.
 | `int-eku-email` | Trusted | Trusted | OK | Trusted |
 | `int-critical-unknown-ext` | Valid, signingCredential.untrusted | Valid, signingCredential.untrusted | refused: unhandled critical extension | Valid, signingCredential.untrusted |
 | `int-sha1` | Trusted | Trusted | OK | Valid, signingCredential.untrusted |
-| `int-rsa1024` | Trusted | Trusted | OK | Trusted |
+| `int-rsa1024` | Trusted | Trusted | OK | Valid, signingCredential.untrusted (since SPEC-014 amendment 8) |
 | `int-rsa2048` | Trusted | Trusted | OK | Trusted |
+| `int-no-aki` | Valid, signingCredential.untrusted | Valid, signingCredential.untrusted | refused: Missing Authority Key Identifier | Valid, signingCredential.untrusted |
+| `int-secp256k1` | Trusted | Trusted | OK | Valid, signingCredential.untrusted |
+| `int-no-ski` | Invalid, signingCredential.untrusted,signingCredential.invalid | Invalid, signingCredential.invalid,signingCredential.untrusted | refused: Missing Authority Key Identifier | Invalid, signingCredential.invalid |
 | `anchor-expired` | Trusted | Valid, signingCredential.untrusted | refused: certificate has expired | Valid, signingCredential.untrusted |
 | `anchor-not-yet-valid` | Trusted | Valid, signingCredential.untrusted | refused: certificate is not yet valid or the system clock is incorrect | Valid, signingCredential.untrusted |
 | `anchor-ca-false` | Valid, signingCredential.untrusted | Valid, signingCredential.untrusted | refused: invalid CA certificate CN=Matrix Anchor (anchor-ca-false), O=c2pa-veri | Valid, signingCredential.untrusted |
@@ -63,8 +66,9 @@ its failure codes.
 | `anchor-ku-no-cert-sign` | Valid, signingCredential.untrusted | Valid, signingCredential.untrusted | refused: invalid CA certificate CN=Matrix Anchor (anchor-ku-no-cert-sign), O=c2 | Valid, signingCredential.untrusted |
 | `anchor-pathlen-0` | Valid, signingCredential.untrusted | Valid, signingCredential.untrusted | refused: path length constraint exceeded | Valid, signingCredential.untrusted |
 | `anchor-critical-unknown-ext` | Valid, signingCredential.untrusted | Valid, signingCredential.untrusted | refused: unhandled critical extension | Valid, signingCredential.untrusted |
-| `anchor-sha1-self-signed` | Trusted | Trusted | OK | Trusted |
-| `anchor-rsa1024` | Trusted | Trusted | OK | Trusted |
+| `anchor-sha1-self-signed` | Trusted | Trusted | OK | Valid, signingCredential.untrusted (since SPEC-014 amendment 8) |
+| `anchor-rsa1024` | Trusted | Trusted | OK | Valid, signingCredential.untrusted (since SPEC-014 amendment 8) |
+| `anchor-no-ski` | Valid, signingCredential.untrusted | Valid, signingCredential.untrusted | refused: Missing Authority Key Identifier | Valid, signingCredential.untrusted |
 | `leaf-serial-negative` | Trusted | Trusted | OK | Invalid, signingCredential.invalid |
 | `leaf-serial-zero` | Trusted | Trusted | OK | Invalid, signingCredential.invalid |
 | `int-serial-negative` | Trusted | Trusted | OK | Valid, signingCredential.untrusted |
@@ -103,3 +107,10 @@ OpenSSL issues these certificates without the field. The generator then
 inserts an `issuerUniqueID` (`[1]`) or a `subjectUniqueID` (`[2]`) before
 the extensions and signs the tbsCertificate again with the issuer's
 throw-away key.
+
+The four probes `int-no-aki`, `int-secp256k1`, `int-no-ski` and
+`anchor-no-ski` were added on 2026-10-09 (step 327, SPEC-061 amendment 5).
+They are built with `authorityKeyIdentifier=none` or
+`subjectKeyIdentifier=none`, because OpenSSL 3 adds both by default. Below a
+CA without a Subject Key Identifier, the next certificate gets no AKI
+keyid, which is what `c2patool` and OpenSSL refuse.

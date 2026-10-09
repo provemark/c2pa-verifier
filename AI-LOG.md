@@ -10193,3 +10193,22 @@ README are where the disclosure lives.
   without settings and with `--trust` on two seeds, every suspect judged by
   `c2patool` 0.28.1 (none more lenient); `composer check` (972 passed).
 - Decided by Maurice: adopt C6.
+
+## 2026-10-09 — Every certificate above the signer meets the profile (step 327, C4)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met punt 1 tot en met 3" (point 2: C4,
+  C6, C7), then "ok, wacht maar op de meting".
+- Produced: SPEC-014 amendment 8 (AC14), SPEC-048 amendment 2, SPEC-049
+  amendment 4, SPEC-061 amendment 5; `src/Trust/ChainCheck.php`
+  (`profileFault()`), `src/Trust/CertificateProfileCheck.php` (two
+  constants public); four probes in `bin/make-trust-matrix.php` and
+  `tests/Fixtures/trust/chain-matrix/` with both `c2patool` versions'
+  answers and the README; `TrustMatrixTest.php`, `WeakHashTest.php`,
+  `RsaExponentTest.php`; the CHANGELOG; `docs/reading-c2pa-2.4.md`;
+  `notes/step-327-profile-above-the-leaf.md`; a row in `NOTES.md`.
+- Measured: the tests red (3 failed), then green; the corpus (8 runs
+  moved, all crafted fixtures; run again on its own after two measurements
+  collided); `bin/fuzz.php` without settings and with `--trust` on two
+  seeds, every suspect judged by `c2patool` 0.28.1 (none more lenient);
+  `composer check` (972 passed).
+- Decided by Maurice: adopt C4, the anchor included.
