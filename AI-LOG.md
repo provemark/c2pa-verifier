@@ -10387,3 +10387,14 @@ README are where the disclosure lives.
   (with and without `--trust`) in a worktree at `v0.5.3` and in this tree.
 - Decided by Maurice: release 0.6.0 before the ISOBMFF details. The tag,
   the release and Packagist wait for his word.
+
+## 2026-10-09 — 0.6.0 released (step 340)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push, tag v0.6.0 en houd ze onder Changed".
+- Produced: `bfad0ee` pushed; the annotated tag `v0.6.0`, pushed;
+  `notes/step-340-release-0.6.0.md`; a row in `NOTES.md`.
+- Measured: CI on the commit and on the tag (both green, 8 jobs);
+  Packagist's `p2` metadata; a fresh `composer require` and one run of the
+  installed command.
+- Decided by Maurice: tag 0.6.0; the fixed `Trusted` cases stay under
+  *Changed*, not in `SECURITY.md`.
