@@ -5,6 +5,19 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Changed
+
+- **A timestamp authority's certificate that fails the certificate profile
+  makes the file `Invalid` (SPEC-017 amendment 8).** A version 2 claim
+  whose timestamp comes from a TSA whose leaf has no keyUsage, is a CA, or
+  is signed over SHA-1 was `Trusted` or `Valid` here, the timestamp
+  ignored; `c2patool` 0.28.1 says `Invalid` with
+  `signingCredential.invalid`, and so does this verifier now, naming the
+  timestamp authority in the explanation. Found by the timestamp matrix
+  (`bin/make-tsa-matrix.php`). No file of the corpus moves.
+
 ## 0.5.2 — 2026-10-08
 
 A security release, the second of the day. A certificate authority

@@ -9572,3 +9572,29 @@ README are where the disclosure lives.
   with amendment 7 undone in `ChainCheck` (2 failed), restored;
   `composer check` (931 passed).
 - Decided by Maurice: SPEC-061 with the proposals, amendment 1 option (a).
+
+## 2026-10-09 — The timestamp matrix, and SPEC-017 amendment 8 (steps 289–290)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, morgen beginnen we met de TSA-matrix. Het is nu
+  morgen", "akkoord, bouw de generator en doe de eerste meting",
+  "akkoord, (a), schrijf het amendement uit" and "akkoord, amendement 8
+  bevestigd".
+- Produced: `bin/make-tsa-matrix.php` (matrix and fixture modes);
+  SPEC-017 amendment 8, AC14 and its Traceability row;
+  `src/Timestamp/TimestampCheck.php` (`judge()` and `checkHeader()` take
+  the claim's version); the fixtures `tests/Fixtures/timestamp/tsa-profile/`
+  and `tests/Fixtures/c2patool/tsa-profile/`;
+  `tests/Unit/Timestamp/TsaProfileTest.php`; a row in `docs/comparison.md`;
+  CHANGELOG *Unreleased*; `notes/step-289-tsa-matrix.md`; two rows in
+  `NOTES.md`.
+- Measured: which TSA leaves `openssl ts -reply` signs with (only the
+  critical timeStamping EKU); the matrix (22 probes) through `c2patool`
+  0.27.22 and 0.28.1, `openssl ts -verify` and `bin/c2pa-verify`; 0.28.1
+  on the three off-profile TSAs without settings and with `verify_trust:
+  false`; the tests red (4 failed), then green; the corpus (781 files, 113
+  settings files) and the fuzz seed before and after; PHPStan on macOS and
+  in Docker `php:8.3-cli`; `composer check` (936 passed). Reasoned: from
+  `c2pa-rs` 0.91.1 `crypto/time_stamp/verify.rs`,
+  `crypto/cose/certificate_profile.rs` and `claim.rs`.
+- Decided by Maurice: the TSA matrix first; follow `c2patool` (a);
+  amendment 8.

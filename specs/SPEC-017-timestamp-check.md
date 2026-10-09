@@ -349,6 +349,23 @@ to `tests/Support/` so both files share them.
     signer: `fixture-signed.jpg` with `allowed_list.pem` is
     `signingCredential.trusted`.
 
+- **AC14 — a timestamp authority's certificate that fails the profile makes the file `Invalid`, as `c2patool`** *(amendment 8; required: error path)*
+  - Given the probes of `tests/Fixtures/timestamp/tsa-profile/`, each the
+    PNG fixture's store re-signed by a throw-away signer, version 2 claim,
+    with an RFC 3161 token from a throw-away TSA in `sigTst2`: `control`
+    (the TSA's leaf on the profile), `tsa-leaf-no-key-usage`,
+    `tsa-leaf-ca-true` and `tsa-leaf-sha1` (the leaf signed over SHA-1)
+  - When each is verified with its settings (the signer's root as a
+    `"manifest"` entry, the TSA's root as a `"tsa"` entry) and without
+    settings
+  - Then `control` is `Trusted` with its settings; each of the other three
+    is `Invalid` with `timeStamp.untrusted` and `signingCredential.invalid`,
+    the explanation saying it is the timestamp authority's certificate
+    that fails and why, with and without settings, as `c2patool` 0.28.1
+    records for each
+  - And a version 1 claim is unchanged: `c2pa-rs` does not check a TSA's
+    profile there, so no `signingCredential.invalid` is added for it
+
 ## References
 
 - Specification: C2PA 2.4 §14.6 (time-stamps: `sigTst`/`sigTst2`, the
@@ -569,6 +586,40 @@ final readonly class TimestampCheck
 
    Confirmed by Maurice van Loon, 2026-10-08 (step 275).
 
+8. **2026-10-09, step 290, found by the timestamp matrix (step 289).**
+   A timestamp authority's leaf that fails the certificate profile (no
+   keyUsage, `CA:TRUE`, signed over SHA-1) gave `timeStamp.untrusted`
+   here, and the signer was judged at now: `Trusted`. `c2patool` 0.28.1
+   says `Invalid` with `signingCredential.invalid` for all three, with and
+   without settings, and even with `verify_trust: false`. Read in `c2pa-rs`
+   0.91.1: `verify_time_stamp` (`crypto/time_stamp/verify.rs`) checks the
+   TSA's leaf with `check_end_entity_certificate_profile`, which logs every
+   fault as `SIGNING_CREDENTIAL_INVALID`, and appends that log to the
+   manifest's (line 553); the check runs under `verify_timestamp_trust`,
+   which `c2pa-rs` switches off for a version 1 claim (`claim.rs`).
+
+   The rule, so that the verdict means what `c2patool`'s means: for a
+   version 2 claim, every fault the TSA's leaf has against the profile
+   (SPEC-015's checks, with timeStamping as the only allowed extended key
+   usage, at the token's `genTime`) is reported as
+   `signingCredential.invalid` as well as `timeStamp.untrusted`, the
+   explanation naming the timestamp authority's certificate. The code is
+   `c2pa-rs`'s choice, kept so that the reports compare; it is named in
+   `docs/comparison.md`. A version 1 claim is unchanged.
+
+   Not in the rule, measured: with `verify_trust: false` this verifier
+   checks no TSA at all, where `c2patool` still does (its separate
+   `verify_timestamp_trust`); left as it is and named in
+   `docs/comparison.md`.
+
+   New criterion AC14. **Weight A**: files with such a timestamp go from
+   `Trusted` or `Valid` to `Invalid`, as in `c2patool` 0.28.1; this
+   verifier was more lenient than its oracle. The corpus, the writers and
+   the fuzz seed are measured under every trust settings file before and
+   after, and every verdict that moves is named.
+
+   Confirmed by Maurice van Loon, 2026-10-09 (step 290).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -588,4 +639,5 @@ least one test; every source file maps back to this spec.
 | AC10 | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC10: the NO_TIMESTAMP exceptions are gone; TSA_NOT_CONFIGURED names the files that stay expired, and an anchor un-expires them / SPEC-017 | tests/Pest.php :: SPEC013_PUBLIC_TSA_NOT_CONFIGURED, SPEC013_RS_TSA_NOT_CONFIGURED; tests/Unit/Verifier/VerifierTest.php :: AC11, AC12; src/Verifier/Verifier.php :: check() (the time handed to the profile) |
 | AC12 (amendment 6) | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC12: the Pixel 10 file is expired at now and Trusted under Google's intermediates, as c2patool / SPEC-017 | src/Timestamp/TimestampCheck.php :: check(); src/Trust/ChainCheck.php :: checkCertificates() (an intermediate as anchor) |
 | AC13 (amendment 5) | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC13: a TSA certificate on the allowed list does not make the timestamp trusted / SPEC-017 | src/Timestamp/TimestampCheck.php :: tsaSettings() (no allowed list) |
+| AC14 (amendment 8) | tests/Unit/Timestamp/TsaProfileTest.php :: SPEC-017 AC14: a TSA on the profile leaves the file Trusted, as c2patool 0.28.1; SPEC-017 AC14: a TSA leaf off the profile makes the file Invalid, with and without settings, as c2patool 0.28.1; SPEC-017 AC14: a version 1 claim is unchanged, as c2pa-rs checks no TSA profile there / SPEC-017 | src/Timestamp/TimestampCheck.php :: judge() (the TSA's profile faults as signingCredential.invalid for a version 2 claim), check(); the fixtures from bin/make-tsa-matrix.php (set tsa-profile) |
 | AC11 (amendments 2–3) | tests/Unit/Timestamp/TimestampCheckTest.php :: SPEC-017 AC11: on the writers corpus signature_info.time equals c2patool's, and the negative-nonce tokens validate / SPEC-017 | src/Timestamp/TimestampResult.php :: $timeFraction, timeIso(); src/Timestamp/SignerInfo.php :: signedAttributesForVerification() (the DER-canonical SET), $attributeEncodings; src/Timestamp/TimestampCheck.php :: ecdsaDer(), isDerEcdsaSignature(); src/Verifier/Verifier.php :: signatureInfo() |

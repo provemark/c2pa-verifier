@@ -76,7 +76,7 @@ final readonly class TimestampCheck
             return TimestampResult::none();
         }
 
-        return $this->checkHeader($header, $cose, $manifest->claimBytes(), $settings, $url);
+        return $this->checkHeader($header, $cose, $manifest->claimBytes(), $settings, $url, $manifest->claim->version);
     }
 
     /**
@@ -84,7 +84,7 @@ final readonly class TimestampCheck
      * bytes; further tokens are counted, not judged (c2pa-rs: "we only pay
      * attention to the first time stamp header").
      */
-    public function checkHeader(TimestampHeader $header, CoseSign1 $cose, string $claimBytes, ?TrustSettings $settings, string $url): TimestampResult
+    public function checkHeader(TimestampHeader $header, CoseSign1 $cose, string $claimBytes, ?TrustSettings $settings, string $url, int $claimVersion = 2): TimestampResult
     {
         try {
             $token = TimeStampToken::fromHeaderValue($header->tokens[0], $this->reader);
@@ -92,7 +92,7 @@ final readonly class TimestampCheck
             return new TimestampResult(true, [$this->status(StatusCode::TimeStampMalformed, $url, $e->getMessage())], null, false);
         }
         $tbs = self::countersignedBytes($cose, $header->header, $claimBytes);
-        $result = $this->judge($token, $tbs, $settings, $url);
+        $result = $this->judge($token, $tbs, $settings, $url, $claimVersion);
         if (count($header->tokens) > 1) {
             $result = new TimestampResult($result->present, array_map(
                 static fn (ValidationStatus $s): ValidationStatus => $s->code === StatusCode::TimeStampValidated
@@ -110,8 +110,10 @@ final readonly class TimestampCheck
      * cannot show without breaking an earlier step (outsideValidity).
      *
      * @param  string  $tbs  the countersigned bytes the imprint must match
+     * @param  int  $claimVersion  the claim's version: for 2 and later a TSA leaf off the profile is also
+     *                             signingCredential.invalid, as c2pa-rs logs it (SPEC-017 amendment 8)
      */
-    public function judge(TimeStampToken $token, string $tbs, ?TrustSettings $settings, string $url): TimestampResult
+    public function judge(TimeStampToken $token, string $tbs, ?TrustSettings $settings, string $url, int $claimVersion = 2): TimestampResult
     {
         $sd = $token->signedData;
         $si = $sd->signerInfo;
@@ -183,6 +185,13 @@ final readonly class TimestampCheck
         $faults = $this->profile->checkLeaf($signer, $tsaSettings, $tst->genTime, $url, ekus: [self::OID_EKU_TIME_STAMPING]);
         if ($faults !== []) {
             $statuses[] = $this->status(StatusCode::TimeStampUntrusted, $url, sprintf('timestamp cert untrusted: %s — %s', $tsaName, implode('; ', array_map(static fn (ValidationStatus $s): string => $s->explanation, $faults))));
+            // c2pa-rs logs a TSA leaf's profile faults as signingCredential.invalid into the manifest's own log, for a
+            // version 2 claim (it checks no TSA profile for version 1); kept so that the verdicts compare (amendment 8)
+            if ($claimVersion >= 2) {
+                foreach ($faults as $fault) {
+                    $statuses[] = $this->status(StatusCode::SigningCredentialInvalid, $url, sprintf('the timestamp authority\'s certificate %s fails the certificate profile: %s', $tsaName, preg_replace('/^signing certificate invalid: /', '', $fault->explanation) ?? $fault->explanation));
+                }
+            }
         } else {
             try {
                 $ordered = $this->orderedChain($signerDer, $sd->certificates);
