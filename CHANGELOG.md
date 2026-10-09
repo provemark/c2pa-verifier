@@ -34,6 +34,15 @@ committed.
   a revocation was skipped. Both `c2patool` versions accept these serials;
   this verifier is stricter here (`docs/comparison.md`). Found by fuzzing
   ISOBMFF. No file of the corpus moves.
+- **A leaf signed with RSASSA-PSS must name SHA-256, SHA-384 or SHA-512
+  and the same hash for MGF1 (SPEC-015 amendment 8).** A leaf signed with
+  PSS over SHA-224, or with an MGF1 hash other than the PSS hash, was
+  `Trusted` here and `Invalid` in both `c2patool` versions. A leaf whose
+  outer `signatureAlgorithm` was changed after signing was `Valid` here.
+  All are `signingCredential.invalid` now. Stricter than `c2patool` on
+  two cases (`docs/comparison.md`): the default MGF1 (SHA-1) under a
+  SHA-256 PSS hash, and two copies of the algorithm that differ. Found by
+  fuzzing with trust settings.
 
 ## 0.5.2 — 2026-10-08
 

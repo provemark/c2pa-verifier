@@ -278,6 +278,18 @@ are still to be taken before the tests (Open questions).
     control stays `Trusted`; and `Bytes::hexToDecimal('-0FDB19DB89FA0E')`
     is `-4463028754577934`, without a notice
 
+- **AC13 — a leaf signed with RSASSA-PSS names SHA-256, SHA-384 or SHA-512, MGF1 over the same hash, and one algorithm** *(amendment 8; oracle: `c2pa-rs` 0.91.1 `certificate_profile.rs`, both `c2patool` versions measured in step 304)*
+  - Given the trust matrix's PSS probes (SPEC-061 amendment 3), in which an
+    RSA intermediate signs the leaf with the named parameters
+  - When the Verifier runs under each probe's settings
+  - Then PSS SHA-256/SHA-256, SHA-384/SHA-384, and SHA-256 with a 20-byte
+    salt stay `Trusted`. SHA-224 is `Invalid` with `signingCredential.invalid`
+    naming "RSASSA-PSS over SHA-224". An MGF1 over SHA-384 or over the
+    default SHA-1 with a SHA-256 PSS hash is `Invalid`, naming "MGF1 over
+    …, not over the PSS hash SHA-256". A leaf whose outer
+    `signatureAlgorithm` was changed after signing is `Invalid`, naming the
+    difference from tbsCertificate's `signature` (RFC 5280 §4.1.1.2)
+
 ## References
 
 - Specification: C2PA 2.4 §14.5 (the certificate profile: v3,
@@ -442,6 +454,34 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
    **Weight A: three probes move from `Trusted` to `Invalid` or `Valid`;
    stricter than both `c2patool` versions.**
 
+8. **2026-10-09, steps 303–305, found by fuzzing with trust settings** *(confirmed by Maurice van Loon, 2026-10-09: refuse in both open cases)* —
+   The profile allowed `rsassaPss` by name and refused a weak PSS hash,
+   but did not read the rest of the parameters. Measured in step 304, with
+   certificates issued that way: a leaf signed with RSASSA-PSS over SHA-224,
+   or with an MGF1 hash other than the PSS hash, was `Trusted` here and
+   `Invalid` (`signingCredential.invalid`) in both `c2patool` versions. A
+   leaf whose outer `signatureAlgorithm` was changed after signing was
+   `Valid` here and `Invalid` there. `c2pa-rs` 0.91.1 reads the outer
+   algorithm's parameters and requires a hash of SHA-256, SHA-384 or
+   SHA-512 and the same hash for MGF1.
+
+   Now `CertificateExtensions` also reads the MGF1 hash (SHA-1 when
+   absent, RFC 4055 §3.1) and whether the outer algorithm is byte-equal to
+   tbsCertificate's `signature`. `algorithmFaults()` names each fault, and
+   `checkLeaf()` reports it as `signingCredential.invalid`. For a version 2
+   claim's TSA leaf this happens too, through SPEC-017 amendment 8.
+
+   Two cases are stricter than `c2patool`, by Maurice van Loon's choice.
+   (a) A SHA-256 PSS hash with the default MGF1 (SHA-1) is refused. `c2pa-rs`
+   means to refuse it, but cannot parse the defaulted field and logs no
+   status, so it says `Trusted`. (b) A difference between the two copies
+   of the algorithm is refused for any algorithm, as RFC 5280 §4.1.1.2 and
+   OpenSSL require. `c2pa-rs` does not compare them. New AC13; the probes
+   join SPEC-061 (amendment 3).
+
+   **Weight A: four probes move from `Trusted` or `Valid` to `Invalid`, as
+   in `c2patool`; one more is stricter than it.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -462,3 +502,4 @@ least one test; every source file maps back to this spec.
 | AC10 | tests/Unit/Trust/CertificateProfileCheckTest.php :: AC10: the codes are verbatim, and the drift alarm grows / SPEC-015 | src/Report/StatusCode.php :: SigningCredentialExpired; tests/Pest.php :: SPEC013_CORPUS |
 | AC11 | tests/Unit/Asn1/IntegerBoundTest.php :: AC11 / SPEC-015 | src/Trust/Certificate.php (the serial bound); bin/make-integer-bound-variants.php; docs/comparison.md |
 | AC12 (amendment 7) | tests/Unit/Trust/SerialNumberTest.php :: AC12 (four tests) / SPEC-015; tests/Unit/Trust/TrustMatrixTest.php :: SPEC061_STRICTER / SPEC-061 | src/Support/Bytes.php :: hexToDecimal(), decimalOctets(); src/Trust/Certificate.php :: \$serialPositive; src/Trust/CertificateProfileCheck.php :: checkLeaf(); src/Trust/ChainCheck.php :: pathFault() |
+| AC13 (amendment 8) | tests/Unit/Trust/PssParametersTest.php :: AC13 (four tests) / SPEC-015; tests/Unit/Trust/TrustMatrixTest.php :: SPEC061_STRICTER / SPEC-061 | src/Trust/CertificateExtensions.php :: fromDer() (\$pssMgf1HashOid, \$algorithmMatchesTbs), algorithmFaults(); src/Trust/CertificateProfileCheck.php :: checkLeaf() |

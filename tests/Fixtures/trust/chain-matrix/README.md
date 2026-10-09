@@ -3,7 +3,7 @@
 Built by `bin/make-trust-matrix.php <scratch> <c2patool-0.28.1>
 <c2patool-0.27.22> chain-matrix <probe>…` on 2026-10-08 (step 288). One
 valid chain (leaf ← intermediate ← anchor: P-256, SHA-256, the C2PA leaf
-profile) and 41 variants (44 since step 302), each one property of one certificate away from it.
+profile) and 41 variants (44 since step 302, 53 since step 305), each one property of one certificate away from it.
 Each PNG is `../../fixture-signed.png` with its claim re-signed by the
 probe's throw-away leaf; x5chain holds the leaf and the intermediate, the
 anchor is left out. The keys lived in a scratch directory while the script
@@ -74,3 +74,21 @@ with the same command and these probe names. Their serials are set, not
 random: `-0x0FDB19DB89FA0E`, `0`, and `-0x0FDB19DB89FA0F` on the
 intermediate. This verifier refuses them by SPEC-015 amendment 7 (RFC 5280
 §4.1.2.2).
+
+| probe (step 305) | c2patool 0.27.22 | c2patool 0.28.1 | OpenSSL | this verifier |
+|---|---|---|---|---|
+| `leaf-pss-control` | Trusted | Trusted | OK | Trusted |
+| `leaf-pss-sha384` | Trusted | Trusted | OK | Trusted |
+| `leaf-pss-sha224` | Invalid, signingCredential.invalid | Invalid, signingCredential.invalid | OK | Invalid, signingCredential.invalid |
+| `leaf-pss-sha1` | Trusted | Trusted | OK | Invalid, signingCredential.invalid |
+| `leaf-pss-mgf1-sha1` | Trusted | Trusted | OK | Invalid, signingCredential.invalid |
+| `leaf-pss-mgf1-sha384` | Invalid, signingCredential.invalid | Invalid, signingCredential.invalid | OK | Invalid, signingCredential.invalid |
+| `leaf-pss-saltlen-20` | Trusted | Trusted | OK | Trusted |
+| `leaf-pss-outer-mgf1-sha384` | Invalid, signingCredential.invalid, signingCredential.untrusted | Invalid, the same | refused: cert info signature and signature algorithm mismatch | Invalid, signingCredential.invalid, signingCredential.untrusted |
+| `leaf-pss-outer-mgf1-unknown` | Invalid, the same | Invalid, the same | refused, the same | Invalid, the same |
+
+In the `leaf-pss-*` probes the intermediate is RSA-2048 and signs the
+leaf with `openssl x509 -sigopt rsa_padding_mode:pss` and the probe's
+digest, MGF1 digest and salt length. The two `outer` probes then have the
+last byte of the outer `signatureAlgorithm`'s MGF1 hash OID changed (to
+`02`, SHA-384, and to `7F`, unknown), which no signature covers.

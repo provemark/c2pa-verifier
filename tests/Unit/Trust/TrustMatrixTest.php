@@ -21,6 +21,8 @@ const SPEC061_STRICTER = [
     'leaf-serial-negative' => 'SPEC-015 amendment 7: a serial number is a positive integer (RFC 5280 §4.1.2.2)',
     'leaf-serial-zero' => 'SPEC-015 amendment 7: a serial number is a positive integer (RFC 5280 §4.1.2.2)',
     'int-serial-negative' => 'SPEC-015 amendment 7: a serial number is a positive integer (RFC 5280 §4.1.2.2)',
+    'leaf-pss-sha1' => 'SPEC-015: no RSASSA-PSS over SHA-1 (C2PA 2.4 §14.5); c2pa-rs cannot read the defaulted parameters and logs nothing',
+    'leaf-pss-mgf1-sha1' => 'SPEC-015 amendment 8: the MGF1 hash equals the PSS hash; c2pa-rs cannot read the defaulted MGF1 and logs nothing',
 ];
 
 /**
@@ -97,7 +99,7 @@ it('AC6: every probe the generator defines has a fixture and both answers, and n
     $defined = spec061GeneratorProbes();
     sort($defined);
 
-    expect($defined)->toHaveCount(45)
+    expect($defined)->toHaveCount(54)
         ->and(spec061FixtureProbes())->toBe($defined);
     foreach ($defined as $probe) {
         foreach (['0.27.22', '0.28.1'] as $version) {

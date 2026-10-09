@@ -9823,3 +9823,23 @@ README are where the disclosure lives.
   explanations.
 - Reasoned: from `c2pa-rs` 0.91.1 `src/crypto/cose/certificate_profile.rs`.
 - Decided by Maurice: none in this step.
+
+## 2026-10-09 — RSASSA-PSS parameters in the leaf's profile (step 305)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, weigeren in beide gevallen, push en begin met stap 305",
+  then "ok, wacht maar op de meting" and "duurt lang".
+- Produced: `ad629d5` pushed; SPEC-015 amendment 8 and AC13, SPEC-061
+  amendment 3; `src/Trust/CertificateExtensions.php`,
+  `src/Trust/CertificateProfileCheck.php`; `bin/make-trust-matrix.php` with
+  nine PSS probes; their fixtures and `c2patool` answers in `chain-matrix`;
+  `tests/Unit/Trust/PssParametersTest.php`; `TrustMatrixTest.php` (54
+  probes, two more stricter); `docs/comparison.md`; the folder's README;
+  the CHANGELOG; `notes/step-305-pss-parameters.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: the tests red (5 failed), then green (8 passed); the corpus
+  (841 files × 154 settings modes, before and after: 770 runs moved, all
+  new probes); `bin/fuzz.php` without settings and with `--trust` on two
+  seeds, every suspect judged by `c2patool` 0.28.1 (none more lenient);
+  `composer check` (953 passed); PHPStan on macOS and in Docker.
+- Decided by Maurice: refuse the defaulted MGF1 under a SHA-256 PSS hash,
+  and refuse two copies of the algorithm that differ.

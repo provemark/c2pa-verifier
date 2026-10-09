@@ -30,6 +30,21 @@ final readonly class CertificateExtensions
 
     private const OID_SHA1 = '1.3.14.3.2.26';
 
+    private const OID_MGF1 = '1.2.840.113549.1.1.8';
+
+    /** The hashes an RSASSA-PSS certificate may name, by OID (C2PA 2.4 §14.5), and the others by name for messages. */
+    public const PSS_HASHES = [
+        '2.16.840.1.101.3.4.2.1' => 'SHA-256',
+        '2.16.840.1.101.3.4.2.2' => 'SHA-384',
+        '2.16.840.1.101.3.4.2.3' => 'SHA-512',
+    ];
+
+    private const OTHER_HASHES = [
+        self::OID_SHA1 => 'SHA-1',
+        '2.16.840.1.101.3.4.2.4' => 'SHA-224',
+        '1.2.840.113549.2.5' => 'MD5',
+    ];
+
     /** Signature algorithms that rest on MD2, MD4, MD5 or SHA-1 (SPEC-048 scope item 1). */
     private const WEAK_SIGNATURES = [
         '1.2.840.113549.1.1.2' => 'md2WithRSAEncryption',
@@ -82,6 +97,8 @@ final readonly class CertificateExtensions
      * @param  list<string>  $emails  subjectAltName rfc822Name entries and the subject's emailAddress, lower-cased
      * @param  string  $signatureOid  the certificate's outer signatureAlgorithm (RFC 5280 §4.1.1.2)
      * @param  string|null  $pssHashOid  for RSASSA-PSS, the hash; SHA-1 when the parameter is absent (RFC 4055 §3.1)
+     * @param  string|null  $pssMgf1HashOid  for RSASSA-PSS, MGF1's hash; SHA-1 when absent; the mask generation function's own OID when it is not MGF1 (SPEC-015 amendment 8)
+     * @param  bool  $algorithmMatchesTbs  the outer signatureAlgorithm is byte-equal to tbsCertificate's signature (RFC 5280 §4.1.1.2)
      */
     private function __construct(
         public array $extensions,
@@ -90,6 +107,8 @@ final readonly class CertificateExtensions
         public ?NameConstraints $nameConstraints,
         public string $signatureOid,
         public ?string $pssHashOid,
+        public ?string $pssMgf1HashOid = null,
+        public bool $algorithmMatchesTbs = true,
     ) {}
 
     /** @throws TrustException when the DER does not hold a readable tbsCertificate */
@@ -104,18 +123,27 @@ final readonly class CertificateExtensions
             $algorithm = $certificate->element(1);
             $signatureOid = $algorithm->element(0)->oid();
             $pssHashOid = null;
+            $pssMgf1HashOid = null;
             if ($signatureOid === self::OID_RSASSA_PSS) {
-                // RSASSA-PSS-params ::= SEQUENCE { hashAlgorithm [0] AlgorithmIdentifier DEFAULT sha1, … }
+                // RSASSA-PSS-params ::= SEQUENCE { hashAlgorithm [0] AlgorithmIdentifier DEFAULT sha1,
+                //   maskGenAlgorithm [1] AlgorithmIdentifier DEFAULT mgf1SHA1, … } (RFC 4055 §3.1)
                 $pssHashOid = self::OID_SHA1;
+                $pssMgf1HashOid = self::OID_SHA1;
                 $parameters = $algorithm->sequence()[1] ?? null;
                 foreach ($parameters !== null && $parameters->is(TagClass::Universal, Der::SEQUENCE) ? $parameters->sequence() : [] as $field) {
                     if ($field->is(TagClass::ContextSpecific, 0)) {
                         $pssHashOid = $field->child(0)->element(0)->oid();
                     }
+                    if ($field->is(TagClass::ContextSpecific, 1)) {
+                        $mgf = $field->child(0);
+                        $mgfOid = $mgf->element(0)->oid();
+                        $pssMgf1HashOid = $mgfOid === self::OID_MGF1 ? $mgf->element(1)->element(0)->oid() : $mgfOid;
+                    }
                 }
             }
             $fields = $tbs->sequence();
             $versioned = $fields !== [] && $fields[0]->is(TagClass::ContextSpecific, 0);
+            $algorithmMatchesTbs = $tbs->element($versioned ? 2 : 1)->encoded() === $algorithm->encoded();
             $subject = $tbs->element($versioned ? 5 : 4);
 
             $extensions = [];
@@ -154,7 +182,7 @@ final readonly class CertificateExtensions
                 }
             }
 
-            return new self($extensions, $rdns, array_values(array_unique($emails)), $constraints, $signatureOid, $pssHashOid);
+            return new self($extensions, $rdns, array_values(array_unique($emails)), $constraints, $signatureOid, $pssHashOid, $pssMgf1HashOid, $algorithmMatchesTbs);
         } catch (Asn1Exception $e) {
             throw new TrustException(sprintf('the extensions or names of a certificate of %d bytes could not be read: %s', strlen($der), $e->getMessage()));
         }
@@ -173,6 +201,38 @@ final readonly class CertificateExtensions
         }
 
         return self::WEAK_SIGNATURES[$this->signatureOid] ?? null;
+    }
+
+    /**
+     * What the certificate's own signature algorithm breaks of the profile for RSASSA-PSS (SPEC-015 amendment 8, as
+     * c2pa-rs's certificate profile reads it), and of RFC 5280 §4.1.1.2 for any algorithm; a weak hash is weakHash()'s.
+     *
+     * @return list<string>
+     */
+    public function algorithmFaults(): array
+    {
+        $faults = [];
+        if (! $this->algorithmMatchesTbs) {
+            $faults[] = 'the signatureAlgorithm differs from the signature field of tbsCertificate (RFC 5280 §4.1.1.2)';
+        }
+        if ($this->signatureOid !== self::OID_RSASSA_PSS || $this->weakHash() !== null) {
+            return $faults;
+        }
+        $hash = $this->pssHashOid ?? self::OID_SHA1;
+        if (! array_key_exists($hash, self::PSS_HASHES)) {
+            $faults[] = sprintf('the signature is RSASSA-PSS over %s (C2PA 2.4 §14.5 allows SHA-256, SHA-384 and SHA-512)', self::hashName($hash));
+        }
+        $mgf1 = $this->pssMgf1HashOid ?? self::OID_SHA1;
+        if ($mgf1 !== $hash) {
+            $faults[] = sprintf('the RSASSA-PSS mask is MGF1 over %s, not over the PSS hash %s', self::hashName($mgf1), self::hashName($hash));
+        }
+
+        return $faults;
+    }
+
+    private static function hashName(string $oid): string
+    {
+        return self::PSS_HASHES[$oid] ?? self::OTHER_HASHES[$oid] ?? $oid;
     }
 
     /** @return list<string> the OIDs of critical extensions this verifier does not understand */

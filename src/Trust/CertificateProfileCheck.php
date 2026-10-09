@@ -132,6 +132,8 @@ final readonly class CertificateProfileCheck
             $faults[] = $invalid(sprintf('the signature is %s (C2PA 2.4 §14.5 allows SHA-256, SHA-384 and SHA-512; RFC 4055 makes SHA-1 the default)', $leaf->x509->weakHash()));
         }
         // 5. the key
+        // SPEC-015 amendment 8: the RSASSA-PSS hash and its MGF1, and the two copies of the algorithm agreeing
+        $faults = [...$faults, ...array_map($invalid, $leaf->x509->algorithmFaults())];
         $faults = [...$faults, ...array_map($invalid, $this->keyFaults($leaf))];
         // 6. KeyUsage, as c2pa-rs keeps it
         if ($leaf->keyUsage === null) {

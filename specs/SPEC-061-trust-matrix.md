@@ -188,6 +188,18 @@ const SPEC061_CODES_DIFFER = [/* probe => [0.28.1's codes, 0.27.22's, this verif
 
    **Weight C: no verdict of the existing probes moves.**
 
+3. **2026-10-09, step 305, with SPEC-015 amendment 8** *(confirmed by Maurice van Loon, 2026-10-09)* —
+   Nine new probes, in which the intermediate is RSA-2048 and signs the
+   leaf with RSASSA-PSS parameters the probe names (`leaf-pss-*`). Two of
+   them have the outer `signatureAlgorithm`'s MGF1 hash changed after
+   signing. The matrix holds 54 probes; AC6 counts 54. Two join
+   `SPEC061_STRICTER`: `leaf-pss-sha1` (SPEC-015, no SHA-1) and
+   `leaf-pss-mgf1-sha1` (SPEC-015 amendment 8). Both are `Trusted` in
+   `c2patool` only because `c2pa-rs` cannot parse the defaulted
+   parameters. The other seven agree with 0.28.1.
+
+   **Weight C: no verdict of the existing probes moves.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

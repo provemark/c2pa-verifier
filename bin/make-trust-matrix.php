@@ -318,6 +318,33 @@ $variants = [
     'leaf-serial-negative' => ['leaf', 'serial', '-0x0FDB19DB89FA0E'],
     'leaf-serial-zero' => ['leaf', 'serial', '0'],
     'int-serial-negative' => ['int', 'serial', '-0x0FDB19DB89FA0F'],
+    // the RSASSA-PSS parameters the leaf is signed with, by an RSA intermediate (step 304; $pss below)
+    'leaf-pss-control' => [null, null, null],
+    'leaf-pss-sha384' => [null, null, null],
+    'leaf-pss-sha224' => [null, null, null],
+    'leaf-pss-sha1' => [null, null, null],
+    'leaf-pss-mgf1-sha1' => [null, null, null],
+    'leaf-pss-mgf1-sha384' => [null, null, null],
+    'leaf-pss-saltlen-20' => [null, null, null],
+    'leaf-pss-outer-mgf1-sha384' => [null, null, null],
+    'leaf-pss-outer-mgf1-unknown' => [null, null, null],
+];
+/**
+ * The PSS probes: the intermediate becomes RSA-2048 and signs the leaf with these digest, MGF1 digest and salt
+ * length; an edit then changes the last byte of the outer signatureAlgorithm's MGF1 hash OID (not signed by anyone).
+ *
+ * @var array<string, array{md: string, mgf1: string, salt: int, edit: int<0, 255>|null}> $pss
+ */
+$pss = [
+    'leaf-pss-control' => ['md' => 'sha256', 'mgf1' => 'sha256', 'salt' => 32, 'edit' => null],
+    'leaf-pss-sha384' => ['md' => 'sha384', 'mgf1' => 'sha384', 'salt' => 48, 'edit' => null],
+    'leaf-pss-sha224' => ['md' => 'sha224', 'mgf1' => 'sha224', 'salt' => 28, 'edit' => null],
+    'leaf-pss-sha1' => ['md' => 'sha1', 'mgf1' => 'sha1', 'salt' => 20, 'edit' => null],
+    'leaf-pss-mgf1-sha1' => ['md' => 'sha256', 'mgf1' => 'sha1', 'salt' => 32, 'edit' => null],
+    'leaf-pss-mgf1-sha384' => ['md' => 'sha256', 'mgf1' => 'sha384', 'salt' => 32, 'edit' => null],
+    'leaf-pss-saltlen-20' => ['md' => 'sha256', 'mgf1' => 'sha256', 'salt' => 20, 'edit' => null],
+    'leaf-pss-outer-mgf1-sha384' => ['md' => 'sha256', 'mgf1' => 'sha256', 'salt' => 32, 'edit' => 0x02],
+    'leaf-pss-outer-mgf1-unknown' => ['md' => 'sha256', 'mgf1' => 'sha256', 'salt' => 32, 'edit' => 0x7F],
 ];
 
 $genKey = static function (string $path, string $kind): void {
@@ -366,6 +393,10 @@ foreach ($variants as $probe => [$position, $field, $value]) {
             'serial' => matrixCert($was['ext'], $was['key'], $was['md'], $was['validity'], is_string($value) ? $value : throw new RuntimeException("{$probe}: a serial is a string")),
         };
     }
+    if (isset($pss[$probe])) {
+        $recipe['int'] = matrixCert($recipe['int']['ext'], 'rsa2048', $recipe['int']['md'], $recipe['int']['validity'], $recipe['int']['serial']);
+        $recipe['leaf'] = matrixCert($recipe['leaf']['ext'], $recipe['leaf']['key'], $pss[$probe]['md'], $recipe['leaf']['validity'], $recipe['leaf']['serial']);
+    }
     $cn = ['anchor' => "Matrix Anchor ({$probe})", 'int' => "Matrix Intermediate ({$probe})", 'leaf' => "Matrix Signer ({$probe})"];
     $issuer = ['anchor' => null, 'int' => 'anchor', 'leaf' => 'int'];
     foreach (['anchor', 'int', 'leaf'] as $who) {
@@ -376,11 +407,24 @@ foreach ($variants as $probe => [$position, $field, $value]) {
         // the digest is the issuer's choice; an Ed25519 issuer signs without one
         $issuerKey = $issuer[$who] === null ? $r['key'] : $recipe[$issuer[$who]]['key'];
         $md = $issuerKey === 'ed25519' ? [] : ['-'.$r['md']];
+        if ($who === 'leaf' && isset($pss[$probe])) {
+            $md = [...$md, '-sigopt', 'rsa_padding_mode:pss', '-sigopt', 'rsa_mgf1_md:'.$pss[$probe]['mgf1'], '-sigopt', 'rsa_pss_saltlen:'.$pss[$probe]['salt']];
+        }
         if ($issuer[$who] === null) {
             tmRun(tmSh(...array_merge(['openssl', 'req', '-new', '-x509'], $md, ['-key', "{$keys}/{$who}.key", '-config', "{$keys}/{$who}.cnf", '-extensions', 'v3'], $dates, ['-out', "{$keys}/{$who}.pem"])));
         } else {
             tmRun(tmSh('openssl', 'req', '-new', '-key', "{$keys}/{$who}.key", '-config', "{$keys}/{$who}.cnf", '-out', "{$keys}/{$who}.csr"));
             tmRun(tmSh(...array_merge(['openssl', 'x509', '-req'], $md, ['-in', "{$keys}/{$who}.csr", '-CA', "{$keys}/{$issuer[$who]}.pem", '-CAkey', "{$keys}/{$issuer[$who]}.key", '-set_serial', $r['serial'] ?? (string) random_int(1000, 99999999)], $dates, ['-extfile', "{$keys}/{$who}.cnf", '-extensions', 'v3', '-out', "{$keys}/{$who}.pem"])));
+        }
+        if ($who === 'leaf' && ($pss[$probe]['edit'] ?? null) !== null) {
+            // the last SHA-256 OID in the certificate is the outer signatureAlgorithm's MGF1 hash
+            $der = $pemToDer((string) file_get_contents("{$keys}/leaf.pem"));
+            $at = strrpos($der, "\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01");
+            if ($at === false) {
+                throw new RuntimeException("{$probe}: no SHA-256 OID in the leaf");
+            }
+            $der[$at + 10] = chr($pss[$probe]['edit']);
+            file_put_contents("{$keys}/leaf.pem", "-----BEGIN CERTIFICATE-----\n".chunk_split(base64_encode($der), 64, "\n")."-----END CERTIFICATE-----\n");
         }
         if ($set === '' || $who === 'anchor') {
             copy("{$keys}/{$who}.pem", "{$out}/{$probe}.{$who}.pem");
