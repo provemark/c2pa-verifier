@@ -9860,3 +9860,16 @@ README are where the disclosure lives.
   the package name and the namespace; each provemark repository's
   `composer.json`.
 - Decided by Maurice: prepare 0.5.3 so that the plugins get it.
+
+## 2026-10-09 — 0.5.3 released (step 307)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push, tag v0.5.3 en houd PSS onder Changed".
+- Produced: `4d526ad` pushed; annotated tag `v0.5.3`, pushed; a row in
+  `NOTES.md`.
+- Measured: CI run 37897772341 on `4d526ad` and 37897950644 on the tag,
+  both green; Packagist's metadata (`v0.5.3` at `4d526ad`); a fresh
+  `composer require provemark/c2pa-verifier:^0.5` in an empty directory
+  with an empty cache, and `vendor/bin/c2pa-verify` on three trust-matrix
+  probes.
+- Decided by Maurice: release 0.5.3; the RSASSA-PSS findings stay under
+  *Changed*, not *Security*.
