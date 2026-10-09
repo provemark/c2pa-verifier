@@ -9904,3 +9904,17 @@ README are where the disclosure lives.
   `CertificateExtensions`, and `c2pa-rs` 0.91.1
   `src/crypto/cose/certificate_profile.rs`.
 - Decided by Maurice: none in this step.
+
+## 2026-10-09 — Unique IDs in a certificate, measured (step 310)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push en begin met de probe voor C5".
+- Produced: `a71ccef` pushed; `notes/step-310-unique-ids-measured.md`; C5 in
+  `docs/reading-c2pa-2.4.md` brought up to the measurement; a row in
+  `NOTES.md`. The generator change (three unique-ID probes) was measured
+  and set aside for the fix.
+- Measured: a standalone certificate with `subjectUniqueID` read by
+  `openssl x509 -text` and accepted by `openssl verify`; `php
+  bin/make-trust-matrix.php <scratch> <c2patool-0.28.1> <c2patool-0.27.22>`
+  with the three probes (the first run refused for a wrong length, then
+  fixed); 0.28.1's explanation; `composer check` (953 passed).
+- Decided by Maurice: none in this step.
