@@ -83,8 +83,10 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.6.0`**, still a `0.x` on purpose. `^0.6` receives
-every 0.6.x fix. `0.6.0` follows the whole of C2PA 2.4, read rule by rule
+The current tag is **`v0.6.1`**, still a `0.x` on purpose. `^0.6` receives
+every 0.6.x fix. `0.6.1` reads an icon kept in a data box of an earlier C2PA
+version, as C2PA 2.4 §10.2.3.2 asks, and checks its hash, where `0.6.0`
+refused it. `0.6.0` follows the whole of C2PA 2.4, read rule by rule
 (`docs/reading-c2pa-2.4.md`), and adds nine status codes to `StatusCode`
 for rules it now checks: cloud data, the time-stamp assertion, the original
 preservation image, and the text wrapper. It also checks the revocation of

@@ -10438,3 +10438,11 @@ README are where the disclosure lives.
 - Decided by Maurice: amendment 1 as proposed, including accepting the
   stricter redaction and JUMBF-rule behaviour.
 
+## 2026-10-10 — The release commit for 0.6.1 (step 344)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, push en breng 0.6.1 uit".
+- Produced: `CHANGELOG.md` (0.6.1), `README.md`;
+  `notes/step-344-release-0.6.1.md`; a row in `NOTES.md`.
+- Measured: `composer check`; `bin/api-check.php`; `bin/spec-check.php`.
+- Decided by Maurice: push and release 0.6.1.
+

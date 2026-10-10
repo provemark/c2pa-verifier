@@ -5,7 +5,10 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.6.1 — 2026-10-10
+
+A patch release: icons in the data boxes of earlier C2PA versions are read
+and checked, where they were refused. The public contract is unchanged.
 
 ### Changed
 
