@@ -10398,3 +10398,29 @@ README are where the disclosure lives.
   installed command.
 - Decided by Maurice: tag 0.6.0; the fixed `Trusted` cases stay under
   *Changed*, not in `SECURITY.md`.
+
+## 2026-10-10 — SPEC-067 drafted (step 341)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ik wil het probleem in de verifier ook nog oplossen", then
+  "ja, akkoord, schrijf SPEC-067 als draft" and "ja, goedgekeurd".
+- Produced: `specs/SPEC-067-icons-in-data-boxes.md`;
+  `notes/step-341-spec-067-drafted.md`; a row in `NOTES.md`.
+- Measured: the JUMBF layout of the C2PA Sign fixture, its icon urls, and
+  the hash range (SHA-256 of the `c2pa.data` superbox without its header,
+  both manifests); `c2patool` 0.28.1's verdict (`Trusted`).
+- Decided by Maurice: go ahead during the consolidation period; SPEC-067
+  approved.
+
+## 2026-10-10 — Icons in data boxes (step 342)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: build SPEC-067 after its approval.
+- Produced: `src/Jumbf/JumbfParser.php`, `src/Manifest/IconReferenceCheck.php`,
+  `bin/make-databox-variants.php`, `tests/Unit/Manifest/DataBoxIconTest.php`,
+  `tests/Fixtures/databox/` (the fixture, four variants, the C2PA test
+  roots), `docs/comparison.md`, `docs/reading-c2pa-2.4.md`, `CHANGELOG.md`;
+  `notes/step-342-icons-in-data-boxes.md`; a row in `NOTES.md`.
+- Measured: tests red (8 failed) then green; six mutations caught, one dead
+  guard removed; the corpus before and after (1,792 runs, 10 move, all on
+  the new fixtures); `composer check` (1,019 passed); `bin/api-check.php`.
+- Decided by Maurice: none in this step.
+

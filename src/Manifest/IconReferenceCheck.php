@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Provemark\C2paVerifier\Manifest;
 
 use Provemark\C2paVerifier\Cbor\CborBytes;
+use Provemark\C2paVerifier\Jumbf\JumbfParser;
+use Provemark\C2paVerifier\Jumbf\Superbox;
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 
@@ -36,6 +38,15 @@ final readonly class IconReferenceCheck
                 continue;   // a resource reference, or not an icon map: not a hashed URI (amendment 2)
             }
             $url = $icon['url'];
+            // SPEC-067: an icon in a data box of earlier versions is read, and its hash checked.
+            if (str_contains($url, '/c2pa.databoxes/')) {
+                $status = self::checkDataBox($manifest, $url, $icon);
+                if ($status !== null) {
+                    $statuses[] = $status;
+                }
+
+                continue;
+            }
             $label = substr($url, strrpos($url, '/') + 1);
             if (! str_starts_with($url, 'self#jumbf=') || ! array_key_exists($label, $recorded)) {
                 $statuses[] = new ValidationStatus(StatusCode::AssertionMissing, $url, sprintf('could not resolve icon address: %s names no assertion this claim lists; an icon shall be a hashed URI to an embedded c2pa.icon (C2PA 2.4 §10.2.3.2), and data boxes of earlier versions are not read', $url));
@@ -52,6 +63,61 @@ final readonly class IconReferenceCheck
     }
 
     /** Whether the manifest carries any icon — the report names the check only then. */
+    /**
+     * The data box an icon url names, or null (SPEC-067 AC3–AC5).
+     *
+     * Only `self#jumbf=/c2pa/<this manifest's label>/c2pa.databoxes/<label>`,
+     * matched as a whole: another manifest's box, a deeper path, a store that
+     * is absent or not a superbox, a child that is not one, and two boxes under
+     * the label all resolve to nothing.
+     *
+     * @internal SPEC-025: not part of the public API.
+     */
+    public static function dataBox(Manifest $manifest, string $url): ?Superbox
+    {
+        $prefix = 'self#jumbf=/c2pa/'.$manifest->label.'/c2pa.databoxes/';
+        if (! str_starts_with($url, $prefix)) {
+            return null;
+        }
+        // A deeper path cannot match: JumbfParser refuses a label holding '/'.
+        $label = substr($url, strlen($prefix));
+
+        $stores = array_values(array_filter(
+            $manifest->box->superboxes(),
+            static fn (Superbox $box): bool => $box->description->label === 'c2pa.databoxes' && $box->description->uuid === JumbfParser::UUID_DATABOX_STORE,
+        ));
+        if (count($stores) !== 1) {
+            return null;
+        }
+        $boxes = array_values(array_filter(
+            $stores[0]->superboxes(),
+            static fn (Superbox $box): bool => $box->description->label === $label,
+        ));
+
+        return count($boxes) === 1 ? $boxes[0] : null;
+    }
+
+    /**
+     * An icon that names a data box: missing when it resolves to nothing, a
+     * mismatch when the box's payload does not hash to the icon's hash.
+     *
+     * @param  array<array-key, mixed>  $icon
+     */
+    private static function checkDataBox(Manifest $manifest, string $url, array $icon): ?ValidationStatus
+    {
+        $box = self::dataBox($manifest, $url);
+        if ($box === null) {
+            return new ValidationStatus(StatusCode::AssertionMissing, $url, sprintf('could not resolve icon address: %s names no data box of this manifest (C2PA 2.4 §10.2.3.2, §18.12.1)', $url));
+        }
+        $alg = is_string($icon['alg'] ?? null) ? $icon['alg'] : $manifest->claim->alg;
+        $hash = $icon['hash'] ?? null;
+        if (! in_array($alg, ['sha256', 'sha384', 'sha512'], true) || ! $hash instanceof CborBytes || ! hash_equals(hash($alg, $box->payload(), true), $hash->bytes)) {
+            return new ValidationStatus(StatusCode::AssertionHashedUriMismatch, $url, sprintf('icon hash does not match the data box it names (C2PA 2.4 §8.4.2.3, §15.10.3.3)'));
+        }
+
+        return null;
+    }
+
     public static function present(Manifest $manifest): bool
     {
         return self::icons($manifest) !== [];

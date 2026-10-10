@@ -5,6 +5,24 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Changed
+
+- **An icon in a data box is read, and its hash checked (SPEC-067).** C2PA
+  2.4 §10.2.3.2 asks consumers to keep supporting the data boxes of earlier
+  versions, and this verifier refused them (SPEC-034) until a real file had
+  one: the Drupal module C2PA Sign 1.4.11, which signs with `c2patool`
+  0.9.12, stores a site's logo as `c2pa.databoxes/c2pa.data` in every
+  manifest it writes. Such a file was `Invalid` here and `Trusted` in
+  `c2patool` 0.28.1. The `c2pa.databoxes` store is now walked, an icon url
+  naming a box of its own manifest resolves, and the box's payload must hash
+  to the icon's hash; a box that is not there stays `assertion.missing`, and
+  changed bytes are `assertion.hashedURI.mismatch`. `c2pa-rs` checks neither:
+  `c2patool` 0.28.1 reads three such altered variants as `Trusted`. Over the
+  corpus, only the five new data-box fixtures move. The public contract is
+  unchanged.
+
 ## 0.6.0 — 2026-10-09
 
 The whole of C2PA 2.4 read against the verifier (`docs/reading-c2pa-2.4.md`):

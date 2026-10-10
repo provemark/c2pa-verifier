@@ -54,11 +54,15 @@ final readonly class JumbfParser
 
     public const UUID_UUID_ASSERTION = '75756964-0011-0010-8000-00aa00389b71';   // uuid
 
+    /** The data box store of earlier versions (C2PA 2.4 §11.1.4.6, §18.12.1): read so an icon in it can be checked (SPEC-067). */
+    public const UUID_DATABOX_STORE = '63326462-0011-0010-8000-00aa00389b71';   // c2db
+
     /** The superbox types this parser walks into. */
     private const KNOWN_SUPERBOXES = [
         self::UUID_MANIFEST_STORE, self::UUID_MANIFEST, self::UUID_MANIFEST_C2MD, self::UUID_UPDATE_MANIFEST, self::UUID_ASSERTION_STORE,
         self::UUID_CLAIM, self::UUID_CLAIM_SIGNATURE,
         self::UUID_CBOR_ASSERTION, self::UUID_JSON_ASSERTION, self::UUID_EMBEDDED_FILE, self::UUID_UUID_ASSERTION,
+        self::UUID_DATABOX_STORE,
     ];
 
     private const CONTENT_TYPES = ['cbor', 'json', 'bfdb', 'bidb', 'uuid'];
