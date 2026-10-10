@@ -67,7 +67,7 @@ lenient than now, stricter than `c2pa-rs`.
 **Out of scope** (each needs its own spec before it may be built)
 
 - Data boxes named by anything other than an icon. No other reference to a
-  data box was found; a reference to one stays whatever it is today.
+  data box was found; a reference to one stays whatever it is today, except a redaction (amendment 1).
 - Interpreting the data box's content (its CBOR, an image format). As for
   `c2pa.icon` (SPEC-034), the bytes are bound, not judged.
 - Data boxes in another manifest of the store. An icon names its own
@@ -113,8 +113,9 @@ lenient than now, stricter than `c2pa-rs`.
     Existing JUMBF bounds apply unchanged.
 
 - **AC6 — nothing else moves**
-  - Given the whole corpus and every existing fixture, under the three
-    standard settings, before and after
+  - Given the whole corpus and every existing fixture, under the two
+    settings the corpus tool runs (none, and `trust/full.settings.json`),
+    before and after (corrected by amendment 1)
   - When verified
   - Then every verdict and status list is identical, except on files whose
     icon names a data box.
@@ -152,6 +153,34 @@ if (str_starts_with($url, $databoxPrefix)) {
 }
 ```
 
+## Amendments
+
+### Amendment 1 — from an independent review (approved by Maurice, 2026-10-10)
+
+1. **Each data box is hashed once per algorithm** within a manifest's
+   check, however many icons name it, as `HashedUriCheck` does for
+   assertions (SPEC-045 AC2). Without it, 2,000 icons naming one 8 MB box
+   took 42.5 s (measured by the review; before this spec, a fraction of a
+   second): the check runs whether or not the claim's signature holds, so
+   no key is needed. New criterion: a manifest with many icons naming one
+   large data box is checked in bounded time.
+2. **A redaction that names a data box is now checked.** `Manifest::resolve()`
+   used to throw "unknown box" for a data-box url, so `HashedUriCheck`
+   skipped such a redaction silently; it now resolves, and a box that still
+   holds bytes is `assertion.notRedacted`. This is accepted as correct, and
+   pinned by a test and a line in `docs/comparison.md`. The scope's "a
+   reference to one stays whatever it is today" is corrected accordingly.
+3. **The children of a `c2db` store go through the JUMBF rules** like every
+   other walked superbox (Requestable, label rules, budgets). A malformed
+   data box, even one no icon names, now refuses the store with a parse
+   error where it used to be ignored. Accepted: it is an error, never a
+   wrong `Valid`, and no real file in the corpus has one. Pinned by a test.
+4. **`alg` as `HashedUriCheck` handles it:** the icon's `alg`, or the
+   claim's; no algorithm, a non-string `alg`, or one outside sha256,
+   sha384, sha512 is `algorithm.unsupported`; a hash of the wrong length,
+   or not a byte string, is `assertion.hashedURI.mismatch`. New tests.
+5. Cosmetic: a misplaced docblock, a `sprintf` without arguments.
+
 ## Open questions
 
 - **The consolidation period** (no new features until about 22 October).
@@ -181,6 +210,7 @@ if (str_starts_with($url, $databoxPrefix)) {
 | AC4 | tests/Unit/Manifest/DataBoxIconTest.php :: resolves only the manifest's own data boxes / SPEC-067 | src/Manifest/IconReferenceCheck.php :: dataBox() (the prefix) |
 | AC5 | tests/Unit/Manifest/DataBoxIconTest.php :: resolves nothing for a child that is not a superbox; resolves nothing when two data boxes share the label; reads a data box only from a store of the data box type; resolves nothing when the manifest has two data box stores / SPEC-067 | src/Manifest/IconReferenceCheck.php :: dataBox() |
 | AC6 | the corpus before and after (notes/step-342-icons-in-data-boxes.md); every existing test unchanged | bin/make-databox-variants.php |
+| Amendment 1 | tests/Unit/Manifest/DataBoxIconTest.php :: hashes one data box once, however many icons name it; checks a redaction that names a data box; refuses the store when a data box breaks the JUMBF rules, named or not; handles the icon's alg as a claim entry's (6 cases) / SPEC-067 | src/Manifest/IconReferenceCheck.php :: check() ($digests), checkDataBox(), ALGORITHMS |
 
 The SPEC-067 tests were run red first (8 failed: every data-box url was
 `assertion.missing`, in both C2PA Sign manifests). Mutations watched
@@ -190,3 +220,11 @@ first of two stores taken. A seventh, a deeper path accepted, survived:
 `JumbfParser` already refuses a label holding `/`, so that guard was dead
 code and was removed. `composer check` green (1019 passed); the public
 contract unchanged (`bin/api-check.php`, 135 symbols).
+
+Amendment 1 (step 343): the bounded-time test and the alg cases were run red
+first (3.07 s; `checkDataBox` not reachable), then green (0.03 s). The
+redaction and JUMBF-rule tests pin behaviour the commit already had. Five
+mutations: no cache, alg always sha256, a non-string alg falling back, an
+unsupported alg reported as a mismatch were caught; a separate length check
+survived because `hash_equals` already refuses a hash of another length, and
+was removed. The corpus is identical to step 342's run.

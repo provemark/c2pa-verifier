@@ -25,6 +25,9 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  */
 final readonly class IconReferenceCheck
 {
+    /** The hash algorithms C2PA 2.4 §13.1 allows; a local list, as HashedUriCheck keeps its own. */
+    private const ALGORITHMS = ['sha256', 'sha384', 'sha512'];
+
     /** @return list<ValidationStatus> */
     public function check(Manifest $manifest): array
     {
@@ -33,6 +36,7 @@ final readonly class IconReferenceCheck
             $recorded[substr($entry->url, strrpos($entry->url, '/') + 1)] = $entry->hash->bytes;
         }
         $statuses = [];
+        $digests = [];   // SPEC-067 amendment 1: each data box hashed once per algorithm
         foreach (self::icons($manifest) as $icon) {
             if (! is_array($icon) || ! is_string($icon['url'] ?? null)) {
                 continue;   // a resource reference, or not an icon map: not a hashed URI (amendment 2)
@@ -40,7 +44,7 @@ final readonly class IconReferenceCheck
             $url = $icon['url'];
             // SPEC-067: an icon in a data box of earlier versions is read, and its hash checked.
             if (str_contains($url, '/c2pa.databoxes/')) {
-                $status = self::checkDataBox($manifest, $url, $icon);
+                $status = self::checkDataBox($manifest, $url, $icon, $digests);
                 if ($status !== null) {
                     $statuses[] = $status;
                 }
@@ -62,7 +66,6 @@ final readonly class IconReferenceCheck
         return $statuses;
     }
 
-    /** Whether the manifest carries any icon — the report names the check only then. */
     /**
      * The data box an icon url names, or null (SPEC-067 AC3–AC5).
      *
@@ -99,25 +102,37 @@ final readonly class IconReferenceCheck
 
     /**
      * An icon that names a data box: missing when it resolves to nothing, a
-     * mismatch when the box's payload does not hash to the icon's hash.
+     * mismatch when the box's payload does not hash to the icon's hash, and
+     * `algorithm.unsupported` as `HashedUriCheck` reports it for a claim entry:
+     * the icon's `alg`, or the claim's; none, a non-string one, or one outside
+     * sha256, sha384, sha512 (SPEC-067 amendment 1). Each box is hashed once
+     * per algorithm, in $digests, however many icons name it.
+     *
+     * @internal SPEC-025: not part of the public API.
      *
      * @param  array<array-key, mixed>  $icon
+     * @param  array<string, string>  $digests
      */
-    private static function checkDataBox(Manifest $manifest, string $url, array $icon): ?ValidationStatus
+    public static function checkDataBox(Manifest $manifest, string $url, array $icon, array &$digests): ?ValidationStatus
     {
         $box = self::dataBox($manifest, $url);
         if ($box === null) {
             return new ValidationStatus(StatusCode::AssertionMissing, $url, sprintf('could not resolve icon address: %s names no data box of this manifest (C2PA 2.4 §10.2.3.2, §18.12.1)', $url));
         }
-        $alg = is_string($icon['alg'] ?? null) ? $icon['alg'] : $manifest->claim->alg;
+        $alg = array_key_exists('alg', $icon) ? $icon['alg'] : $manifest->claim->alg;
+        if (! is_string($alg) || ! in_array($alg, self::ALGORITHMS, true)) {
+            return new ValidationStatus(StatusCode::AlgorithmUnsupported, $url, sprintf('the icon names no hash algorithm this verifier supports (sha256, sha384, sha512; C2PA 2.4 §13.1, §15.4.2)'));
+        }
         $hash = $icon['hash'] ?? null;
-        if (! in_array($alg, ['sha256', 'sha384', 'sha512'], true) || ! $hash instanceof CborBytes || ! hash_equals(hash($alg, $box->payload(), true), $hash->bytes)) {
-            return new ValidationStatus(StatusCode::AssertionHashedUriMismatch, $url, sprintf('icon hash does not match the data box it names (C2PA 2.4 §8.4.2.3, §15.10.3.3)'));
+        // A hash of the wrong length cannot be equal, so it needs no check of its own.
+        if (! $hash instanceof CborBytes || ! hash_equals($digests[spl_object_id($box).':'.$alg] ??= hash($alg, $box->payload(), true), $hash->bytes)) {
+            return new ValidationStatus(StatusCode::AssertionHashedUriMismatch, $url, 'icon hash does not match the data box it names (C2PA 2.4 §8.4.2.3, §15.10.3.3)');
         }
 
         return null;
     }
 
+    /** Whether the manifest carries any icon — the report names the check only then. */
     public static function present(Manifest $manifest): bool
     {
         return self::icons($manifest) !== [];

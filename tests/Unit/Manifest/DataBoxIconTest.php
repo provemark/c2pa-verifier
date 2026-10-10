@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Cbor\CborBytes;
+use Provemark\C2paVerifier\Cbor\CborDecoder;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
+use Provemark\C2paVerifier\Hash\HashedUriCheck;
+use Provemark\C2paVerifier\Jumbf\JumbfException;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\IconReferenceCheck;
 use Provemark\C2paVerifier\Manifest\Manifest;
@@ -228,6 +232,99 @@ it('resolves nothing, and does not throw, for a manifest without a data box stor
 
     expect(IconReferenceCheck::dataBox($first, 'self#jumbf=/c2pa/'.$first->label.'/c2pa.databoxes/c2pa.data'))->toBeNull();
 })->group('SPEC-067');
+
+// --- Amendment 1 -----------------------------------------------------------------
+
+it('hashes one data box once, however many icons name it', function () {
+    // The review's probe, built here: the active claim's one
+    // claim_generator_info entry repeated 300 times, and its data box grown by
+    // 4 MB. Before amendment 1 each icon hashed the whole box again (300 x 4 MB).
+    require_once dirname(__DIR__, 3).'/bin/variant-helpers.php';
+    $store = spec067Store();
+    $active = spec067Manifests($store)[SPEC067_ACTIVE];
+    $claim = null;
+    foreach ($active->box->superboxes() as $child) {
+        if (str_starts_with($child->description->label, 'c2pa.claim')) {
+            $claim = $child;
+        }
+    }
+    assert($claim !== null);
+    $content = $claim->contentBoxes()[0];
+    $at = strpos($store, 'claim_generator_info', $content->offset + 8);
+    assert(is_int($at));
+    $at += 20;
+    expect(ord($store[$at]))->toBe(0x81);   // a one-entry CBOR array, as measured
+    $end = null;
+    for ($j = $at + 2; $j < $content->offset + $content->length; $j++) {
+        try {
+            (new CborDecoder)->decode(substr($store, $at + 1, $j + 1 - $at - 1));
+            $end = $j + 1;
+            break;
+        } catch (Throwable) {
+        }
+    }
+    assert(is_int($end));
+    $entry = substr($store, $at + 1, $end - $at - 1);
+    $store = bSplice($store, $at, $end - $at, "\x99".pack('n', 300).str_repeat($entry, 300), [0, $active->box->offset, $claim->offset, $content->offset]);
+
+    $active = spec067Manifests($store)[SPEC067_ACTIVE];
+    $databoxes = null;
+    foreach ($active->box->superboxes() as $child) {
+        if ($child->description->label === 'c2pa.databoxes') {
+            $databoxes = $child;
+        }
+    }
+    assert($databoxes !== null);
+    $box = $databoxes->superboxes()[0];
+    $boxContent = $box->contentBoxes()[0];
+    $store = bSplice($store, $boxContent->offset + $boxContent->length, 0, str_repeat("\0", 4 * 1024 * 1024), [0, $active->box->offset, $databoxes->offset, $box->offset, $boxContent->offset]);
+    $grown = spec067Manifests($store)[SPEC067_ACTIVE];
+
+    $started = hrtime(true);
+    $statuses = (new IconReferenceCheck)->check($grown);
+    $seconds = (hrtime(true) - $started) / 1e9;
+
+    // 300 icons, each a mismatch now that the box grew: all were checked.
+    expect(count(array_filter($statuses, fn ($s) => $s->code === StatusCode::AssertionHashedUriMismatch)))->toBe(300)
+        ->and($seconds)->toBeLessThan(1.0);
+})->group('SPEC-067');
+
+it('checks a redaction that names a data box', function () {
+    $upload = spec067Manifests()[SPEC067_UPLOAD];
+    $url = 'self#jumbf=/c2pa/'.SPEC067_UPLOAD.'/c2pa.databoxes/c2pa.data';
+
+    $codes = array_map(fn ($s) => $s->code->value.' '.$s->url, (new HashedUriCheck)->check($upload->withRedactions([$url])));
+
+    expect($codes)->toContain('assertion.notRedacted '.$url);
+})->group('SPEC-067');
+
+it('refuses the store when a data box breaks the JUMBF rules, named or not', function () {
+    // Requestable (bit 0x01 of the toggles, measured 0x13) cleared on the active manifest's c2pa.data description box.
+    $store = spec067EditDataBoxStore("\x13c2pa.data\0", "\x12c2pa.data\0");
+
+    expect(fn () => spec067Manifests($store))->toThrow(JumbfException::class, 'Requestable is not set');
+})->group('SPEC-067');
+
+it('handles the icon\'s alg as a claim entry\'s', function (array $icon, ?string $expected) {
+    $upload = spec067Manifests()[SPEC067_UPLOAD];
+    $url = 'self#jumbf=/c2pa/'.SPEC067_UPLOAD.'/c2pa.databoxes/c2pa.data';
+    $box = IconReferenceCheck::dataBox($upload, $url);
+    assert($box !== null);
+    $good = new CborBytes(hash('sha256', $box->payload(), true));
+    $icon = array_map(fn ($v) => $v === 'GOOD' ? $good : $v, ['url' => $url, ...$icon]);
+
+    $digests = [];
+    $status = IconReferenceCheck::checkDataBox($upload, $url, $icon, $digests);
+
+    expect($status?->code->value)->toBe($expected);
+})->with([
+    'sha256, the right hash' => [['alg' => 'sha256', 'hash' => 'GOOD'], null],
+    'no alg: the claim\'s' => [['hash' => 'GOOD'], null],
+    'sha1' => [['alg' => 'sha1', 'hash' => 'GOOD'], 'algorithm.unsupported'],
+    'a non-string alg' => [['alg' => 5, 'hash' => 'GOOD'], 'algorithm.unsupported'],
+    'sha384 over a 32-byte hash' => [['alg' => 'sha384', 'hash' => 'GOOD'], 'assertion.hashedURI.mismatch'],
+    'a hash that is not bytes' => [['alg' => 'sha256', 'hash' => 'text'], 'assertion.hashedURI.mismatch'],
+])->group('SPEC-067');
 
 it('reports the codes as named', function () {
     // Pins the enum values the expectations above spell out as strings.

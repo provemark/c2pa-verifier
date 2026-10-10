@@ -10424,3 +10424,17 @@ README are where the disclosure lives.
   the new fixtures); `composer check` (1,019 passed); `bin/api-check.php`.
 - Decided by Maurice: none in this step.
 
+## 2026-10-10 — SPEC-067 amendment 1 (step 343)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "kan je de nieuwe code onafhankelijk reviewen?", then "ja,
+  goedgekeurd" for amendment 1.
+- Produced: an independent review (a separate agent, read-only); the
+  amendment in `specs/SPEC-067-icons-in-data-boxes.md`;
+  `src/Manifest/IconReferenceCheck.php`; new tests in
+  `tests/Unit/Manifest/DataBoxIconTest.php`; `docs/comparison.md`;
+  `notes/step-343-spec-067-amendment-1.md`; a row in `NOTES.md`.
+- Measured: the slowdown (3.07 s → 0.03 s on the test's probe; 42.5 s on
+  the review's); tests red then green; five mutations; the corpus.
+- Decided by Maurice: amendment 1 as proposed, including accepting the
+  stricter redaction and JUMBF-rule behaviour.
+
