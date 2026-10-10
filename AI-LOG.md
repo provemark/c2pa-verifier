@@ -10446,3 +10446,13 @@ README are where the disclosure lives.
 - Measured: `composer check`; `bin/api-check.php`; `bin/spec-check.php`.
 - Decided by Maurice: push and release 0.6.1.
 
+## 2026-10-10 — 0.6.1 released (step 345)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, push en breng 0.6.1 uit".
+- Produced: `ea2d9f7` pushed; the annotated tag `v0.6.1`, pushed;
+  `notes/step-345-release-0.6.1.md`; a row in `NOTES.md`.
+- Measured: CI on the commit and on the tag (both green, 8 jobs);
+  Packagist's `p2` metadata; a fresh `composer require` and one run of the
+  installed command on the C2PA Sign logo fixture.
+- Decided by Maurice: release 0.6.1.
+
