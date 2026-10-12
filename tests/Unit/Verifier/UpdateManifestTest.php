@@ -155,6 +155,26 @@ it('AC6: a standard manifest with two parentOf ingredients is manifest.multipleP
         ->and(spec021OracleFailures('update-manifest/two-parents.json'))->toBe(['manifest.multipleParents']);
 })->group('SPEC-022');
 
+// AC6, amendment 7: the rule is §15.10.1.2's, and c2patool 0.28 no longer applies it to these parents
+it('AC6 (amendment 7): every parentOf counts, as §15.10.1.2 says, where c2patool 0.28 counts only those naming a manifest', function (): void {
+    $report = spec020Verify('update-manifest/two-parents.png', SPEC022_VARIANT_SETTINGS);
+    $parents = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::ManifestMultipleParents));
+    $oracle = spec020Oracle('update-manifest/two-parents--0.28.2.json');
+    $active = $oracle['active_manifest'];
+    assert(is_string($active));
+    /** @var list<array<string, mixed>> $ingredients */
+    $ingredients = spec020OracleManifest('update-manifest/two-parents--0.28.2.json', $active)['ingredients'];
+
+    expect($parents)->toHaveCount(1)
+        ->and($parents[0]->explanation)->toContain('C2PA 2.4 §15.10.1.2')
+        ->and($parents[0]->explanation)->not->toContain('§15.11')
+        // both parents name no manifest, which is why c2pa 0.91 does not count them
+        ->and(array_column($ingredients, 'relationship'))->toBe(['parentOf', 'parentOf'])
+        ->and(array_filter($ingredients, static fn (array $i): bool => isset($i['active_manifest'])))->toBe([])
+        ->and($oracle['validation_state'])->toBe('Trusted')
+        ->and(spec021OracleFailures('update-manifest/two-parents--0.28.2.json'))->toBe([]);
+})->group('SPEC-022');
+
 // AC7
 it('AC7: c2cm and c2tm stay refused; only c2um was opened', function (): void {
     $original = (string) file_get_contents(Corpus::fixtures().'/binding/no-hard-binding.bin');

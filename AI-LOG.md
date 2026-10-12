@@ -10456,3 +10456,23 @@ README are where the disclosure lives.
   installed command on the C2PA Sign logo fixture.
 - Decided by Maurice: release 0.6.1.
 
+
+## 2026-10-12 — The one-parent rule (step 346)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: after a re-run of the Go comparison showed c2patool 0.28.2 calling
+  `two-parents.png` `Trusted`, "kijk naar two-parents.png in c2patool
+  0.28.2", then "doe punt 1 en 2 als één stap nu": name the divergence in
+  `docs/comparison.md` and correct the section number.
+- Produced: SPEC-022 amendment 7; `src/Manifest/UpdateManifestCheck.php`
+  and `src/Verifier/Verifier.php` (§15.11 → §15.10.1.2);
+  `tests/Unit/Verifier/UpdateManifestTest.php` (a test next to AC6);
+  `tests/Fixtures/c2patool/update-manifest/two-parents--0.28.2.json` and
+  its README; a row in `docs/comparison.md`; `docs/reading-c2pa-2.4.md`;
+  `notes/step-346-one-parent-rule.md`; a row in `NOTES.md`.
+- Measured: c2patool 0.27.22, 0.28.1 and 0.28.2 on the file; the c2pa-rs
+  history (`git log -S has_valid_parent`, `git tag --contains`); the 2.3
+  and 2.4 specification text; the test red, then green, and its negative
+  assertion seen red; `composer check` (1,029 passed), `php bin/spec-check.php`.
+- Decided by Maurice: keep counting every `parentOf` assertion as the
+  specification says, and do the comparison row and the section fix as one
+  step inside the consolidation.

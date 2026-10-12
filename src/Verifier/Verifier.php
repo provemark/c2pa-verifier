@@ -317,7 +317,7 @@ final readonly class Verifier
             $checks[] = 'icons';
         }
 
-        // an update manifest lives under §11.2.3's rules, and a standard manifest under §15.11's
+        // an update manifest lives under §11.2.3's rules, and a standard manifest under §15.10.1.2's
         // one-parent rule — both need the graph's ingredients (SPEC-022)
         if ($graph !== null) {
             $scopes = [];

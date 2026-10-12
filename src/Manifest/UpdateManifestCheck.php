@@ -9,7 +9,7 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
 
 /**
  * The rules an update manifest lives under (SPEC-022; C2PA 2.4 §11.2.3),
- * and the one rule §15.11 puts on a standard manifest's parents.
+ * and the one rule §15.10.1.2 puts on a standard manifest's parents.
  *
  * An update manifest adds assertions without touching the content: it
  * therefore carries no hard binding and no thumbnail, its actions may
@@ -86,9 +86,9 @@ final readonly class UpdateManifestCheck
             $statuses[] = new ValidationStatus($code, '', $explanation);
         };
         if (! $isUpdateManifest) {
-            // §15.11: an asset is derived from one thing
+            // §15.10.1.2: an asset is derived from one thing
             if ($parents > 1) {
-                $say(StatusCode::ManifestMultipleParents, sprintf('the manifest names %d ingredients with the relationship parentOf; a manifest has at most one parent (C2PA 2.4 §15.11)', $parents));
+                $say(StatusCode::ManifestMultipleParents, sprintf('the manifest names %d ingredients with the relationship parentOf; a manifest has at most one parent (C2PA 2.4 §15.10.1.2)', $parents));
             }
 
             return $statuses;

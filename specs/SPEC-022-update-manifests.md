@@ -113,7 +113,7 @@ since the parser refuses it):
     with more than one ingredient of any relationship →
     `manifest.update.invalid`;
   - a **standard** manifest with more than one `parentOf` ingredient →
-    `manifest.multipleParents` (§15.11, c2pa-rs `verify_internal`).
+    `manifest.multipleParents` (§15.10.1.2, c2pa-rs `verify_internal`).
   The url is the claim's (`self#jumbf=/c2pa/<label>/c2pa.claim[.v2]`), as
   c2pa-rs logs it; a status for a manifest that is not the active one is
   scoped to the ingredient assertion that named it (SPEC-021's rule).
@@ -318,7 +318,7 @@ final readonly class UpdateManifestCheck
     public const array ALLOWED_ACTIONS = ['c2pa.edited.metadata', 'c2pa.opened', 'c2pa.published', 'c2pa.redacted'];
 
     /**
-     * §11.2.3 for every manifest in the store, plus §15.11's one-parent rule for standard manifests.
+     * §11.2.3 for every manifest in the store, plus §15.10.1.2's one-parent rule for standard manifests.
      *
      * @param  array<string, list<IngredientAssertion>>  $ingredients  the graph's, per manifest label
      * @return list<ValidationStatus>
@@ -450,6 +450,30 @@ actions check.
    `Valid` becomes `Invalid`, as in both `c2patool` versions. New
    criterion AC10.
 
+7. **2026-10-12, step 346, measured — stricter than c2patool 0.28** *(decided by Maurice van Loon, 2026-10-12)* —
+   two corrections to AC6, neither of which changes a verdict.
+
+   The one-parent rule is C2PA 2.4 **§15.10.1.2** (Standard Manifest
+   Assertions): *"Validate that there are zero or one c2pa.ingredient
+   assertions whose relationship is parentOf. If there is more than one,
+   the manifest shall be rejected with a failure code of
+   manifest.multipleParents."* This spec, the code comments and the
+   explanation in the report said §15.11, which is the ingredient walk.
+   All of them now say §15.10.1.2. C2PA 2.3 has the same sentence.
+
+   And `c2patool` no longer agrees on `two-parents.png`. 0.27.22 says
+   `Invalid` with `manifest.multipleParents` (AC6's oracle, unchanged);
+   0.28.0 (step 107), 0.28.1 and 0.28.2 say `Trusted`. The cause is
+   c2pa-rs commit `be7f5ea2` ("Update for C2PA 2.3 spec", in c2pa
+   0.91.0): `verify_internal` now counts a `parentOf` ingredient only
+   when it names a manifest (`c2pa_manifest` up to v2, `c2pa_manifest`
+   and a signature in v3). Both parents in `two-parents.png` name none,
+   so the count is zero. The specification counts assertions, not
+   manifest references, and this verifier keeps doing so. The 0.28.2
+   output is recorded as `two-parents--0.28.2.json` and pinned next to
+   AC6, so a future `c2patool` that returns to the rule shows up as a
+   failing test. Named in `docs/comparison.md`.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -462,7 +486,7 @@ least one test; every source file maps back to this spec.
 | AC3 | tests/Unit/Verifier/UpdateManifestTest.php :: AC3 / SPEC-022 | src/Hash/DataHashCheck.php (the §15.12.1.1 adjustment) |
 | AC4 | tests/Unit/Verifier/UpdateManifestTest.php :: AC4 / SPEC-022 | src/Manifest/UpdateManifestCheck.php (`rules()`); src/Manifest/ActionsCheck.php (the update exemption) |
 | AC5 | tests/Unit/Verifier/UpdateManifestTest.php :: AC5 / SPEC-022 | src/Verifier/Verifier.php (`claim.hardBindings.missing` when the chain ends) |
-| AC6 | tests/Unit/Verifier/UpdateManifestTest.php :: AC6 / SPEC-022 | src/Manifest/UpdateManifestCheck.php (`rules()`, the one-parent rule) |
+| AC6 (amendment 7) | tests/Unit/Verifier/UpdateManifestTest.php :: AC6 / SPEC-022; AC6 (amendment 7) / SPEC-022 | src/Manifest/UpdateManifestCheck.php (`rules()`, the one-parent rule) |
 | AC7 | tests/Unit/Verifier/UpdateManifestTest.php :: AC7 / SPEC-022; tests/Unit/Jumbf/JumbfParserTest.php :: AC13 / SPEC-005 | src/Jumbf/JumbfParser.php (`refuseUnreadable()`, `UUID_TIMESTAMP_MANIFEST`) |
 | AC8 | tests/Unit/Verifier/UpdateManifestTest.php :: AC8 / SPEC-022 | src/Manifest/Claim.php (an empty `claim_generator_info`) |
 | AC9 | tests/Unit/Verifier/UpdateManifestTest.php :: AC9 / SPEC-022; tests/Unit/Verifier/VerifierTest.php :: AC12 / SPEC-013 | tests/Pest.php; the whole verification path |
