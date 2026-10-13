@@ -10731,3 +10731,18 @@ README are where the disclosure lives.
   passed, 1 skipped.
 - Reasoned: none beyond the spec.
 - Decided by Maurice: option (a); SPEC-072 approved; in 0.7.0.
+
+## 2026-10-13 — The release commit for 0.7.0 (step 361)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, maak release 0.7.0 zodra alles goed is in de CI".
+- Produced: `CHANGELOG.md` (0.7.0); `README.md` (the tag paragraph);
+  `notes/step-361-release-0.7.0.md`; a row in `NOTES.md`.
+- Measured: CI on `bd29cb5`, 8/8 green; the corpus at `v0.6.1` against HEAD
+  (worktree, `vendor/` copied): no state differs over 793 files × 2 modes,
+  40 files change in codes; `bin/api-check.php` 136 symbols;
+  `bin/package-check.php` 486 files, 4.9 MB; `composer check` 1,109 passed,
+  1 skipped.
+- Reasoned: that the sister library (`<0.6.1 || >=0.7` conflict) and the
+  Drupal module (`^0.6`) do not take 0.7.0 until updated, read from their
+  constraints.
+- Decided by Maurice: release 0.7.0 once CI is green.

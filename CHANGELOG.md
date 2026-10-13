@@ -5,6 +5,67 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.7.0 — 2026-10-13
+
+A minor release. A data hash or a BMFF hash may no longer leave the image
+or the media outside what is signed. Pixel Camera videos verify. Ingredient
+failures that a signer acknowledged are reported. The public contract grows
+by one property, `ValidationStatus::$acknowledged`.
+
+### Security
+
+- **What a hash may exclude (SPEC-068, SPEC-069, SPEC-071).** D. Buchanan's
+  "How to Hack Time, With C2PA" (2 October 2026) signs one exclusion over a
+  whole file. That shape was already refused here (SPEC-012 amendment 7),
+  but the same effect survived. A `c2pa.hash.data` that excluded
+  everything but the manifest store, or only the PNG image data, and a
+  `c2pa.hash.bmff` that excluded `/mdat` or `/moov`, were `Trusted` here
+  with a pixel or a sample changed after signing. `c2patool` 0.28.1 and
+  0.28.2 still call all of these `Trusted`. Now:
+  - a data hash that leaves no byte of the file is
+    `assertion.dataHash.mismatch` (SPEC-068);
+  - an exclusion beyond the manifest store is allowed only wholly inside
+    the payload of a JPEG APP1 Exif or XMP segment of the primary image,
+    which is what the Google Pixel 10 writes, and nowhere in any other
+    format (SPEC-069);
+  - a BMFF exclusion is allowed only for what `c2pa-rs` and Pixel Camera
+    write: the C2PA `uuid` box, `ftyp`, `mfra`, `free`, `skip`,
+    `meta/iloc`, `mfra/tfra`, `moov/free`, `moov/udta`, `moov/meta`, the
+    offset fields of `stco`, `co64`, `tfhd` and `trun` from offset 16, and
+    a track excluded by index only when its handler is timed metadata
+    (SPEC-071, SPEC-072);
+  - anything else is a mismatch, judged by where the range or path lies,
+    before the file is hashed.
+
+  Over the fixtures and corpora, no verdict moves between 0.6.1 and 0.7.0.
+  A writer that excludes something else will now get `Invalid` here. The
+  lists grow only by amendment, with a real file.
+
+### Added
+
+- **Pixel Camera video (SPEC-072).** A QuickTime-style `meta` box (no
+  version and flags) is read, and indexed xpath steps (`/moov[1]/trak[3]`,
+  1-based, as `c2pa-rs` 0.91) are resolved. A Pixel Camera video was a
+  wrong `Invalid` here, and now verifies as it does in `c2patool`. A
+  malformed index is `assertion.bmffHash.malformed`.
+- **`ValidationStatus::$acknowledged` (SPEC-070).** A failure an
+  ingredient assertion recorded (C2PA 2.4 §18.16.12.4) used to be dropped
+  from the report, as `c2pa-rs` does. It is now kept, marked as
+  acknowledged, explained as *"acknowledged by the signer of … not counted
+  in the verdict"*, and rendered under that ingredient's
+  `validationDeltas.informational`. The verdict is unchanged, and
+  `validation_status` (failures only) is unchanged. **A caller that walks
+  `$report->result->statuses` and asks `$status->code->isFailure()` must
+  now skip `$status->acknowledged`.**
+
+### Changed
+
+- The informational for an allowed exclusion says that the excluded bytes
+  are not signed: Exif or XMP values such as a GPS position or a capture
+  time (SPEC-069 amendment 1, after Golaszewski et al.'s Pixel 10 Pro GPS
+  alteration), and `udta`, `meta` or a timed-metadata track in a video
+  (SPEC-072).
+
 ## 0.6.1 — 2026-10-10
 
 A patch release: icons in the data boxes of earlier C2PA versions are read
