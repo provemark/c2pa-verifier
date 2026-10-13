@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-13                      |
 | Supersedes | SPEC-012 AC4 in one case: additional exclusions that leave nothing to hash are no longer "honoured as signed" |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -133,6 +133,8 @@ non-overlapping and in bounds at that point, so the sum is exact.
 - None blocking. SPEC-069 subsumes this spec for every format it covers.
   It is kept anyway: it can ship first, as a single line, and it keeps
   the plainest case's explanation plain.
+  *Status 2026-10-13 (step 351):* settled. Maurice approved this spec on
+  its own, ahead of SPEC-069.
 
 ## Traceability
 
@@ -141,7 +143,13 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
+| AC1 | tests/Unit/Hash/DataHashCoversNothingTest.php :: reports a data hash whose exclusions cover every byte as a mismatch, without hashing (2 files × 2 modes) / SPEC-068 | src/Hash/DataHashCheck.php :: check() (the zero-byte check, after the store-exclusion checks) |
+| AC2 | tests/Unit/Hash/DataHashCoversNothingTest.php :: keeps amendment 7's answer for one exclusion over the whole file / SPEC-068 | src/Hash/DataHashCheck.php :: check() (the order: amendment 7 first) |
+| AC3 | tests/Unit/Hash/DataHashCoversNothingTest.php :: does not refuse a data hash that leaves one byte: the floor / SPEC-068 | src/Hash/DataHashCheck.php :: check(); bin/make-exclusion-coverage-variants.php (`all-but-one-byte`) |
+| AC4 | the corpus before and after (notes/step-351-data-hash-covers-nothing.md); every existing test unchanged | — |
+
+The AC1 tests were run red first (4 failed: two statuses, `match` and the
+informational, where one `mismatch` was expected). AC2 and AC3 pin
+behaviour that was already there, and were green from the start. Two
+mutations were watched failing: the bound at `<= 1` (AC3 fails) and the
+check moved before amendment 7's (AC2 fails). `composer check` green.

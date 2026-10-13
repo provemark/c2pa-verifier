@@ -222,6 +222,11 @@ final readonly class DataHashCheck
             }
         }
 
+        // ---- a hash over nothing binds nothing (SPEC-068): the ranges are sorted, apart and in bounds here ----
+        if ($end - array_sum(array_column($exclusions, 'length')) === 0) {
+            return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('the exclusions leave no byte of the %d-byte file to hash: %s; a data hash over nothing binds nothing', $end, implode(', ', array_map(static fn (array $r): string => sprintf('[%d, %d]', $r['start'], $r['length']), $exclusions))))];
+        }
+
         // ---- the hash, streamed ----
         try {
             $actual = $this->hashExcept($reader, $alg, $exclusions, $end);

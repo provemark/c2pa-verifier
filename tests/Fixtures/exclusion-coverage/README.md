@@ -17,6 +17,7 @@ which signs one exclusion over the whole file.
 | `whole-file` | `[0, 47735]` | 0 of 47,735 | `Invalid`, `assertion.dataHash.mismatch` ("exclusion does not match the manifest location") | the same | `Invalid`, `assertion.dataHash.mismatch` (SPEC-012 amendment 7) |
 | `all-but-store` | `[0, 33]`, `[33, 46074]`, `[46107, 1666]` | 0 of 47,773 | `Trusted` + informational `additionalExclusionsPresent` | the same | the same |
 | `all-but-store-pixel-edited` | the same file, one IDAT byte changed after signing | 0 | `Trusted` + informational | the same | the same |
+| `all-but-one-byte` (step 351) | `[0, 33]`, `[33, 46074]`, `[46107, 1665]`: the last byte of IEND's CRC hashed | 1 of 47,773 | `Trusted` + informational | the same | the same (SPEC-068 AC3: the floor) |
 | `idat-excluded` | `[33, 46057]`, `[46111, 1633]` (IDAT up to IEND) | 66 of 47,756 | `Trusted` + informational | the same | the same |
 | `idat-excluded-pixel-edited` | the same file, one IDAT byte changed after signing | 66 | `Trusted` + informational | the same | the same |
 

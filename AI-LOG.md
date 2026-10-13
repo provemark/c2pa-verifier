@@ -10556,3 +10556,22 @@ README are where the disclosure lives.
   conversation, so that a missing entry fails closed. Flagged in the
   spec's Problem section for Maurice's approval.
 - Decided by Maurice: write both specs.
+
+## 2026-10-13 — SPEC-068: a data hash over nothing is a mismatch (step 351)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-068 approved, begin met de tests".
+- Produced: SPEC-068 approved, then implemented (traceability filled);
+  `tests/Unit/Hash/DataHashCoversNothingTest.php`; the zero-byte check in
+  `src/Hash/DataHashCheck.php`; `all-but-one-byte` in
+  `bin/make-exclusion-coverage-variants.php` (all `exclusion-coverage`
+  files and answers regenerated under a new throw-away hierarchy); a row
+  in `docs/comparison.md`; `notes/step-351-data-hash-covers-nothing.md`;
+  a row in `NOTES.md`.
+- Measured: `vendor/bin/pest --group=SPEC-068` 4 failed / 2 passed before,
+  6 passed after. Two mutations caught. A before/after run over 793
+  fixtures in two modes was identical on state, codes and data-hash
+  explanations. The other explanations differ only by the time of the
+  check, shown by running one file twice without the change.
+  `composer check` 1,035 passed. `php bin/spec-check.php` OK.
+- Reasoned: none beyond the spec.
+- Decided by Maurice: SPEC-068 approved, on its own, ahead of SPEC-069.

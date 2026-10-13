@@ -24,6 +24,7 @@ declare(strict_types=1);
  *   whole-file                  one exclusion [0, file length]: the article's shape
  *   all-but-store               [0, 33] + the store + [store end, file end]: zero bytes hashed
  *   all-but-store-pixel-edited  the same file with one IDAT byte changed after signing
+ *   all-but-one-byte            the same three ranges, the last one byte short: one byte hashed (step 351, SPEC-068 AC3)
  *   idat-excluded               the store + [first IDAT, IEND): only the image data left out
  *   idat-excluded-pixel-edited  the same file with one IDAT byte changed after signing
  *
@@ -207,6 +208,7 @@ $variants = [
     'control-resigned' => [$s, [[33, 12 + strlen($s)]]],
     'whole-file' => $rebound(static fn (int $n): array => [[0, 33 + 12 + $n + $tail]]),
     'all-but-store' => $rebound(static fn (int $n): array => [[0, 33], [33, 12 + $n], [33 + 12 + $n, $tail]]),
+    'all-but-one-byte' => $rebound(static fn (int $n): array => [[0, 33], [33, 12 + $n], [33 + 12 + $n, $tail - 1]]),
     'idat-excluded' => $rebound(static fn (int $n): array => [[33, 12 + $n], [33 + 12 + $n + $idatFromTail, $idatSpan]]),
 ];
 
@@ -277,7 +279,7 @@ foreach ($variants as $name => [$edited, $ranges]) {
     $hashed = strlen($signed) - array_sum(array_column($ranges, 1));
     $files[$name] = $signed;
     printf("%s  %-28s %d of %d bytes hashed, exclusions %s\n", hash('sha256', $signed), $name, $hashed, strlen($signed), implode(' ', array_map(static fn (array $r): string => "[{$r[0]}, {$r[1]}]", $ranges)));
-    if ($name !== 'control-resigned' && $name !== 'whole-file') {
+    if (in_array($name, ['all-but-store', 'idat-excluded'], true)) {
         $files["{$name}-pixel-edited"] = pngPixelChanged($signed);
     }
 }
