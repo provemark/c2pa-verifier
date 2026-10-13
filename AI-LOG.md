@@ -10520,3 +10520,23 @@ README are where the disclosure lives.
 - Reasoned: `/tools export-ignore` keeps it out of the Composer package;
   not checked with `bin/package-check.php`.
 - Decided by Maurice: the tool gets its own step after the comparison rows.
+
+## 2026-10-13 — The data hash may leave out the whole image, measured (step 349)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: read D. Buchanan's "How to Hack Time, With C2PA" and check whether
+  the verifier still holds; then "akkoord, begin met de meting".
+- Produced: `bin/make-exclusion-coverage-variants.php`;
+  `tests/Fixtures/exclusion-coverage/` (six PNGs, the throw-away root and
+  its settings, `README.md`); `tests/Fixtures/c2patool/exclusion-coverage/`
+  (twelve answers); `notes/step-349-exclusion-coverage.md`; a row in
+  `NOTES.md`.
+- Measured: `php bin/make-exclusion-coverage-variants.php <scratch>
+  <c2patool 0.28.1> <c2patool 0.28.2>`. A whole-file exclusion is
+  `Invalid` in all three verifiers. Three ranges covering everything but
+  the store, or the store plus IDAT, are `Trusted` with an informational
+  `assertion.dataHash.additionalExclusionsPresent` in all three, also with
+  a pixel changed after signing.
+- Reasoned: before measuring, from `src/Hash/DataHashCheck.php` and
+  SPEC-012 amendment 7, that the three-range shape would pass. JPEG, WebP
+  and BMFF were not measured.
+- Decided by Maurice: measure first, then a spec.
