@@ -27,6 +27,13 @@ final readonly class ValidationStatus
          * rendering below is unchanged.
          */
         public ?string $ingredientUri = null,
+        /**
+         * SPEC-070: a status about an ingredient that the ingredient assertion already recorded
+         * (C2PA 2.4 §18.16.12.4: the writer "acknowledged validation errors ... and has chosen to
+         * proceed"). It is reported under the ingredient's informational statuses and counts for
+         * nothing in the verdict, where c2pa-rs drops it from the report altogether.
+         */
+        public bool $acknowledged = false,
     ) {
         // a check may quote what a certificate or a file carries (a damaged KeyUsage comes back
         // from OpenSSL as raw bytes); a report that cannot be written as JSON is no report

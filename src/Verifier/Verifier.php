@@ -412,7 +412,7 @@ final readonly class Verifier
         if ($graph !== null) {
             $borrowed = self::bindingOf($manifest, $manifestStore, $graph);
             $bindingLabel = $borrowed === null || $borrowed === $manifest ? null : $borrowed->label;
-            $statuses = $this->ingredients->drop($statuses, IngredientManifestCheck::recordedInStore($graph), $manifestStore->active->label, $bindingLabel);
+            $statuses = $this->ingredients->acknowledge($statuses, IngredientManifestCheck::recordedInStore($graph), $manifestStore->active->label, $bindingLabel);
         }
 
         return ValidationResult::fromStatuses($statuses, $checks);

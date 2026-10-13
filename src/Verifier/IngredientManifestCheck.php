@@ -42,7 +42,7 @@ use Provemark\C2paVerifier\Trust\TrustSettings;
  *
  * Every status carries the URI of the ingredient assertion that named the
  * manifest, so the report groups it under `ingredientDeltas`. A status the
- * assertion itself already recorded is dropped (§18.16.12.4: the writer
+ * assertion itself already recorded is marked acknowledged (SPEC-070; §18.16.12.4: the writer
  * acknowledged it and went on) — except when its url names the active
  * manifest, which no ingredient assertion may speak for (CAI-12751).
  *
@@ -327,32 +327,43 @@ final readonly class IngredientManifestCheck
     }
 
     /**
-     * Statuses minus the ones the assertion recorded — never one whose url names the active manifest,
-     * and never a failure of the manifest whose hard binding an update manifest borrows (amendment 6):
-     * that binding is what ties the asset to the credential, so no record may excuse its fault.
+     * Statuses with the failures the assertion recorded marked as acknowledged (SPEC-070; SPEC-021 AC4
+     * dropped them, as c2pa-rs does): reported as informational, counted for nothing. A recorded success
+     * or informational line is still dropped (SPEC-070 amendment 1): it hides nothing. Never one whose
+     * url names the active manifest, and never a failure of the manifest whose hard binding an update
+     * manifest borrows (amendment 6): that binding is what ties the asset to the credential, so no
+     * record may excuse its fault. Those stay as they are.
      *
      * @param  list<ValidationStatus>  $statuses
      * @param  list<string>  $recorded  the keys of self::recorded()
      * @param  string|null  $bindingLabel  the binding manifest of an update manifest, null without one
      * @return list<ValidationStatus>
      */
-    public function drop(array $statuses, array $recorded, string $activeLabel, ?string $bindingLabel): array
+    public function acknowledge(array $statuses, array $recorded, string $activeLabel, ?string $bindingLabel): array
     {
         $active = sprintf('self#jumbf=/c2pa/%s', $activeLabel);
         $binding = $bindingLabel === null ? null : sprintf('self#jumbf=/c2pa/%s', $bindingLabel);
 
-        return array_values(array_filter($statuses, static function (ValidationStatus $status) use ($recorded, $active, $binding): bool {
-            if ($status->ingredientUri === null) {
-                return true;   // the active manifest's own line, never dropped
-            }
-            if ($status->url === $active || str_starts_with($status->url, $active.'/')) {
-                return true;   // the guard: no ingredient assertion speaks for the manifest being verified
-            }
-            if ($binding !== null && $status->code->isFailure() && ($status->url === $binding || str_starts_with($status->url, $binding.'/'))) {
-                return true;   // nor for the manifest that binds the asset in its stead
-            }
+        $out = [];
+        foreach ($statuses as $status) {
+            if ($status->ingredientUri === null
+                || $status->url === $active || str_starts_with($status->url, $active.'/')
+                || ($binding !== null && $status->code->isFailure() && ($status->url === $binding || str_starts_with($status->url, $binding.'/')))
+                || ! in_array($status->code->value.' '.$status->url, $recorded, true)) {
+                // the active manifest's own line; the guard (no ingredient assertion speaks for the manifest
+                // being verified, nor for the one that binds the asset in its stead); or nothing recorded it
+                $out[] = $status;
 
-            return ! in_array($status->code->value.' '.$status->url, $recorded, true);
-        }));
+                continue;
+            }
+            if (! $status->code->isFailure()) {
+                continue;   // a recorded success or informational line hides nothing: dropped, as c2pa-rs does (amendment 1)
+            }
+            // the manifest whose ingredient assertion recorded it: the label in the assertion's URI
+            $by = preg_match('#^self\#jumbf=/?c2pa/([^/]+)/#', $status->ingredientUri, $m) === 1 ? $m[1] : $status->ingredientUri;
+            $out[] = new ValidationStatus($status->code, $status->url, sprintf('acknowledged by the signer of %s in its ingredient assertion (C2PA 2.4 §18.16.12.4), not counted in the verdict: %s', $by, $status->explanation), $status->ingredientUri, true);
+        }
+
+        return $out;
     }
 }

@@ -93,6 +93,7 @@ Report\ValidationState :: property name
 Report\ValidationState :: property value
 Report\ValidationStatus :: method __construct
 Report\ValidationStatus :: method toArray
+Report\ValidationStatus :: property acknowledged
 Report\ValidationStatus :: property code
 Report\ValidationStatus :: property explanation
 Report\ValidationStatus :: property ingredientUri

@@ -28,7 +28,7 @@ function spec021Failures(VerificationReport $report): array
 {
     $codes = [];
     foreach ($report->result->statuses as $status) {
-        if ($status->code->isFailure()) {
+        if ($status->code->isFailure() && ! $status->acknowledged) {   // SPEC-070: acknowledged is informational
             $codes[$status->code->value] = true;
         }
     }
@@ -174,8 +174,10 @@ it('AC5: a recorded status never cancels the active manifest\'s own failure', fu
         new ValidationStatus(StatusCode::ClaimSignatureMismatch, "self#jumbf=/c2pa/{$active}/c2pa.signature", 'x', $ingredient->url),
         new ValidationStatus(StatusCode::AssertionHashedUriMismatch, 'self#jumbf=/c2pa/urn:c2pa:ingredient/c2pa.assertions/c2pa.actions', 'x', $ingredient->url),
     ];
-    $kept = (new IngredientManifestCheck)->drop($mine, $keys, $active, null);
-    expect(array_map(static fn (ValidationStatus $s): string => $s->code->value, $kept))->toBe(['claimSignature.mismatch']);
+    // SPEC-070: the one about the active manifest stays a failure; the other is kept, marked acknowledged
+    $kept = (new IngredientManifestCheck)->acknowledge($mine, $keys, $active, null);
+    expect(array_map(static fn (ValidationStatus $s): string => $s->code->value, array_values(array_filter($kept, static fn (ValidationStatus $s): bool => ! $s->acknowledged))))->toBe(['claimSignature.mismatch'])
+        ->and(array_map(static fn (ValidationStatus $s): bool => $s->acknowledged, $kept))->toBe([false, true]);
 
     // and on the file: both recorded statuses name the active manifest, so neither is dropped
     $report = spec020Verify('ingredient-manifest/records-active-fault.png', SPEC021_VARIANT_SETTINGS);
@@ -286,6 +288,17 @@ function spec021Keys(array $statuses): array
     return array_map(static fn (ValidationStatus $s): string => $s->code->value.' '.$s->url, $statuses);
 }
 
+/**
+ * The keys of the statuses SPEC-070 left unmarked: what still counts.
+ *
+ * @param  list<ValidationStatus>  $statuses
+ * @return list<string>
+ */
+function spec021Unmarked(array $statuses): array
+{
+    return spec021Keys(array_values(array_filter($statuses, static fn (ValidationStatus $s): bool => ! $s->acknowledged)));
+}
+
 it('AC11: a fault of the update manifest\'s binding manifest is never dropped; another manifest\'s still is', function (): void {
     $by = 'self#jumbf=/c2pa/A/c2pa.assertions/c2pa.ingredient';
     $statuses = [
@@ -300,8 +313,9 @@ it('AC11: a fault of the update manifest\'s binding manifest is never dropped; a
     ];
     $check = new IngredientManifestCheck;
 
-    // B binds: its failure stays, its informational line and C's failure go as before
-    expect(spec021Keys($check->drop($statuses, $recorded, 'A', 'B')))->toBe(['assertion.hashedURI.mismatch self#jumbf=/c2pa/B/c2pa.assertions/c2pa.hash.data'])
-        // without an update manifest there is no binding manifest to guard, and all three go
-        ->and($check->drop($statuses, $recorded, 'A', null))->toBe([]);
+    // B binds: its failure stays unmarked; its informational line and C's failure are acknowledged (SPEC-070; they went before)
+    $unmarked = spec021Unmarked(...);
+    expect($unmarked($check->acknowledge($statuses, $recorded, 'A', 'B')))->toBe(['assertion.hashedURI.mismatch self#jumbf=/c2pa/B/c2pa.assertions/c2pa.hash.data'])
+        // without an update manifest there is no binding manifest to guard, and all three are acknowledged
+        ->and($unmarked($check->acknowledge($statuses, $recorded, 'A', null)))->toBe([]);
 })->group('SPEC-021');

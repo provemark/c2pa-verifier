@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-13 (with release 0.7.0)  |
 | Supersedes | SPEC-021 AC4 in one respect: what the ingredient assertion recorded is no longer absent from the validation results |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -131,6 +131,24 @@ public function __construct(
 // re-made with acknowledged: true and the explanation prefixed.
 ```
 
+## Amendments
+
+### Amendment 1 — failures only (decided by Maurice van Loon, 2026-10-13, step 355)
+
+**Found while building.** An ingredient assertion records successes and
+informational lines too (`claimSignature.validated`,
+`assertion.hashedURI.match`, `ingredient.unknownProvenance`), and
+`drop()` removed those as well. Read to the letter, "every status
+`drop()` removes" would bring all of them back as acknowledged, which is
+noise that hides nothing. `RedactionTest` AC1 showed it: five extra
+lines on one ingredient.
+
+**Change.** Only a recorded **failure** comes back marked as
+acknowledged. A recorded success or informational line is dropped as
+before. This matches the title and the Problem section, and the AC1
+fixtures, all of which record failures. In Scope, read "every status" as
+"every failure". AC1's assertion is unchanged.
+
 ## Open questions
 
 - **The public contract (blocking).** `ValidationStatus` is one of the
@@ -139,11 +157,17 @@ public function __construct(
   that make the release 0.7.0 rather than 0.6.2? Proposal: 0.7.0, since
   the contract grows, with SPEC-068, SPEC-069 and its amendment 1 in the
   same release.
+  *Status 2026-10-13 (step 355):* decided by Maurice: 0.7.0.
 - **The code (non-blocking).** C2PA 2.4 has no code for "acknowledged".
   The proposal keeps the original code and marks it, rather than inventing
   one (brief §4: no vocabulary of our own). The cost is that a caller who
   reads only codes, not kinds, sees `claimSignature.mismatch` under
   informational. The kind and the explanation say what it is.
+  *Status 2026-10-13 (step 355):* approved with the spec: the original
+  code, marked. Checked on the callers this project knows: the WordPress
+  plugin reads `validation_status` (failures only), and the sister
+  library's `ManifestStoreParser` reads only `success` and `failure` from
+  an ingredient's deltas. Neither sees the new lines as failures.
 
 ## Traceability
 
@@ -152,7 +176,21 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
+| AC1 | tests/Unit/Verifier/AcknowledgedIngredientTest.php :: reports a failure the ingredient assertion recorded as informational, the verdict unchanged (4 cases) / SPEC-070 | src/Verifier/IngredientManifestCheck.php :: acknowledge() (was drop()); src/Report/ValidationResult.php :: toArray() (the informational kind); src/Report/ValidationStatus.php :: $acknowledged |
+| AC2 | tests/Unit/Verifier/AcknowledgedIngredientTest.php :: leaves the guard as it was / SPEC-070; tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC4 (SPEC-021, the active-manifest case), AC11 | src/Verifier/IngredientManifestCheck.php :: acknowledge() (the guard) |
+| AC3 | tests/Unit/Verifier/AcknowledgedIngredientTest.php :: lets an acknowledged status count for nothing in the verdict, and renders it as informational / SPEC-070 | src/Report/ValidationResult.php :: fromStatuses() |
+| AC4 | the corpus before and after (notes/step-355-acknowledged-ingredient-failures.md) | — |
+| Amendment 1 | tests/Unit/Manifest/RedactionTest.php :: AC1 (a recorded success stays dropped) | src/Verifier/IngredientManifestCheck.php :: acknowledge() (failures only) |
+
+The tests were run red first: 6 failed (the property, the method and the
+rendering did not exist yet). Building showed that recorded successes came
+back too, and amendment 1 (failures only) was decided by Maurice the same
+day. Existing tests that moved, all as this spec says: SPEC-021's `drop()`
+cases (now `acknowledge()`, expecting the mark), its failure helper (skips
+acknowledged), SPEC-063 AC7 (the recorded `cloud-data.hardBinding` is now
+reported, acknowledged), and SPEC-025's surface count (135 → 136).
+Mutations watched failing: the verdict counting acknowledged statuses (10
+tests), rendering by code kind (5), an acknowledged `untrusted` holding
+`Trusted` down (1), the active-manifest guard removed (2), successes
+acknowledged too (3). `composer check` green (1,064 passed); the contract
+136 symbols.

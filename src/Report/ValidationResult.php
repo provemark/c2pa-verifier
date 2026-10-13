@@ -45,13 +45,16 @@ final readonly class ValidationResult
         $trusted = false;
         $failed = false;
         foreach ($statuses as $status) {
+            if ($status->acknowledged) {
+                continue;   // SPEC-070: recorded by a signer, reported, not counted
+            }
             $succeeded = $succeeded || $status->code->isSuccess();
             $trusted = $trusted || ($status->code === StatusCode::SigningCredentialTrusted && $status->ingredientUri === null);
             $failed = $failed || ($status->code->isFailure() && $status->code !== StatusCode::SigningCredentialUntrusted);
         }
         $untrusted = false;
         foreach ($statuses as $status) {
-            $untrusted = $untrusted || $status->code === StatusCode::SigningCredentialUntrusted;
+            $untrusted = $untrusted || ($status->code === StatusCode::SigningCredentialUntrusted && ! $status->acknowledged);
         }
 
         return new self($statuses, match (true) {
@@ -71,6 +74,7 @@ final readonly class ValidationResult
         $deltas = [];
         foreach ($this->statuses as $status) {
             $kind = match (true) {
+                $status->acknowledged => 'informational',   // SPEC-070
                 $status->code->isSuccess() => 'success',
                 $status->code->isInformational() => 'informational',
                 default => 'failure',

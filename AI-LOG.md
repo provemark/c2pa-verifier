@@ -10629,3 +10629,24 @@ README are where the disclosure lives.
 - Reasoned: none.
 - Decided by Maurice: amendment 1 approved; SPEC-070 approved; the release
   will be 0.7.0.
+
+## 2026-10-13 — SPEC-070 built (step 355)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendement 1 en SPEC-070 approved, 0.7.0"; while
+  building, the choice "Alleen fouten" for recorded successes.
+- Produced: SPEC-070 approved, amended (failures only) and implemented;
+  `ValidationStatus::$acknowledged`; `ValidationResult` (verdict and
+  rendering); `IngredientManifestCheck::acknowledge()` (was `drop()`) and
+  its call in `Verifier`; `tests/Unit/Verifier/AcknowledgedIngredientTest.php`;
+  the moved tests in `IngredientManifestCheckTest`, `CloudDataCheckTest`
+  and `ApiSurfaceTest`; `tests/Fixtures/api/public-surface.txt`; a row in
+  `docs/comparison.md`; `notes/step-355-acknowledged-ingredient-failures.md`;
+  a row in `NOTES.md`.
+- Measured: 6 tests red before, green after. Five mutations caught. Corpus
+  before and after: no state changes, identical once the acknowledged
+  lines are left out; 31 files gain them. `composer check` 1,064 passed;
+  contract 136 symbols.
+- Reasoned: that the plugin and the sister library are unaffected, read
+  from their code (`validation_status`; `success`/`failure` only).
+- Decided by Maurice: SPEC-070 approved; release 0.7.0; amendment 1,
+  failures only.

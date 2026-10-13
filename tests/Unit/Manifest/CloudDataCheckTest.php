@@ -146,9 +146,12 @@ it('AC7: in an ingredient manifest too: an unrecorded failure is a delta, a reco
         ->and($unrecorded->result->state->value)->toBe('Invalid')
         ->and(spec063Oracle('cloud-in-ingredient-unrecorded')['state'])->toBe('Invalid');
 
-    // signed by 0.28.1, the ingredient assertion records the failure itself: no delta (SPEC-021)
+    // signed by 0.28.1, the ingredient assertion records the failure itself: no failure in the delta
+    // (SPEC-021), and since SPEC-070 the recorded failure is reported, marked acknowledged
     $recorded = spec063Probe('cloud-in-ingredient');
-    expect(spec063Codes($recorded, true))->toBe([])
+    $acknowledged = array_values(array_filter($recorded->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::AssertionCloudDataHardBinding));
+    expect($acknowledged)->toHaveCount(1)
+        ->and($acknowledged[0]->acknowledged)->toBeTrue()
         ->and($recorded->result->state->value)->toBe('Trusted')
         ->and(spec063Oracle('cloud-in-ingredient')['state'])->toBe('Trusted');
 })->group('SPEC-063');
