@@ -1,0 +1,218 @@
+# SPEC-069: Where an additional exclusion may lie, per format
+
+| Field      | Value                                             |
+|------------|---------------------------------------------------|
+| Status     | draft                                             |
+| Author     | Maurice van Loon                                  |
+| Approved   | —                                                 |
+| Supersedes | SPEC-012 AC4 ("additional exclusions are honoured and reported"), except where this spec allows them |
+
+> Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
+> `implemented` (Traceability filled). No implementation code while `draft`.
+> Only the Traceability section of an `approved` spec may change without a new
+> approval; everything else needs a proposed amendment.
+
+## Problem
+
+C2PA 2.4 §15.12.1 lets a `c2pa.hash.data` leave byte ranges out of the
+hash. §15.12.1.1 constrains only the range that holds the manifest store
+(SPEC-012 amendment 7). Every other range is honoured as signed, with the
+informational `assertion.dataHash.additionalExclusionsPresent`
+(VAL-ASSE-0045). Nothing says *where* such a range may lie.
+
+Step 349 measured what follows. `exclusion-coverage/idat-excluded-pixel-edited.png`
+excludes the store and the PNG's image data (IDAT up to IEND). 66 bytes
+are hashed and none of them is a pixel. One pixel changed after signing,
+and the file is `Trusted` here, in `c2patool` 0.28.1 and in 0.28.2.
+SPEC-068 does not catch it, because 66 is not 0. D. Buchanan's article
+("How to Hack Time, With C2PA", 2 October 2026) names the fix: *"carefully
+and explicitly specify which parts of a file are allowed to be excluded"*,
+and have verifiers enforce it. The C2PA specification does not do that
+yet. This spec does it for this verifier.
+
+**Why an allow-list, not a deny-list.** A deny-list ("not the image data")
+has to know every byte that changes what is shown or heard: in PNG alone
+that is IHDR, PLTE, IDAT, but also tRNS, gAMA, cHRM, sRGB, iCCP and the
+APNG chunks. A missing entry is a wrong `Trusted`. An allow-list names the
+few places a measured writer excludes and refuses the rest. A missing
+entry is then a wrong `Invalid`, which is the error this project prefers
+(brief §4, "fail closed").
+
+**What real files do.** Step 349's scan of 708 fixture files found 393
+data-hash bindings and **one** with additional exclusions:
+`writers/google-20250919-pixel10-npld-picnic-table.jpg` (Google Pixel 10).
+It has four, each exactly the payload of an APP1 segment in the primary
+image, after the marker and the length field:
+
+| exclusion | segment | identifier |
+|---|---|---|
+| `[6, 43697]` | APP1 at 2, 43,701 bytes | `Exif\0\0` |
+| `[50643, 1158]` | APP1 at 50,639 | `http://ns.adobe.com/xap/1.0/\0` |
+| `[51805, 65458]` | APP1 at 51,801 | `http://ns.adobe.com/xmp/extension/\0` |
+| `[117267, 24606]` | APP1 at 117,263 | `http://ns.adobe.com/xmp/extension/\0` |
+
+None of them touches the quantisation or Huffman tables, the frame
+header, the scan, or the MPF gain-map image after the first EOI.
+
+## Scope
+
+**In scope**
+
+- Every additional exclusion of a `c2pa.hash.data` (one that holds no part
+  of the store), in every format that uses it.
+- The allow-list:
+  - **JPEG**: an exclusion lying wholly inside the payload of one APP1
+    segment of the primary image (before its first SOS) whose identifier is
+    `Exif\0\0`, `http://ns.adobe.com/xap/1.0/\0` or
+    `http://ns.adobe.com/xmp/extension/\0`. "Payload" means after the
+    two-byte marker and the two-byte length.
+  - **PNG, WebP, GIF, WAV, AVI, MP3, FLAC, plain text**: nothing. No
+    measured writer excludes anything beyond the store in these formats.
+
+**Out of scope** (each needs its own spec before it may be built)
+
+- BMFF exclusions (box paths, `c2pa.hash.bmff.v2`/`v3`): not measured.
+  `assertion.bmffHash.additionalExclusionsPresent` stays informational.
+- Widening the allow-list. Each new entry needs a real file from a real
+  writer, the measured ranges, and an amendment.
+- Whether excluding Exif is wise: Exif carries a capture date and GPS that
+  the signature then does not cover. That is a writer's choice, and what
+  this verifier reports about the claim's own metadata does not change.
+- The secondary (gain-map) image of an MPF/Ultra HDR JPEG. Exclusions
+  there are refused, since no writer was measured making one.
+
+## Behavior
+
+- **AC1 — the Pixel 10 file is unchanged**
+  - Given `writers/google-20250919-pixel10-npld-picnic-table.jpg`
+  - When verified
+  - Then the same state and the same status list as before. The four
+    exclusions are allowed, and the informational
+    `assertion.dataHash.additionalExclusionsPresent` is still reported, now
+    with "inside APP1 Exif/XMP payloads" in its explanation.
+
+- **AC2 — an exclusion over image data is a mismatch** *(required: error path)*
+  - Given `exclusion-coverage/idat-excluded.png` and
+    `idat-excluded-pixel-edited.png`
+  - When verified, with and without `throw-away-root.settings.json`
+  - Then exactly one status for `c2pa.hash.data`,
+    `assertion.dataHash.mismatch`, whose explanation names the exclusion,
+    the format, and that the format allows no exclusion beyond the store.
+    The file is not hashed. The verdict is `Invalid`.
+
+- **AC3 — the three-range shape and the one-byte floor** *(error path)*
+  - Given `exclusion-coverage/all-but-store.png`,
+    `all-but-store-pixel-edited.png` and SPEC-068's `all-but-one-byte.png`
+  - When verified
+  - Then `assertion.dataHash.mismatch` for each. For the first two
+    SPEC-068 answers first (no byte hashed). For the third this spec
+    answers, naming the first exclusion it refuses.
+
+- **AC4 — a JPEG exclusion outside the allowed payloads** *(error path)*
+  - Given new JPEG fixtures, built from `fixture-signed.jpg` in the step-349
+    way and re-signed:
+    - `jpeg-scan-excluded.jpg`: an exclusion inside the scan data;
+    - `jpeg-app1-header-excluded.jpg`: an Exif APP1 exclusion that starts
+      at the marker, not the payload;
+    - `jpeg-icc-excluded.jpg`: the payload of the APP2 ICC profile, which
+      changes the colours and is not on the list;
+    - `jpeg-exif-allowed.jpg`: exactly the Exif APP1 payload (the positive
+      control).
+  - When verified under the throw-away root
+  - Then the first three are `Invalid` with `assertion.dataHash.mismatch`
+    naming the segment, or "no segment", that the exclusion falls in. The
+    fourth is `Trusted` with `dataHash.match` and the informational.
+
+- **AC5 — malformed structure refuses, never allows** *(required: malformed input)*
+  - Given a JPEG whose segment walk cannot reach the first SOS (a length
+    past the end of the file, or a marker without 0xFF), and a JPEG with
+    more than the walk's segment limit before SOS
+  - When an additional exclusion has to be placed
+  - Then `assertion.dataHash.mismatch`, explaining that the allowed
+    payloads could not be established. It is never allowed by default. A
+    file with no additional exclusions never walks the segments and is
+    unaffected.
+
+- **AC6 — nothing else moves**
+  - Given the drift-alarm corpora and every fixture outside
+    `exclusion-coverage/`, the new JPEG fixtures and `binding/`
+  - When verified before and after
+  - Then no state or status code changes, except the files named under
+    *Changed answers* below.
+
+**Changed answers** (SPEC-012's fixtures, whose signature is already
+broken): `binding/exclusion-extra.png` and `binding/exclusions-unsorted.png`
+(an extra range of 64 bytes over IDAT data) go from `dataHash.match` plus
+the informational to `assertion.dataHash.mismatch`. Both stay `Invalid`,
+and SPEC-012 AC4/AC5 get an amendment that points here.
+
+## References
+
+- Specification: C2PA 2.4 §15.12.1, §15.12.1.1, §18.5, VAL-ASSE-0045 (as
+  cited in SPEC-012); ITU-T T.81 §B.1.1.4 and B.2.4 (JPEG markers and the
+  segment length); the PNG spec §5.4 (chunk naming) for why a PNG
+  deny-list would be long.
+- Oracle: `c2patool` 0.28.1 and 0.28.2: `Trusted` for every
+  `exclusion-coverage` file except `whole-file`. **This spec diverges
+  from them deliberately**, as SPEC-012 amendment 7 does. The divergence
+  goes into `docs/comparison.md`, and upstream should hear of it before
+  this ships (see Open questions).
+- Measured (step 349, and for this spec): the four Pixel 10 ranges and
+  the segments they sit in (a marker walk over the file); one file in 708
+  with additional exclusions.
+- Reasoned: that other cameras or apps exclude the same APP1 payloads.
+  The allow-list holds what was measured and nothing else.
+
+## API sketch
+
+```php
+// namespace Provemark\C2paVerifier\Hash;
+
+/** Where a format allows an exclusion beyond the store; empty = nowhere. @internal */
+interface ExclusionAllowance
+{
+    /**
+     * @param  resource  $stream
+     * @return list<array{start: int, length: int, what: string}>  e.g. 'APP1 Exif payload'
+     * @throws ContainerException  when the structure cannot be walked (AC5)
+     */
+    public function allowed($stream): array;
+}
+
+final readonly class JpegExclusionAllowance implements ExclusionAllowance { /* bounded marker walk to the first SOS */ }
+final readonly class NoExclusionAllowance implements ExclusionAllowance { /* [] */ }
+
+// DataHashCheck::check(..., ExclusionAllowance $allowance = new NoExclusionAllowance)
+// The Verifier passes the JPEG one when the format is 'jpeg'. The walk runs
+// only when $others !== [], so files without extras pay nothing.
+```
+
+## Open questions
+
+- **Upstream (non-blocking, Maurice's call).** The same wrong `Trusted`
+  is in `c2patool` 0.28.2 and so in c2pa-rs. Report it to the CAI before,
+  or together with, a release that names it? The article is public, but
+  the three-range and image-data shapes are not in it.
+- **Release and propagation (non-blocking).** 0.6.2 with SPEC-068 and
+  SPEC-069, then the WordPress plugin and the demo? It falls inside the
+  consolidation until ~22 October, so it needs Maurice's decision, as
+  SPEC-067 did.
+- **Allow-list wording (blocking for approval).** "Wholly inside one
+  payload" admits a part of a payload as well as the whole of one. The
+  Pixel excludes whole payloads. Allowing parts is no weaker, since the
+  rest is hashed, but say so explicitly or require exact payloads?
+  Proposal: wholly inside.
+
+## Traceability
+
+Filled when status becomes `implemented`. Every acceptance criterion maps to at
+least one test; every source file maps back to this spec.
+
+| Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
+|----------------------|-----------------------------|----------------------|
+| AC1                  | —                           | —                    |
+| AC2                  | —                           | —                    |
+| AC3                  | —                           | —                    |
+| AC4                  | —                           | —                    |
+| AC5                  | —                           | —                    |
+| AC6                  | —                           | —                    |

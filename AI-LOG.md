@@ -10540,3 +10540,19 @@ README are where the disclosure lives.
   SPEC-012 amendment 7, that the three-range shape would pass. JPEG, WebP
   and BMFF were not measured.
 - Decided by Maurice: measure first, then a spec.
+
+## 2026-10-13 — Two specs for the exclusion gap (step 350)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf de spec voor (a) en (b)": (a) refuse a data hash
+  over zero bytes, (b) refuse exclusions over image data, per format.
+- Produced: `specs/SPEC-068-data-hash-covers-nothing.md`,
+  `specs/SPEC-069-where-exclusions-may-lie.md` (both `draft`);
+  `notes/step-350-exclusion-specs.md`; a row in `NOTES.md`.
+- Measured: a scratch scan of 708 fixtures with `bin/c2pa-verify --text`.
+  One file has additional exclusions (Pixel 10), and a marker walk places
+  its four ranges exactly on APP1 Exif/XMP payloads. The fewest bytes
+  hashed anywhere is 51. `php bin/spec-check.php` OK.
+- Reasoned: (b) as an allow-list instead of the deny-list proposed in
+  conversation, so that a missing entry fails closed. Flagged in the
+  spec's Problem section for Maurice's approval.
+- Decided by Maurice: write both specs.
