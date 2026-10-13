@@ -187,6 +187,33 @@ final readonly class NoExclusionAllowance implements ExclusionAllowance { /* [] 
 // only when $others !== [], so files without extras pay nothing.
 ```
 
+## Amendments
+
+### Amendment 1 — say that the allowed bytes are not signed (proposed 2026-10-13, step 353; awaiting approval)
+
+**Why.** Golaszewski, Krawetz, Sherman et al., "Verifying Provenance of
+Digital Media: Why the C2PA Specifications Fall Short" (arXiv 2604.24890,
+IACR ePrint 2026/804) report that the Google Pixel 10 Pro puts GPS
+information in an exclusion range. They changed the location, and a
+conforming validator (Proofmode Verify) showed the false one. That is the
+range this spec allows: the Exif APP1 payload. The verdict stays right,
+since the image is bound. But the informational now says only "honoured as
+signed, each inside an allowed region (APP1 Exif payload, …)", which a
+reader can take to mean that the Exif data is signed. It is the opposite.
+
+**Change.** The informational's explanation ends with one sentence:
+*"these bytes are not covered by the signature: what they hold (Exif or
+XMP metadata such as a GPS position or a capture time) is not verified"*.
+The code, the url, the state and the allow-list do not change.
+
+- **AC1 (amended).** As AC1, and the informational's explanation contains
+  "these bytes are not covered by the signature".
+- **AC4 (amended).** The same for `jpeg-exif-allowed.jpg`.
+
+**Reasoned, not measured.** Whether the Pixel 10 file in `writers/`
+carries GPS in its Exif was not checked. The sentence is about what the
+range *may* hold, not what this file holds.
+
 ## Open questions
 
 - **Upstream (non-blocking, Maurice's call).** The same wrong `Trusted`

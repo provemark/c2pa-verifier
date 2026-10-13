@@ -10599,3 +10599,20 @@ README are where the disclosure lives.
 - Reasoned: none beyond the spec.
 - Decided by Maurice: the allow-list; "wholly inside one payload";
   SPEC-069 approved.
+
+## 2026-10-13 — Two more from the literature, drafted (step 353)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: whether others published similar C2PA findings, to take them into
+  this fix ("kan je goed zoeken"); then "akkoord, kandidaat 1 en 2
+  meenemen".
+- Produced: SPEC-069 amendment 1 (proposed);
+  `specs/SPEC-070-acknowledged-ingredient-failures.md` (draft);
+  `notes/step-353-two-more-from-the-literature.md`; a row in `NOTES.md`.
+- Measured: none. The sources were read on the web: arXiv 2604.24890 and
+  its abstract at IACR ePrint 2026/804 (the full PDF returned 403);
+  Krawetz's 27-page PDF; the posts by Buchanan and Hacker Factor; DPReview;
+  `c2pa-rs` PR #2743; CVE listings.
+- Reasoned: each finding mapped to this verifier from its specs and code
+  (the table in the note). `php bin/spec-check.php` OK.
+- Decided by Maurice: take candidates 1 (SPEC-069 amendment 1) and 2
+  (SPEC-070); a revocation list stays separate.
