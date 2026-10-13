@@ -189,7 +189,7 @@ final readonly class NoExclusionAllowance implements ExclusionAllowance { /* [] 
 
 ## Amendments
 
-### Amendment 1 — say that the allowed bytes are not signed (proposed 2026-10-13, step 353; awaiting approval)
+### Amendment 1 — say that the allowed bytes are not signed (approved by Maurice van Loon, 2026-10-13; built in step 354)
 
 **Why.** Golaszewski, Krawetz, Sherman et al., "Verifying Provenance of
 Digital Media: Why the C2PA Specifications Fall Short" (arXiv 2604.24890,
@@ -213,6 +213,12 @@ The code, the url, the state and the allow-list do not change.
 **Reasoned, not measured.** Whether the Pixel 10 file in `writers/`
 carries GPS in its Exif was not checked. The sentence is about what the
 range *may* hold, not what this file holds.
+
+**Built (step 354).** The tests were red first (2 failed: AC1 and AC4's
+positive control), then green. Over the corpus before and after (793
+files, two modes), only the Pixel 10 file moves, in that explanation
+alone. `composer check` 1,058 passed. Traceability: AC1 and AC4 as above;
+`src/Hash/DataHashCheck.php :: check()` (the informational).
 
 ## Open questions
 

@@ -72,7 +72,9 @@ it('keeps the Pixel 10 file as it was, its four exclusions allowed as APP1 Exif 
     expect($report->result->state->value)->toBe('Trusted')
         ->and(array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $statuses))->toBe([StatusCode::AssertionDataHashMatch, StatusCode::AssertionDataHashAdditionalExclusionsPresent])
         ->and($statuses[1]->explanation)->toContain('[6, 43697], [50643, 1158], [51805, 65458], [117267, 24606]')
-        ->and($statuses[1]->explanation)->toContain('inside an allowed region (APP1 Exif payload, APP1 XMP payload)');
+        ->and($statuses[1]->explanation)->toContain('inside an allowed region (APP1 Exif payload, APP1 XMP payload)')
+        // amendment 1: the allowed bytes are not signed (the Pixel 10 Pro's GPS, Golaszewski et al. 2026)
+        ->and($statuses[1]->explanation)->toContain('these bytes are not covered by the signature: what they hold (Exif or XMP metadata such as a GPS position or a capture time) is not verified');
 })->group('SPEC-069');
 
 it('reports a PNG exclusion over the image data as a mismatch, without hashing', function (string $name, ?string $settings): void {
@@ -133,7 +135,8 @@ it('allows exactly the Exif payload of a JPEG: the positive control', function (
     expect($report->result->state->value)->toBe('Trusted')
         ->and(array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $statuses))->toBe([StatusCode::AssertionDataHashMatch, StatusCode::AssertionDataHashAdditionalExclusionsPresent])
         ->and($statuses[1]->explanation)->toContain('[24, 20]')
-        ->and($statuses[1]->explanation)->toContain('(APP1 Exif payload)');
+        ->and($statuses[1]->explanation)->toContain('(APP1 Exif payload)')
+        ->and($statuses[1]->explanation)->toContain('these bytes are not covered by the signature');
 })->group('SPEC-069');
 
 it('maps a JPEG\'s segments up to the first SOS, with only the APP1 Exif and XMP payloads allowed (an Exif identifier in APP2 is not)', function (): void {

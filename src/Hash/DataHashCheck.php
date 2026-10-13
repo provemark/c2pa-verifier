@@ -275,7 +275,7 @@ final readonly class DataHashCheck
             : new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('data hash does not match: %s over %d of %d bytes gives %s, the assertion carries %s', $alg, $end - array_sum(array_column($exclusions, 'length')), $end, bin2hex($actual), bin2hex($expected))),
         ];
         if ($others !== []) {
-            $statuses[] = new ValidationStatus(StatusCode::AssertionDataHashAdditionalExclusionsPresent, $url, sprintf('%d exclusion(s) beyond the manifest store, honoured as signed, each inside an allowed region (%s): %s', count($others), implode(', ', array_keys($allowedIn)), implode(', ', array_map(static fn (array $r): string => sprintf('[%d, %d]', $r['start'], $r['length']), $others))));
+            $statuses[] = new ValidationStatus(StatusCode::AssertionDataHashAdditionalExclusionsPresent, $url, sprintf('%d exclusion(s) beyond the manifest store, honoured as signed, each inside an allowed region (%s): %s; these bytes are not covered by the signature: what they hold (Exif or XMP metadata such as a GPS position or a capture time) is not verified', count($others), implode(', ', array_keys($allowedIn)), implode(', ', array_map(static fn (array $r): string => sprintf('[%d, %d]', $r['start'], $r['length']), $others))));   // SPEC-069 amendment 1
         }
 
         return $statuses;

@@ -10616,3 +10616,16 @@ README are where the disclosure lives.
   (the table in the note). `php bin/spec-check.php` OK.
 - Decided by Maurice: take candidates 1 (SPEC-069 amendment 1) and 2
   (SPEC-070); a revocation list stays separate.
+
+## 2026-10-13 — SPEC-069 amendment 1 built (step 354)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendement 1 en SPEC-070 approved, 0.7.0".
+- Produced: amendment 1 marked approved and built; one sentence in the
+  informational of `src/Hash/DataHashCheck.php`; two assertions in
+  `tests/Unit/Hash/ExclusionAllowanceTest.php`;
+  `notes/step-354-unsigned-exif-said.md`; a row in `NOTES.md`.
+- Measured: 2 tests red before, green after. Corpus before and after: only
+  the Pixel 10 file's explanation differs. `composer check` 1,058 passed.
+- Reasoned: none.
+- Decided by Maurice: amendment 1 approved; SPEC-070 approved; the release
+  will be 0.7.0.
