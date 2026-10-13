@@ -10502,3 +10502,21 @@ README are where the disclosure lives.
   outside it.
 - Decided by Maurice: measure against `c2pa-web` first, then name the two
   divergences in the comparison as their own step.
+
+## 2026-10-13 — `c2pa-web` as an oracle (step 348)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "begin met stap 348": give the step-347 measuring script a place
+  in the repository, so it can be repeated and linked to.
+- Produced: `tools/web-oracle/` (`README.md`, `package.json`,
+  `package-lock.json`, `.gitignore`, `list.php`, `entry.js`, `run-cli.mjs`,
+  `run-web.mjs`, `compare.mjs`); a `.gitignore` exception for it; a
+  paragraph in `docs/comparison.md`; `notes/step-348-web-oracle.md`; a row
+  in `NOTES.md`.
+- Measured: `npm run all` from the repository with `c2patool` 0.28.1. The
+  results equal step 347's scratch run, file for file: 0 differences
+  `c2pa-web`/`c2patool`; 8/17/49 and 4/12/21 against this verifier, all
+  named; 0 blocked requests. `composer check` (1,029 passed);
+  `php bin/spec-check.php` OK.
+- Reasoned: `/tools export-ignore` keeps it out of the Composer package;
+  not checked with `bin/package-check.php`.
+- Decided by Maurice: the tool gets its own step after the comparison rows.

@@ -17,9 +17,11 @@ composer.lock
 # --- Build artifacts and local tools (c2patool binary is downloaded, never committed) ---
 out/
 # tools/ holds downloaded binaries (c2patool), which are never committed; the
-# second-oracle program under tools/go-oracle/ is source, and is (step 61).
+# second-oracle program under tools/go-oracle/ is source, and is (step 61), and
+# so is the c2pa-web comparison under tools/web-oracle/ (step 348).
 tools/*
 !tools/go-oracle/
+!tools/web-oracle/
 
 # --- Editors / OS ---
 .idea/

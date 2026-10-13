@@ -29,6 +29,13 @@ files whose result 0.28.0 changed, every one has been examined:
 The settings shape 0.28.0 reads (`trust.anchors`) is read here too
 (SPEC-031). Each remaining difference is a row below.
 
+**And against `c2pa-web` 0.15.3**, the CAI's browser build (c2pa `=0.91.0`
+in WebAssembly), measured on 2026-10-13 over the 92 distinct files of the
+five corpora, with and without trust settings and with no network
+(`tools/web-oracle/`, step 348). It agrees with `c2patool` 0.28.1 on the
+state, the failure codes and every other code of every file. Every
+difference with this verifier is therefore one of the rows below.
+
 **Since 0.2.0** (SPEC-033 to SPEC-040), every new rule was measured on
 signed probes under **both** versions before it was built. Their answers
 are recorded beside the probes, under `tests/Fixtures/c2patool/`:

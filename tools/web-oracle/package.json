@@ -1,0 +1,20 @@
+{
+  "name": "c2pa-verifier-web-oracle",
+  "private": true,
+  "description": "Runs @contentauth/c2pa-web in headless Chrome over the drift-alarm corpora and compares it with c2patool and this verifier (step 348).",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild entry.js --bundle --format=iife --outfile=out/bundle.js --log-level=warning",
+    "list": "php list.php ../.. > out/files.json",
+    "cli": "node run-cli.mjs",
+    "web": "node run-web.mjs",
+    "compare": "node compare.mjs",
+    "all": "mkdir -p out && npm run build && npm run list && npm run cli && npm run web && npm run compare"
+  },
+  "dependencies": {
+    "@contentauth/c2pa-web": "0.15.3",
+    "esbuild": "0.25.10",
+    "playwright-core": "1.56.1"
+  }
+}
