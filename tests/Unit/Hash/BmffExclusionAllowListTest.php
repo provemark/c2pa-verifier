@@ -106,5 +106,6 @@ it('names exactly what c2pa-rs writes as allowed, and nothing more', function (a
     'mdat' => [['xpath' => '/mdat'], false],
     'moov' => [['xpath' => '/moov'], false],
     'a track' => [['xpath' => '/moov/trak'], false],
-    'Pixel\'s indexed track (out of scope: fail closed)' => [['xpath' => '/moov[1]/trak[3]'], false],
+    // SPEC-072: allowed by path; whether its handler is timed metadata is checked after the box walk
+    'Pixel\'s indexed track' => [['xpath' => '/moov[1]/trak[3]'], true],
 ])->group('SPEC-071');

@@ -10712,3 +10712,22 @@ README are where the disclosure lives.
 - Reasoned: the restriction of an indexed track exclusion to a
   timed-metadata handler, so that the video track cannot be unbound.
 - Decided by Maurice: push step 358; write the follow-up spec.
+
+## 2026-10-13 — SPEC-072 built: Pixel Camera video (step 360)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord (a), SPEC-072 approved, in 0.7.0".
+- Produced: SPEC-072 approved and implemented;
+  `IsobmffManifestStoreExtractor` (`metaSkip()`, `ipath`);
+  `StreamReader::seek()`; `BmffHashCheck` (`pathMatches()`,
+  `trackRefusal()`, the allow-list, `shapeFault()`, the informational);
+  `tests/Unit/Hash/PixelVideoTest.php`; SPEC-071's test updated for the
+  indexed track; `bin/make-pixel-shape-variants.php`,
+  `tests/Fixtures/pixel-shape/` and its `c2patool` answers; two edits in
+  `docs/comparison.md`; `notes/step-360-pixel-video.md`; a row in `NOTES.md`.
+- Measured: 11 tests red before, green after; the real Pixel file matches
+  locally, as in `c2patool` 0.28.2; `c2patool` 0.28.1/0.28.2 confirm the
+  synthetic file's digest and accept the video-track variant (refused
+  here); five mutations caught; corpus identical. `composer check` 1,109
+  passed, 1 skipped.
+- Reasoned: none beyond the spec.
+- Decided by Maurice: option (a); SPEC-072 approved; in 0.7.0.

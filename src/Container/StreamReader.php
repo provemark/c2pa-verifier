@@ -100,6 +100,14 @@ final readonly class StreamReader
         }
     }
 
+    /** To an absolute offset (SPEC-072: the walk looks at a meta box's first bytes, then goes back). */
+    public function seek(int $offset): void
+    {
+        if ($offset < 0 || fseek($this->stream, $offset) !== 0) {
+            throw new ContainerException(sprintf('cannot seek to offset %d of the %s stream', $offset, $this->noun));
+        }
+    }
+
     public function tell(): int
     {
         $position = ftell($this->stream);

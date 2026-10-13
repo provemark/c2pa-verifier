@@ -76,7 +76,16 @@ final readonly class BmffHashCheck
     private const UNSUPPORTED_FILTERS = ['length', 'version', 'flags', 'exact'];
 
     /** SPEC-071: the boxes an exclusion may take whole, as c2pa-rs writes them. */
-    private const ALLOWED_WHOLE = ['/ftyp', '/mfra', '/free', '/skip', '/meta/iloc', '/mfra/tfra'];
+    private const ALLOWED_WHOLE = ['/ftyp', '/mfra', '/free', '/skip', '/meta/iloc', '/mfra/tfra', '/moov/free', '/moov/udta', '/moov/meta'];   // the last three: Pixel Camera (SPEC-072)
+
+    /** SPEC-072: a track excluded by index, allowed only when its handler is timed metadata (checked after the walk). */
+    private const INDEXED_TRACK = '#^/moov\[1\]/trak\[([1-9][0-9]{0,8})\]$#';
+
+    /** SPEC-072: one xpath step, a box type with an optional 1-based index. */
+    private const XPATH_STEP = '#^([^\[\]/]+)(?:\[([1-9][0-9]{0,8})\])?$#';
+
+    /** SPEC-072: exclusions whose boxes can hold metadata worth saying is not signed. */
+    private const UNSIGNED_METADATA = ['/moov/udta', '/moov/meta'];
 
     /** SPEC-071: the offset fields, allowed only through a subset from offset 16 on. */
     private const ALLOWED_OFFSET_FIELDS = ['/moov/trak/mdia/minf/stbl/stco', '/moov/trak/mdia/minf/stbl/co64', '/moof/traf/tfhd', '/moof/traf/trun'];
@@ -125,6 +134,20 @@ final readonly class BmffHashCheck
             // reads forward from wherever it is told to start
             rewind($stream);
             $boxes = $this->boxes->boxTree($stream);
+            $readTrack = static function (int $at, int $length) use ($stream): string {
+                if (fseek($stream, $at) !== 0) {
+                    throw new HashException(sprintf('cannot seek to %d while reading a track handler', $at));
+                }
+
+                return Read::upTo($stream, $length);
+            };
+            foreach ($assertion['exclusions'] as $exclusion) {
+                $xpath = $exclusion['xpath'] ?? null;
+                $refused = is_string($xpath) ? self::trackRefusal($xpath, $boxes, $readTrack) : null;
+                if ($refused !== null) {
+                    throw new HashException(sprintf('%s: the exclusion %s is refused: %s', $label, $xpath, $refused));
+                }
+            }
             $included = self::plan($boxes, $assertion['exclusions'], function (int $at, int $length) use ($stream): string {
                 if ($length < 1) {
                     return '';
@@ -143,8 +166,9 @@ final readonly class BmffHashCheck
         }
 
         // SPEC-038: informational, beside whatever the hash says, as c2patool 0.28.0 reports it
+        $unsigned = array_filter($assertion['exclusions'], static fn (array $e): bool => in_array($e['xpath'] ?? null, self::UNSIGNED_METADATA, true) || (is_string($e['xpath'] ?? null) && preg_match(self::INDEXED_TRACK, $e['xpath']) === 1)) !== [];
         $notes = self::hasAdditionalExclusions($assertion['exclusions'])
-            ? [new ValidationStatus(StatusCode::AssertionBmffHashAdditionalExclusionsPresent, $url, 'extra BMFF hash exclusion(s) found: beyond the C2PA uuid box, ftyp and mfra')]
+            ? [new ValidationStatus(StatusCode::AssertionBmffHashAdditionalExclusionsPresent, $url, 'extra BMFF hash exclusion(s) found: beyond the C2PA uuid box, ftyp and mfra'.($unsigned ? '; these boxes are not covered by the signature: what they hold (user data, metadata, a timed-metadata track, such as a location or a capture time) is not verified' : ''))]   // SPEC-072
             : [];
         if ($assertion['merkle'] !== null) {
             return [...$notes, ...$this->checkMerkle($url, $stream, $included, $assertion)];
@@ -264,7 +288,7 @@ final readonly class BmffHashCheck
      * own, and they count even when the last box is excluded.
      *
      * @param  list<array{offset: int, length: int, marker?: bool}>  $included
-     * @param  list<array{offset: int, length: int, type: string, path?: string}>  $topLevel
+     * @param  list<array{offset: int, length: int, type: string, path?: string, ipath?: string}>  $topLevel
      * @param  resource  $stream
      * @return list<array{offset: int, length: int, marker?: bool}>
      *
@@ -442,6 +466,17 @@ final readonly class BmffHashCheck
         if ($exclusions === []) {
             return self::LABEL.': the exclusions list is empty; a BMFF hash must exclude at least the C2PA box';
         }
+        foreach (is_array($exclusions) ? $exclusions : [] as $exclusion) {
+            // SPEC-072: an indexed step is type[n], n a decimal integer from 1; anything else in brackets is malformed
+            $xpath = is_array($exclusion) ? ($exclusion['xpath'] ?? null) : null;
+            if (is_string($xpath) && $xpath !== '' && $xpath[0] === '/' && (str_contains($xpath, '[') || str_contains($xpath, ']'))) {
+                foreach (explode('/', substr($xpath, 1)) as $step) {
+                    if (preg_match(self::XPATH_STEP, $step) !== 1) {
+                        return sprintf('%s: the xpath %s has a malformed step %s: an index is [n] with n a whole number from 1', self::LABEL, $xpath, self::printable($step));
+                    }
+                }
+            }
+        }
         foreach (is_array($exclusions) ? $exclusions : [] as $i => $exclusion) {
             $subsets = is_array($exclusion) ? ($exclusion['subset'] ?? null) : null;
             if (! is_array($subsets) || ! array_is_list($subsets)) {
@@ -465,6 +500,74 @@ final readonly class BmffHashCheck
     }
 
     /**
+     * Whether an xpath names this box (SPEC-072): step by step, the type equal and, where the
+     * xpath gives an index, the box's 1-based index among same-type siblings equal too. A step
+     * without an index matches every sibling of that type, as before. A box handed over without
+     * an indexed path (SPEC-027's top-level callers) matches unindexed xpaths only.
+     */
+    private static function pathMatches(string $xpath, string $path, ?string $ipath): bool
+    {
+        if (! str_contains($xpath, '[')) {
+            return $path === $xpath;
+        }
+        if ($ipath === null) {
+            return false;
+        }
+        $pattern = '';
+        foreach (explode('/', substr($xpath, 1)) as $step) {
+            if (preg_match(self::XPATH_STEP, $step, $m) !== 1) {
+                return false;   // shapeFault() has refused it already
+            }
+            $pattern .= '/'.preg_quote($m[1], '#').'\['.(($m[2] ?? '') !== '' ? $m[2] : '[0-9]+').'\]';
+        }
+
+        return preg_match('#^'.$pattern.'$#', $ipath) === 1;
+    }
+
+    /**
+     * SPEC-072: why an indexed track exclusion is refused once the boxes are known, or null. The
+     * track it resolves to must hold mdia/hdlr with handler type `meta` (timed metadata, what Pixel
+     * Camera excludes); a video or audio track's sample table says which mdat bytes are frames, so
+     * excluding it could unbind the picture.
+     *
+     * @param  list<array{offset: int, length: int, type: string, path: string, ipath?: string}>  $boxes
+     * @param  callable(int, int): string  $readAt
+     */
+    private static function trackRefusal(string $xpath, array $boxes, callable $readAt): ?string
+    {
+        if (preg_match(self::INDEXED_TRACK, $xpath, $m) !== 1) {
+            return null;
+        }
+        $track = sprintf('/moov[1]/trak[%s]', $m[1]);
+        $found = false;
+        $handler = null;
+        foreach ($boxes as $box) {
+            $ipath = $box['ipath'] ?? null;
+            if ($ipath === $track) {
+                $found = true;
+            }
+            if ($ipath === $track.'/mdia[1]/hdlr[1]' && $box['length'] >= 20) {
+                $handler = $readAt($box['offset'] + 16, 4);
+            }
+        }
+        if ($handler === 'meta') {
+            return null;
+        }
+
+        return sprintf('a track may be excluded only when its handler is meta (timed metadata); %s', match (true) {
+            ! $found => 'it resolves to no track',
+            $handler === null => 'this one has no handler',
+            default => sprintf("this one's is %s", self::printable($handler)),
+        });
+    }
+
+    /** Bytes from the file, as they may appear in an explanation: themselves when printable ASCII, else hex. */
+    private static function printable(string $bytes): string
+    {
+        return preg_match('/^[\x20-\x7e]*$/', $bytes) === 1 ? $bytes : '0x'.bin2hex($bytes);
+    }
+
+    /**
      * SPEC-071: why this exclusion is not one a BMFF hash may carry, or null when it is. The
      * allow-list is what c2pa-rs writes (36 assertions measured in step 356; v2's list in SPEC-029):
      * the C2PA uuid box by its data filter, ftyp, mfra, free, skip, meta/iloc and mfra/tfra, whole
@@ -484,8 +587,8 @@ final readonly class BmffHashCheck
             if (is_array($map) && ($map['offset'] ?? null) === 8 && $value instanceof CborBytes && $value->bytes === IsobmffManifestStoreExtractor::C2PA_UUID) {
                 return null;
             }
-        } elseif (in_array($xpath, self::ALLOWED_WHOLE, true)) {
-            return null;
+        } elseif (in_array($xpath, self::ALLOWED_WHOLE, true) || (is_string($xpath) && preg_match(self::INDEXED_TRACK, $xpath) === 1)) {
+            return null;   // an indexed track: its handler is checked after the box walk (SPEC-072)
         } elseif (in_array($xpath, self::ALLOWED_OFFSET_FIELDS, true)) {
             $subset = $exclusion['subset'] ?? null;
             if (is_array($subset) && $subset !== [] && array_filter($subset, static fn (mixed $range): bool => ! is_array($range) || ! is_int($range['offset'] ?? null) || $range['offset'] < 16) === []) {
@@ -495,7 +598,7 @@ final readonly class BmffHashCheck
             return 'an offset table may be excluded only with a subset whose every range starts at offset 16 or later, so that its header and entry count stay hashed';
         }
 
-        return 'a BMFF hash may exclude only the C2PA uuid box, ftyp, mfra, free, skip, meta/iloc, mfra/tfra and the offset fields of stco, co64, tfhd and trun (from offset 16), which is what c2pa-rs writes; any other box could hold the media';
+        return 'a BMFF hash may exclude only the C2PA uuid box, ftyp, mfra, free, skip, meta/iloc, mfra/tfra and the offset fields of stco, co64, tfhd and trun (from offset 16), which is what c2pa-rs writes, and moov/free, moov/udta, moov/meta and a timed-metadata track, which is what Pixel Camera writes; any other box could hold the media';
     }
 
     /**
@@ -693,7 +796,7 @@ final readonly class BmffHashCheck
      * it — measured on this file's two 40-byte `stco` boxes, excluded from offset
      * 16 (step 86).
      *
-     * @param  array{offset: int, length: int, type: string, path: string}  $box
+     * @param  array{offset: int, length: int, type: string, path: string, ipath?: string}  $box
      * @param  array<string, mixed>  $exclusion
      * @return list<array{offset: int, length: int}>
      */
@@ -727,7 +830,7 @@ final readonly class BmffHashCheck
     /**
      * A box minus everything excluded inside it, in file order.
      *
-     * @param  array{offset: int, length: int, type: string, path: string}  $box
+     * @param  array{offset: int, length: int, type: string, path: string, ipath?: string}  $box
      * @param  list<array{offset: int, length: int}>  $excluded
      * @return list<array{offset: int, length: int}>
      */
@@ -762,7 +865,7 @@ final readonly class BmffHashCheck
     /**
      * The top-level boxes no exclusion matches, in file order.
      *
-     * @param  list<array{offset: int, length: int, type: string, path?: string}>  $boxes
+     * @param  list<array{offset: int, length: int, type: string, path?: string, ipath?: string}>  $boxes
      * @param  list<array<string, mixed>>  $exclusions
      * @param  callable(int, int): string  $readAt  the asset's bytes at an offset, for the data filter
      * @return list<array{offset: int, length: int}>
@@ -789,7 +892,7 @@ final readonly class BmffHashCheck
     }
 
     /**
-     * @param  array{offset: int, length: int, type: string, path?: string}  $box
+     * @param  array{offset: int, length: int, type: string, path?: string, ipath?: string}  $box
      * @param  array<string, mixed>  $exclusion
      * @param  callable(int, int): string  $readAt
      *
@@ -809,7 +912,7 @@ final readonly class BmffHashCheck
         // SPEC-027's callers hand over top-level boxes without a path; a box that
         // has none is at the top level and its path is its type.
         $path = $box['path'] ?? '/'.$box['type'];
-        if ($path !== $xpath) {
+        if (! self::pathMatches($xpath, $path, $box['ipath'] ?? null)) {
             return false;
         }
 

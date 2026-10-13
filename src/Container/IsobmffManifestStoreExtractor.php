@@ -65,7 +65,8 @@ final readonly class IsobmffManifestStoreExtractor
     /**
      * The box types this walk descends into, and how many bytes of their own come
      * first. ISO/IEC 14496-12 gives `meta` a version and flags before its children;
-     * the rest begin immediately.
+     * the rest begin immediately. A QuickTime-style `meta` has none (SPEC-072): see
+     * metaSkip().
      */
     private const CONTAINERS = [
         'moov' => 0, 'trak' => 0, 'mdia' => 0, 'minf' => 0, 'stbl' => 0,
@@ -100,7 +101,9 @@ final readonly class IsobmffManifestStoreExtractor
      * two places (the maintainer's decision, 2026-09-22).
      *
      * @param  resource  $stream  a readable, seekable stream positioned at 0
-     * @return list<array{offset: int, length: int, type: string, path: string}>
+     *                            Each box also carries `ipath`, its path with a 1-based index on every step
+     *                            among same-type siblings (`/moov[1]/trak[3]`), for indexed xpaths (SPEC-072).
+     * @return list<array{offset: int, length: int, type: string, path: string, ipath: string}>
      *
      * @throws ContainerException on every malformed case, and when a box nests
      *                            deeper than DEFAULT_MAX_BOX_DEPTH
@@ -112,17 +115,17 @@ final readonly class IsobmffManifestStoreExtractor
         rewind($stream);
 
         $boxes = [];
-        $this->descend($reader, 0, $end, '', 1, $boxes);
+        $this->descend($reader, 0, $end, '', '', 1, $boxes);
 
         return $boxes;
     }
 
     /**
-     * @param  list<array{offset: int, length: int, type: string, path: string}>  $boxes
+     * @param  list<array{offset: int, length: int, type: string, path: string, ipath: string}>  $boxes
      *
      * @throws ContainerException
      */
-    private function descend(StreamReader $reader, int $from, int $to, string $parent, int $depth, array &$boxes): void
+    private function descend(StreamReader $reader, int $from, int $to, string $parent, string $indexedParent, int $depth, array &$boxes): void
     {
         if ($depth > self::DEFAULT_MAX_BOX_DEPTH) {
             throw new ContainerException(sprintf(
@@ -133,23 +136,46 @@ final readonly class IsobmffManifestStoreExtractor
         }
 
         $offset = $from;
+        $seen = [];
         while ($offset + self::BOX_HEADER_LENGTH <= $to) {
             if (count($boxes) >= $this->maxBoxes) {
                 throw new ContainerException(sprintf('more than %d boxes (offset %d)', $this->maxBoxes, $offset));
             }
             [$size, $header, $type] = $this->boxHeader($reader, $offset, $to);
+            $seen[$type] = ($seen[$type] ?? 0) + 1;
             $path = $parent.'/'.$type;
-            $boxes[] = ['offset' => $offset, 'length' => $size, 'type' => $type, 'path' => $path];
+            $ipath = sprintf('%s/%s[%d]', $indexedParent, $type, $seen[$type]);
+            $boxes[] = ['offset' => $offset, 'length' => $size, 'type' => $type, 'path' => $path, 'ipath' => $ipath];
 
             $skip = array_key_exists($type, self::CONTAINERS) ? self::CONTAINERS[$type] : null;
+            if ($type === 'meta' && $size >= $header + 8) {
+                $skip = $this->metaSkip($reader, $offset, $header);
+            }
             if ($skip !== null && $size > $header + $skip) {
                 $reader->skip($skip, $offset);
-                $this->descend($reader, $offset + $header + $skip, $offset + $size, $path, $depth + 1, $boxes);
+                $this->descend($reader, $offset + $header + $skip, $offset + $size, $path, $ipath, $depth + 1, $boxes);
             } else {
                 $reader->skip($size - $header, $offset);
             }
             $offset += $size;
         }
+    }
+
+    /**
+     * How many bytes of its own a `meta` box has before its children (SPEC-072): none in the
+     * QuickTime style, where its first child (`hdlr`) follows the header at once — a Pixel Camera
+     * video's `/moov/meta` — and four, version and flags, in ISO/IEC 14496-12's (§8.11.1). Told
+     * apart by where `hdlr` is: bytes 4–7 after the header are its type in the QuickTime form, and
+     * its size in the ISO one. A meta box that is neither is read as ISO, as before.
+     *
+     * @throws ContainerException
+     */
+    private function metaSkip(StreamReader $reader, int $offset, int $header): int
+    {
+        $first = $reader->readExactly(8, $offset, 'the start of the meta box');
+        $reader->seek($offset + $header);
+
+        return substr($first, 4, 4) === 'hdlr' ? 0 : 4;
     }
 
     /**

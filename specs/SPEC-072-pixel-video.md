@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-13 (option (a); in 0.7.0) |
 | Supersedes | SPEC-071's allow-list, which it widens by exactly Pixel's measured exclusions |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -171,11 +171,14 @@ time.
   fixtures; (b) ask the issue's author for permission to include it under
   a licence. That is outward-facing, so it is Maurice's call. Proposal:
   (a) now, and (b) later if it is wanted.
+  *Status 2026-10-13 (step 360):* decided by Maurice: (a).
 - **Release (non-blocking).** In 0.7.0, so that Pixel videos stop being a
   wrong `Invalid` in the same release that tightens the allow-list?
   Proposal: yes.
+  *Status 2026-10-13 (step 360):* decided by Maurice: in 0.7.0.
 - **The informational's sentence (non-blocking).** It applies to `udta`,
   `meta` and the metadata track, not to `free`/`skip`, which are padding.
+  *Status 2026-10-13 (step 360):* approved with the spec.
 
 ## Traceability
 
@@ -184,9 +187,21 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
+| AC1 | tests/Unit/Hash/PixelVideoTest.php :: verifies the Pixel Camera video's binding, as c2patool does (local only; skipped without C2PA_PIXEL_VIDEO) / SPEC-072 | all of the below |
+| AC2 | tests/Unit/Hash/PixelVideoTest.php :: verifies a file of the Pixel shape, and c2patool agrees / SPEC-072 | src/Container/IsobmffManifestStoreExtractor.php :: metaSkip(), descend() (`ipath`); src/Hash/BmffHashCheck.php :: pathMatches(), refusedExclusion(); bin/make-pixel-shape-variants.php |
+| AC3 | tests/Unit/Hash/PixelVideoTest.php :: refuses a track excluded by index unless its handler is timed metadata (2 files) / SPEC-072 | src/Hash/BmffHashCheck.php :: trackRefusal(), check() |
+| AC4 | tests/Unit/Hash/PixelVideoTest.php :: refuses a malformed index as malformed (6 cases); accepts the indexed and unindexed forms the allow-list names / SPEC-072 | src/Hash/BmffHashCheck.php :: shapeFault(), XPATH_STEP |
+| AC5 | tests/Unit/Hash/PixelVideoTest.php :: walks both forms of the meta box / SPEC-072 | src/Container/IsobmffManifestStoreExtractor.php :: metaSkip(); src/Container/StreamReader.php :: seek() |
+| AC6 | the corpus before and after (notes/step-360-pixel-video.md); tests/Unit/Hash/BmffExclusionAllowListTest.php (the indexed track now allowed by path) | — |
+
+The tests were run red first: 11 failed (no classes changed yet, no
+fixtures). The AC2 fixture's digest is computed by this verifier and
+confirmed by `c2patool` 0.28.1 and 0.28.2 (`Trusted`,
+`assertion.bmffHash.match`). With `C2PA_PIXEL_VIDEO` set to the real file,
+AC1 passes: `assertion.bmffHash.match`, `Valid`, as `c2patool` 0.28.2.
+Mutations watched failing: `meta` always read as ISO (4), the index
+ignored when matching (1), any handler accepted (1), a malformed index not
+refused (6), no unsigned sentence (1). Found on the way: `c2patool` 0.28.x
+also calls `pixel-shape-video-track.mp4` `Trusted`, which excludes the video
+track by index. That is refused here. `composer check` green (1,109 passed,
+1 skipped).
