@@ -10476,3 +10476,29 @@ README are where the disclosure lives.
 - Decided by Maurice: keep counting every `parentOf` assertion as the
   specification says, and do the comparison row and the section fix as one
   step inside the consolidation.
+
+## 2026-10-13 — Two kept divergences named in the comparison (step 347)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: a WordPress/ai maintainer prefers the CAI's own implementations
+  (`c2pa-web`) over third-party verifiers. Maurice asked to compare this
+  verifier with `c2pa-web` before replying, then "begin met de rijen in
+  comparison.md" for the two code differences that turned up.
+- Produced: two rows in `docs/comparison.md`;
+  `notes/step-347-two-kept-divergences.md`; a row in `NOTES.md`. The
+  measuring script (Playwright with system Chrome, `c2pa-web` bundled with
+  esbuild) stays outside the repository for now.
+- Measured: `c2pa-web` 0.15.3 bundles c2pa `=0.91.0` (its `Cargo.toml`, and
+  the string in the WASM). On the 92 distinct drift-alarm files, without
+  settings and with `full-plus-digicert-g4` / `test-roots`, with no network:
+  `c2pa-web` and `c2patool` 0.28.1 agree on state, failure codes and all
+  codes. Against this verifier: 8 and 4 state differences, all `Invalid`
+  here and all named in `tests/Pest.php`. The two unnamed code differences
+  were traced to SPEC-011 AC5/AC7 and AC10's normalisation. The quoted
+  explanation was checked against the outputs, and a wrong quote was
+  corrected before the commit. `composer check` (1,029 passed);
+  `php bin/spec-check.php` OK (67 specs).
+- Reasoned: the browser build and `c2patool` differ only by c2pa
+  0.91.0/0.91.1; the corpus shows no effect, which says nothing about files
+  outside it.
+- Decided by Maurice: measure against `c2pa-web` first, then name the two
+  divergences in the comparison as their own step.
