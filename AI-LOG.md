@@ -10700,3 +10700,15 @@ README are where the disclosure lives.
 - Reasoned: the cause of the box-walk fault from the bytes (4,841,330 + 12 =
   4,841,342).
 - Decided by Maurice: route (a); SPEC-071 approved; in 0.7.0.
+
+## 2026-10-13 — SPEC-072 drafted (step 359)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push stap 358 en schrijf de vervolgspec".
+- Produced: steps 357–358 pushed; `specs/SPEC-072-pixel-video.md` (draft);
+  `notes/step-359-pixel-video-drafted.md`; a row in `NOTES.md`.
+- Measured: in the Pixel file (scratch, outside the repository), the
+  handler types of its three tracks (`vide`, `soun`, `meta`) and the first
+  child of `/moov/meta` (`hdlr`, `mdta`). `php bin/spec-check.php` OK.
+- Reasoned: the restriction of an indexed track exclusion to a
+  timed-metadata handler, so that the video track cannot be unbound.
+- Decided by Maurice: push step 358; write the follow-up spec.
