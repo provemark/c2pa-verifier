@@ -153,3 +153,8 @@ informational, where one `mismatch` was expected). AC2 and AC3 pin
 behaviour that was already there, and were green from the start. Two
 mutations were watched failing: the bound at `<= 1` (AC3 fails) and the
 check moved before amendment 7's (AC2 fails). `composer check` green.
+
+Step 352 (SPEC-069): the verifier now refuses `all-but-one-byte.png`
+through SPEC-069. AC3's test checks this spec alone, with an allowance
+that lets every range stand (`match`, one byte hashed), and that the
+verifier's refusal carries SPEC-069's explanation, not this one's.

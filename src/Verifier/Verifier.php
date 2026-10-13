@@ -24,8 +24,11 @@ use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Hash\AlternativeContentCheck;
 use Provemark\C2paVerifier\Hash\BmffHashCheck;
 use Provemark\C2paVerifier\Hash\DataHashCheck;
+use Provemark\C2paVerifier\Hash\ExclusionAllowance;
 use Provemark\C2paVerifier\Hash\HardBindings;
 use Provemark\C2paVerifier\Hash\HashedUriCheck;
+use Provemark\C2paVerifier\Hash\JpegExclusionAllowance;
+use Provemark\C2paVerifier\Hash\NoExclusionAllowance;
 use Provemark\C2paVerifier\Jumbf\JumbfException;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\ActionsCheck;
@@ -173,7 +176,7 @@ final readonly class Verifier
 
         // the header's token, else a time-stamp assertion's from any manifest of the store (SPEC-064)
         $timestamp = $this->timestamp->forManifest($manifestStore->active, $settings, TimestampAssertions::collect($manifestStore));
-        $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp, $graphStatuses, $graph);
+        $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp, $graphStatuses, $graph, $format);
         $refusals = [];
         // a CAWG identity assertion carries a credential of its own that c2pa-rs validates; this verifier
         // does not yet, and will not call Trusted what it has not looked at (SPEC-013 amendment 7)
@@ -227,6 +230,18 @@ final readonly class Verifier
     }
 
     /**
+     * SPEC-069: where an exclusion beyond the manifest store may lie. Only JPEG has a measured writer
+     * that makes one (the Pixel 10's Exif and XMP payloads); every other format allows none.
+     */
+    private static function exclusionAllowance(string $format): ExclusionAllowance
+    {
+        return $format === 'jpeg' ? new JpegExclusionAllowance : new NoExclusionAllowance(match ($format) {
+            'png' => 'PNG', 'webp' => 'WebP', 'gif' => 'GIF', 'wav' => 'WAV', 'avi' => 'AVI', 'mp3' => 'MP3', 'flac' => 'FLAC', 'text' => 'plain text',
+            default => $format,
+        });
+    }
+
+    /**
      * Steps 4–6 on the active manifest: the signature, the hashed URIs, and
      * the data hash — always, unless its assertion is declared and its hashed
      * URI failed (SPEC-013 amendment 10).
@@ -234,8 +249,9 @@ final readonly class Verifier
      * @param  resource  $stream
      * @param  list<ValidationStatus>  $graphStatuses  the ingredient graph's, each scoped (SPEC-020)
      * @param  ManifestGraph|null  $graph  null when the graph could not be built (a bound was exceeded)
+     * @param  string  $format  the detected format, which says where an exclusion beyond the store may lie (SPEC-069)
      */
-    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings, TimestampResult $timestamp, array $graphStatuses, ?ManifestGraph $graph): ValidationResult
+    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings, TimestampResult $timestamp, array $graphStatuses, ?ManifestGraph $graph, string $format): ValidationResult
     {
         $manifest = $manifestStore->active;
         // the timestamp first, as c2patool lists it; informational only, but it supplies the time below (SPEC-017)
@@ -373,7 +389,7 @@ final readonly class Verifier
                 // the manifest actually carries, not the container it arrived in.
                 $statuses = [...$statuses, ...(BmffHashCheck::labelOf($binding) !== null
                     ? $this->bmffHash->check($binding, $stream)
-                    : $this->dataHash->check($binding, $stream, $store, $manifest->isUpdateManifest))];
+                    : $this->dataHash->check($binding, $stream, $store, $manifest->isUpdateManifest, self::exclusionAllowance($format)))];
             }
             // SPEC-027 amendment 1: `checks_performed` says which hard binding ran, so
             // that a caller reading it cannot mistake a BMFF file for one whose data hash

@@ -9,6 +9,8 @@ use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
 use Provemark\C2paVerifier\Cose\ClaimSignatureCheck;
 use Provemark\C2paVerifier\Hash\DataHashCheck;
+use Provemark\C2paVerifier\Hash\ExclusionAllowance;
+use Provemark\C2paVerifier\Hash\ExclusionRegion;
 use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\Manifest;
@@ -231,8 +233,36 @@ it('AC3: the store\'s exclusion holds the store and nothing else', function (): 
         ->and(ValidationResult::fromStatuses($statuses, ['dataHash'])->state)->toBe(ValidationState::Invalid);
 })->group('SPEC-012');
 
-it('AC4: additional exclusions are honoured and reported', function (): void {
-    $statuses = spec012Check('binding/exclusion-extra.png');
+/** SPEC-069: an allowance that permits exactly [46500, 64], the range binding/exclusion-extra.png adds over IDAT data. */
+function spec012AllowExtra(): ExclusionAllowance
+{
+    return new class implements ExclusionAllowance
+    {
+        public function format(): string
+        {
+            return 'PNG';
+        }
+
+        public function rule(): string
+        {
+            return 'a test allows [46500, 64]';
+        }
+
+        public function regions($stream): array
+        {
+            return [new ExclusionRegion(46500, 64, 'a test region', true)];
+        }
+    };
+}
+
+it('AC4: additional exclusions are honoured and reported where the format allows them (SPEC-069)', function (): void {
+    // SPEC-012 amendment 11: PNG allows no exclusion beyond the store, so by default the extra range is a mismatch
+    $refused = spec012Check('binding/exclusion-extra.png');
+    expect(spec012Codes($refused))->toBe(['assertion.dataHash.mismatch'])
+        ->and($refused[0]->explanation)->toContain('[46500, 64]');
+
+    [$manifest, $stream, $store] = spec012Open('binding/exclusion-extra.png');
+    $statuses = (new DataHashCheck)->check($manifest, $stream, $store, allowance: spec012AllowExtra());
     expect(spec012Codes($statuses))->toBe(['assertion.dataHash.match', 'assertion.dataHash.additionalExclusionsPresent'])
         ->and($statuses[0]->url)->toBe(SPEC012_PNG.'/c2pa.assertions/c2pa.hash.data')
         ->and($statuses[1]->url)->toBe(SPEC012_PNG.'/c2pa.assertions/c2pa.hash.data')
@@ -271,8 +301,10 @@ it('AC5: overlapping exclusions: assertion.dataHash.malformed', function (): voi
     expect(spec012OraclePairs(spec012C2patool('exclusions-overlap', true), 'validation_status', 'assertion.dataHash'))
         ->toBe([['code' => 'assertion.dataHash.mismatch', 'url' => SPEC012_PNG.'/c2pa.assertions/c2pa.hash.data']]);
 
-    $unsorted = spec012Check('binding/exclusions-unsorted.png');
-    expect(spec012Codes($unsorted))->toBe(['assertion.dataHash.match', 'assertion.dataHash.additionalExclusionsPresent']);
+    // sorted first: under an allowance for the extra range it is exclusion-extra's answer; by default a mismatch (SPEC-069)
+    [$manifest, $stream, $store] = spec012Open('binding/exclusions-unsorted.png');
+    expect(spec012Codes((new DataHashCheck)->check($manifest, $stream, $store, allowance: spec012AllowExtra())))->toBe(['assertion.dataHash.match', 'assertion.dataHash.additionalExclusionsPresent'])
+        ->and(spec012Codes(spec012Check('binding/exclusions-unsorted.png')))->toBe(['assertion.dataHash.mismatch']);
 })->group('SPEC-012');
 
 it('AC6: shape faults: malformed, and a missing hash is a mismatch', function (): void {

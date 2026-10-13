@@ -10575,3 +10575,27 @@ README are where the disclosure lives.
   `composer check` 1,035 passed. `php bin/spec-check.php` OK.
 - Reasoned: none beyond the spec.
 - Decided by Maurice: SPEC-068 approved, on its own, ahead of SPEC-069.
+
+## 2026-10-13 — SPEC-069: where an exclusion beyond the store may lie (step 352)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord allow-list en geheel binnen segment, SPEC-069 approved".
+- Produced: SPEC-069 approved, then implemented (open questions' statuses,
+  traceability); `src/Hash/ExclusionAllowance.php`,
+  `ExclusionRegion.php`, `NoExclusionAllowance.php`,
+  `JpegExclusionAllowance.php`; the allowance in
+  `src/Hash/DataHashCheck.php` and `src/Verifier/Verifier.php`;
+  `tests/Unit/Hash/ExclusionAllowanceTest.php`; SPEC-012 amendment 11 and
+  its AC4/AC5 tests; SPEC-068's AC3 test and traceability; the drift
+  alarm's divergence in `tests/Unit/Verifier/VerifierTest.php`; four JPEG
+  variants in `bin/make-exclusion-coverage-variants.php` (all
+  `exclusion-coverage` files and answers regenerated) and the README
+  there; two rows in `docs/comparison.md`;
+  `notes/step-352-where-exclusions-may-lie.md`; a row in `NOTES.md`.
+- Measured: 21 tests red before, green after. Six mutations, one of which
+  survived until a test was added. Corpus before and after (793 files, two
+  modes): three files differ, all expected. `c2patool` 0.28.1/0.28.2 call
+  all four new JPEG variants `Trusted`. `composer check` 1,058 passed;
+  contract 135 symbols; `php bin/spec-check.php` OK.
+- Reasoned: none beyond the spec.
+- Decided by Maurice: the allow-list; "wholly inside one payload";
+  SPEC-069 approved.

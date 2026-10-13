@@ -44,9 +44,10 @@ final readonly class DataHashCheck
 
     /**
      * @param  resource  $stream  the asset, readable and seekable
+     * @param  ExclusionAllowance  $allowance  where the format allows an exclusion beyond the store (SPEC-069); by default nowhere
      * @return list<ValidationStatus>
      */
-    public function check(Manifest $manifest, $stream, ManifestStoreBytes $store, bool $adjustForUpdate = false): array
+    public function check(Manifest $manifest, $stream, ManifestStoreBytes $store, bool $adjustForUpdate = false, ExclusionAllowance $allowance = new NoExclusionAllowance): array
     {
         $manifestUrl = sprintf('self#jumbf=/c2pa/%s', $manifest->label);
 
@@ -227,6 +228,42 @@ final readonly class DataHashCheck
             return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('the exclusions leave no byte of the %d-byte file to hash: %s; a data hash over nothing binds nothing', $end, implode(', ', array_map(static fn (array $r): string => sprintf('[%d, %d]', $r['start'], $r['length']), $exclusions))))];
         }
 
+        // ---- an exclusion beyond the store only where the format allows it (SPEC-069) ----
+        $allowedIn = [];
+        if ($others !== []) {
+            try {
+                $regions = $allowance->regions($stream);
+            } catch (ContainerException $e) {
+                return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('%d exclusion(s) beyond the manifest store, and the regions %s allows for them could not be established: %s; an exclusion is never allowed by default', count($others), $allowance->format(), $e->getMessage()))];
+            }
+            foreach ($others as $range) {
+                $home = null;
+                foreach ($regions as $region) {
+                    if ($region->allowed && $range['start'] >= $region->start && $region->start + $region->length >= $range['start'] + $range['length']) {
+                        $home = $region;
+                        break;
+                    }
+                }
+                if ($home === null) {
+                    $falls = [];
+                    foreach ($regions as $region) {
+                        $overlaps = $range['length'] === 0
+                            ? $range['start'] >= $region->start && $range['start'] < $region->start + $region->length
+                            : $range['start'] < $region->start + $region->length && $region->start < $range['start'] + $range['length'];
+                        if (! $region->allowed && $overlaps) {
+                            $falls[] = $region->what;
+                        }
+                    }
+
+                    return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('the exclusion [%d, %d] (start, length) holds no part of the manifest store and is not allowed where it lies%s; %s', $range['start'], $range['length'], $falls === [] ? '' : ': it falls in '.implode(', ', $falls), $allowance->rule()))];
+                }
+                $allowedIn[$home->what] = true;
+            }
+            if (! rewind($stream)) {
+                return [new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, 'the asset could not be read: cannot seek back to its start')];
+            }
+        }
+
         // ---- the hash, streamed ----
         try {
             $actual = $this->hashExcept($reader, $alg, $exclusions, $end);
@@ -238,7 +275,7 @@ final readonly class DataHashCheck
             : new ValidationStatus(StatusCode::AssertionDataHashMismatch, $url, sprintf('data hash does not match: %s over %d of %d bytes gives %s, the assertion carries %s', $alg, $end - array_sum(array_column($exclusions, 'length')), $end, bin2hex($actual), bin2hex($expected))),
         ];
         if ($others !== []) {
-            $statuses[] = new ValidationStatus(StatusCode::AssertionDataHashAdditionalExclusionsPresent, $url, sprintf('%d exclusion(s) beyond the manifest store, honoured as signed: %s', count($others), implode(', ', array_map(static fn (array $r): string => sprintf('[%d, %d]', $r['start'], $r['length']), $others))));
+            $statuses[] = new ValidationStatus(StatusCode::AssertionDataHashAdditionalExclusionsPresent, $url, sprintf('%d exclusion(s) beyond the manifest store, honoured as signed, each inside an allowed region (%s): %s', count($others), implode(', ', array_keys($allowedIn)), implode(', ', array_map(static fn (array $r): string => sprintf('[%d, %d]', $r['start'], $r['length']), $others))));
         }
 
         return $statuses;

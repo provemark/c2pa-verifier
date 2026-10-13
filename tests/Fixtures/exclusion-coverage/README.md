@@ -26,4 +26,28 @@ All under `throw-away-root.settings.json`. The answers are under
 new hierarchy, so the files' hashes differ per run; the shape does not.
 
 The two `-pixel-edited` files are the wrong `Trusted`: the image data
-changed after signing, and all three verifiers say `Trusted`.
+changed after signing, and all three verifiers say `Trusted` (0.6.1).
+
+## Step 352: JPEG (SPEC-069 AC4)
+
+`fixture-signed.jpg` with an Exif APP1 (20 bytes of payload: an empty IFD0)
+and an ICC APP2 (a blank 142-byte payload) put between its JFIF APP0 and
+its store. The store is rewritten into APP11 segments laid out as C2PA 2.4
+§A.3.4 lays them out, then re-signed.
+
+| file | exclusions (start, length) | 0.28.1 | 0.28.2 |
+|---|---|---|---|
+| `jpeg-exif-allowed` | `[24, 20]` (exactly the Exif payload), the store | `Trusted` | `Trusted` |
+| `jpeg-app1-header-excluded` | `[20, 24]` (the whole Exif segment), the store | `Trusted` | `Trusted` |
+| `jpeg-icc-excluded` | `[48, 142]` (the ICC payload), the store | `Trusted` | `Trusted` |
+| `jpeg-scan-excluded` | the store, `[95371, 64]` (scan data) | `Trusted` | `Trusted` |
+
+## This verifier after SPEC-068 and SPEC-069 (steps 351, 352)
+
+| file | answer |
+|---|---|
+| `control-resigned`, `jpeg-exif-allowed` | `Trusted` (the second with the informational, naming "APP1 Exif payload") |
+| `whole-file` | `Invalid`: SPEC-012 amendment 7 |
+| `all-but-store`, `all-but-store-pixel-edited` | `Invalid`: SPEC-068, no byte hashed |
+| `all-but-one-byte`, `idat-excluded`, `idat-excluded-pixel-edited` | `Invalid`: SPEC-069, PNG allows no exclusion beyond the store |
+| `jpeg-app1-header-excluded`, `jpeg-icc-excluded`, `jpeg-scan-excluded` | `Invalid`: SPEC-069, naming the segment or the scan the range falls in |

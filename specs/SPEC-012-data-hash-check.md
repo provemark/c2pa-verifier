@@ -528,6 +528,24 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
     **Weight B: a named difference with `c2patool`, from the
     specification's own validator rule.**
 
+11. **2026-10-13, step 352, with SPEC-069 (approved by Maurice van Loon
+    the same day)** — AC4's "additional exclusions are honoured and
+    reported" holds only where the format allows the range: inside the
+    payload of a JPEG APP1 Exif or XMP segment of the primary image, and
+    nowhere in any other format (SPEC-069). Elsewhere an exclusion that
+    holds no part of the store is `assertion.dataHash.mismatch`, and the
+    file is not hashed. `DataHashCheck::check()` takes the format's
+    `ExclusionAllowance`, and by default allows nothing. The changed answers:
+    `binding/exclusion-extra.png` and `binding/exclusions-unsorted.png` (a
+    range over IDAT data) are a mismatch by default. Under an allowance for
+    that range, AC4's and AC5's tests still pin the informational, its url
+    and its shape against `c2patool`. Both files stay `Invalid`, since
+    their signature is broken. The informational's explanation now names
+    the regions the ranges lie in.
+
+    **Weight A: a deliberate difference with `c2patool`, which honours an
+    extra exclusion wherever it lies (step 349: a wrong `Trusted`).**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

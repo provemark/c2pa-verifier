@@ -400,6 +400,8 @@ it('AC10: the drift alarm: every recorded c2patool JSON, state and failures', fu
                     ? 'assertion.dataHash.mismatch'
                     : 'assertion.hashedURI.mismatch',
                 StatusCode::GeneralError, StatusCode::AssertionUndeclared => null,
+                // SPEC-069's deliberate divergence: c2patool honours an exclusion beyond the store wherever it lies
+                StatusCode::AssertionDataHashMismatch => str_contains($status->explanation, 'is not allowed where it lies') ? null : $status->code->value,
                 default => $status->code->value,
             };
         }

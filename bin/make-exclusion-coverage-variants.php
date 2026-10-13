@@ -28,17 +28,24 @@ declare(strict_types=1);
  *   idat-excluded               the store + [first IDAT, IEND): only the image data left out
  *   idat-excluded-pixel-edited  the same file with one IDAT byte changed after signing
  *
+ * Step 352 (SPEC-069 AC4): fixture-signed.jpg with an Exif APP1 and an ICC APP2 put before its store, and
+ *   jpeg-exif-allowed           the store + exactly the Exif payload: the allowed shape, the positive control
+ *   jpeg-app1-header-excluded   the store + the whole Exif segment, marker and length included
+ *   jpeg-icc-excluded           the store + the ICC profile's payload, which changes the colours
+ *   jpeg-scan-excluded          the store + 64 bytes of the scan data
+ *
  * Usage: php bin/make-exclusion-coverage-variants.php <scratch-dir> <c2patool-0.28.1> <c2patool-0.28.2>.
  * Tooling, not the verification path.
  *
  * Writes:
- *   tests/Fixtures/exclusion-coverage/<variant>.png, throw-away-root.pem, throw-away-root.settings.json
+ *   tests/Fixtures/exclusion-coverage/<variant>.png|.jpg, throw-away-root.pem, throw-away-root.settings.json
  *   tests/Fixtures/c2patool/exclusion-coverage/<variant>--<version>.json
  */
 
 require __DIR__.'/../vendor/autoload.php';
 require __DIR__.'/variant-helpers.php';
 
+use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Cose\SignatureVerifier;
@@ -171,15 +178,16 @@ $idatSpan = 47724 - 46091;                                           // IDAT up 
 
 /**
  * The store with its exclusion list made by $ranges (from the store's length), the
- * hash recomputed over the PNG that carries it and the claim's hashed URI with it.
+ * hash recomputed over the file $writer makes of it and the claim's hashed URI with it.
  * The list's length depends on the store's and the other way round, so it is
  * rebuilt until it no longer moves.
  *
  * @param  Closure(int): list<array{0: int, 1: int}>  $ranges
+ * @param  Closure(string): string  $writer  the store in its container
  * @param  list<int>  $hashBox
  * @return array{0: string, 1: list<array{0: int, 1: int}>}
  */
-function ecRebound(Closure $ranges, string $s, string $png, int $exStart, int $exEnd, int $hashStart, int $claimHashValue, array $hashBox, int $hashDataBox): array
+function ecRebound(Closure $ranges, string $s, Closure $writer, int $exStart, int $exEnd, int $hashStart, int $claimHashValue, array $hashBox, int $hashDataBox): array
 {
     $length = strlen($s);
     for ($round = 0; $round < 4; $round++) {
@@ -191,7 +199,7 @@ function ecRebound(Closure $ranges, string $s, string $png, int $exStart, int $e
         $store = bSplice($s, $exStart, $exEnd - $exStart, $cbor, $hashBox);
         if (strlen($store) === $length) {
             $delta = strlen($cbor) - ($exEnd - $exStart);
-            $digest = ecDataHash(pngWithStore($png, $store), $list);
+            $digest = ecDataHash($writer($store), $list);
             $store = bReplace($store, $hashStart + $delta + 2, substr($store, $hashStart + $delta + 2, 32), $digest);
             $boxLength = bU32($store, $hashDataBox);
             $uri = hash('sha256', substr($store, $hashDataBox + 8, $boxLength - 8), true);
@@ -202,10 +210,35 @@ function ecRebound(Closure $ranges, string $s, string $png, int $exStart, int $e
     }
     throw new RuntimeException('the exclusion list did not settle');
 }
-$rebound = static fn (Closure $ranges): array => ecRebound($ranges, $s, $png, $exStart, $exEnd, $hashStart, $claimHashValue, $hashBox, $HASH_DATA_BOX);
+$asPng = static fn (string $store): string => pngWithStore($png, $store);
+$rebound = static fn (Closure $ranges): array => [...ecRebound($ranges, $s, $asPng, $exStart, $exEnd, $hashStart, $claimHashValue, $hashBox, $HASH_DATA_BOX), $asPng, 'png'];
+
+/**
+ * The JPEG $head.APP11….$tail: the store cut into APP11 segments as C2PA 2.4 §A.3.4 lays them out
+ * (CI "JP", the box instance number $en, packet sequence numbers from 1, the superbox's LBox and
+ * TBox repeated, then up to 65,517 bytes of the rest).
+ */
+function ecJpegWithStore(string $head, string $store, string $tail, string $en): string
+{
+    $out = $head;
+    $z = 1;
+    foreach (str_split(substr($store, 8), 65535 - 2 - 16) as $piece) {
+        $out .= "\xff\xeb".pack('n', 2 + 16 + strlen($piece)).'JP'.$en.pack('N', $z++).substr($store, 0, 8).$piece;
+    }
+
+    return $out.$tail;
+}
+
+/** The bytes the APP11 segments of a store of $length take (four bytes of marker and length, sixteen of header, per piece). */
+function ecApp11Length(int $length): int
+{
+    $pieces = intdiv($length - 8 + 65516, 65517);
+
+    return $length - 8 + 20 * $pieces;
+}
 
 $variants = [
-    'control-resigned' => [$s, [[33, 12 + strlen($s)]]],
+    'control-resigned' => [$s, [[33, 12 + strlen($s)]], $asPng, 'png'],
     'whole-file' => $rebound(static fn (int $n): array => [[0, 33 + 12 + $n + $tail]]),
     'all-but-store' => $rebound(static fn (int $n): array => [[0, 33], [33, 12 + $n], [33 + 12 + $n, $tail]]),
     'all-but-one-byte' => $rebound(static fn (int $n): array => [[0, 33], [33, 12 + $n], [33 + 12 + $n, $tail - 1]]),
@@ -246,7 +279,43 @@ $settings = ['trust' => ['trust_anchors' => $rootPem, 'trust_config' => (string)
 file_put_contents("{$dir}/throw-away-root.settings.json", json_encode($settings, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
 
 $files = [];
-foreach ($variants as $name => [$edited, $ranges]) {
+// ---- step 352, SPEC-069 AC4: the JPEG fixture with an Exif APP1 and an ICC APP2 put before its store ----
+// fixture-signed.jpg: SOI, JFIF APP0 [2, 18], the store in two APP11 segments [20, 94772], COM, DQT, DHT,
+// SOF0, SOS at 95065 (14 bytes), scan data from 95079. Its store's hash.data box sits at 81546, the claim's
+// at 81741, laid out as the PNG's (step 09: the cbor box 72 bytes in, its payload 80; the claim's 47 and 55).
+$jpeg = (string) file_get_contents($root.'/tests/Fixtures/fixture-signed.jpg');
+$jpegStream = fopen($root.'/tests/Fixtures/fixture-signed.jpg', 'rb');
+$jpegExtracted = $jpegStream === false ? null : (new JpegManifestStoreExtractor)->extract($jpegStream);
+if ($jpegExtracted === null || strlen($jpegExtracted->bytes) !== 94740 || strlen($jpeg) !== 96939 || substr($jpeg, 20, 4) !== "\xff\xeb\xfa\x0a" || substr($jpeg, 95065, 2) !== "\xff\xda") {
+    throw new RuntimeException('the JPEG fixture is not laid out as step 352 measured');
+}
+$js = $jpegExtracted->bytes;
+$J_HASH_BOX = 81546;
+$J_CLAIM = 81741 + 55;
+if (ord($js[$J_HASH_BOX + 80]) !== 0xA5 || ord($js[$J_CLAIM]) !== 0xA7) {
+    throw new RuntimeException('the JPEG store is not laid out as the PNG\'s');
+}
+$jhd = bMapPairs($js, $J_HASH_BOX + 80);
+$jClaim = bMapPairs($js, $J_CLAIM);
+$exif = 'Exif'."\0\0".'II*'."\0".pack('V', 8)."\0\0\0\0\0\0";                // an empty IFD0, no next IFD
+$icc = 'ICC_PROFILE'."\0\x01\x01".str_repeat("\0", 128);                       // one chunk of a (blank) profile
+$exifSegment = "\xff\xe1".pack('n', 2 + strlen($exif)).$exif;                    // at 20
+$iccSegment = "\xff\xe2".pack('n', 2 + strlen($icc)).$icc;                       // after it
+$jHead = substr($jpeg, 0, 20).$exifSegment.$iccSegment;
+$jTail = substr($jpeg, 94792);
+$jScan = 95079 - 94792;                                                          // the scan data's offset in the tail
+$asJpeg = static fn (string $store): string => ecJpegWithStore($jHead, $store, $jTail, substr($jpeg, 20 + 6, 2));
+$P = strlen($jHead);
+$jRebound = static fn (Closure $ranges): array => [...ecRebound($ranges, $js, $asJpeg, $jhd['exclusions'][1], $jhd['exclusions'][2], $jhd['hash'][1], bMapPairs($js, $jClaim['created_assertions'][1] + 1)['hash'][1] + 2, [0, 38, 117, $J_HASH_BOX, $J_HASH_BOX + 72], $J_HASH_BOX), $asJpeg, 'jpg'];
+$jStore = static fn (int $n): array => [$P, ecApp11Length($n)];
+$variants += [
+    'jpeg-exif-allowed' => $jRebound(static fn (int $n): array => [[24, strlen($exif)], $jStore($n)]),
+    'jpeg-app1-header-excluded' => $jRebound(static fn (int $n): array => [[20, strlen($exifSegment)], $jStore($n)]),
+    'jpeg-icc-excluded' => $jRebound(static fn (int $n): array => [[20 + strlen($exifSegment) + 4, strlen($icc)], $jStore($n)]),
+    'jpeg-scan-excluded' => $jRebound(static fn (int $n): array => [$jStore($n), [$P + ecApp11Length($n) + $jScan + 100, 64]]),
+];
+
+foreach ($variants as $name => [$edited, $ranges, $writer, $extension]) {
     $manifest = ManifestStore::fromTree((new JumbfParser)->parse($edited))->active;
     $claimBytes = $manifest->claimBytes();
     $COSE = strpos($edited, $manifest->signatureBytes());
@@ -275,16 +344,16 @@ foreach ($variants as $name => [$edited, $ranges]) {
     if (! (new SignatureVerifier)->verify(CoseSign1::fromBytes($cose), $claimBytes)) {
         throw new RuntimeException("{$name}: the new signature does not verify under its own leaf");
     }
-    $signed = pngWithStore($png, $store);
+    $signed = $writer($store);
     $hashed = strlen($signed) - array_sum(array_column($ranges, 1));
-    $files[$name] = $signed;
+    $files["{$name}.{$extension}"] = $signed;
     printf("%s  %-28s %d of %d bytes hashed, exclusions %s\n", hash('sha256', $signed), $name, $hashed, strlen($signed), implode(' ', array_map(static fn (array $r): string => "[{$r[0]}, {$r[1]}]", $ranges)));
     if (in_array($name, ['all-but-store', 'idat-excluded'], true)) {
-        $files["{$name}-pixel-edited"] = pngPixelChanged($signed);
+        $files["{$name}-pixel-edited.png"] = pngPixelChanged($signed);
     }
 }
-foreach ($files as $name => $bytes) {
-    file_put_contents("{$dir}/{$name}.png", $bytes);
+foreach ($files as $file => $bytes) {
+    file_put_contents("{$dir}/{$file}", $bytes);
 }
 
 // ---- the oracles, and this verifier beside them ----
@@ -309,14 +378,15 @@ $state = static function (string $output): string {
 
     return (is_string($json['validation_state'] ?? null) ? $json['validation_state'] : '?').'  '.implode(' ', array_unique($codes));
 };
-foreach (array_keys($files) as $name) {
+foreach (array_keys($files) as $file) {
+    $name = pathinfo($file, PATHINFO_FILENAME);
     foreach (['0.28.1' => $old, '0.28.2' => $new] as $v => $tool) {
         $lines = [];
-        exec(ecSh($tool, "{$dir}/{$name}.png", '--settings', "{$dir}/throw-away-root.settings.json").' 2>&1', $lines);
+        exec(ecSh($tool, "{$dir}/{$file}", '--settings', "{$dir}/throw-away-root.settings.json").' 2>&1', $lines);
         file_put_contents("{$oracles}/{$name}--{$v}.json", implode("\n", $lines)."\n");
         printf("  %-28s c2patool %-7s %s\n", $name, $v, $state(implode("\n", $lines)));
     }
     $lines = [];
-    exec(ecSh(PHP_BINARY, $root.'/bin/c2pa-verify', '--settings', "{$dir}/throw-away-root.settings.json", "{$dir}/{$name}.png").' 2>&1', $lines);
+    exec(ecSh(PHP_BINARY, $root.'/bin/c2pa-verify', '--settings', "{$dir}/throw-away-root.settings.json", "{$dir}/{$file}").' 2>&1', $lines);
     printf("  %-28s %-17s %s\n", $name, 'this verifier', $state(implode("\n", $lines)));
 }

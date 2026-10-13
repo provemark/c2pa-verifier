@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
+use Provemark\C2paVerifier\Hash\DataHashCheck;
+use Provemark\C2paVerifier\Hash\ExclusionAllowance;
+use Provemark\C2paVerifier\Hash\ExclusionRegion;
+use Provemark\C2paVerifier\Jumbf\JumbfParser;
+use Provemark\C2paVerifier\Manifest\ManifestStore;
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
@@ -12,7 +18,8 @@ use Provemark\C2paVerifier\Verifier\Verifier;
 /*
  * SPEC-068: a data hash that leaves no byte of the file to hash is a
  * mismatch. The files are tests/Fixtures/exclusion-coverage/ (steps 349 and
- * 351, re-signed under a throw-away root); the c2patool answers, which say
+ * 351, re-signed under a throw-away root); since SPEC-069 the one-byte floor
+ * is checked with an allowance that lets every range stand. The c2patool answers, which say
  * Trusted where this spec says Invalid, are under
  * tests/Fixtures/c2patool/exclusion-coverage/.
  */
@@ -75,11 +82,38 @@ it('keeps amendment 7\'s answer for one exclusion over the whole file', function
 })->group('SPEC-068');
 
 it('does not refuse a data hash that leaves one byte: the floor', function (): void {
-    $report = spec068Verify('all-but-one-byte', true);
-    $codes = array_map(static fn (ValidationStatus $s): StatusCode => $s->code, spec068DataHash($report));
+    // this spec alone, under an allowance that lets every range stand: one byte hashed is not its case
+    $stream = fopen(Corpus::fixtures().'/exclusion-coverage/all-but-one-byte.png', 'rb');
+    $store = $stream === false ? null : (new PngManifestStoreExtractor)->extract($stream);
+    if ($store === null) {
+        throw new RuntimeException('no store in all-but-one-byte.png');
+    }
+    $everywhere = new class implements ExclusionAllowance
+    {
+        public function format(): string
+        {
+            return 'PNG';
+        }
 
-    expect($codes)->toBe([StatusCode::AssertionDataHashMatch, StatusCode::AssertionDataHashAdditionalExclusionsPresent])
-        ->and(spec068DataHash($report)[0]->explanation)->toContain('over 1 of 47773 bytes')
-        ->and($report->result->state->value)->toBe('Trusted')
+        public function rule(): string
+        {
+            return 'anywhere';
+        }
+
+        public function regions($stream): array
+        {
+            return [new ExclusionRegion(0, PHP_INT_MAX, 'the whole file', true)];
+        }
+    };
+    $statuses = (new DataHashCheck)->check(ManifestStore::fromTree((new JumbfParser)->parse($store->bytes))->active, $stream, $store, allowance: $everywhere);
+    expect(array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $statuses))->toBe([StatusCode::AssertionDataHashMatch, StatusCode::AssertionDataHashAdditionalExclusionsPresent])
+        ->and($statuses[0]->explanation)->toContain('over 1 of 47773 bytes')
         ->and(spec068Oracle('all-but-one-byte', '0.28.2'))->toBe('Trusted');
+
+    // the verifier answers it through SPEC-069 (PNG allows no exclusion beyond the store), not through this spec
+    $verified = spec068DataHash(spec068Verify('all-but-one-byte', true));
+    expect($verified)->toHaveCount(1)
+        ->and($verified[0]->code)->toBe(StatusCode::AssertionDataHashMismatch)
+        ->and($verified[0]->explanation)->toContain('PNG allows no exclusion beyond the manifest store')
+        ->and($verified[0]->explanation)->not->toContain('leave no byte');
 })->group('SPEC-068');

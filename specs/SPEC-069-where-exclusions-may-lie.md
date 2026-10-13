@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-13 (the allow-list, and "wholly inside one payload") |
 | Supersedes | SPEC-012 AC4 ("additional exclusions are honoured and reported"), except where this spec allows them |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -193,15 +193,19 @@ final readonly class NoExclusionAllowance implements ExclusionAllowance { /* [] 
   is in `c2patool` 0.28.2 and so in c2pa-rs. Report it to the CAI before,
   or together with, a release that names it? The article is public, but
   the three-range and image-data shapes are not in it.
+  *Status 2026-10-13 (step 352):* open, for Maurice.
 - **Release and propagation (non-blocking).** 0.6.2 with SPEC-068 and
   SPEC-069, then the WordPress plugin and the demo? It falls inside the
   consolidation until ~22 October, so it needs Maurice's decision, as
   SPEC-067 did.
+  *Status 2026-10-13 (step 352):* open, for Maurice.
 - **Allow-list wording (blocking for approval).** "Wholly inside one
   payload" admits a part of a payload as well as the whole of one. The
   Pixel excludes whole payloads. Allowing parts is no weaker, since the
   rest is hashed, but say so explicitly or require exact payloads?
   Proposal: wholly inside.
+  *Status 2026-10-13 (step 352):* decided by Maurice: wholly inside one
+  payload. The allow-list itself was approved with it.
 
 ## Traceability
 
@@ -210,9 +214,22 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
+| AC1 | tests/Unit/Hash/ExclusionAllowanceTest.php :: keeps the Pixel 10 file as it was, its four exclusions allowed as APP1 Exif and XMP payloads / SPEC-069 | src/Hash/JpegExclusionAllowance.php :: regions(), ALLOWED_APP1; src/Hash/DataHashCheck.php :: check() (the informational names the regions); src/Verifier/Verifier.php :: exclusionAllowance() |
+| AC2 | tests/Unit/Hash/ExclusionAllowanceTest.php :: reports a PNG exclusion over the image data as a mismatch, without hashing (2 files × 2 modes) / SPEC-069 | src/Hash/NoExclusionAllowance.php; src/Hash/DataHashCheck.php :: check() |
+| AC3 | tests/Unit/Hash/ExclusionAllowanceTest.php :: answers the three-range shape through SPEC-068 and the one-byte floor here / SPEC-069; tests/Unit/Hash/DataHashCoversNothingTest.php :: does not refuse a data hash that leaves one byte: the floor / SPEC-068 | src/Hash/DataHashCheck.php :: check() (SPEC-068's check first) |
+| AC4 | tests/Unit/Hash/ExclusionAllowanceTest.php :: refuses a JPEG exclusion outside the allowed payloads, naming where it falls (3 files); allows exactly the Exif payload of a JPEG: the positive control; allows an exclusion only wholly inside an allowed region (4 cases); maps a JPEG's segments up to the first SOS / SPEC-069 | src/Hash/JpegExclusionAllowance.php :: regions(), name(); src/Hash/DataHashCheck.php :: check() (wholly inside; where it falls); bin/make-exclusion-coverage-variants.php (the `jpeg-*` files) |
+| AC5 | tests/Unit/Hash/ExclusionAllowanceTest.php :: refuses to map a JPEG whose segments cannot be walked to the first SOS (7 cases); refuses, never allows, when the allowed regions cannot be established; a file without extras never asks / SPEC-069 | src/Hash/JpegExclusionAllowance.php :: regions() (DEFAULT_MAX_SEGMENTS); src/Hash/DataHashCheck.php :: check() (the ContainerException) |
+| AC6 | the corpus before and after (notes/step-352-where-exclusions-may-lie.md); tests/Unit/Hash/DataHashCheckTest.php :: AC4, AC5 (SPEC-012 amendment 11); tests/Unit/Verifier/VerifierTest.php :: AC10 (the drift alarm names the divergence) | src/Hash/ExclusionAllowance.php, src/Hash/ExclusionRegion.php |
+
+The tests were run red first: 21 failed (all 19 SPEC-069 cases, plus
+SPEC-012's AC4 and AC5 as amended), because the classes and the parameter
+did not exist yet. After the change, `composer check` failed twice more:
+SPEC-068 AC3's floor (now answered by this spec, as its AC3 says) and the
+drift alarm on `variants/exclusion-extra` (the changed answer). Both tests
+were brought in line. Mutations watched failing: a start-only containment,
+no allowance for JPEG, no rewind after the walk, any region counting
+whether allowed or not, the whole segment allowed instead of the payload,
+and any APPn checked for the identifiers. That last one survived the first
+round, and an Exif identifier in APP2 was added to the segment-map test.
+`composer check` green (1,058 passed); the public contract unchanged
+(`bin/api-check.php`, 135 symbols).
