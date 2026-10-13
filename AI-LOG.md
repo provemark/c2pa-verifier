@@ -10650,3 +10650,20 @@ README are where the disclosure lives.
   from their code (`validation_status`; `success`/`failure` only).
 - Decided by Maurice: SPEC-070 approved; release 0.7.0; amendment 1,
   failures only.
+
+## 2026-10-13 — A BMFF hash may exclude the media, measured (step 356)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: whether more issues of this kind should be included; then
+  "akkoord, begin met de meting"; and "heeft dit iemand al aangekaart?".
+- Produced: `bin/make-bmff-exclusion-coverage-variants.php`;
+  `tests/Fixtures/bmff-exclusion-coverage/` (five MP4s, the throw-away
+  root and settings, README); `tests/Fixtures/c2patool/bmff-exclusion-coverage/`;
+  `notes/step-356-bmff-exclusion-coverage.md`; a row in `NOTES.md`.
+- Measured: the script's run. `/mdat` and `/moov` excluded and edited are
+  `Trusted` in `c2patool` 0.28.1/0.28.2 and here. The control (the same
+  edit without the exclusion) is `assertion.bmffHash.mismatch` here and in
+  0.28.2. A scratch scan of the 36 BMFF hash assertions in the fixtures for
+  their exclusion paths.
+- Reasoned: from c2pa-rs PRs #2668 and #2434 (read on GitHub), and from
+  `BmffHashCheck::matches()`, that indexed xpaths are not resolved here.
+- Decided by Maurice: measure first.
