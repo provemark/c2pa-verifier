@@ -10667,3 +10667,14 @@ README are where the disclosure lives.
 - Reasoned: from c2pa-rs PRs #2668 and #2434 (read on GitHub), and from
   `BmffHashCheck::matches()`, that indexed xpaths are not resolved here.
 - Decided by Maurice: measure first.
+
+## 2026-10-13 — SPEC-071 drafted (step 357)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf SPEC-071 en push stap 356".
+- Produced: step 356 pushed; `specs/SPEC-071-where-bmff-exclusions-may-lie.md`
+  (draft); `notes/step-357-bmff-allow-list-drafted.md`; a row in `NOTES.md`.
+- Measured: none new (step 356's numbers). `php bin/spec-check.php` OK.
+- Reasoned: the allow-list from the 36 measured BMFF assertions and SPEC-029's
+  record of `c2pa-rs` v2's list (subsets from offset 16 on the offset
+  fields); C2PA 2.4 §18.6 as the governing section.
+- Decided by Maurice: write SPEC-071; push step 356.
