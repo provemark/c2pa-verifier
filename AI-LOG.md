@@ -10746,3 +10746,16 @@ README are where the disclosure lives.
   Drupal module (`^0.6`) do not take 0.7.0 until updated, read from their
   constraints.
 - Decided by Maurice: release 0.7.0 once CI is green.
+
+## 2026-10-13 — 0.7.0 released (step 362)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, maak release 0.7.0 zodra alles goed is in de CI"; "ok,
+  laat weten als de tag staat".
+- Produced: the annotated tag `v0.7.0` on `9be0fdf`, pushed;
+  `notes/step-362-release-0.7.0.md`; a row in `NOTES.md`.
+- Measured: CI runs 38393247299 (commit) and 38393503089 (tag), 8/8 each;
+  Packagist lists `v0.7.0`; a fresh `composer require` installed it, and
+  three fixtures gave the expected verdicts with their exit codes.
+- Reasoned: none.
+- Decided by Maurice: release once CI is green; then the Drupal module
+  first, then the plugin and the demo.
