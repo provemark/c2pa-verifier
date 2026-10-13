@@ -128,6 +128,12 @@ it('AC5: the informational code, as 0.28.0 reports it', function (): void {
 
             continue;
         }
+        if ($relative === 'bmff/xpath-nested.mp4') {
+            // SPEC-071: /a/be is no box a BMFF hash may exclude, refused by path before the informational
+            expect(spec038Has($ours, 'assertion.bmffHash.mismatch'))->toBeTrue($relative);
+
+            continue;
+        }
         expect(spec038Has($ours, 'assertion.bmffHash.additionalExclusionsPresent'))->toBe($reported, $relative);
     }
 })->group('SPEC-038');

@@ -10,7 +10,9 @@ declare(strict_types=1);
  * whose c2pa.hash.bmff.v3 gains such an exclusion, the digest recomputed by bxDigest() (step 133's
  * port of c2pa-rs, copied from bin/make-spec038-variants.php, which checks itself against the signed
  * digest first), the claim re-hashed and re-signed under a throw-away root, the COSE padded so that
- * no box moves. The `-edited` files change one byte of the excluded box after signing.
+ * no box moves. The `-edited` files change one byte of the excluded box after signing. Step 358
+ * (SPEC-071 AC3, AC4) adds an offset table excluded whole and from offset 8, the digest left as
+ * signed, and an exclusion of a box the file does not have (/zzzz).
  *
  * Usage: php bin/make-bmff-exclusion-coverage-variants.php <c2patool-0.28.1> <c2patool-0.28.2>
  * Writes:
@@ -473,10 +475,25 @@ $excluding = static fn (string $xpath): Closure => static function (array $d) us
 
     return $d;
 };
+/**
+ * The assertion with one more exclusion, the digest left as signed: for paths the step-133 port does
+ * not cover (nested ones), where the verifier must refuse the path before anything is hashed (step 358).
+ *
+ * @param  array<string, mixed>  $exclusion
+ */
+$addingAsSigned = static fn (array $exclusion): Closure => static function (array $d) use ($exclusion): array {
+    $d['exclusions'] = [...bxMaps($d['exclusions'] ?? null), $exclusion];
+
+    return $d;
+};
 $variants = [
     'unchanged-resigned' => static fn (array $d): array => $d,
     'mdat-excluded' => $excluding('/mdat'),
     'moov-excluded' => $excluding('/moov'),
+    // step 358, SPEC-071 AC3 and AC4
+    'stco-excluded-whole' => $addingAsSigned(['xpath' => '/moov/trak/mdia/minf/stbl/stco']),
+    'stco-excluded-from-8' => $addingAsSigned(['xpath' => '/moov/trak/mdia/minf/stbl/stco', 'subset' => [['offset' => 8, 'length' => 0]]]),
+    'zzzz-excluded' => $excluding('/zzzz'),
 ];
 foreach (glob("{$out}/*.mp4") ?: [] as $stale) {
     unlink($stale);

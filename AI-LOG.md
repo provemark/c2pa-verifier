@@ -10678,3 +10678,25 @@ README are where the disclosure lives.
   record of `c2pa-rs` v2's list (subsets from offset 16 on the offset
   fields); C2PA 2.4 §18.6 as the governing section.
 - Decided by Maurice: write SPEC-071; push step 356.
+
+## 2026-10-13 — SPEC-071 built; a Pixel video measured (step 358)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord (a), SPEC-071 approved, in 0.7.0"; and "kan je zo'n
+  video ergens vinden?" (answered by a background search agent).
+- Produced: SPEC-071 approved and implemented;
+  `BmffHashCheck::refusedExclusion()` and the refusal in `check()`;
+  `tests/Unit/Hash/BmffExclusionAllowListTest.php`; SPEC-038 AC5's test
+  naming `xpath-nested.mp4`; three variants in
+  `bin/make-bmff-exclusion-coverage-variants.php` (fixtures and answers
+  regenerated) and the README there; a row in `docs/comparison.md`;
+  `notes/step-358-bmff-allow-list.md`; a row in `NOTES.md`.
+- Measured: 31 tests red before, green after; five mutations caught;
+  corpus before and after (only `xpath-nested.mp4` moves, not in state). A
+  Pixel Camera video (the attachment to c2pa-rs issue #2373, sha256
+  2f1c2bd8…, not committed: no licence): `c2patool` 0.28.1/0.28.2 verify its
+  hash. It was `Invalid` here before (the QuickTime-style `/moov/meta` read
+  as a FullBox) and is `Invalid` after (`/moov/free` refused). `composer
+  check` 1,098 passed.
+- Reasoned: the cause of the box-walk fault from the bytes (4,841,330 + 12 =
+  4,841,342).
+- Decided by Maurice: route (a); SPEC-071 approved; in 0.7.0.

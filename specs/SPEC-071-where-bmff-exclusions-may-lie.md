@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-13 (route (a); in 0.7.0) |
 | Supersedes | SPEC-038's "additional exclusions are honoured and reported", except for the boxes this spec allows |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -158,8 +158,10 @@ public static function refusedExclusion(array $exclusion): ?string;
   video first and resolve indexed paths before this spec. Proposal: (a),
   because the wrong `Trusted` is open now and a Pixel video is likely
   refused either way.
+  *Status 2026-10-13 (step 358):* decided by Maurice: (a).
 - **Release (non-blocking).** In 0.7.0 with SPEC-068, SPEC-069 and SPEC-070?
   Proposal: yes.
+  *Status 2026-10-13 (step 358):* decided by Maurice: in 0.7.0.
 
 ## Traceability
 
@@ -168,8 +170,27 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
+| AC1 | tests/Unit/Hash/BmffExclusionAllowListTest.php :: leaves c2pa-rs's own exclusions as they were (3 files) / SPEC-071 | src/Hash/BmffHashCheck.php :: refusedExclusion(), ALLOWED_WHOLE, ALLOWED_OFFSET_FIELDS |
+| AC2 | tests/Unit/Hash/BmffExclusionAllowListTest.php :: reports an exclusion of the media as a mismatch, without hashing (5 files × 2 modes) / SPEC-071 | src/Hash/BmffHashCheck.php :: check() (the refusal, before the box walk) |
+| AC3 | tests/Unit/Hash/BmffExclusionAllowListTest.php :: refuses an offset table excluded whole or from its header (2 files); names exactly what c2pa-rs writes as allowed, and nothing more (19 cases) / SPEC-071 | src/Hash/BmffHashCheck.php :: refusedExclusion() |
+| AC4 | tests/Unit/Hash/BmffExclusionAllowListTest.php :: reports an exclusion of the media … ("a box the file does not have") / SPEC-071 | src/Hash/BmffHashCheck.php :: check() |
+| AC5 | the corpus before and after (notes/step-358-bmff-allow-list.md); tests/Unit/Hash/BmffShapeTest.php :: AC5 (`xpath-nested.mp4`, the changed answer) | bin/make-bmff-exclusion-coverage-variants.php (`stco-*`, `zzzz-excluded`) |
+
+The tests were run red first: 31 failed (`refusedExclusion()` did not exist
+and every variant was honoured). The 3 AC1 cases pin behaviour that was
+already there. After the change, SPEC-038 AC5 moved on `xpath-nested.mp4`,
+the named changed answer, and its test names it. Mutations watched
+failing: the refusal never applied (12), the offset fields from offset 8
+(2), an empty subset allowed (1), `/mdat` on the list (5), any uuid box
+allowed (1). `composer check` green (1,098 passed).
+
+**Pixel, measured the same day (step 358).** A Pixel Camera video, the
+attachment to `c2pa-rs` issue #2373 (sha256 `2f1c2bd8…`, kept outside the
+repository: no licence), excludes `/ftyp`, the C2PA `/uuid`, `/mfra`,
+`/free`, `/moov/free`, `/moov/udta`, `/moov/meta` and `/moov[1]/trak[3]`.
+`c2patool` 0.28.1/0.28.2 verify its hash. Here it is `Invalid` before this
+spec, because the box walk reads its QuickTime-style `/moov/meta` (no
+version and flags) as an ISO FullBox. It stays `Invalid` after this spec,
+now refused at `/moov/free`. This is the trigger route (a) named: a
+follow-up spec for the QuickTime `meta`, indexed paths and Pixel's
+exclusions.

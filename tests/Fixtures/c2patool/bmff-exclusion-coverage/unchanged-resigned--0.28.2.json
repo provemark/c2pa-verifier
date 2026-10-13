@@ -60,7 +60,7 @@
         "alg": "Es256",
         "issuer": "C2PA Verifier throw-away hierarchy",
         "common_name": "step 356 bmff exclusion coverage",
-        "cert_serial_number": "571171"
+        "cert_serial_number": "526353"
       },
       "label": "urn:c2pa:7c2f5033-3a53-4ac6-9bf3-553e696c3e63",
       "claim_version": 2

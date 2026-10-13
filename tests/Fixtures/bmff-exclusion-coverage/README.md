@@ -16,6 +16,12 @@ the excluded box's body, after signing.
 | `mdat-excluded-edited` | the same file, one mdat byte changed | `Trusted` | `Trusted` | `Trusted` |
 | `moov-excluded` | the same and `/moov` (the track description) | `Trusted` | `Trusted` | `Trusted` |
 | `moov-excluded-edited` | the same file, one moov byte changed | `Trusted` | `Trusted` | `Trusted` |
+| `stco-excluded-whole` (step 358) | the default and `/moov/trak/mdia/minf/stbl/stco` whole; digest as signed | `Invalid` (mismatch) | the same | `Invalid` |
+| `stco-excluded-from-8` (step 358) | the same with `subset: [{offset: 8, length: 0}]`; digest as signed | `Invalid` (mismatch) | the same | `Invalid` |
+| `zzzz-excluded` (step 358) | the default and `/zzzz`, a box the file does not have | `Trusted` | `Trusted` | `Trusted` |
+
+Since SPEC-071 (step 358) every file but `unchanged-resigned` is `Invalid`
+here, `assertion.bmffHash.mismatch`, naming the refused path.
 
 All under `probe-root.settings.json`. The answers are under
 `../c2patool/bmff-exclusion-coverage/`. All three report the informational

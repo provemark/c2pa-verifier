@@ -75,6 +75,12 @@ final readonly class BmffHashCheck
     /** `subset` was here until SPEC-029 implemented it; the rest await a file that uses them. */
     private const UNSUPPORTED_FILTERS = ['length', 'version', 'flags', 'exact'];
 
+    /** SPEC-071: the boxes an exclusion may take whole, as c2pa-rs writes them. */
+    private const ALLOWED_WHOLE = ['/ftyp', '/mfra', '/free', '/skip', '/meta/iloc', '/mfra/tfra'];
+
+    /** SPEC-071: the offset fields, allowed only through a subset from offset 16 on. */
+    private const ALLOWED_OFFSET_FIELDS = ['/moov/trak/mdia/minf/stbl/stco', '/moov/trak/mdia/minf/stbl/co64', '/moof/traf/tfhd', '/moof/traf/trun'];
+
     /**
      * @param  iterable<string, resource>  $fragments  a name and an open stream, one at
      *                                                 a time (SPEC-028). Empty for a whole file, which is every caller but
@@ -107,6 +113,14 @@ final readonly class BmffHashCheck
         try {
             $assertion = $this->assertionOf($data, $manifest->claim->alg);
             $this->bound($assertion['exclusions']);
+            // SPEC-071: only what c2pa-rs writes may be excluded, judged by path before a byte is hashed
+            foreach ($assertion['exclusions'] as $exclusion) {
+                $refused = self::refusedExclusion($exclusion);
+                if ($refused !== null) {
+                    $xpath = $exclusion['xpath'] ?? null;
+                    throw new HashException(sprintf('%s: the exclusion %s is refused: %s', $label, is_string($xpath) ? $xpath : '(no xpath)', $refused));
+                }
+            }
             // the checks before this one have read the stream to its end; the box walk
             // reads forward from wherever it is told to start
             rewind($stream);
@@ -448,6 +462,40 @@ final readonly class BmffHashCheck
         }
 
         return null;
+    }
+
+    /**
+     * SPEC-071: why this exclusion is not one a BMFF hash may carry, or null when it is. The
+     * allow-list is what c2pa-rs writes (36 assertions measured in step 356; v2's list in SPEC-029):
+     * the C2PA uuid box by its data filter, ftyp, mfra, free, skip, meta/iloc and mfra/tfra, whole
+     * or narrowed; the offset fields of stco, co64, tfhd and trun only through a subset that starts
+     * at offset 16 or later, so that the box header, version, flags and count stay hashed. Anything
+     * else, a path that matches no box included, would let the media out of the hash.
+     *
+     * @param  array<string, mixed>  $exclusion
+     */
+    public static function refusedExclusion(array $exclusion): ?string
+    {
+        $xpath = $exclusion['xpath'] ?? null;
+        if ($xpath === '/uuid') {
+            $data = $exclusion['data'] ?? null;
+            $map = is_array($data) && count($data) === 1 ? ($data[0] ?? null) : null;
+            $value = is_array($map) ? ($map['value'] ?? null) : null;
+            if (is_array($map) && ($map['offset'] ?? null) === 8 && $value instanceof CborBytes && $value->bytes === IsobmffManifestStoreExtractor::C2PA_UUID) {
+                return null;
+            }
+        } elseif (in_array($xpath, self::ALLOWED_WHOLE, true)) {
+            return null;
+        } elseif (in_array($xpath, self::ALLOWED_OFFSET_FIELDS, true)) {
+            $subset = $exclusion['subset'] ?? null;
+            if (is_array($subset) && $subset !== [] && array_filter($subset, static fn (mixed $range): bool => ! is_array($range) || ! is_int($range['offset'] ?? null) || $range['offset'] < 16) === []) {
+                return null;
+            }
+
+            return 'an offset table may be excluded only with a subset whose every range starts at offset 16 or later, so that its header and entry count stay hashed';
+        }
+
+        return 'a BMFF hash may exclude only the C2PA uuid box, ftyp, mfra, free, skip, meta/iloc, mfra/tfra and the offset fields of stco, co64, tfhd and trun (from offset 16), which is what c2pa-rs writes; any other box could hold the media';
     }
 
     /**
