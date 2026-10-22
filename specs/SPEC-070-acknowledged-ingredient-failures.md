@@ -149,6 +149,125 @@ before. This matches the title and the Problem section, and the AC1
 fixtures, all of which record failures. In Scope, read "every status" as
 "every failure". AC1's assertion is unchanged.
 
+### Amendment 2 — in v3, the list a failure was recorded in counts (approved by Maurice van Loon, 2026-10-22, step 363, and built in it)
+
+**Found by measuring.** `recorded()` keys a recorded status by code and url
+only, and `acknowledge()` compares those keys. The list a v3 assertion put
+the status in (`success`, `informational` or `failure`) is read and then
+lost. So a `claimSignature.mismatch` recorded under `success` acknowledges
+the failure exactly as one recorded under `failure` does. This is the
+deviation `docs/reading-c2pa-2.4.md` records under §18.16.12.4 (P08-7:
+"the recorded type is not compared, as in `c2pa-rs`").
+
+The specification compares on the kind. C2PA 2.4 §18.16.12.4.3: the
+comparison *"shall consider the status type (success, informational, or
+failure), code, and url, ignoring other fields"*. §15.11.3.3 asks the
+validator for an *"equivalent entry"*. §18.16.12.4.1 makes the
+acknowledgement a statement about a recorded *failure status*. A failure
+code filed under `success` is not that statement.
+
+Measured on 2026-10-22, outside this repository, with c2pa-python 0.38.1 and
+the c2patool `sample/` test certificates. The setup: an ingredient X whose
+claim signature was broken by one flipped byte (`Invalid`,
+`claimSignature.mismatch`), and an asset that takes X as its parent and
+records that code in a different place each time:
+
+| X's `claimSignature.mismatch` recorded under | c2patool 0.28.2 and 0.27.22 | this verifier, v0.7.0 |
+|---|---|---|
+| `failure` | `Valid`, not reported | `Valid`, informational, acknowledged |
+| nothing | `Invalid` | `Invalid` |
+| `success` | `Valid`, not reported | `Valid`, informational, acknowledged |
+| `informational` | `Valid`, not reported | `Valid`, informational, acknowledged |
+
+c2pa-rs reads the list and then replaces the kind with one derived from
+the code (`validation_results.rs`, `from_store`: `log_kind(s.code())`),
+because a v1/v2 `validationStatus` has no lists. That reason holds for
+v1/v2 only.
+
+**How far it reaches, measured.** Every file under `tests/Fixtures` that
+c2patool 0.27.22 reads (929 files) was scanned for what its ingredient
+assertions record. No v3 record holds a failure code under `success` or
+`informational`, so no fixture's verdict should move. The v2 records do
+hold failures (`claimSignature.mismatch` in `c2pa-rs/CIE-sig-CA.jpg`,
+`public-testfiles/adobe-20220124-CIE-sig-CA.jpg`,
+`public-testfiles/adobe-20220124-E-uri-CIE-sig-CA.jpg` and
+`ingredient-manifest/records-active-fault.png`;
+`assertion.hashedURI.mismatch` in `c2pa-rs/CACAE-uri-CA.jpg`). Those must
+stay as they are. Files c2patool cannot read were not in that scan; AC8
+covers them.
+
+**Change.**
+
+- A v3 record (`validationResults`: `activeManifest` and every
+  `ingredientDeltas[].validationDeltas`) keys each status by **kind**, code
+  and url, where the kind is the list it was found in.
+- A v1/v2 record (`validationStatus`) has no lists, so its kind is the
+  code's own kind (`StatusCode`), as today.
+- `acknowledge()` compares the reader's status by its own kind, code and
+  url. A failure is acknowledged only when the record holds it as a
+  failure.
+- Nothing else changes: the guard, Amendment 1 (a matching recorded
+  success or informational line is still dropped), and the pool
+  `recordedInStore()` builds over the graph (SPEC-021 amendment 6).
+
+So a failure recorded under `success` or `informational` is not
+acknowledged. It stays a failure under that ingredient's
+`validationDeltas.failure` and in `validation_status`, and the file reads
+`Invalid`, as when nothing is recorded. This verifier then differs from
+`c2patool` on such a file, by design; `docs/comparison.md` says so.
+
+**New criteria.**
+
+- **AC5 — a failure filed in another list is not acknowledged**
+  *(required: error path)*
+  - Given an asset whose v3 ingredient assertion records the ingredient's
+    real `claimSignature.mismatch` under `success`, and one that records
+    it under `informational`
+  - When the Verifier runs, with and without the full trust settings
+  - Then the state is `Invalid`, and the mismatch appears unmarked under
+    that ingredient's `validationDeltas.failure` and in
+    `validation_status`. `c2patool` 0.28.2 reads both `Valid`; the
+    difference is stated in `docs/comparison.md`.
+
+- **AC6 — the same failure under `failure` is still acknowledged**
+  - Given the same asset with the mismatch recorded under `failure`
+  - When the Verifier runs
+  - Then the result is AC1's: `Valid`, the mismatch under
+    `validationDeltas.informational`, marked as acknowledged.
+
+- **AC7 — v1/v2 records are unchanged**
+  - Given AC1's fixtures (all v2) and
+    `ingredient-manifest/records-active-fault.png`
+  - When the Verifier runs
+  - Then every result is what it is on v0.7.0, line for line.
+
+- **AC8 — nothing else moves**
+  - Given the corpora and every fixture
+  - When verified before and after
+  - Then no state and no line changes, except on the AC5 and AC6
+    fixtures.
+
+**Fixtures.** AC5 and AC6 need three new signed files, made by a generator
+in the style of `bin/make-ingredient-manifest-variants.php`: one
+ingredient with a broken claim signature, and an active manifest whose v3
+ingredient assertion records the mismatch under `failure`, `success` or
+`informational`. Signed with throw-away keys, as that generator does
+(Maurice's decision of 2026-09-21). The measurement above used
+c2pa-python, which this repository does not depend on; its files are not
+the fixtures.
+
+**Open, for the maintainer.**
+
+- **Release.** No public symbol moves (the contract stays at 136), but a
+  crafted file that reads `Valid` on 0.7.0 reads `Invalid` after.
+  Proposal: 0.7.1, with the CHANGELOG naming the behaviour change.
+  *Decided by Maurice, 2026-10-22:* 0.7.1.
+- **A success code recorded under `failure`.** With the kind in the key,
+  it no longer matches the reader's own success, so that success line is
+  kept instead of dropped. No verdict changes, and the scan found no such
+  record. Proposal: accept it as a consequence rather than add a rule.
+  *Approved with the amendment.*
+
 ## Open questions
 
 - **The public contract (blocking).** `ValidationStatus` is one of the
@@ -181,6 +300,10 @@ least one test; every source file maps back to this spec.
 | AC3 | tests/Unit/Verifier/AcknowledgedIngredientTest.php :: lets an acknowledged status count for nothing in the verdict, and renders it as informational / SPEC-070 | src/Report/ValidationResult.php :: fromStatuses() |
 | AC4 | the corpus before and after (notes/step-355-acknowledged-ingredient-failures.md) | — |
 | Amendment 1 | tests/Unit/Manifest/RedactionTest.php :: AC1 (a recorded success stays dropped) | src/Verifier/IngredientManifestCheck.php :: acknowledge() (failures only) |
+| AC5 (amendment 2) | tests/Unit/Verifier/AcknowledgedKindTest.php :: AC5 (amendment 2): a failure recorded under success or informational is not acknowledged (4 cases, each against c2patool 0.28.2's `Trusted`) / SPEC-070 | src/Verifier/IngredientManifestCheck.php :: kinds() (an entry counts only in its code's own list) |
+| AC6 (amendment 2) | tests/Unit/Verifier/AcknowledgedKindTest.php :: AC6 (amendment 2): the same failure recorded under failure is still acknowledged / SPEC-070 | src/Verifier/IngredientManifestCheck.php :: kinds() |
+| AC7 (amendment 2) | tests/Unit/Verifier/AcknowledgedKindTest.php :: amendment 2: a v3 record counts only where its list is the code's own kind; a v2 record keeps every entry / SPEC-070; tests/Unit/Verifier/AcknowledgedIngredientTest.php (AC1, unchanged); tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC5 (SPEC-021, `records-active-fault.png`) | src/Verifier/IngredientManifestCheck.php :: recorded() (v1/v2 unfiltered) |
+| AC8 (amendment 2) | the corpus before and after (notes/step-363-acknowledged-kind.md) | — |
 
 The tests were run red first: 6 failed (the property, the method and the
 rendering did not exist yet). Building showed that recorded successes came
@@ -194,3 +317,13 @@ tests), rendering by code kind (5), an acknowledged `untrusted` holding
 `Trusted` down (1), the active-manifest guard removed (2), successes
 acknowledged too (3). `composer check` green (1,064 passed); the contract
 136 symbols.
+
+Amendment 2 (step 363): the tests were run red first, 5 failed (AC5's
+four cases and the `recorded()` seam); AC6 passed before, as it pins what
+0.7.0 already does. Mutations watched: dropping the list filter (5 tests
+fail). Keeping or dropping an entry whose code this verifier does not know
+changes no test, and cannot change a result: no status of its own carries
+such a code. Corpus against `v0.7.0` (921 fixture files × 2 modes, the new
+directory included): only `acknowledged-kind/recorded-success.jpg` and
+`recorded-informational.jpg` differ. `composer check` green (1,115
+passed, 1 skipped); the contract stays at 136 symbols.

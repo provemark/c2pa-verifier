@@ -10759,3 +10759,26 @@ README are where the disclosure lives.
 - Reasoned: none.
 - Decided by Maurice: release once CI is green; then the Drupal module
   first, then the plugin and the demo.
+
+## 2026-10-22 — SPEC-070 amendment 2: the recorded list counts (step 363)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: a security study of how readers drop ingredient failures a writer
+  recorded, then "meet het soort-punt eerst", "ja, schrijf SPEC-070
+  Amendment 2" and "keur de amendment goed, ga 0.7.1".
+- Produced: SPEC-070 amendment 2 (AC5–AC8);
+  `IngredientManifestCheck::kinds()`; `bin/make-acknowledged-kind-variants.php`;
+  `tests/Fixtures/acknowledged-kind/` and `tests/Fixtures/c2patool/acknowledged-kind/`;
+  `tests/Unit/Verifier/AcknowledgedKindTest.php`; a row in
+  `docs/comparison.md`; the §18.16.12.4 row and P08-7 in
+  `docs/reading-c2pa-2.4.md`; `notes/step-363-acknowledged-kind.md`; a row in
+  `NOTES.md`.
+- Measured: c2pa-python 0.38.1 variants read with c2patool 0.27.22, 0.28.2
+  and this verifier (outside the repository); a scan of 929 fixtures with
+  c2patool 0.27.22 for recorded lists; the new fixtures with both c2patool
+  versions; `vendor/bin/pest --group=SPEC-070` red (5) then green; one
+  mutation; `corpus-norm241.php` on a `v0.7.0` worktree and on the change;
+  `composer check` (1,115 passed, 1 skipped).
+- Reasoned: `c2pa-rs` re-derives the recorded type from the code
+  (`validation_results.rs`, read, not run); the change is conformance, not
+  a security fix.
+- Decided by Maurice: the amendment approved; release as 0.7.1.

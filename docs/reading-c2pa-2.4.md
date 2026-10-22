@@ -1330,7 +1330,7 @@ claims*). `c2pa-rs` was read at 0.91.1 (`claim.rs`: `verify_actions`,
 | 18.16.12.4 | A v3 ingredient with `activeManifest` records `validationResults`. | `fromAssertion()` | covered | measured: `IngredientAssertionTest` "AC2" (`manifest-no-results`) |
 | 18.16.12.4 | A v3 ingredient without `activeManifest` carries no `validationResults`. | not checked | **by design** (§15.10.3.2: a validator checks no more than it lists; a rule for the claim generator; step 328) | read → P08-7 |
 | 18.16.12.4 | A recorded failure is the writer's acknowledgement; the validator drops what was recorded, never for the active manifest. | `IngredientManifestCheck::recorded()`, `drop()` | covered | measured: `IngredientManifestCheckTest` "AC4", "AC5" |
-| 18.16.12.4 | Each status map holds a `code`; custom codes are namespaced (with `success` in v2); deltas are compared on type, code and url. | `recorded()` ignores entries without a text `code` and `url` (so they excuse nothing); the recorded type is not compared, as in `c2pa-rs` (`validation_results.rs`, `from_store`, which re-derives the kind from the code); custom-code syntax by decision (`docs/conformance.md`, `PRED-STRU-002`) | partial | read → P08-7 |
+| 18.16.12.4 | Each status map holds a `code`; custom codes are namespaced (with `success` in v2); deltas are compared on type, code and url. | `recorded()` ignores entries without a text `code` and `url` (so they excuse nothing); the recorded type is compared for v3 (an entry counts only in the list of its code's own kind, SPEC-070 amendment 2), where `c2pa-rs` re-derives the kind from the code (`validation_results.rs`, `from_store`); a v1/v2 `validationStatus` has no type to compare; custom-code syntax by decision (`docs/conformance.md`, `PRED-STRU-002`) | partial | read → P08-7 |
 | 18.16.12.4 | `specVersion` is SemVer; `trustListURI` is absent when the C2PA Trust List was used. | | n/a (writer; informational) | — |
 
 ### Candidates
@@ -1394,10 +1394,12 @@ claims*). `c2pa-rs` was read at 0.91.1 (`claim.rs`: `verify_actions`,
   refused: a `parentOf`/`componentOf` ingredient that no `c2pa.opened` or
   `c2pa.placed` action names; a v3 ingredient without `activeManifest`
   that still carries `validationResults`. `c2pa-rs` checks neither (its
-  v3 rules in `ingredient.rs` run only when serialising). Also: a recorded
-  status excuses a fault whatever list (success, informational, failure)
-  the writer put it in, as in `c2pa-rs`. Risk: **stricter than c2patool if
-  adopted**; the last point is **documentation only**.
+  v3 rules in `ingredient.rs` run only when serialising). Risk:
+  **stricter than c2patool if adopted**. *Closed in part:* a recorded
+  status used to excuse a fault whatever list (success, informational,
+  failure) the writer put it in, as in `c2pa-rs`; since SPEC-070
+  amendment 2 (step 363) a v3 entry counts only in the list of its code's
+  own kind.
 - **P08-8 — embedded data, thumbnails, alternative content (§18.12–
   §18.14, §18.16.10).** Unchecked: the `c2pa.embedded-data` label prefix,
   an empty media type or a set External toggle in the description box, two

@@ -290,7 +290,7 @@ final readonly class IngredientManifestCheck
             $keys[] = $entry['code'].' '.$url;
         };
         foreach ((array) ($ingredient->validationStatus ?? []) as $entry) {
-            $add($entry);
+            $add($entry);   // v1/v2: no lists, so the kind is the code's own
         }
         foreach (self::kinds($ingredient->validationResults['activeManifest'] ?? null) as $entry) {
             $add($entry);
@@ -307,7 +307,11 @@ final readonly class IngredientManifestCheck
     }
 
     /**
-     * The statuses a `{success, informational, failure}` map holds, in that order.
+     * The statuses a `{success, informational, failure}` map holds, in that order, each only where its
+     * list is its code's own kind (SPEC-070 amendment 2). The comparison considers the type (C2PA 2.4
+     * §18.16.12.4.3) and the reader's own status always has its code's kind, so an entry filed under
+     * another list matches nothing: a failure recorded under `success` acknowledges nothing. A code this
+     * verifier does not know is kept; no status of its own can carry it.
      *
      * @return list<mixed>
      */
@@ -319,7 +323,16 @@ final readonly class IngredientManifestCheck
         $out = [];
         foreach (['success', 'informational', 'failure'] as $kind) {
             foreach ((array) ($map[$kind] ?? []) as $entry) {
-                $out[] = $entry;
+                $code = is_array($entry) && is_string($entry['code'] ?? null) ? StatusCode::tryFrom($entry['code']) : null;
+                $own = match (true) {
+                    $code === null => $kind,
+                    $code->isSuccess() => 'success',
+                    $code->isInformational() => 'informational',
+                    default => 'failure',
+                };
+                if ($own === $kind) {
+                    $out[] = $entry;
+                }
             }
         }
 
