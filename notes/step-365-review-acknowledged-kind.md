@@ -46,3 +46,13 @@ the spec but not the author's conclusions, reviewed steps 363 and 364.
 
 `composer check`: 1,117 passed, 1 skipped. `src/` is unchanged by this
 step, so the CHANGELOG for 0.7.1 stands.
+
+## Addendum: CI red on the push
+
+The push of steps 363–365 failed CI on PHP 8.3, 8.4 and 8.5 (run
+39830291243): AC6 called `spec070Informational()`, a helper defined in
+`AcknowledgedIngredientTest.php`. `composer check` runs Pest in one process,
+where that file is loaded too; CI runs `composer test:parallel`, where it
+was not. AC6 now uses its own helper and the statuses' `acknowledged` mark.
+Run alone, the file passes (8 tests), and `composer test:parallel` passes
+locally (1,117). Before a push, run the parallel suite as CI does.

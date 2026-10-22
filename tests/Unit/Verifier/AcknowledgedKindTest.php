@@ -7,6 +7,7 @@ use Provemark\C2paVerifier\Manifest\HashedUri;
 use Provemark\C2paVerifier\Manifest\IngredientAssertion;
 use Provemark\C2paVerifier\Manifest\Relationship;
 use Provemark\C2paVerifier\Report\ValidationState;
+use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
 use Provemark\C2paVerifier\Verifier\IngredientManifestCheck;
 
@@ -87,8 +88,11 @@ it('AC6 (amendment 2): the same failure recorded under failure is still acknowle
 
     expect($report->result->state)->toBe(ValidationState::Trusted)
         ->and(spec070DeltaCodes($array, 'failure'))->toBe([])
-        ->and(spec070Informational($array, 'claimSignature.mismatch'))->toHaveCount(1)
-        ->and(spec070Informational($array, 'claimSignature.mismatch')[0]['explanation'])->toStartWith('acknowledged by the signer of ');
+        ->and(spec070DeltaCodes($array, 'informational'))->toContain('claimSignature.mismatch');
+    // the line is marked as acknowledged (SPEC-070), not merely informational
+    $marked = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->acknowledged && $s->code->value === 'claimSignature.mismatch'));
+    expect($marked)->toHaveCount(1)
+        ->and($marked[0]->explanation)->toStartWith('acknowledged by the signer of ');
 })->group('SPEC-070');
 
 // the seam: what recorded() keeps
