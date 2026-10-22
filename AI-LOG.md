@@ -10806,3 +10806,15 @@ README are where the disclosure lives.
   under its mutation, and `composer check` (1,117 passed, 1 skipped).
 - Reasoned: the reviewer's reading of where `c2pa-rs` files each code.
 - Decided by Maurice: the three follow-ups (two tests, the AC5 wording).
+
+## 2026-10-22 — 0.7.1 released (step 366)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push en wacht op CI"; "ja, tag v0.7.1 en push".
+- Produced: the push of steps 363–365 and of the CI fix; the annotated tag
+  `v0.7.1` on `fe6906d`, pushed; `notes/step-366-release-0.7.1.md`; a row
+  in `NOTES.md`.
+- Measured: CI runs 39830291243 (red, AC6's helper), 39830766540 (8/8) and
+  39831217386 (the tag); Packagist lists `v0.7.1`; a fresh `composer
+  require` and two fixtures with their exit codes.
+- Reasoned: none.
+- Decided by Maurice: push, then the tag.
