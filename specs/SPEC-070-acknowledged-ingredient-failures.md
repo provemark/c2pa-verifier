@@ -226,8 +226,9 @@ acknowledged. It stays a failure under that ingredient's
   - When the Verifier runs, with and without the full trust settings
   - Then the state is `Invalid`, and the mismatch appears unmarked under
     that ingredient's `validationDeltas.failure` and in
-    `validation_status`. `c2patool` 0.28.2 reads both `Valid`; the
-    difference is stated in `docs/comparison.md`.
+    `validation_status`. `c2patool` 0.28.2 reads both `Trusted` with the
+    settings and `Valid` without; the difference is stated in
+    `docs/comparison.md`.
 
 - **AC6 — the same failure under `failure` is still acknowledged**
   - Given the same asset with the mismatch recorded under `failure`
@@ -300,7 +301,7 @@ least one test; every source file maps back to this spec.
 | AC3 | tests/Unit/Verifier/AcknowledgedIngredientTest.php :: lets an acknowledged status count for nothing in the verdict, and renders it as informational / SPEC-070 | src/Report/ValidationResult.php :: fromStatuses() |
 | AC4 | the corpus before and after (notes/step-355-acknowledged-ingredient-failures.md) | — |
 | Amendment 1 | tests/Unit/Manifest/RedactionTest.php :: AC1 (a recorded success stays dropped) | src/Verifier/IngredientManifestCheck.php :: acknowledge() (failures only) |
-| AC5 (amendment 2) | tests/Unit/Verifier/AcknowledgedKindTest.php :: AC5 (amendment 2): a failure recorded under success or informational is not acknowledged (4 cases, each against c2patool 0.28.2's `Trusted`) / SPEC-070 | src/Verifier/IngredientManifestCheck.php :: kinds() (an entry counts only in its code's own list) |
+| AC5 (amendment 2) | tests/Unit/Verifier/AcknowledgedKindTest.php :: AC5 (amendment 2): a failure recorded under success or informational is not acknowledged (4 cases, each against c2patool 0.28.2's `Trusted`); amendment 2: the same holds for the deltas a v3 record carries for its own ingredients; amendment 2: a code this verifier does not know is kept, whatever list it is in / SPEC-070 | src/Verifier/IngredientManifestCheck.php :: kinds() (an entry counts only in its code's own list) |
 | AC6 (amendment 2) | tests/Unit/Verifier/AcknowledgedKindTest.php :: AC6 (amendment 2): the same failure recorded under failure is still acknowledged / SPEC-070 | src/Verifier/IngredientManifestCheck.php :: kinds() |
 | AC7 (amendment 2) | tests/Unit/Verifier/AcknowledgedKindTest.php :: amendment 2: a v3 record counts only where its list is the code's own kind; a v2 record keeps every entry / SPEC-070; tests/Unit/Verifier/AcknowledgedIngredientTest.php (AC1, unchanged); tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC5 (SPEC-021, `records-active-fault.png`) | src/Verifier/IngredientManifestCheck.php :: recorded() (v1/v2 unfiltered) |
 | AC8 (amendment 2) | the corpus before and after (notes/step-363-acknowledged-kind.md) | — |
@@ -322,8 +323,11 @@ Amendment 2 (step 363): the tests were run red first, 5 failed (AC5's
 four cases and the `recorded()` seam); AC6 passed before, as it pins what
 0.7.0 already does. Mutations watched: dropping the list filter (5 tests
 fail). Keeping or dropping an entry whose code this verifier does not know
-changes no test, and cannot change a result: no status of its own carries
-such a code. Corpus against `v0.7.0` (921 fixture files × 2 modes, the new
+changed no test at first, and cannot change a result: no status of its
+own carries such a code. An independent review found that gap and a
+second one (the filter on `ingredientDeltas[].validationDeltas` was not
+exercised either); two tests were added for them, and each fails under its
+mutation (the deltas left unfiltered, an unknown code dropped). Corpus against `v0.7.0` (921 fixture files × 2 modes, the new
 directory included): only `acknowledged-kind/recorded-success.jpg` and
-`recorded-informational.jpg` differ. `composer check` green (1,115
+`recorded-informational.jpg` differ. `composer check` green (1,117
 passed, 1 skipped); the contract stays at 136 symbols.

@@ -116,3 +116,28 @@ it('amendment 2: a v3 record counts only where its list is the code\'s own kind;
     );
     expect(IngredientManifestCheck::recorded($v2))->toBe(["claimSignature.mismatch {$sig}", "claimSignature.validated {$sig}"]);
 })->group('SPEC-070');
+
+it('amendment 2: the same holds for the deltas a v3 record carries for its own ingredients', function (): void {
+    $sig = 'self#jumbf=/c2pa/C/c2pa.signature';
+    $entry = static fn (string $code): array => ['code' => $code, 'url' => $sig, 'explanation' => 'x'];
+    $v3 = spec070V3(['activeManifest' => ['success' => [], 'informational' => [], 'failure' => []], 'ingredientDeltas' => [[
+        'ingredientAssertionURI' => 'self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient.v3',
+        'validationDeltas' => [
+            'success' => [$entry('claimSignature.mismatch')],
+            'informational' => [$entry('assertion.hashedURI.mismatch')],
+            'failure' => [$entry('signingCredential.expired')],
+        ],
+    ]]]);
+
+    expect(IngredientManifestCheck::recorded($v3))->toBe(["signingCredential.expired {$sig}"]);
+})->group('SPEC-070');
+
+it('amendment 2: a code this verifier does not know is kept, whatever list it is in', function (): void {
+    $sig = 'self#jumbf=/c2pa/B/c2pa.signature';
+    $v3 = spec070V3(['activeManifest' => [
+        'success' => [['code' => 'com.example.custom', 'url' => $sig, 'explanation' => 'x']],
+        'failure' => [['code' => 'com.example.other', 'url' => $sig, 'explanation' => 'x']],
+    ]]);
+
+    expect(IngredientManifestCheck::recorded($v3))->toBe(["com.example.custom {$sig}", "com.example.other {$sig}"]);
+})->group('SPEC-070');

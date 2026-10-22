@@ -10792,3 +10792,17 @@ README are where the disclosure lives.
   (489 files), the dist against `v0.7.0` with `git archive`, `composer check`.
 - Reasoned: a patch, since no public symbol moves.
 - Decided by Maurice: 0.7.1. Tag and push not yet given.
+
+## 2026-10-22 — An independent review of SPEC-070 amendment 2 (step 365)
+- Model: Claude Opus 5.5, Claude Code CLI (and one Claude Code subagent as
+  the reviewer)
+- Asked: "ik wil nog echt goed reviewen. Vooral de nieuwe code met de
+  invloed op de rest"; then "ja, doe die drie".
+- Produced: two tests in `tests/Unit/Verifier/AcknowledgedKindTest.php`;
+  AC5's wording and the Traceability section of SPEC-070;
+  `notes/step-365-review-acknowledged-kind.md`; a row in `NOTES.md`.
+- Measured: by the reviewer, `composer check`, 747 fixtures with the filter
+  on and off, a mutation, the generator re-run; here, each new test failing
+  under its mutation, and `composer check` (1,117 passed, 1 skipped).
+- Reasoned: the reviewer's reading of where `c2pa-rs` files each code.
+- Decided by Maurice: the three follow-ups (two tests, the AC5 wording).
