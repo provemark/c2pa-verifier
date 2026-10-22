@@ -83,7 +83,9 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.7.0`**, still a `0.x` on purpose. `0.7.0` refuses
+The current tag is **`v0.7.1`**, still a `0.x` on purpose. `0.7.1` counts an
+ingredient failure as acknowledged only when the signer recorded it as a
+failure (C2PA 2.4 §18.16.12.4.3). `0.7.0` refuses
 a data hash or a BMFF hash that leaves the image or the media outside what
 is signed, verifies Pixel Camera videos, and reports ingredient failures a
 signer acknowledged, with a new `ValidationStatus::$acknowledged` that a

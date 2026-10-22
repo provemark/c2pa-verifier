@@ -10782,3 +10782,13 @@ README are where the disclosure lives.
   (`validation_results.rs`, read, not run); the change is conformance, not
   a security fix.
 - Decided by Maurice: the amendment approved; release as 0.7.1.
+
+## 2026-10-22 — The release commit for 0.7.1 (step 364)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "keur de amendment goed, ga 0.7.1".
+- Produced: CHANGELOG 0.7.1; the README's tag paragraph;
+  `notes/step-364-release-0.7.1.md`; a row in `NOTES.md`.
+- Measured: `bin/api-check.php` (surface unchanged), `bin/package-check.php`
+  (489 files), the dist against `v0.7.0` with `git archive`, `composer check`.
+- Reasoned: a patch, since no public symbol moves.
+- Decided by Maurice: 0.7.1. Tag and push not yet given.

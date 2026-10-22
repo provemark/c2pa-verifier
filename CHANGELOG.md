@@ -5,6 +5,26 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.7.1 — 2026-10-22
+
+A patch release: an ingredient failure counts as acknowledged only when the
+signer recorded it as a failure. The public contract is unchanged.
+
+### Changed
+
+- **The list a recorded status is in counts (SPEC-070 amendment 2).** C2PA
+  2.4 §18.16.12.4.3 compares a recorded status on its type (success,
+  informational or failure), code and url. A v3 ingredient assertion that
+  filed an ingredient's failure under `success` or `informational`
+  acknowledged it here as if it were under `failure`, as in `c2pa-rs`,
+  which derives the type from the code. Such an entry now excuses nothing:
+  the failure stays, and the file is `Invalid`. `c2patool` 0.27.22 and
+  0.28.2 still call these files `Trusted`. A v1/v2 `validationStatus` has
+  no lists and is compared as before.
+
+  Over the fixtures and corpora, no verdict moves between 0.7.0 and 0.7.1;
+  no real file was found that files a failure in another list.
+
 ## 0.7.0 — 2026-10-13
 
 A minor release. A data hash or a BMFF hash may no longer leave the image
