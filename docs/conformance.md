@@ -4,7 +4,9 @@
 five of its gaps (step 92); corrected 2026-09-24 (step 108), when `PRED-IMG-004`
 turned out to be a gap that step 90 had marked enforced, and closed the same
 day (step 109); four rows brought up to date with SPEC-035 amendment 5 and
-SPEC-046 to SPEC-049 on 2026-09-28 (step 176).* This table puts every predicate of
+SPEC-046 to SPEC-049 on 2026-09-28 (step 176); eight rows brought up to date
+with SPEC-064, SPEC-065, SPEC-017 amendment 9 and the closing of issue #10 on
+2026-10-23 (step 382).* This table puts every predicate of
 [`encypherai/c2pa-conformance-suite`](https://github.com/encypherai/c2pa-conformance-suite)
 that applies to the containers this verifier reads next to what this
 verifier actually does. The suite's catalogue formalises **237 normative
@@ -35,11 +37,11 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | verdict | predicates |
 |---|---|
-| **yes** | 63 |
-| partial | 12 |
+| **yes** | 70 |
+| partial | 10 |
 | closed | 4 |
-| by design | 21 |
-| **gap** | 11 |
+| by design | 22 |
+| **gap** | 5 |
 | **total** | 111 |
 
 ## Cross-format (6)
@@ -63,9 +65,9 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | predicate | sev | rule | this verifier |
 |---|---|---|---|
-| `PRED-TIME-001` | shall | Skip or follow timestamp header lookup | partial — the `sigTst`/`sigTst2` header path is implemented; the assertion-based fallback is not — see TIME-003 |
-| `PRED-TIME-002` | shall | Manifest identifier lookup in timestamp mapping | **gap** — the manifest-identifier-to-token mapping of a `c2pa.time-stamp` assertion is not read |
-| `PRED-TIME-003` | shall | c2pa.time-stamp assertion structural well-formedness | **gap** — the `c2pa.time-stamp` assertion (C2PA 2.4's assertion-based timestamps) is not read at all; no `assertion.timestamp.malformed` code exists here |
+| `PRED-TIME-001` | shall | Skip or follow timestamp header lookup | **yes** — since 2026-10-09 (SPEC-064): the manifest's own `sigTst`/`sigTst2` header first, and where it gives no trusted time, each token a `c2pa.time-stamp` assertion offers for the manifest (§15.8.1.2) |
+| `PRED-TIME-002` | shall | Manifest identifier lookup in timestamp mapping | **yes** — since 2026-10-09 (SPEC-064): a `c2pa.time-stamp` assertion's map is read by manifest label, and only the tokens for this manifest are tried |
+| `PRED-TIME-003` | shall | c2pa.time-stamp assertion structural well-formedness | **yes** — since 2026-10-09 (SPEC-064): a shape §15.10.3.2.6 refuses is `assertion.timestamp.malformed` |
 | `PRED-TIME-004` | shall | Ignore time-stamp manifests inside ingredients | **yes** — each manifest's timestamp comes from its own COSE header; an ingredient's can never reach the active manifest |
 
 ## Ingredients (8)
@@ -118,7 +120,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-CRYP-007` | shall | Certificate chain of trust to trust anchor | **yes** — `ChainCheck` builds to an anchor; `signingCredential.trusted` / `.untrusted` (SPEC-014). Every issuer must be a CA with `keyCertSign` within its `pathlen` (SPEC-014 amendment 4); name constraints and unknown critical extensions stop the path (SPEC-046), as do MD5 or SHA-1 signatures (SPEC-048) and an RSA key with a bad exponent (SPEC-049) between the anchor and the leaf |
 | `PRED-CRYP-008` | shall | COSE claim signature cryptographic verification | **yes** — `CoseSign1` + `SignatureVerifier` over the Sig_structure; `claimSignature.validated` / `.mismatch` (SPEC-009) |
 | `PRED-CRYP-009` | may | COSE header bucket placement permissiveness | **yes** for a claim v1 — `CoseSign1::findChain()` looks as `c2pa-rs` does: the protected header (label 33 or `"x5chain"`), else the unprotected `"x5chain"`. Label 33 in the unprotected header is no chain, and a chain in both headers is refused; in a claim v2 or later an unprotected chain is `signingCredential.invalid`, stricter by design (SPEC-047, 2026-09-27) |
-| `PRED-CRYP-010` | shall | Multiple tstToken entries rejected as malformed | partial — the header is a CBOR map, so a second `sigTst` key cannot survive decoding; a `tstToken` list inside one header is not counted |
+| `PRED-CRYP-010` | shall | Multiple tstToken entries rejected as malformed | **yes** — a second `sigTst` key cannot survive CBOR decoding, and since SPEC-017 amendment 9 a header whose `tstTokens` holds more than one token is `timeStamp.malformed` and gives no time (§15.8.1.1) |
 | `PRED-CRYP-011` | shall | sigTst time-stamp response PKI status validation | **yes** — `TimeStampToken` requires PKIStatusInfo 0 or 1 (SPEC-016) |
 | `PRED-CRYP-012` | shall | sigTst2 TimeStampToken retrieval | **yes** — `sigTst2` is read as a bare TimeStampToken (SPEC-016, SPEC-017) |
 | `PRED-CRYP-013` | shall | TimeStampToken signature and messageImprint validation | **yes** — signature, messageImprint and its algorithm are all checked: `timeStamp.malformed` / `.mismatch` (SPEC-017) |
@@ -127,7 +129,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-CRYP-016` | shall | Time-stamp and signing certificate validity window enforcement | partial — the rule is enforced — the signer is judged at the attested time — but reported as `signingCredential.expired`, not `claimSignature.outsideValidity` |
 | `PRED-CRYP-017` | shall | Use attested time for certificate validity when trusted timestamp present | **yes** — `CertificateProfileCheck::check($at)` takes the trusted timestamp's time; `now` only without one, and the explanation says which (SPEC-017) |
 | `PRED-CRYP-018` | may | Claimed time of signing via iat header validation | by design — the `iat` claimed time of signing is not read; a `may` |
-| `PRED-CRYP-019` | shall | Claimed time of signing inside/outside validity informational code | **gap** — follows from CRYP-018: no `timeOfSigning.*` codes exist here |
+| `PRED-CRYP-019` | shall | Claimed time of signing inside/outside validity informational code | by design — follows from CRYP-018: no `timeOfSigning.*` codes exist here; issue #10 closed as not planned (the maintainer's decision) |
 | `PRED-CRYP-020` | shall | CA certificate revocation check at signing time | by design — CA revocation at signing time needs revocation data (SPEC-014) |
 | `PRED-CRYP-021` | shall | OCSP response from manifest store revocation check | **yes** — the same stapled-OCSP path; `notRevoked` is recorded with the caveat that the header carrying it is unsigned |
 | `PRED-CRYP-022` | may | Online OCSP query fallback | by design — online OCSP query; no network |
@@ -151,8 +153,8 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-ASSE-010` | shall | Assertion metadata field not validated | **yes** — assertion `metadata` fields are never validated |
 | `PRED-ASSE-011` | shall | Specific assertion type dispatch | **yes** — dispatch by label: actions, ingredient, the hard bindings (`Verifier`) |
 | `PRED-ASSE-012` | shall | Hashed-URI and hashed-ext-URI field validation in assertions | partial — hashed URIs inside ingredient assertions are validated (SPEC-020/021); hashed URIs inside other assertion types are not walked |
-| `PRED-ASSE-013` | shall | Alternative-content-representation structural validity | **gap** — `c2pa.alternative-content-representation` is not implemented |
-| `PRED-ASSE-014` | shall | Alternative-content-representation embedded preservation image hash | **gap** — the embedded preservation image hash is not checked |
+| `PRED-ASSE-013` | shall | Alternative-content-representation structural validity | **yes** — since 2026-10-09 (SPEC-065): the assertion's count and shape (§15.10.3.2.7), else `assertion.alternativeContentRepresentation.malformed` |
+| `PRED-ASSE-014` | shall | Alternative-content-representation embedded preservation image hash | **yes** — since 2026-10-09 (SPEC-065): the embedded image's hash, `assertion.alternativeContentRepresentation.match` or `.hashMismatch` |
 | `PRED-ASSE-015` | shall | Hashed-URI reference integrity | **yes** — same mechanism as ASSE-006 |
 | `PRED-ASSE-016` | shall | External reference validation procedure | by design — external data is never retrieved (no network) |
 | `PRED-ASSE-017` | shall | Ingredient assertion relationship field validity | **yes** — `IngredientAssertion`: `relationship` required and one of the three, else `assertion.ingredient.malformed` |
@@ -164,7 +166,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-ASSE-023` | shall | Inception action position validation | partial — `ActionsCheck` requires the first action to be `c2pa.created` or `c2pa.opened`, and since SPEC-033 refuses a second opening anywhere in the claim (a later `c2pa.created` included); it does not require `created_assertions`' first actions reference to resolve to `c2pa.actions.v2` |
 | `PRED-ASSE-024` | shall | reviewRatings absent when dataSource is human entry | **gap** — `reviewRatings` alongside a `humanEntry` `dataSource` is not rejected |
 | `PRED-ASSE-025` | shall | Mandatory digitalSourceType for editorial and created actions | partial — since 2026-09-24 (SPEC-032): a `c2pa.created` in a v2 claim without `digitalSourceType` is `assertion.action.malformed`, as both `c2patool` versions; other actions are not required to carry one, which no oracle enforces and §15 does not ask |
-| `PRED-ASSE-026` | shall | Alternative content representation choice exclusivity | **gap** — follows from ASSE-013 |
+| `PRED-ASSE-026` | shall | Alternative content representation choice exclusivity | **yes** — since 2026-10-09 (SPEC-065): exactly one of the two fields, else malformed |
 | `PRED-ASSE-027` | shall | Forbidden labels in external references | **yes** — since 2026-09-24 (SPEC-032): `ExternalReferenceCheck` refuses the forbidden labels, a `location` without `url`, and `alg` or `hash` alone, with `assertion.external-reference.malformed` (§15.10.3.2.2); nothing is fetched |
 
 ## Container and progressive content (7)
@@ -215,7 +217,7 @@ accept; its predicate list does not depend on its cryptography being right.
 
 ## What the 23 gaps mean, sorted by what they could cost
 
-Twenty-three gaps were recorded. Eleven have since been closed (section 0, section 1, `PRED-ASSE-027` by SPEC-032, `PRED-STRU-009` by SPEC-034, `PRED-BMFF-001`, `-002` and `-004` by SPEC-038), and one narrowed to partial (`PRED-ASSE-025`).
+Twenty-three gaps were recorded. Sixteen have since been closed (section 0, section 1, `PRED-ASSE-027` by SPEC-032, `PRED-STRU-009` by SPEC-034, `PRED-BMFF-001`, `-002` and `-004` by SPEC-038, `PRED-TIME-002` and `-003` by SPEC-064, `PRED-ASSE-013`, `-014` and `-026` by SPEC-065), one narrowed to partial (`PRED-ASSE-025`), and one set aside by decision (`PRED-CRYP-019`, issue #10). Five remain, each an open issue: #1, #7, #8, #9, #12.
 
 A gap is only interesting through its consequence. The question this
 project asks of everything is the same one: **can it make this verifier say
@@ -286,9 +288,8 @@ signature and the chain all still hold; what fails is a rule about what a
 manifest may say.
 
 - `PRED-ASSE-024` — `reviewRatings` alongside a `humanEntry` `dataSource`
-- `PRED-ASSE-025` (partial since SPEC-032) — a `digitalSourceType` on actions other than `c2pa.created`
+- `PRED-ASSE-025` (partial since SPEC-032) — a `digitalSourceType` on actions other than `c2pa.created` (issue #2 closed as not planned)
 - `PRED-ASSE-023` (partial) — `created_assertions`' first actions reference resolving to `c2pa.actions.v2`
-- `PRED-ASSE-013`, `014`, `026` — `c2pa.alternative-content-representation`
 - `PRED-CRYP-024` — `c2pa.session-keys`: its `signerBinding` is not verified
 - `PRED-CRYP-006` — a trust anchor with `notBefore`/`notAfter` gating
 
@@ -304,11 +305,8 @@ c2patool is never a surprise.
 
 - `PRED-ASSE-021`, `PRED-ABMF-001` — no `c2pa.hash.multi-asset` fallback: a
   failed hard binding stays failed, where the rule says to try another
-- `PRED-TIME-002`, `PRED-TIME-003` — the `c2pa.time-stamp` assertion is not
-  read, so such a file is judged at *now*: an expired certificate is called
-  expired rather than excused
-- `PRED-ASSE-007`, `PRED-STRU-018`, `PRED-CRYP-016`,
-  `PRED-CRYP-019` — the check happens, the status code differs
+- `PRED-ASSE-007`, `PRED-STRU-018`, `PRED-CRYP-016` — the check happens,
+  the status code differs
   (`general.error` for
   `assertion.cbor.invalid`, `assertion.missing` for `hashedURI.missing`,
   `signingCredential.expired` for `claimSignature.outsideValidity`)

@@ -372,5 +372,6 @@ a test TSA Trust List and a validation time in, crJSON out (step 367).
 | 376–377 | The crJSON signature: SPEC-076 | implemented 2026-10-23 |
 | 378–379 | The harness: SPEC-077 (`--trust-list`, `--tsa-trust-list`), `docs/conformance-harness.md` | implemented 2026-10-23 |
 | 380–381 | The test mode with the Conformance Test Root: SPEC-078 | implemented 2026-10-23 |
-| — | The open gaps of `docs/conformance.md` | planned |
+| 382 | The conformance table brought up to date: 5 gaps left (#1, #7, #8, #9, #12) | done 2026-10-23 |
+| — | The open gaps, #9 first | planned |
 | — | Applying | Maurice's decision |

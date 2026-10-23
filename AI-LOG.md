@@ -11083,3 +11083,16 @@ README are where the disclosure lives.
   `PRIVATE KEY` in the fixtures.
 - Reasoned: none beyond the spec.
 - Decided by Maurice: SPEC-078 approved.
+
+## 2026-10-23 — The conformance table brought up to date (step 382)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "wat zijn die gaten?"; then "push en start 1".
+- Produced: the push of steps 380–381; `docs/conformance.md` (eight
+  rows, the count, the sorted lists); `notes/step-382-conformance-table.md`;
+  rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: the changed rows against the code and the issues' states;
+  the table recounted from its rows (111); the official trust lists'
+  JSON (`ServiceStatus`, `StatusStartingTime`; two signer and one TSA
+  service with an empty status) for the next step.
+- Reasoned: the predicates read against the code.
+- Decided by Maurice: the table first, then #9.
