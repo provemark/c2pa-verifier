@@ -487,6 +487,9 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
    **Weight A: one probe moves from `Invalid` to `Trusted`, as in
    `c2patool`; AC18 stays for every other form.**
 
+9. **2026-10-23, step 403, noted by the review of 2026-10-23 (outside its scope; the low items, "doe 1 nog", Maurice van Loon).** Two assertion boxes with one label: `resolve()` returns the first, which the claim's hash covers, while `$manifest->assertions` kept the last, which the data hash, actions, ingredient and other checks read. Not a wrong `Valid`: the second box is undeclared (`assertion.undeclared`, a failure), so the file is `Invalid`; but the checks read bytes no hash covered. The first box with a label is now the one kept; a later one is neither decoded nor used, and is still reported as undeclared.
+   - **AC21 — one label, the box the reference resolves to**: `fixture-signed.png` with a second `c2pa.actions.v2` after the store's last box (`c2pa.created` changed to `c2pa.opened_`, lengths fixed): the kept assertion is the box `resolve()` returns, holds `c2pa.created`, and `HashedUriCheck` still reports `assertion.undeclared`.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -514,3 +517,7 @@ least one test; every source file maps back to this spec.
 | AC18 | tests/Unit/Manifest/ManifestProbesTest.php :: AC18: a version 2 manifest whose label is not a C2PA URN is claim.malformed / SPEC-007 | src/Manifest/Manifest.php :: read(), C2PA_URN |
 | AC19 | tests/Unit/Manifest/ManifestProbesTest.php :: AC19: a version 2 claim whose claim_generator_info is an empty map is claim.malformed / SPEC-007 | src/Manifest/Claim.php :: fromMap() |
 | AC20 (amendment 8) | tests/Unit/Manifest/ManifestProbesTest.php :: AC20: a version 2 manifest labelled in the deprecated urn:uuid form is accepted / SPEC-007 | src/Manifest/Manifest.php :: read(), UUID_URN |
+| AC21 (amendment 9) | tests/Unit/Manifest/ManifestStoreTest.php :: AC21: of two assertion boxes with one label, every check reads the one the claim's reference resolves to / SPEC-007 | src/Manifest/Manifest.php :: read() |
+
+Amendment 9 (step 403): the test red first (the kept box was the second),
+green after. The corpus before and after: 0 of 1,854 runs moved.

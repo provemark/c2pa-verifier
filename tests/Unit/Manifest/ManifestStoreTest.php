@@ -6,6 +6,7 @@ use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
+use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Jumbf\Superbox;
 use Provemark\C2paVerifier\Manifest\EmbeddedFile;
@@ -337,4 +338,35 @@ it('AC15: a float JSON cannot hold is rendered as its name, and the report encod
     $walk(json_decode($report->toJson(), true, 512, JSON_THROW_ON_ERROR));
 
     expect($lists)->toContain(['NaN', 'Infinity', '-Infinity', 'NaN']);
+})->group('SPEC-007');
+
+// AC21 (amendment 9)
+it('AC21: of two assertion boxes with one label, every check reads the one the claim\'s reference resolves to', function (): void {
+    $stream = fopen(dirname(__DIR__, 2).'/Fixtures/fixture-signed.png', 'rb');
+    assert($stream !== false);
+    $extracted = (new PngManifestStoreExtractor)->extract($stream);
+    assert($extracted !== null);
+    $bytes = $extracted->bytes;
+    $root = (new JumbfParser)->parse($bytes);
+    $manifest = $root->superboxes()[0];
+    $store = array_values(array_filter($manifest->superboxes(), static fn (Superbox $b): bool => $b->description->label === 'c2pa.assertions'))[0];
+    $actions = array_values(array_filter($store->superboxes(), static fn (Superbox $b): bool => $b->description->label === 'c2pa.actions.v2'))[0];
+    // a second c2pa.actions.v2 after the store's last box, its CBOR changed (created → opened, same length)
+    $copy = str_replace('c2pa.created', 'c2pa.opened_', substr($bytes, $actions->offset, $actions->length));
+    expect($copy)->not->toBe(substr($bytes, $actions->offset, $actions->length));
+    $end = $store->offset + $store->length;
+    $forged = substr($bytes, 0, $end).$copy.substr($bytes, $end);
+    foreach ([0, $manifest->offset, $store->offset] as $at) {   // each enclosing box grows by the copy
+        $size = unpack('N', substr($forged, $at, 4));
+        assert(is_array($size) && is_int($size[1]));
+        $forged = substr_replace($forged, pack('N', $size[1] + strlen($copy)), $at, 4);
+    }
+    $active = ManifestStore::fromTree((new JumbfParser)->parse($forged))->active;
+    $resolved = $active->resolve('self#jumbf=c2pa.assertions/c2pa.actions.v2');
+
+    expect($active->assertions['c2pa.actions.v2']->box)->toBe($resolved)
+        ->and(json_encode($active->assertions['c2pa.actions.v2']->data))->toContain('c2pa.created')
+        ->and(json_encode($active->assertions['c2pa.actions.v2']->data))->not->toContain('c2pa.opened_')
+        // the second box is still reported, so the file stays Invalid
+        ->and(array_map(static fn ($s): string => $s->code->value, (new HashedUriCheck)->check($active)))->toContain('assertion.undeclared');
 })->group('SPEC-007');

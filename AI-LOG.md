@@ -11375,3 +11375,13 @@ README are where the disclosure lives.
   a row in `NOTES.md`.
 - Reasoned: the limit and what a list can do; nothing measured.
 - Decided by Maurice: none beyond the item.
+
+## 2026-10-23 — SPEC-007 amendment 9: duplicate assertion labels (step 403)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: the same "doe 1 nog".
+- Produced: SPEC-007 amendment 9 and its Traceability; `Manifest::read()`;
+  AC21 in `tests/Unit/Manifest/ManifestStoreTest.php`;
+  `notes/step-403-duplicate-assertion-label.md`; a row in `NOTES.md`.
+- Measured: a forged second box built in the test (red, green); the
+  corpus before and after (0 of 1,854); `composer check` (1,316 passed).
+- Decided by Maurice: none beyond the items.

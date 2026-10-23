@@ -198,6 +198,11 @@ final readonly class Manifest
         $assertions = [];
         foreach ($assertionStore->superboxes() as $assertionBox) {
             $assertionLabel = $assertionBox->description->label;
+            if (isset($assertions[$assertionLabel])) {
+                // a second box with one label: a reference resolves to the first (resolve()), so every check
+                // reads that one; HashedUriCheck reports this one as undeclared (SPEC-007 amendment 9)
+                continue;
+            }
             $data = self::at(sprintf('%s/c2pa.assertions/%s', $manifestUrl, $assertionLabel), static fn (): mixed => self::assertionData($assertionBox, $budget));
             $assertions[$assertionLabel] = new Assertion($assertionLabel, $assertionBox, $data);
         }
