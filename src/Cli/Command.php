@@ -257,8 +257,11 @@ final readonly class Command
         }
         $offset = strtoupper($m[7]) === 'Z' ? '+00:00' : $m[7];
         $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d\\TH:i:sP', sprintf('%s-%s-%sT%s:%s:%s%s', $m[1], $m[2], $m[3], $m[4], $m[5], $m[6], $offset));
+        // the time is recorded in UTC (crJSON's validationTime): an offset can carry it past year 9999 or before
+        // year 1, which RFC 3339 cannot write (SPEC-073 amendment 2)
+        $year = $parsed === false ? 0 : (int) $parsed->setTimezone(new \DateTimeZone('UTC'))->format('Y');
 
-        return $parsed === false ? null : $parsed;
+        return $parsed === false || $year < 1 || $year > 9999 ? null : $parsed;
     }
 
     /** @param  resource  $stderr */

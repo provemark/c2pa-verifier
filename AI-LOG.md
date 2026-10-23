@@ -11313,3 +11313,14 @@ README are where the disclosure lives.
   mutations; the corpus before and after (0 of 1,854); `composer check`
   (1,296 passed).
 - Decided by Maurice: do the low items.
+
+## 2026-10-23 — SPEC-073 amendment 2: the `--at` year range (step 397)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: the same "doe 1 nog".
+- Produced: SPEC-073 amendment 2 and its Traceability (the heading the
+  first edit dropped restored); `Command::rfc3339()`; AC5 cases in
+  `tests/Unit/Verifier/ValidationTimeTest.php`;
+  `notes/step-397-at-year-range.md`; a row in `NOTES.md`.
+- Measured: the tests red and green; two mutations; `composer check`
+  (1,303 passed).
+- Decided by Maurice: none beyond the item.

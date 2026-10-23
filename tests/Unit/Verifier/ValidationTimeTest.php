@@ -153,7 +153,19 @@ it('AC5: a time that is not RFC 3339 is refused on the command line', function (
     'no such day' => ['--at', '2026-02-30T00:00:00Z'],
     'a word' => ['--at', 'yesterday'],
     'empty' => ['--at='],
+    'empty, as its own argument' => ['--at', ''],
+    // amendment 2: a UTC year outside 0001–9999 cannot be written back as RFC 3339
+    'year 10000 in UTC' => ['--at', '9999-12-31T23:59:59-23:59'],
+    'year 0000 in UTC' => ['--at', '0001-01-01T00:00:00+01:00'],
+    'year 0000' => ['--at', '0000-06-01T00:00:00Z'],
 ])->group('SPEC-073');
+
+it('AC5: the first and last instants RFC 3339 can write back are accepted', function (string $at): void {
+    [$status, , $err] = spec073Run('--at', $at, '--crjson', Corpus::fixtures().'/'.SPEC073_NO_TIMESTAMP.'.png');
+
+    expect($err)->toBe('')
+        ->and($status)->toBeLessThan(2);
+})->with(['0001-01-01T00:00:00Z', '9999-12-31T23:59:59Z', '9999-12-31T23:59:59+23:59'])->group('SPEC-073');
 
 it('AC5: --at as the last argument is refused', function (): void {
     [$status, $out, $err] = spec073Run(Corpus::fixtures().'/'.SPEC073_NO_TIMESTAMP.'.png', '--at');

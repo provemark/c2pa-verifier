@@ -194,6 +194,9 @@ parameters). An optional parameter is an addition: 0.8.0.
 1. **2026-10-23, step 396, found by the review of 2026-10-23 (the low items, "doe 1 nog", Maurice van Loon).** Without a given time, `verify()` recorded `time()` once, and each check read `time()` again for itself (`CertificateProfileCheck`, `ChainCheck`, `OcspCheck`), as the API sketch above did not intend ("computed once"). Over a second boundary the checks could disagree with each other and with the recorded `validationTime`. Now `verify()` reads the clock once and passes it down: `$at = $trusted ?? $now ?? $clock`, for the active manifest and every ingredient manifest. The certificate explanation still says "checked at now" where no time was given: it is named, no longer inferred from a null time.
    - **AC6 — one clock reading**: with `inspect()` given a fixed clock and no validation time, the active signer of `c2pa-rs/ocsp.jpg` (valid 2024-10-15 to 2025-10-15) and the ingredient signer of `c2pa-rs/video1.mp4` (valid 2022-04-04 to 2023-04-04) are not expired at a clock inside their validity and are expired at one after it, "expired at" that clock and "checked at now"; the report's `validationTime` is the reading the checks used.
 
+2. **2026-10-23, step 397, found by the review of 2026-10-23 (the low items, "doe 1 nog", Maurice van Loon).** `--at 9999-12-31T23:59:59-23:59` was accepted and recorded as `10000-01-01T23:58:59Z`, and `--at 0001-01-01T00:00:00+01:00` as `0000-12-31T23:00:00Z`: neither is RFC 3339, so crJSON's `validationTime` broke its schema. A time whose UTC year falls outside 0001–9999 is now refused, as any time that is not RFC 3339 (exit 2). The library's `verify()` takes any `DateTimeInterface`; a caller passing such a time there gets what `gmdate()` writes.
+   - **AC5 (extended)**: both are refused, and `--at ''` as its own argument too; `0001-01-01T00:00:00Z`, `9999-12-31T23:59:59Z` and `9999-12-31T23:59:59+23:59` are accepted.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -208,6 +211,7 @@ least one test; every source file maps back to this spec.
 | AC5 | tests/Unit/Verifier/ValidationTimeTest.php :: AC5: a time that is not RFC 3339 is refused on the command line (5 datasets); AC5: --at as the last argument is refused; AC5: an offset other than Z is converted / SPEC-073 | src/Cli/Command.php :: run() (`--at`), rfc3339() |
 | AC6 | the corpus before and after (notes/step-369-validation-time.md); every existing test unchanged | — |
 | AC6 (amendment 1) | tests/Unit/Verifier/ValidationTimeTest.php :: AC6: without a given time, every check judges at the one clock reading verify() took, and says "now" (2 datasets); AC6: the report records the clock reading the checks used / SPEC-073 | src/Verifier/Verifier.php :: verify(), inspect(), check(); src/Verifier/IngredientManifestCheck.php :: check(), manifest() |
+| AC5 (amendment 2) | tests/Unit/Verifier/ValidationTimeTest.php :: AC5: a time that is not RFC 3339 is refused on the command line (the year and empty-argument datasets); AC5: the first and last instants RFC 3339 can write back are accepted (3) / SPEC-073 | src/Cli/Command.php :: rfc3339() |
 
 `src/Verifier/FragmentedVerifier.php :: verify()` passes the time on; no
 criterion names it.
@@ -236,3 +240,7 @@ The first fix passed the clock on but let the certificate explanation say
 time; the tests were sharpened to read the wording and the name is now
 passed. Mutations, each failing: the active manifest ignoring the clock,
 an ingredient ignoring it, "now" not named.
+
+Amendment 2 (step 397): the two UTC-year cases red first (year 0000 as
+written was already refused by `checkdate()`), green after; dropping
+either bound fails its case.
