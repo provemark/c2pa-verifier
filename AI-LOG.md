@@ -10917,3 +10917,20 @@ README are where the disclosure lives.
   schema where `c2patool` differs; `specVersion` 2.4.0; the
   specification's algorithm names; schema validation and per-manifest
   comparison in tests; crJSON as a separate rendering.
+
+## 2026-10-23 — SPEC-006 amendment 3: maps kept as maps (step 372)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "wat adviseer je?"; "ja neem over"; "kies 1"; "ja akkoord".
+- Produced: `src/Cbor/CborMap.php`; `keepMaps` in
+  `src/Cbor/CborDecoder.php`; AC16 in `tests/Unit/Cbor/CborDecoderTest.php`;
+  SPEC-006 amendment 3 and AC16; SPEC-074 approved, its open questions
+  settled, amendment 1; `notes/step-372-keep-maps.md`; rows in `NOTES.md`
+  and `docs/milestones.md`.
+- Measured: the rubric files of `conformance-public` searched for byte
+  values (none); RFC 8610 Appendix G.2; empty objects and arrays in
+  `c2patool`'s crJSON; AC16 red, then green; one mutation; the corpus
+  before and after (0 of 1,842); `composer check` (1,134 passed).
+- Reasoned: the advice on SPEC-074's three open questions.
+- Decided by Maurice: the closing quote, refusing other tags, floats as
+  the double (SPEC-074 approved); the decoder mode over the other two
+  routes; both amendments' text.

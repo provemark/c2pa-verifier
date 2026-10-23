@@ -6,6 +6,7 @@ use Provemark\C2paVerifier\Cbor\CborBudget;
 use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cbor\CborDecoder;
 use Provemark\C2paVerifier\Cbor\CborException;
+use Provemark\C2paVerifier\Cbor\CborMap;
 use Provemark\C2paVerifier\Cbor\CborTag;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
@@ -340,4 +341,38 @@ it('AC15: the default limits are 32 and 65536, and sufficient for the sixteen bl
     foreach (SPEC006_RECORDED as $name) {
         expect($decoder->decode(spec006Recorded($name)['bytes']))->not->toBeNull($name);
     }
+})->group('SPEC-006');
+
+// AC16 (amendment 3)
+it('AC16: with keepMaps, every map is a CborMap and every array a list', function (): void {
+    $keep = new CborDecoder(keepMaps: true);
+
+    expect(spec006Decode('a0', $keep))->toEqual(new CborMap([]))
+        ->and(spec006Decode('80', $keep))->toBe([])
+        ->and(spec006Decode('a1006161', $keep))->toEqual(new CborMap([0 => 'a']))
+        ->and(spec006Decode('a2016161216162', $keep))->toEqual(new CborMap([1 => 'a', -2 => 'b']))
+        ->and(spec006Decode('a161618180', $keep))->toEqual(new CborMap(['a' => [[]]]))
+        ->and(spec006Decode('c1a0', $keep))->toEqual(new CborTag(1, new CborMap([])))
+        ->and(spec006Decode('9fa0ff', $keep))->toEqual([new CborMap([])]);
+
+    $ordered = spec006Decode('a2617a01616102', $keep);
+    expect($ordered)->toBeInstanceOf(CborMap::class);
+    if ($ordered instanceof CborMap) {
+        expect(array_keys($ordered->entries))->toBe(['z', 'a']);
+    }
+})->group('SPEC-006');
+
+it('AC16: with keepMaps, the key rules and the limits hold unchanged', function (): void {
+    $keep = new CborDecoder(keepMaps: true);
+
+    expect(fn () => spec006Decode('a201020103', $keep))->toThrow(CborException::class, 'duplicate map key 1 at offset 3');
+    expect(fn () => spec006Decode('a1400a', $keep))->toThrow(CborException::class, 'map key at offset 1 is a byte string');
+    expect(fn () => spec006Decode('a1613101', $keep))->toThrow(CborException::class, 'would collide with an integer key');
+    expect(fn () => spec006Decode(str_repeat('a16161', 33).'00', $keep))->toThrow(CborException::class, 'depth 33 exceeds the limit of 32');
+})->group('SPEC-006');
+
+it('AC16: without keepMaps, a map is still a PHP array', function (): void {
+    expect((new CborDecoder)->keepMaps)->toBeFalse()
+        ->and(spec006Decode('a0'))->toBe([])
+        ->and(spec006Decode('a1006161'))->toBe(['a']);
 })->group('SPEC-006');

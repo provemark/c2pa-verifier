@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-23                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -84,13 +84,14 @@ Measured in step 370 and in this step (2026-10-23):
 
 ## Behavior
 
-- **AC1 — a byte string is Base64 with the prefix**
+- **AC1 — a byte string is Base64 between `b64'` and `'`**
   - Given byte strings `h''`, `h'00'`, `h'0102'`, `h'fbff'` and a 32-byte
     SHA-256
   - When mapped
-  - Then each is `b64'` followed by its RFC 4648 §4 Base64, with padding
-    (`b64'AA=='`, `b64'AQI='`, `b64'+/8='`), and for `h''` the prefix
-    alone. Whether a closing `'` follows is open question 1.
+  - Then each is `b64'`, its RFC 4648 §4 Base64 with padding, and a
+    closing `'`, as CBOR diagnostic notation writes it (RFC 8610
+    Appendix G.2): `b64'AA=='`, `b64'AQI='`, `b64'+/8='`, and `b64''`
+    for `h''` (open question 1).
 
 - **AC2 — the JSON-native types pass unchanged**
   - Given text (including non-ASCII and control characters), 0, 23, 24,
@@ -99,7 +100,9 @@ Measured in step 370 and in this step (2026-10-23):
   - When mapped and `json_encode`d
   - Then each has its own value and type: a CBOR map is a JSON object
     (`{}` even when empty), a CBOR array a JSON array (`[]` even when
-    empty), and a map keeps its key order.
+    empty), and a map keeps its key order. The values are decoded with
+    `keepMaps: true` (SPEC-006 amendment 3), without which an empty map
+    cannot be told from an empty array *(amendment 1)*.
 
 - **AC3 — tag 0 is its text**
   - Given `0("2026-10-09T05:31:00Z")` and the `when` field of a fixture's
@@ -121,9 +124,11 @@ Measured in step 370 and in this step (2026-10-23):
 
 - **AC6 — what Table 1 cannot express is refused** *(required: error path)*
   - Given a tag other than 0 (`1(1700000000)`, `32("https://x")`), tag 0
-    over something that is not text (`0(1)`), a map whose integer key
-    collides with a text key (`{1: "a", "1": "b"}`), NaN, +∞ and -∞, at
-    the top and nested three levels deep
+    over something that is not text (`0(1)`), NaN, +∞ and -∞, a PHP
+    array that is not a list (a map decoded without `keepMaps`), at the
+    top and nested three levels deep. *(Amendment 1: the key collision
+    `{1: "a", "1": "b"}` left this list; the decoder refuses it, SPEC-006
+    AC13.)*
   - When mapped
   - Then a `CrJsonValueException` is thrown, naming the reason and the
     path to the value (e.g. `actions[0].when`). No partial value is
@@ -137,10 +142,10 @@ Measured in step 370 and in this step (2026-10-23):
   - When every assertion in a `cbor` content box of every manifest is
     mapped, `cawg.identity` excepted (`c2pa-rs` decodes its signature)
   - Then each equals `c2patool`'s value for the same manifest and label,
-    after four named normalisations applied to both sides: a byte string
-    and an array of integers 0–255 compare as the bytes they hold; the
-    closing quote is ignored; an added `"pad": "b64''"` that the CBOR
-    does not hold is ignored; floats compare at single precision. Any
+    after three named normalisations applied to both sides: a byte string
+    and an array of integers 0–255 compare as the bytes they hold; an
+    added `"pad": "b64''"` that the CBOR does not hold is ignored; floats
+    compare at single precision. Any
     other difference fails the test, with the file, the label and the
     path. Measured with a prototype outside the repository: 298 of 298
     equal, 147 of them only after the `pad` normalisation.
@@ -185,15 +190,28 @@ public contract does not change.
    page's form, prefix only, and the difference named in
    `docs/comparison.md`. *Against:* if the programme compares whole
    documents rather than codes, the `c2pa-rs` form matches what it
-   expects. Blocking: AC1 depends on it (AC7 ignores the quote).
+   expects. Blocking: AC1 depends on it.
+   *Status 2026-10-23 (step 372):* settled, the other way: **with the
+   closing quote**. The prefix comes from CBOR diagnostic notation, where
+   a byte string is *"enclosed in single quotes, prefixed by … >b64<"*
+   (RFC 8610 Appendix G.2); `c2pa-rs` writes it so; and the programme's
+   34 rubric files at `conformance-public` `da71a72` read no byte value
+   (no `b64`, no `pad`). The page's shorter form is named in
+   `docs/comparison.md` when this spec is built.
 2. **A tag other than 0.** *Proposal:* refuse (AC6), so the next spec
    writes `{}` for that assertion. *Alternative:* the content, as the
    report's `plain()` does, which is lossy and silent. No such tag
    occurs in the corpus. Not blocking.
+   *Status 2026-10-23 (step 372):* settled as proposed: refused.
 3. **Single-precision floats.** *Proposal:* written as the double PHP
    holds (`2.319999933242798`); AC7 compares at single precision. Writing
    `2.32` would need the decoder to keep each float's width, a change to
    SPEC-006's value model. Not blocking.
+   *Status 2026-10-23 (step 372):* settled as proposed: the double.
+
+## Amendments
+
+1. **2026-10-23, step 372, decided by Maurice van Loon ("kies 1")** *(confirmed by Maurice van Loon, 2026-10-23: "ja akkoord")* — the input is decoded with `keepMaps: true`. Building AC2 showed that the decoder returns an empty map and an empty array alike (`[]`), and a map keyed 0, 1, 2… as a list, so this mapping could not write `{}` for an empty map. SPEC-006 amendment 3 adds the mode. AC2 now names it; AC6 loses the key collision, which never reaches this mapping because the decoder refuses a text key that reads as an integer (SPEC-006 AC13), and gains a guard: a PHP array with keys that are not a list was decoded without the mode and is refused. AC7 decodes each assertion's `cbor` content box again with the mode.
 
 ## Traceability
 

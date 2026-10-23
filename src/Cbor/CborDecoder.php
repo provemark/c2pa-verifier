@@ -29,12 +29,15 @@ final readonly class CborDecoder
     public function __construct(
         public int $maxDepth = self::DEFAULT_MAX_DEPTH,
         public int $maxItems = self::DEFAULT_MAX_ITEMS,
+        // amendment 3: maps as CborMap, for crJSON (SPEC-074); every check keeps the default
+        public bool $keepMaps = false,
     ) {}
 
     /**
      * Exactly one data item; bytes left over are an error. The value is an
      * int, a string (text), a CborBytes, a list, an array with int|string
-     * keys (a map), a CborTag, a bool or null — nested the same way.
+     * keys (a map), a CborTag, a bool or null — nested the same way. With
+     * keepMaps every map is a CborMap instead (amendment 3).
      *
      * @throws CborException
      */
@@ -289,9 +292,9 @@ final readonly class CborDecoder
 
     /**
      * @param  int|null  $count  null: indefinite, pairs until a break, counted against the same limit
-     * @return array<int|string, mixed>
+     * @return array<int|string, mixed>|CborMap a CborMap with keepMaps (amendment 3)
      */
-    private function map(string $bytes, int &$offset, int $head, ?int $count, int $depth, CborBudget $budget): array
+    private function map(string $bytes, int &$offset, int $head, ?int $count, int $depth, CborBudget $budget): array|CborMap
     {
         $this->countable('map', $head, $count ?? 0);
         $this->enter($depth, $head);
@@ -318,7 +321,7 @@ final readonly class CborDecoder
             $map[$key] = $value;
         }
 
-        return $map;
+        return $this->keepMaps ? new CborMap($map) : $map;
     }
 
     private function countable(string $what, int $head, int $count): void
@@ -358,6 +361,7 @@ final readonly class CborDecoder
         return match (true) {
             $value instanceof CborBytes => 'a byte string',
             $value instanceof CborTag => 'a tag',
+            $value instanceof CborMap => 'a map',
             is_array($value) => array_is_list($value) ? 'an array' : 'a map',
             is_bool($value) => 'a boolean',
             $value === null => 'null',

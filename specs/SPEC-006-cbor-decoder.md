@@ -268,6 +268,19 @@ questions). RFC 8949 Appendix A and Appendix F are quoted by their hex.
   - When it decodes the sixteen measured blobs
   - Then it succeeds, and its limits are readable as 32 and 65,536
 
+- **AC16 — maps kept as maps, on request** *(amendment 3, 2026-10-23:
+  crJSON must tell `{}` from `[]` — see Amendments)*
+  - Given a decoder made with `keepMaps: true`, and `a0` (an empty map),
+    `80` (an empty array), `a1006161` (`{0: "a"}`), `a2016161216162`
+    (`{1: "a", -2: "b"}`), `a161618180` (`{"a": [[]]}`) and a map inside
+    a tag and inside an indefinite array
+  - When each is decoded
+  - Then every map is a `CborMap` whose `entries` hold its keys and
+    values in order, and every array a list: `a0` is `CborMap([])`, `80`
+    is `[]`, `a1006161` is `CborMap([0 => "a"])`, not `["a"]`. AC13's key
+    rules and every limit hold unchanged. Without `keepMaps` (the
+    default) every existing criterion answers as before, byte for byte.
+
 ## References
 
 - Specification: RFC 8949 (STD 94) §3 (the data model), §3.1 (major
@@ -320,6 +333,7 @@ final readonly class CborDecoder
     public function __construct(
         public int $maxDepth = self::DEFAULT_MAX_DEPTH,
         public int $maxItems = self::DEFAULT_MAX_ITEMS,
+        public bool $keepMaps = false,   // amendment 3: maps as CborMap
     ) {}
 
     /**
@@ -364,6 +378,8 @@ messages.
 1. **2026-09-21, step 37, decided by Maurice van Loon ("floats decode")** *(confirmed by Maurice van Loon, 2026-09-22)* — floats decode (major type 7, additional information 25–27: half, single and double, the infinities and NaN, and inside a tag). The original AC7 refused every float because no C2PA field the sister library reads carries one; four of the C2PA's own test files do (`nikon-20221019-building.jpeg` and the three `truepic-20230212-*.jpg`, in camera assertions) and c2patool reads them. Half precision is decoded by hand, single and double by `unpack`; a float truncated inside its bytes is still an error naming the offset. AC7 rewritten as the RFC 8949 Appendix A float vectors, seen red then green; the Scope's exclusion struck. `notes/step-37-floats.md`. (Left as a stub in step 37 and written out in step 51; the notes of steps 37 and 39 number this and the next amendment 2 and 3 — the list here is the count.)
 2. **2026-09-21, step 39, decided by Maurice van Loon ("optie a")** *(confirmed by Maurice van Loon, 2026-09-22)* — indefinite lengths decode. The original AC6 refused RFC 8949 §3.2.3's indefinite-length strings, arrays and maps because §4.2.1's deterministic encoding, which C2PA asks of a claim, forbids them. c2pa-rs's own test fixtures (`C.jpg`, `CA.jpg`, `CA_ct.jpg`, `CIE-sig-CA.jpg`, `E-sig-CA.jpg`, `XCA.jpg`, `no_alg.jpg`, `ocsp_with_assertion.jpg`, and `C_with_CAWG_data.jpg` with a 2.x `urn:c2pa:` label) carry them in the claim and c2patool reads every one: the oracle tolerates what the letter forbids, and files exist. The resource concern behind the refusal — an unterminated stream — is met by the bounds every container already has (`maxItems`, `maxDepth`) and by the end of input; decoding touches no hash. AC6 rewritten; the Scope's exclusion struck; the `claim-indefinite-array` variant of step 14 now decodes, so SPEC-010 AC6 and SPEC-013 AC7 lose it as a CBOR-fault example (their amendments).
 
+3. **2026-10-23, step 372, decided by Maurice van Loon ("kies 1")** *(confirmed by Maurice van Loon, 2026-10-23: "ja akkoord")* — maps kept as maps, on request (AC16). A decoded map is a PHP array, so an empty map and an empty array are both `[]`, and a map whose keys are 0, 1, 2… in order is a list. No check needs the difference. crJSON does (SPEC-074): C2PA 2.4 crJSON Table 1 maps a CBOR map to a JSON object and an array to an array. Measured: in `c2patool` 0.28.2's crJSON of 59 fixture files, 0 empty objects and 29 empty arrays occur inside assertions, so nothing real is wrong today, and a mapping that wrote `[]` for an empty map would be silently wrong the day one occurs. The default stays as it is; only a decoder made with `keepMaps: true` returns `CborMap`, and only the crJSON route makes one. The alternative, a new value model for every consumer, was put aside as far larger for no gain in a check.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -386,3 +402,4 @@ least one test; every source file maps back to this spec.
 | AC13 | tests/Unit/Cbor/CborDecoderTest.php :: AC13: map keys are int or string, and unique / SPEC-006 | src/Cbor/CborDecoder.php :: map(), kind(), show() |
 | AC14 | tests/Unit/Cbor/CborDecoderTest.php :: AC14: limits are enforced before memory is spent / SPEC-006 | src/Cbor/CborDecoder.php :: enter(), countable(), string() |
 | AC15 | tests/Unit/Cbor/CborDecoderTest.php :: AC15: the default limits are 32 and 65536, and sufficient for the sixteen blobs / SPEC-006 | src/Cbor/CborDecoder.php :: DEFAULT_MAX_DEPTH, DEFAULT_MAX_ITEMS, __construct() |
+| AC16 | tests/Unit/Cbor/CborDecoderTest.php :: AC16: with keepMaps, every map is a CborMap and every array a list; AC16: with keepMaps, the key rules and the limits hold unchanged; AC16: without keepMaps, a map is still a PHP array / SPEC-006 | src/Cbor/CborDecoder.php :: __construct() (`keepMaps`), map(), kind(); src/Cbor/CborMap.php |
