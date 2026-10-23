@@ -10949,3 +10949,21 @@ README are where the disclosure lives.
 - Reasoned: placing the class in `Cbor` rather than `Report` (no new
   Deptrac arrow); sorting object keys in AC7's comparison.
 - Decided by Maurice: none beyond step 372's.
+
+## 2026-10-23 — SPEC-075 and ADR-0006 drafted (step 374)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja push en ga door"; then "akkoord" (to the outline of the
+  crJSON document and five choices).
+- Produced: the push of steps 372–373; `specs/SPEC-075-crjson-document.md`
+  (draft); `docs/adr/ADR-0006-json-schema-validator-for-tests.md`
+  (proposed); `notes/step-374-spec075-draft.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: the rubric field counts; per-manifest results, delta
+  placement, manifest order, claims (with the schema) and embedded-file
+  shapes against `c2patool --crjson` on 59 files; Packagist for the two
+  validators.
+- Reasoned: not testing the codes again; the proposals in the open
+  questions.
+- Decided by Maurice: embedded files as `c2pa-rs` writes them;
+  `Verifier::VERSION`; the minimal example's `@context`; `toCrJson()`
+  with the validation time on the report; a dev-only schema validator.
