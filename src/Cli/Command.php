@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Provemark\C2paVerifier\Cli;
 
 use Provemark\C2paVerifier\Report\ValidationState;
+use Provemark\C2paVerifier\Support\Bytes;
 use Provemark\C2paVerifier\Trust\TrustException;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\Verifier;
@@ -32,6 +33,7 @@ final readonly class Command
         ."  Prints the verification report as JSON on standard output.\n"
         ."  --settings <path>  trust settings in c2patool's JSON shape (anchors, EKUs, allowed list)\n"
         ."  --at <time>        judge at this time (RFC 3339) where no trusted timestamp gives one; default now\n"
+        ."  --crjson           print the report as crJSON (C2PA 2.4) instead; a failure crJSON has no place for goes to standard error\n"
         ."  --text             also read plain text (C2PA 2.4 §A.8; experimental upstream, off by default)\n"
         ."  --help             this text\n"
         ."  Exit status: 0 Trusted or Valid, 1 Invalid, 2 no report (usage, unreadable file or settings).\n";
@@ -51,6 +53,7 @@ final readonly class Command
         $file = null;
         $settingsPath = null;
         $at = null;
+        $crJson = false;
         $text = false;
         $optionsEnded = false;
         for ($i = 0, $n = count($arguments); $i < $n; $i++) {
@@ -92,6 +95,14 @@ final readonly class Command
                 if ($at === null) {
                     return $this->usage($stderr, sprintf('--at: %s is not an RFC 3339 date-time (e.g. 2026-10-09T05:31:00Z)', var_export($value, true)));
                 }
+
+                continue;
+            }
+            if (! $optionsEnded && $argument === '--crjson') {
+                if ($crJson) {
+                    return $this->usage($stderr, '--crjson given twice');
+                }
+                $crJson = true;
 
                 continue;
             }
@@ -164,7 +175,7 @@ final readonly class Command
             fclose($stream);
         }
         try {
-            $json = $report->toJson();
+            $json = $crJson ? $report->toCrJson() : $report->toJson();
         } catch (\JsonException $e) {
             // SPEC-019 AC13: no input is known to reach this since SPEC-007 AC15; should one, it is
             // the command's own failure, one line and exit 2, never PHP's fatal error and its trace
@@ -173,6 +184,13 @@ final readonly class Command
             return 2;
         }
         fwrite($stdout, $json."\n");
+        if ($crJson && $report->store === null) {
+            // SPEC-075 AC8: crJSON describes a store; with none, the report's own answer has nowhere to go but here
+            $failure = array_values(array_filter($report->result->statuses, static fn ($s): bool => $s->code->isFailure()))[0] ?? null;
+            fwrite($stderr, $failure === null
+                ? "crJSON: no manifest store in the file\n"
+                : sprintf("crJSON: no manifest store: %s: %s\n", $failure->code->value, Bytes::printable($failure->explanation)));
+        }
 
         return $report->result->state === ValidationState::Invalid ? 1 : 0;
     }

@@ -21,6 +21,7 @@ final readonly class VerificationReport
     /**
      * @param  array{alg: string, issuer: ?string, common_name: string, cert_serial_number: string, time?: string}|null  $signatureInfo  the active manifest's signer as c2patool prints it (SPEC-015), with `time` when the timestamp validated (SPEC-017); null when the chain could not be read
      * @param  string|null  $remoteManifestUrl  a manifest declared by URL in the file's XMP, never fetched (SPEC-013 amendment 9)
+     * @param  \DateTimeImmutable|null  $validationTime  the time judged at where no trusted timestamp gave one: SPEC-073's, or the clock when verify() started (SPEC-075)
      */
     public function __construct(
         public string $format,
@@ -39,6 +40,7 @@ final readonly class VerificationReport
         public ValidationResult $result,
         public ?array $signatureInfo = null,
         public ?string $remoteManifestUrl = null,
+        public ?\DateTimeImmutable $validationTime = null,
     ) {}
 
     /** @return array<string, mixed> */
@@ -66,5 +68,11 @@ final readonly class VerificationReport
     public function toJson(): string
     {
         return json_encode($this->toArray(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    }
+
+    /** The report as crJSON (C2PA 2.4 crJSON; SPEC-075): the same verdict, written for the conformance programme's harness. */
+    public function toCrJson(): string
+    {
+        return json_encode(CrJsonDocument::of($this), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION);
     }
 }

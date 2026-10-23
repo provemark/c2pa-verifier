@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-23                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -227,9 +227,17 @@ three symbols (`VERSION`, `$validationTime`, `toCrJson()`); 0.8.0.
    `c2pa-rs`'s `[{"name": <claim_generator>}]`, which passes the schema
    but writes a value the claim does not hold. The programme supports
    spec versions 2.2 and 2.4, whose claims are v2. Blocking for AC3/AC7.
+   *Status 2026-10-23 (step 375):* settled as proposed: faithful.
 2. **A file without a store.** *Proposal:* `manifests: []`, the failure
    on standard error, the exit status as the report's. *Alternative:* no
    crJSON at all (exit 2), as `c2patool` gives no output. Not blocking.
+   *Status 2026-10-23 (step 375):* settled as proposed: `manifests: []`.
+
+## Amendments
+
+1. **2026-10-23, step 375, decided by Maurice van Loon** *(confirmed by Maurice van Loon, 2026-10-23: "akkoord")* — building AC3 and AC7 against the 59 answers showed more ways in which a faithful claim differs from `c2pa-rs`'s and from the v1 schema than the draft named. Nothing in the output changed; the comparisons name what they measured.
+   - AC3, against `c2patool`, the named ways become five: (a) `c2pa-rs` writes the claim's `signature` URI absolute, in v1 and in v2 (one v2 claim here holds it relative); (b) it writes v1's `assertions` URIs absolute and leaves v2's `created_assertions` and `gathered_assertions` as they are; (c) where the claim's `claim_generator_info` is absent, `null` or empty, it makes one up from `claim_generator`; (d) it writes `redacted_assertions: []` for v2 claims only, where §3.5.1 asks it of every claim, as this verifier does; (e) it leaves out v1 fields the v1 schema does not name (`claim_generator_hints`). Each is a normalisation of the comparison, and the test names it.
+   - AC7 accepts **every** schema error inside a v1 `claim`, not only a missing `claim_generator_info`: open question 1 settled on writing v1 claims as their CBOR holds them, and C2PA 1.x claims break the v1 schema in four measured ways (49 without `claim_generator_info`, 2 with it `null`, 1 with it empty, 1 with `metadata` an array, which `c2patool`'s own crJSON has too). v2 claims stay under the whole schema.
 
 ## Traceability
 
@@ -238,12 +246,26 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
+| AC1 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC1: the root holds @context, jsonGenerator and manifests, nothing else / SPEC-075 | src/Verifier/CrJsonDocument.php :: of(), CONTEXT; src/Verifier/Verifier.php :: VERSION |
+| AC2 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC2: every manifest, in reverse store order, with exactly its fields / SPEC-075 | src/Verifier/CrJsonDocument.php :: of() |
+| AC3 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC3: the claim is faithful; against c2patool equal for v2, and for v1 but for five named ways; AC3: a v2 claim without gathered or redacted assertions writes them as empty lists / SPEC-075 | src/Verifier/CrJsonDocument.php :: claim() |
+| AC4 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC4: one key per assertion in store order; embedded files as c2patool writes them / SPEC-075 | src/Verifier/CrJsonDocument.php :: assertions(), assertion() |
+| AC5 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC5: the results, per manifest; deltas on the manifest that holds the ingredient; AC5: an ingredient manifest holds the delta that names it, and empty lists where none does / SPEC-075 | src/Verifier/CrJsonDocument.php :: of(), ownResults() |
+| AC6 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC6: every manifest carries the validation time the report judged at / SPEC-075 | src/Verifier/Verifier.php :: verify(), inspect(); src/Verifier/VerificationReport.php :: $validationTime |
+| AC7 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC7: the validator first reproduces step 370 on c2patool's own answers; AC7: every crJSON written is schema-valid outside the signature and the accepted v1 claims / SPEC-075 | tests/Fixtures/crjson/crJSON.schema.json and README (ADR-0006); composer.json `require-dev` opis/json-schema |
+| AC8 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC8: without a store, manifests is empty and the root is otherwise as AC1 (3 datasets); AC8: on the command line, the report's failure goes to standard error and the exit is the report's / SPEC-075 | src/Verifier/CrJsonDocument.php :: of(); src/Cli/Command.php :: run() |
+| AC9 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC9: --crjson prints toCrJson() of the same call, with --settings and --at / SPEC-075 | src/Cli/Command.php :: run() (`--crjson`); src/Verifier/VerificationReport.php :: toCrJson() |
+
+`Verifier::VERSION` is `0.8.0-dev`, not `0.8.0` as the API sketch had it:
+SemVer allows a pre-release, and the release commit sets the final
+number. `CrJsonDocument` lives in `src/Verifier/`, as the sketch's
+corrected line says.
+
+The tests were run red first: 14 of 15 failed on the missing method; the
+fifteenth checks the validator itself against step 370 and was green, as
+it should be. Four mutations were watched failing: every delta on the
+active manifest (AC5), store order not reversed (AC2, AC5), the clock in
+place of the report's time (AC6), the embedded hash left out (AC4). The
+ordinary report over the corpus, before and after: 0 of 1,842 runs
+moved. The contract grew by three symbols, to 139. `composer check`:
+1,182 passed, 1 skipped.

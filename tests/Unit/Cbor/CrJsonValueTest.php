@@ -7,7 +7,6 @@ use Provemark\C2paVerifier\Cbor\CrJsonValue;
 use Provemark\C2paVerifier\Cbor\CrJsonValueException;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\Assertion;
-use Provemark\C2paVerifier\Manifest\ManifestStore;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
 use Provemark\C2paVerifier\Verifier\Verifier;
 
@@ -24,22 +23,6 @@ function spec074Decode(string $bytes): mixed
     return (new CborDecoder(keepMaps: true))->decode($bytes);
 }
 
-/** The manifest store of a fixture, or a failure naming it. */
-function spec074Store(string $relative): ManifestStore
-{
-    $stream = fopen(Corpus::fixtures().'/'.$relative, 'rb');
-    if ($stream === false) {
-        throw new RuntimeException("cannot open {$relative}");
-    }
-    $store = (new Verifier)->verify($stream)->store;
-    fclose($stream);
-    if ($store === null) {
-        throw new RuntimeException("{$relative}: no manifest store");
-    }
-
-    return $store;
-}
-
 /** An assertion's own CBOR, decoded again with keepMaps: its one `cbor` content box. */
 function spec074AssertionValue(Assertion $assertion): mixed
 {
@@ -53,55 +36,6 @@ function spec074AssertionValue(Assertion $assertion): mixed
 function spec074Json(string $hex): string
 {
     return json_encode(CrJsonValue::of(spec074Decode((string) hex2bin($hex))), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
-}
-
-/**
- * Both sides of AC7 brought to one form: a `b64'…'` string and an array of
- * integers 0–255 as the bytes they hold, floats at single precision, and an
- * object's keys sorted, since JSON objects are unordered (RFC 8259 §4).
- */
-function spec074Canon(mixed $value): mixed
-{
-    if (is_float($value)) {
-        $single = unpack('g', pack('g', $value));
-
-        return is_array($single) ? $single[1] : $value;
-    }
-    if (is_string($value) && preg_match("/^b64'([A-Za-z0-9+\\/=]*)'$/D", $value, $m) === 1) {
-        return ['bytes' => bin2hex((string) base64_decode($m[1], true))];
-    }
-    if (is_array($value) && $value !== [] && array_is_list($value)
-        && array_filter($value, static fn (mixed $i): bool => is_int($i) && $i >= 0 && $i <= 255) === $value) {
-        return ['bytes' => bin2hex(pack('C*', ...$value))];
-    }
-    if (is_array($value)) {
-        $value = array_map(spec074Canon(...), $value);
-        if (! array_is_list($value)) {
-            ksort($value, SORT_STRING);
-        }
-
-        return $value;
-    }
-
-    return $value;
-}
-
-/** c2pa-rs adds `"pad": "b64''"` beside a hash the CBOR holds without one; drop it where ours has none. */
-function spec074DropAddedPad(mixed $theirs, mixed $ours): mixed
-{
-    if (! is_array($theirs) || ! is_array($ours)) {
-        return $theirs;
-    }
-    if (! array_is_list($theirs) && ($theirs['pad'] ?? null) === "b64''" && ! array_key_exists('pad', $ours)) {
-        unset($theirs['pad']);
-    }
-    foreach ($theirs as $key => $child) {
-        if (array_key_exists($key, $ours)) {
-            $theirs[$key] = spec074DropAddedPad($child, $ours[$key]);
-        }
-    }
-
-    return $theirs;
 }
 
 // AC1

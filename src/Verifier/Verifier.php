@@ -72,6 +72,9 @@ final readonly class Verifier
 {
     public const STORE_URL = 'self#jumbf=/c2pa';
 
+    /** This package's version, SemVer 2.0, for crJSON's jsonGenerator (SPEC-075); the release commit sets it. */
+    public const string VERSION = '0.8.0-dev';
+
     public function __construct(
         private FormatDetector $formats = new FormatDetector,
         private JpegManifestStoreExtractor $jpeg = new JpegManifestStoreExtractor,
@@ -109,6 +112,20 @@ final readonly class Verifier
      * @param  \DateTimeInterface|null  $validationTime  the time to judge at where no trusted timestamp gives one; null is now (SPEC-073)
      */
     public function verify($stream, ?TrustSettings $settings = null, ?\DateTimeInterface $validationTime = null): VerificationReport
+    {
+        // SPEC-075: the report keeps the time it judged at, the given one or the clock read now
+        $judgedAt = new \DateTimeImmutable('@'.($validationTime?->getTimestamp() ?? time()));
+        $report = $this->inspect($stream, $settings, $validationTime);
+
+        return new VerificationReport($report->format, $report->hasManifest, $report->store, $report->result, $report->signatureInfo, $report->remoteManifestUrl, $judgedAt);
+    }
+
+    /**
+     * verify() without the time it judged at.
+     *
+     * @param  resource  $stream
+     */
+    private function inspect(mixed $stream, ?TrustSettings $settings, ?\DateTimeInterface $validationTime): VerificationReport
     {
         $now = $validationTime?->getTimestamp();   // SPEC-073: whole seconds, a fraction rounded down
 

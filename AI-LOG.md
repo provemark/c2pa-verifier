@@ -10967,3 +10967,24 @@ README are where the disclosure lives.
 - Decided by Maurice: embedded files as `c2pa-rs` writes them;
   `Verifier::VERSION`; the minimal example's `@context`; `toCrJson()`
   with the validation time on the report; a dev-only schema validator.
+
+## 2026-10-23 — SPEC-075 built: the crJSON document (step 375)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja akkoord" (SPEC-075, ADR-0006 and both open questions);
+  "akkoord" (amendment 1).
+- Produced: `src/Verifier/CrJsonDocument.php`; `toCrJson()` and
+  `$validationTime` in `src/Verifier/VerificationReport.php`; `VERSION`
+  and the time-keeping `verify()` in `src/Verifier/Verifier.php`;
+  `--crjson` in `src/Cli/Command.php`; `opis/json-schema` in
+  `require-dev`; `tests/Fixtures/crjson/` (schema and README);
+  `tests/Unit/Verifier/CrJsonDocumentTest.php`; helpers moved to
+  `tests/Shared.php`; the surface fixture and count (139); SPEC-075
+  implemented with amendment 1; ADR-0006 accepted;
+  `notes/step-375-crjson-document.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: the validator against step 370's findings; the tests red
+  (14 of 15) and green; four mutations; the corpus before and after (0 of
+  1,842); `composer check` (1,182 passed).
+- Reasoned: `0.8.0-dev` as the version until the release commit.
+- Decided by Maurice: SPEC-075 and ADR-0006 approved; faithful v1
+  claims; `manifests: []` without a store; amendment 1.

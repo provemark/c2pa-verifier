@@ -124,6 +124,7 @@ Verifier\FragmentedVerifier :: method merkleMapOf
 Verifier\FragmentedVerifier :: method verify
 Verifier\VerificationReport :: method __construct
 Verifier\VerificationReport :: method toArray
+Verifier\VerificationReport :: method toCrJson
 Verifier\VerificationReport :: method toJson
 Verifier\VerificationReport :: property format
 Verifier\VerificationReport :: property hasManifest
@@ -131,6 +132,8 @@ Verifier\VerificationReport :: property remoteManifestUrl
 Verifier\VerificationReport :: property result
 Verifier\VerificationReport :: property signatureInfo
 Verifier\VerificationReport :: property store
+Verifier\VerificationReport :: property validationTime
 Verifier\Verifier :: const STORE_URL
+Verifier\Verifier :: const VERSION
 Verifier\Verifier :: method __construct
 Verifier\Verifier :: method verify

@@ -26,6 +26,7 @@
         "ext-phar": "*",
         "deptrac/deptrac": "^4.7",
         "laravel/pint": "^1.32",
+        "opis/json-schema": "^2.6",
         "pestphp/pest": "^4.0",
         "phpstan/phpstan": "^2.2",
         "provemark/content-credentials": "^0.15"
