@@ -10834,3 +10834,21 @@ README are where the disclosure lives.
 - Reasoned: that the programme's test inputs are the test set and are not
   public; which parts of `src/` serve which harness input.
 - Decided by Maurice: the plan's first step; nothing beyond it yet.
+
+## 2026-10-23 — SPEC-073 drafted: a validation time (step 368)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja, leg stap 2 uit; push samen met de volgende"; then
+  "akkoord, schrijf SPEC-073 als draft".
+- Produced: `specs/SPEC-073-validation-time.md` (draft);
+  `notes/step-368-spec073-draft.md`; a row in `NOTES.md`; the plan's row
+  in `docs/milestones.md`.
+- Measured: the C2PA 2.4 HTML searched for "current time"; `bin/c2pa-verify`
+  on `expired-signer-no-timestamp.png`, `expired-signer-trusted-tsa.png`,
+  `c2pa-rs/ocsp.jpg`, `validity/expired.png`, `revocation/ca-revoked.png`;
+  `c2patool` 0.28.2 `--help`; the `c2pa-rs` 0.91.1 settings source;
+  `php bin/spec-check.php`.
+- Reasoned: rounding fractions down; an optional parameter as a minor
+  release.
+- Decided by Maurice: the draft's four choices (a `?DateTimeInterface`
+  parameter, fractions rounded down, no report field yet, SPEC-073); push
+  steps 367 and 368 together.
