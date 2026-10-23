@@ -150,6 +150,35 @@ final readonly class TrustSettings
     }
 
     /**
+     * The conformance programme's two lists as they are published, PEM bundles (SPEC-077): the
+     * signer list as one "manifest" entry, the TSA list as one "tsa" entry (SPEC-031), so that an
+     * anchor of one list never vouches for the other's kind (C2PA 2.4 §14.4.1, §14.4.2). Either
+     * may be left out; a list given without a certificate is refused, since it would make every
+     * signer untrusted without a word.
+     *
+     * @throws TrustException
+     */
+    public static function fromTrustLists(?string $signers, ?string $tsas = null, int $maxCertificates = self::DEFAULT_MAX_CERTIFICATES): self
+    {
+        if ($signers === null && $tsas === null) {
+            throw new TrustException('no list given: a signer trust list, a TSA trust list, or both');
+        }
+        $sets = [];
+        foreach ([[TrustAnchorSet::MANIFEST, $signers, 'the trust list'], [TrustAnchorSet::TSA, $tsas, 'the TSA trust list']] as [$kind, $pem, $what]) {
+            if ($pem === null) {
+                continue;
+            }
+            $certificates = str_contains($pem, '-----BEGIN ') ? self::certificatesFromPem($pem, $what, $maxCertificates) : [];
+            if ($certificates === []) {
+                throw new TrustException(sprintf('%s holds no certificate', $what));
+            }
+            $sets[] = new TrustAnchorSet($kind, $certificates);
+        }
+
+        return new self([], [], [], true, $sets);
+    }
+
+    /**
      * Every `CERTIFICATE` block of a PEM string as a Certificate, in order.
      * A block of any other kind (a key, a request) is refused without
      * echoing its contents; a block OpenSSL refuses names its position.

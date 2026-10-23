@@ -115,6 +115,7 @@ Trust\TrustSettings :: method certificatesFromPem
 Trust\TrustSettings :: method ekusFromConfig
 Trust\TrustSettings :: method fromArray
 Trust\TrustSettings :: method fromJson
+Trust\TrustSettings :: method fromTrustLists
 Trust\TrustSettings :: property allowedList
 Trust\TrustSettings :: property anchorSets
 Trust\TrustSettings :: property trustAnchors

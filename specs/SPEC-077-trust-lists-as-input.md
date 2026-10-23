@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-23                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -146,6 +146,7 @@ public static function fromTrustLists(string $signers, ?string $tsas = null, int
   options on the existing command; exclusive with `--settings`; an empty
   list refused; one list alone allowed; byte-equality with `--settings`
   as the test.
+  *Status 2026-10-23 (step 379):* settled; approved without changes.
 
 ## Traceability
 
@@ -154,8 +155,23 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
+| AC1 | tests/Unit/Cli/TrustListsTest.php :: AC1: the lists are the two entries, byte for byte as --settings built from the same files (3 datasets) / SPEC-077 | src/Trust/TrustSettings.php :: fromTrustLists(); src/Cli/Command.php :: run() (`--trust-list`, `--tsa-trust-list`); tests/Fixtures/trust/conformance-public/ |
+| AC2 | tests/Unit/Cli/TrustListsTest.php :: AC2: the lists stay apart: control.png in place, then swapped / SPEC-077 | src/Trust/TrustSettings.php :: fromTrustLists() (one entry per kind) |
+| AC3 | tests/Unit/Cli/TrustListsTest.php :: AC3: one list alone anchors its own kind and nothing else / SPEC-077 | src/Trust/TrustSettings.php :: fromTrustLists() |
+| AC4 | tests/Unit/Cli/TrustListsTest.php :: AC4: the harness call is toCrJson() of verify() with the lists and the time / SPEC-077 | src/Cli/Command.php :: run(); docs/conformance-harness.md |
+| AC5 | tests/Unit/Cli/TrustListsTest.php :: AC5: what the command line refuses, with exit 2 and no report (8 datasets); AC5: the library refuses a list without a certificate, and one that is not a certificate / SPEC-077 | src/Cli/Command.php :: run(), usage(); src/Trust/TrustSettings.php :: fromTrustLists() |
+
+`fromTrustLists()` takes `?string $signers`, not `string` as the API
+sketch had it: AC3 needs the TSA list alone, and the call refuses two
+nulls. AC1 compares the crJSON with each `validationTime` removed, since
+the two runs read the clock a moment apart.
+
+The tests were run red first: 7 of 15 failed; the eight command-line
+refusals passed only because the options were unknown (exit 2 already),
+so each was made to require its own message, and then 15 of 15 failed.
+Four mutations were watched failing: the two kinds swapped (AC2, AC3,
+AC4); both lists as signer anchors (AC2, AC3, AC4); an empty list
+accepted (AC5); `--settings` with a list let through (AC5). The swapped
+kinds leave AC1 green, as measured before the spec: the official lists
+share 16 anchors. The contract grew by one symbol, to 140. `composer
+check`: 1,209 passed, 1 skipped.

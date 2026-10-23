@@ -11036,3 +11036,17 @@ README are where the disclosure lives.
 - Decided by Maurice: options on the existing command; exclusive with
   `--settings`; an empty list refused; one list alone allowed;
   byte-equality with `--settings` as the test.
+
+## 2026-10-23 — SPEC-077 built: the two trust lists as input (step 379)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "Ja, akkoord".
+- Produced: `fromTrustLists()` in `src/Trust/TrustSettings.php`; the two
+  options in `src/Cli/Command.php`; `tests/Unit/Cli/TrustListsTest.php`;
+  `tests/Fixtures/trust/conformance-public/` (two lists, README);
+  `docs/conformance-harness.md`; the surface fixture and count (140);
+  SPEC-077 implemented; `notes/step-379-trust-lists.md`; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: red (7, then 15 of 15) and green; four mutations;
+  `composer check` (1,209 passed).
+- Reasoned: no corpus run, since the default path did not change.
+- Decided by Maurice: SPEC-077 approved.

@@ -32,6 +32,8 @@ final readonly class Command
     public const string USAGE = "Usage: c2pa-verify [--settings <path>] [--text] [--] <file>\n"
         ."  Prints the verification report as JSON on standard output.\n"
         ."  --settings <path>  trust settings in c2patool's JSON shape (anchors, EKUs, allowed list)\n"
+        ."  --trust-list <pem>      the signers' trust anchors, PEM (the C2PA Trust List); not with --settings\n"
+        ."  --tsa-trust-list <pem>  the time-stamp authorities' trust anchors, PEM (the C2PA TSA Trust List); not with --settings\n"
         ."  --at <time>        judge at this time (RFC 3339) where no trusted timestamp gives one; default now\n"
         ."  --crjson           print the report as crJSON (C2PA 2.4) instead; a failure crJSON has no place for goes to standard error\n"
         ."  --text             also read plain text (C2PA 2.4 §A.8; experimental upstream, off by default)\n"
@@ -53,6 +55,7 @@ final readonly class Command
         $file = null;
         $settingsPath = null;
         $at = null;
+        $lists = ['--trust-list' => null, '--tsa-trust-list' => null];
         $crJson = false;
         $text = false;
         $optionsEnded = false;
@@ -98,6 +101,19 @@ final readonly class Command
 
                 continue;
             }
+            $listOption = $optionsEnded ? null : (array_key_exists($argument, $lists) ? $argument : (str_starts_with($argument, '--trust-list=') ? '--trust-list' : (str_starts_with($argument, '--tsa-trust-list=') ? '--tsa-trust-list' : null)));
+            if ($listOption !== null) {
+                // SPEC-077: the conformance programme's lists, as published
+                if ($lists[$listOption] !== null) {
+                    return $this->usage($stderr, "{$listOption} given twice");
+                }
+                if ($argument === $listOption && $i + 1 >= $n) {
+                    return $this->usage($stderr, "{$listOption} needs a path");
+                }
+                $lists[$listOption] = $argument === $listOption ? $arguments[++$i] : substr($argument, strlen($listOption) + 1);
+
+                continue;
+            }
             if (! $optionsEnded && $argument === '--crjson') {
                 if ($crJson) {
                     return $this->usage($stderr, '--crjson given twice');
@@ -136,8 +152,38 @@ final readonly class Command
             $verifier = $this->textVerifier;
         }
 
+        if ($settingsPath !== null && ($lists['--trust-list'] !== null || $lists['--tsa-trust-list'] !== null)) {
+            return $this->usage($stderr, '--settings and --trust-list/--tsa-trust-list exclude each other: one source of trust');
+        }
+
         // 2. the settings, before the file: the caller asked for trust and gets it or a refusal
         $settings = null;
+        if ($lists['--trust-list'] !== null || $lists['--tsa-trust-list'] !== null) {
+            $pems = [];
+            foreach ($lists as $option => $path) {
+                if ($path === null) {
+                    $pems[$option] = null;
+
+                    continue;
+                }
+                $pem = $this->read($path);
+                if (is_array($pem)) {
+                    return $this->usage($stderr, sprintf('cannot read %s %s: %s', $option, $path, $pem['reason']));
+                }
+                $pems[$option] = $pem;
+            }
+            foreach ($pems as $option => $pem) {
+                if ($pem === null) {
+                    continue;
+                }
+                try {
+                    TrustSettings::fromTrustLists($option === '--trust-list' ? $pem : null, $option === '--tsa-trust-list' ? $pem : null);
+                } catch (TrustException $e) {
+                    return $this->usage($stderr, sprintf('%s %s: %s', $option, (string) $lists[$option], $e->getMessage()));
+                }
+            }
+            $settings = TrustSettings::fromTrustLists($pems['--trust-list'], $pems['--tsa-trust-list']);
+        }
         if ($settingsPath !== null) {
             $json = $this->read($settingsPath);
             if (is_array($json)) {
