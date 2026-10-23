@@ -51,12 +51,21 @@ final readonly class Manifest
         /** A c2um box: it adds assertions without touching the content, and its rules differ (SPEC-022, C2PA 2.4 §11.2.3). */
         public bool $isUpdateManifest = false,
         /**
-         * The absolute URIs of this manifest's assertions that a claim in the store declares redacted
-         * (SPEC-035; C2PA 2.4 §6.8). A reference among them may name a box that is gone.
+         * The absolute URIs of this manifest's assertions that a claim in the store redacts with effect:
+         * declared by a manifest above this one in the ingredient graph (SPEC-035; amendment 6; C2PA 2.4
+         * §6.8). A reference among them may name a box that is gone.
          *
          * @var list<string>
          */
         public array $redacted = [],
+        /**
+         * Every absolute URI of this manifest's assertions that a reached claim declares redacted, in
+         * effect or not: what is checked for a box still holding content (`assertion.notRedacted`, as
+         * c2pa-rs reports it; SPEC-035 AC5).
+         *
+         * @var list<string>
+         */
+        public array $declared = [],
     ) {}
 
     /** One manifest on its own: the redactions its own claim declares are the only ones it knows. */
@@ -91,18 +100,37 @@ final readonly class Manifest
     }
 
     /**
-     * This manifest with the store's redactions that name it, its references checked against them.
+     * This manifest with the store's redactions that name it, its references checked against those in
+     * effect.
      *
-     * @param  list<string>  $redactions  every absolute entry in the store (redactionsOf())
+     * @param  list<string>  $redactions  the entries in effect (SPEC-035 amendment 6)
+     * @param  list<string>|null  $declared  every entry a reached claim declares; null: the same as $redactions
      */
-    public function withRedactions(array $redactions): self
+    public function withRedactions(array $redactions, ?array $declared = null): self
     {
         $prefix = sprintf('%s/c2pa/%s/', self::URI_PREFIX, $this->label);
-        $mine = array_values(array_filter($redactions, static fn (string $uri): bool => str_starts_with($uri, $prefix)));
-        $manifest = new self($this->label, $this->claim, $this->assertions, $this->box, $this->assertionStore, $this->claimBox, $this->signatureBox, $this->isUpdateManifest, $mine);
+        $manifest = new self($this->label, $this->claim, $this->assertions, $this->box, $this->assertionStore, $this->claimBox, $this->signatureBox, $this->isUpdateManifest, self::naming($redactions, $prefix), self::naming($declared ?? $redactions, $prefix));
         $manifest->checkReferences();
 
         return $manifest;
+    }
+
+    /**
+     * The entries that name an assertion of the manifest with this prefix.
+     *
+     * @param  list<string>  $uris
+     * @return list<string>
+     */
+    private static function naming(array $uris, string $prefix): array
+    {
+        $mine = [];
+        foreach ($uris as $uri) {
+            if (str_starts_with($uri, $prefix)) {
+                $mine[] = $uri;
+            }
+        }
+
+        return $mine;
     }
 
     /** A URI of this manifest in its absolute form: a relative one is read against this manifest (§14.2). */

@@ -378,6 +378,11 @@ Questions 2, 3 and 4 were settled by adopting their proposals.
 
    Confirmed by Maurice van Loon, 2026-09-27 (step 158).
 
+6. **2026-10-23, step 390, found by the review of 2026-10-23; the rule approved by Maurice van Loon ("akkoord").** Amendment 5 counts the redactions of every manifest the graph reaches, and `withRedactions()` applies each to whichever manifest its URI names, the active one included. C2PA 2.4 §6.8 makes a redaction something a manifest does to an ingredient it takes; nothing lets a manifest redact the one that takes it, or one beside it. So an ingredient B of the active manifest A could declare one of A's assertions redacted, and `HashedUriCheck` would skip that assertion's missing box. Reasoned from the code: to use it, B must carry the redaction when A takes it (A's hash of B covers B's claim, and since SPEC-070 amendment 3 B can no longer acknowledge its own mismatch), so B's author must know A's label beforehand. Fixed anyway, by the same ancestor rule as SPEC-070 amendment 3.
+   - **The rule.** A redaction declared by manifest R applies to an assertion of manifest T only when R is a proper ancestor of T in the ingredient graph. The active manifest's assertions are never redactable; a redaction of R's own assertions is already AC4's self-redaction. When the graph cannot be built, no redaction applies (the graph's error is reported; a missing box is then `assertion.missing`).
+   - **AC10 — a redaction reaches only below the manifest that declares it** *(required: error path)*: with A taking B and B taking C, a redaction by A of a B or C assertion applies; one by B of a C assertion applies; one by B of an A assertion, by C of a B assertion, or by any manifest of an A assertion does not. Tested on the function that scopes the redactions, over a graph built by `ManifestGraph::fromIngredients()`.
+   - **AC11 — nothing else moves**: the redaction fixtures (`tests/Fixtures/redactions/`, `redaction-scope/`) and every corpus file, before and after.
+
 ## Traceability
 
 Filled when status becomes `implemented`.
@@ -393,3 +398,19 @@ Filled when status becomes `implemented`.
 | AC7 | tests/Unit/Manifest/RedactionTest.php :: AC7: nothing else moves / SPEC-035; the drift alarms (SPEC-013 AC10–AC13); the before/after run of step 129b | — |
 | AC8 | tests/Unit/Manifest/RedactionTest.php :: AC8: the vocabulary grows by six codes, verbatim / SPEC-035 | src/Report/StatusCode.php (six cases; isInformational()); tests/Fixtures/api/public-surface.txt |
 | AC9 | tests/Unit/Manifest/RedactionTest.php :: AC9: only a manifest the graph reaches may redact (amendment 5) / SPEC-035 | src/Manifest/ManifestStore.php :: fromTree(), redacting() |
+| AC10 (amendment 6) | tests/Unit/Manifest/RedactionScopeTest.php :: AC10: a redaction reaches only below the manifest that declares it (7 datasets); AC10: a redaction whose URI names no manifest, or a cycle back to the declaring one, applies to nothing / SPEC-035 | src/Manifest/ManifestStore.php :: redacting(), scopedRedactions(); src/Manifest/ManifestGraph.php :: below(); src/Manifest/Manifest.php :: withRedactions(), $declared; src/Hash/HashedUriCheck.php :: notRedacted() |
+| AC11 (amendment 6) | the corpus before and after (notes/step-390-redaction-scope.md); tests/Unit/Manifest/RedactionTest.php, tests/Unit/Hash/HardBindingRedactedTest.php unchanged and green | — |
+
+Amendment 6 (step 390): the new tests were run red first (the scoping
+function did not exist). The first build applied the scope to every use
+of a redaction and lost `assertion.notRedacted` where the active manifest
+declares one of its own assertions redacted that is still present:
+`RedactionTest` AC3–AC5 and `HardBindingRedactedTest` AC2, which compare
+with `c2patool`, failed. A manifest now keeps two lists: the redactions in
+effect (`$redacted`, which may excuse a missing box) and every one a
+reached claim declares (`$declared`, checked for content still there).
+Mutations, each failing: redactions applied wherever their URI points (5
+tests); a manifest below itself in a cycle (3). The corpus before and
+after: 0 of 1,854 runs moved. `Manifest::fromBox()`, used only by
+`bin/make-spec035-variants.php`, still applies a lone manifest's own
+redactions to itself; it is not on the verification path.

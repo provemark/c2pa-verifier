@@ -11213,3 +11213,21 @@ README are where the disclosure lives.
 - Reasoned: the ancestor rule from §18.16.12.4.
 - Decided by Maurice: the order of the fixes; quiet handling (local
   commits until a release); amendment 3's text.
+
+## 2026-10-23 — SPEC-035 amendment 6: redaction scope (step 390)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord" (to fixing the fourth review finding with the
+  ancestor rule).
+- Produced: SPEC-035 amendment 6 and its Traceability;
+  `ManifestGraph::below()`; `ManifestStore::redacting()`,
+  `scopedRedactions()`; `Manifest::$declared`, `withRedactions()`,
+  `naming()`; `HashedUriCheck::notRedacted()` on `$declared`;
+  `IngredientManifestCheck` using `below()`;
+  `tests/Unit/Manifest/RedactionScopeTest.php`;
+  `notes/step-390-redaction-scope.md`; a row in `NOTES.md`.
+- Measured: the tests red and green; four existing tests failing on the
+  first build (the lost `assertion.notRedacted`), green after; two
+  mutations; the corpus before and after (0 of 1,854); `composer check`
+  (1,258 passed).
+- Reasoned: how hard the finding is to use after step 389.
+- Decided by Maurice: fix it with the ancestor rule.

@@ -265,38 +265,13 @@ final readonly class IngredientManifestCheck
             $below = null;
             foreach ($graph->ingredients[$label] ?? [] as $ingredient) {
                 foreach (self::recorded($ingredient) as $key) {
-                    $below ??= self::below($graph, $label);
+                    $below ??= $graph->below($label);
                     $records[$key."\n".$label] = ['key' => $key, 'below' => $below];
                 }
             }
         }
 
         return array_values($records);
-    }
-
-    /**
-     * The manifests reachable from $label through ingredient references, $label itself left out
-     * even where a cycle leads back to it (amendment 3).
-     *
-     * @return list<string>
-     */
-    private static function below(ManifestGraph $graph, string $label): array
-    {
-        $seen = [];
-        $queue = [$label];
-        while ($queue !== []) {
-            $current = array_pop($queue);
-            foreach ($graph->ingredients[$current] ?? [] as $ingredient) {
-                $named = $ingredient->manifestLabel();
-                if ($named !== null && ! isset($seen[$named])) {
-                    $seen[$named] = true;
-                    $queue[] = $named;
-                }
-            }
-        }
-        unset($seen[$label]);
-
-        return array_map('strval', array_keys($seen));
     }
 
     /**

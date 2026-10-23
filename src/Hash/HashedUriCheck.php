@@ -83,7 +83,7 @@ final readonly class HashedUriCheck
     private function notRedacted(Manifest $manifest): array
     {
         $statuses = [];
-        foreach ($manifest->redacted as $uri) {
+        foreach ($manifest->declared as $uri) {   // declared, in effect or not (SPEC-035 amendment 6)
             if (! $this->resolves($manifest, $uri)) {
                 continue;   // removed: a valid form of redaction
             }

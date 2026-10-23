@@ -212,6 +212,32 @@ final readonly class ManifestGraph
         return $labels;
     }
 
+    /**
+     * The manifests reachable from $label through ingredient references, $label itself left out even
+     * where a cycle leads back to it: what a manifest may speak for (SPEC-070 amendment 3) and redact
+     * (SPEC-035 amendment 6).
+     *
+     * @return list<string>
+     */
+    public function below(string $label): array
+    {
+        $seen = [];
+        $queue = [$label];
+        while ($queue !== []) {
+            $current = array_pop($queue);
+            foreach ($this->ingredients[$current] ?? [] as $ingredient) {
+                $named = $ingredient->manifestLabel();
+                if ($named !== null && ! isset($seen[$named])) {
+                    $seen[$named] = true;
+                    $queue[] = $named;
+                }
+            }
+        }
+        unset($seen[$label]);
+
+        return array_map('strval', array_keys($seen));
+    }
+
     /** @return list<string> every claim's redacted_assertions, in store order */
     private static function redactions(ManifestStore $store): array
     {

@@ -50,7 +50,7 @@ final readonly class ManifestStore
                 }
             }
         }
-        $redactions = Manifest::redactionsOf(self::redacting(array_values(array_filter($read, static fn (Manifest|ManifestException|CborException $m): bool => $m instanceof Manifest))));
+        [$redactions, $declared] = self::redacting(array_values(array_filter($read, static fn (Manifest|ManifestException|CborException $m): bool => $m instanceof Manifest)));
         $manifests = [];
         foreach ($read as $manifest) {
             if (! $manifest instanceof Manifest) {
@@ -61,7 +61,7 @@ final readonly class ManifestStore
             if (isset($manifests[$manifest->label])) {
                 throw new ManifestException(sprintf('the store holds two manifests labelled %s; a label identifies one manifest (C2PA 2.4 §8.1)', $manifest->label), StatusCode::ClaimMalformed);
             }
-            $manifest = $manifest->withRedactions($redactions);
+            $manifest = $manifest->withRedactions($redactions, $declared);
             $manifests[$manifest->label] = $manifest;
         }
         if ($manifests === []) {
@@ -72,15 +72,16 @@ final readonly class ManifestStore
     }
 
     /**
-     * The manifests whose redactions count: the active one and those the ingredient graph reaches
-     * from it (SPEC-035 amendment 5), as c2pa-rs gathers them while it walks the claims it
-     * validates. A manifest nothing references is never validated, so what it declares redacted
-     * excuses nothing (C2PA 2.4 §6.8: a redaction is made by a manifest that takes the redacted one
-     * as an ingredient). When the graph cannot be built, only the active manifest counts; the
+     * The redactions that count: those declared by the active manifest and the manifests the
+     * ingredient graph reaches from it (SPEC-035 amendment 5), each only where it names an
+     * assertion of a manifest below the one declaring it (amendment 6; C2PA 2.4 §6.8: a manifest
+     * redacts in the ingredients it takes). A manifest nothing references is never validated, so
+     * what it declares excuses nothing. When the graph cannot be built, no redaction counts; the
      * verifier reports the graph's own error.
      *
      * @param  list<Manifest>  $read  in store order, references not yet checked
-     * @return list<Manifest>
+     * @return array{0: list<string>, 1: list<string>} the redactions in effect, and every one the reached
+     *                                                 claims declare (for `assertion.notRedacted`)
      */
     private static function redacting(array $read): array
     {
@@ -89,17 +90,44 @@ final readonly class ManifestStore
             $byLabel[$manifest->label] = $manifest;
         }
         if ($byLabel === []) {
-            return [];
+            return [[], []];
         }
         $active = $byLabel[array_key_last($byLabel)];
         try {
             $graph = ManifestGraph::fromStore(new self($byLabel, $active));
-            $reached = [$active->label, ...array_map('strval', array_keys($graph->referenced))];
         } catch (ManifestException) {
-            $reached = [$active->label];
+            return [[], Manifest::redactionsOf([$active])];
+        }
+        $declared = [];
+        foreach ([$active->label, ...array_map('strval', array_keys($graph->referenced))] as $label) {
+            if (isset($byLabel[$label])) {
+                $declared[$label] = Manifest::redactionsOf([$byLabel[$label]]);
+            }
         }
 
-        return array_values(array_filter($read, static fn (Manifest $m): bool => in_array($m->label, $reached, true)));
+        return [self::scopedRedactions($graph, $declared), array_values(array_unique(array_merge([], ...array_values($declared))))];
+    }
+
+    /**
+     * Of each manifest's declared redactions, those that name an assertion of a manifest below it in
+     * the graph (SPEC-035 amendment 6). A URI that names no manifest applies to nothing.
+     *
+     * @param  array<string, list<string>>  $declared  by the declaring manifest's label
+     * @return list<string>
+     */
+    public static function scopedRedactions(ManifestGraph $graph, array $declared): array
+    {
+        $applies = [];
+        foreach ($declared as $by => $uris) {
+            $below = $graph->below((string) $by);
+            foreach ($uris as $uri) {
+                if (preg_match('#^self\#jumbf=/c2pa/([^/]+)/#', $uri, $m) === 1 && in_array($m[1], $below, true)) {
+                    $applies[] = $uri;
+                }
+            }
+        }
+
+        return array_values(array_unique($applies));
     }
 
     /**
