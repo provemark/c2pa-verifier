@@ -213,7 +213,7 @@ public contract does not change.
 
 1. **2026-10-23, step 372, decided by Maurice van Loon ("kies 1")** *(confirmed by Maurice van Loon, 2026-10-23: "ja akkoord")* — the input is decoded with `keepMaps: true`. Building AC2 showed that the decoder returns an empty map and an empty array alike (`[]`), and a map keyed 0, 1, 2… as a list, so this mapping could not write `{}` for an empty map. SPEC-006 amendment 3 adds the mode. AC2 now names it; AC6 loses the key collision, which never reaches this mapping because the decoder refuses a text key that reads as an integer (SPEC-006 AC13), and gains a guard: a PHP array with keys that are not a list was decoded without the mode and is refused. AC7 decodes each assertion's `cbor` content box again with the mode.
 
-2. **2026-10-23, step 393, proposed (found by the review of 2026-10-23)** — a map key that starts with a NUL byte is refused with `CrJsonValueException`, naming the path: PHP cannot hold such a key as an object property and threw an uncaught `\Error` (`--crjson` exited 255 on a signed file with one). Confirmed by running. **AC8 (new)**: `{"\u0000ction": 1}` and the same key nested are refused, not crashed on.
+2. **2026-10-23, step 393, approved by Maurice van Loon ("ja"; found by the review of 2026-10-23)** — a map key that starts with a NUL byte is refused with `CrJsonValueException`, naming the path: PHP cannot hold such a key as an object property and threw an uncaught `\Error` (`--crjson` exited 255 on a signed file with one). Confirmed by running. **AC8 (new)**: `{"\u0000ction": 1}` and the same key nested are refused, not crashed on.
 
 ## Traceability
 
@@ -229,6 +229,7 @@ least one test; every source file maps back to this spec.
 | AC5 | tests/Unit/Cbor/CrJsonValueTest.php :: AC5: an integer map key becomes its decimal string / SPEC-074 | src/Cbor/CrJsonValue.php :: map() (CborMap keys) |
 | AC6 | tests/Unit/Cbor/CrJsonValueTest.php :: AC6: what Table 1 cannot express is refused, naming why and where (7 datasets); AC6: a map decoded without keepMaps is refused, not guessed at / SPEC-074 | src/Cbor/CrJsonValue.php :: map(); src/Cbor/CrJsonValueException.php |
 | AC7 | tests/Unit/Cbor/CrJsonValueTest.php :: AC7: every CBOR assertion of 59 real files equals c2patool --crjson, under three named normalisations / SPEC-074 | src/Cbor/CrJsonValue.php :: of(); tests/Fixtures/c2patool/crjson/ (59 answers, README) |
+| AC8 (amendment 2) | tests/Unit/Cbor/CrJsonValueTest.php :: AC8: a map key starting with a NUL byte is refused, naming where, not crashed on / SPEC-074 | src/Cbor/CrJsonValue.php :: map() |
 
 `CrJsonValue` lives in `src/Cbor/`, not `src/Report/` as the API sketch
 had it: `Report` is a leaf layer, and the mapping needs only CBOR's own
@@ -247,3 +248,5 @@ mutations were watched failing: no closing quote (6 failed), every tag
 read as tag 0 (3), maps as PHP arrays (5), a keyed array let through
 (1). `composer check` is green: 1,167 passed, 1 skipped. The divergences
 from `c2pa-rs` are in `docs/comparison.md`, "crJSON values".
+
+Amendment 2 (step 393): the test red first (an uncaught `Error`), green after; the mutation letting the key through fails it. A NUL byte inside a key is kept (`{"a\u0000b":1}`). The reviewer's probe `nul.jpg` (an altered file, not kept as a fixture): `--crjson` exited 255 with a PHP fatal error before, exits 1 (its report's status) with a whole document after.

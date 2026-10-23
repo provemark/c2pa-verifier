@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+use Provemark\C2paVerifier\Cbor\CrJsonValue;
+use Provemark\C2paVerifier\Cbor\CrJsonValueException;
 use Provemark\C2paVerifier\Verifier\CrJsonDocument;
 
 /*
@@ -200,3 +202,21 @@ it('AC6: every document passes the whole schema but for the named exceptions', f
     }
     expect($documents)->toBe(68);
 })->group('SPEC-076');
+
+// SPEC-075 AC10 (amendment 2): CrJsonDocument writes {} for an assertion fromJson() refuses
+it('AC10: a JSON assertion is written as it is, where it can be written back the same', function (string $json, ?string $written): void {
+    $out = static fn (): string => json_encode(CrJsonValue::fromJson($json), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION);
+    if ($written === null) {
+        expect($out)->toThrow(CrJsonValueException::class);
+    } else {
+        expect($out())->toBe($written);
+    }
+})->with([
+    'as it is' => ['{"a": [1, 2.5, 1.0, "x/y", null, true], "b": {}}', '{"a":[1,2.5,1.0,"x/y",null,true],"b":{}}'],
+    'the largest 64-bit integer' => ['{"n": 9223372036854775807}', '{"n":9223372036854775807}'],
+    'a number beyond a double' => ['{"n": 1e99999999}', null],
+    'an integer beyond 64 bits' => ['{"n": 123456789012345678901234567890}', null],
+    'a negative integer beyond 64 bits, nested' => ['{"a": [{"n": -99999999999999999999}]}', null],
+    'not JSON' => ['{"n": ', null],
+    'a key starting with NUL' => ['{"\\u0000n": 1}', null],
+])->group('SPEC-075');

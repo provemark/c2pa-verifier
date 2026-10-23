@@ -30,6 +30,29 @@ final class CrJsonValue
         return self::map($cbor, '$');
     }
 
+    /**
+     * A JSON assertion as it is (crJSON §3.6.2), where it can be written back as the same JSON: not
+     * where a number lies beyond a double, or an integer beyond 64 bits, which PHP would write as
+     * another number (SPEC-075 amendment 2).
+     *
+     * @throws CrJsonValueException
+     */
+    public static function fromJson(string $json): mixed
+    {
+        try {
+            $value = json_decode($json, false, 64, JSON_THROW_ON_ERROR);
+            $exact = json_decode($json, false, 64, JSON_THROW_ON_ERROR | JSON_BIGINT_AS_STRING);
+            json_encode($value, JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION);   // refuses an infinity
+        } catch (\JsonException $e) {
+            throw new CrJsonValueException(sprintf('the JSON cannot be written back: %s', $e->getMessage()), 0, $e);
+        }
+        if (serialize($value) !== serialize($exact)) {
+            throw new CrJsonValueException('the JSON holds an integer beyond 64 bits, which would be written back as another number');
+        }
+
+        return $value;
+    }
+
     private static function map(mixed $value, string $path): mixed
     {
         if ($value instanceof CborBytes) {
@@ -48,6 +71,10 @@ final class CrJsonValue
         if ($value instanceof CborMap) {
             $object = new \stdClass;
             foreach ($value->entries as $key => $entry) {
+                if (str_starts_with((string) $key, "\0")) {
+                    // PHP cannot hold such a key as a property (SPEC-074 amendment 2)
+                    throw new CrJsonValueException(sprintf('a map key at %s starts with a NUL byte, which this writer cannot hold', $path));
+                }
                 $object->{(string) $key} = self::map($entry, ($path === '$' ? '' : $path.'.').$key);
             }
 

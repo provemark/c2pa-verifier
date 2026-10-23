@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Provemark\C2paVerifier\Cbor\CborDecoder;
+use Provemark\C2paVerifier\Cbor\CborMap;
 use Provemark\C2paVerifier\Cbor\CrJsonValue;
 use Provemark\C2paVerifier\Cbor\CrJsonValueException;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
@@ -171,4 +172,14 @@ it('AC7: every CBOR assertion of 59 real files equals c2patool --crjson, under t
     }
     expect($answers)->toBe(59)
         ->and($compared)->toBe(298);
+})->group('SPEC-074');
+
+// AC8 (amendment 2)
+it('AC8: a map key starting with a NUL byte is refused, naming where, not crashed on', function (): void {
+    $top = new CborMap(["\0ction" => 1]);
+    $nested = new CborMap(['actions' => [new CborMap(["\0ction" => 'c2pa.created'])]]);
+
+    expect(fn () => CrJsonValue::of($top))->toThrow(CrJsonValueException::class, 'NUL')
+        ->and(fn () => CrJsonValue::of($nested))->toThrow(CrJsonValueException::class, 'actions[0]')
+        ->and(json_encode(CrJsonValue::of(new CborMap(["a\0b" => 1]))))->toBe('{"a\u0000b":1}');
 })->group('SPEC-074');

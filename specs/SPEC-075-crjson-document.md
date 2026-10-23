@@ -239,7 +239,7 @@ three symbols (`VERSION`, `$validationTime`, `toCrJson()`); 0.8.0.
    - AC3, against `c2patool`, the named ways become five: (a) `c2pa-rs` writes the claim's `signature` URI absolute, in v1 and in v2 (one v2 claim here holds it relative); (b) it writes v1's `assertions` URIs absolute and leaves v2's `created_assertions` and `gathered_assertions` as they are; (c) where the claim's `claim_generator_info` is absent, `null` or empty, it makes one up from `claim_generator`; (d) it writes `redacted_assertions: []` for v2 claims only, where §3.5.1 asks it of every claim, as this verifier does; (e) it leaves out v1 fields the v1 schema does not name (`claim_generator_hints`). Each is a normalisation of the comparison, and the test names it.
    - AC7 accepts **every** schema error inside a v1 `claim`, not only a missing `claim_generator_info`: open question 1 settled on writing v1 claims as their CBOR holds them, and C2PA 1.x claims break the v1 schema in four measured ways (49 without `claim_generator_info`, 2 with it `null`, 1 with it empty, 1 with `metadata` an array, which `c2patool`'s own crJSON has too). v2 claims stay under the whole schema.
 
-2. **2026-10-23, step 393, proposed (found by the review of 2026-10-23)** — a JSON assertion is written as `{}` when its value cannot be written back as the same JSON: a number beyond a double (`1e99999999`, which PHP reads as infinity and then cannot encode, so the whole document was refused with exit 2), or an integer beyond 64 bits (written back as a different float). Confirmed by running. **AC10 (new)**: both give `{}` for that assertion and a complete document otherwise; the exit status stays the report's.
+2. **2026-10-23, step 393, approved by Maurice van Loon ("ja"; found by the review of 2026-10-23)** — a JSON assertion is written as `{}` when its value cannot be written back as the same JSON: a number beyond a double (`1e99999999`, which PHP reads as infinity and then cannot encode, so the whole document was refused with exit 2), or an integer beyond 64 bits (written back as a different float). Confirmed by running. **AC10 (new)**: both give `{}` for that assertion and a complete document otherwise; the exit status stays the report's.
 
 ## Traceability
 
@@ -257,6 +257,7 @@ least one test; every source file maps back to this spec.
 | AC7 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC7: the validator first reproduces step 370 on c2patool's own answers; AC7: every crJSON written is schema-valid but for the accepted v1 claims / SPEC-075 | tests/Fixtures/crjson/crJSON.schema.json and README (ADR-0006); composer.json `require-dev` opis/json-schema |
 | AC8 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC8: without a store, manifests is empty and the root is otherwise as AC1 (3 datasets); AC8: on the command line, the report's failure goes to standard error and the exit is the report's / SPEC-075 | src/Verifier/CrJsonDocument.php :: of(); src/Cli/Command.php :: run() |
 | AC9 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC9: --crjson prints toCrJson() of the same call, with --settings and --at / SPEC-075 | src/Cli/Command.php :: run() (`--crjson`); src/Verifier/VerificationReport.php :: toCrJson() |
+| AC10 (amendment 2) | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC10: a JSON assertion is written as it is, where it can be written back the same (7 datasets) / SPEC-075 | src/Cbor/CrJsonValue.php :: fromJson(); src/Verifier/CrJsonDocument.php :: assertion() |
 
 `Verifier::VERSION` is `0.8.0-dev`, not `0.8.0` as the API sketch had it:
 SemVer allows a pre-release, and the release commit sets the final
@@ -271,3 +272,5 @@ place of the report's time (AC6), the embedded hash left out (AC4). The
 ordinary report over the corpus, before and after: 0 of 1,842 runs
 moved. The contract grew by three symbols, to 139. `composer check`:
 1,182 passed, 1 skipped.
+
+Amendment 2 (step 393): the tests red first (`fromJson()` did not exist), green after. Mutations, each failing: bigints let through (2), an infinity let through (1). The reviewer's probe `inf.jpg` (an altered file, not kept as a fixture): `--crjson` exited 2 ("Inf and NaN cannot be JSON encoded") before, exits 1 (its report's status) with a whole document after.

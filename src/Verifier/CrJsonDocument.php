@@ -227,10 +227,10 @@ final class CrJsonDocument
         try {
             return match ($boxes[0]->type) {
                 'cbor' => CrJsonValue::of((new CborDecoder(keepMaps: true))->decode($boxes[0]->data)),
-                'json' => json_decode($boxes[0]->data, false, 64, JSON_THROW_ON_ERROR),   // §3.6.2: as it is
+                'json' => CrJsonValue::fromJson($boxes[0]->data),   // §3.6.2: as it is, where it can be (SPEC-075 amendment 2)
                 default => new \stdClass,   // §3.6.1: nothing to derive
             };
-        } catch (CborException|CrJsonValueException|\JsonException) {
+        } catch (CborException|CrJsonValueException) {
             return new \stdClass;
         }
     }

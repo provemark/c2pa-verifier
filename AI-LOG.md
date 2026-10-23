@@ -11256,3 +11256,17 @@ README are where the disclosure lives.
 - Measured: the tests red (3 of 8) and green; five mutations; the corpus
   before and after (0 of 1,854); `composer check` (1,282 passed).
 - Decided by Maurice: none beyond the amendment.
+
+## 2026-10-23 — SPEC-074 and SPEC-075 amendment 2: crJSON values (step 393)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: the same "ja" as step 391.
+- Produced: SPEC-074 and SPEC-075 amendment 2 (approved) and their
+  Traceability; `CrJsonValue::map()` (NUL keys), `CrJsonValue::fromJson()`;
+  `CrJsonDocument::assertion()` using it; AC8 in
+  `tests/Unit/Cbor/CrJsonValueTest.php`, AC10 in
+  `tests/Unit/Verifier/CrJsonSignatureTest.php`;
+  `notes/step-393-crjson-crashes.md`; a row in `NOTES.md`.
+- Measured: the tests red and green; three mutations; the reviewer's two
+  probes before (exit 255, 2) and after (exit 1, whole documents);
+  `composer check` (1,290 passed).
+- Decided by Maurice: none beyond the amendments.
