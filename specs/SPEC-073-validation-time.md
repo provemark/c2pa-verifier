@@ -207,7 +207,7 @@ least one test; every source file maps back to this spec.
 | AC1 | tests/Unit/Verifier/ValidationTimeTest.php :: AC1: an expired signer without a timestamp is judged at the given time / SPEC-073 | src/Verifier/Verifier.php :: verify(), check() (`$at = $trusted ?? $now`); src/Trust/CertificateProfileCheck.php :: check(), checkLeaf() (`$timeName`) |
 | AC2 | tests/Unit/Verifier/ValidationTimeTest.php :: AC2: the edges of the validity, and a fraction rounded down (4 datasets) / SPEC-073 | src/Verifier/Verifier.php :: verify() (`getTimestamp()`); src/Trust/CertificateProfileCheck.php :: checkLeaf() |
 | AC3 | tests/Unit/Verifier/ValidationTimeTest.php :: AC3: a trusted timestamp wins over the given time / SPEC-073 | src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |
-| AC4 | tests/Unit/Verifier/ValidationTimeTest.php :: AC4: the stapled OCSP response and the ingredient follow the given time / SPEC-073 | src/Verifier/IngredientManifestCheck.php :: check(), manifest(); src/Verifier/Verifier.php :: check() (the revocation call) |
+| AC4 | tests/Unit/Verifier/ValidationTimeTest.php :: AC4: the stapled OCSP response and the ingredient follow the given time; AC4: a fragmented stream is judged at the given time, and records it (3 datasets; step 401) / SPEC-073 | src/Verifier/IngredientManifestCheck.php :: check(), manifest(); src/Verifier/Verifier.php :: check() (the revocation call) |
 | AC5 | tests/Unit/Verifier/ValidationTimeTest.php :: AC5: a time that is not RFC 3339 is refused on the command line (5 datasets); AC5: --at as the last argument is refused; AC5: an offset other than Z is converted / SPEC-073 | src/Cli/Command.php :: run() (`--at`), rfc3339() |
 | AC6 | the corpus before and after (notes/step-369-validation-time.md); every existing test unchanged | — |
 | AC6 (amendment 1) | tests/Unit/Verifier/ValidationTimeTest.php :: AC6: without a given time, every check judges at the one clock reading verify() took, and says "now" (2 datasets); AC6: the report records the clock reading the checks used / SPEC-073 | src/Verifier/Verifier.php :: verify(), inspect(), check(); src/Verifier/IngredientManifestCheck.php :: check(), manifest() |
@@ -244,3 +244,8 @@ an ingredient ignoring it, "now" not named.
 Amendment 2 (step 397): the two UTC-year cases red first (year 0000 as
 written was already refused by `checkdate()`), green after; dropping
 either bound fails its case.
+
+Step 401 (a test gap the review of 2026-10-23 named, no change in
+behaviour): `FragmentedVerifier::verify()` passing the time on had no
+test. The new case judges `bmff-fragmented/` now, in 2099 and in 2000;
+dropping the time in the hand-off fails two of the three.

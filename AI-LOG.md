@@ -11357,3 +11357,13 @@ README are where the disclosure lives.
 - Measured: the timeStamp urls over the fixtures; the test red and
   green; two mutations; `composer check` (1,312 passed).
 - Decided by Maurice: none beyond the item.
+
+## 2026-10-23 — A test for the fragmented path's time (step 401)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: the same "doe 1 nog".
+- Produced: an AC4 case in `tests/Unit/Verifier/ValidationTimeTest.php`;
+  SPEC-073's Traceability; `notes/step-401-fragmented-time-test.md`; a row
+  in `NOTES.md`.
+- Measured: the fixture at three times; the mutation failing two cases;
+  `composer check` (1,315 passed).
+- Decided by Maurice: none beyond the item.

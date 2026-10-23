@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Provemark\C2paVerifier\Cli\Command;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
 use Provemark\C2paVerifier\Trust\TrustSettings;
+use Provemark\C2paVerifier\Verifier\FragmentedVerifier;
 use Provemark\C2paVerifier\Verifier\VerificationReport;
 use Provemark\C2paVerifier\Verifier\Verifier;
 
@@ -238,3 +239,26 @@ it('AC6: the report records the clock reading the checks used', function (): voi
     expect($at)->toBeGreaterThanOrEqual($before)->toBeLessThanOrEqual($after)
         ->and($expired)->toContain('expired at '.gmdate('Y-m-d\TH:i:s\Z', $at));
 })->group('SPEC-073');
+
+// AC4: the fragmented path too
+it('AC4: a fragmented stream is judged at the given time, and records it', function (?string $at, bool $expired): void {
+    $dir = Corpus::fixtures().'/bmff-fragmented';
+    $fragments = (static function () use ($dir): Generator {
+        foreach ([1, 2, 3, 4, 5] as $i) {
+            $stream = fopen("{$dir}/seg_{$i}.m4s", 'rb');
+            assert($stream !== false);
+            yield "seg_{$i}.m4s" => $stream;
+            fclose($stream);
+        }
+    })();
+    $init = fopen("{$dir}/init.mp4", 'rb');
+    assert($init !== false);
+    $report = (new FragmentedVerifier)->verify($init, $fragments, null, $at === null ? null : new DateTimeImmutable($at));
+
+    expect(in_array('signingCredential.expired', spec073Codes($report), true))->toBe($expired)
+        ->and($at === null || $report->validationTime?->format('Y-m-d\TH:i:s\Z') === $at)->toBeTrue();
+})->with([
+    'now, inside the signer\'s validity' => [null, false],
+    'after it' => ['2099-01-01T00:00:00Z', true],
+    'before it' => ['2000-01-01T00:00:00Z', true],
+])->group('SPEC-073');
