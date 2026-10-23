@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-23                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -187,6 +187,7 @@ parameters). An optional parameter is an addition: 0.8.0.
 - None blocking. The four choices of step 367's follow-up were made by
   Maurice on 2026-10-23: a `?DateTimeInterface` third parameter, fractions
   rounded down, no report field yet, this number.
+  *Status 2026-10-23 (step 369):* settled; approved without changes.
 
 ## Traceability
 
@@ -195,9 +196,29 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
+| AC1 | tests/Unit/Verifier/ValidationTimeTest.php :: AC1: an expired signer without a timestamp is judged at the given time / SPEC-073 | src/Verifier/Verifier.php :: verify(), check() (`$at = $trusted ?? $now`); src/Trust/CertificateProfileCheck.php :: check(), checkLeaf() (`$timeName`) |
+| AC2 | tests/Unit/Verifier/ValidationTimeTest.php :: AC2: the edges of the validity, and a fraction rounded down (4 datasets) / SPEC-073 | src/Verifier/Verifier.php :: verify() (`getTimestamp()`); src/Trust/CertificateProfileCheck.php :: checkLeaf() |
+| AC3 | tests/Unit/Verifier/ValidationTimeTest.php :: AC3: a trusted timestamp wins over the given time / SPEC-073 | src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |
+| AC4 | tests/Unit/Verifier/ValidationTimeTest.php :: AC4: the stapled OCSP response and the ingredient follow the given time / SPEC-073 | src/Verifier/IngredientManifestCheck.php :: check(), manifest(); src/Verifier/Verifier.php :: check() (the revocation call) |
+| AC5 | tests/Unit/Verifier/ValidationTimeTest.php :: AC5: a time that is not RFC 3339 is refused on the command line (5 datasets); AC5: --at as the last argument is refused; AC5: an offset other than Z is converted / SPEC-073 | src/Cli/Command.php :: run() (`--at`), rfc3339() |
+| AC6 | the corpus before and after (notes/step-369-validation-time.md); every existing test unchanged | — |
+
+`src/Verifier/FragmentedVerifier.php :: verify()` passes the time on; no
+criterion names it.
+
+AC1's last clause (the explanation names the given time) has nothing to
+say on a `Trusted` report, which carries no validity explanation. It is
+tested where the explanation exists: AC2's two refused times, whose
+`signingCredential.expired` says `checked at the given validation time`.
+
+The tests were run red first: 7 failed, 7 passed. The five AC5 refusals
+passed only because `--at` was an unknown option, so they were tightened
+to require "RFC 3339" in the message. Then 13 failed and 1 passed: AC3
+pins behaviour that already held, since PHP ignores an extra argument.
+Three mutations were watched failing: the given time put before the
+timestamp's (AC3 fails), the fraction rounded up (AC2 "nine tenths"
+fails), and the ingredient check not given the time (AC4 fails).
+`composer check` is green: 1,131 passed, 1 skipped.
+
+The usage line (SPEC-019 AC9) is unchanged. `--at` is named in the lines
+below it only, since this spec does not amend SPEC-019.

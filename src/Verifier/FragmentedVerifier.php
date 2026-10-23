@@ -40,8 +40,9 @@ final readonly class FragmentedVerifier
      * @param  iterable<string, resource>  $fragments  a name and an open stream, one
      *                                                 at a time. The name is what a status says when that fragment is the
      *                                                 one that failed, so it should be something a caller recognises.
+     * @param  \DateTimeInterface|null  $validationTime  as Verifier::verify() takes it (SPEC-073)
      */
-    public function verify($init, iterable $fragments, ?TrustSettings $settings = null): VerificationReport
+    public function verify($init, iterable $fragments, ?TrustSettings $settings = null, ?\DateTimeInterface $validationTime = null): VerificationReport
     {
         // Verifier already routes an ISOBMFF file to the BMFF hard binding; what it
         // does not know is that there are more files. Handing it a check that does
@@ -52,7 +53,7 @@ final readonly class FragmentedVerifier
         // could not be used. An earlier draft took one and quietly ignored it, which
         // PHPStan caught and which would have read as a seam that was not one.
         return (new Verifier(bmffHash: new BmffHashCheck(fragments: $fragments)))
-            ->verify($init, $settings);
+            ->verify($init, $settings, $validationTime);
     }
 
     /**

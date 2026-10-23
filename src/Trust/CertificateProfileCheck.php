@@ -42,9 +42,10 @@ final readonly class CertificateProfileCheck
     /**
      * @param  int|null  $at  the epoch to judge validity at — a trusted timestamp's time (SPEC-017); null = now
      * @param  string|null  $reason  why $at is what it is, for the `.expired` message ("no timestamp", "the timestamp's TSA is not trusted", …)
+     * @param  string|null  $timeName  what $at is, for the same message, where it is neither now nor a timestamp's (SPEC-073)
      * @return list<ValidationStatus>
      */
-    public function check(Manifest $manifest, ?TrustSettings $settings = null, ?int $at = null, ?string $reason = null): array
+    public function check(Manifest $manifest, ?TrustSettings $settings = null, ?int $at = null, ?string $reason = null, ?string $timeName = null): array
     {
         $url = sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label);
         try {
@@ -59,7 +60,7 @@ final readonly class CertificateProfileCheck
             return [new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, sprintf('the signing certificate could not be read: %s', $e->getMessage()))];
         }
 
-        return $this->checkLeaf($leaf, $settings, $at, $url, $this->acceptedEkus($certificates, $settings), $reason);
+        return $this->checkLeaf($leaf, $settings, $at, $url, $this->acceptedEkus($certificates, $settings), $reason, timeName: $timeName);
     }
 
     /**
@@ -92,9 +93,10 @@ final readonly class CertificateProfileCheck
      * @param  list<string>|null  $ekus  non-null replaces the accepted EKU list (built-in + trust_config) — SPEC-017: a TSA needs timeStamping alone
      * @param  string|null  $reason  why $at is what it is, for the `.expired` message
      * @param  bool  $manifestSigner  false for a TSA: §14.5.1.1 asks digitalSignature of a manifest signer only
+     * @param  string|null  $timeName  what $at is, where it is neither now nor a timestamp's (SPEC-073)
      * @return list<ValidationStatus>
      */
-    public function checkLeaf(Certificate $leaf, ?TrustSettings $settings, ?int $at, string $url, ?array $ekus = null, ?string $reason = null, bool $manifestSigner = true): array
+    public function checkLeaf(Certificate $leaf, ?TrustSettings $settings, ?int $at, string $url, ?array $ekus = null, ?string $reason = null, bool $manifestSigner = true, ?string $timeName = null): array
     {
         $faults = [];
         $invalid = static fn (string $reason): ValidationStatus => new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, 'signing certificate invalid: '.$reason);
@@ -120,7 +122,7 @@ final readonly class CertificateProfileCheck
                 gmdate('Y-m-d\TH:i:s\Z', $time),
                 gmdate('Y-m-d\TH:i:s\Z', $leaf->validFrom),
                 gmdate('Y-m-d\TH:i:s\Z', $leaf->validTo),
-                $at === null ? 'now' : "the timestamp's time",
+                $timeName ?? ($at === null ? 'now' : "the timestamp's time"),
                 $reason ?? ($at === null ? 'no timestamp' : 'from a trusted timestamp'),
             ));
         }

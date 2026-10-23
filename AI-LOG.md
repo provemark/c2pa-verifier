@@ -10866,3 +10866,21 @@ README are where the disclosure lives.
   that means for `c2patool` as a reference.
 - Decided by Maurice: carry on with the verifier; which product to put
   forward is left for later.
+
+## 2026-10-23 — SPEC-073 built: a validation time (step 369)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "zet hem approved".
+- Produced: `tests/Unit/Verifier/ValidationTimeTest.php`; changes to
+  `src/Verifier/Verifier.php`, `src/Verifier/FragmentedVerifier.php`,
+  `src/Verifier/IngredientManifestCheck.php`,
+  `src/Trust/CertificateProfileCheck.php`, `src/Cli/Command.php`;
+  SPEC-073 approved, then implemented with its Traceability;
+  `notes/step-369-validation-time.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: `vendor/bin/pest --group=SPEC-073` red (7, then 13 of 14
+  after tightening AC5) and green; three mutations; the corpus before and
+  after (0 of 1,842 runs differ); `composer check` (1,131 passed, 1
+  skipped).
+- Reasoned: leaving SPEC-019's usage line unchanged, since this spec does
+  not amend it.
+- Decided by Maurice: SPEC-073 approved as drafted.

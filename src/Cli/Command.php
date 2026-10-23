@@ -31,6 +31,7 @@ final readonly class Command
     public const string USAGE = "Usage: c2pa-verify [--settings <path>] [--text] [--] <file>\n"
         ."  Prints the verification report as JSON on standard output.\n"
         ."  --settings <path>  trust settings in c2patool's JSON shape (anchors, EKUs, allowed list)\n"
+        ."  --at <time>        judge at this time (RFC 3339) where no trusted timestamp gives one; default now\n"
         ."  --text             also read plain text (C2PA 2.4 §A.8; experimental upstream, off by default)\n"
         ."  --help             this text\n"
         ."  Exit status: 0 Trusted or Valid, 1 Invalid, 2 no report (usage, unreadable file or settings).\n";
@@ -49,6 +50,7 @@ final readonly class Command
         // 1. the arguments: four cases, no short options, no repeats
         $file = null;
         $settingsPath = null;
+        $at = null;
         $text = false;
         $optionsEnded = false;
         for ($i = 0, $n = count($arguments); $i < $n; $i++) {
@@ -74,6 +76,21 @@ final readonly class Command
                     $settingsPath = $arguments[++$i];
                 } else {
                     $settingsPath = substr($argument, strlen('--settings='));
+                }
+
+                continue;
+            }
+            if (! $optionsEnded && ($argument === '--at' || str_starts_with($argument, '--at='))) {
+                if ($at !== null) {
+                    return $this->usage($stderr, '--at given twice');
+                }
+                if ($argument === '--at' && $i + 1 >= $n) {
+                    return $this->usage($stderr, '--at needs a time (RFC 3339, e.g. 2026-10-09T05:31:00Z)');
+                }
+                $value = $argument === '--at' ? $arguments[++$i] : substr($argument, strlen('--at='));
+                $at = self::rfc3339($value);
+                if ($at === null) {
+                    return $this->usage($stderr, sprintf('--at: %s is not an RFC 3339 date-time (e.g. 2026-10-09T05:31:00Z)', var_export($value, true)));
                 }
 
                 continue;
@@ -142,7 +159,7 @@ final readonly class Command
 
         // 4. the report, and the verdict as the exit status
         try {
-            $report = $verifier->verify($stream, $settings);
+            $report = $verifier->verify($stream, $settings, $at);
         } finally {
             fclose($stream);
         }
@@ -158,6 +175,26 @@ final readonly class Command
         fwrite($stdout, $json."\n");
 
         return $report->result->state === ValidationState::Invalid ? 1 : 0;
+    }
+
+    /**
+     * An RFC 3339 §5.6 date-time, or null (SPEC-073 AC5). Every field is range-checked, so
+     * 2026-02-30 is refused rather than rolled over into March; a leap second (60) is
+     * refused too, since no epoch can hold it. The fraction is dropped: rounded down.
+     */
+    private static function rfc3339(string $value): ?\DateTimeImmutable
+    {
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?([Zz]|[+-](\d{2}):(\d{2}))$/D', $value, $m) !== 1) {
+            return null;
+        }
+        if (! checkdate((int) $m[2], (int) $m[3], (int) $m[1]) || (int) $m[4] > 23 || (int) $m[5] > 59 || (int) $m[6] > 59
+            || (isset($m[8], $m[9]) && ((int) $m[8] > 23 || (int) $m[9] > 59))) {
+            return null;
+        }
+        $offset = strtoupper($m[7]) === 'Z' ? '+00:00' : $m[7];
+        $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d\\TH:i:sP', sprintf('%s-%s-%sT%s:%s:%s%s', $m[1], $m[2], $m[3], $m[4], $m[5], $m[6], $offset));
+
+        return $parsed === false ? null : $parsed;
     }
 
     /** @param  resource  $stderr */
