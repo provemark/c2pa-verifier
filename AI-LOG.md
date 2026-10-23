@@ -10852,3 +10852,17 @@ README are where the disclosure lives.
 - Decided by Maurice: the draft's four choices (a `?DateTimeInterface`
   parameter, fractions rounded down, no report field yet, SPEC-073); push
   steps 367 and 368 together.
+
+## 2026-10-23 — Step 367 addendum: the conforming products list
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "maar zijn c2patool en c2pa-rs wel door het conformance heen
+  gekomen?"; "kan de drupal plugin op de lijst bijv?"; then "ja ga verder
+  met deze verifier".
+- Produced: an addendum to `notes/step-367-conformance-programme.md`.
+- Measured: `conforming-products-list.json` at `da71a72`, counted and
+  searched; the CAI's programme page; the `brob`/`c2cm` refusals in
+  `src/Jumbf/JumbfParser.php`.
+- Reasoned: that the programme lists products, not libraries, and what
+  that means for `c2patool` as a reference.
+- Decided by Maurice: carry on with the verifier; which product to put
+  forward is left for later.

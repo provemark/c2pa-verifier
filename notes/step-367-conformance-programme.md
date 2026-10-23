@@ -123,3 +123,31 @@ reading shows it is not needed.
 - Reasoned: that the programme's test inputs are the test set, and that
   they are not public (from the wording "will be provided"); which of the
   verifier's parts serve which input (from reading `src/`).
+
+## Addendum, the same day: who is on the list
+
+Measured: `conforming-products/conforming-products-list.json` at
+`c2pa-org/conformance-public` `da71a72` holds 273 records, all
+`conformant`: 243 generator products and 30 validator products, 10 of
+them under programme version 0.2. A search of the records for
+`c2patool`, `c2pa-rs`, `contentauth`, `c2pa-web`, "Content Authenticity
+Initiative" and "SDK" finds nothing. The CAI's page on the programme does
+not name its SDK either.
+
+Reasoned: the programme lists products, not libraries. `c2patool` and
+`c2pa-rs` are building blocks; products built on them are listed, but a
+record does not say which library a product uses. That makes `c2patool`
+a reference here, not a certified answer: the norm is the
+specification, and the divergences this verifier keeps on purpose
+(`docs/comparison.md`) are the ones to explain when applying. The
+programme's expected results are not public; its own conformance tool
+runs on `c2pa-rs`.
+
+This verifier, a library, would not be listed either. A product using it
+would be. CMS and asset-management software is on the list as validator
+products (Fotoware, `image/jpeg` and `image/png`, programme 0.1;
+SitecoreAI DAM, C2PA 2.4, programme 0.2), and a record states
+`supportsCompressedManifests`, which may be `false`: this verifier
+refuses `brob` and `c2cm` boxes (`JumbfParser`), so it would be `false`.
+Which product to put forward, and whether to apply at all, is Maurice's
+decision and is left until the harness exists.
