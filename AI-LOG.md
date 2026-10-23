@@ -10884,3 +10884,18 @@ README are where the disclosure lives.
 - Reasoned: leaving SPEC-019's usage line unchanged, since this spec does
   not amend it.
 - Decided by Maurice: SPEC-073 approved as drafted.
+
+## 2026-10-23 — crJSON read and measured (step 370)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ga verder".
+- Produced: `notes/step-370-crjson-measured.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: the C2PA 2.4 crJSON page and its embedded schema;
+  `c2patool` 0.28.2 with and without `--crjson` over 85 fixture files;
+  schema validation with Python `jsonschema` 4.26.0 in a scratch
+  environment; the per-manifest comparison; the conformance tool's
+  `c2pa-rs` submodule commit.
+- Reasoned: the schema as the rule where `c2patool` differs; deriving
+  the results from the existing report; the three-spec split.
+- Decided by Maurice: none in this step (push of steps 367 addendum and
+  369 not yet given).
