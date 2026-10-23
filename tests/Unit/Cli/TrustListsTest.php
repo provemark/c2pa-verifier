@@ -102,12 +102,14 @@ it('AC1: the lists are the two entries, byte for byte as --settings built from t
     $settings = spec077Settings($signers, $tsas);
     $file = Corpus::fixtures().'/'.$relative;
 
-    foreach ([[], ['--crjson']] as $extra) {
+    // one fixed time for both runs: an explanation names the judged time to the second (an OCSP
+    // response "not current" at now), and two runs a moment apart can fall in different seconds
+    foreach ([['--at', '2026-10-23T12:00:00Z'], ['--at', '2026-10-23T12:00:00Z', '--crjson']] as $extra) {
         [$listStatus, $listOut, $listErr] = spec077Run(...[...$extra, '--trust-list', $signers, '--tsa-trust-list', $tsas, $file]);
         [$setStatus, $setOut] = spec077Run(...[...$extra, '--settings', $settings, $file]);
         expect($listErr)->toBe('')
             ->and($listStatus)->toBe($setStatus)
-            ->and(preg_replace('/"validationTime": "[^"]+"/', '', $listOut))->toBe(preg_replace('/"validationTime": "[^"]+"/', '', $setOut));
+            ->and($listOut)->toBe($setOut);
     }
     if ($state !== null) {
         [, $out] = spec077Run('--trust-list', $signers, '--tsa-trust-list', $tsas, $file);

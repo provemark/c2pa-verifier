@@ -11096,3 +11096,15 @@ README are where the disclosure lives.
   service with an empty status) for the next step.
 - Reasoned: the predicates read against the code.
 - Decided by Maurice: the table first, then #9.
+
+## 2026-10-23 — Step 379 addendum: a test that read the clock twice
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "er faalt wat".
+- Produced: AC1 of `tests/Unit/Cli/TrustListsTest.php` with a fixed
+  `--at` for both runs; an addendum to `notes/step-379-trust-lists.md`.
+- Measured: CI run 39956383005 (PHP 8.3, AC1: the OCSP explanation's
+  judged time one second apart); `vendor/bin/pest --group=SPEC-077`;
+  `composer check`.
+- Reasoned: the other two-run comparisons already fix the time or have
+  no store.
+- Decided by Maurice: none.
