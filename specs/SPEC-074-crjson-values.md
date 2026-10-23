@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-23                      |
 | Supersedes | —                                                 |
@@ -220,10 +220,28 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
+| AC1 | tests/Unit/Cbor/CrJsonValueTest.php :: AC1: a byte string is Base64 between b64' and ' (5 datasets) / SPEC-074 | src/Cbor/CrJsonValue.php :: map() (CborBytes) |
+| AC2 | tests/Unit/Cbor/CrJsonValueTest.php :: AC2: the JSON-native types pass unchanged (11 datasets) / SPEC-074 | src/Cbor/CrJsonValue.php :: map() (CborMap as stdClass, lists, scalars); src/Cbor/CborDecoder.php :: `keepMaps` (SPEC-006 amendment 3) |
+| AC3 | tests/Unit/Cbor/CrJsonValueTest.php :: AC3: tag 0 is its text; AC3: the when of a real c2pa.actions.v2 is its text / SPEC-074 | src/Cbor/CrJsonValue.php :: map() (CborTag 0) |
+| AC4 | tests/Unit/Cbor/CrJsonValueTest.php :: AC4: a float stays a float (5 datasets) / SPEC-074 | src/Cbor/CrJsonValue.php :: map() (finite floats) |
+| AC5 | tests/Unit/Cbor/CrJsonValueTest.php :: AC5: an integer map key becomes its decimal string / SPEC-074 | src/Cbor/CrJsonValue.php :: map() (CborMap keys) |
+| AC6 | tests/Unit/Cbor/CrJsonValueTest.php :: AC6: what Table 1 cannot express is refused, naming why and where (7 datasets); AC6: a map decoded without keepMaps is refused, not guessed at / SPEC-074 | src/Cbor/CrJsonValue.php :: map(); src/Cbor/CrJsonValueException.php |
+| AC7 | tests/Unit/Cbor/CrJsonValueTest.php :: AC7: every CBOR assertion of 59 real files equals c2patool --crjson, under three named normalisations / SPEC-074 | src/Cbor/CrJsonValue.php :: of(); tests/Fixtures/c2patool/crjson/ (59 answers, README) |
+
+`CrJsonValue` lives in `src/Cbor/`, not `src/Report/` as the API sketch
+had it: `Report` is a leaf layer, and the mapping needs only CBOR's own
+types, so no Deptrac arrow was added.
+
+AC7 also sorts an object's keys on both sides before comparing: JSON
+objects are unordered (RFC 8259 §4), and `c2pa-rs` writes ingredient
+fields in its own order. That is equality of JSON, not a fourth
+normalisation of content. It compared 298 assertions, as measured.
+
+AC3's real file is `writers/openai-20260826-c2pa_2x.png`: the first
+choice, `c2pa-rs/CA.jpg`, has no `when` in its actions.
+
+The tests were run red first: all 33 failed on the missing class. Four
+mutations were watched failing: no closing quote (6 failed), every tag
+read as tag 0 (3), maps as PHP arrays (5), a keyed array let through
+(1). `composer check` is green: 1,167 passed, 1 skipped. The divergences
+from `c2pa-rs` are in `docs/comparison.md`, "crJSON values".

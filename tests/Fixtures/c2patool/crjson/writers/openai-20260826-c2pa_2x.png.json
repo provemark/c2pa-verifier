@@ -1,0 +1,189 @@
+{
+  "@context": {
+    "@vocab": "https://c2pa.org/crjson",
+    "extras": "https://c2pa.org/crjson/extras"
+  },
+  "manifests": [
+    {
+      "label": "urn:c2pa:51a82951-e158-439e-b1d6-51c5f7dc7ff4",
+      "isUpdateManifest": false,
+      "isCompressedManifest": false,
+      "assertions": {
+        "c2pa.icon": {
+          "format": "image/svg+xml",
+          "identifier": "self#jumbf=/c2pa/urn:c2pa:51a82951-e158-439e-b1d6-51c5f7dc7ff4/c2pa.assertions/c2pa.icon",
+          "hash": "b64'lfe8kJEJxdpDbamHc+PyoxVdijCFOjGUDiyNwlzFz04='"
+        },
+        "c2pa.actions.v2": {
+          "actions": [
+            {
+              "action": "c2pa.created",
+              "when": "2026-08-26T00:00:00Z",
+              "softwareAgent": {
+                "name": "gpt-image",
+                "version": "2.0"
+              },
+              "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+            },
+            {
+              "action": "c2pa.converted",
+              "when": "2026-08-26T00:00:00Z"
+            },
+            {
+              "action": "c2pa.watermarked.unbound",
+              "when": "2026-08-26T00:00:00Z"
+            }
+          ]
+        },
+        "c2pa.hash.data": {
+          "exclusions": [
+            {
+              "start": 33,
+              "length": 23609
+            }
+          ],
+          "name": "jumbf manifest",
+          "alg": "sha256",
+          "hash": "b64'ze2QKCH+gx6AClCopkW1d+aeb2lSqI/CyRrco5wL2PE='",
+          "pad": "b64'AAAAAAAAAAA='"
+        }
+      },
+      "claim.v2": {
+        "instanceID": "xmp:iid:1a477365-a5f3-483a-ac47-342e33e93374",
+        "signature": "self#jumbf=/c2pa/urn:c2pa:51a82951-e158-439e-b1d6-51c5f7dc7ff4/c2pa.signature",
+        "claim_generator_info": {
+          "name": "OpenAI Media Service API",
+          "icon": {
+            "url": "self#jumbf=c2pa.assertions/c2pa.icon",
+            "hash": "b64'lfe8kJEJxdpDbamHc+PyoxVdijCFOjGUDiyNwlzFz04='"
+          },
+          "specVersion": "2.2.0",
+          "org.contentauth.c2pa_rs": "0.79.2"
+        },
+        "alg": "sha256",
+        "dc:title": "image.png",
+        "redacted_assertions": [],
+        "created_assertions": [
+          {
+            "url": "self#jumbf=c2pa.assertions/c2pa.icon",
+            "hash": "b64'lfe8kJEJxdpDbamHc+PyoxVdijCFOjGUDiyNwlzFz04='"
+          },
+          {
+            "url": "self#jumbf=c2pa.assertions/c2pa.actions.v2",
+            "hash": "b64'y2N5LkHZpYZMZdagqrUnD/RWb+ngdqNMkNkbtp9BHgY='"
+          },
+          {
+            "url": "self#jumbf=c2pa.assertions/c2pa.hash.data",
+            "hash": "b64'XheZi4bifyF0CqXxeOAnV/xnpkFa892JZhMNNpK0x3Y='"
+          }
+        ],
+        "gathered_assertions": []
+      },
+      "signature": {
+        "algorithm": "ps256",
+        "certificateInfo": {
+          "serialNumber": "ba5fce90e708cf2058031ee441c6473",
+          "issuer": {
+            "CN": "SSL.com C2PA ICA R1 2025",
+            "O": "SSL Corporation",
+            "C": "US"
+          },
+          "subject": {
+            "C": "US",
+            "O": "OpenAI OpCo, LLC",
+            "CN": "OpenAI Media Service"
+          },
+          "validity": {
+            "notBefore": "2026-04-22T15:51:05+00:00",
+            "notAfter": "2027-04-23T15:51:04+00:00"
+          }
+        },
+        "timeStampInfo": {
+          "timestamp": "2026-08-26T10:48:55.837381+00:00",
+          "certificateInfo": {
+            "serialNumber": "61db4628328a8c8d4a06b7bffe60e3026c3f71b7",
+            "issuer": {
+              "C": "US",
+              "ST": "CA",
+              "L": "San Francisco",
+              "O": "OpenAI OpCo, LLC",
+              "OU": "TSA",
+              "CN": "OpenAI TSA Issuing CA"
+            },
+            "subject": {
+              "C": "US",
+              "ST": "CA",
+              "L": "San Francisco",
+              "O": "OpenAI OpCo, LLC",
+              "OU": "TSA",
+              "CN": "OpenAI TSA Leaf"
+            },
+            "validity": {
+              "notBefore": "2026-04-08T17:46:26+00:00",
+              "notAfter": "2037-07-09T17:46:26+00:00"
+            }
+          }
+        }
+      },
+      "validationResults": {
+        "success": [
+          {
+            "code": "timeStamp.validated",
+            "url": "self#jumbf=/c2pa/urn:c2pa:51a82951-e158-439e-b1d6-51c5f7dc7ff4/c2pa.signature",
+            "explanation": "timestamp message digest matched: OpenAI TSA Leaf"
+          },
+          {
+            "code": "claimSignature.insideValidity",
+            "url": "self#jumbf=/c2pa/urn:c2pa:51a82951-e158-439e-b1d6-51c5f7dc7ff4/c2pa.signature",
+            "explanation": "claim signature valid"
+          },
+          {
+            "code": "claimSignature.validated",
+            "url": "self#jumbf=/c2pa/urn:c2pa:51a82951-e158-439e-b1d6-51c5f7dc7ff4/c2pa.signature",
+            "explanation": "claim signature valid"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:c2pa:51a82951-e158-439e-b1d6-51c5f7dc7ff4/c2pa.assertions/c2pa.icon",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.icon"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:c2pa:51a82951-e158-439e-b1d6-51c5f7dc7ff4/c2pa.assertions/c2pa.actions.v2",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:c2pa:51a82951-e158-439e-b1d6-51c5f7dc7ff4/c2pa.assertions/c2pa.hash.data",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+          },
+          {
+            "code": "assertion.dataHash.match",
+            "url": "self#jumbf=/c2pa/urn:c2pa:51a82951-e158-439e-b1d6-51c5f7dc7ff4/c2pa.assertions/c2pa.hash.data",
+            "explanation": "data hash valid"
+          }
+        ],
+        "informational": [
+          {
+            "code": "timeStamp.untrusted",
+            "url": "self#jumbf=/c2pa/urn:c2pa:51a82951-e158-439e-b1d6-51c5f7dc7ff4/c2pa.signature",
+            "explanation": "timestamp cert untrusted: OpenAI TSA Leaf"
+          }
+        ],
+        "failure": [
+          {
+            "code": "signingCredential.untrusted",
+            "url": "self#jumbf=/c2pa/urn:c2pa:51a82951-e158-439e-b1d6-51c5f7dc7ff4/c2pa.signature",
+            "explanation": "signing certificate untrusted"
+          }
+        ],
+        "specVersion": "2.3.0",
+        "validationTime": "2026-10-23T10:10:21.103323+00:00"
+      }
+    }
+  ],
+  "jsonGenerator": {
+    "name": "c2pa-rs",
+    "version": "0.91.2"
+  }
+}

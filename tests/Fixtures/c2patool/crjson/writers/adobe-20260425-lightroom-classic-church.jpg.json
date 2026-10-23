@@ -1,0 +1,339 @@
+{
+  "@context": {
+    "@vocab": "https://c2pa.org/crjson",
+    "extras": "https://c2pa.org/crjson/extras"
+  },
+  "manifests": [
+    {
+      "label": "urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a",
+      "isUpdateManifest": false,
+      "isCompressedManifest": false,
+      "assertions": {
+        "c2pa.thumbnail.claim.jpeg": {
+          "format": "image/jpeg",
+          "identifier": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.thumbnail.claim.jpeg",
+          "hash": "b64'MXyC+BQQx8Z391ufIG+9xCgnhSDuRWM1GP25hII4FI4='"
+        },
+        "c2pa.thumbnail.ingredient.jpeg": {
+          "format": "image/jpeg",
+          "identifier": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.thumbnail.ingredient.jpeg",
+          "hash": "b64'ZxVIuO1ALlRy7rK/K6pCy0c9NvCiYxGo1P2hCj2dGcY='"
+        },
+        "c2pa.ingredient.v2": {
+          "dc:title": "JGVX3188-DxO_DeepPRIME XD3 X-Trans.dng",
+          "dc:format": "image/x-adobe-dng",
+          "relationship": "parentOf",
+          "instanceID": "xmp:iid:e73ccbcc-e713-4e1c-b368-7062e205aa35",
+          "thumbnail": {
+            "url": "self#jumbf=c2pa.assertions/c2pa.thumbnail.ingredient.jpeg",
+            "hash": "b64'ZxVIuO1ALlRy7rK/K6pCy0c9NvCiYxGo1P2hCj2dGcY='",
+            "pad": "b64''"
+          }
+        },
+        "c2pa.actions": {
+          "actions": [
+            {
+              "action": "c2pa.opened",
+              "parameters": {
+                "ingredients": [
+                  {
+                    "url": "self#jumbf=c2pa.assertions/c2pa.ingredient.v2",
+                    "hash": "b64'Ljy00ZI1+fnn59F1Xie/75jvTQwm7HgS8eLQ+3KWhug='",
+                    "pad": "b64''"
+                  }
+                ]
+              }
+            },
+            {
+              "action": "c2pa.color_adjustments",
+              "parameters": {
+                "com.adobe.acr": "Blacks2012",
+                "com.adobe.acr.value": "-36"
+              }
+            },
+            {
+              "action": "c2pa.color_adjustments",
+              "parameters": {
+                "com.adobe.acr": "ColorNoiseReduction",
+                "com.adobe.acr.value": "-25"
+              }
+            },
+            {
+              "action": "c2pa.color_adjustments",
+              "parameters": {
+                "com.adobe.acr.value": "Changed Look Table",
+                "com.adobe.acr": "Look Table"
+              }
+            },
+            {
+              "action": "c2pa.color_adjustments",
+              "parameters": {
+                "com.adobe.acr": "PerspectiveUpright",
+                "com.adobe.acr.value": "5"
+              }
+            },
+            {
+              "action": "c2pa.color_adjustments",
+              "parameters": {
+                "com.adobe.acr": "Point Curve",
+                "com.adobe.acr.value": "Point Curve Changed"
+              }
+            },
+            {
+              "action": "c2pa.color_adjustments",
+              "parameters": {
+                "com.adobe.acr.value": "11",
+                "com.adobe.acr": "SharpenEdgeMasking"
+              }
+            },
+            {
+              "action": "c2pa.color_adjustments",
+              "parameters": {
+                "com.adobe.acr": "Sharpness",
+                "com.adobe.acr.value": "-17"
+              }
+            },
+            {
+              "action": "c2pa.color_adjustments",
+              "parameters": {
+                "com.adobe.acr": "White Balance",
+                "com.adobe.acr.value": "Changed White Balance"
+              }
+            },
+            {
+              "action": "c2pa.color_adjustments",
+              "parameters": {
+                "com.adobe.acr": "Whites2012",
+                "com.adobe.acr.value": "53"
+              }
+            },
+            {
+              "action": "c2pa.cropped",
+              "parameters": {
+                "com.adobe.acr": "Crop",
+                "com.adobe.acr.value": "Rotated Crop"
+              }
+            },
+            {
+              "action": "c2pa.filtered",
+              "parameters": {
+                "com.adobe.acr": "Look",
+                "com.adobe.acr.value": "None to Adobe Color"
+              }
+            },
+            {
+              "action": "c2pa.resized",
+              "parameters": {
+                "com.adobe.acr": "Upright",
+                "com.adobe.acr.value": "Changed Upright"
+              }
+            },
+            {
+              "action": "c2pa.resized",
+              "parameters": {
+                "com.adobe.acr.value": "Changed Warp",
+                "com.adobe.acr": "Warp"
+              }
+            }
+          ]
+        },
+        "stds.schema-org.CreativeWork": {
+          "@context": "https://schema.org",
+          "@type": "CreativeWork",
+          "author": [
+            {
+              "name": "Jules Verne Times Two",
+              "@type": "Person"
+            }
+          ]
+        },
+        "c2pa.hash.data": {
+          "exclusions": [
+            {
+              "start": 8642,
+              "length": 93877
+            }
+          ],
+          "name": "jumbf manifest",
+          "alg": "sha256",
+          "hash": "b64'KezgoitBZw+2stdoAdnY9VGlPEI13wyjGZkbB3Bkw0g='",
+          "pad": "b64'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='"
+        }
+      },
+      "claim": {
+        "instanceID": "xmp:iid:8998b361-65d3-454e-9475-76ab42aa2ed3",
+        "signature": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.signature",
+        "claim_generator_info": [
+          {
+            "name": "Lightroom Classic",
+            "version": "15.3",
+            "org.cai.c2pa_rs": "0.46.0"
+          }
+        ],
+        "alg": "sha256",
+        "dc:title": "Church detail at night, Manganitis, Ikaria, Greece julesvernex2.jpg",
+        "claim_generator": "lightroom_classic/15.3",
+        "dc:format": "jpg",
+        "assertions": [
+          {
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.thumbnail.claim.jpeg",
+            "hash": "b64'MXyC+BQQx8Z391ufIG+9xCgnhSDuRWM1GP25hII4FI4='"
+          },
+          {
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.thumbnail.ingredient.jpeg",
+            "hash": "b64'ZxVIuO1ALlRy7rK/K6pCy0c9NvCiYxGo1P2hCj2dGcY='"
+          },
+          {
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.ingredient.v2",
+            "hash": "b64'Ljy00ZI1+fnn59F1Xie/75jvTQwm7HgS8eLQ+3KWhug='"
+          },
+          {
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.actions",
+            "hash": "b64'fBrxGZLMMkt6OR/L4TJWd5vkNfvECKryc7504e+GIGY='"
+          },
+          {
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/stds.schema-org.CreativeWork",
+            "hash": "b64'6AdLHzPM8DinQhkrEbwXWFw7mn7z+cZUlupufbJ4WcE='"
+          },
+          {
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.hash.data",
+            "hash": "b64'0n4wzPdKa5xMqVsdtM9u141wFGBr8Xl3NLoeqDGDv6g='"
+          }
+        ]
+      },
+      "signature": {
+        "algorithm": "ps256",
+        "certificateInfo": {
+          "serialNumber": "4973206b3e75dfc96caf7f56ff2d2aadb04007dd",
+          "issuer": {
+            "C": "US",
+            "O": "Adobe Systems Incorporated",
+            "OU": "Adobe Trust Services",
+            "CN": "Adobe Product Services G4"
+          },
+          "subject": {
+            "CN": "Adobe C2PA",
+            "OU": "Content Authenticity Initiative",
+            "O": "Adobe Inc.",
+            "L": "San Jose",
+            "ST": "California",
+            "C": "US"
+          },
+          "validity": {
+            "notBefore": "2025-10-07T16:39:07+00:00",
+            "notAfter": "2026-10-07T16:39:07+00:00"
+          }
+        },
+        "timeStampInfo": {
+          "timestamp": "2026-04-25T09:46:07+00:00",
+          "certificateInfo": {
+            "serialNumber": "9190dc12c9c87db32fd0ab550bded4b",
+            "issuer": {
+              "C": "US",
+              "O": "DigiCert, Inc.",
+              "CN": "DigiCert Trusted G4 TimeStamping RSA4096 SHA256 2025 CA1"
+            },
+            "subject": {
+              "C": "US",
+              "O": "DigiCert, Inc.",
+              "CN": "Adobe SHA256 ECC256 Timestamp Responder 2025 1"
+            },
+            "validity": {
+              "notBefore": "2025-06-11T00:00:00+00:00",
+              "notAfter": "2036-09-10T23:59:59+00:00"
+            }
+          }
+        }
+      },
+      "validationResults": {
+        "success": [
+          {
+            "code": "timeStamp.validated",
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.signature",
+            "explanation": "timestamp message digest matched: Adobe SHA256 ECC256 Timestamp Responder 2025 1"
+          },
+          {
+            "code": "timeStamp.trusted",
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.signature",
+            "explanation": "legacy timestamp cert trusted: Adobe SHA256 ECC256 Timestamp Responder 2025 1"
+          },
+          {
+            "code": "claimSignature.insideValidity",
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.signature",
+            "explanation": "claim signature valid"
+          },
+          {
+            "code": "claimSignature.validated",
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.signature",
+            "explanation": "claim signature valid"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.thumbnail.claim.jpeg",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim.jpeg"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.thumbnail.ingredient.jpeg",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.ingredient.jpeg"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.ingredient.v2",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.ingredient.v2"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.actions",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/stds.schema-org.CreativeWork",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/stds.schema-org.CreativeWork"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.hash.data",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+          },
+          {
+            "code": "assertion.dataHash.match",
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.hash.data",
+            "explanation": "data hash valid"
+          }
+        ],
+        "informational": [],
+        "failure": [
+          {
+            "code": "signingCredential.untrusted",
+            "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.signature",
+            "explanation": "signing certificate untrusted"
+          }
+        ],
+        "specVersion": "2.3.0",
+        "validationTime": "2026-10-23T10:10:21.038543+00:00"
+      },
+      "ingredientDeltas": [
+        {
+          "ingredientAssertionURI": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.ingredient.v2",
+          "validationDeltas": {
+            "success": [],
+            "informational": [
+              {
+                "code": "ingredient.unknownProvenance",
+                "url": "self#jumbf=/c2pa/urn:uuid:4c83369d-6f41-41cf-a78b-487cc2b8c15a/c2pa.assertions/c2pa.ingredient.v2",
+                "explanation": "JGVX3188-DxO_DeepPRIME XD3 X-Trans.dng: ingredient does not have provenance"
+              }
+            ],
+            "failure": []
+          }
+        }
+      ]
+    }
+  ],
+  "jsonGenerator": {
+    "name": "c2pa-rs",
+    "version": "0.91.2"
+  }
+}

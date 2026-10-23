@@ -227,6 +227,30 @@ files with the same trust anchors.
 `timeStamp.untrusted` here where `c2patool` says `timeStamp.trusted`
 without an anchor — 34 corpus files, informational, no verdict changes.
 
+## crJSON values (SPEC-074)
+
+Not a verdict: how a CBOR value is written when crJSON is asked for.
+Measured against `c2patool` 0.28.2 `--crjson` (`c2pa-rs` 0.91.2) on 298
+CBOR assertions of 59 files (`tests/Fixtures/c2patool/crjson/`).
+
+- **Byte strings** are `b64'…'` with a closing quote, as `c2pa-rs` writes
+  them and as CBOR diagnostic notation does (RFC 8610 Appendix G.2). The
+  crJSON page (C2PA 2.4, Table 1 and §3.6.3.1) writes only the prefix
+  (`"b64'<base64>"`); the schema says nothing.
+- **Every** byte string is written so, by Table 1. `c2pa-rs` does it only
+  for fields named `hash`, `pad`, `pad2` and `signature`; elsewhere (BMFF
+  exclusion values, `ocspVals`, time-stamp tokens, `cawg.identity`'s
+  `pad1`) it leaves an array of integers.
+- An array of integers stays an array. `c2pa-rs` turns one named `hash`
+  into a byte string (old Adobe `c2pa.actions`).
+- No `"pad": "b64''"` is added beside a hash the CBOR holds without one;
+  `c2pa-rs` adds it (147 of the 298 assertions).
+- A single-precision float is written as the double PHP holds
+  (`2.319999933242798`); `c2pa-rs` writes its shortest single form
+  (`2.32`). The same value.
+- A tag other than 0, NaN and the infinities are refused, not written.
+  None occurs in the corpus.
+
 ## What "works" rests on
 
 - One pinned oracle (`c2patool` 0.27.22), and its successor 0.28.0

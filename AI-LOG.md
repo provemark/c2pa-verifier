@@ -10934,3 +10934,18 @@ README are where the disclosure lives.
 - Decided by Maurice: the closing quote, refusing other tags, floats as
   the double (SPEC-074 approved); the decoder mode over the other two
   routes; both amendments' text.
+
+## 2026-10-23 — SPEC-074 built: CBOR values as crJSON values (step 373)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja akkoord" (both amendments; then build).
+- Produced: `src/Cbor/CrJsonValue.php`, `src/Cbor/CrJsonValueException.php`;
+  `tests/Unit/Cbor/CrJsonValueTest.php`; `tests/Fixtures/c2patool/crjson/`
+  (59 answers and a README); "crJSON values" in `docs/comparison.md`;
+  SPEC-074 implemented with its Traceability;
+  `notes/step-373-crjson-values.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: `c2patool` 0.28.2 `--crjson` on 59 files; the tests red
+  (33 of 33) and green; four mutations; `composer check` (1,167 passed).
+- Reasoned: placing the class in `Cbor` rather than `Report` (no new
+  Deptrac arrow); sorting object keys in AC7's comparison.
+- Decided by Maurice: none beyond step 372's.
