@@ -356,3 +356,19 @@ with the signing command and tool version recorded.
 | 200 | The check before 0.2.9: every spec implemented; 621 tests; CI run 36749893798 green on `984883a` (8 jobs, `older-php` included); dist 379 files, contract surface unchanged, `src/` unchanged since 0.2.8; CHANGELOG and README up to date — `notes/step-200-pre-release-check.md` | done 2026-10-02 |
 | 201 | `v0.2.9` tagged on `6e880a9` after CI run 37001138783 was green on that commit (PHP 8.3, 8.4, 8.5; `requirements.php` on 7.4, 8.0, 8.1, 8.2); the GitHub archive holds 380 files, equal to `git archive` and to `bin/package-check.php`; on Packagist; `composer require provemark/c2pa-verifier:^0.2` installs 0.2.9, which ships `requirements.php` | done 2026-10-02 |
 | 250 | `v0.3.0` tagged on `d3fcca4` after CI run 37312393998 was green on that commit (8 jobs). It carries WAV, AVI, MP3 and FLAC (SPEC-055..058), the check before it (step 243), and two reviews' fixes (steps 244–249), one of them a wrong `Trusted` present since 0.2.5 (SPEC-046 amendment 1). The GitHub archive holds 376 files, equal to `git archive` and to `bin/package-check.php`; on Packagist; `composer require provemark/c2pa-verifier:^0.3` installs 0.3.0 and reads the four new formats' fixtures `Valid` | done 2026-10-05 |
+
+## Toward the C2PA conformance programme
+
+The programme's validator test is a harness: an asset, a test Trust List,
+a test TSA Trust List and a validation time in, crJSON out (step 367).
+
+| step | what | state |
+|---|---|---|
+| 367 | What the programme asks; the four inputs against this verifier | done 2026-10-23 |
+| — | A validation time as input (CLI and API) | next, a spec |
+| — | crJSON read and measured against `c2patool --crjson` and the conformance tool | planned |
+| — | crJSON output, next to the existing report | planned |
+| — | `bin/conformance-harness` | planned |
+| — | The test mode measured with the Conformance Test Root, per media type | planned |
+| — | The open gaps of `docs/conformance.md` | planned |
+| — | Applying | Maurice's decision |

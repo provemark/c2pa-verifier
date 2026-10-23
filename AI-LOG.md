@@ -10818,3 +10818,19 @@ README are where the disclosure lives.
   require` and two fixtures with their exit codes.
 - Reasoned: none.
 - Decided by Maurice: push, then the tag.
+
+## 2026-10-23 — What the conformance programme asks of a validator (step 367)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ik wil deze verifier langzaam gereedmaken voor het conformance
+  traject/program … Ik wil in ieder geval dat het door de testset komt van
+  dat traject. Kan je nakijken wat die testset is en kan je een voorstel
+  maken?"; then "akkoord, begin met stap 1".
+- Produced: `notes/step-367-conformance-programme.md`; a row in
+  `NOTES.md`; a section in `docs/milestones.md`.
+- Measured: `c2pa-org/conformance-public` `da71a72` (`docs/v0.2/`),
+  `c2pa-org/public-testfiles` `22beccc` and
+  `contentauth/c2pa-conformance-tool` `6d10ee0`, read with `gh api`;
+  `c2patool` 0.28.2 `--crjson` on one fixture; `bin/c2pa-verify --help`.
+- Reasoned: that the programme's test inputs are the test set and are not
+  public; which parts of `src/` serve which harness input.
+- Decided by Maurice: the plan's first step; nothing beyond it yet.
