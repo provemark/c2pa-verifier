@@ -320,7 +320,13 @@ final readonly class TimestampCheck
             return new TrustSettings([], [], [self::OID_EKU_TIME_STAMPING], true);
         }
 
-        return new TrustSettings(ChainCheck::tsaAnchorsOf($operator), [], [self::OID_EKU_TIME_STAMPING], $operator->verifyTrust);
+        // the operator's "tsa" entries become this check's signer entries, their dates kept (SPEC-079)
+        $sets = array_values(array_map(
+            static fn (TrustAnchorSet $set): TrustAnchorSet => new TrustAnchorSet(TrustAnchorSet::MANIFEST, $set->anchors, windows: $set->windows, reasons: $set->reasons),
+            array_filter($operator->anchorSets, static fn (TrustAnchorSet $set): bool => $set->kind === TrustAnchorSet::TSA),
+        ));
+
+        return new TrustSettings($operator->trustAnchors, [], [self::OID_EKU_TIME_STAMPING], $operator->verifyTrust, $sets);
     }
 
     /**

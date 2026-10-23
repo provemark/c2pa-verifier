@@ -175,3 +175,9 @@ accepted (AC5); `--settings` with a list let through (AC5). The swapped
 kinds leave AC1 green, as measured before the spec: the official lists
 share 16 anchors. The contract grew by one symbol, to 140. `composer
 check`: 1,209 passed, 1 skipped.
+
+Correction, 2026-10-23 (step 385): the Scope gives as the reason for
+`fromTrustLists()` that "the entry class is internal". It is not:
+`TrustAnchorSet` is a contract class, and a library caller can build the
+two entries itself. `fromTrustLists()` stays the shorter way, and since
+SPEC-079 the only one that reads the programme's JSON form.

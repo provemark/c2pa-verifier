@@ -29,6 +29,13 @@ bin/c2pa-verify --crjson \
 | the validation time | `--at <RFC 3339>`: used where no trusted time-stamp gives a time | SPEC-073 |
 | crJSON out | `--crjson` | SPEC-074, SPEC-075, SPEC-076 |
 
+Each list may be the PEM bundle or the same list in the programme's JSON
+form (ETSI TS 119 602 List of Trusted Entities; `C2PA-TRUST-LIST.json`,
+`C2PA-TSA-TRUST-LIST.json`). The JSON form also carries when each anchor
+was trusted and, if it was, when it stopped being: this verifier then
+counts the anchor only inside those stretches (C2PA 2.4 §14.4.1; SPEC-079).
+The PEM bundle carries no dates.
+
 The two lists stay apart: an anchor of the signer list never vouches for
 a time-stamp authority, and the reverse (C2PA 2.4 §14.4.1, §14.4.2;
 SPEC-031). `--settings` cannot be combined with them, so that there is

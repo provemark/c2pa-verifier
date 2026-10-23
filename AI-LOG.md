@@ -11134,3 +11134,21 @@ README are where the disclosure lives.
   the empty status.
 - Decided by Maurice: the JSON lists through the existing options; an
   empty status is not used, and said.
+
+## 2026-10-23 — SPEC-079 built: trust lists with dates (step 385)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord".
+- Produced: `fromLote()`, `loteCertificates()`, `loteTimeline()` in
+  `src/Trust/TrustSettings.php`; `$windows`, `$reasons` in
+  `src/Trust/TrustAnchorSet.php`; `listedFault()` in
+  `src/Trust/ChainCheck.php`; `tsaSettings()` in
+  `src/Timestamp/TimestampCheck.php`; `tests/Unit/Trust/TrustListDatesTest.php`;
+  the official JSON lists as fixtures; the surface fixture and count
+  (142); `docs/conformance.md`, `docs/comparison.md`,
+  `docs/conformance-harness.md`; SPEC-079 implemented; a correction in
+  SPEC-077's Traceability; `notes/step-385-trust-list-dates.md`; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: red (16 of 16) and green; five mutations; the corpus before
+  and after (0 of 1,854); `composer check` (1,238 passed).
+- Reasoned: reading AC6's "one service" as "one of its services".
+- Decided by Maurice: SPEC-079 approved.

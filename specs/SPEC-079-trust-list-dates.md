@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-23                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -160,6 +160,7 @@ The contract does not grow: `fromTrustLists()` keeps its signature.
 
 - None blocking. The empty status: not used, and said (Maurice,
   2026-10-23).
+  *Status 2026-10-23 (step 385):* settled; approved without changes.
 
 ## Traceability
 
@@ -168,10 +169,26 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
+| AC1 | tests/Unit/Trust/TrustListDatesTest.php :: AC1: the JSON lists give the PEM bundles' anchors but the three NETLOCK ones, and the same reports / SPEC-079 | src/Trust/TrustSettings.php :: fromTrustLists(), fromLote(), loteCertificates(); tests/Fixtures/trust/conformance-public/*.json |
+| AC2 | tests/Unit/Trust/TrustListDatesTest.php :: AC2: a signer anchor listed after the signature is not used; listed before, it is / SPEC-079 | src/Trust/ChainCheck.php :: listedFault(), checkCertificates() |
+| AC3 | tests/Unit/Trust/TrustListDatesTest.php :: AC3: a signer anchor untrusted after the signature still counts; untrusted before, it does not / SPEC-079 | src/Trust/TrustSettings.php :: loteTimeline() |
+| AC4 | tests/Unit/Trust/TrustListDatesTest.php :: AC4: without a time-stamp, the validation time decides / SPEC-079 | src/Trust/ChainCheck.php :: listedFault() (the judged time) |
+| AC5 | tests/Unit/Trust/TrustListDatesTest.php :: AC5: a TSA anchor is judged at the token's time / SPEC-079 | src/Timestamp/TimestampCheck.php :: tsaSettings() (the operator's "tsa" entries with their dates) |
+| AC6 | tests/Unit/Trust/TrustListDatesTest.php :: AC6: an entry that cannot be placed is not used, and the report says why (6 datasets); AC6: a list in which no entry is usable is refused, like a PEM file without a certificate / SPEC-079 | src/Trust/TrustSettings.php :: loteTimeline(), fromLote(); src/Trust/TrustAnchorSet.php :: $windows, $reasons |
+| AC7 | tests/Unit/Trust/TrustListDatesTest.php :: AC7: malformed JSON lists are refused, naming the option and the fault (4 datasets) / SPEC-079 | src/Trust/TrustSettings.php :: fromLote(), loteCertificates() |
+
+The contract grew by two symbols, `TrustAnchorSet::$windows` and
+`$reasons`, to 142; the API sketch said it would not grow, wrongly:
+`TrustAnchorSet` is a contract class. Both are optional constructor
+parameters with defaults, an addition.
+
+AC6's documents hold the unplaceable service and one usable service: a
+document whose only service cannot be placed is refused as a whole (the
+same criterion's last sentence), so "whose one service has" is read as
+"one of whose services has".
+
+The tests were run red first: 16 of 16. Five mutations were watched
+failing: the dates ignored (10 tests); the TSA entries' dates dropped
+(AC5); an empty status read as trusted (AC6); the history ignored (AC3);
+no end to a trusted stretch (AC3). The corpus before and after: 0 of
+1,854 runs moved. `composer check`: 1,238 passed, 1 skipped.

@@ -168,6 +168,11 @@ final readonly class TrustSettings
             if ($pem === null) {
                 continue;
             }
+            if (str_starts_with(ltrim($pem), '{')) {
+                $sets[] = self::fromLote($pem, $kind, $what, $maxCertificates);   // SPEC-079: the programme's JSON form
+
+                continue;
+            }
             $certificates = str_contains($pem, '-----BEGIN ') ? self::certificatesFromPem($pem, $what, $maxCertificates) : [];
             if ($certificates === []) {
                 throw new TrustException(sprintf('%s holds no certificate', $what));
@@ -176,6 +181,149 @@ final readonly class TrustSettings
         }
 
         return new self([], [], [], true, $sets);
+    }
+
+    private const string LOTE_TRUSTED = 'http://c2pa.org/conformance/trust-list/trusted';
+
+    private const string LOTE_UNTRUSTED = 'http://c2pa.org/conformance/trust-list/untrusted';
+
+    /**
+     * A list in ETSI TS 119 602's JSON form (LoTE), as the programme publishes it (SPEC-079). Each
+     * service's statuses, the current one and its ServiceHistory, form a timeline, each status lasting
+     * until the next begins; the anchor is trusted in the `trusted` stretches only (C2PA 2.4 §14.4.1).
+     * A service that cannot be placed on a timeline is kept, never trusted, with its reason.
+     */
+    private static function fromLote(string $json, string $kind, string $what, int $max): TrustAnchorSet
+    {
+        try {
+            $decoded = json_decode($json, true, 64, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new TrustException(sprintf('%s is not valid JSON: %s', $what, $e->getMessage()), 0, $e);
+        }
+        $lote = is_array($decoded) ? ($decoded['LoTE'] ?? null) : null;
+        if (! is_array($lote) || ! is_array($lote['TrustedEntitiesList'] ?? null)) {
+            throw new TrustException(sprintf('%s is JSON but not a List of Trusted Entities (ETSI TS 119 602 LoTE)', $what));
+        }
+        $anchors = [];
+        $windows = [];
+        $reasons = [];
+        foreach ($lote['TrustedEntitiesList'] as $e => $entity) {
+            foreach (is_array($entity) && is_array($entity['TrustedEntityServices'] ?? null) ? $entity['TrustedEntityServices'] : [] as $s => $service) {
+                $at = sprintf('%s: entity %d, service %d', $what, (int) $e + 1, (int) $s + 1);
+                $information = is_array($service) && is_array($service['ServiceInformation'] ?? null) ? $service['ServiceInformation'] : [];
+                $certificates = self::loteCertificates($information, $at, $max - count($anchors));
+                [$stretches, $reason] = self::loteTimeline($information, is_array($service) && is_array($service['ServiceHistory'] ?? null) ? $service['ServiceHistory'] : [], $certificates);
+                foreach ($certificates as $certificate) {
+                    $hash = bin2hex($certificate->sha256);
+                    $anchors[] = $certificate;
+                    $windows[$hash] = $stretches;
+                    if ($reason !== null) {
+                        $reasons[$hash] = $reason;
+                    }
+                }
+            }
+        }
+        if (array_filter($windows, static fn (array $w): bool => $w !== []) === []) {
+            throw new TrustException(sprintf('%s holds no usable anchor: no service is trusted at any time', $what));
+        }
+
+        return new TrustAnchorSet($kind, $anchors, windows: $windows, reasons: $reasons);
+    }
+
+    /**
+     * @param  array<mixed>  $information
+     * @return list<Certificate>
+     */
+    private static function loteCertificates(array $information, string $at, int $room): array
+    {
+        $identity = is_array($information['ServiceDigitalIdentity'] ?? null) ? $information['ServiceDigitalIdentity'] : [];
+        $certificates = [];
+        foreach (is_array($identity['X509Certificates'] ?? null) ? $identity['X509Certificates'] : [] as $i => $entry) {
+            $value = is_array($entry) && is_string($entry['val'] ?? null) ? $entry['val'] : null;
+            $der = $value === null ? false : base64_decode($value, true);
+            if ($der === false || $der === '') {
+                throw new TrustException(sprintf('%s, certificate %d is not base64', $at, (int) $i + 1));
+            }
+            if (count($certificates) >= $room) {
+                throw new TrustException(sprintf('%s: the list holds more certificates than this verifier reads', $at));
+            }
+            try {
+                $certificates[] = Certificate::fromDer($der);
+            } catch (TrustException $e) {
+                throw new TrustException(sprintf('%s, certificate %d: %s', $at, (int) $i + 1, $e->getMessage()), 0, $e);
+            }
+        }
+
+        return $certificates;
+    }
+
+    /**
+     * A service's trusted stretches, or none and the reason it cannot be placed.
+     *
+     * @param  array<mixed>  $information
+     * @param  array<mixed>  $history
+     * @param  list<Certificate>  $certificates
+     * @return array{0: list<array{from: int, until: int|null}>, 1: string|null}
+     */
+    private static function loteTimeline(array $information, array $history, array $certificates): array
+    {
+        $own = array_map(static fn (Certificate $c): string => $c->sha256, $certificates);
+        $records = [];
+        foreach ([$information, ...array_values($history)] as $n => $record) {
+            if (! is_array($record)) {
+                return [[], 'a history entry is not an object'];
+            }
+            if ($n > 0 && is_array($record['ServiceDigitalIdentity'] ?? null)) {
+                try {
+                    $theirs = array_map(static fn (Certificate $c): string => $c->sha256, self::loteCertificates($record, 'history', PHP_INT_MAX));
+                } catch (TrustException) {
+                    return [[], 'a history entry names certificates that cannot be read'];
+                }
+                if ($theirs !== $own) {
+                    return [[], 'a history entry names other certificates than the service'];
+                }
+            }
+            $status = $record['ServiceStatus'] ?? null;
+            if ($status === null) {
+                return [[], 'the list gives no status'];
+            }
+            if ($status === '') {
+                return [[], 'the list gives an empty status'];
+            }
+            if ($status !== self::LOTE_TRUSTED && $status !== self::LOTE_UNTRUSTED) {
+                return [[], sprintf('the status %s is neither trusted nor untrusted', is_string($status) ? $status : get_debug_type($status))];
+            }
+            $time = $record['StatusStartingTime'] ?? null;
+            if ($time === null || $time === '') {
+                return [[], 'the list gives no starting time'];
+            }
+            $epoch = is_string($time) ? self::rfc3339($time) : null;
+            if ($epoch === null) {
+                return [[], sprintf('the starting time %s is not an RFC 3339 date-time', is_string($time) ? $time : get_debug_type($time))];
+            }
+            $records[] = [$epoch, $status === self::LOTE_TRUSTED];
+        }
+        usort($records, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
+        $stretches = [];
+        foreach ($records as $i => [$from, $trusted]) {
+            if ($trusted) {
+                $stretches[] = ['from' => $from, 'until' => $records[$i + 1][0] ?? null];
+            }
+        }
+
+        return [$stretches, $stretches === [] ? 'the list never trusts it' : null];
+    }
+
+    /** An RFC 3339 date-time as whole seconds since the epoch (a fraction rounded down), or null. */
+    private static function rfc3339(string $value): ?int
+    {
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})$/D', $value, $m) !== 1
+            || ! checkdate((int) $m[2], (int) $m[3], (int) $m[1]) || (int) $m[4] > 23 || (int) $m[5] > 59 || (int) $m[6] > 59) {
+            return null;
+        }
+        $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d\\TH:i:sP', sprintf('%s-%s-%sT%s:%s:%s%s', $m[1], $m[2], $m[3], $m[4], $m[5], $m[6], $m[7] === 'Z' ? '+00:00' : $m[7]));
+
+        return $parsed === false ? null : $parsed->getTimestamp();
     }
 
     /**

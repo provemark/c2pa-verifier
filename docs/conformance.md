@@ -1,6 +1,6 @@
 # Conformance: 111 named obligations, one by one
 
-*Measured 2026-09-22 (step 90); updated the same day after SPEC-030 closed
+*Measured 2026-09-22 (step 90); `PRED-CRYP-006` closed by SPEC-079 (step 385); updated the same day after SPEC-030 closed
 five of its gaps (step 92); corrected 2026-09-24 (step 108), when `PRED-IMG-004`
 turned out to be a gap that step 90 had marked enforced, and closed the same
 day (step 109); four rows brought up to date with SPEC-035 amendment 5 and
@@ -37,11 +37,11 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | verdict | predicates |
 |---|---|
-| **yes** | 70 |
+| **yes** | 71 |
 | partial | 10 |
 | closed | 4 |
 | by design | 22 |
-| **gap** | 5 |
+| **gap** | 4 |
 | **total** | 111 |
 
 ## Cross-format (6)
@@ -116,7 +116,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-CRYP-003` | shall | Signing credential validation | **yes** — `CertificateProfileCheck` (SPEC-015), every fault `signingCredential.invalid`; since 2026-09-27 also an unknown critical extension (SPEC-046) and a PSS leaf over SHA-1 (SPEC-048), and since 2026-09-28 an RSA public exponent below 3 or even (SPEC-049) |
 | `PRED-CRYP-004` | shall | Signature algorithm allowed list check | **yes** — `SignatureVerifier` allows ES256/384/512, PS256/384/512, EdDSA; anything else is `algorithm.unsupported` |
 | `PRED-CRYP-005` | shall | Timestamp presence check before trust chain verification | **yes** — the timestamp check runs before the chain and hands it the attested time (SPEC-013 amendment 8) |
-| `PRED-CRYP-006` | shall | Trust anchor temporal validity gating | **gap** — a trust anchor with `notBefore`/`notAfter` gating is not supported: `TrustSettings` has no such field |
+| `PRED-CRYP-006` | shall | Trust anchor temporal validity gating | **yes** — since 2026-10-23 (SPEC-079): the programme's JSON lists (ETSI TS 119 602 LoTE) give each anchor `trusted`/`untrusted` stretches, applied at the trusted time-stamp's time, else the validation time (§14.4.1, §15.7); an anchor that cannot be placed is not used. A PEM bundle or a `--settings` document still carries no dates |
 | `PRED-CRYP-007` | shall | Certificate chain of trust to trust anchor | **yes** — `ChainCheck` builds to an anchor; `signingCredential.trusted` / `.untrusted` (SPEC-014). Every issuer must be a CA with `keyCertSign` within its `pathlen` (SPEC-014 amendment 4); name constraints and unknown critical extensions stop the path (SPEC-046), as do MD5 or SHA-1 signatures (SPEC-048) and an RSA key with a bad exponent (SPEC-049) between the anchor and the leaf |
 | `PRED-CRYP-008` | shall | COSE claim signature cryptographic verification | **yes** — `CoseSign1` + `SignatureVerifier` over the Sig_structure; `claimSignature.validated` / `.mismatch` (SPEC-009) |
 | `PRED-CRYP-009` | may | COSE header bucket placement permissiveness | **yes** for a claim v1 — `CoseSign1::findChain()` looks as `c2pa-rs` does: the protected header (label 33 or `"x5chain"`), else the unprotected `"x5chain"`. Label 33 in the unprotected header is no chain, and a chain in both headers is refused; in a claim v2 or later an unprotected chain is `signingCredential.invalid`, stricter by design (SPEC-047, 2026-09-27) |
@@ -217,7 +217,7 @@ accept; its predicate list does not depend on its cryptography being right.
 
 ## What the 23 gaps mean, sorted by what they could cost
 
-Twenty-three gaps were recorded. Sixteen have since been closed (section 0, section 1, `PRED-ASSE-027` by SPEC-032, `PRED-STRU-009` by SPEC-034, `PRED-BMFF-001`, `-002` and `-004` by SPEC-038, `PRED-TIME-002` and `-003` by SPEC-064, `PRED-ASSE-013`, `-014` and `-026` by SPEC-065), one narrowed to partial (`PRED-ASSE-025`), and one set aside by decision (`PRED-CRYP-019`, issue #10). Five remain, each an open issue: #1, #7, #8, #9, #12.
+Twenty-three gaps were recorded. Sixteen have since been closed (section 0, section 1, `PRED-ASSE-027` by SPEC-032, `PRED-STRU-009` by SPEC-034, `PRED-BMFF-001`, `-002` and `-004` by SPEC-038, `PRED-TIME-002` and `-003` by SPEC-064, `PRED-ASSE-013`, `-014` and `-026` by SPEC-065), one narrowed to partial (`PRED-ASSE-025`), and one set aside by decision (`PRED-CRYP-019`, issue #10). `PRED-CRYP-006` (#9) closed on 2026-10-23 by SPEC-079. Four remain, each an open issue: #1, #7, #8, #12.
 
 A gap is only interesting through its consequence. The question this
 project asks of everything is the same one: **can it make this verifier say
@@ -291,7 +291,6 @@ manifest may say.
 - `PRED-ASSE-025` (partial since SPEC-032) — a `digitalSourceType` on actions other than `c2pa.created` (issue #2 closed as not planned)
 - `PRED-ASSE-023` (partial) — `created_assertions`' first actions reference resolving to `c2pa.actions.v2`
 - `PRED-CRYP-024` — `c2pa.session-keys`: its `signerBinding` is not verified
-- `PRED-CRYP-006` — a trust anchor with `notBefore`/`notAfter` gating
 
 Each would make a strict validator reject a file this one accepts. None of
 them lets changed bytes through: they are conformance rules about a

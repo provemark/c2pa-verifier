@@ -28,6 +28,11 @@ final readonly class TrustAnchorSet
      * @param  list<Certificate>  $anchors
      * @param  list<Certificate>  $allowedList  only ever non-empty for a "manifest" entry (§14.4.3)
      * @param  list<string>  $trustConfig  EKU OIDs for chains that reach this entry
+     * @param  array<string, list<array{from: int, until: int|null}>>  $windows  SPEC-079: by an anchor's SHA-256 (hex), the
+     *                                                                           stretches its list trusts it in; an anchor absent
+     *                                                                           here has no dates (a PEM bundle); an empty list
+     *                                                                           means never
+     * @param  array<string, string>  $reasons  SPEC-079: by SHA-256 (hex), why an anchor could not be placed on a timeline
      */
     public function __construct(
         public string $kind,
@@ -35,6 +40,8 @@ final readonly class TrustAnchorSet
         public array $allowedList = [],
         public array $trustConfig = [],
         public ?string $uri = null,
+        public array $windows = [],
+        public array $reasons = [],
     ) {
         if (! in_array($kind, self::KINDS, true)) {
             throw new TrustException(sprintf('trust_kind %s is not one of %s', $kind, implode(', ', self::KINDS)));

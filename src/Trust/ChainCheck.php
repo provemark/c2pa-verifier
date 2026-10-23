@@ -123,7 +123,7 @@ final readonly class ChainCheck
                 // depth = links walked from the leaf to the anchor: the leaf itself an anchor is 0, the leaf signed by one is 1
                 if ($current->sameAs($anchor)) {
                     $path = array_reverse(array_slice($chain, 0, $depth + 1));
-                    $fault = self::pathFault($path) ?? (new OcspCheck)->revokedCa($unprotected, $path, $at);
+                    $fault = self::listedFault($settings, $anchor, $at) ?? self::pathFault($path) ?? (new OcspCheck)->revokedCa($unprotected, $path, $at);
                     if ($fault !== null) {
                         return [new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))];
                     }
@@ -132,7 +132,7 @@ final readonly class ChainCheck
                 }
                 if ($current->issuer === $anchor->subject && $current->signedBy($anchor)) {
                     // the anchor issued $current: $depth intermediates lie between it and the leaf
-                    $fault = self::issuerFault($anchor, $current, $depth, $at, 'trust anchor');
+                    $fault = self::issuerFault($anchor, $current, $depth, $at, 'trust anchor') ?? self::listedFault($settings, $anchor, $at);
                     if ($fault !== null) {
                         $anchorFault ??= $fault;
 
@@ -208,6 +208,51 @@ final readonly class ChainCheck
     public static function tsaAnchorsOf(TrustSettings $settings): array
     {
         return [...$settings->trustAnchors, ...array_merge(...array_map(static fn (TrustAnchorSet $set): array => $set->kind === TrustAnchorSet::TSA ? $set->anchors : [], $settings->anchorSets))];
+    }
+
+    /**
+     * Why a reached anchor does not count at $at under its list's dates (C2PA 2.4 §14.4.1, §15.7;
+     * SPEC-079), or null when it counts: an entry without dates (a PEM bundle, the legacy list), or a
+     * dated entry with a trusted stretch around $at.
+     */
+    private static function listedFault(TrustSettings $settings, Certificate $anchor, int $at): ?string
+    {
+        foreach ($settings->trustAnchors as $legacy) {
+            if (hash_equals($legacy->sha256, $anchor->sha256)) {
+                return null;
+            }
+        }
+        $hash = bin2hex($anchor->sha256);
+        $dated = false;
+        $stretches = [];
+        $reason = null;
+        foreach ($settings->anchorSets as $set) {
+            if ($set->kind !== TrustAnchorSet::MANIFEST || array_filter($set->anchors, static fn (Certificate $a): bool => hash_equals($a->sha256, $anchor->sha256)) === []) {
+                continue;
+            }
+            if (! array_key_exists($hash, $set->windows)) {
+                return null;
+            }
+            foreach ($set->windows[$hash] as $window) {
+                if ($at >= $window['from'] && ($window['until'] === null || $at < $window['until'])) {
+                    return null;
+                }
+            }
+            $dated = true;
+            $stretches = [...$stretches, ...$set->windows[$hash]];
+            $reason ??= $set->reasons[$hash] ?? null;
+        }
+        if (! $dated) {
+            return null;
+        }
+        $when = static fn (int $t): string => gmdate('Y-m-d\TH:i:s\Z', $t);
+
+        return sprintf(
+            'the trust list does not trust the anchor %s at %s: %s (C2PA 2.4 §14.4.1)',
+            $anchor->subjectCn(),
+            $when($at),
+            $reason ?? 'it is listed as trusted '.implode(', ', array_map(static fn (array $w): string => 'from '.$when($w['from']).($w['until'] === null ? '' : ' until '.$when($w['until'])), $stretches)),
+        );
     }
 
     /**
