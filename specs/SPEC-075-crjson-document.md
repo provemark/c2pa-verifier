@@ -241,6 +241,9 @@ three symbols (`VERSION`, `$validationTime`, `toCrJson()`); 0.8.0.
 
 2. **2026-10-23, step 393, approved by Maurice van Loon ("ja"; found by the review of 2026-10-23)** — a JSON assertion is written as `{}` when its value cannot be written back as the same JSON: a number beyond a double (`1e99999999`, which PHP reads as infinity and then cannot encode, so the whole document was refused with exit 2), or an integer beyond 64 bits (written back as a different float). Confirmed by running. **AC10 (new)**: both give `{}` for that assertion and a complete document otherwise; the exit status stays the report's.
 
+3. **2026-10-23, step 399, found by the review of 2026-10-23 (the low items, "doe 1 nog", Maurice van Loon).** An ingredient manifest's own `validationResults` came from the first ingredient assertion, in store order, that named it and had a delta; the checker scopes that manifest's own statuses under its first reference in walk order (`$graph->referenced[$label][0]`). With a manifest named twice and the store listing the later reference first, crJSON could show the other reference's delta as the manifest's own results. `ownResultsOf()` now takes the delta of the first reference in walk order, and none where that reference has none.
+   - **AC11 — the manifest's own results are the checker's scope**: A takes P1 then P2, both take M, the store lists P2 before P1: M's results are P1's delta, and with only P2's delta present M has none.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -258,6 +261,7 @@ least one test; every source file maps back to this spec.
 | AC8 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC8: without a store, manifests is empty and the root is otherwise as AC1 (3 datasets); AC8: on the command line, the report's failure goes to standard error and the exit is the report's / SPEC-075 | src/Verifier/CrJsonDocument.php :: of(); src/Cli/Command.php :: run() |
 | AC9 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC9: --crjson prints toCrJson() of the same call, with --settings and --at / SPEC-075 | src/Cli/Command.php :: run() (`--crjson`); src/Verifier/VerificationReport.php :: toCrJson() |
 | AC10 (amendment 2) | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC10: a JSON assertion is written as it is, where it can be written back the same (7 datasets) / SPEC-075 | src/Cbor/CrJsonValue.php :: fromJson(); src/Verifier/CrJsonDocument.php :: assertion() |
+| AC11 (amendment 3) | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC11: a manifest's own results are the delta of the reference the checker scoped them under / SPEC-075 | src/Verifier/CrJsonDocument.php :: ownResults(), ownResultsOf() |
 
 `Verifier::VERSION` is `0.8.0-dev`, not `0.8.0` as the API sketch had it:
 SemVer allows a pre-release, and the release commit sets the final
@@ -274,3 +278,8 @@ moved. The contract grew by three symbols, to 139. `composer check`:
 1,182 passed, 1 skipped.
 
 Amendment 2 (step 393): the tests red first (`fromJson()` did not exist), green after. Mutations, each failing: bigints let through (2), an infinity let through (1). The reviewer's probe `inf.jpg` (an altered file, not kept as a fixture): `--crjson` exited 2 ("Inf and NaN cannot be JSON encoded") before, exits 1 (its report's status) with a whole document after.
+
+Amendment 3 (step 399): the test red against the first build's logic,
+moved unchanged into `ownResultsOf()` (it gave P2's delta); green after.
+The crJSON of every fixture before and after, at a fixed `--at`: 0 of
+927 documents moved.

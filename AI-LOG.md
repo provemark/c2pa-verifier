@@ -11335,3 +11335,14 @@ README are where the disclosure lives.
 - Measured: the tests red (7) and green; two mutations; the crJSON
   no-store line seen as hex before; `composer check` (1,310 passed).
 - Decided by Maurice: none beyond the item.
+
+## 2026-10-23 — SPEC-075 amendment 3: crJSON own results (step 399)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: the same "doe 1 nog".
+- Produced: SPEC-075 amendment 3 and its Traceability;
+  `CrJsonDocument::ownResultsOf()`; AC11 in
+  `tests/Unit/Verifier/CrJsonDocumentTest.php`;
+  `notes/step-399-crjson-own-results.md`; a row in `NOTES.md`.
+- Measured: the test red on the old logic, green after; crJSON of 927
+  fixtures before and after (0 moved); `composer check` (1,311 passed).
+- Decided by Maurice: none beyond the item.

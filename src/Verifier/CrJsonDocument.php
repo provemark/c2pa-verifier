@@ -163,13 +163,24 @@ final class CrJsonDocument
         } catch (ManifestException) {
             return [];   // the report says why; no delta could have been placed either
         }
+
+        return self::ownResultsOf($graph, $byUri);
+    }
+
+    /**
+     * The delta of the reference the checker scoped each manifest's own statuses under: the first
+     * in walk order (`IngredientManifestCheck::check()`; SPEC-075 amendment 3). A manifest whose
+     * first reference has no delta has none, whatever another reference holds.
+     *
+     * @param  array<string, array<string, list<mixed>>>  $byUri
+     * @return array<string, array<string, list<mixed>>>
+     */
+    public static function ownResultsOf(ManifestGraph $graph, array $byUri): array
+    {
         $own = [];
-        foreach ($graph->ingredients as $list) {
-            foreach ($list as $ingredient) {
-                $named = $ingredient->manifestLabel();
-                if ($named !== null && ! isset($own[$named]) && isset($byUri[$ingredient->url])) {
-                    $own[$named] = $byUri[$ingredient->url];
-                }
+        foreach ($graph->referenced as $label => $urls) {
+            if (isset($urls[0], $byUri[$urls[0]])) {
+                $own[(string) $label] = $byUri[$urls[0]];
             }
         }
 

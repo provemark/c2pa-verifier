@@ -2,8 +2,14 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Cli\Command;
+use Provemark\C2paVerifier\Manifest\HashedUri;
+use Provemark\C2paVerifier\Manifest\IngredientAssertion;
+use Provemark\C2paVerifier\Manifest\ManifestGraph;
+use Provemark\C2paVerifier\Manifest\Relationship;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
+use Provemark\C2paVerifier\Verifier\CrJsonDocument;
 use Provemark\C2paVerifier\Verifier\Verifier;
 
 /*
@@ -326,4 +332,34 @@ it('AC9: --crjson prints toCrJson() of the same call, with --settings and --at',
     [$twice, $nothing] = spec075Run('--crjson', '--crjson', $file);
     expect($twice)->toBe(2)
         ->and($nothing)->toBe('');
+})->group('SPEC-075');
+
+// AC11 (amendment 3)
+/** An ingredient assertion in $holder, at $label, naming manifest $names. */
+function spec075Takes(string $holder, string $label, string $names): IngredientAssertion
+{
+    return new IngredientAssertion(
+        $label, "self#jumbf=/c2pa/{$holder}/c2pa.assertions/{$label}", 1,
+        Relationship::ComponentOf, 'x', 'image/jpeg', null, 'xmp:iid:1',
+        new HashedUri("self#jumbf=/c2pa/{$names}", new CborBytes(str_repeat("\x00", 32)), null),
+        null, null, null, null, null, [],
+    );
+}
+
+it('AC11: a manifest\'s own results are the delta of the reference the checker scoped them under', function (): void {
+    // A takes P1 then P2; both take M. The walk reaches M first through P1; the store lists P2 before P1
+    $graph = ManifestGraph::fromIngredients('A', [
+        'M' => [],
+        'P2' => [spec075Takes('P2', 'c2pa.ingredient.v3', 'M')],
+        'P1' => [spec075Takes('P1', 'c2pa.ingredient.v3', 'M')],
+        'A' => [spec075Takes('A', 'c2pa.ingredient.v3', 'P1'), spec075Takes('A', 'c2pa.ingredient.v3__1', 'P2')],
+    ], []);
+    $first = 'self#jumbf=/c2pa/P1/c2pa.assertions/c2pa.ingredient.v3';
+    $other = 'self#jumbf=/c2pa/P2/c2pa.assertions/c2pa.ingredient.v3';
+    $deltas = [$first => ['success' => ['P1 about M'], 'informational' => [], 'failure' => []], $other => ['success' => ['P2 about M'], 'informational' => [], 'failure' => []]];
+
+    expect($graph->referenced['M'][0] ?? null)->toBe($first)
+        ->and(CrJsonDocument::ownResultsOf($graph, $deltas)['M']['success'] ?? null)->toBe(['P1 about M'])
+        // the first reference has no delta: M has none, never the other's
+        ->and(CrJsonDocument::ownResultsOf($graph, [$other => $deltas[$other]]))->not->toHaveKey('M');
 })->group('SPEC-075');
