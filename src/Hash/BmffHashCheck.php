@@ -76,7 +76,7 @@ final readonly class BmffHashCheck
     private const UNSUPPORTED_FILTERS = ['length', 'version', 'flags', 'exact'];
 
     /** SPEC-071: the boxes an exclusion may take whole, as c2pa-rs writes them. */
-    private const ALLOWED_WHOLE = ['/ftyp', '/mfra', '/free', '/skip', '/meta/iloc', '/mfra/tfra', '/moov/free', '/moov/udta', '/moov/meta'];   // the last three: Pixel Camera (SPEC-072)
+    private const ALLOWED_WHOLE = ['/ftyp', '/mfra', '/free', '/skip', '/mfra/tfra', '/moov/free', '/moov/udta', '/moov/meta'];   // the last three: Pixel Camera (SPEC-072)
 
     /** SPEC-072: a track excluded by index, allowed only when its handler is timed metadata (checked after the walk). */
     private const INDEXED_TRACK = '#^/moov\[1\]/trak\[([1-9][0-9]{0,8})\]$#';
@@ -87,8 +87,12 @@ final readonly class BmffHashCheck
     /** SPEC-072: exclusions whose boxes can hold metadata worth saying is not signed. */
     private const UNSIGNED_METADATA = ['/moov/udta', '/moov/meta'];
 
-    /** SPEC-071: the offset fields, allowed only through a subset from offset 16 on. */
-    private const ALLOWED_OFFSET_FIELDS = ['/moov/trak/mdia/minf/stbl/stco', '/moov/trak/mdia/minf/stbl/co64', '/moof/traf/tfhd', '/moof/traf/trun'];
+    /**
+     * SPEC-071 amendment 1: the offset tables an older c2pa-rs excluded, now refused. With them excluded,
+     * the bytes read as samples can be changed without touching the hash; C2PA 2.4 §18.6.2 hashes every
+     * offset at its post-embed value, and today's c2pa-rs no longer excludes them.
+     */
+    private const OFFSET_TABLES = ['/moov/trak/mdia/minf/stbl/stco', '/moov/trak/mdia/minf/stbl/co64', '/meta/iloc', '/moof/traf/tfhd', '/moof/traf/trun'];
 
     /**
      * @param  iterable<string, resource>  $fragments  a name and an open stream, one at
@@ -589,16 +593,11 @@ final readonly class BmffHashCheck
             }
         } elseif (in_array($xpath, self::ALLOWED_WHOLE, true) || (is_string($xpath) && preg_match(self::INDEXED_TRACK, $xpath) === 1)) {
             return null;   // an indexed track: its handler is checked after the box walk (SPEC-072)
-        } elseif (in_array($xpath, self::ALLOWED_OFFSET_FIELDS, true)) {
-            $subset = $exclusion['subset'] ?? null;
-            if (is_array($subset) && $subset !== [] && array_filter($subset, static fn (mixed $range): bool => ! is_array($range) || ! is_int($range['offset'] ?? null) || $range['offset'] < 16) === []) {
-                return null;
-            }
-
-            return 'an offset table may be excluded only with a subset whose every range starts at offset 16 or later, so that its header and entry count stay hashed';
+        } elseif (in_array($xpath, self::OFFSET_TABLES, true)) {
+            return 'an offset table is hashed, never excluded: with it excluded, which bytes are read as the media can change without changing the hash (C2PA 2.4 §18.6.2 hashes every offset at its post-embed value; an older c2pa-rs excluded these, today\'s does not)';
         }
 
-        return 'a BMFF hash may exclude only the C2PA uuid box, ftyp, mfra, free, skip, meta/iloc, mfra/tfra and the offset fields of stco, co64, tfhd and trun (from offset 16), which is what c2pa-rs writes, and moov/free, moov/udta, moov/meta and a timed-metadata track, which is what Pixel Camera writes; any other box could hold the media';
+        return 'a BMFF hash may exclude only the C2PA uuid box, ftyp, mfra, free, skip and mfra/tfra, which is what c2pa-rs writes, and moov/free, moov/udta, moov/meta and a timed-metadata track, which is what Pixel Camera writes; any other box could hold the media';
     }
 
     /**

@@ -163,6 +163,16 @@ public static function refusedExclusion(array $exclusion): ?string;
   Proposal: yes.
   *Status 2026-10-13 (step 358):* decided by Maurice: in 0.7.0.
 
+## Amendments
+
+1. **2026-10-23, step 395, found by the review of 2026-10-23; option A chosen by Maurice van Loon ("doe A").** The offset tables leave the allow-list. Out of scope above was "whether excluding the offset tables can make a player read other, hashed bytes as samples". It can: with the chunk offsets of `c2pa-rs/video1.mp4` changed, the file kept `assertion.bmffHash.match` here.
+   - **Measured** (2026-10-23): `c2patool` 0.28.2 signs with `c2pa.hash.bmff.v3` and excludes only `/uuid`, `/ftyp`, `/mfra`, `/free`, `/skip`; the same change to such a file is `assertion.bmffHash.mismatch` here. `c2pa-rs` 0.91.1 and 0.88.0 keep the offset exclusions in `set_default_exclusions_with_options()` commented out, "no longer mandatory". Of the 46 BMFF fixtures, only `c2pa-rs/video1.mp4` (`c2pa.hash.bmff.v2`, c2pa-rs 0.28.2, 2024) carries them; Pixel Camera does not.
+   - **Read**: C2PA 2.4 §18.6.2: boxes with file offsets "shall be included in the input data contributed to the hash with their post-embed values"; each of the three ways it describes hashes them.
+   - **The rule.** An exclusion of `/moov/trak/mdia/minf/stbl/stco`, `/moov/trak/mdia/minf/stbl/co64`, `/meta/iloc`, `/moof/traf/tfhd` or `/moof/traf/trun`, whole or in part, is refused by path as any other (`assertion.bmffHash.mismatch`, naming it and why). `/mfra` and `/mfra/tfra` stay allowed: the random-access index, which today's `c2pa-rs` still excludes (`/mfra`); a player reads the fragments themselves through `moof` (reasoned).
+   - **What it costs**: a file signed by an older `c2pa-rs` with these exclusions is `Invalid` here.
+   - **AC6 — an offset table excluded is refused** *(required: error path)*: `c2pa-rs/video1.mp4` gives `assertion.bmffHash.mismatch` naming the refused exclusion, and no `assertion.bmffHash.match`; `stco-excluded-whole.mp4` and `stco-excluded-from-8.mp4` are refused with the new reason; the allow-list cases for these paths are refused, `/mfra/tfra` allowed.
+   - **AC7 — nothing else moves**: the corpus before and after differs only in `c2pa-rs/video1.mp4` and the files built to exclude offset tables.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -175,6 +185,8 @@ least one test; every source file maps back to this spec.
 | AC3 | tests/Unit/Hash/BmffExclusionAllowListTest.php :: refuses an offset table excluded whole or from its header (2 files); names exactly what c2pa-rs writes as allowed, and nothing more (19 cases) / SPEC-071 | src/Hash/BmffHashCheck.php :: refusedExclusion() |
 | AC4 | tests/Unit/Hash/BmffExclusionAllowListTest.php :: reports an exclusion of the media … ("a box the file does not have") / SPEC-071 | src/Hash/BmffHashCheck.php :: check() |
 | AC5 | the corpus before and after (notes/step-358-bmff-allow-list.md); tests/Unit/Hash/BmffShapeTest.php :: AC5 (`xpath-nested.mp4`, the changed answer) | bin/make-bmff-exclusion-coverage-variants.php (`stco-*`, `zzzz-excluded`) |
+| AC6 (amendment 1) | tests/Unit/Hash/BmffExclusionAllowListTest.php :: AC6: refuses the offset fields an older c2pa-rs excluded, before hashing; refuses an offset table excluded whole or from its header (2 files, the new reason); names exactly what c2pa-rs writes as allowed, and nothing more (the offset-table cases now refused) / SPEC-071 | src/Hash/BmffHashCheck.php :: OFFSET_TABLES, ALLOWED_WHOLE, refusedExclusion() |
+| AC7 (amendment 1) | the corpus before and after (notes/step-395-bmff-offset-tables.md); tests/Unit/Hash/BmffV2ExclusionsTest.php :: AC1, tests/Unit/Hash/BmffShapeTest.php :: AC5, AC6 (`video1.mp4`, the changed answer) | — |
 
 The tests were run red first: 31 failed (`refusedExclusion()` did not exist
 and every variant was honoured). The 3 AC1 cases pin behaviour that was
@@ -194,3 +206,14 @@ version and flags) as an ISO FullBox. It stays `Invalid` after this spec,
 now refused at `/moov/free`. This is the trigger route (a) named: a
 follow-up spec for the QuickTime `meta`, indexed paths and Pixel's
 exclusions.
+
+Amendment 1 (step 395): 8 tests red first (the five offset-table cases
+allowed, the two refusal texts, AC6). Three existing tests that pinned
+`video1.mp4`'s match moved with it (SPEC-029 AC1, SPEC-038 AC5 and AC6),
+and the refusal text pinned by "reports an exclusion of the media"
+changed. Mutations, each failing: `trun` (2), `stco` (3) and `meta/iloc`
+(1) put back on the allow-list. The corpus before and after: 20 of 1,854
+runs moved, 10 files; by state and codes only `c2pa-rs/video1.mp4` moved
+(`assertion.bmffHash.match` → `mismatch`, `Invalid` either way, with or
+without the corpus's trust settings; under `full-plus-digicert-g4.settings.json`, which trusts its chain, it moves from `Valid` to `Invalid`, SPEC-038 AC6); the other nine were refused already and
+moved by the refusal's wording.

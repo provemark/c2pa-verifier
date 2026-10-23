@@ -44,7 +44,6 @@ it('leaves c2pa-rs\'s own exclusions as they were', function (string $relative, 
 })->with([
     'the v3 default, re-signed' => ['bmff-exclusion-coverage/unchanged-resigned.mp4', 'bmff-exclusion-coverage/probe-root.settings.json', 'Trusted'],
     'the v3 default, as signed' => ['fixture-signed.mp4', null, 'Valid'],
-    'the v2 list with nested offset fields' => ['c2pa-rs/video1.mp4', null, 'Invalid'],   // Invalid for its own reasons (SPEC-029); the binding matches
 ])->group('SPEC-071');
 
 it('reports an exclusion of the media as a mismatch, without hashing', function (string $name, string $path, ?string $settings): void {
@@ -53,7 +52,7 @@ it('reports an exclusion of the media as a mismatch, without hashing', function 
 
     expect($statuses)->toHaveCount(1)
         ->and($statuses[0]->code)->toBe(StatusCode::AssertionBmffHashMismatch)
-        ->and($statuses[0]->explanation)->toContain("the exclusion {$path} is refused: a BMFF hash may exclude only the C2PA uuid box, ftyp, mfra, free, skip, meta/iloc, mfra/tfra and the offset fields of stco, co64, tfhd and trun")
+        ->and($statuses[0]->explanation)->toContain("the exclusion {$path} is refused: a BMFF hash may exclude only the C2PA uuid box, ftyp, mfra, free, skip and mfra/tfra")
         ->and($report->result->state->value)->toBe('Invalid');
     // the deliberate divergence: c2patool calls each of them Trusted
     /** @var array{validation_state: string} $oracle */
@@ -75,8 +74,18 @@ it('refuses an offset table excluded whole or from its header', function (string
 
     expect($statuses)->toHaveCount(1)
         ->and($statuses[0]->code)->toBe(StatusCode::AssertionBmffHashMismatch)
-        ->and($statuses[0]->explanation)->toContain('the exclusion /moov/trak/mdia/minf/stbl/stco is refused: an offset table may be excluded only with a subset whose every range starts at offset 16 or later');
+        ->and($statuses[0]->explanation)->toContain('the exclusion /moov/trak/mdia/minf/stbl/stco is refused: '.SPEC071_OFFSETS);
 })->with(['stco-excluded-whole', 'stco-excluded-from-8'])->group('SPEC-071');
+
+// AC6 (amendment 1)
+const SPEC071_OFFSETS = 'an offset table is hashed, never excluded';
+
+it('AC6: refuses the offset fields an older c2pa-rs excluded, before hashing', function (): void {
+    $statuses = spec071Bmff(spec071Verify('c2pa-rs/video1.mp4'));
+
+    expect(array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $statuses))->toBe([StatusCode::AssertionBmffHashMismatch])
+        ->and($statuses[0]->explanation)->toContain(SPEC071_OFFSETS);
+})->group('SPEC-071');
 
 /** @param array<string, mixed> $exclusion */
 function spec071Allowed(array $exclusion): bool
@@ -95,12 +104,13 @@ it('names exactly what c2pa-rs writes as allowed, and nothing more', function (a
     'mfra' => [['xpath' => '/mfra'], true],
     'free with a subset' => [['xpath' => '/free', 'subset' => [['offset' => 0, 'length' => 4]]], true],
     'skip' => [['xpath' => '/skip'], true],
-    'meta/iloc' => [['xpath' => '/meta/iloc'], true],
+    'meta/iloc' => [['xpath' => '/meta/iloc'], false],
     'mfra/tfra' => [['xpath' => '/mfra/tfra'], true],
-    'stco from 16, as c2pa-rs writes it' => [['xpath' => '/moov/trak/mdia/minf/stbl/stco', 'subset' => [['offset' => 16, 'length' => 0]]], true],
-    'co64 from 16' => [['xpath' => '/moov/trak/mdia/minf/stbl/co64', 'subset' => [['offset' => 16, 'length' => 0]]], true],
-    'tfhd 16+8, as c2pa-rs writes it' => [['xpath' => '/moof/traf/tfhd', 'subset' => [['offset' => 16, 'length' => 8]]], true],
-    'trun 16+4' => [['xpath' => '/moof/traf/trun', 'subset' => [['offset' => 16, 'length' => 4]]], true],
+    // amendment 1: the offset fields an older c2pa-rs excluded are hashed
+    'stco from 16, as an older c2pa-rs wrote it' => [['xpath' => '/moov/trak/mdia/minf/stbl/stco', 'subset' => [['offset' => 16, 'length' => 0]]], false],
+    'co64 from 16' => [['xpath' => '/moov/trak/mdia/minf/stbl/co64', 'subset' => [['offset' => 16, 'length' => 0]]], false],
+    'tfhd 16+8, as an older c2pa-rs wrote it' => [['xpath' => '/moof/traf/tfhd', 'subset' => [['offset' => 16, 'length' => 8]]], false],
+    'trun 16+4' => [['xpath' => '/moof/traf/trun', 'subset' => [['offset' => 16, 'length' => 4]]], false],
     'trun with a second range from 12' => [['xpath' => '/moof/traf/trun', 'subset' => [['offset' => 16, 'length' => 4], ['offset' => 12, 'length' => 4]]], false],
     'tfhd with an empty subset' => [['xpath' => '/moof/traf/tfhd', 'subset' => []], false],
     'mdat' => [['xpath' => '/mdat'], false],

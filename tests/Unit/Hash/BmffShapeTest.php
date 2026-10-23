@@ -128,8 +128,8 @@ it('AC5: the informational code, as 0.28.0 reports it', function (): void {
 
             continue;
         }
-        if ($relative === 'bmff/xpath-nested.mp4') {
-            // SPEC-071: /a/be is no box a BMFF hash may exclude, refused by path before the informational
+        if ($relative === 'bmff/xpath-nested.mp4' || $relative === 'c2pa-rs/video1.mp4') {
+            // SPEC-071: /a/be is no box a BMFF hash may exclude, nor (amendment 1) an offset table; refused by path before the informational
             expect(spec038Has($ours, 'assertion.bmffHash.mismatch'))->toBeTrue($relative);
 
             continue;
@@ -140,10 +140,11 @@ it('AC5: the informational code, as 0.28.0 reports it', function (): void {
 
 it('AC6: nothing else moves', function (): void {
     // a guard: the corpus is the drift alarms' (SPEC-013 AC10–AC13) and the before/after run of step 134b;
-    // here, c2pa-rs's video1.mp4 (v2, nested exclusions and a subset) keeps its verdict under the DigiCert settings
+    // here, c2pa-rs's video1.mp4 (v2, nested exclusions and a subset) kept its verdict under the DigiCert settings,
+    // until SPEC-071 amendment 1 refused its excluded offset tables: Invalid, by that refusal alone
     $report = spec020Verify('c2pa-rs/video1.mp4', 'trust/full-plus-digicert-g4.settings.json');
-    expect($report->result->state->value)->toBe('Valid')
-        ->and(spec038Codes($report))->toBe([]);
+    expect($report->result->state->value)->toBe('Invalid')
+        ->and(spec038Codes($report))->toBe(['assertion.bmffHash.mismatch c2pa.assertions/c2pa.hash.bmff.v2']);
 })->group('SPEC-038');
 
 it('AC7: the vocabulary grows by two codes, verbatim (amendment 1)', function (): void {

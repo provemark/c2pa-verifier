@@ -153,12 +153,13 @@ it('AC1: video1.mp4 verifies, and its failures are c2patool\'s', function (): vo
     ksort($theirs);
     ksort($ours);
 
-    expect($report->result->state)->toBe(ValidationState::Valid)
-        ->and(spec029Codes($report))->toContain(StatusCode::AssertionBmffHashMatch->value)
-        ->and(array_keys($ours))->toBe(array_keys($theirs))
-        // the binding, the timestamp and the ingredient hash all pass; what fails is
-        // the ingredient's own chain, which ends at an intermediate nothing signs
-        ->and(array_keys($ours))->toBe(['signingCredential.untrusted']);
+    // SPEC-071 amendment 1: its offset tables are excluded, which is refused before hashing; the
+    // recorded oracle answer predates the rule, so the two lists differ by exactly that refusal
+    expect($report->result->state)->toBe(ValidationState::Invalid)
+        ->and(spec029Codes($report))->toContain(StatusCode::AssertionBmffHashMismatch->value)
+        ->and(spec029Codes($report))->not->toContain(StatusCode::AssertionBmffHashMatch->value)
+        ->and(array_keys($theirs))->toBe(['signingCredential.untrusted'])
+        ->and(array_keys($ours))->toBe(['assertion.bmffHash.mismatch', 'signingCredential.untrusted']);
 })->group('SPEC-029');
 
 it('AC2: a changed byte in a hashed region is a mismatch', function (): void {

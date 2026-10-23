@@ -11283,3 +11283,20 @@ README are where the disclosure lives.
   too weak at first, then red and green; three mutations; `composer check`
   (1,293 passed).
 - Decided by Maurice: none beyond the amendment.
+
+## 2026-10-23 — SPEC-071 amendment 1: BMFF offset tables (step 395)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja meet 2", then "doe A".
+- Produced: SPEC-071 amendment 1 and its Traceability; `OFFSET_TABLES`,
+  `ALLOWED_WHOLE` and `refusedExclusion()` in `src/Hash/BmffHashCheck.php`;
+  AC6 and updated cases in `tests/Unit/Hash/BmffExclusionAllowListTest.php`;
+  three tests moved with `video1.mp4`; `docs/comparison.md`;
+  `notes/step-395-bmff-offset-tables.md`; a row in `NOTES.md`.
+- Measured: C2PA 2.4 §18.6.2 read; three files signed with c2patool
+  0.28.2 (scratch, test key outside the repository) and their exclusions;
+  a change to the chunk offsets on both kinds of file; c2pa-rs 0.91.1
+  and 0.88.0 source read; the 46 BMFF fixtures surveyed; a chunk-layout
+  check (option B) on every real file; the tests red, green; three
+  mutations; the corpus before and after (10 files, one by verdict);
+  `composer check` (1,293 passed).
+- Decided by Maurice: option A.
