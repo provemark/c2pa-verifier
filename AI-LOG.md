@@ -11245,3 +11245,14 @@ README are where the disclosure lives.
   (five wrong `Trusted`); the new tests red, green; six mutations, one
   surviving until a case was added; `composer check` (1,274 passed).
 - Decided by Maurice: the amendments and their order.
+
+## 2026-10-23 — SPEC-079 amendment 2, EKU choice (step 392)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: the same "ja" as step 391.
+- Produced: `ChainCheck::reaches()`; the time passed through
+  `kindNote()`, `acceptedEkus()` (now public) and their callers;
+  `tests/Unit/Trust/EntryTimeTest.php`; SPEC-079's Traceability;
+  `notes/step-392-entry-time.md`; a row in `NOTES.md`.
+- Measured: the tests red (3 of 8) and green; five mutations; the corpus
+  before and after (0 of 1,854); `composer check` (1,282 passed).
+- Decided by Maurice: none beyond the amendment.

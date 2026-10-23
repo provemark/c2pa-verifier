@@ -48,7 +48,7 @@ final readonly class ChainCheck
 
         $statuses = $this->checkCertificates($chain, $settings, $url, $at, $cose->unprotected);
         $statuses = $this->timeStampingSigner($chain, $settings, $url, $at, $statuses);
-        $note = self::kindNote($settings, TrustAnchorSet::MANIFEST, $chain);
+        $note = self::kindNote($settings, TrustAnchorSet::MANIFEST, $chain, $at);
         if ($note === '') {
             return $statuses;
         }
@@ -256,21 +256,36 @@ final readonly class ChainCheck
     }
 
     /**
+     * Whether the chain reaches one entry as the trust check would reach it: at $at, with the entry's
+     * allowed list and its dates (SPEC-079 amendment 2), whatever the entry's kind.
+     *
+     * @param  non-empty-list<Certificate>  $chain  leaf first
+     * @param  int|null  $at  null = now
+     */
+    public static function reaches(array $chain, TrustAnchorSet $set, ?int $at): bool
+    {
+        $alone = new TrustAnchorSet(TrustAnchorSet::MANIFEST, $set->anchors, $set->allowedList, windows: $set->windows, reasons: $set->reasons);
+        $outcome = (new self)->checkCertificates($chain, new TrustSettings([], [], [], true, [$alone]), '', $at);
+
+        return ($outcome[0] ?? null)?->code === StatusCode::SigningCredentialTrusted;
+    }
+
+    /**
      * For an untrusted outcome: a sentence naming the entries of another
      * kind that this chain *would* have reached, which were deliberately not
      * used — or '' when no such entry exists (SPEC-031 AC6).
      *
      * @param  non-empty-list<Certificate>  $chain  leaf first
+     * @param  int|null  $at  the time the trust check used; null = now
      */
-    public static function kindNote(TrustSettings $settings, string $kind, array $chain): string
+    public static function kindNote(TrustSettings $settings, string $kind, array $chain, ?int $at = null): string
     {
         $reached = [];
         foreach ($settings->anchorSets as $i => $set) {
             if ($set->kind === $kind) {
                 continue;
             }
-            $outcome = (new ChainCheck)->checkCertificates($chain, new TrustSettings($set->anchors, $set->allowedList), '');
-            if (($outcome[0] ?? null)?->code === StatusCode::SigningCredentialTrusted) {
+            if (self::reaches($chain, $set, $at)) {
                 $reached[] = sprintf('trust.anchors[%d] ("%s")', $i, $set->kind);
             }
         }

@@ -60,26 +60,27 @@ final readonly class CertificateProfileCheck
             return [new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, sprintf('the signing certificate could not be read: %s', $e->getMessage()))];
         }
 
-        return $this->checkLeaf($leaf, $settings, $at, $url, $this->acceptedEkus($certificates, $settings), $reason, timeName: $timeName);
+        return $this->checkLeaf($leaf, $settings, $at, $url, $this->acceptedEkus($certificates, $settings, $at), $reason, timeName: $timeName);
     }
 
     /**
      * The EKUs accepted for this chain: the built-in list, the top-level
      * `trust_config`, and the `trust_config` of every "manifest" entry the
-     * chain reaches — never another entry's (C2PA 2.4 §14.4.1; SPEC-031 AC8).
+     * chain reaches — never another entry's (C2PA 2.4 §14.4.1; SPEC-031 AC8). Reached as the trust
+     * check reaches it: at $at, with the entry's dates (SPEC-079 amendment 2).
      *
      * @param  non-empty-list<Certificate>  $chain
+     * @param  int|null  $at  null = now
      * @return list<string>
      */
-    private function acceptedEkus(array $chain, ?TrustSettings $settings): array
+    public function acceptedEkus(array $chain, ?TrustSettings $settings, ?int $at = null): array
     {
         $accepted = [...self::BUILT_IN_EKUS, ...($settings === null ? [] : $settings->trustConfig)];
         foreach ($settings === null ? [] : $settings->anchorSets as $set) {
             if ($set->kind !== TrustAnchorSet::MANIFEST || $set->trustConfig === []) {
                 continue;
             }
-            $reached = (new ChainCheck)->checkCertificates($chain, new TrustSettings($set->anchors, $set->allowedList), '');
-            if (($reached[0] ?? null)?->code === StatusCode::SigningCredentialTrusted) {
+            if (ChainCheck::reaches($chain, $set, $at)) {
                 $accepted = [...$accepted, ...$set->trustConfig];
             }
         }

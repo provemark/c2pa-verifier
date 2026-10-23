@@ -201,6 +201,7 @@ least one test; every source file maps back to this spec.
 | AC6 | tests/Unit/Trust/TrustListDatesTest.php :: AC6: an entry that cannot be placed is undated, or, where it could hide a removal, not used and named (8 datasets); AC6: a list in which no entry is usable is refused, like a PEM file without a certificate / SPEC-079 | src/Trust/TrustSettings.php :: loteTimeline(), fromLote(); src/Trust/TrustAnchorSet.php :: $windows, $reasons |
 | AC7 | tests/Unit/Trust/TrustListDatesTest.php :: AC7: malformed JSON lists are refused, naming the option and the fault (4 datasets) / SPEC-079 | src/Trust/TrustSettings.php :: fromLote(), loteCertificates() |
 | AC8 (amendment 2, timeline) | tests/Unit/Trust/TrustListDatesTest.php :: AC8: a timeline the first build misread leaves the signer untrusted (9 datasets); AC8: the guards against those misreadings still trust what is trusted (3); AC8: a list whose shape could hide a removal, or with no usable anchor counted once each, is refused (4) / SPEC-079 | src/Trust/TrustSettings.php :: fromTrustLists() (byte order mark), fromLote(), loteTimeline(), outside(), bothTrust(), rfc3339() |
+| AC8 (amendment 2, EKU choice) | tests/Unit/Trust/EntryTimeTest.php :: AC8: an entry's EKUs count only where the chain reaches it at the judged time, with its dates (4 datasets); AC8: the note on an entry of the other kind names it only where the chain reaches it then, with its dates (3); AC8: the verifier judges an entry's EKUs and the other-kind note at the time it judges trust / SPEC-079 | src/Trust/ChainCheck.php :: reaches(), kindNote(), check(); src/Trust/CertificateProfileCheck.php :: acceptedEkus(), check(); src/Timestamp/TimestampCheck.php :: the TSA note |
 
 The contract grew by two symbols, `TrustAnchorSet::$windows` and
 `$reasons`, to 142; the API sketch said it would not grow, wrongly:
@@ -235,3 +236,12 @@ trusted status's time rounded down (1, after the rounding case), a
 `ServiceHistory` string read as none (1), the BOM kept (1). AC1 (the
 official lists' 32 and 23 anchors, the same reports as the PEM bundles)
 unchanged.
+
+Amendment 2, EKU choice (step 392): the 8 new tests run against the
+first build, 3 failing (the dated entry reached after its end, by the
+note and by the EKU choice, and the end-to-end case); `acceptedEkus()`
+made public for the test, the class being internal. Mutations, each
+failing: `reaches()` without the dates (3), at the clock (2); each of the
+three callers not passing its time (1 each, caught only once the
+end-to-end case was added). The corpus before and after: 0 of 1,854
+runs moved.

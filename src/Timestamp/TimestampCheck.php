@@ -286,7 +286,7 @@ final readonly class TimestampCheck
                     $trusted ? StatusCode::TimeStampTrusted : StatusCode::TimeStampUntrusted,
                     $url,
                     sprintf('timestamp cert %s: %s — %s', $trusted ? 'trusted' : 'untrusted', $tsaName, preg_replace('/^signing certificate (un)?trusted: /', '', $outcome->explanation) ?? $outcome->explanation)
-                        .($trusted || $settings === null ? '' : ChainCheck::kindNote($settings, TrustAnchorSet::TSA, $ordered)),
+                        .($trusted || $settings === null ? '' : ChainCheck::kindNote($settings, TrustAnchorSet::TSA, $ordered, $tst->genTime)),
                 );
             }
         }
