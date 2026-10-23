@@ -11367,3 +11367,11 @@ README are where the disclosure lives.
 - Measured: the fixture at three times; the mutation failing two cases;
   `composer check` (1,315 passed).
 - Decided by Maurice: none beyond the item.
+
+## 2026-10-23 — SPEC-079 amendment 3: the backdating limit (step 402)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: the same "doe 1 nog".
+- Produced: SPEC-079 amendment 3; `notes/step-402-tsa-backdating-limit.md`;
+  a row in `NOTES.md`.
+- Reasoned: the limit and what a list can do; nothing measured.
+- Decided by Maurice: none beyond the item.

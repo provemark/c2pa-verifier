@@ -186,6 +186,8 @@ The contract does not grow: `fromTrustLists()` keeps its signature.
    - **The EKU choice and `kindNote()`** judge whether a chain reaches an entry at the same time as the trust check, with the entry's dates (SPEC-031 AC8 read with SPEC-073 and this spec): the first build asked at the clock, without dates.
    - **AC8 (new)** — each of these, as a LoTE document on `control.png` or a unit test, gives the fail-closed answer; the official lists still give 32 and 23 anchors, and the reports of AC1 are unchanged.
 
+3. **2026-10-23, step 402, found by the review of 2026-10-23 (the low items, "doe 1 nog", Maurice van Loon); a known limit, no change in behaviour.** A TSA's `untrusted` stretch is judged at the token's own `genTime` (Reasoned, above). A TSA removed because its key leaked can still sign a token whose `genTime` lies before the removal: it is judged trusted then, and that trusted time becomes the time the signer is judged at (SPEC-017). Nothing in the token tells a backdated `genTime` from a true one, and C2PA 2.4 §14.4.2 names no other time to judge a TSA at. A list that knows a key leaked can say so by an `untrusted` status from before the first token it wants refused; the verifier reads that as written. Reasoned, not measured; no other implementation reads these lists to compare with.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
