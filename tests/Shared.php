@@ -21,6 +21,8 @@ declare(strict_types=1);
  * moves here the moment a second file needs it, and not before.
  */
 
+use Opis\JsonSchema\Errors\ErrorFormatter;
+use Opis\JsonSchema\Validator;
 use Provemark\C2paVerifier\Asn1\Der;
 use Provemark\C2paVerifier\Asn1\DerReader;
 use Provemark\C2paVerifier\Cbor\CborBytes;
@@ -312,4 +314,117 @@ function spec074Store(string $relative): ManifestStore
     }
 
     return $store;
+}
+
+/** The crJSON schema's $id, under which the copy in Fixtures/crjson/ is registered (ADR-0006). */
+const SPEC075_SCHEMA_ID = 'https://c2pa.org/crjson/crJSON.schema.json';
+
+function spec075Report(string $relative, ?string $settings = null, ?DateTimeInterface $at = null): VerificationReport
+{
+    $stream = fopen(Corpus::fixtures().'/'.$relative, 'rb');
+    if ($stream === false) {
+        throw new RuntimeException("cannot open {$relative}");
+    }
+    $trust = $settings === null ? null : TrustSettings::fromJson((string) file_get_contents(Corpus::fixtures().'/'.$settings));
+    $report = (new Verifier)->verify($stream, $trust, $at);
+    fclose($stream);
+
+    return $report;
+}
+
+/** @return array<string, mixed> the crJSON as arrays (objects and lists alike), for reading fields */
+function spec075Doc(VerificationReport $report): array
+{
+    /** @var array<string, mixed> */
+    return json_decode($report->toCrJson(), true, 512, JSON_THROW_ON_ERROR);
+}
+
+/**
+ * The 59 oracle answers, by the fixture they answer.
+ *
+ * @return array<string, array<string, mixed>>
+ */
+function spec075Oracle(): array
+{
+    /** @var array<string, array<string, mixed>>|null $all */
+    static $all = null;
+    if ($all !== null) {
+        return $all;
+    }
+    $root = Corpus::fixtures().'/c2patool/crjson';
+    $all = [];
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)) as $file) {
+        if (! $file instanceof SplFileInfo || ! str_ends_with($file->getPathname(), '.json')) {
+            continue;
+        }
+        /** @var array<string, mixed> $answer */
+        $answer = json_decode((string) file_get_contents($file->getPathname()), true, 512, JSON_THROW_ON_ERROR);
+        $all[substr($file->getPathname(), strlen($root) + 1, -strlen('.json'))] = $answer;
+    }
+    ksort($all);
+
+    return $all;
+}
+
+/**
+ * @param  array<mixed>  $doc
+ * @return list<array<string, mixed>>
+ */
+function spec075Manifests(array $doc): array
+{
+    /** @var list<array<string, mixed>> */
+    return is_array($doc['manifests'] ?? null) ? $doc['manifests'] : [];
+}
+
+/**
+ * Every schema error as "path :: message", paths with indexes as `*`.
+ *
+ * @return list<string>
+ */
+function spec075SchemaErrors(string $json): array
+{
+    /** @var Validator|null $validator */
+    static $validator = null;
+    if ($validator === null) {
+        $validator = new Validator;
+        $validator->setMaxErrors(1000);
+        $validator->resolver()?->registerRaw((string) file_get_contents(Corpus::fixtures().'/crjson/crJSON.schema.json'), SPEC075_SCHEMA_ID);
+    }
+    $result = $validator->validate(json_decode($json, false, 512, JSON_THROW_ON_ERROR), SPEC075_SCHEMA_ID);
+    $error = $result->error();
+    if ($error === null) {
+        return [];
+    }
+    $errors = [];
+    foreach ((new ErrorFormatter)->format($error, true) as $path => $messages) {
+        foreach (is_array($messages) ? $messages : [$messages] as $message) {
+            $errors[] = preg_replace('#/\d+(?=/|$)#', '/*', (string) $path).' :: '.(is_string($message) ? $message : '');
+        }
+    }
+
+    return $errors;
+}
+
+/**
+ * A decoded JSON value that must be an array, or a failure naming where.
+ *
+ * @return array<mixed>
+ */
+function spec075A(mixed $value, string $where = ''): array
+{
+    if (! is_array($value)) {
+        throw new RuntimeException("not an array: {$where}");
+    }
+
+    return $value;
+}
+
+/** A decoded JSON value that must be a string, or a failure naming where. */
+function spec075S(mixed $value, string $where = ''): string
+{
+    if (! is_string($value)) {
+        throw new RuntimeException("not a string: {$where}");
+    }
+
+    return $value;
 }

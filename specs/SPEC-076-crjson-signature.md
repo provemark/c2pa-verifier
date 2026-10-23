@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-23                      |
 | Supersedes | SPEC-075's `"signature": {}` placeholder          |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -158,6 +158,14 @@ The contract does not change: the signature is inside the crJSON string.
   crJSON page's names, `c2pa-rs`'s serial form, the schema's eight DN
   keys with the last of a repeat winning, `Z` throughout, a failed but
   readable token written, `{}` for an unreadable signature.
+  *Status 2026-10-23 (step 377):* settled; approved without changes.
+
+## Amendments
+
+1. **2026-10-23, step 377, decided by Maurice van Loon** *(confirmed by Maurice van Loon, 2026-10-23: "akkoord")* — building AC2 to AC4 against the 92 manifests showed three differences from `c2pa-rs` the draft did not count. The output follows the draft; the comparisons name what they measured.
+   - AC2 and AC3: where a DN holds an e-mail address, this verifier writes it as `E`, which the schema names, and `c2pa-rs` leaves it out (11 names in the 59 files). The comparison removes `E` from this verifier's side where `c2patool`'s lacks it.
+   - AC4: `timeStampInfo` is on the same manifests as `c2patool`'s in 74 cases, not 75, and two manifests differ by name. `c2pa-rs/CA_ct.jpg`'s header token cannot be read here (`c2patool` itself reports `timeStamp.malformed`; `c2pa-rs` writes the TSA's certificate without a time, which the schema refuses), so this verifier writes no `timeStampInfo`. `c2pa-rs/update_manifest.jpg`'s manifest has no header token but a `c2pa.time-stamp` assertion's (SPEC-064), which this verifier reads and `c2pa-rs` does not use for crJSON. Of the 74, the time is equal on the 69 where `c2patool` writes one, and this verifier adds it on the other 5.
+   - AC5: the fixtures are `cose/chain-empty.png`, `cose/leaf-der-broken.png` and `cose/protected-not-map.png`; there is no `x5chain/` directory.
 
 ## Traceability
 
@@ -166,9 +174,20 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
+| AC1 | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC1: the algorithm by its C2PA name, equal to c2patool's once upper-cased / SPEC-076 | src/Verifier/CrJsonDocument.php :: signature(), ALGORITHMS |
+| AC2 | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC2: certificateInfo of the leaf, equal to c2patool's with times as instants / SPEC-076 | src/Verifier/CrJsonDocument.php :: certificateInfo(); src/Trust/Certificate.php :: $serialHex |
+| AC3 | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC3: a DN holds the schema's eight keys only, in the certificate's order, a repeat's last value / SPEC-076 | src/Verifier/CrJsonDocument.php :: distinguishedName(), DN_KEYS |
+| AC4 | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC4: timeStampInfo wherever the token can be read, its time whether or not it validated; AC4: a validated, an untrusted and a mismatched token each give their time and their TSA (3 datasets); AC4: no token, no timeStampInfo / SPEC-076 | src/Timestamp/TimestampCheck.php :: readToken(); src/Verifier/CrJsonDocument.php :: signature() |
+| AC5 | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC5: a signature that cannot be read is {} (3 datasets) / SPEC-076 | src/Verifier/CrJsonDocument.php :: signature() |
+| AC6 | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC6: every document passes the whole schema but for the named exceptions; tests/Unit/Verifier/CrJsonDocumentTest.php :: AC7: every crJSON written is schema-valid but for the accepted v1 claims / SPEC-076, SPEC-075 | src/Verifier/CrJsonDocument.php |
+
+The tests were run red first: 8 of 12 failed. AC5 and AC6 passed
+before the build, since every signature was then `{}`; AC6 was tightened
+to name the three unreadable fixtures rather than infer them from the
+output, and both were then watched failing under the mutation "every
+signature `{}`". Five mutations in all, each failing: lower-case names
+(AC1); a repeat's first value (AC2, AC3: one corpus certificate repeats
+an attribute); no token read (AC4); every signature `{}` (AC1, AC2, AC4,
+AC6); assertion tokens ignored (AC4). The ordinary report over the
+corpus before and after: 0 of 1,842 runs moved. `composer check`: 1,194
+passed, 1 skipped.

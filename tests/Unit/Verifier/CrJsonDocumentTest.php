@@ -2,12 +2,8 @@
 
 declare(strict_types=1);
 
-use Opis\JsonSchema\Errors\ErrorFormatter;
-use Opis\JsonSchema\Validator;
 use Provemark\C2paVerifier\Cli\Command;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
-use Provemark\C2paVerifier\Trust\TrustSettings;
-use Provemark\C2paVerifier\Verifier\VerificationReport;
 use Provemark\C2paVerifier\Verifier\Verifier;
 
 /*
@@ -17,7 +13,8 @@ use Provemark\C2paVerifier\Verifier\Verifier;
  * The schema is the page's own, under crjson/ (ADR-0006).
  */
 
-const SPEC075_SCHEMA_ID = 'https://c2pa.org/crjson/crJSON.schema.json';
+/** The fields the crJSON schema's claimV1 names. */
+const SPEC075_V1_SCHEMA_FIELDS = ['claim_generator', 'claim_generator_info', 'signature', 'assertions', 'dc:format', 'instanceID', 'dc:title', 'redacted_assertions', 'alg', 'alg_soft', 'metadata'];
 
 /** The three files where SPEC-021 AC9 validates a manifest named twice once, under the first assertion. */
 const SPEC075_NAMED_TWICE = [
@@ -25,95 +22,6 @@ const SPEC075_NAMED_TWICE = [
     'public-testfiles/adobe-20220124-CACAICAICICA.jpg',
     'public-testfiles/adobe-20220124-CAIAIIICAICIICAIICICA.jpg',
 ];
-
-/** The fields the crJSON schema's claimV1 names. */
-const SPEC075_V1_SCHEMA_FIELDS = ['claim_generator', 'claim_generator_info', 'signature', 'assertions', 'dc:format', 'instanceID', 'dc:title', 'redacted_assertions', 'alg', 'alg_soft', 'metadata'];
-
-function spec075Report(string $relative, ?string $settings = null, ?DateTimeInterface $at = null): VerificationReport
-{
-    $stream = fopen(Corpus::fixtures().'/'.$relative, 'rb');
-    if ($stream === false) {
-        throw new RuntimeException("cannot open {$relative}");
-    }
-    $trust = $settings === null ? null : TrustSettings::fromJson((string) file_get_contents(Corpus::fixtures().'/'.$settings));
-    $report = (new Verifier)->verify($stream, $trust, $at);
-    fclose($stream);
-
-    return $report;
-}
-
-/** @return array<string, mixed> the crJSON as arrays (objects and lists alike), for reading fields */
-function spec075Doc(VerificationReport $report): array
-{
-    /** @var array<string, mixed> */
-    return json_decode($report->toCrJson(), true, 512, JSON_THROW_ON_ERROR);
-}
-
-/**
- * The 59 oracle answers, by the fixture they answer.
- *
- * @return array<string, array<string, mixed>>
- */
-function spec075Oracle(): array
-{
-    /** @var array<string, array<string, mixed>>|null $all */
-    static $all = null;
-    if ($all !== null) {
-        return $all;
-    }
-    $root = Corpus::fixtures().'/c2patool/crjson';
-    $all = [];
-    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)) as $file) {
-        if (! $file instanceof SplFileInfo || ! str_ends_with($file->getPathname(), '.json')) {
-            continue;
-        }
-        /** @var array<string, mixed> $answer */
-        $answer = json_decode((string) file_get_contents($file->getPathname()), true, 512, JSON_THROW_ON_ERROR);
-        $all[substr($file->getPathname(), strlen($root) + 1, -strlen('.json'))] = $answer;
-    }
-    ksort($all);
-
-    return $all;
-}
-
-/**
- * @param  array<mixed>  $doc
- * @return list<array<string, mixed>>
- */
-function spec075Manifests(array $doc): array
-{
-    /** @var list<array<string, mixed>> */
-    return is_array($doc['manifests'] ?? null) ? $doc['manifests'] : [];
-}
-
-/**
- * Every schema error as "path :: message", paths with indexes as `*`.
- *
- * @return list<string>
- */
-function spec075SchemaErrors(string $json): array
-{
-    /** @var Validator|null $validator */
-    static $validator = null;
-    if ($validator === null) {
-        $validator = new Validator;
-        $validator->setMaxErrors(1000);
-        $validator->resolver()?->registerRaw((string) file_get_contents(Corpus::fixtures().'/crjson/crJSON.schema.json'), SPEC075_SCHEMA_ID);
-    }
-    $result = $validator->validate(json_decode($json, false, 512, JSON_THROW_ON_ERROR), SPEC075_SCHEMA_ID);
-    $error = $result->error();
-    if ($error === null) {
-        return [];
-    }
-    $errors = [];
-    foreach ((new ErrorFormatter)->format($error, true) as $path => $messages) {
-        foreach (is_array($messages) ? $messages : [$messages] as $message) {
-            $errors[] = preg_replace('#/\d+(?=/|$)#', '/*', (string) $path).' :: '.(is_string($message) ? $message : '');
-        }
-    }
-
-    return $errors;
-}
 
 /** @return array{int, string, string} exit status, stdout, stderr */
 function spec075Run(string ...$arguments): array
@@ -151,30 +59,6 @@ function spec075Absolute(mixed $claim, string $label): mixed
     }
 
     return $claim;
-}
-
-/**
- * A decoded JSON value that must be an array, or a failure naming where.
- *
- * @return array<mixed>
- */
-function spec075A(mixed $value, string $where = ''): array
-{
-    if (! is_array($value)) {
-        throw new RuntimeException("not an array: {$where}");
-    }
-
-    return $value;
-}
-
-/** A decoded JSON value that must be a string, or a failure naming where. */
-function spec075S(mixed $value, string $where = ''): string
-{
-    if (! is_string($value)) {
-        throw new RuntimeException("not a string: {$where}");
-    }
-
-    return $value;
 }
 
 /**
@@ -393,7 +277,7 @@ it('AC7: the validator first reproduces step 370 on c2patool\'s own answers', fu
         ]);
 })->group('SPEC-075');
 
-it('AC7: every crJSON written is schema-valid outside the signature and the accepted v1 claims', function (): void {
+it('AC7: every crJSON written is schema-valid but for the accepted v1 claims', function (): void {
     $documents = 0;
     $cases = [...array_map(static fn (string $r): array => [$r, null], array_keys(spec075Oracle())), ['c2pa-rs/ocsp.jpg', new DateTimeImmutable('2026-10-09T05:31:00Z')]];
     foreach ($cases as [$relative, $at]) {
@@ -401,9 +285,9 @@ it('AC7: every crJSON written is schema-valid outside the signature and the acce
         $doc = spec075Doc($report);
         $v1 = array_filter(spec075Manifests($doc), static fn (array $m): bool => array_key_exists('claim', $m)) !== [];
         foreach (spec075SchemaErrors($report->toCrJson()) as $error) {
-            // amendment 1: a v1 claim is written as its CBOR holds it, and C2PA 1.x claims break the v1 schema
-            $accepted = str_starts_with($error, '/manifests/*/signature')
-                || ($v1 && (str_starts_with($error, '/manifests/*/claim :: ') || str_starts_with($error, '/manifests/*/claim/')));
+            // amendment 1: a v1 claim is written as its CBOR holds it, and C2PA 1.x claims break the v1 schema;
+            // the signature's own exception went with SPEC-076 AC6, none of these files has an unreadable one
+            $accepted = ($v1 && (str_starts_with($error, '/manifests/*/claim :: ') || str_starts_with($error, '/manifests/*/claim/')));
             expect($accepted)->toBeTrue("{$relative}: {$error}");
         }
         $documents++;

@@ -8,19 +8,26 @@ use Provemark\C2paVerifier\Cbor\CborDecoder;
 use Provemark\C2paVerifier\Cbor\CborException;
 use Provemark\C2paVerifier\Cbor\CrJsonValue;
 use Provemark\C2paVerifier\Cbor\CrJsonValueException;
+use Provemark\C2paVerifier\Cose\CoseException;
+use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Manifest\Assertion;
 use Provemark\C2paVerifier\Manifest\EmbeddedFile;
 use Provemark\C2paVerifier\Manifest\Manifest;
 use Provemark\C2paVerifier\Manifest\ManifestException;
 use Provemark\C2paVerifier\Manifest\ManifestGraph;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
+use Provemark\C2paVerifier\Timestamp\TimestampAssertions;
+use Provemark\C2paVerifier\Timestamp\TimestampCheck;
+use Provemark\C2paVerifier\Trust\Certificate;
+use Provemark\C2paVerifier\Trust\TrustException;
 
 /**
  * A report as a crJSON document (C2PA 2.4 crJSON §3; SPEC-075): every
  * manifest of the store, the active one first, its claim and assertions
  * mapped by Table 1 (SPEC-074), and its own validation results. Nothing is
  * checked here: the statuses are the report's, placed where crJSON wants
- * them. The signature is SPEC-076's; until then it is `{}`.
+ * them. The signature is SPEC-076's: the algorithm by its C2PA name, the leaf
+ * certificate, and the time-stamp token as read.
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
  * removed in any release; the contract is the nine classes named in the README.
@@ -28,6 +35,12 @@ use Provemark\C2paVerifier\Manifest\ManifestStore;
 final class CrJsonDocument
 {
     public const string SPEC_VERSION = '2.4.0';
+
+    /** COSE algorithm identifiers by the names crJSON §3.7 uses (C2PA 2.4 §13.2.1; SPEC-076 AC1). */
+    private const array ALGORITHMS = [-7 => 'ES256', -35 => 'ES384', -36 => 'ES512', -37 => 'PS256', -38 => 'PS384', -39 => 'PS512', -8 => 'Ed25519'];
+
+    /** The schema's distinguishedName keys, by OpenSSL's short names (SPEC-076 AC3). */
+    private const array DN_KEYS = ['C' => 'C', 'ST' => 'ST', 'L' => 'L', 'O' => 'O', 'OU' => 'OU', 'CN' => 'CN', 'emailAddress' => 'E', 'organizationIdentifier' => '2.5.4.97'];
 
     /** The form of the crJSON page's minimal example, and of c2pa-rs (SPEC-075 AC1). */
     private const array CONTEXT = ['@vocab' => 'https://c2pa.org/crjson', 'extras' => 'https://c2pa.org/crjson/extras'];
@@ -63,6 +76,7 @@ final class CrJsonDocument
             }
         }
         $own = self::ownResults($store, $byUri);
+        $assertions = TimestampAssertions::collect($store);
 
         foreach (array_reverse($store->manifests, true) as $label => $manifest) {
             $codes = $manifest === $store->active ? $active : ($own[$label] ?? $empty);
@@ -70,12 +84,69 @@ final class CrJsonDocument
                 'label' => (string) $label,
                 ($manifest->claim->version === 2 ? 'claim.v2' : 'claim') => self::claim($manifest),
                 'assertions' => self::assertions($manifest),
-                'signature' => new \stdClass,   // SPEC-076
+                'signature' => self::signature($manifest, $assertions),
                 'validationResults' => $codes + ['specVersion' => self::SPEC_VERSION, 'validationTime' => $time],
             ] + (isset($held[$label]) ? ['ingredientDeltas' => $held[$label]] : []);
         }
 
         return $document;
+    }
+
+    /**
+     * §3.7: the claim signature, or {} where it cannot be read (SPEC-076 AC5).
+     *
+     * @return array<string, mixed>|\stdClass
+     */
+    private static function signature(Manifest $manifest, TimestampAssertions $assertions): array|\stdClass
+    {
+        try {
+            $cose = CoseSign1::ofManifest($manifest);
+            $leaf = Certificate::chainOf($cose)[0] ?? null;
+        } catch (CoseException|TrustException) {
+            return new \stdClass;
+        }
+        if ($leaf === null) {
+            return new \stdClass;
+        }
+        $signature = ['algorithm' => self::ALGORITHMS[$cose->alg] ?? 'Unknown', 'certificateInfo' => self::certificateInfo($leaf)];
+        $token = (new TimestampCheck)->readToken($manifest, $assertions);
+        if ($token !== null) {
+            $signature['timeStampInfo'] = ['timestamp' => gmdate('Y-m-d\TH:i:s\Z', $token[0]), 'certificateInfo' => self::certificateInfo($token[1])];
+        }
+
+        return $signature;
+    }
+
+    /** @return array{serialNumber: string, issuer: array<string, string>, subject: array<string, string>, validity: array{notBefore: string, notAfter: string}} */
+    private static function certificateInfo(Certificate $certificate): array
+    {
+        return [
+            'serialNumber' => $certificate->serialHex,
+            'issuer' => self::distinguishedName($certificate->issuer),
+            'subject' => self::distinguishedName($certificate->subject),
+            'validity' => ['notBefore' => gmdate('Y-m-d\TH:i:s\Z', $certificate->validFrom), 'notAfter' => gmdate('Y-m-d\TH:i:s\Z', $certificate->validTo)],
+        ];
+    }
+
+    /**
+     * A name as the schema's distinguishedName: its eight keys only, in the certificate's order,
+     * a repeated attribute's last value (as c2pa-rs writes it; SPEC-076 AC3).
+     *
+     * @param  array<string, mixed>  $name  openssl_x509_parse()'s subject or issuer
+     * @return array<string, string>
+     */
+    public static function distinguishedName(array $name): array
+    {
+        $out = [];
+        foreach ($name as $attribute => $value) {
+            $key = self::DN_KEYS[$attribute] ?? null;
+            $last = is_array($value) ? end($value) : $value;
+            if ($key !== null && is_string($last)) {
+                $out[$key] = $last;
+            }
+        }
+
+        return $out;
     }
 
     /**

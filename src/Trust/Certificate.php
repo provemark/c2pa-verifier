@@ -91,6 +91,9 @@ final readonly class Certificate
 
     public string $serialDecimal;
 
+    /** The serial in lower-case hex without leading zeros, as crJSON writes it (SPEC-076 AC2). */
+    public string $serialHex;
+
     /** RFC 5280 §4.1.2.2: the serial number is a positive integer (SPEC-015 amendment 7). */
     public bool $serialPositive;
 
@@ -168,6 +171,7 @@ final readonly class Certificate
             throw new TrustException(sprintf('a certificate serial number of %d octets; this verifier reads at most %d (RFC 5280 allows 20)', Bytes::decimalOctets($serialHex), Bytes::MAX_DECIMAL_OCTETS));
         }
         $this->serialDecimal = self::hexToDecimal($serialHex);
+        $this->serialHex = ltrim(strtolower($serialHex), '0') ?: '0';
         $this->serialPositive = $this->serialDecimal !== '0' && ! str_starts_with($this->serialDecimal, '-');
     }
 

@@ -11003,3 +11003,21 @@ README are where the disclosure lives.
 - Decided by Maurice: the crJSON page's algorithm names; `c2pa-rs`'s
   serial form; the eight DN keys, last repeat wins; `Z` throughout; a
   failed but readable token written; `{}` for an unreadable signature.
+
+## 2026-10-23 — SPEC-076 built: the signature in crJSON (step 377)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoorf" (SPEC-076 approved); "akkoord en ga verder"
+  (amendment 1, and the next step).
+- Produced: `signature()`, `certificateInfo()`, `distinguishedName()` in
+  `src/Verifier/CrJsonDocument.php`; `readToken()` in
+  `src/Timestamp/TimestampCheck.php`; `$serialHex` in
+  `src/Trust/Certificate.php`; `tests/Unit/Verifier/CrJsonSignatureTest.php`;
+  helpers moved to `tests/Shared.php`; SPEC-075's AC7 test without the
+  signature exception; SPEC-076 implemented with amendment 1;
+  `notes/step-377-crjson-signature.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: against `c2patool` on 92 manifests; red (8 of 12) and green;
+  five mutations; the corpus before and after (0 of 1,842);
+  `composer check` (1,194 passed).
+- Reasoned: none beyond the spec.
+- Decided by Maurice: SPEC-076 approved; amendment 1.

@@ -129,6 +129,43 @@ final readonly class TimestampCheck
     }
 
     /**
+     * The token SPEC-017 and SPEC-064 judge, read but not judged, for crJSON's timeStampInfo
+     * (SPEC-076 AC4): the header's one token, else the first a time-stamp assertion offers that
+     * can be read; its genTime and its signer's certificate, whether or not it would validate.
+     * Null where there is none, or none can be read.
+     *
+     * @return array{0: int, 1: Certificate}|null
+     */
+    public function readToken(Manifest $manifest, TimestampAssertions $assertions): ?array
+    {
+        $candidates = [];
+        try {
+            $header = TimestampHeader::fromUnprotected(CoseSign1::ofManifest($manifest)->unprotected);
+            if ($header !== null && count($header->tokens) === 1) {
+                $candidates[] = $header->tokens[0];
+            }
+        } catch (CoseException|TimestampException) {
+            // no header to read; an assertion may still offer a token
+        }
+        foreach ($assertions->tokensFor($manifest->label) as [$der]) {
+            $candidates[] = $der;
+        }
+        foreach ($candidates as $der) {
+            try {
+                $token = TimeStampToken::fromHeaderValue($der, $this->reader);
+                $signer = $token->signedData->signerCertificate($this->reader);
+                if ($signer !== null) {
+                    return [$token->tstInfo->genTime, Certificate::fromDer($signer)];
+                }
+            } catch (TimestampException|TrustException|Asn1Exception) {
+                continue;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * A header's one token judged against the manifest's countersigned
      * bytes. A header with more than one token is malformed and gives no time,
      * as c2pa-rs 0.91.1 drops it (`sigtst.rs`: "only a single timestamp
