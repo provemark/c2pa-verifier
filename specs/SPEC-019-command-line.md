@@ -391,7 +391,11 @@ files could disagree and the command would have to pick one.
    Approved with SPEC-060 (its open question 6) by Maurice van Loon,
    2026-10-07.
 
+4. **2026-10-23, step 398, found by the review of 2026-10-23 (the low items, "doe 1 nog", Maurice van Loon)** — stderr is terminal-safe too. AC12 made the report on stdout terminal-safe; the error lines on stderr echoed what they were given raw: `--at $'2026\e[31mRED'` wrote the ESC byte through `var_export()`, and so did an unknown option, a path that cannot be opened and a list or settings path that cannot be read. Each line now passes `Command::shown()`: C0 controls and DEL as `\xNN`, C1 controls and the bidirectional overrides (U+202A–202E, U+2066–2069) as `\u{…}`, bytes that are not UTF-8 as U+FFFD; printable text, accents included, stays. Found while building it: the crJSON line for a file without a store (SPEC-075 AC8) passed its explanation through `Bytes::printable()`, a helper for four-byte box types, so every such line came out as hex; it now reads as text.
+   - **AC15 — stderr reaches the terminal without control characters** *(error path)*: the five cases above exit 2 with no control character on stderr and the ESC shown as `\x1B`; a bidi override and a C1 control are escaped and `café` kept; the crJSON no-store line reads `general.error: expected a jumb superbox…`.
+
 ## Traceability
+
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
 least one test; every source file maps back to this spec.
@@ -414,3 +418,8 @@ least one test; every source file maps back to this spec.
 Every file under `src/Cli/` maps to this spec; `bin/c2pa-verify` is its shim; `deptrac.yaml`'s `Cli` layer (→ Verifier, Trust, Report, Support) and `composer.json`'s `bin` entry are its configuration. Measured 2026-09-22: 12 red → 12 green, `composer check` exit 0, 314 tests.
 | AC13 | tests/Unit/Cli/CommandTest.php :: AC13: a file whose assertion holds NaN and Infinity gets its report, exit 1, nothing on stderr (amendment 2, step 247) / SPEC-019 | src/Manifest/ManifestStore.php :: plain(); src/Cli/Command.php :: run() (a `JsonException` is exit 2) |
 | AC14 | tests/Unit/Cli/CommandTest.php :: AC14: --text reads plain text, and without it a text is unknown (amendment 3, SPEC-060); AC14: --text twice is a usage fault, and a command made without the text reader refuses --text (amendment 3); AC14: the executable reads plain text with --text (amendment 3) / SPEC-019 | src/Cli/Command.php :: run() (`--text`), __construct() (`$textVerifier`); bin/c2pa-verify |
+| AC15 (amendment 4) | tests/Unit/Cli/CommandTest.php :: AC15: what the command echoes on stderr reaches the terminal without control characters (5 datasets); AC15: bidi overrides and C1 controls are escaped too, and printable text is kept; AC15: the crJSON line for a file without a store reads as text, not as hex / SPEC-019 | src/Cli/Command.php :: shown(), usage(), run() |
+
+Amendment 4 (step 398): the 7 new tests red first, green after.
+Mutations, each failing: the C0/DEL escape dropped (5), the C1/bidi
+escape dropped (1).

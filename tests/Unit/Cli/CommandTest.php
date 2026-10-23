@@ -409,3 +409,34 @@ it('AC14: the executable reads plain text with --text (amendment 3)', function (
         ->and(spec019State($out))->toBe('Valid')
         ->and($err)->toBe('');
 })->group('SPEC-019');
+
+// AC15 (amendment 4)
+it('AC15: what the command echoes on stderr reaches the terminal without control characters', function (string ...$arguments): void {
+    [$status, $out, $err] = spec019Run(...$arguments);
+
+    expect($status)->toBe(2)
+        ->and($out)->toBe('')
+        ->and(preg_match('/[\x00-\x09\x0B-\x1F\x7F]|\xC2[\x80-\x9F]|\xE2\x80[\xAA-\xAE]|\xE2\x81[\xA6-\xA9]/', $err))->toBe(0)
+        ->and($err)->toContain('\x1B');
+})->with([
+    '--at' => ['--at', "2026\e[31mRED"],
+    'an unknown option' => ["--x\e[2J"],
+    'a file that cannot be opened' => ["/nonexistent/\e]0;title\x07x.jpg"],
+    'a list that cannot be read' => ['--trust-list', "/nonexistent/\e[31m.pem", spec019Fixture('fixture-signed.jpg')],
+    'a settings file that cannot be read' => ['--settings', "/nonexistent/\e[31m.json", spec019Fixture('fixture-signed.jpg')],
+])->group('SPEC-019');
+
+it('AC15: bidi overrides and C1 controls are escaped too, and printable text is kept', function (): void {
+    [, , $err] = spec019Run("/nonexistent/caf\u{E9}-\u{202E}gpj.exe-\u{9B}31m.jpg");
+
+    expect($err)->toContain('café-')
+        ->and($err)->toContain('\u{202E}')
+        ->and($err)->toContain('\u{9B}')
+        ->and(str_contains($err, "\u{202E}"))->toBeFalse();
+})->group('SPEC-019');
+
+it('AC15: the crJSON line for a file without a store reads as text, not as hex', function (): void {
+    [, , $err] = spec019Run('--crjson', spec019Fixture('jumbf/not-a-superbox.png'));
+
+    expect($err)->toStartWith('crJSON: no manifest store: general.error: expected a jumb superbox');
+})->group('SPEC-019');

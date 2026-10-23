@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Provemark\C2paVerifier\Cli;
 
 use Provemark\C2paVerifier\Report\ValidationState;
-use Provemark\C2paVerifier\Support\Bytes;
 use Provemark\C2paVerifier\Trust\TrustException;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\Verifier;
@@ -96,7 +95,7 @@ final readonly class Command
                 $value = $argument === '--at' ? $arguments[++$i] : substr($argument, strlen('--at='));
                 $at = self::rfc3339($value);
                 if ($at === null) {
-                    return $this->usage($stderr, sprintf('--at: %s is not an RFC 3339 date-time (e.g. 2026-10-09T05:31:00Z)', var_export($value, true)));
+                    return $this->usage($stderr, sprintf("--at: '%s' is not an RFC 3339 date-time (e.g. 2026-10-09T05:31:00Z)", $value));
                 }
 
                 continue;
@@ -187,14 +186,14 @@ final readonly class Command
         if ($settingsPath !== null) {
             $json = $this->read($settingsPath);
             if (is_array($json)) {
-                fwrite($stderr, sprintf("Error: cannot read settings %s: %s\n", $settingsPath, $json['reason']));
+                fwrite($stderr, self::shown(sprintf("Error: cannot read settings %s: %s\n", $settingsPath, $json['reason'])));
 
                 return 2;
             }
             try {
                 $settings = TrustSettings::fromJson($json);
             } catch (TrustException $e) {
-                fwrite($stderr, sprintf("Error: settings %s: %s\n", $settingsPath, $e->getMessage()));
+                fwrite($stderr, self::shown(sprintf("Error: settings %s: %s\n", $settingsPath, $e->getMessage())));
 
                 return 2;
             }
@@ -203,13 +202,13 @@ final readonly class Command
         // 3. the file as a stream; a directory opens without complaint on macOS and Linux
         //    and then fails on every read, so it is refused here, before the verifier
         if (is_dir($file)) {
-            fwrite($stderr, sprintf("Error: cannot open %s: Is a directory\n", $file));
+            fwrite($stderr, self::shown(sprintf("Error: cannot open %s: Is a directory\n", $file)));
 
             return 2;
         }
         $stream = $this->open($file);
         if (is_array($stream)) {
-            fwrite($stderr, sprintf("Error: cannot open %s: %s\n", $file, $stream['reason']));
+            fwrite($stderr, self::shown(sprintf("Error: cannot open %s: %s\n", $file, $stream['reason'])));
 
             return 2;
         }
@@ -225,7 +224,7 @@ final readonly class Command
         } catch (\JsonException $e) {
             // SPEC-019 AC13: no input is known to reach this since SPEC-007 AC15; should one, it is
             // the command's own failure, one line and exit 2, never PHP's fatal error and its trace
-            fwrite($stderr, sprintf("Error: the report cannot be written as JSON: %s\n", $e->getMessage()));
+            fwrite($stderr, self::shown(sprintf("Error: the report cannot be written as JSON: %s\n", $e->getMessage())));
 
             return 2;
         }
@@ -235,7 +234,7 @@ final readonly class Command
             $failure = array_values(array_filter($report->result->statuses, static fn ($s): bool => $s->code->isFailure()))[0] ?? null;
             fwrite($stderr, $failure === null
                 ? "crJSON: no manifest store in the file\n"
-                : sprintf("crJSON: no manifest store: %s: %s\n", $failure->code->value, Bytes::printable($failure->explanation)));
+                : self::shown(sprintf("crJSON: no manifest store: %s: %s\n", $failure->code->value, $failure->explanation)));
         }
 
         return $report->result->state === ValidationState::Invalid ? 1 : 0;
@@ -264,10 +263,26 @@ final readonly class Command
         return $parsed === false || $year < 1 || $year > 9999 ? null : $parsed;
     }
 
+    /**
+     * A line for the terminal (SPEC-019 amendment 4): what the command echoes (a path, an option, a
+     * message naming manifest content) with its control characters written as escapes, as the report's
+     * JSON writes them: C0 and DEL as \xNN, C1 and the bidirectional overrides as \u{…}, bytes that are
+     * not UTF-8 as U+FFFD. One final newline is kept.
+     */
+    private static function shown(string $line): string
+    {
+        $newline = str_ends_with($line, "\n");
+        $text = mb_scrub($newline ? substr($line, 0, -1) : $line, 'UTF-8');
+        $text = (string) preg_replace_callback('/[\x00-\x1F\x7F]/', static fn (array $m): string => sprintf('\\x%02X', ord($m[0])), $text);
+        $text = (string) preg_replace_callback('/[\x{80}-\x{9F}\x{202A}-\x{202E}\x{2066}-\x{2069}]/u', static fn (array $m): string => sprintf('\\u{%X}', mb_ord($m[0], 'UTF-8')), $text);
+
+        return $newline ? $text."\n" : $text;
+    }
+
     /** @param  resource  $stderr */
     private function usage($stderr, string $fault): int
     {
-        fwrite($stderr, sprintf("Error: %s\n%s", $fault, self::USAGE));
+        fwrite($stderr, self::shown(sprintf("Error: %s\n", $fault)).self::USAGE);
 
         return 2;
     }

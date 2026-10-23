@@ -11324,3 +11324,14 @@ README are where the disclosure lives.
 - Measured: the tests red and green; two mutations; `composer check`
   (1,303 passed).
 - Decided by Maurice: none beyond the item.
+
+## 2026-10-23 — SPEC-019 amendment 4: stderr escapes (step 398)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: the same "doe 1 nog".
+- Produced: SPEC-019 amendment 4 and its Traceability; `Command::shown()`
+  and its use on every stderr line; AC15 in
+  `tests/Unit/Cli/CommandTest.php`; `notes/step-398-stderr-escapes.md`; a
+  row in `NOTES.md`.
+- Measured: the tests red (7) and green; two mutations; the crJSON
+  no-store line seen as hex before; `composer check` (1,310 passed).
+- Decided by Maurice: none beyond the item.
