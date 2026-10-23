@@ -190,8 +190,9 @@ final readonly class TrustSettings
     /**
      * A list in ETSI TS 119 602's JSON form (LoTE), as the programme publishes it (SPEC-079). Each
      * service's statuses, the current one and its ServiceHistory, form a timeline, each status lasting
-     * until the next begins; the anchor is trusted in the `trusted` stretches only (C2PA 2.4 §14.4.1).
-     * A service that cannot be placed on a timeline is kept, never trusted, with its reason.
+     * until the next begins; only an `untrusted` stretch limits the anchor (amendment 1; C2PA 2.4
+     * §14.4.1's notAfter). A service whose entry could hide a removal is kept, never trusted, with
+     * its reason.
      */
     private static function fromLote(string $json, string $kind, string $what, int $max): TrustAnchorSet
     {
@@ -216,6 +217,9 @@ final readonly class TrustSettings
                 foreach ($certificates as $certificate) {
                     $hash = bin2hex($certificate->sha256);
                     $anchors[] = $certificate;
+                    if ($stretches === null) {
+                        continue;   // no dates: as the PEM bundle
+                    }
                     $windows[$hash] = $stretches;
                     if ($reason !== null) {
                         $reasons[$hash] = $reason;
@@ -223,7 +227,7 @@ final readonly class TrustSettings
                 }
             }
         }
-        if (array_filter($windows, static fn (array $w): bool => $w !== []) === []) {
+        if (count(array_filter($windows, static fn (array $w): bool => $w === [])) === count($anchors)) {
             throw new TrustException(sprintf('%s holds no usable anchor: no service is trusted at any time', $what));
         }
 
@@ -258,12 +262,15 @@ final readonly class TrustSettings
     }
 
     /**
-     * A service's trusted stretches, or none and the reason it cannot be placed.
+     * A service's trusted stretches (SPEC-079 amendment 1): every time except inside an `untrusted`
+     * stretch, which runs from its status's starting time to the next status's, or for good. A
+     * `trusted` status bounds nothing by itself. Null: no `untrusted` status, so no dates, as a PEM
+     * bundle. An empty list and a reason: an entry that could hide the end of trust.
      *
      * @param  array<mixed>  $information
      * @param  array<mixed>  $history
      * @param  list<Certificate>  $certificates
-     * @return array{0: list<array{from: int, until: int|null}>, 1: string|null}
+     * @return array{0: list<array{from: int, until: int|null}>|null, 1: string|null}
      */
     private static function loteTimeline(array $information, array $history, array $certificates): array
     {
@@ -284,34 +291,53 @@ final readonly class TrustSettings
                 }
             }
             $status = $record['ServiceStatus'] ?? null;
-            if ($status === null) {
-                return [[], 'the list gives no status'];
-            }
-            if ($status === '') {
-                return [[], 'the list gives an empty status'];
+            if ($status === null || $status === '') {
+                continue;   // no status: nothing said, read as the PEM bundle reads it (the NETLOCK entries)
             }
             if ($status !== self::LOTE_TRUSTED && $status !== self::LOTE_UNTRUSTED) {
                 return [[], sprintf('the status %s is neither trusted nor untrusted', is_string($status) ? $status : get_debug_type($status))];
             }
             $time = $record['StatusStartingTime'] ?? null;
-            if ($time === null || $time === '') {
-                return [[], 'the list gives no starting time'];
-            }
-            $epoch = is_string($time) ? self::rfc3339($time) : null;
+            $epoch = is_string($time) && $time !== '' ? self::rfc3339($time) : null;
             if ($epoch === null) {
-                return [[], sprintf('the starting time %s is not an RFC 3339 date-time', is_string($time) ? $time : get_debug_type($time))];
+                if ($status === self::LOTE_TRUSTED) {
+                    continue;   // a trusted status bounds nothing, so its time is not needed
+                }
+
+                return [[], $time === null || $time === ''
+                    ? 'the list untrusts it with no starting time'
+                    : sprintf('the list untrusts it from %s, which is not an RFC 3339 date-time', is_string($time) ? $time : get_debug_type($time))];
             }
-            $records[] = [$epoch, $status === self::LOTE_TRUSTED];
+            $records[] = [$epoch, $status === self::LOTE_UNTRUSTED];
+        }
+        if (array_filter($records, static fn (array $r): bool => $r[1]) === []) {
+            return [null, null];
         }
         usort($records, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
         $stretches = [];
-        foreach ($records as $i => [$from, $trusted]) {
-            if ($trusted) {
-                $stretches[] = ['from' => $from, 'until' => $records[$i + 1][0] ?? null];
+        $start = PHP_INT_MIN;
+        foreach ($records as $i => [$from, $untrusted]) {
+            if (! $untrusted || $start === null || $from < $start) {
+                continue;
+            }
+            if ($from > $start) {
+                $stretches[] = ['from' => $start, 'until' => $from];
+            }
+            // the removal lasts until the next status; a later removal before that keeps it going
+            $start = null;
+            foreach (array_slice($records, $i + 1) as [$next, $nextUntrusted]) {
+                if (! $nextUntrusted) {
+                    $start = $next;
+
+                    break;
+                }
             }
         }
+        if ($start !== null) {
+            $stretches[] = ['from' => $start, 'until' => null];
+        }
 
-        return [$stretches, $stretches === [] ? 'the list never trusts it' : null];
+        return [$stretches, null];
     }
 
     /** An RFC 3339 date-time as whole seconds since the epoch (a fraction rounded down), or null. */

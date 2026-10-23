@@ -251,7 +251,7 @@ final readonly class ChainCheck
             'the trust list does not trust the anchor %s at %s: %s (C2PA 2.4 §14.4.1)',
             $anchor->subjectCn(),
             $when($at),
-            $reason ?? 'it is listed as trusted '.implode(', ', array_map(static fn (array $w): string => 'from '.$when($w['from']).($w['until'] === null ? '' : ' until '.$when($w['until'])), $stretches)),
+            $reason ?? 'it is trusted '.implode(', and ', array_map(static fn (array $w): string => ($w['from'] === PHP_INT_MIN ? '' : 'from '.$when($w['from']).' ').($w['until'] === null ? 'on' : 'until '.$when($w['until'])), $stretches)).' and untrusted otherwise',
         );
     }
 

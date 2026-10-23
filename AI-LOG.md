@@ -11152,3 +11152,20 @@ README are where the disclosure lives.
   and after (0 of 1,854); `composer check` (1,238 passed).
 - Reasoned: reading AC6's "one service" as "one of its services".
 - Decided by Maurice: SPEC-079 approved.
+
+## 2026-10-23 — SPEC-079 amendment 1: only a removal limits an anchor (step 386)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push maar, wat is issue 9?"; "optie 2"; "ja".
+- Produced: the push of step 385; SPEC-079 amendment 1 and its
+  Traceability; `loteTimeline()` in `src/Trust/TrustSettings.php`; the
+  explanation in `ChainCheck::listedFault()`;
+  `tests/Unit/Trust/TrustListDatesTest.php` rewritten to the amendment;
+  `docs/conformance.md`, `docs/comparison.md`,
+  `docs/conformance-harness.md`, the fixture README;
+  `notes/step-386-trust-list-dates-amended.md`; a row in `NOTES.md`.
+- Measured: issue #9 and its comment (`gh issue view`); the tests red
+  (6 of 18) and green; three mutations; the corpus before and after (0 of
+  1,854); `composer check` (1,240 passed).
+- Reasoned: which unplaceable entries could hide a removal.
+- Decided by Maurice: back to his parking of 2026-09-24 for `notBefore`
+  (option 2), with the amendment's text.

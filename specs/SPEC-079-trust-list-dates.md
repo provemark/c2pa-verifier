@@ -162,6 +162,20 @@ The contract does not grow: `fromTrustLists()` keeps its signature.
   2026-10-23).
   *Status 2026-10-23 (step 385):* settled; approved without changes.
 
+## Amendments
+
+1. **2026-10-23, step 386, decided by Maurice van Loon ("optie 2")** *(confirmed by Maurice van Loon, 2026-10-23: "ja")* — only an `untrusted` status limits an anchor. On 2026-09-24 Maurice parked issue #9 (its comment on GitHub): reading `StatusStartingTime` of a `trusted` status as a `notBefore` is this project's own interpretation (the schema extension calls it "the date a certificate was added to the trust list", not an anchor's `notBefore`), it would make signatures untrusted that `c2patool` trusts, and the issue would reopen on an `untrusted` entry or a `ServiceHistory` in the official list. SPEC-079 was drafted without reading that comment; this amendment brings it back to what the parking left uncontested.
+   - **The timeline.** An anchor is trusted at every time except inside an `untrusted` stretch: from an `untrusted` status's starting time to the next status's, or for good. A `trusted` status bounds nothing by itself; after an `untrusted` one it ends that stretch.
+   - **What cannot be placed.** An empty or absent status is read as the PEM bundle reads the anchor, without dates (the three NETLOCK entries). A `trusted` status with an absent or malformed time likewise. An `untrusted` status with an absent or malformed time, a status that is neither `trusted` nor `untrusted`, and a history entry naming other certificates stay unusable and named, since each could hide the end of trust.
+   - **AC1** becomes: the JSON lists give exactly the PEM bundles' anchors (32 and 23), and the Pixel 10 and OpenAI reports are the same through both.
+   - **AC2** becomes: an anchor whose `trusted` status starts after the signature is still used (`control.png`, `Trusted`), as through the PEM bundle.
+   - **AC3** stays (an anchor untrusted after the signature counts; untrusted before, it does not).
+   - **AC4** becomes: `no-timestamp.png` with its root `untrusted` from 2026-10-12T00:00:00Z (history: `trusted` from 2026-10-01): `--at 2026-10-11` trusted, `--at 2026-10-13` untrusted.
+   - **AC5** becomes: `control.png` with its TSA root `untrusted` from before the token's `genTime` gives `timeStamp.untrusted`; from after, `timeStamp.trusted`.
+   - **AC6** becomes: an empty status, an absent status, and a `trusted` status without a usable time give an undated anchor (`Trusted`); an unknown status, an `untrusted` status without a usable time, and a history entry with other certificates give an unusable anchor, named; a list with no usable anchor is refused.
+   - **AC7** stays.
+   - Against `c2patool`, the verdicts now differ only once the programme untrusts an anchor; none is untrusted today.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -169,12 +183,12 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1 | tests/Unit/Trust/TrustListDatesTest.php :: AC1: the JSON lists give the PEM bundles' anchors but the three NETLOCK ones, and the same reports / SPEC-079 | src/Trust/TrustSettings.php :: fromTrustLists(), fromLote(), loteCertificates(); tests/Fixtures/trust/conformance-public/*.json |
-| AC2 | tests/Unit/Trust/TrustListDatesTest.php :: AC2: a signer anchor listed after the signature is not used; listed before, it is / SPEC-079 | src/Trust/ChainCheck.php :: listedFault(), checkCertificates() |
-| AC3 | tests/Unit/Trust/TrustListDatesTest.php :: AC3: a signer anchor untrusted after the signature still counts; untrusted before, it does not / SPEC-079 | src/Trust/TrustSettings.php :: loteTimeline() |
-| AC4 | tests/Unit/Trust/TrustListDatesTest.php :: AC4: without a time-stamp, the validation time decides / SPEC-079 | src/Trust/ChainCheck.php :: listedFault() (the judged time) |
-| AC5 | tests/Unit/Trust/TrustListDatesTest.php :: AC5: a TSA anchor is judged at the token's time / SPEC-079 | src/Timestamp/TimestampCheck.php :: tsaSettings() (the operator's "tsa" entries with their dates) |
-| AC6 | tests/Unit/Trust/TrustListDatesTest.php :: AC6: an entry that cannot be placed is not used, and the report says why (6 datasets); AC6: a list in which no entry is usable is refused, like a PEM file without a certificate / SPEC-079 | src/Trust/TrustSettings.php :: loteTimeline(), fromLote(); src/Trust/TrustAnchorSet.php :: $windows, $reasons |
+| AC1 | tests/Unit/Trust/TrustListDatesTest.php :: AC1: the JSON lists give exactly the PEM bundles' anchors, and the same reports / SPEC-079 | src/Trust/TrustSettings.php :: fromTrustLists(), fromLote(), loteCertificates(); tests/Fixtures/trust/conformance-public/*.json |
+| AC2 | tests/Unit/Trust/TrustListDatesTest.php :: AC2: an anchor whose trusted status starts after the signature is still used, as through the PEM bundle / SPEC-079 | src/Trust/TrustSettings.php :: loteTimeline() (a trusted status bounds nothing) |
+| AC3 | tests/Unit/Trust/TrustListDatesTest.php :: AC3: a signer anchor untrusted after the signature still counts; untrusted before, it does not / SPEC-079 | src/Trust/TrustSettings.php :: loteTimeline(); src/Trust/ChainCheck.php :: listedFault(), checkCertificates() |
+| AC4 | tests/Unit/Trust/TrustListDatesTest.php :: AC4: without a time-stamp, the validation time decides whether a removal has happened / SPEC-079 | src/Trust/ChainCheck.php :: listedFault() (the judged time) |
+| AC5 | tests/Unit/Trust/TrustListDatesTest.php :: AC5: a TSA anchor removed before the token's time does not vouch for it; removed after, it does / SPEC-079 | src/Timestamp/TimestampCheck.php :: tsaSettings() (the operator's "tsa" entries with their dates) |
+| AC6 | tests/Unit/Trust/TrustListDatesTest.php :: AC6: an entry that cannot be placed is undated, or, where it could hide a removal, not used and named (8 datasets); AC6: a list in which no entry is usable is refused, like a PEM file without a certificate / SPEC-079 | src/Trust/TrustSettings.php :: loteTimeline(), fromLote(); src/Trust/TrustAnchorSet.php :: $windows, $reasons |
 | AC7 | tests/Unit/Trust/TrustListDatesTest.php :: AC7: malformed JSON lists are refused, naming the option and the fault (4 datasets) / SPEC-079 | src/Trust/TrustSettings.php :: fromLote(), loteCertificates() |
 
 The contract grew by two symbols, `TrustAnchorSet::$windows` and
@@ -192,3 +206,11 @@ failing: the dates ignored (10 tests); the TSA entries' dates dropped
 (AC5); an empty status read as trusted (AC6); the history ignored (AC3);
 no end to a trusted stretch (AC3). The corpus before and after: 0 of
 1,854 runs moved. `composer check`: 1,238 passed, 1 skipped.
+
+Amendment 1 (step 386): the tests were rewritten to it first and run:
+6 of 18 failed, the criteria it changes (AC1, AC2, the four undated
+cases of AC6); AC3, AC4, AC5 and AC7 held under the first reading too.
+Three mutations were watched failing: a trusted date read as a
+`notBefore` again (AC2); an empty status not used (AC1, AC6); an
+`untrusted` status without a time ignored (AC6). The corpus before and
+after: 0 of 1,854 runs moved. `composer check`: 1,240 passed, 1 skipped.

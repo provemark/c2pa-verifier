@@ -230,15 +230,16 @@ without an anchor — 34 corpus files, informational, no verdict changes.
 ## Trust anchors with dates (SPEC-079)
 
 Given the conformance programme's JSON lists (ETSI TS 119 602 LoTE), this
-verifier counts an anchor only inside the stretches the list trusts it in
-(C2PA 2.4 §14.4.1, §15.7), and not at all where its entry cannot be
-placed (an empty status, among others). `c2pa-rs` 0.91.1 reads neither
-the JSON form nor any anchor dates, so a file signed under an anchor
-before its listing, or after its removal, is `Trusted` there and
-`signingCredential.untrusted` here. Measured on the lists at
-`conformance-public` `da71a72`: one CA (Castlabs C2PA ECC P-384 Root CA)
-listed a month after its certificate became valid, and three NETLOCK
-entries with an empty status; no fixture is affected.
+verifier does not count an anchor inside a stretch the list has it
+`untrusted` (C2PA 2.4 §14.4.1's `notAfter`, §15.7), and not at all where
+an entry could hide such a removal (an unknown status, an `untrusted`
+status without a usable time). A `trusted` status's date is not a
+`notBefore` here, and an entry without a status is read as the PEM bundle
+reads it (amendment 1). `c2pa-rs` 0.91.1 reads neither the JSON form nor
+any anchor dates, so the verdicts differ only once the programme untrusts
+an anchor: a file signed after the removal is `Trusted` there and
+`signingCredential.untrusted` here. No anchor is untrusted in the lists
+at `conformance-public` `da71a72`, and no fixture is affected.
 
 ## crJSON values (SPEC-074)
 

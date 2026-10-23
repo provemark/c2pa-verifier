@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 use Provemark\C2paVerifier\Cli\Command;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
+use Provemark\C2paVerifier\Trust\TrustAnchorSet;
 use Provemark\C2paVerifier\Trust\TrustException;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\Verifier;
 
 /*
  * SPEC-079: the programme's JSON trust lists (ETSI TS 119 602 LoTE), with
- * their dates (C2PA 2.4 §14.4.1, §15.7). No implementation reads them, so
+ * their dates (C2PA 2.4 §14.4.1, §15.7). Since amendment 1 only an
+ * `untrusted` status limits an anchor. No implementation reads them, so
  * the criteria rest on the text; the LoTE documents below are built from
  * the tsa-matrix probes' throw-away roots, whose times were measured:
  * control.png is time-stamped at 2026-10-09T05:30:24Z, no-timestamp.png's
@@ -142,17 +144,26 @@ function spec079Control(string $signerList, ?string $tsaList = null): array
     return spec079Outcome($out);
 }
 
+/** @return list<string> an entry's anchors by SHA-256, hex */
+function spec079Hashes(TrustAnchorSet $set): array
+{
+    $hashes = [];
+    foreach ($set->anchors as $certificate) {
+        $hashes[] = bin2hex($certificate->sha256);
+    }
+
+    return $hashes;
+}
+
 // AC1
-it('AC1: the JSON lists give the PEM bundles\' anchors but the three NETLOCK ones, and the same reports', function (): void {
-    foreach ([['C2PA-TRUST-LIST', 32, 30], ['C2PA-TSA-TRUST-LIST', 23, 22]] as [$name, $pemCount, $usable]) {
-        $pem = (string) file_get_contents(Corpus::fixtures().'/'.SPEC079_LISTS."/{$name}.pem");
-        $json = (string) file_get_contents(Corpus::fixtures().'/'.SPEC079_LISTS."/{$name}.json");
-        $fromPem = TrustSettings::fromTrustLists($pem)->anchorSets[0];
-        $fromJson = TrustSettings::fromTrustLists($json)->anchorSets[0];
-        $usableHashes = array_keys(array_filter($fromJson->windows, static fn (array $w): bool => $w !== []));
-        expect(count($fromPem->anchors))->toBe($pemCount)
-            ->and(count($usableHashes))->toBe($usable)
-            ->and(array_diff($usableHashes, array_map(static fn ($c): string => bin2hex($c->sha256), $fromPem->anchors)))->toBe([]);
+it('AC1: the JSON lists give exactly the PEM bundles\' anchors, and the same reports', function (): void {
+    foreach (['C2PA-TRUST-LIST' => 32, 'C2PA-TSA-TRUST-LIST' => 23] as $name => $count) {
+        $fromPem = TrustSettings::fromTrustLists((string) file_get_contents(Corpus::fixtures().'/'.SPEC079_LISTS."/{$name}.pem"))->anchorSets[0];
+        $fromJson = TrustSettings::fromTrustLists((string) file_get_contents(Corpus::fixtures().'/'.SPEC079_LISTS."/{$name}.json"))->anchorSets[0];
+        expect(count($fromJson->anchors))->toBe($count)
+            ->and(spec079Hashes($fromJson))->toEqualCanonicalizing(spec079Hashes($fromPem))
+            ->and($fromJson->reasons)->toBe([])
+            ->and(array_filter($fromJson->windows, static fn (array $w): bool => $w === []))->toBe([]);
     }
     foreach (['writers/google-20250919-pixel10-npld-picnic-table.jpg', 'writers/openai-20260826-c2pa_2x.png'] as $relative) {
         $at = ['--at', '2026-10-23T12:00:00Z'];
@@ -164,16 +175,10 @@ it('AC1: the JSON lists give the PEM bundles\' anchors but the three NETLOCK one
 })->group('SPEC-079');
 
 // AC2
-it('AC2: a signer anchor listed after the signature is not used; listed before, it is', function (): void {
+it('AC2: an anchor whose trusted status starts after the signature is still used, as through the PEM bundle', function (): void {
     $root = spec079Roots('control')['manifest'];
 
-    [$state, $codes, $text] = spec079Control(spec079Lote([['pem' => $root, 'status' => SPEC079_TRUSTED, 'time' => '2026-10-09T06:00:00Z']]));
-    expect($state)->toBe('Valid')
-        ->and($codes)->toBe(['signingCredential.untrusted', 'timeStamp.trusted'])
-        ->and($text)->toContain('2026-10-09T06:00:00Z')
-        ->and($text)->toContain('2026-10-09T05:30:24Z');
-
-    [$state, $codes] = spec079Control(spec079Lote([['pem' => $root, 'status' => SPEC079_TRUSTED, 'time' => '2026-10-09T05:00:00Z']]));
+    [$state, $codes] = spec079Control(spec079Lote([['pem' => $root, 'status' => SPEC079_TRUSTED, 'time' => '2026-10-09T06:00:00Z']]));
     expect($state)->toBe('Trusted')
         ->and($codes)->toBe(['signingCredential.trusted', 'timeStamp.trusted']);
 })->group('SPEC-079');
@@ -193,35 +198,36 @@ it('AC3: a signer anchor untrusted after the signature still counts; untrusted b
 })->group('SPEC-079');
 
 // AC4
-it('AC4: without a time-stamp, the validation time decides', function (): void {
+it('AC4: without a time-stamp, the validation time decides whether a removal has happened', function (): void {
     $roots = spec079Roots('no-timestamp');
-    $list = spec079Lote([['pem' => $roots['manifest'], 'status' => SPEC079_TRUSTED, 'time' => '2026-10-12T00:00:00Z']]);
+    $list = spec079Lote([['pem' => $roots['manifest'], 'status' => SPEC079_UNTRUSTED, 'time' => '2026-10-12T00:00:00Z', 'history' => [['status' => SPEC079_TRUSTED, 'time' => '2026-10-01T00:00:00Z']]]]);
     $file = Corpus::fixtures().'/timestamp/tsa-matrix/no-timestamp.png';
 
     [, $out] = spec079Run('--trust-list', $list, '--at', '2026-10-11T00:00:00Z', $file);
-    [, $codes, $text] = spec079Outcome($out);
-    expect($codes)->toBe(['signingCredential.untrusted'])
-        ->and($text)->not->toContain('not yet valid');
+    expect(spec079Outcome($out)[1])->toBe(['signingCredential.trusted']);
 
     [, $out] = spec079Run('--trust-list', $list, '--at', '2026-10-13T00:00:00Z', $file);
-    expect(spec079Outcome($out)[1])->toBe(['signingCredential.trusted']);
+    [, $codes, $text] = spec079Outcome($out);
+    expect($codes)->toBe(['signingCredential.untrusted'])
+        ->and($text)->toContain('2026-10-12T00:00:00Z')
+        ->and($text)->not->toContain('not yet valid');
 })->group('SPEC-079');
 
 // AC5
-it('AC5: a TSA anchor is judged at the token\'s time', function (): void {
+it('AC5: a TSA anchor removed before the token\'s time does not vouch for it; removed after, it does', function (): void {
     $roots = spec079Roots('control');
-    $tsaList = spec079Lote([['pem' => $roots['tsa'], 'status' => SPEC079_TRUSTED, 'time' => '2026-10-09T06:00:00Z']]);
+    $history = [['status' => SPEC079_TRUSTED, 'time' => '2026-10-01T00:00:00Z']];
 
-    [, $codes, $text] = spec079Control(spec079Temp($roots['manifest'], '.pem'), $tsaList);
+    [, $codes, $text] = spec079Control(spec079Temp($roots['manifest'], '.pem'), spec079Lote([['pem' => $roots['tsa'], 'status' => SPEC079_UNTRUSTED, 'time' => '2026-10-09T05:00:00Z', 'history' => $history]]));
     expect($codes)->toBe(['signingCredential.trusted', 'timeStamp.untrusted'])
-        ->and($text)->toContain('2026-10-09T06:00:00Z');
+        ->and($text)->toContain('2026-10-09T05:00:00Z');
 
-    [, $codes] = spec079Control(spec079Temp($roots['manifest'], '.pem'), spec079Lote([['pem' => $roots['tsa'], 'status' => SPEC079_TRUSTED, 'time' => '2026-10-09T05:00:00Z']]));
+    [, $codes] = spec079Control(spec079Temp($roots['manifest'], '.pem'), spec079Lote([['pem' => $roots['tsa'], 'status' => SPEC079_UNTRUSTED, 'time' => '2026-10-09T06:00:00Z', 'history' => $history]]));
     expect($codes)->toBe(['signingCredential.trusted', 'timeStamp.trusted']);
 })->group('SPEC-079');
 
 // AC6
-it('AC6: an entry that cannot be placed is not used, and the report says why', function (?string $status, ?string $time, bool $otherInHistory, string $why): void {
+it('AC6: an entry that cannot be placed is undated, or, where it could hide a removal, not used and named', function (?string $status, ?string $time, bool $otherInHistory, bool $used, string $why): void {
     $roots = spec079Roots('control');
     // a second, usable service, so that the list itself is not refused
     $other = spec079Roots('no-timestamp')['manifest'];
@@ -232,21 +238,29 @@ it('AC6: an entry that cannot be placed is not used, and the report says why', f
     ]);
 
     [$state, $codes, $text] = spec079Control($list);
+    if ($used) {
+        expect($state)->toBe('Trusted')
+            ->and($codes)->toBe(['signingCredential.trusted', 'timeStamp.trusted']);
+
+        return;
+    }
     expect($state)->toBe('Valid')
         ->and($codes)->toBe(['signingCredential.untrusted', 'timeStamp.trusted'])
         ->and($text)->toContain($why);
 })->with([
-    'an empty status' => ['', '', false, 'empty'],
-    'no status at all' => [null, '2026-10-01T00:00:00Z', false, 'no status'],
-    'an unknown status' => ['http://example.org/granted', '2026-10-01T00:00:00Z', false, 'http://example.org/granted'],
-    'no starting time' => [SPEC079_TRUSTED, null, false, 'no starting time'],
-    'a malformed time' => [SPEC079_TRUSTED, '1 October 2026', false, '1 October 2026'],
-    'a history entry with other certificates' => [SPEC079_TRUSTED, '2026-10-01T00:00:00Z', true, 'other certificates'],
+    'an empty status: undated, as NETLOCK' => ['', '', false, true, ''],
+    'no status at all: undated' => [null, '2026-10-01T00:00:00Z', false, true, ''],
+    'trusted without a time: undated' => [SPEC079_TRUSTED, null, false, true, ''],
+    'trusted with a malformed time: undated' => [SPEC079_TRUSTED, '1 October 2026', false, true, ''],
+    'an unknown status: not used' => ['http://example.org/granted', '2026-10-01T00:00:00Z', false, false, 'http://example.org/granted'],
+    'untrusted without a time: not used' => [SPEC079_UNTRUSTED, null, false, false, 'no starting time'],
+    'untrusted with a malformed time: not used' => [SPEC079_UNTRUSTED, '1 October 2026', false, false, '1 October 2026'],
+    'a history entry with other certificates: not used' => [SPEC079_TRUSTED, '2026-10-01T00:00:00Z', true, false, 'other certificates'],
 ])->group('SPEC-079');
 
 it('AC6: a list in which no entry is usable is refused, like a PEM file without a certificate', function (): void {
     $root = spec079Roots('control')['manifest'];
-    $list = spec079Lote([['pem' => $root, 'status' => '', 'time' => '']]);
+    $list = spec079Lote([['pem' => $root, 'status' => 'http://example.org/granted', 'time' => '2026-10-01T00:00:00Z']]);
     [$status, $out, $err] = spec079Run('--trust-list', $list, Corpus::fixtures().'/timestamp/tsa-matrix/control.png');
 
     expect($status)->toBe(2)

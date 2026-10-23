@@ -19,6 +19,6 @@ certificates are in both lists.
 
 In the JSON form three NETLOCK services have an empty `ServiceStatus` and
 `StatusStartingTime` (two in the signer list, one in the TSA list), which
-the programme's schema extension does not allow; SPEC-079 does not use
-them. Castlabs C2PA ECC P-384 Root CA is listed from 2026-08-10, a month
+the programme's schema extension does not allow; SPEC-079 (amendment 1)
+reads them as the PEM bundle does, without dates. Castlabs C2PA ECC P-384 Root CA is listed from 2026-08-10, a month
 after its certificate became valid (step 383).

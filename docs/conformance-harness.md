@@ -31,10 +31,10 @@ bin/c2pa-verify --crjson \
 
 Each list may be the PEM bundle or the same list in the programme's JSON
 form (ETSI TS 119 602 List of Trusted Entities; `C2PA-TRUST-LIST.json`,
-`C2PA-TSA-TRUST-LIST.json`). The JSON form also carries when each anchor
-was trusted and, if it was, when it stopped being: this verifier then
-counts the anchor only inside those stretches (C2PA 2.4 §14.4.1; SPEC-079).
-The PEM bundle carries no dates.
+`C2PA-TSA-TRUST-LIST.json`). The JSON form also says when an anchor
+stopped being trusted, should the programme remove one: this verifier
+then does not count it for a signature judged after that time (C2PA 2.4
+§14.4.1's `notAfter`; SPEC-079). The PEM bundle carries no dates.
 
 The two lists stay apart: an anchor of the signer list never vouches for
 a time-stamp authority, and the reverse (C2PA 2.4 §14.4.1, §14.4.2;
