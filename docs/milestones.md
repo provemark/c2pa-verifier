@@ -371,6 +371,6 @@ a test TSA Trust List and a validation time in, crJSON out (step 367).
 | 374–375 | The crJSON document: SPEC-075, ADR-0006 | implemented 2026-10-23 |
 | 376–377 | The crJSON signature: SPEC-076 | implemented 2026-10-23 |
 | 378–379 | The harness: SPEC-077 (`--trust-list`, `--tsa-trust-list`), `docs/conformance-harness.md` | implemented 2026-10-23 |
-| — | The test mode measured with the Conformance Test Root, per media type | planned |
+| 380 | The test mode with the Conformance Test Root: SPEC-078 | draft 2026-10-23 |
 | — | The open gaps of `docs/conformance.md` | planned |
 | — | Applying | Maurice's decision |

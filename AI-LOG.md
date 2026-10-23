@@ -11050,3 +11050,20 @@ README are where the disclosure lives.
   `composer check` (1,209 passed).
 - Reasoned: no corpus run, since the default path did not change.
 - Decided by Maurice: SPEC-077 approved.
+
+## 2026-10-23 — SPEC-078 drafted: the programme's test certificate (step 380)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "het mag en push" (the public test key may be used, kept
+  outside the repository; push steps 378–379); "doe optie 1".
+- Produced: the push; `specs/SPEC-078-conformance-test-root.md` (draft);
+  `notes/step-380-spec078-draft.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: the conformance tool's test root and signing certificate;
+  three probes signed with `c2patool` 0.28.2 in the scratchpad, verified
+  here and by `c2patool` with and without `store.cfg`, under the official
+  lists, and with one byte changed; `c2pa-rs` 0.91.1's EKU policy; C2PA
+  2.4 §14.4.1 and §14.5.1.2.
+- Reasoned: that the programme's tool calls these files trusted.
+- Decided by Maurice: the public test key may be used by tooling,
+  outside the repository; pin the current behaviour and name both
+  differences (option 1), anchor-to-EKU association left for later.
