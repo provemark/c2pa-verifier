@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-23                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -142,6 +142,7 @@ entries and one test file.
 
 - None blocking. Anchor-to-EKU association (§14.5.1.2) stays open, named
   in `docs/conformance.md`.
+  *Status 2026-10-23 (step 381):* settled; approved without changes.
 
 ## Traceability
 
@@ -150,8 +151,24 @@ least one test; every source file maps back to this spec.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
+| AC1 | tests/Unit/Verifier/ConformanceTestRootTest.php :: AC1: trusted under the test root, through the harness, schema-valid (3 types) / SPEC-078 | tests/Fixtures/conformance-test/signed.*; bin/make-conformance-test-variants.php |
+| AC2 | tests/Unit/Verifier/ConformanceTestRootTest.php :: AC2: untrusted without a list, and under the official lists (3 types) / SPEC-078 | tests/Fixtures/conformance-test/signed.* |
+| AC3 | tests/Unit/Verifier/ConformanceTestRootTest.php :: AC3: one changed byte of the image data is a data-hash mismatch, here and in c2patool (3 types) / SPEC-078 | tests/Fixtures/conformance-test/edited.*; bin/make-conformance-test-variants.php :: ctStoreRanges() |
+| AC4 | tests/Unit/Verifier/ConformanceTestRootTest.php :: AC4: c2patool with the root and store.cfg agrees; with the root alone it says invalid, the named difference (3 types) / SPEC-078 | tests/Fixtures/c2patool/conformance-test/ (12 answers); docs/comparison.md; docs/conformance.md |
+| AC5 | tests/Unit/Verifier/ConformanceTestRootTest.php :: AC5: no private key in the fixtures, and the generator refuses a scratch directory inside the repository / SPEC-078 | bin/make-conformance-test-variants.php (the scratch check comes first) |
+
+The generator takes a fourth argument, the root's PEM, which the Scope
+did not list: the bundle holds the leaf and its key but not the root,
+which the tool embeds in `src/lib/CertificateManager.svelte`. It signs
+with `--settings root-store-cfg.settings.json`, so that `c2patool`'s own
+check after signing passes (the prototype, without settings, exited 1
+on the missing EKU). The WebP store check needed `WebpManifestStoreExtractor`;
+the first run named the abstract RIFF class and stopped before writing
+WebP, and its key directory was removed by the shutdown handler all the
+same.
+
+The tests were run red first: 13 of 13 failed before the fixtures
+existed. This spec adds no library code, so there is no mutation to
+watch; AC4 holds both of `c2patool`'s answers, and AC2 the official
+lists, as the checks that the verdicts are not the fixtures' own.
+`composer check`: 1,222 passed, 1 skipped.

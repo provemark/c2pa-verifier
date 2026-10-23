@@ -378,6 +378,17 @@ Certificate Policy requires of every CA on the list. The case therefore
 needs a listed CA to issue outside its own policy first, and no file is
 known to show it.
 
+Measured on 2026-10-23 (SPEC-078, `tests/Fixtures/conformance-test/`):
+the conformance programme's own public test certificate is such a case.
+"C2PA Conformance Test Signing" (`contentauth/c2pa-conformance-tool`
+`6d10ee0`) carries only id-kp-documentSigning, and the programme's tool
+documents files signed with it as trusted in test mode. With its root as
+`--trust-list`, this verifier says `Trusted`; `c2patool` 0.28.2 says
+`Invalid` (`signingCredential.invalid`, "certificate missing required
+EKU") unless `store.cfg` is given as `trust_config`, and then `Trusted`.
+Strict §14.5.1.2 would say untrusted. Pinned as it is, by the
+maintainer's decision of 2026-10-23.
+
 **Named, not built** (the maintainer's decision, 2026-09-24). The settings
 format this verifier shares with `c2patool` has no way to say which
 anchors belong to which EKU. `trust.anchors[].trust_config` means *widen*

@@ -11067,3 +11067,19 @@ README are where the disclosure lives.
 - Decided by Maurice: the public test key may be used by tooling,
   outside the repository; pin the current behaviour and name both
   differences (option 1), anchor-to-EKU association left for later.
+
+## 2026-10-23 — SPEC-078 built: the programme's test certificate (step 381)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord".
+- Produced: `bin/make-conformance-test-variants.php`;
+  `tests/Fixtures/conformance-test/` (six files, two certificates, two
+  settings files, README); `tests/Fixtures/c2patool/conformance-test/`
+  (twelve answers); `tests/Unit/Verifier/ConformanceTestRootTest.php`;
+  entries in `docs/comparison.md` and `docs/conformance.md`; SPEC-078
+  implemented; `notes/step-381-conformance-test-root.md`; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: the generator run (key in the scratchpad, deleted); the
+  tests red (13 of 13) and green; `composer check` (1,222 passed); no
+  `PRIVATE KEY` in the fixtures.
+- Reasoned: none beyond the spec.
+- Decided by Maurice: SPEC-078 approved.
