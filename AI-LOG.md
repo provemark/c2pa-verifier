@@ -11397,3 +11397,13 @@ README are where the disclosure lives.
   release of each finding by `git log -S` and `git tag --contains`.
 - Decided by Maurice: prepare the release; the push, tag and any
   advisory are still his.
+
+## 2026-10-23 — 0.8.0 released (step 405)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push maar", then "tag maar".
+- Produced: the push of `main`, the annotated tag `v0.8.0`,
+  `notes/step-405-release-0.8.0.md`, a row in `NOTES.md`.
+- Measured: CI on `main` and on the tag (8/8 each); Packagist's metadata;
+  a fresh install from Packagist and three calls on it.
+- Decided by Maurice: push, tag; no advisory; c2patool's behaviour on the
+  offset rewrite not named.
