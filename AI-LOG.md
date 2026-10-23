@@ -11021,3 +11021,18 @@ README are where the disclosure lives.
   `composer check` (1,194 passed).
 - Reasoned: none beyond the spec.
 - Decided by Maurice: SPEC-076 approved; amendment 1.
+
+## 2026-10-23 — SPEC-077 drafted: the two trust lists as input (step 378)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja akkoord" (the outline, its five choices, and the push of
+  steps 376–377).
+- Produced: the push; `specs/SPEC-077-trust-lists-as-input.md` (draft);
+  `notes/step-378-spec077-draft.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: the official lists' overlap; the writer fixtures under them
+  and swapped; `control.png` with both, swapped, either alone, and
+  without `trust_config`.
+- Reasoned: refusing an empty list.
+- Decided by Maurice: options on the existing command; exclusive with
+  `--settings`; an empty list refused; one list alone allowed;
+  byte-equality with `--settings` as the test.
