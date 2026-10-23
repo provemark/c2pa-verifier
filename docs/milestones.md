@@ -367,7 +367,8 @@ a test TSA Trust List and a validation time in, crJSON out (step 367).
 | 367 | What the programme asks; the four inputs against this verifier | done 2026-10-23 |
 | 368–369 | A validation time as input (CLI and API): SPEC-073 | implemented 2026-10-23 |
 | 370 | crJSON read and measured against `c2patool --crjson` and the conformance tool | done 2026-10-23 |
-| — | crJSON output, next to the existing report | planned |
+| 371 | crJSON values from CBOR (Table 1): SPEC-074 | draft 2026-10-23 |
+| — | The crJSON document, and its signature | planned |
 | — | `bin/conformance-harness` | planned |
 | — | The test mode measured with the Conformance Test Root, per media type | planned |
 | — | The open gaps of `docs/conformance.md` | planned |

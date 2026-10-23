@@ -1,0 +1,211 @@
+# SPEC-074: CBOR values as crJSON values
+
+| Field      | Value                                             |
+|------------|---------------------------------------------------|
+| Status     | draft                                             |
+| Author     | Maurice van Loon                                  |
+| Approved   | —                                                 |
+| Supersedes | —                                                 |
+
+> Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
+> `implemented` (Traceability filled). No implementation code while `draft`.
+> Only the Traceability section of an `approved` spec may change without a new
+> approval; everything else needs a proposed amendment.
+
+## Problem
+
+The C2PA Conformance Program's test harness answers in crJSON (step 367).
+crJSON writes every claim and every CBOR assertion as JSON. C2PA 2.4
+crJSON §3.5.1 and §3.6.3 say how, in Table 1, "Mapping from CBOR to
+JSON-LD":
+
+| CBOR | crJSON |
+|---|---|
+| unsigned and negative integer | number |
+| byte string | string, Base64 (RFC 4648), "prefixed by `b64'`" |
+| text string | string |
+| array | array |
+| map | object; keys other than UTF-8 strings "converted to UTF-8 strings, as defined by the implementation" |
+| false, true, null | boolean, null |
+| half, single, double float | float |
+| date-time (tag 0) | string, "direct copy from the text item inside the CBOR tag" |
+
+This verifier already turns decoded CBOR into JSON for its report
+(`ManifestStore::plain()`). That rendering is `c2patool`'s *reader* view:
+byte strings as bare Base64, every tag as its content, a non-finite
+float as the text `NaN`. It is not Table 1, and its contract must not
+change. crJSON needs a mapping of its own.
+
+Measured in step 370 and in this step (2026-10-23):
+
+- `c2pa-rs` 0.91.1 (`src/crjson.rs`) does not apply Table 1 generically.
+  It renders CBOR through its own JSON conversion and then rewrites the
+  fields named `hash`, `pad`, `pad2` and `signature`. Other byte strings
+  stay arrays of integers. In `c2patool` 0.28.2's crJSON of the 62
+  fixture files: the BMFF exclusions' `data/value`, `cawg.identity`'s
+  `pad1`, `c2pa.certificate-status`'s `ocspVals` and a time-stamp
+  assertion's tokens. It also adds `"pad": "b64''"` to an object with a
+  `hash` and no `pad`, and it rewrites an *array of integers* named
+  `hash` into a byte string (old Adobe `c2pa.actions` hold their
+  ingredient hash that way: 38 assertions).
+- `c2pa-rs` prints a single-precision float by its shortest single
+  form (`2.32` in a `stds.exif` of `nikon-20221019-building.jpeg`); PHP
+  holds it as a double and prints `2.319999933242798`. Both denote the
+  same single-precision value.
+- `c2pa-rs` writes **`b64'<base64>'`, with a closing quote**: 1,405 of
+  1,405 prefixed strings in that output. The crJSON page writes the
+  prefix only: in Table 1, in §3.6.3.1 ("starting with the `b64'`
+  prefix") and in its example (`"b64'<base64>"`). The schema has no
+  pattern for it.
+- The CBOR this verifier decodes from the fixture corpus (556 manifest
+  stores, every claim and assertion): 1,688 byte strings, tag 0 only (in
+  `c2pa.actions.v2`), no map with an integer key, 49 floats, none of them
+  NaN or infinite.
+
+## Scope
+
+**In scope**
+
+- One function from a decoded CBOR value (`CborDecoder`'s output:
+  int, string, `CborBytes`, list, map, `CborTag`, bool, null, float) to a
+  JSON-encodable PHP value, by Table 1.
+- A refusal, by name, for a value Table 1 cannot express. §3.6.1 says an
+  assertion nothing can be derived from is written as `{}`; that use is
+  the next spec's.
+
+**Out of scope** (each needs its own spec before it may be built)
+
+- The crJSON document: which assertions, the claim, `{}` for a refused
+  one, embedded files (thumbnails, icons), JSON assertions, `uuid` boxes.
+- The signature object (`certificateInfo`, `timeStampInfo`).
+- `c2pa-rs`'s extras: the added `pad`, the `operating_system` rename,
+  decoding a CAWG signature. They are not in Table 1.
+- The existing report's rendering. `plain()` is not touched.
+
+## Behavior
+
+- **AC1 — a byte string is Base64 with the prefix**
+  - Given byte strings `h''`, `h'00'`, `h'0102'`, `h'fbff'` and a 32-byte
+    SHA-256
+  - When mapped
+  - Then each is `b64'` followed by its RFC 4648 §4 Base64, with padding
+    (`b64'AA=='`, `b64'AQI='`, `b64'+/8='`), and for `h''` the prefix
+    alone. Whether a closing `'` follows is open question 1.
+
+- **AC2 — the JSON-native types pass unchanged**
+  - Given text (including non-ASCII and control characters), 0, 23, 24,
+    `2^63-1`, -1, `-2^63`, false, true, null, an empty array, an empty
+    map, and nested arrays and maps
+  - When mapped and `json_encode`d
+  - Then each has its own value and type: a CBOR map is a JSON object
+    (`{}` even when empty), a CBOR array a JSON array (`[]` even when
+    empty), and a map keeps its key order.
+
+- **AC3 — tag 0 is its text**
+  - Given `0("2026-10-09T05:31:00Z")` and the `when` field of a fixture's
+    `c2pa.actions.v2`
+  - When mapped
+  - Then the value is the text, unchanged.
+
+- **AC4 — a float stays a float**
+  - Given half, single and double floats: `1.0`, `1.5`, `-0.0`,
+    `65504.0`, `1.0e-7`
+  - When mapped and `json_encode`d
+  - Then each is a JSON number with a fraction or exponent (`1.0`, not
+    `1`), so that a reader can tell it from an integer.
+
+- **AC5 — an integer map key becomes its decimal string**
+  - Given `{1: "a", -2: "b"}`
+  - When mapped
+  - Then the object is `{"1": "a", "-2": "b"}`, in that order.
+
+- **AC6 — what Table 1 cannot express is refused** *(required: error path)*
+  - Given a tag other than 0 (`1(1700000000)`, `32("https://x")`), tag 0
+    over something that is not text (`0(1)`), a map whose integer key
+    collides with a text key (`{1: "a", "1": "b"}`), NaN, +∞ and -∞, at
+    the top and nested three levels deep
+  - When mapped
+  - Then a `CrJsonValueException` is thrown, naming the reason and the
+    path to the value (e.g. `actions[0].when`). No partial value is
+    returned.
+
+- **AC7 — against `c2patool` on real data**
+  - Given the fixture files of step 370 whose store this verifier reads
+    (59 of the 62; `c2pa-rs/cloud.jpg` and the two remote-manifest
+    writer files have none here), and `c2patool` 0.28.2's crJSON of
+    each, stored under `tests/Fixtures/c2patool/crjson/`
+  - When every assertion in a `cbor` content box of every manifest is
+    mapped, `cawg.identity` excepted (`c2pa-rs` decodes its signature)
+  - Then each equals `c2patool`'s value for the same manifest and label,
+    after four named normalisations applied to both sides: a byte string
+    and an array of integers 0–255 compare as the bytes they hold; the
+    closing quote is ignored; an added `"pad": "b64''"` that the CBOR
+    does not hold is ignored; floats compare at single precision. Any
+    other difference fails the test, with the file, the label and the
+    path. Measured with a prototype outside the repository: 298 of 298
+    equal, 147 of them only after the `pad` normalisation.
+
+## References
+
+- Specification: C2PA 2.4, Content Credentials JSON (crJSON) §3.5.1,
+  §3.6.1, §3.6.3 (Table 1), §3.6.3.1; RFC 4648 §4; RFC 8949 §3.4.1
+  (tag 0); RFC 8259 §6 (no NaN or infinity in JSON).
+- Oracle: `c2patool` 0.28.2 `--crjson` (c2pa-rs 0.91.2) over the 62
+  files named in `notes/step-370-crjson-measured.md`, with the
+  divergences of AC7 named.
+- Measured: `c2pa-rs` 0.91.1 `src/crjson.rs` (`Base64Bytes`,
+  `fix_hash_encoding()`); the counts in Problem.
+- Reasoned: that a refusal is better than a guess for a tag Table 1 does
+  not name, since a crJSON reader would take the content for the value.
+
+## API sketch
+
+```php
+// src/Report/CrJsonValue.php — @internal (SPEC-025)
+final class CrJsonValue
+{
+    /** @throws CrJsonValueException naming the reason and the path */
+    public static function of(mixed $cbor): mixed;
+}
+
+// src/Report/CrJsonValueException.php — @internal
+final class CrJsonValueException extends \RuntimeException {}
+```
+
+Maps come back as `stdClass` (or `ArrayObject`) so that `json_encode`
+writes an empty map as `{}` and an integer-keyed map as an object.
+`json_encode` is then called with `JSON_PRESERVE_ZERO_FRACTION`. The
+public contract does not change.
+
+## Open questions
+
+1. **The closing quote.** The crJSON page writes `b64'` as a prefix only
+   (`b64'AQI=`). `c2pa-rs`, whose crJSON the programme's own tool
+   produces, writes `b64'AQI='`. The schema allows both. *Proposal:* the
+   page's form, prefix only, and the difference named in
+   `docs/comparison.md`. *Against:* if the programme compares whole
+   documents rather than codes, the `c2pa-rs` form matches what it
+   expects. Blocking: AC1 depends on it (AC7 ignores the quote).
+2. **A tag other than 0.** *Proposal:* refuse (AC6), so the next spec
+   writes `{}` for that assertion. *Alternative:* the content, as the
+   report's `plain()` does, which is lossy and silent. No such tag
+   occurs in the corpus. Not blocking.
+3. **Single-precision floats.** *Proposal:* written as the double PHP
+   holds (`2.319999933242798`); AC7 compares at single precision. Writing
+   `2.32` would need the decoder to keep each float's width, a change to
+   SPEC-006's value model. Not blocking.
+
+## Traceability
+
+Filled when status becomes `implemented`. Every acceptance criterion maps to at
+least one test; every source file maps back to this spec.
+
+| Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
+|----------------------|-----------------------------|----------------------|
+| AC1                  | —                           | —                    |
+| AC2                  | —                           | —                    |
+| AC3                  | —                           | —                    |
+| AC4                  | —                           | —                    |
+| AC5                  | —                           | —                    |
+| AC6                  | —                           | —                    |
+| AC7                  | —                           | —                    |

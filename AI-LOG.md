@@ -10899,3 +10899,21 @@ README are where the disclosure lives.
   the results from the existing report; the three-spec split.
 - Decided by Maurice: none in this step (push of steps 367 addendum and
   369 not yet given).
+
+## 2026-10-23 — SPEC-074 drafted: CBOR values as crJSON values (step 371)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja akkoord" (to the three-spec split, its choices, and the
+  push of the commits since step 368).
+- Produced: `specs/SPEC-074-crjson-values.md` (draft);
+  `notes/step-371-spec074-draft.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: `c2pa-rs` 0.91.1 `src/crjson.rs` read; the closing-quote and
+  integer-array counts in `c2patool` 0.28.2's crJSON; a census of decoded
+  CBOR over 556 stores; a scratch prototype compared with `c2patool` on
+  298 CBOR assertions.
+- Reasoned: refusing what Table 1 cannot express; the proposals in the
+  open questions.
+- Decided by Maurice: the crJSON split into three specs; follow the
+  schema where `c2patool` differs; `specVersion` 2.4.0; the
+  specification's algorithm names; schema validation and per-manifest
+  comparison in tests; crJSON as a separate rendering.
