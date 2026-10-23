@@ -11385,3 +11385,15 @@ README are where the disclosure lives.
 - Measured: a forged second box built in the test (red, green); the
   corpus before and after (0 of 1,854); `composer check` (1,316 passed).
 - Decided by Maurice: none beyond the items.
+
+## 2026-10-23 — The release commit for 0.8.0 (step 404)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja bereid voor".
+- Produced: `CHANGELOG.md` 0.8.0, `README.md`, `Verifier::VERSION`,
+  `SECURITY.md` (the review's findings), `notes/step-404-release-0.8.0.md`,
+  a row in `NOTES.md`.
+- Measured: the corpus against `v0.7.1`; `bin/package-check.php`;
+  `bin/api-check.php` (142); `composer check` (1,316 passed); the first
+  release of each finding by `git log -S` and `git tag --contains`.
+- Decided by Maurice: prepare the release; the push, tag and any
+  advisory are still his.

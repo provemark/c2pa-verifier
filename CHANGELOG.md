@@ -5,6 +5,101 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.8.0 — 2026-10-23
+
+A minor release. The verifier can now be driven the way the C2PA
+conformance programme drives a validator: a validation time given by the
+caller, the programme's two trust lists (PEM or its JSON form, with
+dates), and an answer in crJSON. A review of the whole code base before
+the release found five ways to a wrong `Valid` or `Trusted`; four were in
+released versions. Every user should upgrade.
+
+**A `0.8`, not a `0.7.2`:** the public contract grows from 136 to 142
+symbols (below), and `verify()` takes an optional third argument. Nothing
+was removed or renamed; a caller on `^0.7` keeps 0.7.1 until it asks for
+`^0.8`.
+
+### Security
+
+- **An ingredient could acknowledge its own failures (SPEC-070 amendment
+  3). Present in `0.1.0` to `0.7.1`.** A recorded ingredient status
+  excuses a failure only when a manifest above the failing one recorded
+  it (C2PA 2.4 §18.16.12.4). The records of every manifest the graph
+  reaches were pooled, so a replaced ingredient manifest could list its
+  own `claimSignature.mismatch` and its parent's `ingredient.manifest.mismatch`
+  in an ingredient assertion of its own, and the file came out `Valid`,
+  or `Trusted`. Confirmed with the real classes; no such file was found.
+  A record now speaks only for the manifests below the one holding it.
+- **A redaction could reach the active manifest (SPEC-035 amendment 6).
+  Present in `0.2.1` to `0.7.1`.** A redaction declared by any reached
+  manifest applied to whichever manifest its URI named, so an ingredient
+  could declare one of the active manifest's assertions redacted and its
+  missing box was excused. A redaction now applies only below the
+  manifest that declares it (C2PA 2.4 §6.8). Reasoned from the code: since
+  the fix above, it needs the ingredient's author to know the active
+  manifest's label in advance. `assertion.notRedacted` still checks every
+  declared redaction.
+- **BMFF offset tables could be excluded from the hash (SPEC-071
+  amendment 1). Present in `0.1.0` to `0.7.1`.** An exclusion of the
+  offset fields of `stco`, `co64`, `tfhd`, `trun`, or of `meta/iloc`, was
+  allowed because an older `c2pa-rs` wrote it. With the chunk offsets
+  unsigned, the media could be changed without breaking the binding.
+  C2PA 2.4 §18.6.2 hashes every
+  offset at its post-embed value, and today's `c2pa-rs` no longer excludes
+  them. Such an exclusion is now `assertion.bmffHash.mismatch`. A file an
+  older `c2pa-rs` (2024, `c2pa.hash.bmff.v2`) signed this way is `Invalid`
+  here.
+- **An entry's EKUs were chosen at the clock (SPEC-079 amendment 2).
+  Present in `0.2.0` to `0.7.1`.** Whether a chain reaches a
+  `trust.anchors` entry, for that entry's `trust_config` EKUs and for the
+  note naming an entry of the other kind, was asked at the current time,
+  while trust is judged at a time-stamp's time. A leaf whose EKU only
+  another entry allows could pass. Reasoned, not reproduced. Both now ask
+  at the judged time.
+- **The JSON trust lists (new in this release) could trust a removed
+  anchor (SPEC-079 amendment 2).** Found before release: a certificate in
+  two services, an `untrusted` and a `trusted` status at one instant, a
+  fraction of a second, and a `ServiceHistory` that is not a list each
+  gave `Trusted`. All now fail closed.
+
+### Added
+
+- **A validation time (SPEC-073).** `verify($stream, $settings,
+  $validationTime)` and `bin/c2pa-verify --at <RFC 3339>`: the time to
+  judge certificates, anchors and OCSP at where no trusted time-stamp
+  gives one, in the active manifest and every ingredient. The report keeps
+  it (`VerificationReport::$validationTime`). Without it, the clock is
+  read once per verification.
+- **crJSON (SPEC-074, SPEC-075, SPEC-076).** `VerificationReport::toCrJson()`
+  and `--crjson`: every manifest with its claim, assertions, signature and
+  its own validation results, as C2PA 2.4's crJSON describes them;
+  schema-valid but for v1 claims and unreadable signatures.
+  `Verifier::VERSION` names the generator.
+- **The programme's trust lists (SPEC-077, SPEC-079).**
+  `TrustSettings::fromTrustLists()`, `--trust-list` and `--tsa-trust-list`
+  take the signer and TSA lists, as PEM or in the JSON form (ETSI TS 119
+  602) with their dates: an `untrusted` status limits an anchor from its
+  time on (`TrustAnchorSet::$windows`, `$reasons`). See
+  `docs/conformance-harness.md`.
+- **Fixtures signed with the conformance tool's public test certificate
+  (SPEC-078)**, and `docs/conformance.md` brought up to date.
+
+### Changed
+
+- Of two assertion boxes with one label, every check reads the first, the
+  one the claim's hash covers; the second is still `assertion.undeclared`
+  (SPEC-007 amendment 9).
+- Error lines on stderr escape control characters and bidirectional
+  overrides (SPEC-019 amendment 4); `--at` refuses a time outside the
+  years 0001–9999 in UTC (SPEC-073 amendment 2).
+- `opis/json-schema` joins `require-dev`, for the crJSON tests only
+  (ADR-0006); nothing new is required at run time.
+
+Over the fixtures and corpora, against 0.7.1: 20 of 1,842 runs move, ten
+files. By verdict only `c2pa-rs/video1.mp4` moves (its offset tables
+refused); the other nine were refused already, and only the wording of
+the refusal changed.
+
 ## 0.7.1 — 2026-10-22
 
 A patch release: an ingredient failure counts as acknowledged only when the

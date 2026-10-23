@@ -82,9 +82,9 @@ once before and was wrong: see `PRED-IMG-004` below.
 
 ## Findings so far
 
-The project keeps its own record. Twenty cases of a wrong `Valid` or
-`Trusted` have been found in it, all by the maintainers, the last one by
-the security review of a downstream module: two before any
+The project keeps its own record. Twenty-five cases of a wrong `Valid` or
+`Trusted` have been found in it, all by the maintainers, one by the
+security review of a downstream module: two before any
 release, one after `0.1.0`, five, with eight ways to crash the verifier,
 in the security review of 2026-09-25, fixed in `0.2.2`, one fixed in
 `0.2.3`, two, with four ways to exhaust the verifier, in a review of
@@ -92,8 +92,9 @@ in the security review of 2026-09-25, fixed in `0.2.2`, one fixed in
 findings, fixed in `0.2.5`, one found by reading the reference
 engine's own fixes, fixed in `0.2.6`, one found by a review of `src/`,
 fixed in `0.2.8`, one found by a review of the whole of `src/` before
-`0.3.0`, fixed in it, one reported privately, fixed in `0.5.1`, and one
-found by the trust matrix, fixed in `0.5.2`:
+`0.3.0`, fixed in it, one reported privately, fixed in `0.5.1`, one
+found by the trust matrix, fixed in `0.5.2`, and five found by a review of
+the whole code base before `0.8.0`, fixed in it:
 
 - **2026-09-22, no hard binding** (`notes/step-47-no-hard-binding.md`).
   A correctly signed manifest with no `c2pa.hash.data` assertion — a
@@ -270,6 +271,31 @@ found by the trust matrix, fixed in `0.5.2`:
   of your anchors, or as one (SPEC-014 amendment 7). None of the 53
   anchors in the C2PA lists of 2026-08-14 and DigiCert Trusted Root G4
   lacks it.
+
+- **2026-10-23, a review of the whole code base before `0.8.0` — four
+  present in released versions, fixed in `0.8.0`**
+  (`notes/step-389-acknowledgement-scope.md` to
+  `notes/step-395-bmff-offset-tables.md`). Four review passes, one per area,
+  run as Claude Code subagents (`AI-LOG.md`); every finding re-run or
+  re-read before it was fixed.
+  - *An ingredient acknowledging its own failures*, `0.1.0` to `0.7.1`:
+    the records of every reached manifest were pooled, so a replaced
+    ingredient could excuse its own signature mismatch and its parent's
+    hash of it; `Invalid` became `Valid` (confirmed with the real
+    classes). SPEC-070 amendment 3.
+  - *A redaction reaching the active manifest*, `0.2.1` to `0.7.1`: an
+    ingredient could declare one of the active manifest's assertions
+    redacted. Reasoned; after the fix above it needs the active
+    manifest's label in advance. SPEC-035 amendment 6.
+  - *BMFF offset tables excluded from the hash*, `0.1.0` to `0.7.1`: with
+    the offset tables excluded as an older `c2pa-rs` wrote them, the media
+    could be changed without breaking the binding (confirmed).
+    SPEC-071 amendment 1.
+  - *An entry's EKUs chosen at the clock*, `0.2.0` to `0.7.1`: reasoned,
+    not reproduced. SPEC-079 amendment 2.
+  - *The JSON trust lists*, new in `0.8.0` and fixed before it: five list
+    shapes gave `Trusted` for a removed anchor (confirmed). SPEC-079
+    amendment 2.
 
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now
