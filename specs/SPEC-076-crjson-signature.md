@@ -167,6 +167,9 @@ The contract does not change: the signature is inside the crJSON string.
    - AC4: `timeStampInfo` is on the same manifests as `c2patool`'s in 74 cases, not 75, and two manifests differ by name. `c2pa-rs/CA_ct.jpg`'s header token cannot be read here (`c2patool` itself reports `timeStamp.malformed`; `c2pa-rs` writes the TSA's certificate without a time, which the schema refuses), so this verifier writes no `timeStampInfo`. `c2pa-rs/update_manifest.jpg`'s manifest has no header token but a `c2pa.time-stamp` assertion's (SPEC-064), which this verifier reads and `c2pa-rs` does not use for crJSON. Of the 74, the time is equal on the 69 where `c2patool` writes one, and this verifier adds it on the other 5.
    - AC5: the fixtures are `cose/chain-empty.png`, `cose/leaf-der-broken.png` and `cose/protected-not-map.png`; there is no `x5chain/` directory.
 
+2. **2026-10-23, step 400, found by the review of 2026-10-23 (the low items, "doe 1 nog", Maurice van Loon).** `timeStampInfo` showed the header's token whenever it could be read, also where the verdict took its time from a `c2pa.time-stamp` assertion's token (SPEC-064) because the header's TSA was not trusted; a reader could not tell which time counted. Where the manifest's own results hold `timeStamp.trusted` at an assertion's url, that assertion's token is now shown; otherwise as before (AC4).
+   - **AC7 — timeStampInfo shows the token the verdict used**: `timestamp/assertion/header-wins.png`, judged at 2026-10-23T12:00:00Z: under its own settings the parent's `timeStamp.trusted` is the header's and `timeStampInfo` names the TSA Matrix TSA; with that TSA left out of the settings, `timeStamp.trusted` is the assertion's and `timeStampInfo` names the throw-away TSA.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -180,6 +183,7 @@ least one test; every source file maps back to this spec.
 | AC4 | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC4: timeStampInfo wherever the token can be read, its time whether or not it validated; AC4: a validated, an untrusted and a mismatched token each give their time and their TSA (3 datasets); AC4: no token, no timeStampInfo / SPEC-076 | src/Timestamp/TimestampCheck.php :: readToken(); src/Verifier/CrJsonDocument.php :: signature() |
 | AC5 | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC5: a signature that cannot be read is {} (3 datasets) / SPEC-076 | src/Verifier/CrJsonDocument.php :: signature() |
 | AC6 | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC6: every document passes the whole schema but for the named exceptions; tests/Unit/Verifier/CrJsonDocumentTest.php :: AC7: every crJSON written is schema-valid but for the accepted v1 claims / SPEC-076, SPEC-075 | src/Verifier/CrJsonDocument.php |
+| AC7 (amendment 1) | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC7: timeStampInfo shows the token whose time the verdict used / SPEC-076 | src/Timestamp/TimestampCheck.php :: readToken(); src/Verifier/CrJsonDocument.php :: signature() |
 
 The tests were run red first: 8 of 12 failed. AC5 and AC6 passed
 before the build, since every signature was then `{}`; AC6 was tightened
@@ -191,3 +195,10 @@ an attribute); no token read (AC4); every signature `{}` (AC1, AC2, AC4,
 AC6); assertion tokens ignored (AC4). The ordinary report over the
 corpus before and after: 0 of 1,842 runs moved. `composer check`: 1,194
 passed, 1 skipped.
+
+Amendment 1 (step 400): the test red on the first build at the right
+assertion (the verdict's url was the assertion's, the issuer the
+header's TSA), green after. Mutations, each failing: the judged token
+not put first, the results not passed to `signature()`. Without trust
+settings no token is trusted, so no crJSON document of the fixtures can
+move.

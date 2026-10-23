@@ -11346,3 +11346,14 @@ README are where the disclosure lives.
 - Measured: the test red on the old logic, green after; crJSON of 927
   fixtures before and after (0 moved); `composer check` (1,311 passed).
 - Decided by Maurice: none beyond the item.
+
+## 2026-10-23 — SPEC-076 amendment 1: timeStampInfo (step 400)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: the same "doe 1 nog".
+- Produced: SPEC-076 amendment 1 and its Traceability;
+  `TimestampCheck::readToken()` (`$judged`), `CrJsonDocument::signature()`;
+  AC7 in `tests/Unit/Verifier/CrJsonSignatureTest.php`;
+  `notes/step-400-timestampinfo-judged.md`; a row in `NOTES.md`.
+- Measured: the timeStamp urls over the fixtures; the test red and
+  green; two mutations; `composer check` (1,312 passed).
+- Decided by Maurice: none beyond the item.

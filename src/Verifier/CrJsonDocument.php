@@ -84,7 +84,7 @@ final class CrJsonDocument
                 'label' => (string) $label,
                 ($manifest->claim->version === 2 ? 'claim.v2' : 'claim') => self::claim($manifest),
                 'assertions' => self::assertions($manifest),
-                'signature' => self::signature($manifest, $assertions),
+                'signature' => self::signature($manifest, $assertions, $codes),
                 'validationResults' => $codes + ['specVersion' => self::SPEC_VERSION, 'validationTime' => $time],
             ] + (isset($held[$label]) ? ['ingredientDeltas' => $held[$label]] : []);
         }
@@ -95,9 +95,10 @@ final class CrJsonDocument
     /**
      * §3.7: the claim signature, or {} where it cannot be read (SPEC-076 AC5).
      *
+     * @param  array<string, list<mixed>>  $results  the manifest's own validation results, as written below
      * @return array<string, mixed>|\stdClass
      */
-    private static function signature(Manifest $manifest, TimestampAssertions $assertions): array|\stdClass
+    private static function signature(Manifest $manifest, TimestampAssertions $assertions, array $results = []): array|\stdClass
     {
         try {
             $cose = CoseSign1::ofManifest($manifest);
@@ -109,7 +110,13 @@ final class CrJsonDocument
             return new \stdClass;
         }
         $signature = ['algorithm' => self::ALGORITHMS[$cose->alg] ?? 'Unknown', 'certificateInfo' => self::certificateInfo($leaf)];
-        $token = (new TimestampCheck)->readToken($manifest, $assertions);
+        $judged = null;
+        foreach ($results['success'] ?? [] as $status) {
+            if (is_array($status) && ($status['code'] ?? null) === 'timeStamp.trusted' && is_string($status['url'] ?? null)) {
+                $judged = $status['url'];   // the token the verdict took its time from (SPEC-076 amendment 1)
+            }
+        }
+        $token = (new TimestampCheck)->readToken($manifest, $assertions, $judged);
         if ($token !== null) {
             $signature['timeStampInfo'] = ['timestamp' => gmdate('Y-m-d\TH:i:s\Z', $token[0]), 'certificateInfo' => self::certificateInfo($token[1])];
         }

@@ -132,13 +132,21 @@ final readonly class TimestampCheck
      * The token SPEC-017 and SPEC-064 judge, read but not judged, for crJSON's timeStampInfo
      * (SPEC-076 AC4): the header's one token, else the first a time-stamp assertion offers that
      * can be read; its genTime and its signer's certificate, whether or not it would validate.
-     * Null where there is none, or none can be read.
+     * Null where there is none, or none can be read. Where the verdict took its time from an
+     * assertion's token, `$judged` names that assertion and its token comes first (SPEC-076
+     * amendment 1), so crJSON shows the time that counted.
      *
+     * @param  string|null  $judged  the url of the manifest's `timeStamp.trusted`, if any
      * @return array{0: int, 1: Certificate}|null
      */
-    public function readToken(Manifest $manifest, TimestampAssertions $assertions): ?array
+    public function readToken(Manifest $manifest, TimestampAssertions $assertions, ?string $judged = null): ?array
     {
         $candidates = [];
+        foreach ($assertions->tokensFor($manifest->label) as [$der, $url]) {
+            if ($judged !== null && $url === $judged) {
+                $candidates[] = $der;
+            }
+        }
         try {
             $header = TimestampHeader::fromUnprotected(CoseSign1::ofManifest($manifest)->unprotected);
             if ($header !== null && count($header->tokens) === 1) {

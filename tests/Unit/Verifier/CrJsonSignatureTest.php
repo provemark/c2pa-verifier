@@ -3,7 +3,10 @@
 declare(strict_types=1);
 use Provemark\C2paVerifier\Cbor\CrJsonValue;
 use Provemark\C2paVerifier\Cbor\CrJsonValueException;
+use Provemark\C2paVerifier\Tests\Support\Corpus;
+use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\CrJsonDocument;
+use Provemark\C2paVerifier\Verifier\Verifier;
 
 /*
  * SPEC-076: the signature in crJSON (C2PA 2.4 crJSON §3.7). The oracle is
@@ -220,3 +223,49 @@ it('AC10: a JSON assertion is written as it is, where it can be written back the
     'not JSON' => ['{"n": ', null],
     'a key starting with NUL' => ['{"\\u0000n": 1}', null],
 ])->group('SPEC-075');
+
+// SPEC-076 AC7 (amendment 1)
+/**
+ * header-wins.png under its own settings, or with the parent's header TSA left out, as crJSON:
+ * the parent manifest's timeStampInfo issuer and the url of its timeStamp.trusted.
+ *
+ * @return array{string, string}
+ */
+function spec076ParentToken(bool $headerTsaTrusted): array
+{
+    $settings = spec075A(json_decode((string) file_get_contents(Corpus::fixtures().'/timestamp/assertion/header-wins.settings.json'), true, 512, JSON_THROW_ON_ERROR));
+    $trust = spec075A($settings['trust'] ?? null);
+    $anchors = spec075A($trust['anchors'] ?? null);
+    if (! $headerTsaTrusted) {
+        unset($anchors[1]);   // the TSA Matrix tsa-root: the header token's TSA
+    }
+    $trust['anchors'] = array_values($anchors);
+    $settings['trust'] = $trust;
+    $stream = fopen(Corpus::fixtures().'/timestamp/assertion/header-wins.png', 'rb');
+    assert($stream !== false);
+    /** @var array<string, mixed> $settings */
+    $report = (new Verifier)->verify($stream, TrustSettings::fromArray($settings), new DateTimeImmutable('2026-10-23T12:00:00Z'));
+    $parent = spec075A(spec075A(spec075A(json_decode($report->toCrJson(), true, 512, JSON_THROW_ON_ERROR))['manifests'] ?? null)[1] ?? null);
+    $trusted = '';
+    foreach (['success', 'informational', 'failure'] as $group) {
+        foreach (spec075A(spec075A($parent['validationResults'] ?? null)[$group] ?? null) as $status) {
+            $status = spec075A($status);
+            if (($status['code'] ?? null) === 'timeStamp.trusted') {
+                $trusted = spec075S($status['url'] ?? null);
+            }
+        }
+    }
+    $issuer = spec075A(spec075A(spec075A(spec075A($parent['signature'] ?? null)['timeStampInfo'] ?? null)['certificateInfo'] ?? null)['issuer'] ?? null);
+
+    return [spec075S($issuer['CN'] ?? ''), $trusted];
+}
+
+it('AC7: timeStampInfo shows the token whose time the verdict used', function (): void {
+    [$issuer, $url] = spec076ParentToken(true);
+    expect($url)->toEndWith('/c2pa.signature')
+        ->and($issuer)->toContain('TSA Matrix');
+
+    [$issuer, $url] = spec076ParentToken(false);
+    expect($url)->toEndWith('/c2pa.assertions/c2pa.time-stamp')
+        ->and($issuer)->toContain('Throw-away TSA Root');
+})->group('SPEC-076');
