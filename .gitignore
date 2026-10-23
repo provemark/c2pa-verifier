@@ -4,6 +4,9 @@
 .env.*
 !.env.example
 *.key
+*.pk8
+# the conformance-test generator's key directory (SPEC-078), should one ever land here
+conformance-test-keys-*/
 
 # --- PHP / Composer ---
 /vendor/

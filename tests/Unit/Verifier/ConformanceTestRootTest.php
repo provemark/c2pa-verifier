@@ -110,3 +110,25 @@ it('AC5: no private key in the fixtures, and the generator refuses a scratch dir
     expect($status)->toBe(1)
         ->and(implode("\n", $output))->toContain('outside the repository');
 })->group('SPEC-078');
+
+// AC6 (amendment 1)
+/** The repository's tests/ spelled in capitals, where this volume ignores case; null where it does not. */
+function spec078OtherSpelling(): ?string
+{
+    $root = dirname(__DIR__, 3);
+    $other = dirname($root).'/'.strtoupper(basename($root)).'/tests';
+
+    return is_dir($other) && fileinode($other) === fileinode($root.'/tests') ? $other : null;
+}
+
+it('AC6: the generator refuses the repository spelled in other letters', function (): void {
+    $root = dirname(__DIR__, 3);
+    exec(sprintf('%s %s %s %s %s 2>&1', escapeshellarg(PHP_BINARY), escapeshellarg($root.'/bin/make-conformance-test-variants.php'), escapeshellarg((string) spec078OtherSpelling()), escapeshellarg('c2patool'), escapeshellarg('bundle.pem')), $output, $status);
+    expect($status)->toBe(1)
+        ->and($output[0] ?? '')->toBe('the scratch directory must exist and lie outside the repository');
+})->skip(fn (): bool => spec078OtherSpelling() === null, 'this volume tells letters apart, so no other spelling names the repository')->group('SPEC-078');
+
+it('AC6: git ignores the key\'s file and directory names', function (string $path): void {
+    exec(sprintf('git -C %s check-ignore -q --no-index %s', escapeshellarg(dirname(__DIR__, 3)), escapeshellarg($path)), $ignored, $code);
+    expect($code)->toBe(0);
+})->with(['key.pk8', 'tests/conformance-test-keys-0a1b2c3d/chain.pem'])->group('SPEC-078');

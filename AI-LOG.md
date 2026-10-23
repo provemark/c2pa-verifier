@@ -11270,3 +11270,16 @@ README are where the disclosure lives.
   probes before (exit 255, 2) and after (exit 1, whole documents);
   `composer check` (1,290 passed).
 - Decided by Maurice: none beyond the amendments.
+
+## 2026-10-23 — SPEC-078 amendment 1: the generator guard (step 394)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: the same "ja" as step 391.
+- Produced: SPEC-078 amendment 1 (approved) and its Traceability;
+  `ctInside()` in `bin/make-conformance-test-variants.php`; `.gitignore`
+  (`*.pk8`, `conformance-test-keys-*/`); AC6 in
+  `tests/Unit/Verifier/ConformanceTestRootTest.php`;
+  `notes/step-394-generator-guard.md`; a row in `NOTES.md`.
+- Measured: `realpath()` on the repository spelled in capitals; the test
+  too weak at first, then red and green; three mutations; `composer check`
+  (1,293 passed).
+- Decided by Maurice: none beyond the amendment.

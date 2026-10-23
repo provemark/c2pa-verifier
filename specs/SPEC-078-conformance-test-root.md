@@ -146,7 +146,7 @@ entries and one test file.
 
 ## Amendments
 
-1. **2026-10-23, step 394, proposed (found by the review of 2026-10-23)** — the generator compared paths as case-sensitive strings, and on a case-insensitive volume (macOS) a scratch directory spelled in other letters passed as outside the repository while lying inside it; a Ctrl-C between signing and the shutdown handler could also leave the key. The scratch directory is now refused when it, or any directory above it, is the repository by device and inode; `.gitignore` gains `*.pk8` and `conformance-test-keys-*/`. **AC6 (new)**: the generator refuses `tests/` spelled in other letters (where the volume ignores case), and `git check-ignore` covers the key's file and directory names.
+1. **2026-10-23, step 394, approved by Maurice van Loon ("ja"; found by the review of 2026-10-23)** — the generator compared paths as case-sensitive strings, and on a case-insensitive volume (macOS) a scratch directory spelled in other letters passed as outside the repository while lying inside it; a Ctrl-C between signing and the shutdown handler could also leave the key. The scratch directory is now refused when it, or any directory above it, is the repository by device and inode; `.gitignore` gains `*.pk8` and `conformance-test-keys-*/`. **AC6 (new)**: the generator refuses `tests/` spelled in other letters (where the volume ignores case), and `git check-ignore` covers the key's file and directory names.
 
 ## Traceability
 
@@ -160,6 +160,7 @@ least one test; every source file maps back to this spec.
 | AC3 | tests/Unit/Verifier/ConformanceTestRootTest.php :: AC3: one changed byte of the image data is a data-hash mismatch, here and in c2patool (3 types) / SPEC-078 | tests/Fixtures/conformance-test/edited.*; bin/make-conformance-test-variants.php :: ctStoreRanges() |
 | AC4 | tests/Unit/Verifier/ConformanceTestRootTest.php :: AC4: c2patool with the root and store.cfg agrees; with the root alone it says invalid, the named difference (3 types) / SPEC-078 | tests/Fixtures/c2patool/conformance-test/ (12 answers); docs/comparison.md; docs/conformance.md |
 | AC5 | tests/Unit/Verifier/ConformanceTestRootTest.php :: AC5: no private key in the fixtures, and the generator refuses a scratch directory inside the repository / SPEC-078 | bin/make-conformance-test-variants.php (the scratch check comes first) |
+| AC6 (amendment 1) | tests/Unit/Verifier/ConformanceTestRootTest.php :: AC6: the generator refuses the repository spelled in other letters; AC6: git ignores the key's file and directory names (2 datasets) / SPEC-078 | bin/make-conformance-test-variants.php :: ctInside(); .gitignore |
 
 The generator takes a fourth argument, the root's PEM, which the Scope
 did not list: the bundle holds the leaf and its key but not the root,
@@ -176,3 +177,15 @@ existed. This spec adds no library code, so there is no mutation to
 watch; AC4 holds both of `c2patool`'s answers, and AC2 the official
 lists, as the checks that the verdicts are not the fixtures' own.
 `composer check`: 1,222 passed, 1 skipped.
+
+Amendment 1 (step 394): measured first that `realpath()` keeps the
+letters as typed (`/Users/…/C2PA_VERIFIER/tests` passed the guard and
+stopped only at the c2patool check). The test first asserted on "outside
+the repository", which the usage line also holds, and passed on the
+first build; tightened to the guard's own line, it failed, and passes
+after. Mutations, each failing: names compared as written (1), `*.pk8`
+removed from `.gitignore` (1), the key directory removed (1). The test is
+skipped on a volume that tells letters apart. A Ctrl-C between signing
+and the shutdown handler can still leave the key in the scratch
+directory; it lies outside the repository, and `.gitignore` now names it
+should it land inside.

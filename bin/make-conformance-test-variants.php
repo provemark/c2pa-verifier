@@ -36,7 +36,7 @@ $usage = "usage: php bin/make-conformance-test-variants.php <scratch-dir outside
 
 // the scratch directory first: the key goes there, and never under the repository (AC5)
 $scratchReal = realpath($scratch);
-if ($scratchReal === false || ! is_dir($scratchReal) || $scratchReal === $repo || str_starts_with($scratchReal.'/', $repo.'/')) {
+if ($scratchReal === false || ! is_dir($scratchReal) || ctInside($scratchReal, $repo)) {
     fwrite(STDERR, "the scratch directory must exist and lie outside the repository\n".$usage);
     exit(1);
 }
@@ -100,6 +100,28 @@ file_put_contents("{$keys}/manifest.json", (string) json_encode([
         ['label' => 'c2pa.actions.v2', 'data' => ['actions' => [['action' => 'c2pa.created', 'digitalSourceType' => 'http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture']], 'allActionsIncluded' => true]],
     ],
 ], JSON_UNESCAPED_SLASHES));
+
+/**
+ * Whether $dir is the repository or lies under it. By device and inode, the directory and each one
+ * above it: a name compares as written, and on a volume that ignores case (macOS) the repository
+ * spelled in other letters is the same directory under another name (SPEC-078 amendment 1).
+ */
+function ctInside(string $dir, string $repo): bool
+{
+    $target = @stat($repo);
+    if ($target === false) {
+        return true;
+    }
+    for ($current = $dir; ; $current = dirname($current)) {
+        $here = @stat($current);
+        if ($here === false || ($here['dev'] === $target['dev'] && $here['ino'] === $target['ino'])) {
+            return true;
+        }
+        if (dirname($current) === $current) {
+            return false;
+        }
+    }
+}
 
 /** @return array{int, string} the exit status and the output of a command */
 function ctRun(string $command): array
