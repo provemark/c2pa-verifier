@@ -11108,3 +11108,16 @@ README are where the disclosure lives.
 - Reasoned: the other two-run comparisons already fix the time or have
   no store.
 - Decided by Maurice: none.
+
+## 2026-10-23 — Trust anchors with dates measured (step 383)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "en wat nu?"; then "doe eerst 9".
+- Produced: `notes/step-383-anchor-dates-measured.md`; rows in
+  `NOTES.md` and `docs/milestones.md`.
+- Measured: CI run 39956975972 green (8/8) after the step-379 fix; the
+  programme's two JSON lists and their schema extension; every anchor's
+  list date against its certificate; the fixtures under the official
+  lists; `c2pa-rs` 0.91.1's source for anchor dates.
+- Reasoned: the mapping of `trusted`/`untrusted` times onto §14.4.1's
+  `notBefore`/`notAfter`.
+- Decided by Maurice: #9 before the release.
