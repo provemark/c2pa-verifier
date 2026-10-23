@@ -375,5 +375,5 @@ a test TSA Trust List and a validation time in, crJSON out (step 367).
 | 382 | The conformance table brought up to date: 5 gaps left (#1, #7, #8, #9, #12) | done 2026-10-23 |
 | 383 | #9 measured: anchor dates live in the programme's JSON lists | done 2026-10-23 |
 | 384–385 | #9: SPEC-079, the JSON trust lists with their dates | implemented 2026-10-23 |
-| — | The other gaps (#1, #7, #8, #12) | planned |
+| 387–388 | The other gaps: #12 and #1 by design, #7 and #8 parked | done 2026-10-23 |
 | — | Applying | Maurice's decision |

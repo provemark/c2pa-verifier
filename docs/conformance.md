@@ -1,6 +1,6 @@
 # Conformance: 111 named obligations, one by one
 
-*Measured 2026-09-22 (step 90); `PRED-CRYP-006` closed by SPEC-079 (step 385); `PRED-STRU-002` set aside by design, `PRED-ASSE-021` and `PRED-CRYP-024` parked (step 387); updated the same day after SPEC-030 closed
+*Measured 2026-09-22 (step 90); `PRED-CRYP-006` closed by SPEC-079 (step 385); `PRED-STRU-002` set aside by design, `PRED-ASSE-021` and `PRED-CRYP-024` parked (step 387); `PRED-ASSE-024` set aside by design (step 388); updated the same day after SPEC-030 closed
 five of its gaps (step 92); corrected 2026-09-24 (step 108), when `PRED-IMG-004`
 turned out to be a gap that step 90 had marked enforced, and closed the same
 day (step 109); four rows brought up to date with SPEC-035 amendment 5 and
@@ -40,8 +40,8 @@ accept; its predicate list does not depend on its cryptography being right.
 | **yes** | 71 |
 | partial | 10 |
 | closed | 4 |
-| by design | 23 |
-| **gap** | 3 |
+| by design | 24 |
+| **gap** | 2 |
 | **total** | 111 |
 
 ## Cross-format (6)
@@ -164,7 +164,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-ASSE-021` | shall | Multi-asset hash fallback after standard hard binding failure | **gap** — no `c2pa.hash.multi-asset` fallback; a failed hard binding stays failed — stricter than the rule, not laxer Parked 2026-10-23 (step 387): the multi-asset hash covers assets the API is not given, no measured writer emits `c2pa.hash.multi-asset`, and `c2pa-rs` 0.91.1 does not read it, so there is neither a fixture nor an oracle (issue #7) |
 | `PRED-ASSE-022` | shall | Content validation failure signalling | **yes** — every failure is reported and an ingredient never masks one in the active manifest (SPEC-021, CAI-12751) |
 | `PRED-ASSE-023` | shall | Inception action position validation | partial — `ActionsCheck` requires the first action to be `c2pa.created` or `c2pa.opened`, and since SPEC-033 refuses a second opening anywhere in the claim (a later `c2pa.created` included); it does not require `created_assertions`' first actions reference to resolve to `c2pa.actions.v2` |
-| `PRED-ASSE-024` | shall | reviewRatings absent when dataSource is human entry | **gap** — `reviewRatings` alongside a `humanEntry` `dataSource` is not rejected |
+| `PRED-ASSE-024` | shall | reviewRatings absent when dataSource is human entry | by design — a rule on what a manifest may say (C2PA 2.4 §18.3.5), not on validation: chapter 15 does not name it and gives it no status code, and §18.3.1 says "A Manifest Consumer is not required to read any portion of assertion metadata". Its types do not match the CDDL (`humanEntry.credentialed` is not defined; `humanEntry.anonymous` and `.identified` are deprecated since 2.0). The programme checks it itself, in three asset rubrics, on the crJSON this verifier writes faithfully (SPEC-074, SPEC-075). `c2pa-rs` 0.91.1 does not enforce it (decided 2026-10-23, step 388; issue #1) |
 | `PRED-ASSE-025` | shall | Mandatory digitalSourceType for editorial and created actions | partial — since 2026-09-24 (SPEC-032): a `c2pa.created` in a v2 claim without `digitalSourceType` is `assertion.action.malformed`, as both `c2patool` versions; other actions are not required to carry one, which no oracle enforces and §15 does not ask |
 | `PRED-ASSE-026` | shall | Alternative content representation choice exclusivity | **yes** — since 2026-10-09 (SPEC-065): exactly one of the two fields, else malformed |
 | `PRED-ASSE-027` | shall | Forbidden labels in external references | **yes** — since 2026-09-24 (SPEC-032): `ExternalReferenceCheck` refuses the forbidden labels, a `location` without `url`, and `alg` or `hash` alone, with `assertion.external-reference.malformed` (§15.10.3.2.2); nothing is fetched |
@@ -217,7 +217,7 @@ accept; its predicate list does not depend on its cryptography being right.
 
 ## What the 23 gaps mean, sorted by what they could cost
 
-Twenty-three gaps were recorded. Sixteen have since been closed (section 0, section 1, `PRED-ASSE-027` by SPEC-032, `PRED-STRU-009` by SPEC-034, `PRED-BMFF-001`, `-002` and `-004` by SPEC-038, `PRED-TIME-002` and `-003` by SPEC-064, `PRED-ASSE-013`, `-014` and `-026` by SPEC-065), one narrowed to partial (`PRED-ASSE-025`), and one set aside by decision (`PRED-CRYP-019`, issue #10). `PRED-CRYP-006` (#9) closed on 2026-10-23 by SPEC-079, and `PRED-STRU-002` (#12) set aside the same day as changing nothing in a report. Three remain, each an open issue: #1, #7, #8; #7 and #8 are parked for want of a writer and an oracle.
+Twenty-three gaps were recorded. Sixteen have since been closed (section 0, section 1, `PRED-ASSE-027` by SPEC-032, `PRED-STRU-009` by SPEC-034, `PRED-BMFF-001`, `-002` and `-004` by SPEC-038, `PRED-TIME-002` and `-003` by SPEC-064, `PRED-ASSE-013`, `-014` and `-026` by SPEC-065), one narrowed to partial (`PRED-ASSE-025`), and one set aside by decision (`PRED-CRYP-019`, issue #10). `PRED-CRYP-006` (#9) closed on 2026-10-23 by SPEC-079, and `PRED-STRU-002` (#12) set aside the same day as changing nothing in a report. `PRED-ASSE-024` (#1) was set aside the same day as a rule on the manifest's content that the programme checks itself. Two remain, #7 and #8, both parked for want of a writer and an oracle.
 
 A gap is only interesting through its consequence. The question this
 project asks of everything is the same one: **can it make this verifier say
@@ -287,7 +287,6 @@ These are assertion rules that do not touch the bytes. The hash binding, the
 signature and the chain all still hold; what fails is a rule about what a
 manifest may say.
 
-- `PRED-ASSE-024` — `reviewRatings` alongside a `humanEntry` `dataSource`
 - `PRED-ASSE-025` (partial since SPEC-032) — a `digitalSourceType` on actions other than `c2pa.created` (issue #2 closed as not planned)
 - `PRED-ASSE-023` (partial) — `created_assertions`' first actions reference resolving to `c2pa.actions.v2`
 - `PRED-CRYP-024` — `c2pa.session-keys`: its `signerBinding` is not verified

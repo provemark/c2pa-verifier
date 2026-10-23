@@ -11182,3 +11182,13 @@ README are where the disclosure lives.
 - Reasoned: that a custom code cannot reach the report; the sizes of #7
   and #8.
 - Decided by Maurice: #12 by design, #7 and #8 parked, #1 next.
+
+## 2026-10-23 — Gap #1 set aside (step 388)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord" (to setting #1 aside after the measurement).
+- Produced: `docs/conformance.md` (the row, the count, the lists);
+  `notes/step-388-gap-1.md`; rows in `NOTES.md` and `docs/milestones.md`.
+- Measured: C2PA 2.4 chapters 15 and 18.3 and its CDDL; `c2pa-rs`
+  0.91.1; the programme's rubrics for the rule.
+- Reasoned: a content rule the programme checks on crJSON.
+- Decided by Maurice: #1 by design.
