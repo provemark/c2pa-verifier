@@ -71,7 +71,7 @@ final readonly class IngredientManifestCheck
      *
      * @return list<ValidationStatus>
      */
-    public function check(ManifestStore $store, ManifestGraph $graph, ?TrustSettings $settings, ?int $now = null): array
+    public function check(ManifestStore $store, ManifestGraph $graph, ?TrustSettings $settings, ?int $now = null, ?int $clock = null): array
     {
         $byUrl = [];
         foreach ($graph->ingredients as $list) {
@@ -89,7 +89,7 @@ final readonly class IngredientManifestCheck
             }
             $manifest = $store->manifests[$label];
             $mine = $this->hash($manifest, $ingredient);
-            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests), $assertions, $responses, $now)];
+            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests), $assertions, $responses, $now, $clock)];
             $statuses = [...$statuses, ...$mine];
         }
 
@@ -190,21 +190,21 @@ final readonly class IngredientManifestCheck
      * @param  list<array{0: string, 1: string}>  $responses  the store's certificate-status responses (SPEC-066)
      * @return list<ValidationStatus>
      */
-    private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings, array $storeLabels, ?TimestampAssertions $assertions = null, array $responses = [], ?int $now = null): array
+    private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings, array $storeLabels, ?TimestampAssertions $assertions = null, array $responses = [], ?int $now = null, ?int $clock = null): array
     {
         $timestamp = $this->timestamp->forManifest($manifest, $settings, $assertions ?? TimestampAssertions::none());
         $statuses = $timestamp->present ? $timestamp->statuses : [];
         $statuses = [...$statuses, ...$this->signature->check($manifest)];
 
         $trusted = $timestamp->trustedTime();
-        $at = $trusted ?? $now;   // SPEC-073: a given validation time stands in for now
+        $at = $trusted ?? $now ?? $clock;   // SPEC-073: a given validation time stands in for now; the clock read once (amendment 1)
         $reason = match (true) {
             $trusted !== null => 'from the trusted timestamp',
             ! $timestamp->present => 'no timestamp',
             $timestamp->time === null => 'the timestamp did not validate',
             default => "the timestamp's TSA is not trusted",
         };
-        $statuses = [...$statuses, ...$this->certificate->check($manifest, $settings, $at, $reason, $trusted === null && $now !== null ? 'the given validation time' : null)];
+        $statuses = [...$statuses, ...$this->certificate->check($manifest, $settings, $at, $reason, $trusted === null ? ($now !== null ? 'the given validation time' : 'now') : null)];
 
         $trustSettings = $settings ?? new TrustSettings([], []);
         if ($trustSettings->verifyTrust) {

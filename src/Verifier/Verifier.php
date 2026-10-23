@@ -113,9 +113,11 @@ final readonly class Verifier
      */
     public function verify($stream, ?TrustSettings $settings = null, ?\DateTimeInterface $validationTime = null): VerificationReport
     {
-        // SPEC-075: the report keeps the time it judged at, the given one or the clock read now
-        $judgedAt = new \DateTimeImmutable('@'.($validationTime?->getTimestamp() ?? time()));
-        $report = $this->inspect($stream, $settings, $validationTime);
+        // SPEC-075: the report keeps the time it judged at, the given one or the clock; the clock is read
+        // once, so that every check and the record agree (SPEC-073 amendment 1)
+        $clock = time();
+        $judgedAt = new \DateTimeImmutable('@'.($validationTime?->getTimestamp() ?? $clock));
+        $report = $this->inspect($stream, $settings, $validationTime, $clock);
 
         return new VerificationReport($report->format, $report->hasManifest, $report->store, $report->result, $report->signatureInfo, $report->remoteManifestUrl, $judgedAt);
     }
@@ -125,7 +127,7 @@ final readonly class Verifier
      *
      * @param  resource  $stream
      */
-    private function inspect(mixed $stream, ?TrustSettings $settings, ?\DateTimeInterface $validationTime): VerificationReport
+    private function inspect(mixed $stream, ?TrustSettings $settings, ?\DateTimeInterface $validationTime, int $clock): VerificationReport
     {
         $now = $validationTime?->getTimestamp();   // SPEC-073: whole seconds, a fraction rounded down
 
@@ -196,7 +198,7 @@ final readonly class Verifier
 
         // the header's token, else a time-stamp assertion's from any manifest of the store (SPEC-064)
         $timestamp = $this->timestamp->forManifest($manifestStore->active, $settings, TimestampAssertions::collect($manifestStore));
-        $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp, $graphStatuses, $graph, $format, $now);
+        $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp, $graphStatuses, $graph, $format, $now, $clock);
         $refusals = [];
         // a CAWG identity assertion carries a credential of its own that c2pa-rs validates; this verifier
         // does not yet, and will not call Trusted what it has not looked at (SPEC-013 amendment 7)
@@ -271,8 +273,9 @@ final readonly class Verifier
      * @param  ManifestGraph|null  $graph  null when the graph could not be built (a bound was exceeded)
      * @param  string  $format  the detected format, which says where an exclusion beyond the store may lie (SPEC-069)
      * @param  int|null  $now  the given validation time, or null for the clock (SPEC-073)
+     * @param  int  $clock  the clock as verify() read it, once (SPEC-073 amendment 1)
      */
-    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings, TimestampResult $timestamp, array $graphStatuses, ?ManifestGraph $graph, string $format, ?int $now): ValidationResult
+    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings, TimestampResult $timestamp, array $graphStatuses, ?ManifestGraph $graph, string $format, ?int $now, int $clock): ValidationResult
     {
         $manifest = $manifestStore->active;
         // the timestamp first, as c2patool lists it; informational only, but it supplies the time below (SPEC-017)
@@ -289,14 +292,14 @@ final readonly class Verifier
         // validity at a validated, trusted timestamp's time, else at now (C2PA 2.4 §15.8.2);
         // a given validation time stands in for now, never for the timestamp's (SPEC-073)
         $trusted = $timestamp->trustedTime();
-        $at = $trusted ?? $now;
+        $at = $trusted ?? $now ?? $clock;
         $reason = match (true) {
             $trusted !== null => 'from the trusted timestamp',
             ! $timestamp->present => 'no timestamp',
             $timestamp->time === null => 'the timestamp did not validate',
             default => "the timestamp's TSA is not trusted",
         };
-        $statuses = [...$statuses, ...$this->certificate->check($manifest, $settings, $at, $reason, $trusted === null && $now !== null ? 'the given validation time' : null)];
+        $statuses = [...$statuses, ...$this->certificate->check($manifest, $settings, $at, $reason, $trusted === null ? ($now !== null ? 'the given validation time' : 'now') : null)];
         $checks[] = 'certificate';
 
         // trust: without settings there are no anchors and the answer is untrusted, as c2patool's;
@@ -369,7 +372,7 @@ final readonly class Verifier
         // the manifests the graph found: their box hash and everything the active manifest gets
         // except the data hash, scoped to the assertion that named them (SPEC-021)
         if ($graph !== null && $graph->referenced !== []) {
-            $statuses = [...$statuses, ...$this->ingredients->check($manifestStore, $graph, $settings, $now)];
+            $statuses = [...$statuses, ...$this->ingredients->check($manifestStore, $graph, $settings, $now, $clock)];
             $checks[] = 'ingredients';
         }
 

@@ -175,3 +175,54 @@ it('AC5: an offset other than Z is converted', function (): void {
         ->and($plusOut)->toBe($zuluOut)
         ->and($plusOut)->toBe(spec073Probe(SPEC073_NO_TIMESTAMP, new DateTimeImmutable('2026-10-09T05:31:00Z'))->toJson()."\n");
 })->group('SPEC-073');
+
+// AC6 (amendment 1)
+/** inspect() with a clock of its own: what verify() does with time(), read once. */
+function spec073AtClock(string $relative, string $clock): VerificationReport
+{
+    $stream = fopen(Corpus::fixtures().'/'.$relative, 'rb');
+    if ($stream === false) {
+        throw new RuntimeException("cannot open {$relative}");
+    }
+    $at = (int) strtotime($clock);
+    $inspect = Closure::bind(static fn (Verifier $v): VerificationReport => $v->inspect($stream, null, null, $at), null, Verifier::class);
+
+    return $inspect(new Verifier);
+}
+
+/** @return list<string> the explanations of signingCredential.expired for one manifest's signature */
+function spec073Expired(VerificationReport $report, string $manifest): array
+{
+    $found = [];
+    foreach ($report->result->statuses as $status) {
+        if ($status->code->value === 'signingCredential.expired' && str_contains($status->url, $manifest)) {
+            $found[] = $status->explanation;
+        }
+    }
+
+    return $found;
+}
+
+it('AC6: without a given time, every check judges at the one clock reading verify() took, and says "now"', function (string $relative, string $manifest, string $then, string $later): void {
+    $atThen = spec073Expired(spec073AtClock($relative, $then), $manifest);
+    $atLater = spec073Expired(spec073AtClock($relative, $later), $manifest);
+
+    expect($atThen)->toBe([])
+        ->and($atLater)->toHaveCount(1)
+        ->and($atLater[0] ?? '')->toContain('expired at '.$later)
+        ->and($atLater[0] ?? '')->toContain('checked at now');
+})->with([
+    'the active signer (ocsp.jpg, valid 2024-10-15 to 2025-10-15)' => ['c2pa-rs/ocsp.jpg', 'adobe:urn:uuid:f3a46a78-8103-4e04-9f98-abcf03ebab19', '2025-01-01T00:00:00Z', '2026-10-23T00:00:00Z'],
+    'an ingredient\'s signer (video1.mp4, valid 2022-04-04 to 2023-04-04)' => ['c2pa-rs/video1.mp4', 'urn:uuid:54281c07-ad34-430e-bea5-112a18facf0b', '2022-06-01T00:00:00Z', '2026-10-23T00:00:00Z'],
+])->group('SPEC-073');
+
+it('AC6: the report records the clock reading the checks used', function (): void {
+    $before = time();
+    $report = spec073Report('c2pa-rs/ocsp.jpg', null, null);
+    $after = time();
+    $at = $report->validationTime?->getTimestamp() ?? 0;
+    $expired = implode("\n", array_column(array_filter(spec073Statuses($report), static fn (array $s): bool => $s[0] === 'signingCredential.expired'), 1));
+
+    expect($at)->toBeGreaterThanOrEqual($before)->toBeLessThanOrEqual($after)
+        ->and($expired)->toContain('expired at '.gmdate('Y-m-d\TH:i:s\Z', $at));
+})->group('SPEC-073');

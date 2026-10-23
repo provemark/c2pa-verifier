@@ -11300,3 +11300,16 @@ README are where the disclosure lives.
   mutations; the corpus before and after (10 files, one by verdict);
   `composer check` (1,293 passed).
 - Decided by Maurice: option A.
+
+## 2026-10-23 — SPEC-073 amendment 1: the clock read once (step 396)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "doe 1 nog" (the review's low items, before 0.8.0).
+- Produced: SPEC-073 amendment 1 and its Traceability; the clock passed
+  through `Verifier::verify()`, `inspect()`, `check()` and
+  `IngredientManifestCheck::check()`, `manifest()`; AC6 in
+  `tests/Unit/Verifier/ValidationTimeTest.php`;
+  `notes/step-396-clock-once.md`; a row in `NOTES.md`.
+- Measured: the tests red and green; a wording regression caught; three
+  mutations; the corpus before and after (0 of 1,854); `composer check`
+  (1,296 passed).
+- Decided by Maurice: do the low items.

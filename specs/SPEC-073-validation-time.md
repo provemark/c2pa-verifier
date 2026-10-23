@@ -189,6 +189,11 @@ parameters). An optional parameter is an addition: 0.8.0.
   rounded down, no report field yet, this number.
   *Status 2026-10-23 (step 369):* settled; approved without changes.
 
+## Amendments
+
+1. **2026-10-23, step 396, found by the review of 2026-10-23 (the low items, "doe 1 nog", Maurice van Loon).** Without a given time, `verify()` recorded `time()` once, and each check read `time()` again for itself (`CertificateProfileCheck`, `ChainCheck`, `OcspCheck`), as the API sketch above did not intend ("computed once"). Over a second boundary the checks could disagree with each other and with the recorded `validationTime`. Now `verify()` reads the clock once and passes it down: `$at = $trusted ?? $now ?? $clock`, for the active manifest and every ingredient manifest. The certificate explanation still says "checked at now" where no time was given: it is named, no longer inferred from a null time.
+   - **AC6 — one clock reading**: with `inspect()` given a fixed clock and no validation time, the active signer of `c2pa-rs/ocsp.jpg` (valid 2024-10-15 to 2025-10-15) and the ingredient signer of `c2pa-rs/video1.mp4` (valid 2022-04-04 to 2023-04-04) are not expired at a clock inside their validity and are expired at one after it, "expired at" that clock and "checked at now"; the report's `validationTime` is the reading the checks used.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -202,6 +207,7 @@ least one test; every source file maps back to this spec.
 | AC4 | tests/Unit/Verifier/ValidationTimeTest.php :: AC4: the stapled OCSP response and the ingredient follow the given time / SPEC-073 | src/Verifier/IngredientManifestCheck.php :: check(), manifest(); src/Verifier/Verifier.php :: check() (the revocation call) |
 | AC5 | tests/Unit/Verifier/ValidationTimeTest.php :: AC5: a time that is not RFC 3339 is refused on the command line (5 datasets); AC5: --at as the last argument is refused; AC5: an offset other than Z is converted / SPEC-073 | src/Cli/Command.php :: run() (`--at`), rfc3339() |
 | AC6 | the corpus before and after (notes/step-369-validation-time.md); every existing test unchanged | — |
+| AC6 (amendment 1) | tests/Unit/Verifier/ValidationTimeTest.php :: AC6: without a given time, every check judges at the one clock reading verify() took, and says "now" (2 datasets); AC6: the report records the clock reading the checks used / SPEC-073 | src/Verifier/Verifier.php :: verify(), inspect(), check(); src/Verifier/IngredientManifestCheck.php :: check(), manifest() |
 
 `src/Verifier/FragmentedVerifier.php :: verify()` passes the time on; no
 criterion names it.
@@ -222,3 +228,11 @@ fails), and the ingredient check not given the time (AC4 fails).
 
 The usage line (SPEC-019 AC9) is unchanged. `--at` is named in the lines
 below it only, since this spec does not amend SPEC-019.
+
+Amendment 1 (step 396): the clock tests red on the first build (2 of
+3; the third, the recorded reading, held on a run within one second).
+The first fix passed the clock on but let the certificate explanation say
+"checked at the timestamp's time", because it inferred "now" from a null
+time; the tests were sharpened to read the wording and the name is now
+passed. Mutations, each failing: the active manifest ignoring the clock,
+an ingredient ignoring it, "now" not named.
