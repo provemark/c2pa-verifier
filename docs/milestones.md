@@ -374,5 +374,6 @@ a test TSA Trust List and a validation time in, crJSON out (step 367).
 | 380–381 | The test mode with the Conformance Test Root: SPEC-078 | implemented 2026-10-23 |
 | 382 | The conformance table brought up to date: 5 gaps left (#1, #7, #8, #9, #12) | done 2026-10-23 |
 | 383 | #9 measured: anchor dates live in the programme's JSON lists | done 2026-10-23 |
-| — | #9: a spec, then the other gaps | planned |
+| 384 | #9: SPEC-079, the JSON trust lists with their dates | draft 2026-10-23 |
+| — | The other gaps (#1, #7, #8, #12) | planned |
 | — | Applying | Maurice's decision |

@@ -11121,3 +11121,16 @@ README are where the disclosure lives.
 - Reasoned: the mapping of `trusted`/`untrusted` times onto §14.4.1's
   `notBefore`/`notAfter`.
 - Decided by Maurice: #9 before the release.
+
+## 2026-10-23 — SPEC-079 drafted: trust lists with dates (step 384)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, wat adviseer je voor lege status?"; then "akkoord en
+  push".
+- Produced: the push of step 383; `specs/SPEC-079-trust-list-dates.md`
+  (draft); `notes/step-384-spec079-draft.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: ETSI TS 119 602's LoTE JSON schema; the two probes' times.
+- Reasoned: the TSA list's dates at the token's `genTime`; the advice on
+  the empty status.
+- Decided by Maurice: the JSON lists through the existing options; an
+  empty status is not used, and said.
