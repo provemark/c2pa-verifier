@@ -10988,3 +10988,18 @@ README are where the disclosure lives.
 - Reasoned: `0.8.0-dev` as the version until the release commit.
 - Decided by Maurice: SPEC-075 and ADR-0006 approved; faithful v1
   claims; `manifests: []` without a store; amendment 1.
+
+## 2026-10-23 — SPEC-076 drafted: the signature in crJSON (step 376)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord" (the outline, its six choices, and the push of steps
+  374–375).
+- Produced: the push; `specs/SPEC-076-crjson-signature.md` (draft);
+  `notes/step-376-spec076-draft.md`; rows in `NOTES.md` and
+  `docs/milestones.md`.
+- Measured: `c2patool`'s signature objects on 92 manifests; `c2pa-rs`
+  0.91.1's DN mapping; the schema's DN definition; a census of 193 leaf
+  certificates; C2PA 2.4 §13.2.1.
+- Reasoned: writing a failed token's time.
+- Decided by Maurice: the crJSON page's algorithm names; `c2pa-rs`'s
+  serial form; the eight DN keys, last repeat wins; `Z` throughout; a
+  failed but readable token written; `{}` for an unreadable signature.
