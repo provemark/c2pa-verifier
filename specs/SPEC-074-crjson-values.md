@@ -213,6 +213,8 @@ public contract does not change.
 
 1. **2026-10-23, step 372, decided by Maurice van Loon ("kies 1")** *(confirmed by Maurice van Loon, 2026-10-23: "ja akkoord")* — the input is decoded with `keepMaps: true`. Building AC2 showed that the decoder returns an empty map and an empty array alike (`[]`), and a map keyed 0, 1, 2… as a list, so this mapping could not write `{}` for an empty map. SPEC-006 amendment 3 adds the mode. AC2 now names it; AC6 loses the key collision, which never reaches this mapping because the decoder refuses a text key that reads as an integer (SPEC-006 AC13), and gains a guard: a PHP array with keys that are not a list was decoded without the mode and is refused. AC7 decodes each assertion's `cbor` content box again with the mode.
 
+2. **2026-10-23, step 393, proposed (found by the review of 2026-10-23)** — a map key that starts with a NUL byte is refused with `CrJsonValueException`, naming the path: PHP cannot hold such a key as an object property and threw an uncaught `\Error` (`--crjson` exited 255 on a signed file with one). Confirmed by running. **AC8 (new)**: `{"\u0000ction": 1}` and the same key nested are refused, not crashed on.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

@@ -11231,3 +11231,17 @@ README are where the disclosure lives.
   (1,258 passed).
 - Reasoned: how hard the finding is to use after step 389.
 - Decided by Maurice: fix it with the ancestor rule.
+
+## 2026-10-23 — SPEC-079 amendment 2, timeline (step 391)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja" (to the four proposed amendments for review findings 3, 5,
+  6 and 7, built in that order).
+- Produced: SPEC-079 amendment 2 (approved) and its Traceability for the
+  timeline; `TrustSettings::fromTrustLists()`, `fromLote()`,
+  `loteTimeline()`, `outside()`, `bothTrust()`, `rfc3339()`; AC8 tests in
+  `tests/Unit/Trust/TrustListDatesTest.php`;
+  `notes/step-391-lote-timeline.md`; a row in `NOTES.md`.
+- Measured: the reviewer's sixteen probes through `bin/c2pa-verify`
+  (five wrong `Trusted`); the new tests red, green; six mutations, one
+  surviving until a case was added; `composer check` (1,274 passed).
+- Decided by Maurice: the amendments and their order.

@@ -168,6 +168,9 @@ final readonly class TrustSettings
             if ($pem === null) {
                 continue;
             }
+            if (str_starts_with($pem, "\u{FEFF}")) {
+                $pem = substr($pem, 3);   // a byte order mark: not part of the list (SPEC-079 amendment 2)
+            }
             if (str_starts_with(ltrim($pem), '{')) {
                 $sets[] = self::fromLote($pem, $kind, $what, $maxCertificates);   // SPEC-079: the programme's JSON form
 
@@ -206,27 +209,48 @@ final readonly class TrustSettings
             throw new TrustException(sprintf('%s is JSON but not a List of Trusted Entities (ETSI TS 119 602 LoTE)', $what));
         }
         $anchors = [];
-        $windows = [];
+        $timelines = [];   // by hash: null (no dates), or the stretches every service holding it trusts
         $reasons = [];
+        $read = 0;
         foreach ($lote['TrustedEntitiesList'] as $e => $entity) {
-            foreach (is_array($entity) && is_array($entity['TrustedEntityServices'] ?? null) ? $entity['TrustedEntityServices'] : [] as $s => $service) {
-                $at = sprintf('%s: entity %d, service %d', $what, (int) $e + 1, (int) $s + 1);
-                $information = is_array($service) && is_array($service['ServiceInformation'] ?? null) ? $service['ServiceInformation'] : [];
-                $certificates = self::loteCertificates($information, $at, $max - count($anchors));
-                [$stretches, $reason] = self::loteTimeline($information, is_array($service) && is_array($service['ServiceHistory'] ?? null) ? $service['ServiceHistory'] : [], $certificates);
+            $where = sprintf('%s: entity %d', $what, (int) $e + 1);
+            if (! is_array($entity)) {
+                throw new TrustException(sprintf('%s is not an object', $where));
+            }
+            $services = $entity['TrustedEntityServices'] ?? [];
+            if (! is_array($services)) {
+                throw new TrustException(sprintf('%s: TrustedEntityServices is not a list', $where));   // could hide a removal (amendment 2)
+            }
+            foreach ($services as $s => $service) {
+                $at = sprintf('%s, service %d', $where, (int) $s + 1);
+                $information = is_array($service) ? ($service['ServiceInformation'] ?? []) : null;
+                if (! is_array($information)) {
+                    throw new TrustException(sprintf('%s: %s is not an object', $at, is_array($service) ? 'ServiceInformation' : 'the service'));
+                }
+                $certificates = self::loteCertificates($information, $at, $max - $read);
+                $read += count($certificates);
+                $history = $service['ServiceHistory'] ?? [];
+                [$stretches, $reason] = is_array($history)
+                    ? self::loteTimeline($information, $history, $certificates, $at, $max - $read, $read)
+                    : [[], 'its ServiceHistory is not a list'];
                 foreach ($certificates as $certificate) {
                     $hash = bin2hex($certificate->sha256);
-                    $anchors[] = $certificate;
-                    if ($stretches === null) {
-                        continue;   // no dates: as the PEM bundle
+                    if (! array_key_exists($hash, $timelines)) {
+                        $anchors[] = $certificate;   // once each, however many services hold it
+                        $timelines[$hash] = $stretches;
+                    } elseif ($stretches !== null) {
+                        // in more than one service: trusted only where every one of them trusts it (amendment 2)
+                        $timelines[$hash] = $timelines[$hash] === null ? $stretches : self::bothTrust($timelines[$hash], $stretches);
                     }
-                    $windows[$hash] = $stretches;
                     if ($reason !== null) {
-                        $reasons[$hash] = $reason;
+                        $reasons[$hash] ??= $reason;
+                    } elseif ($timelines[$hash] === [] && ! isset($reasons[$hash])) {
+                        $reasons[$hash] = 'the services that hold it never trust it at the same time';
                     }
                 }
             }
         }
+        $windows = array_filter($timelines, static fn (?array $w): bool => $w !== null);
         if (count(array_filter($windows, static fn (array $w): bool => $w === [])) === count($anchors)) {
             throw new TrustException(sprintf('%s holds no usable anchor: no service is trusted at any time', $what));
         }
@@ -263,16 +287,20 @@ final readonly class TrustSettings
 
     /**
      * A service's trusted stretches (SPEC-079 amendment 1): every time except inside an `untrusted`
-     * stretch, which runs from its status's starting time to the next status's, or for good. A
-     * `trusted` status bounds nothing by itself. Null: no `untrusted` status, so no dates, as a PEM
-     * bundle. An empty list and a reason: an entry that could hide the end of trust.
+     * stretch, which runs from its status's starting time to the next `trusted` status's, or for good.
+     * A `trusted` status bounds nothing by itself. Statuses are ordered with their fractions of a
+     * second, a `trusted` one before an `untrusted` one at the same instant (amendment 2); an
+     * `untrusted` stretch starts at the second its time falls in and ends at the next whole second
+     * after its end, so rounding never trusts more. Null: no `untrusted` status, so no dates, as a
+     * PEM bundle. An empty list and a reason: an entry that could hide the end of trust.
      *
      * @param  array<mixed>  $information
      * @param  array<mixed>  $history
      * @param  list<Certificate>  $certificates
+     * @param  int  $read  certificates read so far, a history's counted with them (amendment 2)
      * @return array{0: list<array{from: int, until: int|null}>|null, 1: string|null}
      */
-    private static function loteTimeline(array $information, array $history, array $certificates): array
+    private static function loteTimeline(array $information, array $history, array $certificates, string $at, int $room, int &$read): array
     {
         $own = array_map(static fn (Certificate $c): string => $c->sha256, $certificates);
         $records = [];
@@ -281,11 +309,17 @@ final readonly class TrustSettings
                 return [[], 'a history entry is not an object'];
             }
             if ($n > 0 && is_array($record['ServiceDigitalIdentity'] ?? null)) {
+                $listed = $record['ServiceDigitalIdentity']['X509Certificates'] ?? [];
+                if (is_array($listed) && count($listed) > $room) {
+                    throw new TrustException(sprintf('%s: the list holds more certificates than this verifier reads', $at));
+                }
                 try {
-                    $theirs = array_map(static fn (Certificate $c): string => $c->sha256, self::loteCertificates($record, 'history', PHP_INT_MAX));
+                    $theirs = array_map(static fn (Certificate $c): string => $c->sha256, self::loteCertificates($record, 'history', $room));
                 } catch (TrustException) {
                     return [[], 'a history entry names certificates that cannot be read'];
                 }
+                $room -= count($theirs);
+                $read += count($theirs);
                 if ($theirs !== $own) {
                     return [[], 'a history entry names other certificates than the service'];
                 }
@@ -298,8 +332,8 @@ final readonly class TrustSettings
                 return [[], sprintf('the status %s is neither trusted nor untrusted', is_string($status) ? $status : get_debug_type($status))];
             }
             $time = $record['StatusStartingTime'] ?? null;
-            $epoch = is_string($time) && $time !== '' ? self::rfc3339($time) : null;
-            if ($epoch === null) {
+            $instant = is_string($time) && $time !== '' ? self::rfc3339($time) : null;
+            if ($instant === null) {
                 if ($status === self::LOTE_TRUSTED) {
                     continue;   // a trusted status bounds nothing, so its time is not needed
                 }
@@ -308,48 +342,96 @@ final readonly class TrustSettings
                     ? 'the list untrusts it with no starting time'
                     : sprintf('the list untrusts it from %s, which is not an RFC 3339 date-time', is_string($time) ? $time : get_debug_type($time))];
             }
-            $records[] = [$epoch, $status === self::LOTE_UNTRUSTED];
+            $records[] = [$instant[0], $instant[1], $status === self::LOTE_UNTRUSTED];
         }
-        if (array_filter($records, static fn (array $r): bool => $r[1]) === []) {
+        if (array_filter($records, static fn (array $r): bool => $r[2]) === []) {
             return [null, null];
         }
-        usort($records, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
-        $stretches = [];
-        $start = PHP_INT_MIN;
-        foreach ($records as $i => [$from, $untrusted]) {
-            if (! $untrusted || $start === null || $from < $start) {
+        // by instant; at one instant a trusted status first, so the untrusted one is what follows
+        usort($records, static fn (array $a, array $b): int => [$a[0], $a[1], $a[2]] <=> [$b[0], $b[1], $b[2]]);
+        $untrusted = [];
+        foreach ($records as $i => [$second, , $isUntrusted]) {
+            if (! $isUntrusted) {
                 continue;
             }
-            if ($from > $start) {
-                $stretches[] = ['from' => $start, 'until' => $from];
-            }
-            // the removal lasts until the next status; a later removal before that keeps it going
-            $start = null;
-            foreach (array_slice($records, $i + 1) as [$next, $nextUntrusted]) {
+            $until = null;
+            foreach (array_slice($records, $i + 1) as [$next, $fraction, $nextUntrusted]) {
                 if (! $nextUntrusted) {
-                    $start = $next;
+                    $until = $next + (trim($fraction, '0') === '' ? 0 : 1);
 
                     break;
                 }
             }
-        }
-        if ($start !== null) {
-            $stretches[] = ['from' => $start, 'until' => null];
+            $untrusted[] = ['from' => $second, 'until' => $until];
         }
 
-        return [$stretches, null];
+        return [self::outside($untrusted), null];
     }
 
-    /** An RFC 3339 date-time as whole seconds since the epoch (a fraction rounded down), or null. */
-    private static function rfc3339(string $value): ?int
+    /**
+     * Every time outside the given stretches, as stretches in order.
+     *
+     * @param  list<array{from: int, until: int|null}>  $removed
+     * @return list<array{from: int, until: int|null}>
+     */
+    private static function outside(array $removed): array
     {
-        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})$/D', $value, $m) !== 1
+        usort($removed, static fn (array $a, array $b): int => $a['from'] <=> $b['from']);
+        $stretches = [];
+        $start = PHP_INT_MIN;
+        foreach ($removed as ['from' => $from, 'until' => $until]) {
+            if ($from > $start) {
+                $stretches[] = ['from' => $start, 'until' => $from];
+            }
+            if ($until === null) {
+                return $stretches;
+            }
+            $start = max($start, $until);
+        }
+        $stretches[] = ['from' => $start, 'until' => null];
+
+        return $stretches;
+    }
+
+    /**
+     * The times both timelines trust.
+     *
+     * @param  list<array{from: int, until: int|null}>  $a
+     * @param  list<array{from: int, until: int|null}>  $b
+     * @return list<array{from: int, until: int|null}>
+     */
+    private static function bothTrust(array $a, array $b): array
+    {
+        $both = [];
+        foreach ($a as $x) {
+            foreach ($b as $y) {
+                $from = max($x['from'], $y['from']);
+                $until = $x['until'] === null ? $y['until'] : ($y['until'] === null ? $x['until'] : min($x['until'], $y['until']));
+                if ($until === null || $from < $until) {
+                    $both[] = ['from' => $from, 'until' => $until];
+                }
+            }
+        }
+        usort($both, static fn (array $p, array $q): int => $p['from'] <=> $q['from']);
+
+        return $both;
+    }
+
+    /**
+     * An RFC 3339 date-time as whole seconds since the epoch (a fraction rounded down) and its
+     * fraction's digits, padded to eighteen so they order as numbers, or null.
+     *
+     * @return array{int, string}|null
+     */
+    private static function rfc3339(string $value): ?array
+    {
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})$/D', $value, $m) !== 1
             || ! checkdate((int) $m[2], (int) $m[3], (int) $m[1]) || (int) $m[4] > 23 || (int) $m[5] > 59 || (int) $m[6] > 59) {
             return null;
         }
-        $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d\\TH:i:sP', sprintf('%s-%s-%sT%s:%s:%s%s', $m[1], $m[2], $m[3], $m[4], $m[5], $m[6], $m[7] === 'Z' ? '+00:00' : $m[7]));
+        $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d\\TH:i:sP', sprintf('%s-%s-%sT%s:%s:%s%s', $m[1], $m[2], $m[3], $m[4], $m[5], $m[6], $m[8] === 'Z' ? '+00:00' : $m[8]));
 
-        return $parsed === false ? null : $parsed->getTimestamp();
+        return $parsed === false ? null : [$parsed->getTimestamp(), substr(str_pad($m[7], 18, '0'), 0, 18)];
     }
 
     /**

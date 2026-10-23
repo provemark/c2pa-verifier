@@ -284,3 +284,114 @@ it('AC7: malformed JSON lists are refused, naming the option and the fault', fun
     'a value that is not base64' => ['{"LoTE": {"TrustedEntitiesList": [{"TrustedEntityServices": [{"ServiceInformation": {"ServiceDigitalIdentity": {"X509Certificates": [{"val": "%%%"}]}, "ServiceStatus": "http://c2pa.org/conformance/trust-list/trusted", "StatusStartingTime": "2026-01-01T00:00:00Z"}}]}]}}', 'base64'],
     'a value that is not a certificate' => ['{"LoTE": {"TrustedEntitiesList": [{"TrustedEntityServices": [{"ServiceInformation": {"ServiceDigitalIdentity": {"X509Certificates": [{"val": "AAAA"}]}, "ServiceStatus": "http://c2pa.org/conformance/trust-list/trusted", "StatusStartingTime": "2026-01-01T00:00:00Z"}}]}]}}', 'could not be read'],
 ])->group('SPEC-079');
+
+/**
+ * A LoTE document from raw services, one entity each (a service may be any JSON value).
+ *
+ * @param  list<mixed>  $entities  each entity's TrustedEntityServices
+ */
+function spec079Raw(array $entities, string $prefix = ''): string
+{
+    return spec079Temp($prefix.json_encode(['LoTE' => ['TrustedEntitiesList' => array_map(static fn (mixed $services): array => ['TrustedEntityServices' => $services], $entities)]]), '.json');
+}
+
+/**
+ * One service for $der with a current status and time and, optionally, a history of [status, time].
+ *
+ * @param  array<mixed>|string  $history  a list of [status, time], or any string
+ * @return array<string, mixed>
+ */
+function spec079Service(string $der, ?string $status, ?string $time, array|string $history = []): array
+{
+    $information = ['ServiceDigitalIdentity' => ['X509Certificates' => [['val' => $der]]]];
+    if ($status !== null) {
+        $information['ServiceStatus'] = $status;
+    }
+    if ($time !== null) {
+        $information['StatusStartingTime'] = $time;
+    }
+    $service = ['ServiceInformation' => $information];
+    if ($history !== []) {
+        $service['ServiceHistory'] = is_string($history) ? $history : array_map(static fn (mixed $h): array => is_array($h) ? ['ServiceStatus' => $h[0] ?? null, 'StatusStartingTime' => $h[1] ?? null] : [], $history);
+    }
+
+    return $service;
+}
+
+// AC8 (amendment 2): control.png is time-stamped at 2026-10-09T05:30:24Z
+it('AC8: a timeline the first build misread leaves the signer untrusted', function (string $case): void {
+    $der = spec079Der(spec079Roots('control')['manifest']);
+    $s = static fn (?string $status, ?string $time, array|string $history = []): array => [spec079Service($der, $status, $time, $history)];
+    $entities = match ($case) {
+        'removed for good, then in a service removed later' => [$s(SPEC079_UNTRUSTED, '2026-01-01T00:00:00Z'), $s(SPEC079_UNTRUSTED, '2030-01-01T00:00:00Z')],
+        'removed later, then in a service removed for good' => [$s(SPEC079_UNTRUSTED, '2030-01-01T00:00:00Z'), $s(SPEC079_UNTRUSTED, '2026-01-01T00:00:00Z')],
+        'unusable, then in a service with dates' => [$s('http://example.com/other', null), $s(SPEC079_UNTRUSTED, '2030-01-01T00:00:00Z')],
+        'with dates, then in an unusable service' => [$s(SPEC079_UNTRUSTED, '2030-01-01T00:00:00Z'), $s('http://example.com/other', null)],
+        'untrusted and trusted at one instant' => [$s(SPEC079_UNTRUSTED, '2026-01-01T00:00:00Z', [[SPEC079_TRUSTED, '2026-01-01T00:00:00Z']])],
+        'trusted and untrusted at one instant' => [$s(SPEC079_TRUSTED, '2026-01-01T00:00:00Z', [[SPEC079_UNTRUSTED, '2026-01-01T00:00:00Z']])],
+        'untrusted at .9 after trusted at .1, in one second' => [$s(SPEC079_UNTRUSTED, '2026-10-09T05:00:00.9Z', [[SPEC079_TRUSTED, '2026-10-09T05:00:00.1Z']])],
+        'a ServiceHistory that is a string' => [$s(SPEC079_TRUSTED, null, 'oops')],
+        'trusted again half a second after the token' => [$s(SPEC079_TRUSTED, '2026-10-09T05:30:24.5Z', [[SPEC079_UNTRUSTED, '2026-10-09T05:00:00Z']])],
+        default => throw new LogicException($case),
+    };
+
+    // a second, unrelated anchor keeps the list usable, so the signer's own answer is what is measured
+    $entities[] = [spec079Service(spec079Der(spec079Roots('control')['tsa']), SPEC079_TRUSTED, null)];
+    [$state, $codes] = spec079Control(spec079Raw($entities));
+    expect([$state, $codes])->toBe(['Valid', ['signingCredential.untrusted', 'timeStamp.trusted']]);
+})->with([
+    'removed for good, then in a service removed later',
+    'removed later, then in a service removed for good',
+    'unusable, then in a service with dates',
+    'with dates, then in an unusable service',
+    'untrusted and trusted at one instant',
+    'trusted and untrusted at one instant',
+    'untrusted at .9 after trusted at .1, in one second',
+    'a ServiceHistory that is a string',
+    'trusted again half a second after the token',
+])->group('SPEC-079');
+
+it('AC8: the guards against those misreadings still trust what is trusted', function (string $case): void {
+    $der = spec079Der(spec079Roots('control')['manifest']);
+    $s = static fn (?string $status, ?string $time, array|string $history = []): array => [spec079Service($der, $status, $time, $history)];
+    [$entities, $prefix] = match ($case) {
+        'two services, both removed later' => [[$s(SPEC079_UNTRUSTED, '2030-01-01T00:00:00Z'), $s(SPEC079_UNTRUSTED, '2031-01-01T00:00:00Z')], ''],
+        'untrusted at .1, trusted again at .9, in one second' => [[$s(SPEC079_TRUSTED, '2026-10-09T05:00:00.9Z', [[SPEC079_UNTRUSTED, '2026-10-09T05:00:00.1Z']])], ''],
+        'a byte order mark before the JSON' => [[$s(SPEC079_TRUSTED, null)], "\u{FEFF}"],
+        default => throw new LogicException($case),
+    };
+
+    [$state, $codes] = spec079Control(spec079Raw($entities, $prefix));
+    expect([$state, $codes])->toBe(['Trusted', ['signingCredential.trusted', 'timeStamp.trusted']]);
+})->with([
+    'two services, both removed later',
+    'untrusted at .1, trusted again at .9, in one second',
+    'a byte order mark before the JSON',
+])->group('SPEC-079');
+
+it('AC8: a list whose shape could hide a removal, or with no usable anchor counted once each, is refused', function (string $case, string $fault): void {
+    $der = spec079Der(spec079Roots('control')['manifest']);
+    $other = spec079Der(spec079Roots('control')['tsa']);
+    $bad = spec079Service($der, 'http://example.com/other', null);
+    $max = TrustSettings::DEFAULT_MAX_CERTIFICATES;
+    $entities = match ($case) {
+        'TrustedEntityServices a string' => [[spec079Service($der, SPEC079_TRUSTED, null)], 'oops'],
+        'ServiceInformation a string' => [[spec079Service($der, SPEC079_TRUSTED, null)], [['ServiceInformation' => 'oops']]],
+        'one certificate, unusable in two services' => [[$bad], [$bad]],
+        'a history naming more certificates than the limit' => (static function () use ($der, $other, &$max): array {
+            $max = 1;
+            $service = spec079Service($der, SPEC079_TRUSTED, null);
+            $service['ServiceHistory'] = [['ServiceStatus' => SPEC079_TRUSTED, 'StatusStartingTime' => '2026-01-01T00:00:00Z', 'ServiceDigitalIdentity' => ['X509Certificates' => [['val' => $der], ['val' => $other]]]]];
+
+            return [[$service]];
+        })(),
+        default => throw new LogicException($case),
+    };
+
+    expect(fn () => TrustSettings::fromTrustLists((string) file_get_contents(spec079Raw($entities)), null, $max))->toThrow(TrustException::class, $fault);
+})->with([
+    ['TrustedEntityServices a string', 'entity 2: TrustedEntityServices is not a list'],
+    ['ServiceInformation a string', 'entity 2, service 1: ServiceInformation is not an object'],
+    ['one certificate, unusable in two services', 'holds no usable anchor'],
+    ['a history naming more certificates than the limit', 'more certificates than this verifier reads'],
+])->group('SPEC-079');

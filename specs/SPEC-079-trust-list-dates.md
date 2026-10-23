@@ -176,6 +176,16 @@ The contract does not grow: `fromTrustLists()` keeps its signature.
    - **AC7** stays.
    - Against `c2patool`, the verdicts now differ only once the programme untrusts an anchor; none is untrusted today.
 
+2. **2026-10-23, steps 391 (timeline) and 392 (EKU choice), approved by Maurice van Loon ("ja"; found by the review of 2026-10-23)** — the timeline fails closed where the first build did not. Confirmed by running a reviewer's LoTE documents through `bin/c2pa-verify` on `control.png`: each gave `Trusted` where the criteria give untrusted.
+   - **A certificate in two services**, with different timelines, is read under both: an anchor counts at a time only where every service that holds it trusts it then, and not at all where any of them is unusable. (The first build kept only the last service read.)
+   - **Equal starting times**: an `untrusted` and a `trusted` status starting at the same instant leave the anchor untrusted from then on. (The first build let the input order decide.)
+   - **Fractions of a second** are kept when the statuses are ordered; the stretches still bound at whole seconds, an `untrusted` one rounded down, a `trusted` one rounded up. (The first build dropped them, so `.9` and `.1` within a second could swap.)
+   - **A `ServiceHistory` that is not a list** makes the anchor unusable, named. (The first build read it as no history.) **An entity, a service or a `ServiceInformation` that is not an object, or a `TrustedEntityServices` that is not a list**, refuses the list, naming the place: no certificate can be read from it, so the entry is not an anchor that could be marked unusable, and dropping it could hide a removal of a certificate another service holds. (The first build skipped it.)
+   - **The "no usable anchor" refusal** counts certificates once each, and so applies when every anchor is unusable under the rules above (a list whose only anchor sits in a service with a `ServiceHistory` that is not a list is refused, not read as a list with one untrusted anchor).
+   - **A byte order mark** before the JSON is skipped. **Certificates in a history entry** count against the same certificate limit as the rest.
+   - **The EKU choice and `kindNote()`** judge whether a chain reaches an entry at the same time as the trust check, with the entry's dates (SPEC-031 AC8 read with SPEC-073 and this spec): the first build asked at the clock, without dates.
+   - **AC8 (new)** — each of these, as a LoTE document on `control.png` or a unit test, gives the fail-closed answer; the official lists still give 32 and 23 anchors, and the reports of AC1 are unchanged.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -190,6 +200,7 @@ least one test; every source file maps back to this spec.
 | AC5 | tests/Unit/Trust/TrustListDatesTest.php :: AC5: a TSA anchor removed before the token's time does not vouch for it; removed after, it does / SPEC-079 | src/Timestamp/TimestampCheck.php :: tsaSettings() (the operator's "tsa" entries with their dates) |
 | AC6 | tests/Unit/Trust/TrustListDatesTest.php :: AC6: an entry that cannot be placed is undated, or, where it could hide a removal, not used and named (8 datasets); AC6: a list in which no entry is usable is refused, like a PEM file without a certificate / SPEC-079 | src/Trust/TrustSettings.php :: loteTimeline(), fromLote(); src/Trust/TrustAnchorSet.php :: $windows, $reasons |
 | AC7 | tests/Unit/Trust/TrustListDatesTest.php :: AC7: malformed JSON lists are refused, naming the option and the fault (4 datasets) / SPEC-079 | src/Trust/TrustSettings.php :: fromLote(), loteCertificates() |
+| AC8 (amendment 2, timeline) | tests/Unit/Trust/TrustListDatesTest.php :: AC8: a timeline the first build misread leaves the signer untrusted (9 datasets); AC8: the guards against those misreadings still trust what is trusted (3); AC8: a list whose shape could hide a removal, or with no usable anchor counted once each, is refused (4) / SPEC-079 | src/Trust/TrustSettings.php :: fromTrustLists() (byte order mark), fromLote(), loteTimeline(), outside(), bothTrust(), rfc3339() |
 
 The contract grew by two symbols, `TrustAnchorSet::$windows` and
 `$reasons`, to 142; the API sketch said it would not grow, wrongly:
@@ -214,3 +225,13 @@ Three mutations were watched failing: a trusted date read as a
 `notBefore` again (AC2); an empty status not used (AC1, AC6); an
 `untrusted` status without a time ignored (AC6). The corpus before and
 after: 0 of 1,854 runs moved. `composer check`: 1,240 passed, 1 skipped.
+
+Amendment 2, timeline (step 391): the reviewer's sixteen LoTE probes run
+first, five giving `Trusted` where the criteria give untrusted; the 16
+new tests red against the first build (11 at first; the rounding case,
+added after a mutation survived, red too). Green after. Mutations, each
+failing: the last service wins (2), fractions and ties ignored (3), a
+trusted status's time rounded down (1, after the rounding case), a
+`ServiceHistory` string read as none (1), the BOM kept (1). AC1 (the
+official lists' 32 and 23 anchors, the same reports as the PEM bundles)
+unchanged.

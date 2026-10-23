@@ -144,6 +144,10 @@ entries and one test file.
   in `docs/conformance.md`.
   *Status 2026-10-23 (step 381):* settled; approved without changes.
 
+## Amendments
+
+1. **2026-10-23, step 394, proposed (found by the review of 2026-10-23)** — the generator compared paths as case-sensitive strings, and on a case-insensitive volume (macOS) a scratch directory spelled in other letters passed as outside the repository while lying inside it; a Ctrl-C between signing and the shutdown handler could also leave the key. The scratch directory is now refused when it, or any directory above it, is the repository by device and inode; `.gitignore` gains `*.pk8` and `conformance-test-keys-*/`. **AC6 (new)**: the generator refuses `tests/` spelled in other letters (where the volume ignores case), and `git check-ignore` covers the key's file and directory names.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
