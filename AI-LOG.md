@@ -11169,3 +11169,16 @@ README are where the disclosure lives.
 - Reasoned: which unplaceable entries could hide a removal.
 - Decided by Maurice: back to his parking of 2026-09-24 for `notBefore`
   (option 2), with the amendment's text.
+
+## 2026-10-23 — Gaps #12, #7 and #8 (step 387)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ja push en dan overige gaten als het niet teveel werk is";
+  then "ja die volgorde".
+- Produced: the push of step 386; `docs/conformance.md` (three rows, the
+  count, the lists); `notes/step-387-gaps-12-7-8.md`; a row in `NOTES.md`.
+- Measured: the four issues and their comments; `c2pa-rs` 0.91.1 for
+  `humanEntry`, `reviewRatings`, `session_keys`, `signerBinding`;
+  C2PA 2.4 §18.3.5.
+- Reasoned: that a custom code cannot reach the report; the sizes of #7
+  and #8.
+- Decided by Maurice: #12 by design, #7 and #8 parked, #1 next.

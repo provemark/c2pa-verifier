@@ -1,6 +1,6 @@
 # Conformance: 111 named obligations, one by one
 
-*Measured 2026-09-22 (step 90); `PRED-CRYP-006` closed by SPEC-079 (step 385); updated the same day after SPEC-030 closed
+*Measured 2026-09-22 (step 90); `PRED-CRYP-006` closed by SPEC-079 (step 385); `PRED-STRU-002` set aside by design, `PRED-ASSE-021` and `PRED-CRYP-024` parked (step 387); updated the same day after SPEC-030 closed
 five of its gaps (step 92); corrected 2026-09-24 (step 108), when `PRED-IMG-004`
 turned out to be a gap that step 90 had marked enforced, and closed the same
 day (step 109); four rows brought up to date with SPEC-035 amendment 5 and
@@ -40,8 +40,8 @@ accept; its predicate list does not depend on its cryptography being right.
 | **yes** | 71 |
 | partial | 10 |
 | closed | 4 |
-| by design | 22 |
-| **gap** | 4 |
+| by design | 23 |
+| **gap** | 3 |
 | **total** | 111 |
 
 ## Cross-format (6)
@@ -88,7 +88,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | predicate | sev | rule | this verifier |
 |---|---|---|---|
 | `PRED-STRU-001` | may | Validation outcome classification (well-formed / valid / trusted) | **yes** — `ValidationState` is Valid / Invalid / Trusted; this verifier has no separate Well-Formed tier and says so in the README |
-| `PRED-STRU-002` | shall | Custom status code namespace syntax conformance | **gap** — a custom status code read from an ingredient's recorded `validationResults` is not checked against the reverse-DNS syntax |
+| `PRED-STRU-002` | shall | Custom status code namespace syntax conformance | by design — this verifier emits no custom codes; it reads them only in an ingredient's recorded `validationResults`, where a recorded code only acknowledges a status raised here when code, type and url match (SPEC-070), and every code raised here is a C2PA 2.4 §15 name. A custom code, well formed or not, can therefore change nothing in the report, and the rule asks for no status of its own (decided 2026-10-23, step 387; issue #12) |
 | `PRED-STRU-003` | shall | PDF update section: single manifest store required | by design — PDF is not a container this verifier reads |
 | `PRED-STRU-004` | should | Stop manifest search after first located store | **yes** — one store per file; a second C2PA box is an error naming both offsets (SPEC-026 AC4), never a second candidate |
 | `PRED-STRU-005` | shall | Remote manifest inaccessibility reporting | by design — remote manifests are not fetched (no network); `manifest.inaccessible` is a code this verifier cannot reach |
@@ -134,7 +134,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-CRYP-021` | shall | OCSP response from manifest store revocation check | **yes** — the same stapled-OCSP path; `notRevoked` is recorded with the caveat that the header carrying it is unsigned |
 | `PRED-CRYP-022` | may | Online OCSP query fallback | by design — online OCSP query; no network |
 | `PRED-CRYP-023` | shall | Online OCSP response acceptance and not-revoked determination | by design — online OCSP acceptance; no network |
-| `PRED-CRYP-024` | shall | c2pa.session-keys signerBinding signature verification | **gap** — `c2pa.session-keys` is not recognised, so its `signerBinding` signature is not verified |
+| `PRED-CRYP-024` | shall | c2pa.session-keys signerBinding signature verification | **gap** — `c2pa.session-keys` is not recognised, so its `signerBinding` signature is not verified Parked 2026-10-23 (step 387): no measured writer emits `c2pa.session-keys`, `c2pa-rs` 0.91.1 does not recognise it, and a fixture would have to be built from the specification alone (issue #8) |
 | `PRED-CRYP-025` | shall | No hash mismatch codes for activeManifest field in claim signature hash validation | **yes** — the claim-signature hash method and `c2pa.ingredient.v3`'s `activeManifest` field are not implemented, so no mismatch can be recorded for it |
 
 ## Assertions (27)
@@ -161,7 +161,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-ASSE-018` | shall | Ingredient assertion activeManifest and digitalSourceType mutual exclusivity | **yes** — `IngredientAssertion` refuses `activeManifest` and `digitalSourceType` together — §18.16.12.3, a rule c2pa-rs does not have (docs/comparison.md) |
 | `PRED-ASSE-019` | shall | Exclusion range C2PA store content integrity | **yes** — the store exclusion must cover the store and only padding beyond it (SPEC-012 AC3, amendment 5) |
 | `PRED-ASSE-020` | shall | Hard binding assertion required for validation | **yes** — same as CROSS-002 |
-| `PRED-ASSE-021` | shall | Multi-asset hash fallback after standard hard binding failure | **gap** — no `c2pa.hash.multi-asset` fallback; a failed hard binding stays failed — stricter than the rule, not laxer |
+| `PRED-ASSE-021` | shall | Multi-asset hash fallback after standard hard binding failure | **gap** — no `c2pa.hash.multi-asset` fallback; a failed hard binding stays failed — stricter than the rule, not laxer Parked 2026-10-23 (step 387): the multi-asset hash covers assets the API is not given, no measured writer emits `c2pa.hash.multi-asset`, and `c2pa-rs` 0.91.1 does not read it, so there is neither a fixture nor an oracle (issue #7) |
 | `PRED-ASSE-022` | shall | Content validation failure signalling | **yes** — every failure is reported and an ingredient never masks one in the active manifest (SPEC-021, CAI-12751) |
 | `PRED-ASSE-023` | shall | Inception action position validation | partial — `ActionsCheck` requires the first action to be `c2pa.created` or `c2pa.opened`, and since SPEC-033 refuses a second opening anywhere in the claim (a later `c2pa.created` included); it does not require `created_assertions`' first actions reference to resolve to `c2pa.actions.v2` |
 | `PRED-ASSE-024` | shall | reviewRatings absent when dataSource is human entry | **gap** — `reviewRatings` alongside a `humanEntry` `dataSource` is not rejected |
@@ -217,7 +217,7 @@ accept; its predicate list does not depend on its cryptography being right.
 
 ## What the 23 gaps mean, sorted by what they could cost
 
-Twenty-three gaps were recorded. Sixteen have since been closed (section 0, section 1, `PRED-ASSE-027` by SPEC-032, `PRED-STRU-009` by SPEC-034, `PRED-BMFF-001`, `-002` and `-004` by SPEC-038, `PRED-TIME-002` and `-003` by SPEC-064, `PRED-ASSE-013`, `-014` and `-026` by SPEC-065), one narrowed to partial (`PRED-ASSE-025`), and one set aside by decision (`PRED-CRYP-019`, issue #10). `PRED-CRYP-006` (#9) closed on 2026-10-23 by SPEC-079. Four remain, each an open issue: #1, #7, #8, #12.
+Twenty-three gaps were recorded. Sixteen have since been closed (section 0, section 1, `PRED-ASSE-027` by SPEC-032, `PRED-STRU-009` by SPEC-034, `PRED-BMFF-001`, `-002` and `-004` by SPEC-038, `PRED-TIME-002` and `-003` by SPEC-064, `PRED-ASSE-013`, `-014` and `-026` by SPEC-065), one narrowed to partial (`PRED-ASSE-025`), and one set aside by decision (`PRED-CRYP-019`, issue #10). `PRED-CRYP-006` (#9) closed on 2026-10-23 by SPEC-079, and `PRED-STRU-002` (#12) set aside the same day as changing nothing in a report. Three remain, each an open issue: #1, #7, #8; #7 and #8 are parked for want of a writer and an oracle.
 
 A gap is only interesting through its consequence. The question this
 project asks of everything is the same one: **can it make this verifier say
@@ -309,9 +309,10 @@ c2patool is never a surprise.
   (`general.error` for
   `assertion.cbor.invalid`, `assertion.missing` for `hashedURI.missing`,
   `signingCredential.expired` for `claimSignature.outsideValidity`)
-- `PRED-STRU-002` — a syntax check on custom codes an ingredient recorded,
-  which changes no verdict. (`PRED-BMFF-002` stood here too, as changing
-  no verdict. Step 133 measured that it did, and SPEC-038 closed it.)
+- (`PRED-STRU-002` stood here, a syntax check on custom codes an ingredient
+  recorded; set aside by design on 2026-10-23. `PRED-BMFF-002` stood here
+  too, as changing no verdict. Step 133 measured that it did, and SPEC-038
+  closed it.)
 
 ## Outside the catalogue
 
