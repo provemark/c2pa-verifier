@@ -252,20 +252,51 @@ final readonly class IngredientManifestCheck
      * assertion's `validationResults` carries the parent's two `ingredient.unknownProvenance` entries,
      * and c2patool drops both). Only the active manifest and the manifests the graph reaches count
      * (amendment 6): a manifest nothing names is never validated, so what it recorded vouches for
-     * nothing.
+     * nothing. Each record carries the manifests that lie below the one holding it (amendment 3): a
+     * record speaks only for those, never for the manifest that holds it nor for one above or beside it
+     * (C2PA 2.4 §18.16.12.4: a statement by the manifest that takes the ingredient, about it).
      *
-     * @return list<string>
+     * @return list<array{key: string, below: list<string>}>
      */
     public static function recordedInStore(ManifestGraph $graph): array
     {
-        $keys = [];
+        $records = [];
         foreach ([$graph->active, ...array_map('strval', array_keys($graph->referenced))] as $label) {
+            $below = null;
             foreach ($graph->ingredients[$label] ?? [] as $ingredient) {
-                $keys = [...$keys, ...self::recorded($ingredient)];
+                foreach (self::recorded($ingredient) as $key) {
+                    $below ??= self::below($graph, $label);
+                    $records[$key."\n".$label] = ['key' => $key, 'below' => $below];
+                }
             }
         }
 
-        return array_values(array_unique($keys));
+        return array_values($records);
+    }
+
+    /**
+     * The manifests reachable from $label through ingredient references, $label itself left out
+     * even where a cycle leads back to it (amendment 3).
+     *
+     * @return list<string>
+     */
+    private static function below(ManifestGraph $graph, string $label): array
+    {
+        $seen = [];
+        $queue = [$label];
+        while ($queue !== []) {
+            $current = array_pop($queue);
+            foreach ($graph->ingredients[$current] ?? [] as $ingredient) {
+                $named = $ingredient->manifestLabel();
+                if ($named !== null && ! isset($seen[$named])) {
+                    $seen[$named] = true;
+                    $queue[] = $named;
+                }
+            }
+        }
+        unset($seen[$label]);
+
+        return array_map('strval', array_keys($seen));
     }
 
     /**
@@ -341,6 +372,27 @@ final readonly class IngredientManifestCheck
     }
 
     /**
+     * Whether a record matches the status and is held by a proper ancestor of the manifest the status is
+     * about (amendment 3). A status whose url names no manifest matches nothing.
+     *
+     * @param  list<array{key: string, below: list<string>}>  $recorded
+     */
+    private static function recordedBelow(ValidationStatus $status, array $recorded): bool
+    {
+        if (preg_match('#^self\#jumbf=/?c2pa/([^/]+)#', $status->url, $m) !== 1) {
+            return false;
+        }
+        $key = $status->code->value.' '.$status->url;
+        foreach ($recorded as $record) {
+            if ($record['key'] === $key && in_array($m[1], $record['below'], true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Statuses with the failures the assertion recorded marked as acknowledged (SPEC-070; SPEC-021 AC4
      * dropped them, as c2pa-rs does): reported as informational, counted for nothing. A recorded success
      * or informational line is still dropped (SPEC-070 amendment 1): it hides nothing. Never one whose
@@ -349,7 +401,8 @@ final readonly class IngredientManifestCheck
      * record may excuse its fault. Those stay as they are.
      *
      * @param  list<ValidationStatus>  $statuses
-     * @param  list<string>  $recorded  the keys of self::recorded()
+     * @param  list<array{key: string, below: list<string>}>  $recorded  self::recordedInStore(): each record's key and the
+     *                                                                   manifests it may speak for (amendment 3)
      * @param  string|null  $bindingLabel  the binding manifest of an update manifest, null without one
      * @return list<ValidationStatus>
      */
@@ -363,9 +416,10 @@ final readonly class IngredientManifestCheck
             if ($status->ingredientUri === null
                 || $status->url === $active || str_starts_with($status->url, $active.'/')
                 || ($binding !== null && $status->code->isFailure() && ($status->url === $binding || str_starts_with($status->url, $binding.'/')))
-                || ! in_array($status->code->value.' '.$status->url, $recorded, true)) {
+                || ! self::recordedBelow($status, $recorded)) {
                 // the active manifest's own line; the guard (no ingredient assertion speaks for the manifest
-                // being verified, nor for the one that binds the asset in its stead); or nothing recorded it
+                // being verified, nor for the one that binds the asset in its stead); or nothing that may speak
+                // for the manifest it is about recorded it (amendment 3)
                 $out[] = $status;
 
                 continue;

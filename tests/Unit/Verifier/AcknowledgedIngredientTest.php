@@ -69,11 +69,11 @@ it('leaves the guard as it was: about the active manifest or the binding manifes
         new ValidationStatus(StatusCode::AssertionHashedUriMismatch, 'self#jumbf=/c2pa/C/c2pa.assertions/c2pa.hash.data', 'about another', $by),
         new ValidationStatus(StatusCode::ClaimSignatureMismatch, 'self#jumbf=/c2pa/C/c2pa.signature', 'not recorded', $by),
     ];
-    $recorded = [
+    $recorded = spec070Records([
         'claimSignature.mismatch self#jumbf=/c2pa/A/c2pa.signature',
         'assertion.hashedURI.mismatch self#jumbf=/c2pa/B/c2pa.assertions/c2pa.hash.data',
         'assertion.hashedURI.mismatch self#jumbf=/c2pa/C/c2pa.assertions/c2pa.hash.data',
-    ];
+    ], ['B', 'C']);   // held by A (SPEC-070 amendment 3): A itself is never below it, so its own fault stays for that reason too
     $out = (new IngredientManifestCheck)->acknowledge($statuses, $recorded, 'A', 'B');
 
     expect($out)->toHaveCount(4)

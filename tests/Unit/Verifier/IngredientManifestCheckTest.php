@@ -175,7 +175,8 @@ it('AC5: a recorded status never cancels the active manifest\'s own failure', fu
         new ValidationStatus(StatusCode::AssertionHashedUriMismatch, 'self#jumbf=/c2pa/urn:c2pa:ingredient/c2pa.assertions/c2pa.actions', 'x', $ingredient->url),
     ];
     // SPEC-070: the one about the active manifest stays a failure; the other is kept, marked acknowledged
-    $kept = (new IngredientManifestCheck)->acknowledge($mine, $keys, $active, null);
+    // the record is held by the active manifest, so it may speak for the ingredient below it (SPEC-070 amendment 3)
+    $kept = (new IngredientManifestCheck)->acknowledge($mine, spec070Records($keys, ['urn:c2pa:ingredient']), $active, null);
     expect(array_map(static fn (ValidationStatus $s): string => $s->code->value, array_values(array_filter($kept, static fn (ValidationStatus $s): bool => ! $s->acknowledged))))->toBe(['claimSignature.mismatch'])
         ->and(array_map(static fn (ValidationStatus $s): bool => $s->acknowledged, $kept))->toBe([false, true]);
 
@@ -276,7 +277,7 @@ it('AC11: an ingredient assertion of a manifest the graph never reaches records 
     ], []);
 
     expect($graph->unreferenced)->toBe(['S'])
-        ->and(IngredientManifestCheck::recordedInStore($graph))->toBe(['ingredient.unknownProvenance self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient']);
+        ->and(IngredientManifestCheck::recordedInStore($graph))->toBe(spec070Records(['ingredient.unknownProvenance self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient'], ['B']));
 })->group('SPEC-021');
 
 /**
@@ -306,11 +307,11 @@ it('AC11: a fault of the update manifest\'s binding manifest is never dropped; a
         new ValidationStatus(StatusCode::IngredientUnknownProvenance, 'self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient', 'x', $by),
         new ValidationStatus(StatusCode::AssertionHashedUriMismatch, 'self#jumbf=/c2pa/C/c2pa.assertions/c2pa.hash.data', 'x', $by),
     ];
-    $recorded = [
+    $recorded = spec070Records([
         'assertion.hashedURI.mismatch self#jumbf=/c2pa/B/c2pa.assertions/c2pa.hash.data',
         'ingredient.unknownProvenance self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient',
         'assertion.hashedURI.mismatch self#jumbf=/c2pa/C/c2pa.assertions/c2pa.hash.data',
-    ];
+    ], ['B', 'C']);   // held by A, which has B and C below it (SPEC-070 amendment 3)
     $check = new IngredientManifestCheck;
 
     // B binds: its failure stays unmarked; its informational line and C's failure are acknowledged (SPEC-070; they went before)

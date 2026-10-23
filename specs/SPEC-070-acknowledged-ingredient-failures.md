@@ -289,6 +289,62 @@ the fixtures.
   library's `ManifestStoreParser` reads only `success` and `failure` from
   an ingredient's deltas. Neither sees the new lines as failures.
 
+### Amendment 3 — a record speaks only for what lies below it (approved by Maurice van Loon, 2026-10-23, step 389)
+
+**Found by review (2026-10-23).** `recordedInStore()` pools the recorded
+statuses of every ingredient assertion of every manifest the graph
+reaches, and `acknowledge()` matches a status against that pool by code,
+url and kind, whoever recorded it. So a manifest's record can acknowledge
+a status *about that manifest itself*. Replace ingredient B of a signed
+file with anything, and give B an ingredient assertion of its own whose
+record lists B's `claimSignature.mismatch` and A's
+`ingredient.manifest.mismatch` of B: both are acknowledged, and the file
+is `Valid`, or `Trusted`, while B is forged. Confirmed with the classes
+themselves (`ManifestGraph::fromIngredients()`, `recordedInStore()`,
+`acknowledge()`, `ValidationResult::fromStatuses()`: `Invalid` before,
+`Valid` after). SPEC-021 AC11 is titled "only a *validated* manifest on
+the graph may acknowledge a fault"; its amendment 6 built "reached".
+
+`c2pa-rs` 0.91.1 does the same, read in its source
+(`validation_results.rs`, `from_store()`): it collects the statuses of the
+ingredient assertions of every claim the active manifest's tree
+references, and drops a status that matches one "by content, not by
+URI". Not run against a file.
+
+C2PA 2.4 §18.16.12.4 makes the record "an explicit statement by the
+claim generator that an actor has acknowledged validation errors in the
+ingredient's C2PA Claim": a statement by the manifest that takes the
+ingredient, about that ingredient. Nothing lets a manifest acknowledge
+its own errors.
+
+**The rule.** A recorded status acknowledges a status about manifest X
+(the label in the status's url, `self#jumbf=/c2pa/X…`) only when the
+manifest that holds the record is a **proper ancestor** of X in the
+ingredient graph: X is reachable from it through ingredient references,
+and it is not X. A record never acknowledges a status about the manifest
+that holds it, nor about one beside or above it. A status whose url names
+no manifest is never acknowledged. The guards of the active manifest and
+of an update manifest's binding manifest stay.
+
+So A's record of B's broken signature still acknowledges it
+(`public-testfiles/adobe-20220124-CIE-sig-CA.jpg`, §18.16.12.4, unchanged),
+and B's record of B's own faults does not: the file is `Invalid`.
+
+**Criteria added.**
+
+- **AC9 — a manifest cannot acknowledge its own faults** *(required: error
+  path)*: a store where the active manifest A takes B, B is altered (its
+  signature fails, A's hash of B fails), and B's own ingredient assertion
+  records both faults; then neither is acknowledged and the verdict is
+  `Invalid`. A unit test over the real classes and, where a generator can
+  make it, a signed fixture.
+- **AC10 — a record still speaks for what lies below it**: A's record of
+  B's fault acknowledges it; a record held by B about its ingredient C
+  acknowledges C's fault; a record held by C about B (C below B) does not.
+- **AC11 — nothing else moves**: every fixture and corpus file, before and
+  after, the same state, codes and acknowledgements, as measured with a
+  copied `vendor/`.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -305,6 +361,9 @@ least one test; every source file maps back to this spec.
 | AC6 (amendment 2) | tests/Unit/Verifier/AcknowledgedKindTest.php :: AC6 (amendment 2): the same failure recorded under failure is still acknowledged / SPEC-070 | src/Verifier/IngredientManifestCheck.php :: kinds() |
 | AC7 (amendment 2) | tests/Unit/Verifier/AcknowledgedKindTest.php :: amendment 2: a v3 record counts only where its list is the code's own kind; a v2 record keeps every entry / SPEC-070; tests/Unit/Verifier/AcknowledgedIngredientTest.php (AC1, unchanged); tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC5 (SPEC-021, `records-active-fault.png`) | src/Verifier/IngredientManifestCheck.php :: recorded() (v1/v2 unfiltered) |
 | AC8 (amendment 2) | the corpus before and after (notes/step-363-acknowledged-kind.md) | — |
+| AC9 (amendment 3) | tests/Unit/Verifier/AcknowledgementScopeTest.php :: AC9: a manifest cannot acknowledge its own faults, nor its parent's hash of it; AC9: a cycle does not put a manifest below itself (2 datasets) / SPEC-070 | src/Verifier/IngredientManifestCheck.php :: recordedInStore(), below(), recordedBelow(), acknowledge() |
+| AC10 (amendment 3) | tests/Unit/Verifier/AcknowledgementScopeTest.php :: AC10: a record speaks for what lies below it, and for nothing above or beside it (6 datasets); AC10: a status whose url names no manifest is never acknowledged / SPEC-070 | src/Verifier/IngredientManifestCheck.php :: recordedBelow() |
+| AC11 (amendment 3) | the corpus before and after (notes/step-389-acknowledgement-scope.md); every existing test, four of them given the new record shape | — |
 
 The tests were run red first: 6 failed (the property, the method and the
 rendering did not exist yet). Building showed that recorded successes came
@@ -331,3 +390,13 @@ mutation (the deltas left unfiltered, an unknown code dropped). Corpus against `
 directory included): only `acknowledged-kind/recorded-success.jpg` and
 `recorded-informational.jpg` differ. `composer check` green (1,117
 passed, 1 skipped); the contract stays at 136 symbols.
+
+Amendment 3 (step 389): the new tests were run red first against the
+pooled records, 5 of 8 failing (every case where a record spoke for its
+own manifest or one above it); the three allowed cases passed and pin
+§18.16.12.4. Three mutations were then watched: the old pooling (4
+failed), a url without a manifest acknowledged (2 failed), and the holder
+counted below itself, which first survived (no test had a cycle) and
+failed once two cycle cases were added to AC9. The corpus before and
+after: 0 of 1,854 runs moved. Four existing tests were given the new
+record shape (`spec070Records()` in `tests/Shared.php`).

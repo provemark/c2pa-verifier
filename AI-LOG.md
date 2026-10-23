@@ -11192,3 +11192,24 @@ README are where the disclosure lives.
   0.91.1; the programme's rubrics for the rule.
 - Reasoned: a content rule the programme checks on crJSON.
 - Decided by Maurice: #1 by design.
+
+## 2026-10-23 — Review of the release candidate; SPEC-070 amendment 3 (step 389)
+- Model: Claude Opus 5.5, Claude Code CLI (and four Claude Code subagents
+  as reviewers)
+- Asked: "kan je eerst nog een goede review doen, van alle code, maar ook
+  vooral de nieuwe dingen die je hebt toegevoegd."; "ja, ga verder
+  hiermee"; "akkoord" (amendment 3).
+- Produced: four reviews (validation time and CLI; crJSON; trust lists;
+  all of `src/`); SPEC-070 amendment 3 and its Traceability;
+  `recordedInStore()`, `below()`, `recordedBelow()`, `acknowledge()` in
+  `src/Verifier/IngredientManifestCheck.php`;
+  `tests/Unit/Verifier/AcknowledgementScopeTest.php`; four tests given the
+  new record shape; `notes/step-389-acknowledgement-scope.md`; a row in
+  `NOTES.md`.
+- Measured: each reviewer's main findings re-run here; `c2pa-rs` 0.91.1's
+  `from_store()` read; the tests red (5 of 8) and green; three mutations
+  (one survived until cycle tests were added); the corpus before and
+  after (0 of 1,854); `composer check` (1,250 passed).
+- Reasoned: the ancestor rule from §18.16.12.4.
+- Decided by Maurice: the order of the fixes; quiet handling (local
+  commits until a release); amendment 3's text.

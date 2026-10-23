@@ -428,3 +428,16 @@ function spec075S(mixed $value, string $where = ''): string
 
     return $value;
 }
+
+/**
+ * Recorded keys in the shape acknowledge() takes since SPEC-070 amendment 3: each with the manifests
+ * the record may speak for. Used by IngredientManifestCheckTest and AcknowledgedIngredientTest.
+ *
+ * @param  list<string>  $keys
+ * @param  list<string>  $below
+ * @return list<array{key: string, below: list<string>}>
+ */
+function spec070Records(array $keys, array $below): array
+{
+    return array_map(static fn (string $key): array => ['key' => $key, 'below' => $below], $keys);
+}
