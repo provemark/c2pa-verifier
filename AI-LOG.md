@@ -11500,3 +11500,15 @@ README are where the disclosure lives.
   `composer check`. Reasoned: that a verdict resting on an acknowledgement
   is where an acknowledgement fault shows.
 - Decided by Maurice: 50% tree plans, 70% aimed records.
+
+## 2026-10-24 — The release commit for 0.8.1 (step 412)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, bereid 0.8.1 voor".
+- Produced: `CHANGELOG.md` (0.8.1), `README.md` (tag), `SECURITY.md`
+  (two findings, one changed rule), `src/Verifier/Verifier.php`
+  (`VERSION`), `notes/step-412-release-0.8.1.md`, a row in `NOTES.md`.
+- Measured: the affected versions from the tags; `v0.8.0` against the
+  new fixtures; the corpus against `v0.8.0`; `bin/api-check.php`;
+  `bin/package-check.php`; `composer check`. Reasoned: that versions
+  before `0.7.1` carry the first finding too (same code, not run).
+- Decided by Maurice: to prepare 0.8.1. Push, tag and advisory not yet.

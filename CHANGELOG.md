@@ -5,6 +5,56 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.8.1 — 2026-10-24
+
+A patch release. A fuzzer for the manifest graph (`bin/graph-fuzz.php`),
+which builds manifest stores in which every manifest is signed again,
+found two ways to a wrong `Trusted` in `0.8.0`, one of them present since
+`0.1.0`. Every user should upgrade. The public contract is unchanged (142
+symbols).
+
+### Security
+
+- **Only the first reference to an ingredient manifest had its hash
+  checked (SPEC-021 amendment 7). Present in `0.1.0` to `0.8.0`.** A
+  manifest named by two ingredient assertions was validated once, through
+  the first, and the second assertion's hash of it was never compared. A
+  second reference with a wrong hash left the file `Trusted`; `c2patool`
+  0.28.2 says `Invalid`, `ingredient.manifest.mismatch`. Confirmed on
+  `0.7.1` and `0.8.0`. The hash of every assertion that names a manifest
+  is now checked, under that assertion (C2PA 2.4 §15.11.3.3.2); the
+  manifest itself is still validated once.
+- **A redaction could reach the active manifest through a cycle
+  (SPEC-035 amendment 7). Present in `0.8.0`.** `0.8.0` let a redaction
+  apply only below the manifest that declares it, but "below" followed a
+  cycle, so an ingredient whose references lead back to the active
+  manifest could still declare one of its assertions redacted. With the
+  cycle acknowledged (see Changed), the file was `Trusted` with an
+  assertion of the active manifest removed. Confirmed on `0.8.0`. It needs
+  the ingredient's author to know the active manifest's label in advance.
+  No redaction of the active manifest applies now.
+
+### Changed
+
+- **A cycle can no longer be acknowledged (SPEC-070 amendment 4).** A
+  reference that closes a cycle is `assertion.ingredient.malformed`, and a
+  record in a manifest above it could acknowledge it, so a cyclic store
+  could be `Valid` or `Trusted`. `c2patool` refuses every such store. A
+  cycle is not an error in one ingredient's claim (C2PA 2.4 §18.16.12.4),
+  so no record speaks for it now, and a cyclic store is `Invalid`. Other
+  failures in such a store are acknowledged as before. No corpus file
+  holds a cycle.
+- **`bin/graph-fuzz.php`** is new: seeded, replayable plans of one to six
+  manifests with faults, ingredients, redactions and recorded statuses,
+  judged against a prediction made from the plan alone, plus fixed
+  calibration plans. It found both issues above and, run against
+  `0.7.1`, the issues fixed in `0.8.0`. Its throw-away keys are made
+  outside the repository and deleted after each run.
+
+Measured: the corpus against `0.8.0` (`vendor/` copied into the
+worktree), 0 of 1,854 runs moved, 18 new runs for the new fixtures;
+`bin/graph-fuzz.php` on seeds 407–410, 2,000 plans each, 0 findings.
+
 ## 0.8.0 — 2026-10-23
 
 A minor release. The verifier can now be driven the way the C2PA

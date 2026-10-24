@@ -82,7 +82,7 @@ once before and was wrong: see `PRED-IMG-004` below.
 
 ## Findings so far
 
-The project keeps its own record. Twenty-five cases of a wrong `Valid` or
+The project keeps its own record. Twenty-seven cases of a wrong `Valid` or
 `Trusted` have been found in it, all by the maintainers, one by the
 security review of a downstream module: two before any
 release, one after `0.1.0`, five, with eight ways to crash the verifier,
@@ -93,8 +93,9 @@ findings, fixed in `0.2.5`, one found by reading the reference
 engine's own fixes, fixed in `0.2.6`, one found by a review of `src/`,
 fixed in `0.2.8`, one found by a review of the whole of `src/` before
 `0.3.0`, fixed in it, one reported privately, fixed in `0.5.1`, one
-found by the trust matrix, fixed in `0.5.2`, and five found by a review of
-the whole code base before `0.8.0`, fixed in it:
+found by the trust matrix, fixed in `0.5.2`, five found by a review of
+the whole code base before `0.8.0`, fixed in it, and two found by a fuzzer
+for the manifest graph, fixed in `0.8.1`:
 
 - **2026-09-22, no hard binding** (`notes/step-47-no-hard-binding.md`).
   A correctly signed manifest with no `c2pa.hash.data` assertion — a
@@ -296,6 +297,26 @@ the whole code base before `0.8.0`, fixed in it:
   - *The JSON trust lists*, new in `0.8.0` and fixed before it: five list
     shapes gave `Trusted` for a removed anchor (confirmed). SPEC-079
     amendment 2.
+
+- **2026-10-24, a fuzzer for the manifest graph — fixed in `0.8.1`**
+  (`notes/step-406-graph-fuzz-plan.md` to
+  `notes/step-410-cycle-not-acknowledged.md`). `bin/graph-fuzz.php` builds
+  stores in which every manifest is signed again with throw-away keys, so
+  the only fault is the one it placed, and judges each against a
+  prediction made from its plan. Line coverage had not shown these: the
+  code at fault was executed by every run.
+  - *Only the first reference's hash checked*, `0.1.0` to `0.8.0`: a
+    second ingredient assertion naming the same manifest with a wrong hash
+    left the file `Trusted` (confirmed on `0.7.1` and `0.8.0`). SPEC-021
+    amendment 7.
+  - *A redaction of the active manifest through a cycle*, `0.8.0`: the
+    fix of `0.8.0` above followed a cycle back to the active manifest
+    (confirmed on `0.8.0`; needs the active manifest's label in advance).
+    SPEC-035 amendment 7.
+  - Not counted above, because it changed a rule rather than broke one: a
+    cyclic store whose cycle a record acknowledged could be `Trusted`
+    where `c2patool` refuses it; since `0.8.1` a cycle cannot be
+    acknowledged (SPEC-070 amendment 4).
 
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now
