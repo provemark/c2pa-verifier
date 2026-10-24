@@ -11467,3 +11467,22 @@ README are where the disclosure lives.
   needs the active manifest's label in advance.
 - Decided by Maurice: choice 1; acknowledging a cyclic reference left for a
   separate step.
+
+## 2026-10-24 — No record speaks for a cycle (step 410)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, begin met keuze 2" (a cyclic reference may not be
+  acknowledged; corpus measured first).
+- Produced: `src/Manifest/ManifestGraph.php` (`$cyclic`),
+  `src/Verifier/IngredientManifestCheck.php` (`recordedInStore()`),
+  SPEC-070 amendment 4 with AC12 and AC13, AC12 tests in
+  `tests/Unit/Verifier/AcknowledgementScopeTest.php`,
+  `tests/Fixtures/graph-fuzz-cycle-acknowledged/` and its `c2patool`
+  output, the oracle rule and two calibration plans in
+  `bin/graph-fuzz.php`, a row in `docs/comparison.md`,
+  `notes/step-410-cycle-not-acknowledged.md`, a row in `NOTES.md`.
+- Measured: cyclic statuses over the corpus (0 in 7,159 runs); the oracle
+  against the unchanged verifier; the tests red then green; four
+  mutations; the corpus before and after; `bin/graph-fuzz.php` on seeds
+  407–410; `c2patool` 0.28.2 on the fixtures; `composer check`. Reasoned:
+  that a cycle is not an error in one ingredient's claim (§18.16.12.4).
+- Decided by Maurice: choice 2, with the corpus measured first.

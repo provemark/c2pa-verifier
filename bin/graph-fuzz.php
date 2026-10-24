@@ -560,8 +560,9 @@ function gfFaults(GfPlan $plan): array
             $faults[] = new GfFault($legit ? 'ingredient.claimSignature.mismatch' : 'ingredient.manifest.mismatch', gfUrl($plan->manifest($ref['to'])->label), $ref['to']);
         }
     }
+    // a reference that closes a cycle: no record may speak for it (SPEC-070 amendment 4; c2patool refuses the store)
     foreach ($walk['cyclic'] as $ref) {
-        $faults[] = new GfFault('assertion.ingredient.malformed', gfUrl($plan->manifest($ref['from'])->label, 'c2pa.assertions/'.gfIngredientLabel($ref['k'])), $ref['from']);
+        $faults[] = new GfFault('assertion.ingredient.malformed', gfUrl($plan->manifest($ref['from'])->label, 'c2pa.assertions/'.gfIngredientLabel($ref['k'])), null);
     }
     foreach ($walk['missing'] as $ref) {
         $faults[] = new GfFault('ingredient.manifest.missing', (string) $plan->manifest($ref['from'])->ingredients[$ref['k']]->missing, null);
@@ -953,6 +954,8 @@ $calibration = [
     'ingredient: second reference, wrong hash' => $two(new GfManifest($label('m0'), ingredients: [$to('m1'), $to('m1', 'componentOf', true)]), new GfManifest($label('m1'))),
     'redacted ingredient: second reference, wrong hash' => $two(new GfManifest($label('m0'), ingredients: [$to('m1'), $to('m1', 'componentOf', true)], redacts: ['m1']), new GfManifest($label('m1'))),
     'ingredient: cycle back to the active' => $two(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1'), ingredients: [$to('m0')])),
+    'cycle back to the active, acknowledged' => $two(new GfManifest($label('m0'), ingredients: [$to('m1', 'componentOf', false, $rec('assertion.ingredient.malformed', gfUrl($label('m1'), 'c2pa.assertions/c2pa.ingredient.v3')))]), new GfManifest($label('m1'), ingredients: [$to('m0')])),
+    'cycle below the active, acknowledged' => $three(new GfManifest($label('m0'), ingredients: [$to('m1', 'componentOf', false, $rec('assertion.ingredient.malformed', gfUrl($label('m2'), 'c2pa.assertions/c2pa.ingredient.v3')))]), new GfManifest($label('m1'), ingredients: [$to('m2')]), new GfManifest($label('m2'), ingredients: [$to('m1')])),
     'ingredient: names itself' => $two(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1'), ingredients: [$to('m1')])),
     'ingredient: missing manifest' => $one(new GfManifest($label('m0'), ingredients: [$to('missing')])),
     'acknowledged by the parent' => $two(new GfManifest($label('m0'), ingredients: [$to('m1', 'componentOf', false, $rec('claimSignature.mismatch', $sig1))]), new GfManifest($label('m1'), faults: ['sig'])),

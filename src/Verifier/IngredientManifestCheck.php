@@ -262,17 +262,24 @@ final readonly class IngredientManifestCheck
      * (amendment 6): a manifest nothing names is never validated, so what it recorded vouches for
      * nothing. Each record carries the manifests that lie below the one holding it (amendment 3): a
      * record speaks only for those, never for the manifest that holds it nor for one above or beside it
-     * (C2PA 2.4 §18.16.12.4: a statement by the manifest that takes the ingredient, about it).
+     * (C2PA 2.4 §18.16.12.4: a statement by the manifest that takes the ingredient, about it). A record
+     * of a reference that closes a cycle is left out (SPEC-070 amendment 4): a cycle is the store's own
+     * shape, not an ingredient's error that a signer could have acknowledged, and c2patool refuses such
+     * a store outright.
      *
      * @return list<array{key: string, below: list<string>}>
      */
     public static function recordedInStore(ManifestGraph $graph): array
     {
         $records = [];
+        $cyclic = array_map(static fn (string $url): string => StatusCode::AssertionIngredientMalformed->value.' '.$url, $graph->cyclic);
         foreach ([$graph->active, ...array_map('strval', array_keys($graph->referenced))] as $label) {
             $below = null;
             foreach ($graph->ingredients[$label] ?? [] as $ingredient) {
                 foreach (self::recorded($ingredient) as $key) {
+                    if (in_array($key, $cyclic, true)) {
+                        continue;
+                    }
                     $below ??= $graph->below($label);
                     $records[$key."\n".$label] = ['key' => $key, 'below' => $below];
                 }

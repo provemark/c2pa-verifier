@@ -345,6 +345,49 @@ and B's record of B's own faults does not: the file is `Invalid`.
   after, the same state, codes and acknowledgements, as measured with a
   copied `vendor/`.
 
+### Amendment 4 — no record speaks for a cycle (approved by Maurice van Loon, 2026-10-24, step 410: "akkoord, begin met keuze 2")
+
+**Found by the graph fuzzer.** A reference that leads back into the path
+of the walk is a cycle, reported as `assertion.ingredient.malformed` on the
+assertion that closes it (SPEC-020). Under amendment 3 a manifest above
+that assertion could acknowledge it, and in step 407's random plans most
+acknowledgements were of exactly this status. With it acknowledged, a
+cyclic store came out `Valid` or `Trusted`. That was the route step 409's
+redaction of the active manifest used (SPEC-035 amendment 7).
+`c2patool` 0.28.2 refuses every cyclic store ("cyclic ingredient found in
+path", exit 1, no report).
+
+C2PA 2.4 §18.16.12.4 lets a claim generator acknowledge validation errors
+"in the ingredient's C2PA Claim". A cycle is not an error in one
+ingredient's claim. It is the shape of the store as a whole, and it
+involves the acknowledging manifest's own reference. There is nothing a
+signer could have checked and accepted.
+
+**The rule.** `ManifestGraph` names the assertions whose reference closes a
+cycle (`$cyclic`). `IngredientManifestCheck::recordedInStore()` leaves out
+every record of `assertion.ingredient.malformed` on one of those
+assertions, so no record acknowledges it and a cyclic store is `Invalid`.
+A malformed assertion that closes no cycle (one this verifier could not
+decode) can still be acknowledged under amendment 3. Other faults in a
+cyclic store can be too.
+
+**Criteria added.**
+
+- **AC12 — a cycle is never acknowledged** *(required: error path)*: the
+  graph names the closing assertion of a short and a long cycle and none
+  in a chain; a record of that status held by the active manifest
+  acknowledges nothing, and the verdict is `Invalid`; in the same cyclic
+  graph a record of another fault below it still acknowledges that fault,
+  and a non-cyclic malformed assertion is still acknowledged; end to end,
+  `graph-fuzz-cycle-acknowledged/cycle-back-to-the-active-acknowledged.png`
+  and `cycle-below-the-active-acknowledged.png` are `Invalid` with only
+  `assertion.ingredient.malformed` unacknowledged, and `a-chain-of-three.png`
+  is `Trusted`.
+- **AC13 — nothing else moves**: no corpus file holds a cyclic reference
+  (measured: 0 cyclic statuses in 7,159 runs, every fixture without
+  settings, with `trust/full.settings.json` and with each directory's own
+  settings), and every corpus run is the same before and after.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -364,6 +407,8 @@ least one test; every source file maps back to this spec.
 | AC9 (amendment 3) | tests/Unit/Verifier/AcknowledgementScopeTest.php :: AC9: a manifest cannot acknowledge its own faults, nor its parent's hash of it; AC9: a cycle does not put a manifest below itself (2 datasets) / SPEC-070 | src/Verifier/IngredientManifestCheck.php :: recordedInStore(), below(), recordedBelow(), acknowledge() |
 | AC10 (amendment 3) | tests/Unit/Verifier/AcknowledgementScopeTest.php :: AC10: a record speaks for what lies below it, and for nothing above or beside it (6 datasets); AC10: a status whose url names no manifest is never acknowledged / SPEC-070 | src/Verifier/IngredientManifestCheck.php :: recordedBelow() |
 | AC11 (amendment 3) | the corpus before and after (notes/step-389-acknowledgement-scope.md); every existing test, four of them given the new record shape | — |
+| AC12 (amendment 4) | tests/Unit/Verifier/AcknowledgementScopeTest.php :: AC12 (five tests, seven cases) / SPEC-070 | src/Manifest/ManifestGraph.php :: $cyclic, descend(); src/Verifier/IngredientManifestCheck.php :: recordedInStore() |
+| AC13 (amendment 4) | the corpus before and after (notes/step-410-cycle-not-acknowledged.md) | — |
 
 The tests were run red first: 6 failed (the property, the method and the
 rendering did not exist yet). Building showed that recorded successes came

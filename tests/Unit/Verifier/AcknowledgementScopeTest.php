@@ -111,3 +111,80 @@ it('AC10: a status whose url names no manifest is never acknowledged', function 
 
     expect($out[0]->acknowledged)->toBeFalse();
 })->group('SPEC-070');
+
+// AC12, amendment 4 (step 410): no record speaks for a reference that closes a cycle
+
+/** The cyclic status of a graph: the `assertion.ingredient.malformed` the walk reported for the reference back into the path. */
+function spec070Cyclic(ManifestGraph $graph): ValidationStatus
+{
+    $cyclic = array_values(array_filter($graph->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::AssertionIngredientMalformed));
+    expect($cyclic)->toHaveCount(1);
+
+    return $cyclic[0];
+}
+
+it('AC12: the graph names every reference that closes a cycle', function (): void {
+    $short = ManifestGraph::fromIngredients('A', ['A' => [spec070Ingredient('A', 'B', [])], 'B' => [spec070Ingredient('B', 'A', [])]], []);
+    $long = ManifestGraph::fromIngredients('A', ['A' => [spec070Ingredient('A', 'B', [])], 'B' => [spec070Ingredient('B', 'C', [])], 'C' => [spec070Ingredient('C', 'B', [])]], []);
+    $none = ManifestGraph::fromIngredients('A', ['A' => [spec070Ingredient('A', 'B', [])], 'B' => [spec070Ingredient('B', 'C', [])], 'C' => []], []);
+
+    expect($short->cyclic)->toBe([spec070Cyclic($short)->url])
+        ->and($short->cyclic)->toBe(['self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient'])
+        ->and($long->cyclic)->toBe(['self#jumbf=/c2pa/C/c2pa.assertions/c2pa.ingredient'])
+        ->and($none->cyclic)->toBe([]);
+})->group('SPEC-070');
+
+it('AC12: a record of a cyclic reference acknowledges nothing, whoever above it holds it', function (bool $long): void {
+    $closer = $long ? 'C' : 'B';
+    $record = ['code' => 'assertion.ingredient.malformed', 'url' => "self#jumbf=/c2pa/{$closer}/c2pa.assertions/c2pa.ingredient"];
+    $a = [spec070Ingredient('A', 'B', [$record])];   // the active manifest records it
+    $graph = ManifestGraph::fromIngredients('A', $long
+        ? ['A' => $a, 'B' => [spec070Ingredient('B', 'C', [])], 'C' => [spec070Ingredient('C', 'B', [])]]
+        : ['A' => $a, 'B' => [spec070Ingredient('B', 'A', [])]], []);
+    $out = (new IngredientManifestCheck)->acknowledge([spec070Cyclic($graph)], IngredientManifestCheck::recordedInStore($graph), 'A', null);
+
+    expect($out[0]->url)->toBe($record['url'])
+        ->and($out[0]->acknowledged)->toBeFalse()
+        ->and(ValidationResult::fromStatuses($out, [])->state)->toBe(ValidationState::Invalid);
+})->with([
+    'B takes A back' => [false],
+    'C takes B back, below B' => [true],
+])->group('SPEC-070');
+
+it('AC12: in a graph with a cycle, a record still acknowledges another fault below it (amendment 3)', function (): void {
+    $record = ['code' => 'claimSignature.mismatch', 'url' => 'self#jumbf=/c2pa/B/c2pa.signature'];
+    $out = spec070Acknowledged(
+        ['A' => [spec070Ingredient('A', 'B', [$record])], 'B' => [spec070Ingredient('B', 'A', [])]],
+        [new ValidationStatus(StatusCode::ClaimSignatureMismatch, $record['url'], 'x', 'self#jumbf=/c2pa/A/c2pa.assertions/c2pa.ingredient')],
+    );
+
+    expect($out[0]->acknowledged)->toBeTrue();
+})->group('SPEC-070');
+
+it('AC12: a malformed ingredient assertion that closes no cycle is still acknowledged by a record above it', function (): void {
+    $url = 'self#jumbf=/c2pa/B/c2pa.assertions/c2pa.ingredient__1';
+    $malformed = new ValidationStatus(StatusCode::AssertionIngredientMalformed, $url, 'x', $url);
+    $graph = ManifestGraph::fromIngredients('A', [
+        'A' => [spec070Ingredient('A', 'B', [['code' => 'assertion.ingredient.malformed', 'url' => $url]])],
+        'B' => [],
+    ], [], ['B' => [$malformed]]);
+    $out = (new IngredientManifestCheck)->acknowledge($graph->statuses, IngredientManifestCheck::recordedInStore($graph), 'A', null);
+
+    expect($graph->cyclic)->toBe([])
+        ->and($out)->toHaveCount(1)
+        ->and($out[0]->acknowledged)->toBeTrue();
+})->group('SPEC-070');
+
+it('AC12: end to end — a cycle acknowledged by the active manifest is Invalid; a chain without one stays Trusted', function (string $file, string $state): void {
+    $report = spec020Verify("graph-fuzz-cycle-acknowledged/{$file}.png", 'graph-fuzz-cycle-acknowledged/graph-fuzz-root.settings.json');
+
+    expect($report->result->state->value)->toBe($state);
+    if ($state === 'Invalid') {
+        expect(array_values(array_map(static fn (ValidationStatus $s): string => $s->code->value, array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code->isFailure() && ! $s->acknowledged))))
+            ->toBe(['assertion.ingredient.malformed']);
+    }
+})->with([
+    ['cycle-back-to-the-active-acknowledged', 'Invalid'],
+    ['cycle-below-the-active-acknowledged', 'Invalid'],
+    ['a-chain-of-three', 'Trusted'],
+])->group('SPEC-070');

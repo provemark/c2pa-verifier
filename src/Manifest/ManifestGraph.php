@@ -44,6 +44,7 @@ final readonly class ManifestGraph
      * @param  list<string>  $redactedAssertions  every claim's redacted_assertions, collected (SPEC-021)
      * @param  list<ValidationStatus>  $statuses  each scoped to its ingredient assertion
      * @param  list<string>  $walk  the assertion urls in walk order
+     * @param  list<string>  $cyclic  the urls of the assertions whose reference closes a cycle (SPEC-070 amendment 4)
      */
     public function __construct(
         public string $active,
@@ -54,6 +55,7 @@ final readonly class ManifestGraph
         public array $redactedAssertions,
         public array $statuses,
         public array $walk,
+        public array $cyclic = [],
     ) {}
 
     /**
@@ -109,8 +111,9 @@ final readonly class ManifestGraph
         $statuses = [];
         $walk = [];
         $visited = [];
+        $cyclic = [];
 
-        self::descend($active, 0, [], $ingredients, $malformed, $referenced, $missing, $statuses, $walk, $visited);
+        self::descend($active, 0, [], $ingredients, $malformed, $referenced, $missing, $statuses, $walk, $visited, $cyclic);
 
         $unreferenced = [];
         foreach (array_keys($ingredients) as $label) {
@@ -119,7 +122,7 @@ final readonly class ManifestGraph
             }
         }
 
-        return new self($active, $ingredients, $referenced, $missing, $unreferenced, $redactedAssertions, $statuses, $walk);
+        return new self($active, $ingredients, $referenced, $missing, $unreferenced, $redactedAssertions, $statuses, $walk, $cyclic);
     }
 
     /**
@@ -134,10 +137,11 @@ final readonly class ManifestGraph
      * @param  list<ValidationStatus>  $statuses
      * @param  list<string>  $walk
      * @param  array<string, true>  $visited
+     * @param  list<string>  $cyclic
      *
      * @throws ManifestException general.error when the depth bound is exceeded
      */
-    private static function descend(string $label, int $depth, array $path, array $ingredients, array $malformed, array &$referenced, array &$missing, array &$statuses, array &$walk, array &$visited): void
+    private static function descend(string $label, int $depth, array $path, array $ingredients, array $malformed, array &$referenced, array &$missing, array &$statuses, array &$walk, array &$visited, array &$cyclic): void
     {
         if ($depth > self::MAX_DEPTH) {
             throw new ManifestException(sprintf('the chain of ingredient manifests is deeper than %d', self::MAX_DEPTH), StatusCode::GeneralError);
@@ -172,6 +176,7 @@ final readonly class ManifestGraph
                     sprintf('ingredient assertion %s: the reference to %s is cyclic', $ingredient->label, $target),
                     $ingredient->url,
                 );
+                $cyclic[] = $ingredient->url;
 
                 continue;
             }
@@ -183,7 +188,7 @@ final readonly class ManifestGraph
             }
             $referenced[$target][] = $ingredient->url;
             if (! array_key_exists($target, $visited)) {
-                self::descend($target, $depth + 1, $path, $ingredients, $malformed, $referenced, $missing, $statuses, $walk, $visited);
+                self::descend($target, $depth + 1, $path, $ingredients, $malformed, $referenced, $missing, $statuses, $walk, $visited, $cyclic);
             }
         }
     }
