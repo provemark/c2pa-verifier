@@ -11407,3 +11407,17 @@ README are where the disclosure lives.
   a fresh install from Packagist and three calls on it.
 - Decided by Maurice: push, tag; no advisory; c2patool's behaviour on the
   offset rewrite not named.
+
+## 2026-10-24 — A plan for testing the manifest graph (step 406)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: what to check or do next on the verifier at 0.8.0; then "schrijf
+  de meetopzet voor punt 2" (test the ingredient and graph part), and
+  "akkoord, drie keer ja, begin met step 406".
+- Produced: `notes/step-406-graph-fuzz-plan.md`, a row in `NOTES.md`.
+- Measured: line coverage with pcov of five graph classes under
+  `bin/fuzz.php 406 5 --trust`, `406 0 --trust` and the Pest suite; the
+  unmutated run on a `v0.7.1` worktree; the 58 suspects against
+  `c2patool` 0.27.22, 0.28.1 and 0.28.2. Reasoned: that byte flips cannot
+  yield a correctly signed graph of another shape.
+- Decided by Maurice: the plan; the attacker may hold a trusted key;
+  `c2patool` compared on suspects; the generator committed to `bin/`.
