@@ -11539,3 +11539,19 @@ README are where the disclosure lives.
   Reasoned: which of the 0.2.2 fixes the 44 active-update plans belong to.
 - Decided by Maurice: the extension as explained; calibration against an
   old checkout.
+
+## 2026-10-24 — The update-manifest rules skip an unreached manifest (step 415)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "leg het verschil bij het onbereikte update-manifest eerst uit";
+  "akkoord, begin met amendment 8".
+- Produced: SPEC-022 amendment 8 and AC11; `UpdateManifestCheck::check()`
+  and `Verifier` (the graph's `unreferenced` list skipped);
+  `tests/Fixtures/graph-fuzz-update/` and its `c2patool` output; AC11 in
+  `UpdateManifestTest`; two calibration plans and the reached-only rule in
+  `bin/graph-fuzz.php`; the §15.11.3.3 row in `docs/reading-c2pa-2.4.md`;
+  `notes/step-415-unreached-update-manifests.md`, a row in `NOTES.md`.
+- Measured: AC11 red, then green; two mutations; `c2patool` 0.28.2 and
+  0.27.22 on the five fixtures; the corpus (1,882 runs) against `v0.8.1`;
+  graph fuzz calibration and seeds 414–416; `composer check`. Reasoned:
+  that the strictness protected no verdict.
+- Decided by Maurice: amendment 8.

@@ -360,13 +360,14 @@ final readonly class Verifier
         }
 
         // an update manifest lives under §11.2.3's rules, and a standard manifest under §15.10.1.2's
-        // one-parent rule — both need the graph's ingredients (SPEC-022)
+        // one-parent rule — both need the graph's ingredients, and neither is applied to a manifest the
+        // walk never reaches (SPEC-022 amendment 8)
         if ($graph !== null) {
             $scopes = [];
             foreach ($graph->referenced as $referenced => $urls) {
                 $scopes[$referenced] = $urls[0];
             }
-            $statuses = [...$statuses, ...$this->updateManifests->check($manifestStore, $graph->ingredients, $scopes)];
+            $statuses = [...$statuses, ...$this->updateManifests->check($manifestStore, $graph->ingredients, $scopes, $graph->unreferenced)];
         }
 
         // the manifests the graph found: their box hash and everything the active manifest gets

@@ -271,6 +271,20 @@ variants made in the tests-first step.
     manifest. The state and the failure codes equal both `c2patool`
     versions'.
 
+- **AC11 — the rules apply to the manifests the walk reaches** *(amendment 8)*
+  - Given `tests/Fixtures/graph-fuzz-update/`: a `c2um` that no ingredient
+    names, with the action `c2pa.edited`; a standard manifest that no
+    ingredient names, with two `parentOf` ingredients; the same update
+    manifest reached through an ingredient of the active manifest; an
+    active manifest with two `parentOf` ingredients; and an update
+    manifest on a standard one (the control)
+  - When the Verifier runs with the fixtures' settings
+  - Then the two unreached ones are `Trusted` with no failure, the
+    reached update manifest is `Invalid` with `manifest.update.invalid`,
+    the active manifest with two parents is `Invalid` with
+    `manifest.multipleParents`, and the control is `Trusted`; each state
+    and failure list equals `c2patool` 0.28.2's (recorded) and 0.27.22's.
+
 ## References
 
 - Specification: C2PA 2.4 §11.2.3 (update manifests: the box type, the
@@ -474,6 +488,36 @@ actions check.
    AC6, so a future `c2patool` that returns to the rule shows up as a
    failing test. Named in `docs/comparison.md`.
 
+8. **2026-10-24, step 415, measured** *(decided by Maurice van Loon, 2026-10-24: "akkoord, begin met amendment 8")* —
+   the rules of §11.2.3 and §15.10.1.2 apply to the manifests the walk
+   reaches, not to every manifest in the store. The Scope said "run on
+   **every** manifest in the store", and `UpdateManifestCheck::check()`
+   did so, unreached manifests included. Found by the graph fuzzer (step
+   414): a `c2um` that nothing references, with an action §11.2.3 does
+   not allow, made the file `Invalid` here and was `Trusted` in
+   `c2patool` 0.27.22 and 0.28.2. A standard manifest that nothing
+   references, with two parents, the same.
+
+   C2PA 2.4 §15.11.3.3: "Validators should ignore any additional C2PA
+   Manifests that appear in the C2PA Manifest Store but are not in the
+   list of ingredient manifests." This verifier follows that everywhere
+   else (`ManifestGraph::$unreferenced`, `M7AbsenceTest`, conformance
+   `PRED-INGR-006`): an unreached manifest with a broken signature leaves
+   the file `Trusted`, so a lesser fault of the same manifest could not
+   be allowed to weigh more. The strictness protected no verdict
+   (ADR-0005). An unreached manifest's redactions and records count for
+   nothing already (SPEC-035 amendment 5, SPEC-021 amendment 6), and the
+   binding manifest is found up `parentOf` from the active one, so it is
+   always reached. Step 150's fault, where a `c2um` nothing referenced
+   did change a verdict, stays fixed and stays in the fuzzer's
+   calibration.
+
+   `check()` takes the graph's `unreferenced` list and skips those
+   manifests. **Weight**: a verdict moves from `Invalid` to `Trusted`, for
+   a fault in a manifest the specification says to ignore. Over the
+   corpus (1,882 runs) only the two new unreached fixtures move. New
+   criterion AC11.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -491,5 +535,6 @@ least one test; every source file maps back to this spec.
 | AC8 | tests/Unit/Verifier/UpdateManifestTest.php :: AC8 / SPEC-022 | src/Manifest/Claim.php (an empty `claim_generator_info`) |
 | AC9 | tests/Unit/Verifier/UpdateManifestTest.php :: AC9 / SPEC-022; tests/Unit/Verifier/VerifierTest.php :: AC12 / SPEC-013 | tests/Pest.php; the whole verification path |
 | AC10 | tests/Unit/Verifier/UpdateManifestTest.php :: AC10 / SPEC-022 | src/Verifier/Verifier.php (`bindingOf()`, `hasOwnHardBinding()`, the adjustment only for an active update manifest); bin/make-standard-binding-variants.php |
+| AC11 (amendment 8) | tests/Unit/Verifier/UpdateManifestTest.php :: AC11 / SPEC-022 | src/Manifest/UpdateManifestCheck.php (`check()`, `$unreferenced`); src/Verifier/Verifier.php; tests/Fixtures/graph-fuzz-update/ (`bin/graph-fuzz.php --export`) |
 
 `src/Manifest/UpdateManifestCheck.php` maps to this spec; `StatusCode`'s three new cases are its. Measured 2026-09-22: 9 red → 9 green, `composer check` exit 0, 345 tests, 208 fuzz runs with no fault.

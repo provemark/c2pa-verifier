@@ -249,3 +249,36 @@ it('AC10: a standard active manifest without a binding gets c2patool\'s verdict 
             ->and(spec022Failures($report))->toBe(['assertion.dataHash.mismatch'], $name);
     }
 })->group('SPEC-022');
+
+// AC11, amendment 8 (step 415): §11.2.3 and §15.10.1.2 apply to the manifests the walk reaches, as every other
+// check does (§15.11.3.3); oracles c2patool 0.28.2 (recorded) and 0.27.22 (the same verdicts, step 415)
+it('AC11: the update and one-parent rules apply to the manifests the walk reaches, not to an unreached one', function (string $file, string $state, array $failures): void {
+    $report = spec020Verify("graph-fuzz-update/{$file}.png", 'graph-fuzz-update/graph-fuzz-root.settings.json');
+    $oracle = spec020Oracle("graph-fuzz-update/{$file}.json");
+    $results = is_array($oracle['validation_results'] ?? null) ? $oracle['validation_results'] : [];
+    $active = is_array($results['activeManifest'] ?? null) ? $results['activeManifest'] : [];
+    $oracleFailures = [];
+    foreach (is_array($active['failure'] ?? null) ? $active['failure'] : [] as $status) {
+        assert(is_array($status) && is_string($status['code']));
+        $oracleFailures[] = $status['code'];
+    }
+    foreach (is_array($results['ingredientDeltas'] ?? null) ? $results['ingredientDeltas'] : [] as $delta) {
+        assert(is_array($delta) && is_array($delta['validationDeltas']) && is_array($delta['validationDeltas']['failure']));
+        foreach ($delta['validationDeltas']['failure'] as $status) {
+            assert(is_array($status) && is_string($status['code']));
+            $oracleFailures[] = $status['code'];
+        }
+    }
+    sort($oracleFailures);
+
+    expect($report->result->state->value)->toBe($state)
+        ->and($report->result->state->value)->toBe($oracle['validation_state'])
+        ->and(spec022Failures($report))->toBe($failures)
+        ->and(spec022Failures($report))->toBe(array_values(array_unique($oracleFailures)));
+})->with([
+    'an unreached update manifest with an action §11.2.3 does not allow' => ['an-unreached-update-manifest-with-a-fault', 'Trusted', []],
+    'an unreached standard manifest with two parents' => ['an-unreached-standard-manifest-with-two-parents', 'Trusted', []],
+    'the same update manifest, reached through an ingredient' => ['update-below-its-fault', 'Invalid', ['manifest.update.invalid']],
+    'the active manifest with two parents' => ['standard-two-parents', 'Invalid', ['manifest.multipleParents']],
+    'an update manifest on a standard one (the control)' => ['update-on-a-standard-manifest', 'Trusted', []],
+])->group('SPEC-022');

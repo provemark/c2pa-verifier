@@ -30,17 +30,23 @@ final readonly class UpdateManifestCheck
     public const array ALLOWED_ACTIONS = ['c2pa.edited.metadata', 'c2pa.opened', 'c2pa.published', 'c2pa.redacted'];
 
     /**
-     * Every manifest in the store, each rule of §11.2.3 with c2pa-rs's code. A status for a manifest
-     * that is not the active one is scoped to the ingredient assertion that named it (SPEC-021).
+     * Every manifest the walk reaches, each rule of §11.2.3 with c2pa-rs's code. A status for a manifest
+     * that is not the active one is scoped to the ingredient assertion that named it (SPEC-021). A
+     * manifest the walk never reaches is left out, as every other check leaves it out (§15.11.3.3;
+     * SPEC-022 amendment 8).
      *
      * @param  array<string, list<IngredientAssertion>>  $ingredients  per manifest label, from the graph
      * @param  array<string, string>  $scopes  manifest label => the assertion url that named it
+     * @param  list<string>  $unreferenced  the manifests the walk never reaches
      * @return list<ValidationStatus>
      */
-    public function check(ManifestStore $store, array $ingredients, array $scopes = []): array
+    public function check(ManifestStore $store, array $ingredients, array $scopes = [], array $unreferenced = []): array
     {
         $statuses = [];
         foreach ($store->manifests as $label => $manifest) {
+            if (in_array($label, $unreferenced, true)) {
+                continue;
+            }
             $list = $ingredients[$label] ?? [];
             $parents = 0;
             foreach ($list as $ingredient) {

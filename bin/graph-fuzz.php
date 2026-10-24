@@ -651,10 +651,8 @@ function gfFaults(GfPlan $plan): array
         $faults[] = new GfFault('ingredient.manifest.missing', (string) $plan->manifest($ref['from'])->ingredients[$ref['k']]->missing, null);
     }
     // §11.2.3's rules for an update manifest and §15.10.1.2's one parent for a standard one, on the claim of
-    // every manifest in the store, reached or not (SPEC-022's Scope; c2patool 0.28.2 checks only what it
-    // reaches, step 414). An unreached manifest lies below no reached one, so nothing acknowledges it
-    foreach (array_keys($plan->manifests) as $id) {
-        $id = (string) $id;
+    // every manifest the walk reaches, as every other check (§15.11.3.3; SPEC-022 amendment 8)
+    foreach ($walk['reached'] as $id) {
         $m = $plan->manifest($id);
         $claim = gfUrl($m->label, 'c2pa.claim.v2');
         $parents = count(array_filter($m->ingredients, static fn (GfIngredient $i): bool => $i->rel === 'parentOf'));
@@ -1107,6 +1105,8 @@ $calibration = [
     'update below a standard manifest' => $three(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1'), ingredients: [$to('m2', 'parentOf')], update: true), new GfManifest($label('m2'))),
     'update below, its fault acknowledged' => $three(new GfManifest($label('m0'), ingredients: [$to('m1', 'componentOf', false, $rec('manifest.update.invalid', gfUrl($label('m1'), 'c2pa.claim.v2')))]), new GfManifest($label('m1'), faults: ['uaction'], ingredients: [$to('m2', 'parentOf')], update: true), new GfManifest($label('m2'))),
     'binding manifest: its fault not acknowledged' => $two(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf', false, $rec('claimSignature.mismatch', $sig1))], update: true), new GfManifest($label('m1'), faults: ['sig'])),
+    'update below, its fault' => $three(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1'), faults: ['uaction'], ingredients: [$to('m2', 'parentOf')], update: true), new GfManifest($label('m2'))),
+    'an unreached standard manifest with two parents' => $three(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf')]), new GfManifest($label('m1')), new GfManifest($label('m2'), ingredients: [$to('m1', 'parentOf'), $to('m1', 'parentOf')])),
     'an unreached update manifest with a fault' => $three(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf')]), new GfManifest($label('m1')), new GfManifest($label('m2'), faults: ['uaction'], ingredients: [$to('m1', 'parentOf')], update: true)),
     'standard: two parents' => $three(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf'), $to('m2', 'parentOf')]), new GfManifest($label('m1')), new GfManifest($label('m2'))),
     'step 150: a standard manifest borrows its parent\'s binding beside a c2um' => $three(new GfManifest($label('m0'), faults: ['binding'], ingredients: [$to('m1', 'parentOf')]), new GfManifest($label('m1')), new GfManifest($label('m2'), ingredients: [$to('m1', 'parentOf')], update: true)),
