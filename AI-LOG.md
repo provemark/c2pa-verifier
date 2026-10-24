@@ -11421,3 +11421,14 @@ README are where the disclosure lives.
   yield a correctly signed graph of another shape.
 - Decided by Maurice: the plan; the attacker may hold a trusted key;
   `c2patool` compared on suspects; the generator committed to `bin/`.
+
+## 2026-10-24 — A fuzzer for the manifest graph (step 407)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, begin met step 407".
+- Produced: `bin/graph-fuzz.php`, `notes/step-407-graph-fuzz.md`, a row in
+  `NOTES.md`.
+- Measured: the calibration and 2,000 random plans (seed 407) against
+  this tree and against a `v0.7.1` worktree; `c2patool` 0.28.2 on the
+  three 0.8.0 findings; `composer check`. Reasoned: how hard finding 2 is
+  to use.
+- Decided by Maurice: none in this step beyond step 406's.
