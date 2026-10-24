@@ -227,6 +227,13 @@ files with the same trust anchors.
 `timeStamp.untrusted` here where `c2patool` says `timeStamp.trusted`
 without an anchor — 34 corpus files, informational, no verdict changes.
 
+A manifest named by more than one ingredient assertion: `c2patool` 0.28.2
+validates it again under every assertion that names it, so each of those
+deltas repeats its signature, trust and hashed-URI statuses. Here it is
+validated once, under the first assertion (SPEC-021 AC9), and each further
+assertion carries only the check of its own hash (SPEC-021 amendment 7).
+The verdict and the failures are the same (`graph-fuzz/` fixtures, step 408).
+
 ## Trust anchors with dates (SPEC-079)
 
 Given the conformance programme's JSON lists (ETSI TS 119 602 LoTE), this

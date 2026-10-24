@@ -320,3 +320,63 @@ it('AC11: a fault of the update manifest\'s binding manifest is never dropped; a
         // without an update manifest there is no binding manifest to guard, and all three are acknowledged
         ->and($unmarked($check->acknowledge($statuses, $recorded, 'A', null)))->toBe([]);
 })->group('SPEC-021');
+
+// AC12, amendment 7 (step 408): every reference's hash, not only the first one's
+const SPEC021_GRAPH_SETTINGS = 'graph-fuzz/graph-fuzz-root.settings.json';
+
+/**
+ * The hash statuses of a report, as "code under-assertion" pairs: the assertion label each was found under.
+ *
+ * @return list<string>
+ */
+function spec021HashStatuses(VerificationReport $report): array
+{
+    $hash = [StatusCode::IngredientManifestValidated, StatusCode::IngredientManifestMismatch, StatusCode::IngredientClaimSignatureValidated, StatusCode::IngredientClaimSignatureMismatch];
+    $out = [];
+    foreach ($report->result->statuses as $status) {
+        if (in_array($status->code, $hash, true)) {
+            $out[] = $status->code->value.' '.substr((string) $status->ingredientUri, (int) strrpos((string) $status->ingredientUri, '/') + 1);
+        }
+    }
+
+    return $out;
+}
+
+it('AC12: a manifest named twice has the hash of each reference checked, under that reference', function (string $file, array $hashes): void {
+    $report = spec020Verify("graph-fuzz/{$file}.png", SPEC021_GRAPH_SETTINGS);
+    $oracle = spec020Oracle("graph-fuzz/{$file}.json");
+
+    expect(spec021HashStatuses($report))->toBe($hashes)
+        ->and($report->result->state->value)->toBe($oracle['validation_state'])
+        ->and($report->result->state)->toBe(ValidationState::Invalid);
+    // c2patool's failures, delta by delta
+    foreach (spec020Deltas($oracle) as $delta) {
+        $theirs = array_map(static fn (array $s): string => $s['code'], $delta['validationDeltas']['failure']);
+        $ours = array_values(array_map(static fn (ValidationStatus $s): string => $s->code->value, array_filter(
+            spec021Scoped($report),
+            static fn (ValidationStatus $s): bool => $s->ingredientUri === $delta['ingredientAssertionURI'] && $s->code->isFailure() && ! $s->acknowledged,
+        )));
+        expect($ours)->toBe($theirs, $delta['ingredientAssertionURI']);
+    }
+})->with([
+    'the box hash' => ['ingredient-second-reference-wrong-hash', ['ingredient.manifest.validated c2pa.ingredient.v3', 'ingredient.manifest.mismatch c2pa.ingredient.v3__1']],
+    'the claim-signature hash, for a manifest redacted from' => ['redacted-ingredient-second-reference-wrong-hash', ['ingredient.claimSignature.validated c2pa.ingredient.v3', 'ingredient.claimSignature.mismatch c2pa.ingredient.v3__1']],
+])->group('SPEC-021');
+
+it('AC12: the manifest itself is still validated once, under the first reference (AC9)', function (): void {
+    $report = spec020Verify('graph-fuzz/ingredient-second-reference-wrong-hash.png', SPEC021_GRAPH_SETTINGS);
+    $signature = array_values(array_filter(spec021Scoped($report), static fn (ValidationStatus $s): bool => $s->code === StatusCode::ClaimSignatureValidated));
+
+    expect($signature)->toHaveCount(1)
+        ->and((string) $signature[0]->ingredientUri)->toEndWith('/c2pa.assertions/c2pa.ingredient.v3');
+})->group('SPEC-021');
+
+it('AC12: the controls — one reference with a wrong hash, and no fault at all — are what c2patool says', function (string $file, string $state): void {
+    $report = spec020Verify("graph-fuzz/{$file}.png", SPEC021_GRAPH_SETTINGS);
+
+    expect($report->result->state->value)->toBe($state)
+        ->and($state)->toBe(spec020Oracle("graph-fuzz/{$file}.json")['validation_state']);
+})->with([
+    ['one-manifest', 'Trusted'],
+    ['ingredient-wrong-hash', 'Invalid'],
+])->group('SPEC-021');

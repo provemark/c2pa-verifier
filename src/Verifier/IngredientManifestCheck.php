@@ -67,7 +67,8 @@ final readonly class IngredientManifestCheck
     ) {}
 
     /**
-     * Every manifest the graph reached, in walk order, each scoped to the assertion that named it first.
+     * Every manifest the graph reached, in walk order, each scoped to the assertion that named it first;
+     * the hash of every assertion that names it, each under that assertion (SPEC-021 amendment 7).
      *
      * @return list<ValidationStatus>
      */
@@ -90,6 +91,13 @@ final readonly class IngredientManifestCheck
             $manifest = $store->manifests[$label];
             $mine = $this->hash($manifest, $ingredient);
             $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests), $assertions, $responses, $now, $clock)];
+            // every later reference states a hash of its own, and each is checked under the assertion that
+            // states it (amendment 7; C2PA 2.4 §15.11.3.3.2); the manifest itself is validated once (AC9)
+            foreach (array_slice($urls, 1) as $url) {
+                if (isset($byUrl[$url])) {
+                    $mine = [...$mine, ...$this->hash($manifest, $byUrl[$url])];
+                }
+            }
             $statuses = [...$statuses, ...$mine];
         }
 

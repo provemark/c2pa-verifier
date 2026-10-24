@@ -286,6 +286,21 @@ multi-manifest files.
     A fault of the manifest that supplies an update manifest's hard binding
     is never dropped, whoever recorded it.
 
+- **AC12 — every reference's hash is checked** *(amendment 7; required: error path)*
+  - Given `graph-fuzz/ingredient-second-reference-wrong-hash.png`, whose
+    active manifest names one ingredient manifest in two assertions, the
+    first with the right hashes and the second with wrong ones, and
+    `graph-fuzz/redacted-ingredient-second-reference-wrong-hash.png`, the
+    same with that manifest redacted from (so the claim-signature hash
+    decides, C2PA 2.4 §15.11.3.3.1)
+  - When the Verifier runs with `graph-fuzz/graph-fuzz-root.settings.json`
+  - Then the first assertion carries `ingredient.manifest.validated`
+    (`ingredient.claimSignature.validated`), the second
+    `ingredient.manifest.mismatch` (`ingredient.claimSignature.mismatch`),
+    the manifest's own statuses appear once, under the first assertion
+    (AC9), and the state is `Invalid` with `c2patool` 0.28.2's failures
+    delta by delta.
+
 ## References
 
 - Specification: C2PA 2.4 §15.11.2 (validate each ingredient, whatever its
@@ -452,6 +467,25 @@ instead, beside the orchestration that already holds those collaborators.
 
    Confirmed by Maurice van Loon, 2026-09-25 (step 149).
 
+7. **2026-10-24, step 408, found by the graph fuzzer (step 407).**
+   `check()` validated each referenced manifest once, through the first
+   assertion that names it, and compared only that assertion's hash. A
+   second assertion naming the same manifest with a wrong hash was never
+   compared, so such a file was `Trusted`; `c2patool` 0.28.2 says
+   `Invalid`, `ingredient.manifest.mismatch` under the second assertion.
+   C2PA 2.4 §15.11.3.3.2 checks the box hash per ingredient assertion. Now
+   the hash of every assertion that names a manifest is checked, each under
+   that assertion, by the box hash or, for a manifest redacted from, the
+   claim-signature hash. The manifest itself is still validated once, under
+   the first assertion (AC9); `c2patool` validates it again under each one,
+   which repeats statuses but changes no verdict (`docs/comparison.md`).
+   New criterion AC12.
+
+   **Weight A.** Files that were wrongly `Trusted` become `Invalid`. No
+   corpus file moves (0 of 1,854 runs).
+
+   Confirmed by Maurice van Loon, 2026-10-24 (step 408, choice A).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -470,5 +504,6 @@ least one test; every source file maps back to this spec.
 | AC9 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC9 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`check()`: the first assertion that named it) |
 | AC10 | tests/Unit/Verifier/VerifierTest.php :: AC10–AC13 / SPEC-013; tests/Unit/Cli/CommandTest.php :: AC11 / SPEC-019; bin/fuzz.php | the whole verification path |
 | AC11 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC11 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`recordedInStore()`, `drop()`); src/Verifier/Verifier.php (the binding manifest passed to `drop()`) |
+| AC12 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC12 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`check()`: the hash of every reference) |
 
 `src/Verifier/IngredientManifestCheck.php` maps to this spec; `StatusCode`'s two new cases are its. Measured 2026-09-22: 7 red (2 already true) → 9 green, `composer check` exit 0, 336 tests, 312 fuzz runs with no fault.

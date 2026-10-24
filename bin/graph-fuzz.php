@@ -42,7 +42,13 @@ declare(strict_types=1);
  * finding replays from its seed and index (the keys and signatures differ per run; the plan does
  * not). Every finding is written out as the PNG, its plan and the verifier's report.
  *
+ * With --export <dir> and one or more --only <calibration plan>, the PNGs of those plans are written
+ * to <dir> as fixtures (named after the plan), with graph-fuzz-root.pem and
+ * graph-fuzz-root.settings.json beside them: the public root of that run, so the fixtures verify
+ * under it. Regenerating changes the root and every signature.
+ *
  * Usage: php bin/graph-fuzz.php <seed> <graphs> <scratch-dir> [--verifier <root>] [--calibrate-only]
+ *        [--export <dir> --only <calibration plan> …]
  * Prints the calibration, one line per finding and a summary; exit code 1 on WRONG, ORDER or FAULT.
  */
 
@@ -50,18 +56,24 @@ declare(strict_types=1);
 $argv = $_SERVER['argv'];
 $verifierOption = dirname(__DIR__);
 $calibrateOnly = false;
+$exportDir = null;
+$only = [];
 $positional = [];
 for ($i = 1; $i < count($argv); $i++) {
     if ($argv[$i] === '--verifier') {
         $verifierOption = $argv[++$i] ?? '';
     } elseif ($argv[$i] === '--calibrate-only') {
         $calibrateOnly = true;
+    } elseif ($argv[$i] === '--export') {
+        $exportDir = $argv[++$i] ?? '';
+    } elseif ($argv[$i] === '--only') {
+        $only[] = $argv[++$i] ?? '';
     } else {
         $positional[] = $argv[$i];
     }
 }
-if (count($positional) !== 3 || ! ctype_digit($positional[0]) || ! ctype_digit($positional[1])) {
-    fwrite(STDERR, "usage: php bin/graph-fuzz.php <seed> <graphs> <scratch-dir outside the repository> [--verifier <root>] [--calibrate-only]\n");
+if (count($positional) !== 3 || ! ctype_digit($positional[0]) || ! ctype_digit($positional[1]) || ($exportDir !== null && (! is_dir($exportDir) || $only === []))) {
+    fwrite(STDERR, "usage: php bin/graph-fuzz.php <seed> <graphs> <scratch-dir outside the repository> [--verifier <root>] [--calibrate-only] [--export <dir> --only <calibration plan> …]\n");
     exit(2);
 }
 [$seed, $graphs, $scratch] = [(int) $positional[0], (int) $positional[1], $positional[2]];
@@ -875,7 +887,7 @@ file_put_contents("{$out}/settings.json", $settingsJson."\n");
 /**
  * One plan judged: the prediction, the verifier's answer, the order check; a finding written out.
  *
- * @return array{prediction: array{state: string, faults: list<GfFault>}, answer: array{state: string, failures: list<string>, report: string, fault: ?string}, findings: list<string>}
+ * @return array{prediction: array{state: string, faults: list<GfFault>}, answer: array{state: string, failures: list<string>, report: string, fault: ?string}, findings: list<string>, file: string}
  */
 $judge = static function (string $name, GfPlan $plan) use ($signers, $png, $settings, $out): array {
     $prediction = gfPredict($plan);
@@ -905,7 +917,7 @@ $judge = static function (string $name, GfPlan $plan) use ($signers, $png, $sett
         file_put_contents($base.'.report.json', $answer['report']."\n");
     }
 
-    return ['prediction' => $prediction, 'answer' => $answer, 'findings' => $findings];
+    return ['prediction' => $prediction, 'answer' => $answer, 'findings' => $findings, 'file' => $file];
 };
 
 // ---- calibration: fixed plans, each with what it must show ----
@@ -932,6 +944,7 @@ $calibration = [
     'ingredient: expired' => $two(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1'), 'expired')),
     'ingredient: wrong hash' => $two(new GfManifest($label('m0'), ingredients: [$to('m1', 'componentOf', true)]), new GfManifest($label('m1'))),
     'ingredient: second reference, wrong hash' => $two(new GfManifest($label('m0'), ingredients: [$to('m1'), $to('m1', 'componentOf', true)]), new GfManifest($label('m1'))),
+    'redacted ingredient: second reference, wrong hash' => $two(new GfManifest($label('m0'), ingredients: [$to('m1'), $to('m1', 'componentOf', true)], redacts: ['m1']), new GfManifest($label('m1'))),
     'ingredient: cycle back to the active' => $two(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1'), ingredients: [$to('m0')])),
     'ingredient: names itself' => $two(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1'), ingredients: [$to('m1')])),
     'ingredient: missing manifest' => $one(new GfManifest($label('m0'), ingredients: [$to('missing')])),
@@ -965,8 +978,20 @@ foreach ($calibration as $name => $plan) {
         printf("  %44s codes predicted [%s], got [%s]\n", '', gfCodes($predicted), gfCodes($result['answer']['failures']));
         file_put_contents($out.'/calibration-'.preg_replace('/[^A-Za-z0-9._-]/', '_', $name).'.report.json', $result['answer']['report']."\n");   // the codes differ: kept to read
     }
+    if ($exportDir !== null && in_array($name, $only, true)) {
+        file_put_contents($exportDir.'/'.trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower($name)), '-').'.png', $result['file']);
+    }
     $calibrationFindings += $result['findings'] === [] ? 0 : 1;
     $broken = $broken || (in_array($name, ['one manifest', 'a chain of three', 'shared ingredient'], true) && $result['answer']['state'] !== 'Trusted');
+}
+if ($exportDir !== null) {
+    $unknown = array_diff($only, array_keys($calibration));
+    if ($unknown !== []) {
+        fwrite(STDERR, 'no calibration plan named '.implode(', ', $unknown)."\n");
+        exit(2);
+    }
+    file_put_contents($exportDir.'/graph-fuzz-root.pem', $rootPem);
+    file_put_contents($exportDir.'/graph-fuzz-root.settings.json', $settingsJson."\n");
 }
 if ($broken) {
     fwrite(STDERR, "a plan without a fault is not Trusted: the generator is wrong, not the verifier; stopping\n");

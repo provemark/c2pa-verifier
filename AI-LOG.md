@@ -11432,3 +11432,20 @@ README are where the disclosure lives.
   three 0.8.0 findings; `composer check`. Reasoned: how hard finding 2 is
   to use.
 - Decided by Maurice: none in this step beyond step 406's.
+
+## 2026-10-24 — The hash of every reference is checked (step 408)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, eerst repareren, begin met bevinding 1", then
+  "akkoord, keuze A".
+- Produced: `src/Verifier/IngredientManifestCheck.php`, SPEC-021
+  amendment 7 and AC12, AC12 tests, `tests/Fixtures/graph-fuzz/` and
+  `tests/Fixtures/c2patool/graph-fuzz/`, `--export`/`--only` and one
+  calibration plan in `bin/graph-fuzz.php`, `docs/comparison.md`,
+  `docs/reading-c2pa-2.4.md`, `notes/step-408-every-reference-hash.md`,
+  a row in `NOTES.md`.
+- Measured: the AC12 tests red then green; four mutations; the corpus
+  before and after; `bin/graph-fuzz.php 407 2000`; `c2patool` 0.28.2 on
+  the fixtures; `composer check`. Reasoned: §15.11.3.3.2 per assertion,
+  from the repository's reading of the specification.
+- Decided by Maurice: fix first; choice A (hash per reference, manifest
+  validated once).
