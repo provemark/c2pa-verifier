@@ -47,6 +47,13 @@ declare(strict_types=1);
  * graph-fuzz-root.settings.json beside them: the public root of that run, so the fixtures verify
  * under it. Regenerating changes the root and every signature.
  *
+ * Step 414 adds update manifests (C2PA 2.4 §11.2.3; SPEC-022): a manifest box of type c2um, with no hard
+ * binding of its own, whose asset is bound by the first standard manifest up its parentOf chain
+ * (§15.12), with that manifest's exclusion adjusted to the store as it is now (§15.12.1.1). The plan
+ * may break each rule of §11.2.3 (a hard binding, an action outside the four, no parent, more than one
+ * ingredient) and a standard manifest's one-parent rule (§15.10.1.2), and the oracle predicts the
+ * binding manifest and that its failures are never acknowledged (SPEC-021 amendment 6).
+ *
  * Usage: php bin/graph-fuzz.php <seed> <graphs> <scratch-dir> [--verifier <root>] [--calibrate-only]
  *        [--export <dir> --only <calibration plan> …]
  * Prints the calibration, one line per finding and a summary; exit code 1 on WRONG, ORDER or FAULT.
@@ -90,6 +97,7 @@ if ($scratchReal === false || ! is_dir($scratchReal) || gfInside($scratchReal, $
 }
 require $verifierRoot.'/vendor/autoload.php';
 
+use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\Verifier;
 use Random\Engine\Xoshiro256StarStar;
@@ -256,7 +264,11 @@ final class GfIngredient
     ) {}
 }
 
-/** One manifest: its label, its key ('good', 'untrusted', 'expired'), its faults ('sig', 'uri', 'binding'). */
+/**
+ * One manifest: its label, its key ('good', 'untrusted', 'expired'), its faults ('sig', 'uri', 'binding'; for an update
+ * manifest 'uhash', a hard binding of its own, and 'uaction', an action §11.2.3 does not allow), and whether it is an
+ * update manifest.
+ */
 final class GfManifest
 {
     /**
@@ -270,6 +282,7 @@ final class GfManifest
         public array $faults = [],
         public array $ingredients = [],
         public array $redacts = [],
+        public bool $update = false,
     ) {}
 }
 
@@ -344,34 +357,64 @@ function gfPlan(Randomizer $r): GfPlan
     foreach ($ids as $index => $id) {
         $active = $id === 'm0';
         $key = $r->getInt(1, 100);
+        // in a tree the last manifest is a standard one, so an update manifest's chain can end in a binding
+        $update = $chance($active ? 30 : 25) && ! ($tree && $index === $count - 1);
         $faults = [];
         foreach (['sig' => 7, 'uri' => 7] as $fault => $percent) {
             if ($chance($percent)) {
                 $faults[] = $fault;
             }
         }
-        if ($active && $chance(4)) {
+        if ($update) {
+            foreach (['uhash' => 5, 'uaction' => 5] as $fault => $percent) {
+                if ($chance($percent)) {
+                    $faults[] = $fault;
+                }
+            }
+        } elseif ($active && $chance(4)) {
             $faults[] = 'binding';
         }
-        $ingredients = [];
-        $parent = false;
-        for ($k = $r->getInt(0, 3); $k > 0; $k--) {
+        $target = static function () use ($r, $tree, $index, $count, $ids, $id, $update): ?string {
             $roll = $r->getInt(1, 100);
-            $target = $tree
-                ? ($roll <= 9 || $index === $count - 1 ? null : $ids[$r->getInt($index + 1, $count - 1)])
+
+            return $tree
+                ? (($roll <= 9 && ! $update) || $index === $count - 1 ? null : $ids[$r->getInt($index + 1, $count - 1)])
                 : match (true) {
                     $roll <= 6 => $id,                  // itself: a cycle of one
                     $roll <= 11 => 'missing',           // a manifest the store does not hold
                     $roll <= 20 => null,                // no manifest at all
                     default => $ids[$r->getInt(0, $count - 1)],
                 };
-            $relationship = ! $parent && $chance(50) ? 'parentOf' : ($target === null && $chance(50) ? 'inputTo' : 'componentOf');
-            $parent = $parent || $relationship === 'parentOf';
-            $ingredients[] = new GfIngredient($relationship, $target, $target === 'missing' ? gfUrn($r) : null, $target !== null && $chance(6));
+        };
+        $ingredients = [];
+        if ($update) {
+            // mostly the one parentOf §11.2.3 asks for; sometimes none, the wrong relationship, or a second ingredient
+            $shape = $r->getInt(1, 100);
+            $relationships = match (true) {
+                $shape <= 82 => ['parentOf'],
+                $shape <= 88 => [],
+                $shape <= 94 => ['componentOf'],
+                default => ['parentOf', 'componentOf'],
+            };
+        } else {
+            $relationships = [];
+            $parent = false;
+            for ($k = $r->getInt(0, 3); $k > 0; $k--) {
+                // a second parentOf now and then: §15.10.1.2 allows one
+                $relationships[] = $rel = (! $parent || $chance(8)) && $chance(50) ? 'parentOf' : ($chance(50) ? 'inputTo' : 'componentOf');
+                $parent = $parent || $rel === 'parentOf';
+            }
+        }
+        foreach ($relationships as $relationship) {
+            $to = $target();
+            if ($relationship === 'inputTo' && $to !== null) {
+                $relationship = 'componentOf';   // inputTo only where no manifest is named, as before
+            }
+            $ingredients[] = new GfIngredient($relationship, $to, $to === 'missing' ? gfUrn($r) : null, $to !== null && $chance(6));
         }
         $redacts = $chance(10) ? [$ids[$r->getInt(0, $count - 1)]] : [];
         $signer = $key <= ($active ? 90 : 80) ? 'good' : ($key <= ($active ? 95 : 90) ? 'untrusted' : 'expired');
-        $manifests[$id] = new GfManifest(gfUrn($r), $signer, $faults, $ingredients, $redacts);
+        $manifests[$id] = new GfManifest(gfUrn($r), $signer, $faults, $ingredients, $redacts, $update);
     }
     /** @var list<string> $others */
     $others = $r->shuffleArray(array_values(array_diff($ids, ['m0'])));
@@ -524,6 +567,36 @@ function gfRemovedUnredacted(GfPlan $plan, string $id, array $reached): bool
 }
 
 /**
+ * The manifest whose hard binding covers the asset (C2PA 2.4 §15.12; SPEC-022 amendment 6): the active
+ * manifest when it is a standard manifest with a binding of its own, else the first standard manifest
+ * with one up the chain of parentOf references, each manifest following its last parentOf that names a
+ * manifest. Null when the chain ends, leaves the store or comes round.
+ */
+function gfBinding(GfPlan $plan): ?string
+{
+    $seen = [];
+    for ($id = $plan->active; ! isset($seen[$id]);) {
+        $seen[$id] = true;
+        $m = $plan->manifest($id);
+        if (! $m->update && ! in_array('binding', $m->faults, true)) {
+            return $id;
+        }
+        $next = null;
+        foreach ($m->ingredients as $ingredient) {
+            if ($ingredient->rel === 'parentOf' && $ingredient->target !== null) {
+                $next = $ingredient->target;
+            }
+        }
+        if ($next === null || $next === 'missing') {
+            return null;
+        }
+        $id = $next;
+    }
+
+    return null;
+}
+
+/**
  * Every fault the verifier must report, each with the manifest it is about (null: no manifest can
  * be named, so nothing may acknowledge it) and a code ('*' where only the verdict is predicted).
  *
@@ -577,6 +650,33 @@ function gfFaults(GfPlan $plan): array
     foreach ($walk['missing'] as $ref) {
         $faults[] = new GfFault('ingredient.manifest.missing', (string) $plan->manifest($ref['from'])->ingredients[$ref['k']]->missing, null);
     }
+    // §11.2.3's rules for an update manifest and §15.10.1.2's one parent for a standard one, on the claim of
+    // every manifest in the store, reached or not (SPEC-022's Scope; c2patool 0.28.2 checks only what it
+    // reaches, step 414). An unreached manifest lies below no reached one, so nothing acknowledges it
+    foreach (array_keys($plan->manifests) as $id) {
+        $id = (string) $id;
+        $m = $plan->manifest($id);
+        $claim = gfUrl($m->label, 'c2pa.claim.v2');
+        $parents = count(array_filter($m->ingredients, static fn (GfIngredient $i): bool => $i->rel === 'parentOf'));
+        if ($m->update) {
+            foreach (['uhash', 'uaction'] as $fault) {
+                if (in_array($fault, $m->faults, true)) {
+                    $faults[] = new GfFault('manifest.update.invalid', $claim, $id);
+                }
+            }
+            if ($parents === 0) {
+                $faults[] = new GfFault('manifest.update.wrongParents', $claim, $id);
+            } elseif (count($m->ingredients) > 1) {
+                $faults[] = new GfFault('manifest.update.invalid', $claim, $id);
+            }
+        } elseif ($parents > 1) {
+            $faults[] = new GfFault('manifest.multipleParents', $claim, $id);
+        }
+    }
+    // an active update manifest with no standard manifest up its parentOf chain binds nothing (§15.12)
+    if ($plan->manifest($plan->active)->update && gfBinding($plan) === null) {
+        $faults[] = new GfFault('claim.hardBindings.missing', gfUrl($plan->manifest($plan->active)->label, 'c2pa.claim.v2'), null);
+    }
 
     return $faults;
 }
@@ -584,7 +684,8 @@ function gfFaults(GfPlan $plan): array
 /**
  * The predicted state. A fault about manifest X is acknowledged only by a record of its code and url,
  * filed under its own kind, held by a reached manifest that X lies below, and never when X is the
- * active manifest; a relative url in a record is resolved against its ingredient's manifest.
+ * active manifest or the one that binds the asset; a relative url in a record is resolved against its
+ * ingredient's manifest.
  *
  * @return array{state: string, faults: list<GfFault>}
  */
@@ -606,12 +707,15 @@ function gfPredict(GfPlan $plan): array
             }
         }
     }
+    // the manifest that binds the asset when that is not the active one: its failures are never
+    // acknowledged (SPEC-021 amendment 6)
+    $binding = gfBinding($plan);
     $faults = [];
     $invalid = false;
     $untrusted = false;
     foreach (gfFaults($plan) as $fault) {
         $acknowledged = false;
-        if ($fault->about !== null && $fault->about !== $plan->active && $fault->code !== '*') {
+        if ($fault->about !== null && $fault->about !== $plan->active && $fault->about !== $binding && $fault->code !== '*') {
             foreach ($records as $record) {
                 $acknowledged = $acknowledged || ($record['key'] === $fault->key() && in_array($fault->about, $record['below'], true));
             }
@@ -684,13 +788,19 @@ function gfBuild(GfPlan $plan, array $signers, string $png): array
             $data['validationResults'] = ['activeManifest' => $active, 'ingredientDeltas' => $deltas];
             $assertions[gfIngredientLabel($k)] = gfSuper('63626f72', gfIngredientLabel($k), gfBox('cbor', gfCbor($data)));
         }
-        $opening = ['action' => 'c2pa.created', 'digitalSourceType' => 'http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture'];
-        foreach ($m->ingredients as $k => $ingredient) {
+        // an update manifest opens nothing: one of §11.2.3's four actions, and with 'uaction' one it does not allow
+        $opening = $m->update
+            ? ['action' => 'c2pa.edited.metadata']
+            : ['action' => 'c2pa.created', 'digitalSourceType' => 'http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture'];
+        foreach ($m->update ? [] : $m->ingredients as $k => $ingredient) {
             if ($ingredient->rel === 'parentOf') {
                 $opening = ['action' => 'c2pa.opened', 'parameters' => ['ingredients' => [['url' => 'self#jumbf=c2pa.assertions/'.gfIngredientLabel($k), 'hash' => new GfBytes(gfBoxHash($assertions[gfIngredientLabel($k)]))]]]];
             }
         }
         $actions = [$opening];
+        if (in_array('uaction', $m->faults, true)) {
+            $actions[] = ['action' => 'c2pa.edited'];
+        }
         $redacted = [];
         foreach ($m->redacts as $of) {
             $uri = gfUrl($plan->manifest($of)->label, 'c2pa.assertions/'.GF_PROBE);
@@ -700,15 +810,17 @@ function gfBuild(GfPlan $plan, array $signers, string $png): array
         $assertions = ['c2pa.actions.v2' => gfSuper('63626f72', 'c2pa.actions.v2', gfBox('cbor', gfCbor(['actions' => $actions]))), ...$assertions];
         $assertions[GF_PROBE] = gfSuper('63626f72', GF_PROBE, gfBox('cbor', gfCbor(['manifest' => $id])));
         $assertions[GF_NOTE] = gfSuper('63626f72', GF_NOTE, gfBox('cbor', gfCbor(['note' => 'graph-fuzz'])));
-        if (! in_array('binding', $m->faults, true)) {
-            // the active manifest binds this PNG: the caBX chunk at 33 excluded, the rest is the unsigned file;
-            // an ingredient's binding covers its own asset, which the verifier does not check (§15.11.3.3.1)
+        if (! in_array('binding', $m->faults, true) && (! $m->update || in_array('uhash', $m->faults, true))) {
+            // the active manifest binds this PNG: the caBX chunk at 33 excluded, the rest is the unsigned file.
+            // Any other manifest states the same hash over an exclusion written for a smaller store: the one
+            // an update manifest above it was appended to. It binds this file once that exclusion is
+            // adjusted to the store as it is (§15.12.1.1), which only an active update manifest does
             $isActive = $id === $plan->active;
             $assertions['c2pa.hash.data'] = gfSuper('63626f72', 'c2pa.hash.data', gfBox('cbor', gfCbor([
-                'exclusions' => [['start' => new GfU32(33), 'length' => new GfU32($isActive ? 12 + $storeLength : 1000)]],
+                'exclusions' => [['start' => new GfU32(33), 'length' => new GfU32($isActive && ! $m->update ? 12 + $storeLength : 1000)]],
                 'name' => 'jumbf manifest',
                 'alg' => 'sha256',
-                'hash' => new GfBytes($isActive ? hash('sha256', $png, true) : hash('sha256', $id, true)),
+                'hash' => new GfBytes(hash('sha256', $png, true)),
                 'pad' => new GfBytes(str_repeat("\0", 8)),
             ])));
         }
@@ -742,7 +854,7 @@ function gfBuild(GfPlan $plan, array $signers, string $png): array
             $cose = gfFlip($cose, strlen($cose) - 8);   // inside the signature, after signing
         }
         $signatures[$id] = gfSuper('63326373', 'c2pa.signature', gfBox('cbor', $cose));
-        $boxes[$id] = gfSuper('63326d61', $m->label,
+        $boxes[$id] = gfSuper($m->update ? '6332756d' : '63326d61', $m->label,
             gfSuper('63326173', 'c2pa.assertions', ...array_values($assertions)),
             gfSuper('6332636c', 'c2pa.claim.v2', gfBox('cbor', $claimBytes)),
             $signatures[$id],
@@ -808,9 +920,11 @@ function gfJudge(string $png, TrustSettings $settings): array
         restore_error_handler();
         fclose($stream);
     }
+    // the checkout judged may be older than the flag: before it, an acknowledged status was left out of the list
+    $flagged = (new ReflectionClass(ValidationStatus::class))->hasProperty('acknowledged');
     $failures = [];
     foreach ($report->result->statuses as $status) {
-        if ($status->code->isFailure() && ! $status->acknowledged) {
+        if ($status->code->isFailure() && ! ($flagged && $status->acknowledged)) {
             $failures[] = $status->code->value.' '.$status->url;
         }
     }
@@ -979,6 +1093,23 @@ $calibration = [
     'step 390: an ingredient redacts the active' => $two(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1'), redacts: ['m0'])),
     'redaction of the active through a cycle' => $two(new GfManifest($label('m0'), ingredients: [$to('m1', 'componentOf', false, $rec('assertion.ingredient.malformed', gfUrl($label('m1'), 'c2pa.assertions/c2pa.ingredient.v3')))]), new GfManifest($label('m1'), ingredients: [$to('m0')], redacts: ['m0'])),
     'redaction by an unreached manifest' => $three(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1')), new GfManifest($label('m2'), redacts: ['m1'])),
+    // step 414: update manifests (SPEC-022)
+    'update on a standard manifest' => $two(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf')], update: true), new GfManifest($label('m1'))),
+    'two updates on a standard manifest' => $three(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf')], update: true), new GfManifest($label('m1'), ingredients: [$to('m2', 'parentOf')], update: true), new GfManifest($label('m2'))),
+    'update redacts its parent' => $two(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf')], redacts: ['m1'], update: true), new GfManifest($label('m1'))),
+    'update: a hard binding of its own' => $two(new GfManifest($label('m0'), faults: ['uhash'], ingredients: [$to('m1', 'parentOf')], update: true), new GfManifest($label('m1'))),
+    'update: an action not allowed' => $two(new GfManifest($label('m0'), faults: ['uaction'], ingredients: [$to('m1', 'parentOf')], update: true), new GfManifest($label('m1'))),
+    'update: no parent' => $two(new GfManifest($label('m0'), ingredients: [$to('m1')], update: true), new GfManifest($label('m1'))),
+    'update: two ingredients' => $three(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf'), $to('m2')], update: true), new GfManifest($label('m1')), new GfManifest($label('m2'))),
+    'update: parent missing' => $one(new GfManifest($label('m0'), ingredients: [$to('missing', 'parentOf')], update: true)),
+    'update: no standard manifest up the chain' => $two(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf')], update: true), new GfManifest($label('m1'), update: true)),
+    'update: a cycle of updates' => $two(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf')], update: true), new GfManifest($label('m1'), ingredients: [$to('m0', 'parentOf')], update: true)),
+    'update below a standard manifest' => $three(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1'), ingredients: [$to('m2', 'parentOf')], update: true), new GfManifest($label('m2'))),
+    'update below, its fault acknowledged' => $three(new GfManifest($label('m0'), ingredients: [$to('m1', 'componentOf', false, $rec('manifest.update.invalid', gfUrl($label('m1'), 'c2pa.claim.v2')))]), new GfManifest($label('m1'), faults: ['uaction'], ingredients: [$to('m2', 'parentOf')], update: true), new GfManifest($label('m2'))),
+    'binding manifest: its fault not acknowledged' => $two(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf', false, $rec('claimSignature.mismatch', $sig1))], update: true), new GfManifest($label('m1'), faults: ['sig'])),
+    'an unreached update manifest with a fault' => $three(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf')]), new GfManifest($label('m1')), new GfManifest($label('m2'), faults: ['uaction'], ingredients: [$to('m1', 'parentOf')], update: true)),
+    'standard: two parents' => $three(new GfManifest($label('m0'), ingredients: [$to('m1', 'parentOf'), $to('m2', 'parentOf')]), new GfManifest($label('m1')), new GfManifest($label('m2'))),
+    'step 150: a standard manifest borrows its parent\'s binding beside a c2um' => $three(new GfManifest($label('m0'), faults: ['binding'], ingredients: [$to('m1', 'parentOf')]), new GfManifest($label('m1')), new GfManifest($label('m2'), ingredients: [$to('m1', 'parentOf')], update: true)),
 ];
 
 $started = microtime(true);
@@ -1003,7 +1134,7 @@ foreach ($calibration as $name => $plan) {
         file_put_contents($exportDir.'/'.trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower($name)), '-').'.png', $result['file']);
     }
     $calibrationFindings += $result['findings'] === [] ? 0 : 1;
-    $broken = $broken || (in_array($name, ['one manifest', 'a chain of three', 'shared ingredient'], true) && $result['answer']['state'] !== 'Trusted');
+    $broken = $broken || (in_array($name, ['one manifest', 'a chain of three', 'shared ingredient', 'update on a standard manifest', 'two updates on a standard manifest'], true) && $result['answer']['state'] !== 'Trusted');
 }
 if ($exportDir !== null) {
     $unknown = array_diff($only, array_keys($calibration));

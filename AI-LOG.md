@@ -11521,3 +11521,21 @@ README are where the disclosure lives.
 - Measured: CI on the commit and the tag; Packagist's metadata; a fresh
   `composer require` checked on four fixtures and `fixture-signed.jpg`.
 - Decided by Maurice: push and tag; no advisory.
+
+## 2026-10-24 — Update manifests in the graph fuzzer (step 414)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "leg de graph-fuzzer-uitbreiding eerst uit"; "akkoord, begin met
+  step 414".
+- Produced: update manifests, their faults, the binding manifest and 16
+  calibration plans in `bin/graph-fuzz.php`; judging of checkouts older
+  than the acknowledged flag; `notes/step-414-graph-fuzz-update-manifests.md`,
+  a row in `NOTES.md`.
+- Measured: the calibration and seeds 414–416 on this tree; the
+  calibration and seed 414 against `v0.2.1` and `v0.2.2` (worktrees with a
+  copied `vendor/`), the WRONG plans compared and classed by shape;
+  `c2patool` 0.28.2 on an unreached update manifest with a fault; plan
+  counts from an instrumented copy (not committed); `composer check`
+  (one unexplained failure in a first run, green twice after).
+  Reasoned: which of the 0.2.2 fixes the 44 active-update plans belong to.
+- Decided by Maurice: the extension as explained; calibration against an
+  old checkout.
