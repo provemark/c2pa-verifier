@@ -336,8 +336,12 @@ function gfPlan(Randomizer $r): GfPlan
     $count = $r->getInt(1, 6);
     $ids = array_map(static fn (int $i): string => 'm'.$i, range(0, $count - 1));
     $chance = static fn (int $percent): bool => $r->getInt(1, 100) <= $percent;
+    // half the plans are trees: every reference leads further down the list, to a manifest the store
+    // holds, so no cycle and no missing manifest makes the verdict Invalid whatever is recorded, and the
+    // verdict can rest on what the records acknowledge (step 411)
+    $tree = $chance(50);
     $manifests = [];
-    foreach ($ids as $id) {
+    foreach ($ids as $index => $id) {
         $active = $id === 'm0';
         $key = $r->getInt(1, 100);
         $faults = [];
@@ -353,12 +357,14 @@ function gfPlan(Randomizer $r): GfPlan
         $parent = false;
         for ($k = $r->getInt(0, 3); $k > 0; $k--) {
             $roll = $r->getInt(1, 100);
-            $target = match (true) {
-                $roll <= 6 => $id,                  // itself: a cycle of one
-                $roll <= 11 => 'missing',           // a manifest the store does not hold
-                $roll <= 20 => null,                // no manifest at all
-                default => $ids[$r->getInt(0, $count - 1)],
-            };
+            $target = $tree
+                ? ($roll <= 9 || $index === $count - 1 ? null : $ids[$r->getInt($index + 1, $count - 1)])
+                : match (true) {
+                    $roll <= 6 => $id,                  // itself: a cycle of one
+                    $roll <= 11 => 'missing',           // a manifest the store does not hold
+                    $roll <= 20 => null,                // no manifest at all
+                    default => $ids[$r->getInt(0, $count - 1)],
+                };
             $relationship = ! $parent && $chance(50) ? 'parentOf' : ($target === null && $chance(50) ? 'inputTo' : 'componentOf');
             $parent = $parent || $relationship === 'parentOf';
             $ingredients[] = new GfIngredient($relationship, $target, $target === 'missing' ? gfUrn($r) : null, $target !== null && $chance(6));
@@ -379,10 +385,13 @@ function gfPlan(Randomizer $r): GfPlan
  * The records of every ingredient assertion: mostly a key of a fault the plan predicts (of any
  * manifest — the one below, the holder itself, the active one, a sibling), filed under its own kind
  * or another, its url absolute or relative to the ingredient's manifest; sometimes a success line.
+ * Of the aimed records, 70% take a fault some record may acknowledge, where the plan has one (step
+ * 411): without that, most aimed at a cycle or the active manifest, which nothing may acknowledge.
  */
 function gfRecords(GfPlan $plan, Randomizer $r): void
 {
     $universe = array_values(array_filter(gfFaults($plan), static fn (GfFault $f): bool => $f->code !== '*'));
+    $acknowledgeable = array_values(array_filter($universe, static fn (GfFault $f): bool => $f->about !== null && $f->about !== $plan->active));
     $labels = array_values(array_map(static fn (GfManifest $m): string => $m->label, $plan->manifests));
     foreach ($plan->manifests as $m) {
         foreach ($m->ingredients as $ingredient) {
@@ -392,8 +401,9 @@ function gfRecords(GfPlan $plan, Randomizer $r): void
             }
             for ($n = $r->getInt(1, 3); $n > 0; $n--) {
                 $aimed = $r->getInt(1, 100);
-                [$code, $url] = $universe !== [] && $aimed <= 85
-                    ? [($f = $universe[$r->getInt(0, count($universe) - 1)])->code, $f->url]
+                $pool = $acknowledgeable !== [] && $r->getInt(1, 100) <= 70 ? $acknowledgeable : $universe;
+                [$code, $url] = $pool !== [] && $aimed <= 85
+                    ? [($f = $pool[$r->getInt(0, count($pool) - 1)])->code, $f->url]
                     : ['claimSignature.validated', gfUrl($labels[$r->getInt(0, count($labels) - 1)], 'c2pa.signature')];
                 $misfiled = $r->getInt(1, 100);
                 $kind = $misfiled <= 10 ? ['success', 'informational', 'failure'][$r->getInt(0, 2)] : gfKind($code);

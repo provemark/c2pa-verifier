@@ -11486,3 +11486,17 @@ README are where the disclosure lives.
   407–410; `c2patool` 0.28.2 on the fixtures; `composer check`. Reasoned:
   that a cycle is not an error in one ingredient's claim (§18.16.12.4).
 - Decided by Maurice: choice 2, with the corpus measured first.
+
+## 2026-10-24 — The graph fuzzer aims at what may be acknowledged (step 411)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, begin met de generatorverbetering. En wat houdt dat
+  in?", then "akkoord, bouw het zo".
+- Produced: tree plans and aimed records in `bin/graph-fuzz.php`,
+  `notes/step-411-graph-fuzz-aimed-records.md`, a row in `NOTES.md`.
+- Measured: where the records aim and how many verdicts rest on an
+  acknowledgement, before and after (an instrumented copy, not
+  committed); the old and new generator against `v0.7.1` and `v0.8.0`,
+  WRONG runs classed by cause; seeds 407–410 on the current code;
+  `composer check`. Reasoned: that a verdict resting on an acknowledgement
+  is where an acknowledgement fault shows.
+- Decided by Maurice: 50% tree plans, 70% aimed records.
