@@ -11512,3 +11512,12 @@ README are where the disclosure lives.
   `bin/package-check.php`; `composer check`. Reasoned: that versions
   before `0.7.1` carry the first finding too (same code, not run).
 - Decided by Maurice: to prepare 0.8.1. Push, tag and advisory not yet.
+
+## 2026-10-24 — 0.8.1 released (step 413)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en tag v0.8.1, geen advisory".
+- Produced: the push of `main`, the annotated tag `v0.8.1`,
+  `notes/step-413-release-0.8.1.md`, a row in `NOTES.md`.
+- Measured: CI on the commit and the tag; Packagist's metadata; a fresh
+  `composer require` checked on four fixtures and `fixture-signed.jpg`.
+- Decided by Maurice: push and tag; no advisory.
