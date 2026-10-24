@@ -11449,3 +11449,21 @@ README are where the disclosure lives.
   from the repository's reading of the specification.
 - Decided by Maurice: fix first; choice A (hash per reference, manifest
   validated once).
+
+## 2026-10-24 — No redaction of the active manifest through a cycle (step 409)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, keuze 1" (the narrow fix for the second graph-fuzz
+  finding).
+- Produced: `src/Manifest/ManifestStore.php`, SPEC-035 amendment 7 and
+  AC12, AC12 tests in `tests/Unit/Manifest/RedactionScopeTest.php`,
+  `tests/Fixtures/graph-fuzz-cycle/` and
+  `tests/Fixtures/c2patool/graph-fuzz-cycle/`, the self-redaction
+  prediction and one calibration plan in `bin/graph-fuzz.php`,
+  `notes/step-409-active-redaction-cycle.md`, a row in `NOTES.md`.
+- Measured: the AC12 tests red then green; three mutations; the corpus
+  before and after; `bin/graph-fuzz.php` on seeds 407–410, and seed 409
+  against the code before the change; `c2patool` 0.28.2 on the fixtures
+  and the new calibration plan; `composer check`. Reasoned: that the case
+  needs the active manifest's label in advance.
+- Decided by Maurice: choice 1; acknowledging a cyclic reference left for a
+  separate step.

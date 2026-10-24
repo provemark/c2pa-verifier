@@ -546,6 +546,13 @@ function gfFaults(GfPlan $plan): array
             $faults[] = new GfFault('assertion.missing', 'self#jumbf=/c2pa', null);
         }
     }
+    // a reached manifest that lists its own probe as redacted, where another redaction may take the box so the
+    // store is read: its claim's self-redaction (SPEC-035 AC4), whoever else redacts the box
+    foreach ($walk['reached'] as $id) {
+        if (in_array($id, $plan->manifest($id)->redacts, true) && ! gfRemovedUnredacted($plan, $id, $walk['reached'])) {
+            $faults[] = new GfFault('assertion.selfRedacted', gfUrl($plan->manifest($id)->label, 'c2pa.assertions/'.GF_PROBE), $id);
+        }
+    }
     // every reference whose recorded hash is wrong: the box hash, or the claim-signature hash for a manifest redacted from
     foreach ($walk['references'] as $ref) {
         if ($plan->manifest($ref['from'])->ingredients[$ref['k']]->badHash) {
@@ -954,6 +961,7 @@ $calibration = [
     'step 389: a manifest acknowledges itself' => $three(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1'), faults: ['sig'], ingredients: [$to('m2', 'componentOf', false, $rec('claimSignature.mismatch', $sig1))]), new GfManifest($label('m2'))),
     'step 389: a child acknowledges its parent' => $three(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1'), faults: ['sig'], ingredients: [$to('m2')]), new GfManifest($label('m2'), ingredients: [$to(null, 'inputTo', false, $rec('claimSignature.mismatch', $sig1))])),
     'redaction by the parent' => $two(new GfManifest($label('m0'), ingredients: [$to('m1')], redacts: ['m1']), new GfManifest($label('m1'))),
+    'redaction of itself, and by the parent' => $two(new GfManifest($label('m0'), ingredients: [$to('m1')], redacts: ['m1']), new GfManifest($label('m1'), redacts: ['m1'])),
     'redaction of itself' => $one(new GfManifest($label('m0'), redacts: ['m0'])),
     'step 390: an ingredient redacts the active' => $two(new GfManifest($label('m0'), ingredients: [$to('m1')]), new GfManifest($label('m1'), redacts: ['m0'])),
     'redaction of the active through a cycle' => $two(new GfManifest($label('m0'), ingredients: [$to('m1', 'componentOf', false, $rec('assertion.ingredient.malformed', gfUrl($label('m1'), 'c2pa.assertions/c2pa.ingredient.v3')))]), new GfManifest($label('m1'), ingredients: [$to('m0')], redacts: ['m0'])),

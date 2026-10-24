@@ -110,7 +110,8 @@ final readonly class ManifestStore
 
     /**
      * Of each manifest's declared redactions, those that name an assertion of a manifest below it in
-     * the graph (SPEC-035 amendment 6). A URI that names no manifest applies to nothing.
+     * the graph (SPEC-035 amendment 6), and never one of the active manifest's (amendment 7). A URI
+     * that names no manifest applies to nothing.
      *
      * @param  array<string, list<string>>  $declared  by the declaring manifest's label
      * @return list<string>
@@ -119,7 +120,8 @@ final readonly class ManifestStore
     {
         $applies = [];
         foreach ($declared as $by => $uris) {
-            $below = $graph->below((string) $by);
+            // never the active manifest's, though a cycle back to it puts it below the declaring one (amendment 7)
+            $below = array_diff($graph->below((string) $by), [$graph->active]);
             foreach ($uris as $uri) {
                 if (preg_match('#^self\#jumbf=/c2pa/([^/]+)/#', $uri, $m) === 1 && in_array($m[1], $below, true)) {
                     $applies[] = $uri;
