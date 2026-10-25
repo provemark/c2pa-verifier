@@ -11555,3 +11555,20 @@ README are where the disclosure lives.
   graph fuzz calibration and seeds 414–416; `composer check`. Reasoned:
   that the strictness protected no verdict.
 - Decided by Maurice: amendment 8.
+
+## 2026-10-25 — C2PA 2.5 and the key that fits the algorithm (step 416)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "Is er een nieuwe spec voor c2pa uit? En moet deze verifier daar
+  aan voldoen?", then "wat adviseer je?", "akkoord, begin met punt 1" (the
+  algorithm and key matching) and "akkoord, doe stap 2" (document it).
+- Produced: SPEC-009 amendment 4; the 2.5 sentence and the curve row in
+  `docs/reading-c2pa-2.4.md`; `notes/step-416-c2pa-2.5-key-fit.md`, a row
+  in `NOTES.md`. No code.
+- Measured: the 2.5 version selector and Appendix F on spec.c2pa.org; the
+  commits of `c2pa-org/specifications` (`gh api`); the 2.5 text fetched
+  and hashed, grepped for the 2.4 curve sentence (0 hits); `c2pa-rs`
+  releases and issues for 2.5 work (`gh`). Reasoned: that a crossed curve
+  pairing makes no verdict wrongly `Valid`; `c2patool` on such a file not
+  measured.
+- Decided by Maurice: read 2.5's clarifications first and build nothing
+  for 2.5 yet; keep AC6 and document it.

@@ -7,6 +7,10 @@ Specification 2.4 (April 2026, the newest published version on 2026-10-09)
 that a validator has to meet. For each one it says where this verifier
 meets it, and how that is known.
 
+C2PA 2.5 was published on 2026-10-25, after this reading. What it
+changes is read rule by rule against this document, starting in step 416
+(`notes/step-416-c2pa-2.5-key-fit.md`); rows that 2.5 changes say so.
+
 The text was read from
 <https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html>
 (SHA-256 of the page as fetched on 2026-10-09: `d55caebd…d26d`). Rules are
@@ -374,7 +378,7 @@ construct.
 | 13.2.1 | A claim signature uses ES256, ES384, ES512, PS256, PS384, PS512 or EdDSA; nothing else is accepted. | `SignatureVerifier::NAMES`; anything else `algorithm.unsupported`. `c2pa-rs` (`signing_alg_from_sign1`) has the same seven | covered | measured: `SignatureVerifierTest` AC9 |
 | 13.2.1 | EdDSA means Ed25519 only. | `SignatureVerifier::requireFit()`: only `PublicKey::KIND_ED25519` | covered | measured: `SignatureVerifierTest` AC5 (`eddsa-rsa`), AC8; Ed448 read |
 | 13.2.1 | Keys are checked against the algorithm before verifying: ECDSA on P-256, P-384 or P-521; Ed25519 on edwards25519; RSASSA-PSS with a modulus of at least 2048 bits. A key that does not fit is refused. | `requireFit()` before any arithmetic (`signingCredential.invalid`) | covered | measured: `SignatureVerifierTest` AC5 (`es256-p256k1`, `ps256-rsa1024`, `alg-eddsa-with-ec-key`) |
-| 13.2.1 | Any of the three curves is accepted under any ECDSA algorithm. | `SignatureVerifier::CURVES`, not tied to the alg | covered | measured: `SignatureVerifierTest` AC6 |
+| 13.2.1 | Any of the three curves is accepted under any ECDSA algorithm. | `SignatureVerifier::CURVES`, not tied to the alg. C2PA 2.5 §12.3.1 makes this a permission (*"Validators may reject other pairings"*); kept, SPEC-009 amendment 4 | covered | measured: `SignatureVerifierTest` AC6 |
 | 13.2.1 | RSA keys above 16,384 bits may be refused. | `RSA_MAX_BITS`: refused | covered (the permission used) | read |
 | 13.2.1 | RSASSA-PSS as RFC 8230: MGF1 over the same hash, salt the hash's length; never PKCS#1 v1.5. | `RsaPss::verify()`; `SignatureVerifier::rsaPss()` for both key types | covered | measured: `SignatureVerifierTest` AC7 (both tests), AC12 |
 | 13.2 | The signature algorithm's own hash is used, outside §13.1's lists. | `SignatureVerifier::HASHES` | covered | measured: `SignatureVerifierTest` AC1, AC6 |

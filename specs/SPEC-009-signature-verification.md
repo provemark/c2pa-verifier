@@ -324,6 +324,23 @@ holds a private key or signs.
 
    Approved by Maurice van Loon, 2026-10-05 (step 247).
 
+4. **2026-10-25, step 416, approved by Maurice van Loon** — C2PA 2.5
+   (October 2026) moves this spec's rules to §12.3.1 and turns AC6 from
+   an obligation into a permission. 2.4 §13.2.1: *"Implementations shall
+   accept keys on any of these curves for all ECDSA algorithm choices."*
+   That sentence is gone from 2.5 (measured: 0 occurrences in the text
+   fetched on 2026-10-25); 2.5 §12.3.1 says instead *"P-256 keys shall be
+   used with ES256 or ESP256, P-384 keys with ES384 or ESP384, and P-521
+   keys with ES512 or ESP512. Validators may reject other pairings of
+   these curves with ECDSA algorithms."* AC6 meets both versions, and
+   files signed under 2.4 are the ones in circulation, so AC6 stands. A
+   crossed pairing is still an ECDSA signature made with the holder's
+   key; only the security level differs (reasoned). What `c2patool` does
+   with a signed file carrying such a pairing is not measured; if it
+   refuses one, this amendment is revisited. ESP256/384/512 and ML-DSA,
+   new in 2.5, stay `algorithm.unsupported` (AC9), as 2.5 §14 names for
+   an algorithm a validator does not support. No criterion changed.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
