@@ -165,6 +165,17 @@ $variants = [
 
         return rehashed($s, $png, 'sha256', $hashStart + 2 - 11, 32, [], $claimHashValue - 11, $HASH_DATA_BOX);
     },
+    // step 431: alg-missing with the claim's alg removed too (map of 7 -> 6): no algorithm anywhere (C2PA 2.4 §15.4.1)
+    'alg-missing-everywhere' => static function (string $s) use ($algKey, $algEnd, $hashBox, $HASH_DATA, $exStart, $png, $hashStart, $CLAIM, $HASH_DATA_BOX): string {
+        $s = bReplace(bSplice($s, $algKey, $algEnd - $algKey, '', $hashBox), $HASH_DATA, "\xa5", "\xa4");   // 11 bytes out of the assertion
+        $claim = $CLAIM - 11;
+        [$claimAlgKey, , $claimAlgEnd] = bMapPairs($s, $claim)['alg'];                                       // 63 alg 66 sha256, 11 bytes
+        $s = bReplace(bSplice($s, $claimAlgKey, $claimAlgEnd - $claimAlgKey, '', [0, 38, 33026 - 11, 33073 - 11]), $claim, "\xa7", "\xa6");
+        $s = bReplace($s, $exStart + 17, "\x19\xb3\xd5", cborUint(12 + 46025 - 22));
+        $entry = bMapPairs($s, bMapPairs($s, $claim)['created_assertions'][1] + 1);
+
+        return rehashed($s, $png, 'sha256', $hashStart + 2 - 11, 32, [], $entry['hash'][1] + 2, $HASH_DATA_BOX);
+    },
     'alg-sha384' => static fn (string $s): string => rehashed($sha384($s), $png, 'sha384', $hashStart + 2, 48, [], $claimHashValue + 16, $HASH_DATA_BOX),
     // ---- AC8: no hard binding, another kind, two ----
     'hard-binding-missing' => static fn (string $s): string => rehashed($relabel($s, 'c2pa.othr.data'), $png, 'sha256', $hashStart + 2, 32, [], $claimHashValue, $HASH_DATA_BOX),

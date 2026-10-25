@@ -188,6 +188,8 @@ $variants = [
     // AC10: the hash-data URI pointing nowhere, and at the claim box
     'uri-not-found' => claimReplace($s, $urlValue + 2, 'self#jumbf=c2pa.assertions/c2pa.hash.data', 'self#jumbf=c2pa.assertions/c2pa.hash.datb'),
     'uri-wrong-place' => claimSplice($s, $urlValue, 2 + 41, "\x78\x18".'self#jumbf=c2pa.claim.v2', $claimBox),
+    // step 431: the claim's signature URI resolving, but to the assertion store instead of the signature box
+    'signature-uri-other-box' => claimSplice($s, $pairs['signature'][1], $pairs['signature'][2] - $pairs['signature'][1], "\x78\x1a".'self#jumbf=c2pa.assertions', $claimBox),
     // AC11: the hash re-typed as text, and cut out
     'hash-as-text' => claimSplice($s, $hashValue, 2 + 32, "\x63abc", $claimBox),
     'hash-missing' => cborCutPair($s, $created[1] + 1, 'hash', $claimBox),

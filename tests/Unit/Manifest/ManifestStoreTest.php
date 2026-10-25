@@ -13,6 +13,7 @@ use Provemark\C2paVerifier\Manifest\EmbeddedFile;
 use Provemark\C2paVerifier\Manifest\HashedUri;
 use Provemark\C2paVerifier\Manifest\ManifestException;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
+use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Verifier\Verifier;
 use Provemark\ContentCredentials\Core\Reading\ManifestStoreParser;
 
@@ -275,6 +276,14 @@ it('AC10: a URI that resolves to nothing, to the wrong place, or to an unknown b
         ->toThrow(ManifestException::class, 'self#jumbf=c2pa.assertions/c2pa.hash.datb does not resolve to a box');
     expect(fn () => spec007Variant('uri-wrong-place'))
         ->toThrow(ManifestException::class, 'self#jumbf=c2pa.claim.v2 is not in the assertion store');
+    // step 431: the claim's signature URI resolves, but not to the signature box (C2PA 2.4 §15.7)
+    try {
+        spec007Variant('signature-uri-other-box');
+        throw new RuntimeException('no exception');
+    } catch (ManifestException $e) {
+        expect($e->status)->toBe(StatusCode::ClaimSignatureMissing)
+            ->and($e->getMessage())->toContain('signature URI self#jumbf=c2pa.assertions does not name the signature box');
+    }
     expect(fn () => spec007Variant('unknown-uuid', 'jumbf'))
         ->toThrow(ManifestException::class, 'self#jumbf=c2pa.assertions/c2pa.thumbnail.claim resolves to an unknown box (UUID ffffffff-ffff-ffff-ffff-ffffffffffff)');
 })->group('SPEC-007');

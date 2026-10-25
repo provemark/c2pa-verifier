@@ -46,6 +46,28 @@ it('AC1: a revoked intermediate leaves the path untrusted', function (): void {
         ->and($untrusted[0]->explanation)->toContain('OCSP');
 })->group('SPEC-066');
 
+it('AC1: the same when the signer\'s x5chain carries the trust anchor itself', function (): void {
+    // step 431: bin/make-anchor-in-chain-variants.php; the anchor is found inside the chain, a second path in the walk
+    $verify = static function (string $probe): VerificationReport {
+        $stream = fopen(Corpus::fixtures()."/anchor-in-chain/{$probe}.png", 'rb');
+        if ($stream === false) {
+            throw new RuntimeException("cannot open {$probe}");
+        }
+
+        return (new Verifier)->verify($stream, TrustSettings::fromJson((string) file_get_contents(Corpus::fixtures().'/anchor-in-chain/throw-away-root.settings.json')));
+    };
+
+    $revoked = $verify('anchor-in-chain-ca-revoked');
+    $untrusted = spec066Of($revoked, 'signingCredential.untrusted');
+    expect($revoked->result->state->value)->toBe('Valid')
+        ->and($untrusted)->not->toBe([])
+        ->and($untrusted[0]->explanation)->toContain('Throw-away Intermediate (anchor in chain)')
+        ->and($untrusted[0]->explanation)->toContain('OCSP');
+    foreach (['anchor-in-chain', 'anchor-in-chain-ca-good'] as $probe) {
+        expect($verify($probe)->result->state->value)->toBe('Trusted', $probe);
+    }
+})->group('SPEC-066');
+
 it('AC2: a good, removed, unverifiable or foreign answer about a CA changes nothing', function (string $probe): void {
     $report = spec066Verify($probe);
 

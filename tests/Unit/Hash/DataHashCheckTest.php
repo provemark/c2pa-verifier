@@ -342,6 +342,14 @@ it('AC7: the algorithm: the assertion\'s, else the claim\'s, else unsupported', 
         ->and($manifest->claim->alg)->toBe('sha256');
     expect(spec012Codes((new DataHashCheck)->check($manifest, $stream, $store)))->toBe(['assertion.dataHash.match']);
 
+    // step 431: neither the assertion nor the claim names one: unsupported, never a default (C2PA 2.4 §15.4.1)
+    [$manifest, $stream, $store] = spec012Open('binding/alg-missing-everywhere.png');
+    expect($manifest->assertions['c2pa.hash.data']->data)->not->toHaveKey('alg')
+        ->and($manifest->claim->alg)->toBeNull();
+    $none = (new DataHashCheck)->check($manifest, $stream, $store);
+    expect(spec012Codes($none))->toBe(['algorithm.unsupported'])
+        ->and($none[0]->url)->toBe(SPEC012_PNG.'/c2pa.assertions/c2pa.hash.data');
+
     [$manifest, $stream, $store] = spec012Open('binding/alg-sha384.png');
     assert(is_array($manifest->assertions['c2pa.hash.data']->data));
     expect($manifest->assertions['c2pa.hash.data']->data['alg'])->toBe('sha384');
