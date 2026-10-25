@@ -11892,3 +11892,10 @@ README are where the disclosure lives.
 - Measured: the test red before the change ("2 assertion storees"), green after; `composer check`.
 - Decided by Maurice: to fix it as a step of its own.
 
+## 2026-10-25 — Step 443: the Merkle tree on a non-fragmented MP4, measured
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, ga door met stap 443" (audit step 4: first measure whether `c2patool` writes the group-E files).
+- Produced: `notes/step-443-mdat-merkle-measured.md`; group E and three rows of `docs/reading-c2pa-2.4.md`; `NOTES.md`, `docs/milestones.md`. No code, no fixtures. Step 442 pushed.
+- Measured: `c2patool` 0.28.3 signing `fixture-unsigned.mp4` with a throw-away P-256 hierarchy (keys zeroed and deleted), with and without `core.merkle_tree_chunk_size_in_kb`; verdicts from `c2patool` 0.28.3 and 0.28.1 and `bin/c2pa-verify` on the files and on byte-changed copies; leaf, root and proof recomputed by hand. Reasoned: the `c2pa` 0.91.1 source (`bmff_hash.rs`, `settings/mod.rs`).
+- Decided by Maurice: to measure first.
+

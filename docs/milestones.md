@@ -429,4 +429,5 @@ must meet been implemented, before 2.5 is taken on? The source is
 | 440 | The covered rows of Appendix A (24): 35 mutations, 27 caught by the cited test, 1 by others (citation added), 7 by none; 6 now tested, 1 equivalent | done 2026-10-25 |
 | 441 | The covered rows of §6–§9 and C (23): 23 mutations, 18 caught by the cited test, 1 by another (citation added), 4 by none; all 4 now tested. Step 3 is complete | done 2026-10-25 |
 | 442 | A plural found in step 437: "2 assertion storees" now reads "2 assertion stores"; the explanation only, code and verdict unchanged | done 2026-10-25 |
-| — | What the sorting leaves to build, one spec each | after that |
+| 443 | Group E measured: `c2patool` 0.28.3 writes a Merkle tree over a non-fragmented `mdat` under `core.merkle_tree_chunk_size_in_kb` (off by default), `Trusted` there and catching a changed block; `Invalid` here for two reasons (both `hash` and `merkle`; the `merkle` proof boxes taken for a second store). No file is more lenient here. No code | done 2026-10-25 |
+| — | What the sorting leaves to build, one spec each: the non-fragmented mdat Merkle tree (group E) first, if Maurice wants it | next, his choice |

@@ -139,8 +139,14 @@ amendment 2).
 **E. Not supported; fails closed; could be built (6 rows).** The
 non-fragmented Merkle tree: §15.12.2.1 (two rows), §18.6.2 (`hash` and
 `merkle` together), §18.6.3 (`initHash`; block sizes), §A.5.6. Each such
-file is `Invalid` here. Whether `c2pa-rs` verifies them, and whether any
-writer produces them, is not measured.
+file is `Invalid` here. **Measured in step 443:** `c2patool` 0.28.3 writes
+them when `core.merkle_tree_chunk_size_in_kb` is set (off by default) and
+says `Trusted`; a changed byte in any block, or in the 16 bytes before the
+first, is `assertion.bmffHash.mismatch` there. Here the same files are
+`Invalid` for two reasons: an assertion with both `hash` and `merkle` is
+refused, and the top-level `merkle` uuid boxes that carry a proof are
+refused as a second manifest store. A verdict the other way round (more
+lenient here) does not occur.
 
 **F. Another code, the same verdict (8 rows).** §15.2.2 (47 codes not
 held, listed above), §15.4.3, §15.4.4, §15.8.2 (three time-stamp code
@@ -1088,8 +1094,8 @@ decision*, which follows `c2pa-rs` without `verify.strict_v1_validation`.
 | 15.12.2 | Streaming: validate each portion before rendering, in sequence; locations start at zero. | `FragmentedVerifier`: the count and each leaf's position; rendering is the player's | covered for the sequence; by design for rendering | measured: `FragmentedVerifierTest` "AC3"–"AC5", "AC8" |
 | 15.12.2 | Progressive download: blocks fetched, validated, tracks selected; non-standard playback signalled. | not a player | by design (`PRED-CONT-002`–`004`) | read |
 | 15.12.2 | `update`-purpose ContentProvenanceBox: search it first, follow the parent chain. | `IsobmffManifestStoreExtractor` refuses a purpose it does not read (SPEC-026 AC5) | by design: closed (`PRED-INGR-008`) | measured: SPEC-026 AC5 test |
-| 15.12.2 | No `exclusions`, or an empty list: `assertion.bmffHash.malformed`. | `BmffHashCheck::shapeFault()` (SPEC-038) | covered | measured: `BmffShapeTest` "AC1" |
-| 15.12.2 | Other exclusions: `assertion.bmffHash.additionalExclusionsPresent`. | `BmffHashCheck::refusedExclusion()`: only what `c2pa-rs` writes may be excluded (the C2PA `uuid`, `ftyp`, `mfra`, `free`, `skip`; offset fields from offset 16; Pixel's boxes, SPEC-072); offset tables are always hashed (SPEC-071 amendment 1). Those beyond the C2PA box are reported as `additionalExclusionsPresent` (`hasAdditionalExclusions()`); any other is `assertion.bmffHash.mismatch` (SPEC-071, step 358). Stricter than `c2pa-rs` | covered (stricter, SPEC-071) | measured: `BmffShapeTest` "AC5", `BmffExclusionAllowListTest` "reports an exclusion of the media as a mismatch…", "refuses an offset table excluded whole or from its header" |
+| 15.12.2 | No `exclusions`, or an empty list: `assertion.bmffHash.malformed`. | `BmffHashCheck::shapeFault()` (SPEC-038) | covered | measured: `BmffShapeTest` "AC1"; measured in step 443: written by `c2patool` 0.28.3 under `core.merkle_tree_chunk_size_in_kb`, `Trusted` there, `Invalid` here |
+| 15.12.2 | Other exclusions: `assertion.bmffHash.additionalExclusionsPresent`. | `BmffHashCheck::refusedExclusion()`: only what `c2pa-rs` writes may be excluded (the C2PA `uuid`, `ftyp`, `mfra`, `free`, `skip`; offset fields from offset 16; Pixel's boxes, SPEC-072); offset tables are always hashed (SPEC-071 amendment 1). Those beyond the C2PA box are reported as `additionalExclusionsPresent` (`hasAdditionalExclusions()`); any other is `assertion.bmffHash.mismatch` (SPEC-071, step 358). Stricter than `c2pa-rs` | covered (stricter, SPEC-071) | measured: `BmffShapeTest` "AC5", `BmffExclusionAllowListTest` "reports an exclusion of the media as a mismatch…", "refuses an offset table excluded whole or from its header"; measured in step 443: written by `c2patool` 0.28.3 under `core.merkle_tree_chunk_size_in_kb`, `Trusted` there, `Invalid` here |
 | 15.12.2 | Ignore `pad` and `pad2`. | never read | covered by construction | read |
 | 15.12.2 | The algorithm per §15.4. | `assertionOf()`: the assertion's `alg`, else the claim's (SPEC-027 amendment 8); with neither, `algorithm.unsupported` (amendment 9) | covered (SPEC-027 amendment 9) | measured: `BmffProbesTest` "AC9", `ClaimAlgTest` "AC10" |
 | 15.12.2 | Subsets out of order, overlapping or negative: malformed; other failures `mismatch`; else `match`. | `shapeFault()`, `check()` | covered | measured: `BmffShapeTest` "AC2"; `BmffHashCheckTest` "AC1", "AC2" |
@@ -1275,7 +1281,7 @@ binding and is not read. `c2pa-rs` 0.91.1 was read beside it
 | 18.6.2 | The `length`, `version`, `flags` and `exact` filters. | refused by name once the path resolves | by design: SPEC-027 and SPEC-029 *Out of scope* (no file exercises them; ignoring one would hash the wrong bytes) | measured: `BmffHashCheckTest` AC5, `BmffV2ExclusionsTest` AC6 |
 | 18.6.2 | The `data` filter: bytes at each offset equal the given value. | `matches()` | covered | measured: `BmffHashCheckTest` AC4, `BmffV2ExclusionsTest` AC5 |
 | 18.6.2 | `xpath` syntax is limited: abbreviated, full paths, `node` or `node[n]`, no `//`, 4cc nodes only. | a leading `/` is required (else mismatch); `node[n]` steps are read (SPEC-072), and a bracket that is not `[n]` with `n` from 1 is `assertion.bmffHash.malformed`; other syntax matches no box, so the box is hashed and the binding fails | covered (fails closed) | measured: `PixelVideoTest` "refuses a malformed index as malformed"; the rest read: `shapeFault()`, `pathMatches()` → P07-6; a path without its leading `/`: `BmffHashCheckTest` "AC5: an xpath without its leading slash is refused, not matched loosely" (step 439) |
-| 18.6.2 | One exclusion may match zero or more boxes. | `plan()` applies each exclusion to every box | covered | measured: `BmffV2ExclusionsTest` AC3, AC6; `BmffExclusionLimitsTest` AC3 (step 439) |
+| 18.6.2 | One exclusion may match zero or more boxes. | `plan()` applies each exclusion to every box | covered | measured: `BmffV2ExclusionsTest` AC3, AC6; `BmffExclusionLimitsTest` AC3 (step 439); measured in step 443: written by `c2patool` 0.28.3 under `core.merkle_tree_chunk_size_in_kb`, `Trusted` there, `Invalid` here |
 | 18.6.2 | A non-leaf `xpath` node is a plain container (not a FullBox); children of unusual boxes are excluded by `subset`. | `boxTree()` descends only the containers it knows, so a path through another box matches nothing and is hashed | covered by construction | read |
 | 18.6.2 | An embedded manifest's box is one of the exclusions. | an absent or empty `exclusions` → `assertion.bmffHash.malformed`; a hash that covers its own box cannot match | covered | measured: `BmffShapeTest` AC1; the rest read |
 | 18.6.2 | `free` boxes, the two-pass method and post-embed offsets. | — | n/a (writer guidance) | — |
