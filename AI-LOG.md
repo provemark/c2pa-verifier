@@ -11757,3 +11757,24 @@ README are where the disclosure lives.
   (all `Trusted`); the pinning test red under a one-run mutation of
   `assertionOf()`, green without it; `composer check`.
 - Decided by Maurice: none in this step.
+
+## 2026-10-25 — Every reference of a `c2pa.opened` is the one parent (step 429)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en ga door met vraag 3", "akkoord, optie 2, meet
+  eerst c2pa.placed", "akkoord, bouw amendement 3", and, after a fifth
+  probe showed a second leniency, "akkoord, optie 2, bouw amendement 3".
+- Produced: `bin/make-opened-reference-variants.php`,
+  `tests/Fixtures/opened-references/` (seven probes, the public root,
+  settings, README) and their `c2patool` answers; SPEC-033 amendment 3 and
+  AC10; `tests/Unit/Manifest/OpenedReferencesTest.php`; the rule in
+  `src/Manifest/ActionsCheck.php`; a row in `docs/comparison.md`;
+  `docs/reading-c2pa-2.4.md`, `docs/milestones.md`,
+  `notes/step-429-opened-references.md`, a row in `NOTES.md`; step 428
+  pushed.
+- Measured: probes for `opened`, `placed`, `removed`, `transcoded` and
+  `repackaged` with `c2patool` 0.28.1, 0.28.2 and 0.28.3 (scratch), the
+  seven kept probes with 0.28.1 and 0.28.3; the test red, then green; all
+  957 fixtures before and after; `composer check`.
+- Decided by Maurice: option 2 (refuse rather than record); the wider
+  rule (every reference must be the one parent) over the narrower one
+  (unresolvable references only).

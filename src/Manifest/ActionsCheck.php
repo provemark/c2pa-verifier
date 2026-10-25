@@ -215,7 +215,8 @@ final readonly class ActionsCheck
                     }
                     $relationship = $name === 'c2pa.opened' ? 'parentOf' : 'componentOf';
                     $good = count(array_filter($references, static fn (mixed $r): bool => $resolves($r, $relationship)));
-                    if ($name === 'c2pa.opened' ? $good !== 1 : $good === 0) {
+                    // opened: every reference is the one parent, whatever its place in the list (SPEC-033 amendment 3)
+                    if ($name === 'c2pa.opened' ? $good !== 1 || count($references) !== 1 : $good === 0) {
                         $statuses[] = $mismatch($url, sprintf("action[%d] ('%s') must have valid ingredient with %s relationship", $i, $name, $relationship));
                     }
                 }

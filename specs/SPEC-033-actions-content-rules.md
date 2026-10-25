@@ -204,6 +204,16 @@ does so. Both `c2patool` versions' reports are recorded.
   - Then it has both new cases, each `isFailure()`, and the recorded
     surface holds 114 symbols (SPEC-025 amendment).
 
+- **AC10 — every reference of a `c2pa.opened` is the one parent** *(amendment 3; required: error path; oracle: `c2patool` 0.28.1 and 0.28.3)*
+  - Given the seven probes of `tests/Fixtures/opened-references/`
+  - When the Verifier runs under the probes' settings
+  - Then `opened-good` is `Trusted`; `opened-good-unresolvable`,
+    `opened-unresolvable-good`, `opened-good-twice` and
+    `opened-good-component` are `Invalid` with
+    `assertion.action.ingredientMismatch`; both `placed-*` probes are
+    `Trusted`; and `c2patool` says `Invalid` to `opened-good-unresolvable`
+    and `opened-good-component` and `Trusted` to the others
+
 ## References
 
 - Specification: C2PA 2.4 §15.10.3.2.3 (*c2pa.actions validation*),
@@ -307,6 +317,39 @@ adopting their proposals.
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 125).
 
+3. **2026-10-25, step 429, found by sorting the open rows of the C2PA 2.4 reading; measured** *(confirmed by Maurice van Loon, 2026-10-25)* —
+   Rule 2 counted the references of a `c2pa.opened` that resolve to a
+   `parentOf` ingredient and asked for exactly one; any other reference
+   beside it was ignored. `c2pa-rs` lets the last reference decide
+   (`verify_actions`, rule 2.b.iv: its flag is overwritten on every
+   reference). Measured with `bin/make-opened-reference-variants.php`
+   (`c2patool` 0.28.3 signing, 0.28.1 and 0.28.3 judging): a good
+   reference followed by one that does not resolve, or by one to a
+   `componentOf` ingredient, is `Invalid` (`ingredientMismatch`) there and
+   was `Trusted` here; the same two the other way round are `Trusted`
+   there; the good reference twice is `Trusted` there and was `Invalid`
+   here.
+
+   Rule 2 now reads, for `c2pa.opened`: **every** reference must resolve,
+   by label in this claim, to a `parentOf` ingredient assertion, and there
+   is exactly one reference. Any other reference, one that resolves to
+   nothing or to an ingredient of another relationship, is
+   `assertion.action.ingredientMismatch`, wherever it stands. C2PA 2.4
+   §15.10.3.2.3 asks for *"exactly one valid hashed URI that can be
+   resolved to an ingredient assertion … whose relationship field is
+   parentOf"*, and §15.10.3.3 makes a hashed URI without a destination a
+   failure. So this verifier is never `Trusted` where `c2patool` says
+   `Invalid` on these files, and it is stricter in the order `c2pa-rs`
+   lets through (Maurice's choice of scope, 2026-10-25).
+
+   `c2pa.placed`, `c2pa.removed`, `c2pa.transcoded` and `c2pa.repackaged`
+   keep "at least one": with a good and an unresolvable reference, in
+   either order, both tools say `Trusted` (measured, `placed-*` probes).
+   The hash in a reference is still not compared (open question 2).
+   New AC10.
+
+   **Weight A: files wrongly `Trusted` become `Invalid`.**
+
 ## Traceability
 
 Filled when status becomes `implemented`.
@@ -322,3 +365,4 @@ Filled when status becomes `implemented`.
 | AC7 | tests/Unit/Manifest/ActionsContentTest.php :: AC7: watermarks / SPEC-033 | src/Manifest/ActionsCheck.php :: contentRules() (soft binding); src/Report/StatusCode.php :: AssertionActionSoftBindingMissing |
 | AC8 | tests/Unit/Manifest/ActionsContentTest.php :: AC8: nothing else moves / SPEC-033 | src/Manifest/ActionsCheck.php :: contentRules() |
 | AC9 | tests/Unit/Manifest/ActionsContentTest.php :: AC9: the vocabulary grows by two codes, verbatim / SPEC-033 | src/Report/StatusCode.php :: AssertionActionIngredientMismatch, AssertionActionSoftBindingMissing |
+| AC10 (amendment 3) | tests/Unit/Manifest/OpenedReferencesTest.php :: AC10 / SPEC-033 | src/Manifest/ActionsCheck.php :: contentRules() (rule 2 for c2pa.opened); bin/make-opened-reference-variants.php |
