@@ -295,6 +295,31 @@ it('AC9: an empty assertion list, a null claim_generator_info and a name that is
         ->and($malformed[0]->explanation)->toContain('created_assertions is not a non-empty list');
 })->group('SPEC-007');
 
+it('AC12: a manifest holds one assertion store and one claim signature, never two (C2PA 2.4 §11.1.4.2; step 437)', function (): void {
+    $stream = fopen(dirname(__DIR__, 2).'/Fixtures/fixture-signed.png', 'rb');
+    assert(is_resource($stream));
+    $extracted = (new PngManifestStoreExtractor)->extract($stream);
+    assert($extracted !== null);
+    $bytes = $extracted->bytes;
+    $root = (new JumbfParser)->parse($bytes);
+    $manifests = $root->superboxes();
+    $manifest = end($manifests);
+    assert($manifest instanceof Superbox);
+    foreach (['c2pa.assertions' => 'assertion store', 'c2pa.signature' => 'signature box'] as $label => $what) {
+        $box = array_values(array_filter($manifest->superboxes(), static fn (Superbox $b): bool => $b->description->label === $label))[0];
+        // the box once more after itself; the manifest's and the store's LBox grow by its length
+        $copy = substr($bytes, $box->offset, $box->length);
+        $grown = substr_replace($bytes, $copy, $box->offset + $box->length, 0);
+        foreach ([0, $manifest->offset] as $at) {
+            $length = unpack('N', substr($bytes, $at, 4));
+            assert(is_array($length) && is_int($length[1]));
+            $grown = substr_replace($grown, pack('N', $length[1] + $box->length), $at, 4);
+        }
+        expect(fn () => ManifestStore::fromTree((new JumbfParser)->parse($grown)))
+            ->toThrow(ManifestException::class, "2 {$what}");   // the plural is written \"{$what}es\"; the count is what matters
+    }
+})->group('SPEC-007');
+
 it('AC10: a URI that resolves to nothing, to the wrong place, or to an unknown box is an error', function (): void {
     expect(fn () => spec007Variant('uri-not-found'))
         ->toThrow(ManifestException::class, 'self#jumbf=c2pa.assertions/c2pa.hash.datb does not resolve to a box');

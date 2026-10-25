@@ -11850,3 +11850,10 @@ README are where the disclosure lives.
 - Measured: 21 mutations of `src/`, each restored; the corpus with per-directory settings, with and without the five surviving mutations; each new test red under its mutation; `composer check`.
 - Decided by Maurice: §10 as the next scope.
 
+## 2026-10-25 — Step 437: the covered rows of §11, each broken once
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en ga door met §11".
+- Produced: tests in `JumbfParserTest` and `ManifestStoreTest`; six rows of `docs/reading-c2pa-2.4.md`; `notes/step-437-covered-rows-11.md`, `NOTES.md`, `docs/milestones.md`. No change under `src/`. Step 436 pushed.
+- Measured: 28 mutations of `src/`, each restored; the corpus with per-directory settings, with and without the four surviving mutations (none moved a file); each new test red under its mutation; `composer check`.
+- Decided by Maurice: §11 as the next scope.
+

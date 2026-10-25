@@ -302,6 +302,19 @@ it('AC12: description-box faults are errors naming the box and the fault', funct
         ->toThrow(JumbfException::class, 'offset 32839: salt of 20 bytes, expected 16 or 32');
     expect(fn () => spec005Parse(spec005Variant('private-not-c2sh')))
         ->toThrow(JumbfException::class, 'offset 32839: private box c2sx is not c2sh');
+    // the rest of C2PA 2.4 §11.1.4.1's list, each in place of the control byte, the label's length kept (step 437)
+    $control = spec005Variant('label-control');
+    foreach ([
+        'a C1 control (U+0085)' => "c2pa\xC2\x85laim.v2",
+        'U+FEFF' => "c2pa\xEF\xBB\xBFaim.v2",
+        'U+FFFF' => "c2pa\xEF\xBF\xBFaim.v2",
+        'a surrogate (U+D800)' => "c2pa\xED\xA0\x80aim.v2",
+        'a byte that is not UTF-8' => "c2pa\xFFclaim.v2",
+    ] as $name => $label) {
+        expect(substr_count($control, "c2pa\x01claim.v2"))->toBe(1);
+        expect(fn () => spec005Parse(str_replace("c2pa\x01claim.v2", $label, $control)))
+            ->toThrow(JumbfException::class, 'contains a character that is not permitted', $name);
+    }
 })->group('SPEC-005');
 
 it('AC13: compressed manifests and compressed boxes are errors, not skips; update manifests are read (SPEC-022)', function (): void {
