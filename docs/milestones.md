@@ -377,3 +377,26 @@ a test TSA Trust List and a validation time in, crJSON out (step 367).
 | 384–385 | #9: SPEC-079, the JSON trust lists with their dates | implemented 2026-10-23 |
 | 387–388 | The other gaps: #12 and #1 by design, #7 and #8 parked | done 2026-10-23 |
 | — | Applying | Maurice's decision |
+
+## C2PA 2.5: what waits for `c2pa-rs`
+
+C2PA 2.5 appeared on 2026-10-25. Its clarifications are read against this
+verifier first (steps 416–418); its additions wait until `c2patool`
+applies them, because the verdict follows `c2patool`. Each row is measured
+against `c2patool` before it becomes a spec.
+
+| 2.5 | what | here now |
+|---|---|---|
+| §12.3.1 | ES256/384/512 under a crossed curve may be refused | accepted (SPEC-009 amendment 4) |
+| §12.3.1 | ESP256/384/512, ML-DSA-44/65/87 | `algorithm.unsupported` |
+| §14.10.4.2.4 | a redacted ingredient may be the target of `opened`, `placed`, `removed`, `transcoded`, `repackaged` | `ingredientMismatch` (stricter) |
+| §14.10.4.2.4 | `when` with `whenStart`/`whenEnd`, or `whenStart` after `whenEnd`: `assertion.action.malformed` | not checked |
+| §14.10.4.2.4 | `c2pa.deleted` references: `componentOf` in another manifest | not checked |
+| §14.10.4.2.4 | `assertion.action.ingredientLocationMismatch` (informational) | not reported |
+| §14.10.4.2.4 | `relatedAssertions` to a redacted assertion: `assertion.redacted` (informational) | accepted, not reported |
+| §14.11.3.2 | an ingredient's own `relatedAssertions` | not checked |
+
+| step | what | status |
+|---|---|---|
+| 416 | §12.3.1, algorithm and key: SPEC-009 amendment 4 | done 2026-10-25 |
+| 417 | §14.10.4.2.4 and §14.11.3.2, action and ingredient references | done 2026-10-25 |

@@ -11572,3 +11572,19 @@ README are where the disclosure lives.
   measured.
 - Decided by Maurice: read 2.5's clarifications first and build nothing
   for 2.5 yet; keep AC6 and document it.
+
+## 2026-10-25 — C2PA 2.5 and the references between actions and ingredients (step 417)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met punt 2", then "akkoord, documenteer
+  en begin met punt 3".
+- Produced: `notes/step-417-c2pa-2.5-action-references.md`; the 2.5
+  section in `docs/milestones.md`; five rows of
+  `docs/reading-c2pa-2.4.md` annotated; a row in `NOTES.md`. No code.
+  Step 416 pushed.
+- Measured: the 2.4 text fetched and hashed; the actions, references and
+  ingredient sections of 2.4 and 2.5 diffed; `gh search code` on
+  `contentauth/c2pa-rs` for the new 2.5 names. Reasoned: that no change
+  makes a verdict wrongly `Valid`; that a sentence in 2.5 §14.11.3.2
+  contradicts the one before it.
+- Decided by Maurice: no code for 2.5's action rules; document them as
+  waiting for `c2pa-rs`.
