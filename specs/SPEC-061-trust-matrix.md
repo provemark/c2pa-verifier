@@ -221,6 +221,19 @@ const SPEC061_CODES_DIFFER = [/* probe => [0.28.1's codes, 0.27.22's, this verif
    SKI has no AKI keyid; it is `signingCredential.invalid` everywhere, and
    `c2patool` adds `signingCredential.untrusted`.
 
+6. **2026-10-25, step 434, tests only** *(awaiting Maurice's confirmation)* —
+   Two probes join (63; AC6 counts 63), for profile rules above the leaf
+   (SPEC-014 amendment 8) that no probe broke yet, so that removing either
+   rule fails AC1: `int-pss-mgf1-sha384` (the anchor RSA-2048, signing the
+   intermediate with RSASSA-PSS over SHA-256 and MGF1 over SHA-384) and
+   `int-version-2` (the version field set to v2, the extensions kept, the
+   tbsCertificate signed again). `SPEC061_STRICTER` grows by
+   `int-pss-mgf1-sha384`, which both `c2patool` versions trust;
+   `int-version-2` is `Valid` with `signingCredential.untrusted` in both
+   and here.
+
+   **Weight C: no verdict of the existing probes moves; no code changes.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

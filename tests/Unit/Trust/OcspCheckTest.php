@@ -221,6 +221,29 @@ it('AC4: a response for another certificate is not applied', function (): void {
         ->and(str_contains(strtolower($status->explanation), 'certificate'))->toBeTrue($status->explanation);
 })->group('SPEC-030');
 
+it('AC4: only the issuer, or a responder it issued with OCSPSigning, answers for a certificate (RFC 6960 §4.2.2.2; step 434)', function (): void {
+    // bin/make-ocsp-responder-variants.php: three responses saying the signer is revoked, each signed by a responder in `certs`
+    $chain = [spec030Certificate('responder/signer'), spec030Certificate('responder/ca')];
+
+    expect(spec030Check([spec030Der('responder/delegated')], $chain)->code)->toBe(StatusCode::SigningCredentialOcspRevoked);
+    foreach (['no-eku' => 'OCSPSigning', 'stranger' => 'signature'] as $name => $needle) {
+        $status = spec030Check([spec030Der("responder/{$name}")], $chain);
+        expect($status->code)->toBe(StatusCode::SigningCredentialOcspSkipped, $name)
+            ->and(str_contains($status->explanation, $needle))->toBeTrue("{$name}: {$status->explanation}");
+    }
+})->group('SPEC-030');
+
+it('AC4: a response whose OCSPResponseStatus is not successful is not read on (RFC 6960 §4.2.1; step 434)', function (): void {
+    // revoked.der with its status set to tryLater (3), its response bytes left in place
+    $der = spec030Der('revoked');
+    expect(substr($der, 4, 3))->toBe("\x0a\x01\x00");
+    $der[6] = "\x03";
+    $status = spec030Check([$der], spec030Chain());
+
+    expect($status->code)->toBe(StatusCode::SigningCredentialOcspSkipped)
+        ->and(str_contains($status->explanation, 'not successful'))->toBeTrue($status->explanation);
+})->group('SPEC-030');
+
 it('AC5: a file without rVals says what was not checked', function (): void {
     $report = spec030Verify(relative: 'fixture-signed.jpg');
     $codes = spec030Codes($report);

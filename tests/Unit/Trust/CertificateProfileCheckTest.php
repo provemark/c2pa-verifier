@@ -216,7 +216,8 @@ it('AC2: one departure, one signingCredential.invalid, the state Invalid, as c2p
         'eku-mixed' => 'Time Stamping',
         'no-eku' => 'no ExtendedKeyUsage',
         'v1' => 'no KeyUsage',
-        'rsa-1024' => '1024',
+        // the profile's own words: §13.2.1 refuses the same key for PS256, and must not stand in for §14.5 (step 434)
+        'rsa-1024' => 'RSA key of 1024 bits; C2PA 2.4 §14.5 requires at least 2048',
         'curve-secp256k1' => 'secp256k1',
     ];
     foreach ($cases as $variant => $word) {

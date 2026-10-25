@@ -11821,3 +11821,10 @@ README are where the disclosure lives.
 - Measured: the three probes with `c2patool` 0.28.1 and 0.28.3 and this verifier; the test red with the check removed from `IngredientManifestCheck::manifest()`, green with it; `composer check`.
 - Decided by Maurice: build step 433 as proposed.
 
+## 2026-10-25 — Step 434: the covered rows of §14, each broken once
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en ga door met §14".
+- Produced: `bin/make-ocsp-responder-variants.php` and `tests/Fixtures/ocsp/responder/`; two probes in `bin/make-trust-matrix.php` (`int-pss-mgf1-sha384`, `int-version-2`) with their fixtures and `c2patool` answers; `tests/Fixtures/c2patool/allowed-list/`; tests in `ChainCheckTest`, `OcspCheckTest`, `TrustMatrixTest`, `CertificateProfileCheckTest`; SPEC-061 amendment 6; nine rows of `docs/reading-c2pa-2.4.md`; the matrix README; `notes/step-434-covered-rows-14.md`, `NOTES.md`, `docs/milestones.md`. No change under `src/`. Step 433 pushed.
+- Measured: 48 mutations of `src/`, each restored; the corpus with per-directory settings, with and without the seven surviving mutations; `c2patool` 0.27.22, 0.28.1 and 0.28.3 and `openssl verify` on the new probes; each new test red under its mutation; `composer check`.
+- Decided by Maurice: push step 433; §14 as the next scope.
+

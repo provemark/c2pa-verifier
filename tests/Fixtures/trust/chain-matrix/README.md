@@ -114,3 +114,16 @@ They are built with `authorityKeyIdentifier=none` or
 `subjectKeyIdentifier=none`, because OpenSSL 3 adds both by default. Below a
 CA without a Subject Key Identifier, the next certificate gets no AKI
 keyid, which is what `c2patool` and OpenSSL refuse.
+
+Two probes were added on 2026-10-25 (step 434), for profile rules above
+the leaf that no probe broke yet:
+
+| probe | c2patool 0.27.22 | c2patool 0.28.1 | OpenSSL | this verifier |
+|---|---|---|---|---|
+| `int-pss-mgf1-sha384` | Trusted | Trusted | OK | Valid, signingCredential.untrusted |
+| `int-version-2` | Valid, signingCredential.untrusted | Valid, signingCredential.untrusted | refused: Using cert extension requires at least X509v3 | Valid, signingCredential.untrusted |
+
+In `int-pss-mgf1-sha384` the anchor is RSA-2048 and signs the intermediate
+with RSASSA-PSS over SHA-256, with MGF1 over SHA-384. In `int-version-2`
+the intermediate's version field is set to v2 with its extensions kept,
+and the anchor's throw-away key signs the tbsCertificate again.

@@ -27,6 +27,7 @@ const SPEC061_STRICTER = [
     'int-secp256k1' => 'SPEC-014 amendment 8: the profile holds for every certificate: P-256, P-384 or P-521',
     'anchor-rsa1024' => 'SPEC-014 amendment 8: the profile holds for the anchor too: RSA of at least 2048 bits',
     'anchor-sha1-self-signed' => 'SPEC-014 amendment 8: the profile holds for the anchor too: its own signature algorithm from the list',
+    'int-pss-mgf1-sha384' => 'SPEC-014 amendment 8: the profile holds for every certificate: the MGF1 hash equals the PSS hash (step 434)',
 ];
 
 /**
@@ -105,7 +106,7 @@ it('AC6: every probe the generator defines has a fixture and both answers, and n
     $defined = spec061GeneratorProbes();
     sort($defined);
 
-    expect($defined)->toHaveCount(61)
+    expect($defined)->toHaveCount(63)
         ->and(spec061FixtureProbes())->toBe($defined);
     foreach ($defined as $probe) {
         foreach (['0.27.22', '0.28.1'] as $version) {

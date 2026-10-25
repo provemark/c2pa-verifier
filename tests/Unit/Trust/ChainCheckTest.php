@@ -211,6 +211,26 @@ it('AC3: the allowed list: trusted without a chain', function (): void {
         ->and($settings->anchorSets[0]->anchors[0]->subjectCn())->toBe('Root CA');
 })->group('SPEC-014');
 
+it('AC3: a CA certificate in the allowed list trusts no certificate it issued (C2PA 2.4 §14.4.3; step 434)', function (): void {
+    // the trust matrix's control chain, with its anchor in the allowed list and in no anchor list
+    $dir = spec014Fixtures().'/trust/chain-matrix';
+    $entry = ['trust_anchors' => '', 'trust_kind' => 'manifest', 'allowed_list' => (string) file_get_contents("{$dir}/control.anchor.pem")];
+    $settings = TrustSettings::fromJson(json_encode(['verify' => ['verify_trust' => true], 'trust' => ['anchors' => [$entry], 'trust_config' => (string) file_get_contents(spec014Fixtures().'/trust/store.cfg')]], JSON_THROW_ON_ERROR));
+    $report = spec014Verify('trust/chain-matrix/control.png', $settings);
+    $credential = spec014Credential($report);
+
+    expect($credential)->toHaveCount(1)
+        ->and($credential[0]->code)->toBe(StatusCode::SigningCredentialUntrusted)
+        ->and($report->result->state)->toBe(ValidationState::Valid);
+    // c2patool, given the same certificate as its legacy allowed_list
+    foreach (['0.28.1', '0.28.3'] as $version) {
+        /** @var array<string, mixed> $oracle */
+        $oracle = json_decode((string) file_get_contents(spec014Fixtures()."/c2patool/allowed-list/control-anchor-allowed--{$version}.json"), true, 512, JSON_THROW_ON_ERROR);
+        expect($oracle['validation_state'])->toBe('Valid', $version)
+            ->and(spec014OracleUrl($oracle, 'signingCredential.untrusted'))->not->toBeNull($version);
+    }
+})->group('SPEC-014');
+
 it('AC4: the walk needs the intermediate the chain carries, and an intermediate may be the anchor', function (): void {
     $leafOnly = spec014Verify('binding/x5chain-leaf-only.png', spec014Settings('full'));
     $credential = spec014Credential($leafOnly);

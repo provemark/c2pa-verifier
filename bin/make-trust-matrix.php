@@ -373,12 +373,17 @@ $variants = [
     'leaf-issuer-unique-id' => [null, null, null],
     'leaf-subject-unique-id' => [null, null, null],
     'int-subject-unique-id' => [null, null, null],
+    // the profile above the leaf (step 434): PSS parameters and the version, each in the intermediate
+    'int-pss-mgf1-sha384' => [null, null, null],
+    'int-version-2' => [null, null, null],
 ];
 /**
  * The PSS probes: the intermediate becomes RSA-2048 and signs the leaf with these digest, MGF1 digest and salt
  * length; an edit then changes the last byte of the outer signatureAlgorithm's MGF1 hash OID (not signed by anyone).
  *
- * @var array<string, array{md: string, mgf1: string, salt: int, edit: int<0, 255>|null}> $pss
+ * One probe ('at' => 'int', step 434) moves this to the intermediate: the anchor becomes RSA-2048 and signs it so.
+ *
+ * @var array<string, array{md: string, mgf1: string, salt: int, edit: int<0, 255>|null, at?: 'int'}> $pss
  */
 /**
  * The unique-ID probes (step 310): after OpenSSL has issued the certificate, an issuerUniqueID ([1]) or a
@@ -392,6 +397,15 @@ $uids = [
     'leaf-subject-unique-id' => ['leaf', 2],
     'int-subject-unique-id' => ['int', 2],
 ];
+/**
+ * The version probe (step 434): the tbsCertificate's version field set to this value (1 = v2), its extensions
+ * kept, and signed again with the issuer's throw-away key, as the unique-ID probes are.
+ *
+ * @var array<string, array{0: 'int', 1: int<0, 255>}> $versions
+ */
+$versions = [
+    'int-version-2' => ['int', 1],
+];
 $pss = [
     'leaf-pss-control' => ['md' => 'sha256', 'mgf1' => 'sha256', 'salt' => 32, 'edit' => null],
     'leaf-pss-sha384' => ['md' => 'sha384', 'mgf1' => 'sha384', 'salt' => 48, 'edit' => null],
@@ -402,6 +416,7 @@ $pss = [
     'leaf-pss-saltlen-20' => ['md' => 'sha256', 'mgf1' => 'sha256', 'salt' => 20, 'edit' => null],
     'leaf-pss-outer-mgf1-sha384' => ['md' => 'sha256', 'mgf1' => 'sha256', 'salt' => 32, 'edit' => 0x02],
     'leaf-pss-outer-mgf1-unknown' => ['md' => 'sha256', 'mgf1' => 'sha256', 'salt' => 32, 'edit' => 0x7F],
+    'int-pss-mgf1-sha384' => ['md' => 'sha256', 'mgf1' => 'sha384', 'salt' => 32, 'edit' => null, 'at' => 'int'],
 ];
 
 $genKey = static function (string $path, string $kind): void {
@@ -451,9 +466,11 @@ foreach ($variants as $probe => [$position, $field, $value]) {
             'serial' => matrixCert($was['ext'], $was['key'], $was['md'], $was['validity'], is_string($value) ? $value : throw new RuntimeException("{$probe}: a serial is a string")),
         };
     }
-    if (isset($pss[$probe])) {
-        $recipe['int'] = matrixCert($recipe['int']['ext'], 'rsa2048', $recipe['int']['md'], $recipe['int']['validity'], $recipe['int']['serial']);
-        $recipe['leaf'] = matrixCert($recipe['leaf']['ext'], $recipe['leaf']['key'], $pss[$probe]['md'], $recipe['leaf']['validity'], $recipe['leaf']['serial']);
+    $pssAt = isset($pss[$probe]) ? $pss[$probe]['at'] ?? 'leaf' : null;
+    if ($pssAt !== null) {
+        $signer = $pssAt === 'leaf' ? 'int' : 'anchor';
+        $recipe[$signer] = matrixCert($recipe[$signer]['ext'], 'rsa2048', $recipe[$signer]['md'], $recipe[$signer]['validity'], $recipe[$signer]['serial']);
+        $recipe[$pssAt] = matrixCert($recipe[$pssAt]['ext'], $recipe[$pssAt]['key'], $pss[$probe]['md'], $recipe[$pssAt]['validity'], $recipe[$pssAt]['serial']);
     }
     $cn = ['anchor' => "Matrix Anchor ({$probe})", 'int' => "Matrix Intermediate ({$probe})", 'leaf' => "Matrix Signer ({$probe})"];
     $issuer = ['anchor' => null, 'int' => 'anchor', 'leaf' => 'int'];
@@ -465,7 +482,7 @@ foreach ($variants as $probe => [$position, $field, $value]) {
         // the digest is the issuer's choice; an Ed25519 issuer signs without one
         $issuerKey = $issuer[$who] === null ? $r['key'] : $recipe[$issuer[$who]]['key'];
         $md = $issuerKey === 'ed25519' ? [] : ['-'.$r['md']];
-        if ($who === 'leaf' && isset($pss[$probe])) {
+        if ($who === $pssAt) {
             $md = [...$md, '-sigopt', 'rsa_padding_mode:pss', '-sigopt', 'rsa_mgf1_md:'.$pss[$probe]['mgf1'], '-sigopt', 'rsa_pss_saltlen:'.$pss[$probe]['salt']];
         }
         if ($issuer[$who] === null) {
@@ -474,19 +491,27 @@ foreach ($variants as $probe => [$position, $field, $value]) {
             tmRun(tmSh('openssl', 'req', '-new', '-key', "{$keys}/{$who}.key", '-config', "{$keys}/{$who}.cnf", '-out', "{$keys}/{$who}.csr"));
             tmRun(tmSh(...array_merge(['openssl', 'x509', '-req'], $md, ['-in', "{$keys}/{$who}.csr", '-CA', "{$keys}/{$issuer[$who]}.pem", '-CAkey', "{$keys}/{$issuer[$who]}.key", '-set_serial', $r['serial'] ?? (string) random_int(1000, 99999999)], $dates, ['-extfile', "{$keys}/{$who}.cnf", '-extensions', 'v3', '-out', "{$keys}/{$who}.pem"])));
         }
-        if (($uids[$probe][0] ?? null) === $who) {
+        if (($uids[$probe][0] ?? null) === $who || ($versions[$probe][0] ?? null) === $who) {
             // Certificate ::= SEQUENCE { tbsCertificate, signatureAlgorithm, signatureValue }
             [$tbs, $algorithm] = tmDerChildren($pemToDer((string) file_get_contents("{$keys}/{$who}.pem")));
             $fields = tmDerChildren($tbs);
-            $bits = "\0".'matrixuid';   // a BIT STRING's contents: no unused bits, then the ID
-            $uid = chr(0x80 | $uids[$probe][1]).tmDerLength(strlen($bits)).$bits;   // [n] IMPLICIT BIT STRING
-            $at = count($fields);
-            foreach ($fields as $i => $field) {
-                if (ord($field[0]) === 0xA3) {
-                    $at = $i;
+            if (isset($versions[$probe])) {
+                // version [0] EXPLICIT INTEGER, which OpenSSL writes as 2 (v3) for a certificate with extensions
+                if ($fields[0] !== "\xA0\x03\x02\x01\x02") {
+                    throw new RuntimeException("{$probe}: the tbsCertificate does not begin with version v3");
                 }
+                $fields[0] = "\xA0\x03\x02\x01".chr($versions[$probe][1]);
+            } else {
+                $bits = "\0".'matrixuid';   // a BIT STRING's contents: no unused bits, then the ID
+                $uid = chr(0x80 | $uids[$probe][1]).tmDerLength(strlen($bits)).$bits;   // [n] IMPLICIT BIT STRING
+                $at = count($fields);
+                foreach ($fields as $i => $field) {
+                    if (ord($field[0]) === 0xA3) {
+                        $at = $i;
+                    }
+                }
+                array_splice($fields, $at, 0, [$uid]);
             }
-            array_splice($fields, $at, 0, [$uid]);
             $content = implode('', $fields);
             $tbs = "\x30".tmDerLength(strlen($content)).$content;
             file_put_contents("{$keys}/tbs.der", $tbs);
