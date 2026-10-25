@@ -219,6 +219,75 @@ final class IsobmffManifestStoreExtractor
    root and the `c2patool` outputs are committed under
    `tests/Fixtures/mdat-merkle/`; no key ever is.
 
+## Amendments
+
+1. **2026-10-25, step 447, approved by Maurice van Loon ("akkoord")** — what step 446 measured against the fixtures
+   (`tests/Fixtures/mdat-merkle/`, `notes/step-446-mdat-merkle-fixtures.md`).
+   - **Open question 1 settled.** The six-block file's stored root is the
+     root of step 82's shape, and that shape is the same tree as the one
+     `check_merkle_tree()` walks for every count from 1 to 1,999. AC1 no
+     longer waits on a measurement.
+   - **AC1** becomes: `six-blocks.mp4` (six blocks of 1,024 bytes, the last
+     482, the root stored, six proof boxes) is `Trusted` with
+     `assertion.bmffHash.match` and, beside it,
+     `assertion.bmffHash.additionalExclusionsPresent`, as `c2patool` 0.28.3
+     and 0.28.1 report; the explanation names six blocks.
+   - **AC2** becomes: `one-block.mp4` (8 KB blocks, count 1, the leaf stored,
+     no proof boxes) is `Trusted`, as in both `c2patool` versions.
+   - **AC3** becomes: `block-0-changed`, `block-5-changed`, `gap-changed`
+     (byte 12 of the `mdat`) and `moov-changed` are each `Invalid` with
+     `assertion.bmffHash.mismatch`, as in both versions; the explanation
+     names a block by its index for the first two and the file `hash` for
+     the other two.
+   - **AC4** becomes: `proof-sibling-changed`, `proof-location-moved`,
+     `proof-freed` (a proof box turned into a `free` box of the same size:
+     nothing moves, five proofs for six blocks), `proof-removed` and
+     `proof-duplicated` are each `Invalid` with
+     `assertion.bmffHash.mismatch`, as in both versions. The last two are
+     caught by the file `hash` before any proof is read, since the boxes
+     after them move; `proof-freed` is the file that tests the count of
+     proofs.
+   - **AC6** becomes: `fixed-and-variable`, `block-size-one`, `count-five`,
+     `init-hash` and `proof-location-past-count` are `Invalid` with
+     `assertion.bmffHash.mismatch`, as in both versions;
+     `block-size-text`, which `c2patool` cannot decode, is
+     `assertion.bmffHash.malformed`. `hashes-four` (the stored row four
+     copies of the root, a row the six-leaf tree does not have) stays
+     `Invalid` with `assertion.bmffHash.mismatch`, where both `c2patool`
+     versions say `Trusted`. By design under ADR-0005: §15.12.2.1 defines
+     `hashes` as a row of the tree, and a structure that is not what the
+     specification defines is refused rather than read some other way. A
+     changed byte in that file is `Invalid` in `c2patool` too, so nothing
+     else is lost.
+   - **AC7** becomes a rule on what an `/mdat` exclusion may leave out,
+     instead of a single allowed shape. An `/mdat` exclusion is allowed
+     only with a `subset`, and only when a merkle map binds that `mdat`;
+     each subset must start at offset 16 or later, where the leaves begin.
+     Then every byte the `hash` leaves out is under a leaf.
+     `mdat-offset-24` and `mdat-length-1` are `Trusted`, as in both
+     `c2patool` versions: neither leaves a byte unbound (a changed byte in
+     block 0, block 5, byte 12 or byte 16 is `Invalid` in both).
+     `mdat-whole` stays `Invalid`, where both `c2patool` versions say
+     `Trusted`: the bytes 8 to 16 of an `mdat` with an eight-byte header
+     are under neither the `hash` nor a leaf, and `mdat-whole` with byte 12
+     changed is still `Trusted` there. That copy is made in the test, from
+     `mdat-whole.mp4`, and must be `Invalid` here. By design under
+     ADR-0005: it prevents trust in bytes nobody checked, the same gap
+     `docs/comparison.md` records for an `/mdat` exclusion since SPEC-071.
+     The Scope's second bullet ("exactly `subset: [{offset: 16, length:
+     0}]`") reads accordingly.
+   - **AC8** becomes: `variable-sizes`, `no-block-field` and `two-mdat` are
+     each `Invalid` with `assertion.bmffHash.mismatch` and an explanation
+     saying this verifier does not read that form. `c2patool` says
+     `Trusted` for `variable-sizes` (`c2pa-rs` reads `variableBlockSizes`,
+     though no setting of it writes one), `Invalid` for `no-block-field`,
+     and `Trusted` or `Invalid` from one run to the next for `two-mdat`,
+     the same file (10 of 30 runs `Trusted` in 0.28.3). That answer is no
+     oracle; the test pins this verifier's refusal alone. Out of scope, as
+     the Scope says: each needs its own spec.
+   - The differences of AC6, AC7 and AC8 get rows in `docs/comparison.md`
+     when this spec is implemented.
+
 ## Traceability
 
 Filled when status becomes `implemented`.

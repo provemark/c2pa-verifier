@@ -11921,3 +11921,10 @@ README are where the disclosure lives.
 - Reasoned: the bytes a whole-`mdat` exclusion leaves unbound; which of the measured answers SPEC-080 refuses where `c2patool` accepts (ADR-0005, SPEC-071).
 - Decided by Maurice: none in this step (the fixtures were his go).
 
+## 2026-10-25 — Step 447: SPEC-080 amendment 1 proposed
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en schrijf het amendement".
+- Produced: `specs/SPEC-080-mdat-merkle-tree.md` (amendment 1, proposed); `NOTES.md`, `docs/milestones.md`. No code. Step 446 pushed.
+- Measured: none new; the amendment rests on step 446. Reasoned: ADR-0005 for each difference from `c2patool`; `docs/comparison.md` (the `/mdat` exclusion row of SPEC-071).
+- Decided by Maurice: to push step 446 with its findings public; amendment 1 approved as proposed ("akkoord").
+
