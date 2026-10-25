@@ -1,9 +1,9 @@
 {
     "name": "es256-p384",
-    "purpose": "ES256 under a P-384 key: allowed by C2PA 2.4 \u00a713.2.1 (\"shall accept keys on any of these curves for all ECDSA algorithm choices\")",
+    "purpose": "ES256 under a P-384 key: allowed by C2PA 2.4 \u00a713.2.1, refused since SPEC-009 amendment 5 as c2pa-rs refuses it (C2PA 2.5 \u00a712.3.1: \"Validators may reject other pairings\")",
     "alg": -7,
     "key": "EC P-384",
-    "expect": "true",
+    "expect": "exception",
     "made_with": {
         "genkey": "openssl ecparam -genkey -name secp384r1",
         "sign": "openssl dgst -sha256 -sign %key% -out %sig% %msg%",

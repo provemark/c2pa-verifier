@@ -11655,3 +11655,24 @@ README are where the disclosure lives.
   (no existing file moved); `composer check`. Reasoned: that a parameter
   above the signer prevents no wrong `Valid` (ADR-0005).
 - Decided by Maurice: the amendment, for the signer only.
+
+## 2026-10-25 — An ECDSA algorithm under a key on another curve (step 422)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en leg probe 3 uit", "akkoord, meet probe 3", then
+  "akkoord, amendement 5, alleen signingCredential.invalid".
+- Produced: `bin/make-ecdsa-pairing-variants.php`; six fixtures under
+  `tests/Fixtures/ecdsa-pairing/` with `c2patool` 0.28.2 and 0.28.3
+  answers; `SignatureVerifier::PAIRED_CURVES` and a rule in
+  `requireFit()`; `EcdsaPairingTest` and AC6 restated in
+  `SignatureVerifierTest`; the `es256-p384` vector now expects an
+  exception; SPEC-009 amendment 5; rows in `docs/reading-c2pa-2.4.md`,
+  `docs/milestones.md`, `docs/comparison.md`;
+  `notes/step-422-ecdsa-pairing.md`, a row in `NOTES.md`.
+- Measured: the probes with `c2patool` 0.27.22, 0.28.1, 0.28.2, 0.28.3,
+  `c2pa-web` 0.15.3 (headless Chrome, no network), `openssl dgst -verify`
+  and this verifier, with and without settings; `c2pa-rs`
+  `cose/verifier.rs` and `c2pa_raw_crypto` 0.1.2's ECDSA validators read;
+  AC6 and AC13 red, then green; the corpus before and after (only the new
+  probes moved); `composer check`. Reasoned: that the signature is sound,
+  so only `signingCredential.invalid` is reported.
+- Decided by Maurice: the amendment, with `signingCredential.invalid` only.

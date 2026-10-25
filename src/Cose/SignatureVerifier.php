@@ -40,8 +40,11 @@ final readonly class SignatureVerifier
 
     private const OPENSSL_ALGOS = ['sha256' => OPENSSL_ALGO_SHA256, 'sha384' => OPENSSL_ALGO_SHA384, 'sha512' => OPENSSL_ALGO_SHA512];
 
-    /** The curves §13.2.1 allows for any ECDSA algorithm, with their coordinate size. */
+    /** The curves §13.2.1 allows for ECDSA, with their coordinate size. */
     private const CURVES = ['prime256v1' => 32, 'secp384r1' => 48, 'secp521r1' => 66];
+
+    /** The curve each ECDSA algorithm is paired with (C2PA 2.5 §12.3.1; SPEC-009 amendment 5, as c2pa-rs). */
+    private const PAIRED_CURVES = [self::ES256 => ['prime256v1', 'P-256'], self::ES384 => ['secp384r1', 'P-384'], self::ES512 => ['secp521r1', 'P-521']];
 
     private const RSA_MIN_BITS = 2048;
 
@@ -82,6 +85,11 @@ final readonly class SignatureVerifier
                 && $key->bits >= self::RSA_MIN_BITS && $key->bits <= self::RSA_MAX_BITS,
             default => $key->kind === PublicKey::KIND_ED25519,
         };
+        if ($fits && isset(self::PAIRED_CURVES[$alg]) && $key->curve !== self::PAIRED_CURVES[$alg][0]) {
+            // 2.4 §13.2.1 said to accept any of the three curves; 2.5 §12.3.1 lets a validator refuse a
+            // crossed pairing, and c2pa-rs does (SPEC-009 amendment 5)
+            throw new CoseException(sprintf('key does not fit %s (alg %d): %s; C2PA 2.5 §12.3.1 pairs %s with %s', $name, $alg, $key->describe(), $name, self::PAIRED_CURVES[$alg][1]), StatusCode::SigningCredentialInvalid);
+        }
         if ($fits) {
             return;
         }

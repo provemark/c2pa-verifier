@@ -27,7 +27,7 @@ PHP with the step-16 verification paths (`notes/step-19-signature-vectors.md`).
 | `eddsa-ed25519` | -8 | Ed25519 | `true` | EdDSA (Ed25519) |
 | `eddsa-rsa` | -8 | RSA 2048 | `exception` | alg says EdDSA but the key is RSA: the key does not fit |
 | `es256-p256k1` | -7 | EC secp256k1 | `exception` | ES256 under a secp256k1 key: not P-256/384/521, so the key does not fit (§13.2.1) |
-| `es256-p384` | -7 | EC P-384 | `true` | ES256 under a P-384 key: allowed by C2PA 2.4 §13.2.1 ("shall accept keys on any of these curves for all ECDSA algorithm choices") |
+| `es256-p384` | -7 | EC P-384 | `exception` | ES256 under a P-384 key: allowed by C2PA 2.4 §13.2.1, refused since SPEC-009 amendment 5 as c2pa-rs refuses it (C2PA 2.5 §12.3.1: "Validators may reject other pairings") |
 | `es384-p384` | -35 | EC P-384 | `true` | ES384 under a P-384 key |
 | `es512-p521` | -36 | EC P-521 | `true` | ES512 under a P-521 key |
 | `ps256-rsa1024` | -37 | RSA 1024 | `exception` | a valid PSS signature under a 1024-bit key: below the 2048-bit minimum of §13.2.1, so the key does not fit |
@@ -47,7 +47,7 @@ SHA-256 of the files as committed:
 8f61271dc3a61effdbc154f1429bc221f51a035d80d5fceb58fd90bbe75ff170  eddsa-ed25519.json
 0a3a07ea3e65b8d0e8e562edc4dbed60d91c044a613fd17f874d1e8e974a5ffc  eddsa-rsa.json
 f7b05f20269dce28b945392c28888d7b4f9a3aa35112d2c521da5f7f5d38791e  es256-p256k1.json
-499c609fe5e0b2d80ac31f6fb0cd5bfd4a9fcbb1028a37473c4a4cf46847842f  es256-p384.json
+e85527e21b704d7adca639d5ecf02ba74b0374e5a087aed3958137dade221502  es256-p384.json
 fd3aef77d5c489a11bdc6763e88b917d7c43183010ac0ccdcd62808343ec165e  es384-p384.json
 425df2a240432ee8f2f58bbb7204ba602bb030094601fe3c8c8fcf0793778225  es512-p521.json
 71029e3a2dc45a15481a16aea9f6c9621d4b06d3fa7f8f279237f9d5e2aab4a7  ps256-rsa1024.json

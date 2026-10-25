@@ -165,7 +165,7 @@ $vectors = [
     // ---- ECDSA: the curves the fixtures lack, and a curve crossing §13.2.1 allows ----
     'es384-p384' => ['genkey' => $ec('secp384r1'), 'alg' => -35, 'hash' => 'sha384', 'kind' => 'EC P-384', 'rsBytes' => 48, 'expect' => 'true', 'why' => 'ES384 under a P-384 key'],
     'es512-p521' => ['genkey' => $ec('secp521r1'), 'alg' => -36, 'hash' => 'sha512', 'kind' => 'EC P-521', 'rsBytes' => 66, 'expect' => 'true', 'why' => 'ES512 under a P-521 key'],
-    'es256-p384' => ['genkey' => $ec('secp384r1'), 'alg' => -7, 'hash' => 'sha256', 'kind' => 'EC P-384', 'rsBytes' => 48, 'expect' => 'true', 'why' => 'ES256 under a P-384 key: allowed by C2PA 2.4 §13.2.1 ("shall accept keys on any of these curves for all ECDSA algorithm choices")'],
+    'es256-p384' => ['genkey' => $ec('secp384r1'), 'alg' => -7, 'hash' => 'sha256', 'kind' => 'EC P-384', 'rsBytes' => 48, 'expect' => 'exception', 'why' => 'ES256 under a P-384 key: allowed by C2PA 2.4 §13.2.1, refused since SPEC-009 amendment 5 as c2pa-rs refuses it (C2PA 2.5 §12.3.1: "Validators may reject other pairings")'],
     'es256-p256k1' => ['genkey' => $ec('secp256k1'), 'alg' => -7, 'hash' => 'sha256', 'kind' => 'EC secp256k1', 'rsBytes' => 32, 'expect' => 'exception', 'why' => 'ES256 under a secp256k1 key: not P-256/384/521, so the key does not fit (§13.2.1)'],
     // ---- RSASSA-PSS under ordinary rsaEncryption keys ----
     'ps256-rsa2048' => ['genkey' => $rsa(2048), 'alg' => -37, 'hash' => 'sha256', 'kind' => 'RSA 2048', 'sign' => $pss('sha256'), 'verify' => $pssVerify('sha256'), 'expect' => 'true', 'why' => 'PS256 under a plain RSA key: the EMSA-PSS path'],

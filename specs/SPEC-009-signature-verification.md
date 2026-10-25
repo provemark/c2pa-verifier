@@ -341,6 +341,42 @@ holds a private key or signs.
    new in 2.5, stay `algorithm.unsupported` (AC9), as 2.5 §14 names for
    an algorithm a validator does not support. No criterion changed.
 
+5. **2026-10-25, step 422, approved by Maurice van Loon ("akkoord, amendement 5, alleen signingCredential.invalid")** —
+   amendment 4 left open what `c2patool` does with a crossed pairing.
+   Measured in step 422 on six probes (`bin/make-ecdsa-pairing-variants.php`:
+   a throw-away P-256 root, one signer per probe, the PNG fixture's
+   claim re-signed; `openssl dgst -verify` accepts all six): ES256 under
+   P-384, ES384 under P-256 and ES512 under P-384 are `Invalid` in
+   `c2patool` 0.27.22 (`claimSignature.mismatch`), 0.28.1, 0.28.2 and
+   0.28.3 (`signingCredential.invalid`, *"certificate key algorithm does
+   not match COSE signing algorithm"*, and `claimSignature.mismatch`), and
+   in `c2pa-web` 0.15.3. This verifier said `Valid`, and `Trusted` with
+   the root as anchor. Read in `c2pa-rs`: `spki_matches_signing_alg()` in
+   `sdk/src/crypto/cose/verifier.rs` (PR 2612, in `c2pa` 0.91.0) ties ES256
+   to P-256, ES384 to P-384 and ES512 to P-521. C2PA 2.5 §12.3.1 permits
+   the refusal (*"Validators may reject other pairings"*); 2.4 §13.2.1
+   required acceptance. The verdict follows `c2patool` (ADR-0005), so the
+   pairing is now refused in `requireFit()`, before any arithmetic.
+
+   Only `signingCredential.invalid` is reported: the signature itself is
+   sound, and `claimSignature.mismatch` would say it is not. `c2patool`
+   reports both; the state is the same.
+
+   - **AC6 (restated) — ES384 and ES512 verify; a crossed pairing is
+     refused.** Given `es384-p384` and `es512-p521`: as before. Given
+     `es256-p384` (its `expect` is now `exception`): `CoseException` with
+     `signingCredential.invalid`, naming the key and C2PA 2.5 §12.3.1.
+   - **AC13 (new) — a signed file with a crossed pairing is `Invalid`.**
+     Given the probes under `tests/Fixtures/ecdsa-pairing/`, with their
+     settings and without: `es256-p384`, `es384-p256` and `es512-p384` are
+     `Invalid` with `signingCredential.invalid` and without
+     `claimSignature.mismatch`, as `c2patool` 0.28.2 and 0.28.3 say
+     `Invalid`; `es256-p256`, `es384-p384` and `es512-p521` are `Trusted`,
+     as 0.28.3.
+
+   **Weight A: three new probes move from `Trusted` to `Invalid`, as in
+   every `c2patool` measured. Nothing in the corpus moves.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -353,10 +389,11 @@ least one test; every source file maps back to this spec.
 | AC3 | tests/Unit/Cose/SignatureVerifierTest.php :: AC3: one changed bit of the signature is a mismatch / SPEC-009 | src/Cose/SignatureVerifier.php :: ecdsa(), opensslVerify() |
 | AC4 | tests/Unit/Cose/SignatureVerifierTest.php :: AC4: a claim from another manifest is a mismatch / SPEC-009 | src/Cose/SignatureVerifier.php :: verify() |
 | AC5 | tests/Unit/Cose/SignatureVerifierTest.php :: AC5: a key that does not fit the algorithm cannot be verified / SPEC-009 | src/Cose/SignatureVerifier.php :: requireFit(); src/Cose/PublicKey.php :: describe() |
-| AC6 | tests/Unit/Cose/SignatureVerifierTest.php :: AC6: ES384 and ES512 verify, and their curves cross / SPEC-009 | src/Cose/SignatureVerifier.php :: ecdsa() (`CURVES`); src/Cose/EcdsaSignature.php :: toDer() |
+| AC6 | tests/Unit/Cose/SignatureVerifierTest.php :: AC6: ES384 and ES512 verify; a key on another curve than the algorithm's is refused (amendment 5) / SPEC-009 | src/Cose/SignatureVerifier.php :: ecdsa() (`CURVES`), requireFit() (`PAIRED_CURVES`); src/Cose/EcdsaSignature.php :: toDer() |
 | AC7 | tests/Unit/Cose/SignatureVerifierTest.php :: AC7: PS256 under an ordinary RSA key verifies through EMSA-PSS, and PKCS#1 v1.5 does not pass; AC7: the EMSA-PSS trailer byte is checked: 0xbc verifies, anything else does not (step 65b) / SPEC-009 | src/Cose/SignatureVerifier.php :: rsaPss(); src/Cose/RsaPss.php :: verify(), emsaPssVerify(), mgf1() |
 | AC8 | tests/Unit/Cose/SignatureVerifierTest.php :: AC8: EdDSA verifies, through sodium or OpenSSL / SPEC-009 | src/Cose/SignatureVerifier.php :: ed25519(); src/Cose/PublicKey.php :: rawEd25519() |
 | AC9 | tests/Unit/Cose/SignatureVerifierTest.php :: AC9: an unsupported algorithm cannot be verified / SPEC-009 | src/Cose/SignatureVerifier.php :: verify() (`NAMES`) |
 | AC10 | tests/Unit/Cose/SignatureVerifierTest.php :: AC10: the R||S to DER conversion is exact / SPEC-009 | src/Cose/EcdsaSignature.php :: toDer(), integer(), length() |
 | AC11 | tests/Unit/Cose/SignatureVerifierTest.php :: AC11: the leaf key is read from chain[0], so a reversed chain is a mismatch, not an error / SPEC-009 | src/Cose/SignatureVerifier.php :: verify() (`chain[0]`) |
 | AC12 | tests/Unit/Cose/SignatureVerifierTest.php :: AC12: under an id-RSASSA-PSS key the salt is the hash length too (amendment 3, step 247) / SPEC-009 | src/Cose/SignatureVerifier.php :: rsaPss(); src/Cose/PublicKey.php :: asRsaEncryption() |
+| AC13 (amendment 5) | tests/Unit/Cose/EcdsaPairingTest.php :: AC13 (two tests) / SPEC-009 | src/Cose/SignatureVerifier.php :: requireFit() (`PAIRED_CURVES`); bin/make-ecdsa-pairing-variants.php |

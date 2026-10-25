@@ -13,6 +13,7 @@ use Provemark\C2paVerifier\Cose\SignatureVerifier;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\Manifest;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
+use Provemark\C2paVerifier\Report\StatusCode;
 
 /*
  * SPEC-009: verifying the claim signature. The four fixtures and the
@@ -133,9 +134,9 @@ it('AC5: a key that does not fit the algorithm cannot be verified', function ():
     }
 })->group('SPEC-009');
 
-it('AC6: ES384 and ES512 verify, and their curves cross', function (): void {
+it('AC6: ES384 and ES512 verify; a key on another curve than the algorithm\'s is refused (amendment 5)', function (): void {
     $verifier = new SignatureVerifier;
-    foreach (['es384-p384', 'es512-p521', 'es256-p384'] as $name) {
+    foreach (['es384-p384', 'es512-p521'] as $name) {
         $v = spec009Vector($name);
         expect($v['expect'])->toBe('true', $name)
             ->and($verifier->verify($v['cose'], $v['claim']))->toBeTrue($name)
@@ -145,6 +146,17 @@ it('AC6: ES384 and ES512 verify, and their curves cross', function (): void {
     $v = spec009Vector('es384-p384');
     $cut = CoseSign1::fromBytes(spec009CoseBytes($v['protected'], substr($v['signature'], 0, 95)));
     expect($verifier->verify($cut, $v['claim']))->toBeFalse('95-byte signature');
+
+    $v = spec009Vector('es256-p384');
+    expect($v['expect'])->toBe('exception');
+    try {
+        $verifier->verify($v['cose'], $v['claim']);
+        throw new RuntimeException('es256-p384 was not refused');
+    } catch (CoseException $e) {
+        expect($e->getMessage())->toContain('key does not fit ES256 (alg -7): EC key on secp384r1')
+            ->and($e->getMessage())->toContain('§12.3.1')
+            ->and($e->status)->toBe(StatusCode::SigningCredentialInvalid);
+    }
 })->group('SPEC-009');
 
 it('AC7: PS256 under an ordinary RSA key verifies through EMSA-PSS, and PKCS#1 v1.5 does not pass', function (): void {

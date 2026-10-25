@@ -387,7 +387,7 @@ against `c2patool` before it becomes a spec.
 
 | 2.5 | what | here now |
 |---|---|---|
-| §12.3.1 | ES256/384/512 under a crossed curve may be refused | accepted (SPEC-009 amendment 4) |
+| §12.3.1 | ES256/384/512 under a crossed curve may be refused | refused, as every `c2patool` measured (SPEC-009 amendment 5, step 422) |
 | §12.3.1 | ESP256/384/512, ML-DSA-44/65/87 | `algorithm.unsupported` |
 | §14.10.4.2.4 | a redacted ingredient may be the target of `opened`, `placed`, `removed`, `transcoded`, `repackaged` | `ingredientMismatch` (stricter) |
 | §14.10.4.2.4 | `when` with `whenStart`/`whenEnd`, or `whenStart` after `whenEnd`: `assertion.action.malformed` | not checked |

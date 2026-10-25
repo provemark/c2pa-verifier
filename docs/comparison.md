@@ -58,6 +58,13 @@ certificate signed with `id-Ed25519` and a parameter was `Trusted` here
 and in 0.28.2, `Invalid` in 0.28.3; it is `Invalid` here now. An
 intermediate with the parameter stays `Trusted`, as in 0.28.3, although
 C2PA 2.4 §14.5.1.1 says *all certificates*: it prevents no wrong `Valid`.
+The third (step 422, SPEC-009 amendment 5) found this verifier more
+lenient than every `c2patool` measured: ES256 under a P-384 key, ES384
+under P-256 and ES512 under P-384 were `Valid` and `Trusted` here, and
+`Invalid` in 0.27.22 to 0.28.3 and in `c2pa-web` 0.15.3. C2PA 2.4 §13.2.1
+said to accept them; 2.5 §12.3.1 lets a validator refuse them. They are
+`Invalid` here now, with `signingCredential.invalid` only, where
+`c2patool` adds `claimSignature.mismatch`.
 
 **Since 0.2.0** (SPEC-033 to SPEC-040), every new rule was measured on
 signed probes under **both** versions before it was built. Their answers
