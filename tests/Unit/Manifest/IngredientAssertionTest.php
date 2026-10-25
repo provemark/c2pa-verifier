@@ -132,9 +132,9 @@ it('AC1: a v3 ingredient with a manifest carries both hashed URIs and the record
 
 // AC2
 const SPEC020_MALFORMED = [
-    'no-relationship' => 'relationship',
+    'no-relationship' => 'relationship is missing',   // its own rule, not the type rule after it (step 438)
     'relationship-childof' => 'childOf',
-    'relationship-int' => 'relationship',
+    'relationship-int' => 'relationship is int, not text',
     'v4' => 'version 4',
     'v1-no-title' => 'dc:title',
     'manifest-no-results' => 'validationResults',

@@ -188,3 +188,22 @@ it('AC12: end to end — a cycle acknowledged by the active manifest is Invalid;
     ['cycle-below-the-active-acknowledged', 'Invalid'],
     ['a-chain-of-three', 'Trusted'],
 ])->group('SPEC-070');
+
+it('AC4: a record never acknowledges a failure of the active manifest, even one that names it as below (C2PA 2.4 §18.16.12.4; step 438)', function (): void {
+    // at the seam: a scoped failure about the active manifest, and a record whose holder has the active manifest
+    // below it, as only a cycle could make it. The other guards stop such a record earlier; this one stands alone
+    $active = 'urn:c2pa:00000000-0000-4000-8000-00000000000a';
+    $url = "self#jumbf=/c2pa/{$active}/c2pa.signature";
+    $status = new ValidationStatus(StatusCode::ClaimSignatureMismatch, $url, 'the claim signature does not verify', 'self#jumbf=/c2pa/urn:c2pa:00000000-0000-4000-8000-00000000000b/c2pa.assertions/c2pa.ingredient.v3');
+    $recorded = [['key' => StatusCode::ClaimSignatureMismatch->value.' '.$url, 'below' => [$active]]];
+
+    $out = (new IngredientManifestCheck)->acknowledge([$status], $recorded, $active, null);
+    expect($out)->toHaveCount(1)
+        ->and($out[0]->acknowledged)->toBeFalse()
+        ->and($out[0]->code->isFailure())->toBeTrue();
+    // and the same record for another manifest below is acknowledged: the record itself is well-formed
+    $other = 'urn:c2pa:00000000-0000-4000-8000-00000000000c';
+    $below = new ValidationStatus(StatusCode::ClaimSignatureMismatch, "self#jumbf=/c2pa/{$other}/c2pa.signature", 'the claim signature does not verify', $status->ingredientUri);
+    $out = (new IngredientManifestCheck)->acknowledge([$below], [['key' => StatusCode::ClaimSignatureMismatch->value." self#jumbf=/c2pa/{$other}/c2pa.signature", 'below' => [$other]]], $active, null);
+    expect($out[0]->acknowledged)->toBeTrue();
+})->group('SPEC-070');

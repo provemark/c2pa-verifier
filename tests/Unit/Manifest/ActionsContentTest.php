@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Cbor\CborBytes;
+use Provemark\C2paVerifier\Manifest\ActionsCheck;
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
@@ -166,4 +168,27 @@ it('AC9: the vocabulary grows by two codes, verbatim', function (): void {
     // SPEC-033 amendment 2: this spec's two symbols are recorded; the surface's size is ApiSurfaceTest's alone
     expect(in_array('Report\StatusCode :: const AssertionActionIngredientMismatch', $surface, true))->toBeTrue()
         ->and(in_array('Report\StatusCode :: const AssertionActionSoftBindingMissing', $surface, true))->toBeTrue();
+})->group('SPEC-033');
+
+it('AC6, AC7: a related assertion in another manifest and the deprecated c2pa.watermarked, at the seam (C2PA 2.4 §18.15.4.8, §18.15.5; step 438)', function (): void {
+    $label = 'urn:c2pa:00000000-0000-4000-8000-00000000000a';
+    $created = ['action' => 'c2pa.created', 'digitalSourceType' => 'http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture'];
+    $codes = static function (array $second) use ($label, $created): array {
+        $actions = [['url' => "self#jumbf=/c2pa/{$label}/c2pa.assertions/c2pa.actions.v2", 'data' => ['actions' => [$created, $second]]]];
+        $statuses = (new ActionsCheck)->checkAssertions($label, 2, $actions, false, ['c2pa.actions.v2', 'c2pa.hash.data']);
+
+        return array_map(static fn (ValidationStatus $s): string => $s->code->value.' '.$s->url, $statuses);
+    };
+    $hash = new CborBytes(str_repeat("\0", 32));
+    $related = static fn (string $url): array => ['action' => 'c2pa.edited', 'parameters' => ['relatedAssertions' => [['url' => $url, 'hash' => $hash]]]];
+
+    // the same label, here and in another manifest: only the first resolves within the current one
+    $here = "self#jumbf=/c2pa/{$label}/c2pa.assertions/c2pa.hash.data";
+    $there = 'self#jumbf=/c2pa/urn:c2pa:00000000-0000-4000-8000-00000000000b/c2pa.assertions/c2pa.hash.data';
+    expect($codes($related($here)))->toBe([])
+        ->and($codes($related($there)))->toBe(['assertion.action.malformed '.$there]);
+    // the deprecated watermark action needs a soft binding as the current one does
+    foreach (['c2pa.watermarked', 'c2pa.watermarked.bound'] as $name) {
+        expect($codes(['action' => $name]))->toBe(['assertion.action.softBindingMissing '."self#jumbf=/c2pa/{$label}/c2pa.assertions/c2pa.actions.v2"], $name);
+    }
 })->group('SPEC-033');
