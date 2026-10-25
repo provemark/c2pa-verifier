@@ -11637,3 +11637,21 @@ README are where the disclosure lives.
   mutation, then green; `composer check`. Reasoned: that no code is
   needed.
 - Decided by Maurice: the probe, and SPEC-062 amendment 3.
+
+## 2026-10-25 — An Ed25519 signer certificate with parameters (step 421)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, leg probe 2 uit", "akkoord, meet probe 2", then
+  "akkoord, amendement voor alleen de ondertekenaar".
+- Produced: `bin/make-ed25519-params-variants.php`; four fixtures under
+  `tests/Fixtures/profile-ed25519/` with `c2patool` 0.28.2 and 0.28.3
+  answers; `CertificateExtensions::$ed25519Parameters` and a rule in
+  `CertificateProfileCheck::checkLeaf()`; `Ed25519ParametersTest`;
+  SPEC-015 amendment 11 and AC15; rows in `docs/reading-c2pa-2.4.md` and
+  `docs/comparison.md`; `notes/step-421-ed25519-parameters.md`, a row in
+  `NOTES.md`.
+- Measured: `c2pa-rs` PR 2785's patch read; the probes in scratch and as
+  fixtures with 0.28.2, 0.28.3, `openssl verify` and this verifier, with
+  and without settings; AC15 red, then green; the corpus before and after
+  (no existing file moved); `composer check`. Reasoned: that a parameter
+  above the signer prevents no wrong `Valid` (ADR-0005).
+- Decided by Maurice: the amendment, for the signer only.

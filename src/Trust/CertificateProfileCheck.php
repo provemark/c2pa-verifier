@@ -142,6 +142,10 @@ final readonly class CertificateProfileCheck
         }
         // SPEC-015 amendment 8: the RSASSA-PSS hash and its MGF1, and the two copies of the algorithm agreeing
         $faults = [...$faults, ...array_map($invalid, $leaf->x509->algorithmFaults())];
+        // SPEC-015 amendment 11: id-Ed25519 without parameters (RFC 8410 §3), on the manifest signer only, as c2pa-rs
+        if ($manifestSigner && $leaf->x509->ed25519Parameters) {
+            $faults[] = $invalid('the signature is id-Ed25519 with parameters, which RFC 8410 §3 says must be absent (C2PA 2.4 §14.5.1.1)');
+        }
         $faults = [...$faults, ...array_map($invalid, $this->keyFaults($leaf))];
         // 6. KeyUsage: digitalSignature asserted (C2PA 2.4 §14.5.1.1; SPEC-015 amendment 10, stricter than c2pa-rs,
         // which also takes Non Repudiation alone), and never beside Certificate Sign on an end-entity

@@ -531,6 +531,39 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
     **Weight A: stricter than `c2patool` on purpose, by the
     specification's own rule.**
 
+11. **2026-10-25, step 421, approved by Maurice van Loon ("akkoord, amendement voor alleen de ondertekenaar")** —
+    C2PA 2.4 §14.5.1.1 lists `id-Ed25519` as a certificate signature
+    algorithm by RFC 8410 §3, which says *"For all of the OIDs, the
+    parameters MUST be absent."* `c2pa` 0.91.3 (`c2pa-rs` PR 2785, in
+    `c2patool` 0.28.3) refuses an end-entity certificate whose Ed25519
+    `signatureAlgorithm` or `subjectPublicKeyInfo` carries parameters.
+    Measured in step 421 on four probes (`bin/make-ed25519-params-variants.php`,
+    an Ed25519 root, intermediate and signer): a signer certificate
+    signed with `id-Ed25519` and a NULL parameter was `Trusted` here and in
+    0.28.2, `Invalid` in 0.28.3. A signer key with the parameter was
+    already `Invalid` here (OpenSSL cannot read it) and in both versions.
+    An intermediate signed with the parameter is `Trusted` in both
+    versions and stays so here: the letter says *"All certificates"*, but
+    a parameter in a certificate above the signer prevents no wrong
+    `Valid` (ADR-0005).
+
+    `CertificateExtensions` records whether the outer signatureAlgorithm
+    is `id-Ed25519` with parameters (the two copies are compared already,
+    amendment 8), and `checkLeaf()` reports it as `signingCredential.invalid`
+    for the manifest signer. A TSA's leaf is not checked for it: no probe
+    measured what `c2pa-rs` does there.
+
+    - **AC15 (new) — a signer certificate signed with `id-Ed25519` carries
+      no parameters.** Given the probes under
+      `tests/Fixtures/profile-ed25519/` with their settings and without:
+      `leaf-signature-params` is `Invalid` with `signingCredential.invalid`
+      naming `id-Ed25519 with parameters`, as `c2patool` 0.28.3;
+      `control` and `intermediate-signature-params` are `Trusted`, as
+      0.28.3; `leaf-spki-params` is `Invalid`, as 0.28.3.
+
+    **Weight A: one new probe moves from `Trusted` to `Invalid`, as in
+    `c2patool` 0.28.3. Nothing in the corpus moves.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -553,3 +586,4 @@ least one test; every source file maps back to this spec.
 | AC12 (amendment 7) | tests/Unit/Trust/SerialNumberTest.php :: AC12 (four tests) / SPEC-015; tests/Unit/Trust/TrustMatrixTest.php :: SPEC061_STRICTER / SPEC-061 | src/Support/Bytes.php :: hexToDecimal(), decimalOctets(); src/Trust/Certificate.php :: \$serialPositive; src/Trust/CertificateProfileCheck.php :: checkLeaf(); src/Trust/ChainCheck.php :: pathFault() |
 | AC13 (amendment 8) | tests/Unit/Trust/PssParametersTest.php :: AC13 (four tests) / SPEC-015; tests/Unit/Trust/TrustMatrixTest.php :: SPEC061_STRICTER / SPEC-061 | src/Trust/CertificateExtensions.php :: fromDer() (\$pssMgf1HashOid, \$algorithmMatchesTbs), algorithmFaults(); src/Trust/CertificateProfileCheck.php :: checkLeaf() |
 | AC14 (amendment 9) | tests/Unit/Trust/UniqueIdTest.php :: AC14 (two tests) / SPEC-015; tests/Unit/Trust/TrustMatrixTest.php / SPEC-061 | src/Trust/CertificateExtensions.php :: fromDer() (\$uniqueIds); src/Trust/CertificateProfileCheck.php :: checkLeaf() |
+| AC15 (amendment 11) | tests/Unit/Trust/Ed25519ParametersTest.php :: AC15 (two tests) / SPEC-015 | src/Trust/CertificateExtensions.php :: fromDer() ($ed25519Parameters); src/Trust/CertificateProfileCheck.php :: checkLeaf(); bin/make-ed25519-params-variants.php |

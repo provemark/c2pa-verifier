@@ -53,6 +53,11 @@ One of the three was then probed (step 420, SPEC-062 amendment 3): a
 time-stamp with a SHA-1 imprint keeps an expired signer `Trusted` in
 0.28.2 and `Invalid` in 0.28.3, as here; this verifier reports
 `timeStamp.malformed` where 0.28.3 says `timeStamp.untrusted`.
+The second was probed too (step 421, SPEC-015 amendment 11): a signer
+certificate signed with `id-Ed25519` and a parameter was `Trusted` here
+and in 0.28.2, `Invalid` in 0.28.3; it is `Invalid` here now. An
+intermediate with the parameter stays `Trusted`, as in 0.28.3, although
+C2PA 2.4 §14.5.1.1 says *all certificates*: it prevents no wrong `Valid`.
 
 **Since 0.2.0** (SPEC-033 to SPEC-040), every new rule was measured on
 signed probes under **both** versions before it was built. Their answers

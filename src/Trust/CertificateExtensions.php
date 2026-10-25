@@ -32,6 +32,8 @@ final readonly class CertificateExtensions
 
     private const OID_MGF1 = '1.2.840.113549.1.1.8';
 
+    private const OID_ED25519 = '1.3.101.112';
+
     /** The hashes an RSASSA-PSS certificate may name, by OID (C2PA 2.4 §14.5), and the others by name for messages. */
     public const PSS_HASHES = [
         '2.16.840.1.101.3.4.2.1' => 'SHA-256',
@@ -100,6 +102,7 @@ final readonly class CertificateExtensions
      * @param  string|null  $pssMgf1HashOid  for RSASSA-PSS, MGF1's hash; SHA-1 when absent; the mask generation function's own OID when it is not MGF1 (SPEC-015 amendment 8)
      * @param  bool  $algorithmMatchesTbs  the outer signatureAlgorithm is byte-equal to tbsCertificate's signature (RFC 5280 §4.1.1.2)
      * @param  list<'issuerUniqueID'|'subjectUniqueID'>  $uniqueIds  the optional unique-ID fields the tbsCertificate carries (SPEC-015 amendment 9)
+     * @param  bool  $ed25519Parameters  the outer signatureAlgorithm is id-Ed25519 with parameters, which RFC 8410 §3 says must be absent (SPEC-015 amendment 11)
      */
     private function __construct(
         public array $extensions,
@@ -111,6 +114,7 @@ final readonly class CertificateExtensions
         public ?string $pssMgf1HashOid = null,
         public bool $algorithmMatchesTbs = true,
         public array $uniqueIds = [],
+        public bool $ed25519Parameters = false,
     ) {}
 
     /** @throws TrustException when the DER does not hold a readable tbsCertificate */
@@ -146,6 +150,7 @@ final readonly class CertificateExtensions
             $fields = $tbs->sequence();
             $versioned = $fields !== [] && $fields[0]->is(TagClass::ContextSpecific, 0);
             $algorithmMatchesTbs = $tbs->element($versioned ? 2 : 1)->encoded() === $algorithm->encoded();
+            $ed25519Parameters = $signatureOid === self::OID_ED25519 && count($algorithm->sequence()) > 1;
             $uniqueIds = [];
             foreach ($fields as $field) {
                 if ($field->is(TagClass::ContextSpecific, 1)) {
@@ -193,7 +198,7 @@ final readonly class CertificateExtensions
                 }
             }
 
-            return new self($extensions, $rdns, array_values(array_unique($emails)), $constraints, $signatureOid, $pssHashOid, $pssMgf1HashOid, $algorithmMatchesTbs, $uniqueIds);
+            return new self($extensions, $rdns, array_values(array_unique($emails)), $constraints, $signatureOid, $pssHashOid, $pssMgf1HashOid, $algorithmMatchesTbs, $uniqueIds, $ed25519Parameters);
         } catch (Asn1Exception $e) {
             throw new TrustException(sprintf('the extensions or names of a certificate of %d bytes could not be read: %s', strlen($der), $e->getMessage()));
         }
