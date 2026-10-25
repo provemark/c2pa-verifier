@@ -36,6 +36,20 @@ five corpora, with and without trust settings and with no network
 state, the failure codes and every other code of every file. Every
 difference with this verifier is therefore one of the rows below.
 
+**And against `c2patool` 0.28.3** (`c2pa` 0.91.6, released 2026-10-24),
+compared with 0.28.2 (`c2pa` 0.91.2) on 2026-10-25 over all 770 media
+files under `tests/Fixtures/`, without settings and with
+`trust/full.settings.json` (step 419). One file moved, the same way in
+both: `jpeg/rst-before-sos.jpg`, from `Error: No claim found` to
+`Invalid` with `assertion.dataHash.mismatch`. 0.28.3 reads the bare
+`FF D0` as a marker without a length, finds the store and sees the two
+inserted bytes; this verifier still refuses the container and names the
+marker (SPEC-001 AC15). Neither says `Valid`. The other 769 files give
+the same state and codes. The corpus holds no file for three of the
+four validation changes in between (an Ed25519 certificate with
+parameters, a SHA-1 time-stamp imprint, a crossed ECDSA curve), so their
+not moving shows nothing.
+
 **Since 0.2.0** (SPEC-033 to SPEC-040), every new rule was measured on
 signed probes under **both** versions before it was built. Their answers
 are recorded beside the probes, under `tests/Fixtures/c2patool/`:

@@ -25,7 +25,7 @@ were fixed and the file re-measured; only its row and hash changed.
 | `two-instance-numbers.jpg` | piece 2's En 529 → 530 | `Error: invalid embedded file box` | AC11 error |
 | `pieces-after-sos.jpg` | both pieces after the scan data | `Error: No claim found` | AC13 null |
 | `truncated-in-app0.jpg` | file ends 12 bytes in, inside APP0, before any piece (amendment 1) | `Error: asset could not be parsed: Could not parse input JPEG` | AC14 error |
-| `rst-before-sos.jpg` | a bare `FF D0` (RST0, no length field) between APP0 and piece 1 (amendment 1) | `Error: No claim found` — it reads `FF EB` as a length of 65,515 and skips piece 1 | AC15 error |
+| `rst-before-sos.jpg` | a bare `FF D0` (RST0, no length field) between APP0 and piece 1 (amendment 1) | `Error: No claim found` — it reads `FF EB` as a length of 65,515 and skips piece 1. 0.28.3 (`c2pa` 0.91.6) reads the marker without a length, finds the store and says `Invalid`, `assertion.dataHash.mismatch` (step 419) | AC15 error |
 | `truncated-between-segments.jpg` | file ends at offset 20, exactly after APP0, before piece 1 (amendment 2) | `Error: asset could not be parsed: Could not parse input JPEG` | AC16 error |
 
 SHA-256 (as printed by the script):

@@ -11602,3 +11602,20 @@ README are where the disclosure lives.
   Reasoned: that 2.5 makes SPEC-079's `genTime` normative and leaves
   amendment 1 untouched.
 - Decided by Maurice: document without code; push steps 417 and 418.
+
+## 2026-10-25 — The corpus against c2patool 0.28.3 (step 419)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "is c2pa-rs en c2patool al bezig met 2.5?", then "akkoord, leg de
+  meting tegen 0.28.3 uit", "akkoord, meet tegen 0.28.3" and "akkoord,
+  documenteer en push".
+- Produced: `notes/step-419-c2patool-0.28.3.md`; a paragraph in
+  `docs/comparison.md`; 0.28.3's answer in `tests/Fixtures/jpeg/README.md`;
+  a row in `NOTES.md`. No code. Throwaway runner and normaliser in a
+  scratch directory, not committed.
+- Measured: `gh` searches of `contentauth/c2pa-rs` and `contentauth/c2patool`
+  for 2.5 work (live video only, by a contributor); the `c2pa` 0.91.3–0.91.6
+  release notes; the 0.28.3 zip's SHA-256 against GitHub's digest;
+  0.28.2 and 0.28.3 over 770 fixtures in two settings (3,080 runs; a first
+  interleaved attempt discarded); `bin/c2pa-verify` on the moved file.
+  Reasoned: why the file moved and that keeping the refusal is right.
+- Decided by Maurice: measure, then document without code.
