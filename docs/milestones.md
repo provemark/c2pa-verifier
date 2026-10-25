@@ -419,6 +419,6 @@ must meet been implemented, before 2.5 is taken on? The source is
 | 430 | Group A, question 4: an ingredient's own stapled `revoked`. `c2patool` reads none of these responses: equal (`Trusted`). Read anyway for a `revoked` only, so a revoked ingredient signer counts as on the active manifest (SPEC-066 amendment 2). Group A closed | done 2026-10-25 |
 | 431 | The covered rows checked, §15.1–§15.9: each row's code broken once; 3 of 35 mutations caught by no test, two now tested, one an equivalent mutant; ten citations fixed | done 2026-10-25 |
 | 432 | The covered rows checked, §15.10–§15.12: 93 mutations; 10 caught by no test, six now tested, two stricter-only and one equivalent recorded, one left for step 433 | done 2026-10-25 |
-| 433 | External references in an ingredient manifest: a file and a test | next |
-| — | The covered rows checked, the rest (about 200 rows) | after that, Maurice's choice of scope |
+| 433 | External references in an ingredient manifest: three probes by `c2patool` 0.28.3 with a SPEC-032 probe as parent; a recorded fault is shown and not counted, an unrecorded one fails the file, as `c2patool` says; tested | done 2026-10-25 |
+| — | The covered rows checked, the rest (about 200 rows) | next, Maurice's choice of scope |
 | — | What the sorting leaves to build, one spec each | after that |

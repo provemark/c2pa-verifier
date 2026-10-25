@@ -11814,3 +11814,10 @@ README are where the disclosure lives.
 - Reasoned: that two surviving mutations only make the verifier stricter, and that the past-the-end check is equivalent at the level of the code.
 - Decided by Maurice: §15.10–§15.12 next; build step 432 as proposed, with external references in an ingredient manifest as step 433.
 
+## 2026-10-25 — Step 433: external references in an ingredient manifest
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en bouw stap 433".
+- Produced: `bin/make-ingredient-reference-variants.php`; `tests/Fixtures/ingredient-reference/` (three probes, the throw-away root, settings, README) and `tests/Fixtures/c2patool/ingredient-reference/`; a test in `IngredientManifestCheckTest` AC7; a row of `docs/reading-c2pa-2.4.md`; `notes/step-433-ingredient-external-reference.md`, a row in `NOTES.md`, `docs/milestones.md`. No change under `src/`. Step 432 pushed.
+- Measured: the three probes with `c2patool` 0.28.1 and 0.28.3 and this verifier; the test red with the check removed from `IngredientManifestCheck::manifest()`, green with it; `composer check`.
+- Decided by Maurice: build step 433 as proposed.
+

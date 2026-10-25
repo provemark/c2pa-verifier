@@ -212,6 +212,25 @@ it('AC6: a redaction is judged by SPEC-035\'s rules, no longer refused', functio
 })->group('SPEC-021');
 
 // AC7
+it('AC7: an ingredient manifest\'s external references are validated, and a fault its signer did not record fails the file (step 433)', function (string $probe, string $state, string $kind): void {
+    // bin/make-ingredient-reference-variants.php: a SPEC-032 probe as the parent ingredient (C2PA 2.4 §15.11.3.3.1, §15.10.3.2.2)
+    $report = spec020Verify("ingredient-reference/{$probe}.jpg", 'ingredient-reference/throw-away-root.settings.json');
+    $delta = spec020Deltas($report->toArray())[0]['validationDeltas'];
+    $codes = static fn (string $k): array => array_column($delta[$k], 'code');
+    $oracle = spec020Oracle("ingredient-reference/{$probe}--0.28.3.json");
+
+    expect($report->result->state->value)->toBe($state)
+        ->and($oracle['validation_state'])->toBe($state)
+        ->and($codes('failure'))->toBe($kind === 'failure' ? ['assertion.external-reference.malformed'] : [])
+        ->and($codes('informational'))->toBe($kind === 'informational' ? ['assertion.external-reference.malformed'] : []);
+})->with([
+    'a well-formed reference' => ['ingredient-reference-control', 'Trusted', 'none'],
+    // the signer recorded the fault: shown, not counted (c2patool does not show it)
+    'an empty url, recorded' => ['ingredient-reference-empty-url', 'Trusted', 'informational'],
+    // the record made unrecognisable and the claim signed again: c2patool says the same
+    'an empty url, not recorded' => ['ingredient-reference-unrecorded', 'Invalid', 'failure'],
+])->group('SPEC-021');
+
 it('AC7: the data hash never runs on an ingredient manifest', function (): void {
     $report = spec020Verify('public-testfiles/adobe-20220124-CACA.jpg', SPEC021_SETTINGS);
     $dataHash = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => str_starts_with($s->code->value, 'assertion.dataHash.')));
