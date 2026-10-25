@@ -402,3 +402,16 @@ against `c2patool` before it becomes a spec.
 | 416 | §12.3.1, algorithm and key: SPEC-009 amendment 4 | done 2026-10-25 |
 | 417 | §14.10.4.2.4 and §14.11.3.2, action and ingredient references | done 2026-10-25 |
 | 418 | §13.4.2, TSA anchor dates: SPEC-079 amendment 4 | done 2026-10-25 |
+
+## Before 2.5: is all of 2.4 there?
+
+Maurice's question of 2026-10-25: has every rule of C2PA 2.4 a validator
+must meet been implemented, before 2.5 is taken on? The source is
+`docs/reading-c2pa-2.4.md`; the work is four steps, each its own concept.
+
+| step | what | status |
+|---|---|---|
+| 425 | The reading brought up to date: every open row and every row a later spec touched, checked in the code; the tally recounted (327 covered, 53 partial, 77 by design, 98 n/a, 7 candidates of 563) | done 2026-10-25 |
+| — | The partial rows and candidates sorted: may give a wrong `Valid`, stricter than `c2patool`, by design, or still to build | next |
+| — | The covered rows checked: a test that fails when the rule breaks, for each | after the sorting, Maurice's choice of scope |
+| — | What the sorting leaves to build, one spec each | after that |

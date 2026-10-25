@@ -11701,3 +11701,16 @@ README are where the disclosure lives.
 - Measured: CI on the commit and the tag (8/8 each); Packagist; a fresh
   install of `^0.8.2` and four probes with their settings.
 - Decided by Maurice: the release, and each downstream update.
+
+## 2026-10-25 — The reading of C2PA 2.4 brought up to date (step 425)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "Ik wil goed nagaan of ik alles van spec 2.4 heb geimplementeerd
+  voordat ik 2.5 ga doen", then "akkoord, doe stap 1".
+- Produced: `docs/reading-c2pa-2.4.md` (38 rows, the status-code list, the
+  tally), `docs/milestones.md` (a section for the four steps),
+  `notes/step-425-reading-2.4-up-to-date.md`, a row in `NOTES.md`.
+- Measured: the open rows read against `src/`; each cited test found in its
+  file with `grep -F`; the 2.4 code table extracted from the spec's HTML
+  and compared with `StatusCode` with `comm`; the verdicts counted by
+  script before and after (`git show HEAD:` against the working copy).
+- Decided by Maurice: the four-step approach; this step first.
