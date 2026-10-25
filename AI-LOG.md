@@ -11690,3 +11690,14 @@ README are where the disclosure lives.
   Reasoned: the crossed pairing was accepted from `0.1.0` on; the two
   signatures are not counted among the wrong verdicts.
 - Decided by Maurice: preparing 0.8.2; tag and publication not yet.
+
+## 2026-10-25 — 0.8.2 released (step 424)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en tag v0.8.2", then the library, the Drupal
+  module, the plugin and the demo, and "akkoord, schrijf de note en push
+  alle drie".
+- Produced: tag `v0.8.2`; `notes/step-424-release-0.8.2.md`, a row in
+  `NOTES.md`.
+- Measured: CI on the commit and the tag (8/8 each); Packagist; a fresh
+  install of `^0.8.2` and four probes with their settings.
+- Decided by Maurice: the release, and each downstream update.
