@@ -11588,3 +11588,17 @@ README are where the disclosure lives.
   contradicts the one before it.
 - Decided by Maurice: no code for 2.5's action rules; document them as
   waiting for `c2pa-rs`.
+
+## 2026-10-25 — C2PA 2.5 and the dates of a TSA anchor (step 418)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, documenteer en begin met punt 3" (TSA anchor validity),
+  then "akkoord, documenteer en push".
+- Produced: SPEC-079 amendment 4; the §13.4.2 row and step 418 in
+  `docs/milestones.md`; `notes/step-418-c2pa-2.5-tsa-anchor-dates.md`, a
+  row in `NOTES.md`. No code. Steps 417 and 418 pushed.
+- Measured: 2.4 §14.4.2 and 2.5 §13.4.2 read side by side in the fetched
+  texts; 2.5 grepped for ETSI TS 119 602 and LoTE (two hits, neither a
+  date mapping); `src/` and `docs/` grepped for `trustListUris` (none).
+  Reasoned: that 2.5 makes SPEC-079's `genTime` normative and leaves
+  amendment 1 untouched.
+- Decided by Maurice: document without code; push steps 417 and 418.

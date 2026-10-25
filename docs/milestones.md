@@ -395,8 +395,10 @@ against `c2patool` before it becomes a spec.
 | §14.10.4.2.4 | `assertion.action.ingredientLocationMismatch` (informational) | not reported |
 | §14.10.4.2.4 | `relatedAssertions` to a redacted assertion: `assertion.redacted` (informational) | accepted, not reported |
 | §14.11.3.2 | an ingredient's own `relatedAssertions` | not checked |
+| §13.4.2 | a TSA anchor not used for a time-stamp asserting a time outside its "notBefore"/"notAfter" | judged at `genTime` since SPEC-079; an `untrusted` stretch applied, a `trusted` start not (SPEC-079 amendments 1 and 4) |
 
 | step | what | status |
 |---|---|---|
 | 416 | §12.3.1, algorithm and key: SPEC-009 amendment 4 | done 2026-10-25 |
 | 417 | §14.10.4.2.4 and §14.11.3.2, action and ingredient references | done 2026-10-25 |
+| 418 | §13.4.2, TSA anchor dates: SPEC-079 amendment 4 | done 2026-10-25 |
