@@ -296,6 +296,8 @@ test('SPEC-016 AC8: bounded — a token is at most maxBytes, a header at most ma
         ->and(TimestampHeader::fromUnprotected(['x5chain' => [new CborBytes('x')]]))->toBeNull();
     $one = ['tstTokens' => [['val' => new CborBytes('x')]]];
     expect(fn () => TimestampHeader::fromUnprotected(['sigTst' => $one, 'sigTst2' => $one]))->toThrow(TimestampException::class, 'both');
+    // a tstContainer is a map, not a list holding one (C2PA 2.4 §10.3.2.5; step 436)
+    expect(fn () => TimestampHeader::fromUnprotected(['sigTst2' => [$one]]))->toThrow(TimestampException::class, 'sigTst2 is not a map');
 })->group('SPEC-016');
 
 test('SPEC-016 AC8: bounded — a token is at most maxBytes, a header at most maxTokens — the shape: tstTokens, each with a byte-string val', function (): void {

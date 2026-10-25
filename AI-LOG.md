@@ -11843,3 +11843,10 @@ README are where the disclosure lives.
 - Measured: 35 mutations of `src/`, each restored; the corpus with per-directory settings, with and without the six surviving mutations (none moved a file); each new test red under its mutation; `composer check`.
 - Decided by Maurice: SPEC-061 amendment 6 confirmed; §13 as the next scope.
 
+## 2026-10-25 — Step 436: the covered rows of §10, each broken once
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en ga door met §10".
+- Produced: tests in `ManifestStoreTest` and `TimeStampTokenTest`; nine rows of `docs/reading-c2pa-2.4.md`; `notes/step-436-covered-rows-10.md`, `NOTES.md`, `docs/milestones.md`. No change under `src/`. Step 435 pushed.
+- Measured: 21 mutations of `src/`, each restored; the corpus with per-directory settings, with and without the five surviving mutations; each new test red under its mutation; `composer check`.
+- Decided by Maurice: §10 as the next scope.
+

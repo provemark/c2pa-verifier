@@ -9,6 +9,7 @@ use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
 use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Jumbf\Superbox;
+use Provemark\C2paVerifier\Manifest\Claim;
 use Provemark\C2paVerifier\Manifest\EmbeddedFile;
 use Provemark\C2paVerifier\Manifest\HashedUri;
 use Provemark\C2paVerifier\Manifest\ManifestException;
@@ -269,6 +270,29 @@ it('AC9: a claim missing a required field is an error naming the field and the v
         expect(fn () => spec007Variant($variant))
             ->toThrow(ManifestException::class, "claim (version 2) is missing the required field {$field}");
     }
+})->group('SPEC-007');
+
+it('AC9: an empty assertion list, a null claim_generator_info and a name that is not text are malformed (C2PA 2.4 §10.2.2, §10.2.3; step 436)', function (): void {
+    $entry = ['url' => 'self#jumbf=c2pa.assertions/c2pa.hash.data', 'hash' => new CborBytes(str_repeat("\0", 32))];
+    $claim = ['instanceID' => 'xmp:iid:step-436', 'claim_generator_info' => ['name' => 'step 436'], 'signature' => 'self#jumbf=c2pa.signature', 'created_assertions' => [$entry]];
+    expect(Claim::fromMap(2, $claim)->createdAssertions)->toHaveCount(1);
+    foreach ([
+        'created empty' => [[...$claim, 'created_assertions' => []], 'claim: created_assertions is not a non-empty list'],
+        'gathered empty' => [[...$claim, 'gathered_assertions' => []], 'claim: gathered_assertions is not a non-empty list'],
+        'generator info null' => [[...$claim, 'claim_generator_info' => null], 'claim (version 2) is missing the required field claim_generator_info'],
+        'generator name a number' => [[...$claim, 'claim_generator_info' => ['name' => 5]], 'claim_generator_info is missing the required field name'],
+    ] as $name => [$map, $message]) {
+        expect(fn () => Claim::fromMap(2, $map))->toThrow(ManifestException::class, $message, $name);
+    }
+
+    // and in a file: tests/Fixtures/absence/created-empty.png, every entry gathered and none created
+    $stream = fopen(dirname(__DIR__, 2).'/Fixtures/absence/created-empty.png', 'rb');
+    assert(is_resource($stream));
+    $report = (new Verifier)->verify($stream);
+    $malformed = array_values(array_filter($report->result->statuses, static fn ($s): bool => $s->code === StatusCode::ClaimMalformed));
+    expect($report->result->state->value)->toBe('Invalid')
+        ->and($malformed)->toHaveCount(1)
+        ->and($malformed[0]->explanation)->toContain('created_assertions is not a non-empty list');
 })->group('SPEC-007');
 
 it('AC10: a URI that resolves to nothing, to the wrong place, or to an unknown box is an error', function (): void {
