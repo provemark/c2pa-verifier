@@ -318,6 +318,18 @@ for the manifest graph, fixed in `0.8.1`:
     where `c2patool` refuses it; since `0.8.1` a cycle cannot be
     acknowledged (SPEC-070 amendment 4).
 
+- **2026-10-25, measured against `c2patool` 0.28.3 — not counted above,
+  changed in `0.8.2`** (`notes/step-421-ed25519-parameters.md`,
+  `notes/step-422-ecdsa-pairing.md`). Two signatures were `Valid` or
+  `Trusted` here and `Invalid` in `c2patool`: an ECDSA algorithm under a
+  key on another curve (`0.1.0` to `0.8.1`; every `c2patool` measured
+  refuses it) and a signer certificate signed with `id-Ed25519` and
+  parameters (`c2patool` 0.28.3 refuses it, 0.28.2 did not). Neither lets
+  anyone sign in another's name: the signature is made with the
+  certificate holder's key. Not counted, because they change a rule to
+  follow `c2patool` rather than fix one that broke. SPEC-009 amendment 5,
+  SPEC-015 amendment 11.
+
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now
 tooling (`bin/make-absence-variants.php`) and part of every new spec.

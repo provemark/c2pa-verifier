@@ -11676,3 +11676,17 @@ README are where the disclosure lives.
   probes moved); `composer check`. Reasoned: that the signature is sound,
   so only `signingCredential.invalid` is reported.
 - Decided by Maurice: the amendment, with `signingCredential.invalid` only.
+
+## 2026-10-25 — The release commit for 0.8.2 (step 423)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "is de verifier nu helemaal in sync met c2patool en c2pa-rs etc?",
+  then "akkoord, bereid 0.8.2 voor".
+- Produced: CHANGELOG 0.8.2, README, `Verifier::VERSION`, a SECURITY.md
+  entry, `notes/step-423-release-0.8.2.md`, a row in `NOTES.md`.
+- Measured: `v0.8.1` on the new probes (all `Trusted`); the corpus
+  against `v0.8.1` (12 of 1,906 runs moved, all new fixtures);
+  `bin/api-check.php` (142 symbols); `bin/package-check.php`;
+  `composer check` (1,345 passed, 1 skipped); `bin/spec-check.php`.
+  Reasoned: the crossed pairing was accepted from `0.1.0` on; the two
+  signatures are not counted among the wrong verdicts.
+- Decided by Maurice: preparing 0.8.2; tag and publication not yet.

@@ -5,6 +5,55 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.8.2 — 2026-10-25
+
+A patch release. `c2patool` 0.28.3 (`c2pa` 0.91.6) and C2PA 2.5 both
+appeared on 2026-10-24/25. Measured against them, this verifier said
+`Valid` or `Trusted` in two cases where every `c2patool` measured says
+`Invalid`; both now say `Invalid`. Nothing was forged in either case: the
+signature is the holder's. The public contract is unchanged (142
+symbols).
+
+### Changed
+
+- **An ECDSA algorithm under a key on another curve is refused (SPEC-009
+  amendment 5).** ES256 under a P-384 key, ES384 under P-256 and ES512
+  under P-384 were `Valid`, and `Trusted` under a trusted root.
+  `c2patool` 0.27.22 to 0.28.3 and `c2pa-web` 0.15.3 say `Invalid`; C2PA
+  2.4 §13.2.1 said to accept such a pairing, C2PA 2.5 §12.3.1 lets a
+  validator refuse it. Now `signingCredential.invalid`, without
+  `claimSignature.mismatch` (which `c2patool` adds), as the signature
+  itself is sound.
+- **A signer certificate signed with `id-Ed25519` and algorithm
+  parameters is refused (SPEC-015 amendment 11).** RFC 8410 §3 says the
+  parameters must be absent. `c2patool` 0.28.3 refuses such a signer
+  certificate; 0.28.2 did not. Now `signingCredential.invalid`.
+  Certificates above the signer are left as `c2pa-rs` leaves them.
+- **The update-manifest rules skip a manifest nothing reaches (SPEC-022
+  amendment 8).** An update manifest or a standard manifest that no
+  ingredient names made the file `Invalid` here (`manifest.update.invalid`,
+  `manifest.multipleParents`) and `Trusted` in `c2patool`; C2PA 2.4
+  §15.11.3.3 says to ignore such manifests, and every other check here
+  did. This one goes the other way: a verdict that was stricter than
+  `c2patool` without protecting anything.
+- **`bin/make-ed25519-params-variants.php`, `bin/make-ecdsa-pairing-variants.php`**
+  are new, and `bin/graph-fuzz.php` builds update manifests. Their
+  throw-away keys are made outside the repository and deleted after each
+  run.
+
+### Documentation
+
+- C2PA 2.5 read against this verifier (steps 416–418): no other gap; what
+  2.5 adds waits for `c2pa-rs` (`docs/milestones.md`).
+- The corpus against `c2patool` 0.28.3 (step 419): 769 of 770 files give
+  the same state and codes; the one that moved is refused here, as it was.
+- A time-stamp with a SHA-1 imprint (step 420): `Invalid` here already,
+  as in 0.28.3; 0.28.1 and 0.28.2 said `Trusted`.
+
+Measured: the corpus against `0.8.1` (`vendor/` copied into the worktree,
+the same fixtures in both trees), 12 of 1,906 runs moved, every one in a
+fixture new since `0.8.1`.
+
 ## 0.8.1 — 2026-10-24
 
 A patch release. A fuzzer for the manifest graph (`bin/graph-fuzz.php`),

@@ -83,9 +83,11 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.8.1`**, still a `0.x` on purpose. `0.8.1` closes
-two ways to a wrong `Trusted` that a fuzzer for the manifest graph found
-(see [`CHANGELOG.md`](CHANGELOG.md)). `0.8.0` takes a
+The current tag is **`v0.8.2`**, still a `0.x` on purpose. `0.8.2` refuses
+two signatures that every `c2patool` measured refuses (an ECDSA algorithm
+under a key on another curve, an Ed25519 signer certificate with
+parameters); `0.8.1` closes two ways to a wrong `Trusted` that a fuzzer
+for the manifest graph found (see [`CHANGELOG.md`](CHANGELOG.md)). `0.8.0` takes a
 validation time, the C2PA conformance programme's trust lists (PEM or JSON,
 with dates) and answers in crJSON, and closes four ways to a wrong `Valid`
 or `Trusted` found in a review of the whole code base (see
