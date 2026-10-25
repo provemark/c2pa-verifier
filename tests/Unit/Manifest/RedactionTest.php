@@ -132,6 +132,22 @@ it('AC2: an ingredient\'s claim signature that does not match', function (): voi
         ->and($report->result->state->value)->toBe($oracle['validation_state']);
 })->group('SPEC-035');
 
+it('AC2: an ingredient assertion that records no claimSignature, for a redacted manifest (step 432)', function (): void {
+    // bin/make-claim-signature-missing-variant.php: the key renamed, the hashes recomputed, the claim not re-signed
+    $report = spec020Verify('redactions/claim-signature-missing.png', SPEC035_SETTINGS);
+    $scoped = spec035WithCode($report, 'ingredient.claimSignature.missing');
+
+    expect(spec035DeltaCodes($report->toArray(), 'failure'))->toBe(['ingredient.claimSignature.missing'])
+        ->and($scoped)->toHaveCount(1)
+        ->and(($scoped[0] ?? null)?->ingredientUri)->toContain('c2pa.ingredient')
+        ->and($report->result->state->value)->toBe('Invalid');
+    // c2patool 0.28.1 and 0.28.3 refuse the file under the same rule
+    foreach (['0.28.1', '0.28.3'] as $version) {
+        expect((string) file_get_contents(Corpus::fixtures()."/c2patool/redactions/claim-signature-missing--{$version}.error.txt"))
+            ->toContain('ingredient claimSignature missing');
+    }
+})->group('SPEC-035');
+
 it('AC3–AC5 together: redacted.png holds the three claim-level codes, as c2patool 0.28.0', function (): void {
     $report = spec020Verify('ingredient-manifest/redacted.png', 'ingredient-manifest/throw-away-root.settings.json');
     $theirs = spec035OracleFaults(spec035Oracle('ingredient-manifest-redacted--0.28.0'), SPEC035_REDACTION_CODES);

@@ -123,6 +123,16 @@ it('AC3: every multi-manifest corpus file: the state and the failure codes are c
 })->group('SPEC-021');
 
 // AC4
+it('AC3: an inputTo ingredient\'s manifest is validated as any other (C2PA 2.4 §15.11.2.1, step 432)', function (): void {
+    // the update manifest's one ingredient is inputTo; its manifest is the Adobe parent, hashed and validated
+    $report = spec020Verify('update-manifest/ingredient-inputto.jpg', 'update-manifest/throw-away-root.settings.json');
+    $validated = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::IngredientManifestValidated));
+
+    expect($validated)->toHaveCount(1)
+        ->and($validated[0]->ingredientUri)->toEndWith('/c2pa.assertions/c2pa.ingredient.v3')
+        ->and($validated[0]->url)->toBe('self#jumbf=/c2pa/adobe:urn:uuid:6a6b4dbe-5ef9-40ec-81ec-d8955db3e95c/c2pa.claim');
+})->group('SPEC-021');
+
 it('AC4: a fault the ingredient assertion recorded is dropped, and only that', function (): void {
     foreach (['public-testfiles/adobe-20220124-CIE-sig-CA.jpg' => 'claimSignature.mismatch', 'c2pa-rs/CIE-sig-CA.jpg' => 'claimSignature.mismatch', 'c2pa-rs/CACAE-uri-CA.jpg' => 'assertion.hashedURI.mismatch'] as $relative => $recorded) {
         $report = spec020Verify($relative, SPEC021_SETTINGS);

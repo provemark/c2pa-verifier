@@ -418,5 +418,7 @@ must meet been implemented, before 2.5 is taken on? The source is
 | 429 | Group A, question 3: a `c2pa.opened` with more than one reference. `c2patool` lets the last decide; a good reference followed by an unresolvable or `componentOf` one was `Trusted` here, `Invalid` there. Now every reference must be the one parent (SPEC-033 amendment 3); `placed` and the others measured equal | done 2026-10-25 |
 | 430 | Group A, question 4: an ingredient's own stapled `revoked`. `c2patool` reads none of these responses: equal (`Trusted`). Read anyway for a `revoked` only, so a revoked ingredient signer counts as on the active manifest (SPEC-066 amendment 2). Group A closed | done 2026-10-25 |
 | 431 | The covered rows checked, §15.1–§15.9: each row's code broken once; 3 of 35 mutations caught by no test, two now tested, one an equivalent mutant; ten citations fixed | done 2026-10-25 |
-| — | The covered rows checked, the rest (about 290 rows) | next, Maurice's choice of scope |
+| 432 | The covered rows checked, §15.10–§15.12: 93 mutations; 10 caught by no test, six now tested, two stricter-only and one equivalent recorded, one left for step 433 | done 2026-10-25 |
+| 433 | External references in an ingredient manifest: a file and a test | next |
+| — | The covered rows checked, the rest (about 200 rows) | after that, Maurice's choice of scope |
 | — | What the sorting leaves to build, one spec each | after that |

@@ -495,3 +495,10 @@ it('AC11: c2pa.hash.data beside c2pa.hash.data__1 is two hard bindings, as c2pat
     // as AC8 for two boxes of one label: multipleHardBindings alone, no data hash run (c2patool runs both)
     expect($failures)->toBe(['assertion.multipleHardBindings', 'claimSignature.mismatch', 'signingCredential.untrusted']);
 })->group('SPEC-012');
+
+it('AC11: c2pa.hash.data beside c2pa.hash.bmff.v2 is two hard bindings, counted before either check runs (amendment 9, step 432)', function (): void {
+    // c2patool 0.28.1 and 0.28.3 refuse the file: the bmff box carries a data hash's fields ("missing field `xpath`")
+    [$failures] = spec247Codes(spec020Verify('binding/hard-bindings-mixed.png'));
+
+    expect($failures)->toBe(['assertion.multipleHardBindings', 'claimSignature.mismatch', 'signingCredential.untrusted']);
+})->group('SPEC-012');

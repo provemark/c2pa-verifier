@@ -135,6 +135,22 @@ it('AC4: a fragment of another stream does not pass, though it is valid in its o
         ->and(spec028Explanations($report))->toContain('foreign-seg_3.m4s');
 })->group('SPEC-028');
 
+it('AC3: a fragment with no merkle box is a mismatch naming it, as c2patool says (step 432)', function (): void {
+    // seg_3 with its C2PA uuid box retyped free: nothing places it in the tree (C2PA 2.4 §15.12.2.2)
+    $fragments = spec028Five();
+    $fragments = [...array_slice($fragments, 0, 2), 'broken/seg_3-no-merkle.m4s', ...array_slice($fragments, 3)];
+    $report = spec028Verify($fragments, trusted: false);
+
+    expect($report->result->state)->toBe(ValidationState::Invalid)
+        ->and(spec028Codes($report))->toContain(StatusCode::AssertionBmffHashMismatch->value)
+        ->and(spec028Explanations($report))->toContain('seg_3-no-merkle.m4s carries no C2PA box with purpose merkle');
+    foreach (['0.28.1', '0.28.3'] as $version) {
+        expect((string) file_get_contents(Corpus::fixtures()."/c2patool/bmff-fragmented/no-merkle--{$version}.txt"))
+            ->toContain('assertion.bmffHash.mismatch')
+            ->toContain('Fragment had no MerkleMap');
+    }
+})->group('SPEC-028');
+
 it('AC5: the count is part of the promise', function (): void {
     $short = spec028Five();
     array_pop($short);

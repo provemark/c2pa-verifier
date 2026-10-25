@@ -52,6 +52,15 @@ function relocate(string $from, string $to, string $old, string $new): void
 relocate($source.'/seg_5.m4s', $directory.'/seg_5-location-5.m4s', "\x04", "\x05");
 relocate($source.'/seg_1.m4s', $directory.'/seg_1-location-minus-1.m4s', "\x00", "\x20");
 
-printf("4 variants in %s\n", $directory);
+// step 432: a fragment with no merkle box. seg_3's C2PA `uuid` box retyped `free`, its length and contents
+// kept: nothing in the fragment says where it belongs in the tree (C2PA 2.4 §15.12.2.2)
+$bytes = (string) file_get_contents($source.'/seg_3.m4s');
+$at = strpos($bytes, 'uuid');
+if ($at === false || substr_count($bytes, 'uuid') !== 1) {
+    throw new RuntimeException('expected one uuid box in seg_3.m4s');
+}
+file_put_contents($directory.'/seg_3-no-merkle.m4s', substr_replace($bytes, 'free', $at, 4));
+
+printf("5 variants in %s\n", $directory);
 printf("AC4 uses ../foreign-seg_3.m4s, a fragment of the seven-fragment stream\n");
 printf("AC5 needs no file: the test offers four fragments, then five with one repeated\n");

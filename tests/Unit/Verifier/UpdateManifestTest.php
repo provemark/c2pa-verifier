@@ -130,6 +130,14 @@ it('AC4: an update manifest that breaks §11.2.3', function (): void {
     // claim (its CBOR uses indefinite lengths) — SPEC-022 amendment 1
     $statuses = UpdateManifestCheck::rules(true, ['c2pa.actions'], ['c2pa.opened'], 2, 2);
     expect(array_map(static fn (ValidationStatus $s): string => $s->code->value, $statuses))->toBe(['manifest.update.invalid']);
+
+    // (e) a claim thumbnail and a multi-asset hash, through the same seam (step 432); an ingredient thumbnail is allowed
+    foreach (['c2pa.thumbnail.claim.jpeg', 'c2pa.hash.multi-asset'] as $label) {
+        $statuses = UpdateManifestCheck::rules(true, ['c2pa.actions', $label], ['c2pa.opened'], 1, 1);
+        expect(array_map(static fn (ValidationStatus $s): string => $s->code->value, $statuses))->toBe(['manifest.update.invalid'], $label)
+            ->and($statuses[0]->explanation)->toContain($label);
+    }
+    expect(UpdateManifestCheck::rules(true, ['c2pa.actions', 'c2pa.thumbnail.ingredient.jpeg'], ['c2pa.opened'], 1, 1))->toBe([]);
 })->group('SPEC-022');
 
 // AC5
