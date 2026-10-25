@@ -196,6 +196,13 @@ it('AC4: subset narrows, and length 0 runs to the end of the box', function (): 
             ['offset' => 100, 'length' => 16, 'marker' => true],
             ['offset' => 124, 'length' => 16, 'marker' => false],
         ]);
+
+    // C2PA 2.4 §A.5.6: a subset may run past its box, and one may start past it; no byte outside the box is excluded (step 440)
+    $boxes = [...$box, ['offset' => 140, 'length' => 20, 'type' => 'free', 'path' => '/free']];
+    expect(BmffHashCheck::plan($boxes, [['xpath' => '/stco', 'subset' => [['offset' => 16, 'length' => 100]]]], $read))
+        ->toBe([['offset' => 100, 'length' => 16, 'marker' => true], ['offset' => 140, 'length' => 20, 'marker' => true]])
+        ->and(BmffHashCheck::plan($boxes, [['xpath' => '/stco', 'subset' => [['offset' => 50, 'length' => 4]]]], $read))
+        ->toBe([['offset' => 100, 'length' => 40, 'marker' => true], ['offset' => 140, 'length' => 20, 'marker' => true]]);
 })->group('SPEC-029');
 
 it('AC5: the data filter tells two uuid boxes apart', function (): void {

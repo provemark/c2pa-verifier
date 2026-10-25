@@ -170,3 +170,40 @@ it('AC17: a fault says whether an APP11 JUMBF piece had been read (amendment 5)'
         expect(spec001Reached($extract, $read($name)))->toBeTrue($name);
     }
 })->group('SPEC-001');
+
+/** fixture-signed.jpg with one piece header field rewritten: $field is the offset inside the 16-byte piece header. */
+function spec001Patched(int $piece, int $field, string $value): string
+{
+    $bytes = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/fixture-signed.jpg');
+    preg_match_all('/\xFF\xEB..JP/s', $bytes, $m, PREG_OFFSET_CAPTURE);
+    $at = $m[0][$piece - 1][1] ?? throw new RuntimeException("no piece {$piece}");
+
+    return substr_replace($bytes, $value, $at + 4 + $field, strlen($value));
+}
+
+/** @return resource */
+function spec001Memory(string $bytes)
+{
+    $stream = fopen('php://memory', 'w+b');
+    assert($stream !== false);
+    fwrite($stream, $bytes);
+    rewind($stream);
+
+    return $stream;
+}
+
+it('AC8, AC11: a long APP11 segment without JP, a TBox that differs, a later Z of 0, a piece past LBox (C2PA 2.4 §A.3.1; step 440)', function (): void {
+    $extract = static fn (string $bytes): ?ManifestStoreBytes => (new JpegManifestStoreExtractor)->extract(spec001Memory($bytes));
+    $signed = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/fixture-signed.jpg');
+
+    // another APP11 user with a full piece header's worth of bytes, before the store: skipped, never read as a piece
+    $other = "\xFF\xEB".pack('n', 2 + 20).'XT'.str_repeat("\0", 18);
+    expect(hash('sha256', $extract(substr($signed, 0, 2).$other.substr($signed, 2))->bytes ?? ''))->toBe(SPEC001_STORE_SHA256);
+
+    expect(fn () => $extract(spec001Patched(2, 12, 'jumc')))->toThrow(ContainerException::class, 'TBox 6A 75 6D 63 in piece 2 differs from 6A 75 6D 62')
+        ->and(fn () => $extract(spec001Patched(2, 4, pack('N', 0))))->toThrow(ContainerException::class, 'expected 2, found 0');
+    // LBox 70,000 in both pieces: the first holds less, the second carries the box past it
+    $short = spec001Patched(2, 8, pack('N', 70000));
+    $short = substr_replace($short, pack('N', 70000), (int) strpos($short, "\xFF\xEB") + 12, 4);
+    expect(fn () => $extract($short))->toThrow(ContainerException::class, 'piece 2 carries the box past its LBox 70000');
+})->group('SPEC-001');

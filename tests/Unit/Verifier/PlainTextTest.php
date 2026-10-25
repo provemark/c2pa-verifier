@@ -420,3 +420,11 @@ it('AC9 (amendment 2): the run is read the same whatever the piece size', functi
     expect([$small->selectors(13), $small->selectors(5), $small->skipSelectors(3), $small->selectors(PHP_INT_MAX), $small->offset()])
         ->toBe([$whole->selectors(13), $whole->selectors(5), $whole->skipSelectors(3), $whole->selectors(PHP_INT_MAX), $whole->offset()]);
 })->with([1, 2, 3, 5, 7])->group('SPEC-060');
+
+it('AC6: a length field shorter than a box header is a corrupted wrapper, refused before the store is read (C2PA 2.4 §A.8.2; step 440)', function (): void {
+    // four bytes that read as a box of LBox 4: without the rule they would pass as a store
+    $bytes = 'Text. '.spec060Wrapper(4, "\0\0\0\x04").' More.';
+
+    expect(spec060Fault($bytes)?->getMessage())->toContain('shorter than the 8-byte box header')
+        ->and(spec060Codes(spec060VerifyBytes($bytes), 'failure'))->toBe(['manifest.text.corruptedWrapper']);
+})->group('SPEC-060');
