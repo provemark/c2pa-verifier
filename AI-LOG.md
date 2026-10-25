@@ -11724,3 +11724,22 @@ README are where the disclosure lives.
 - Measured: none. Reasoned: each of the 60 open rows and its pack note
   read against the question whether it can give a wrong `Valid`.
 - Decided by Maurice: none in this step; the probes wait for his word.
+
+## 2026-10-25 — A claim without `alg` (step 427)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en begin met de eerste probe", then "akkoord,
+  bouw amendement 9 en optie 1".
+- Produced: `bin/make-claim-alg-variants.php`, `tests/Fixtures/claim-alg/`
+  (three probes, the public root, settings, README) and their `c2patool`
+  answers; SPEC-027 amendment 9 and AC10; `tests/Unit/Hash/ClaimAlgTest.php`;
+  the fix in `src/Hash/BmffHashCheck.php`; a row in `docs/comparison.md`;
+  `docs/reading-c2pa-2.4.md`, `docs/milestones.md`,
+  `notes/step-427-claim-without-alg.md`, a row in `NOTES.md`; step 426
+  pushed.
+- Measured: the probes with `c2patool` 0.28.1 and 0.28.3 and with this
+  verifier; the test red, then green; all 949 fixtures through the
+  verifier after the change (only the probe reaches the new status);
+  `composer check`.
+- Decided by Maurice: amendment 9; for a claim without `alg` whose entries
+  name their own, follow the specification and record the difference
+  (option 1).

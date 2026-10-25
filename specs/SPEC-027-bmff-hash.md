@@ -168,6 +168,16 @@ range — none of which any fixture here exercises.
   - When the Verifier runs under the probes' settings
   - Then both are `Trusted`, as in `c2patool` 0.27.22 and 0.28.1
 
+- **AC10 — with no algorithm named, `algorithm.unsupported`** *(amendment 9; required: error path; oracle: `c2patool` 0.28.1 and 0.28.3)*
+  - Given `claim-alg/control.mp4`, `entries-alg.mp4` (the claim's `alg`
+    moved into its two hashed-URI entries) and `entries-alg-bmff-no-alg.mp4`
+    (the same, the BMFF hash's `alg` removed)
+  - When the Verifier runs under the probes' settings
+  - Then the first two are `Trusted`, and the third is `Invalid` with
+    `algorithm.unsupported` at the BMFF hash, naming §15.4.1, and no
+    `assertion.bmffHash.match`; `c2patool` reads the first and refuses the
+    other two ("unknown algorithm")
+
 ## References
 
 - Specification: C2PA 2.4 §11.3 and the BMFF hash section; ISO/IEC
@@ -300,6 +310,31 @@ final readonly class BmffHashCheck
    **Weight A: the probe moves from `Invalid` to `Trusted`, as in
    `c2patool`.**
 
+9. **2026-10-25, steps 426 and 427, found by sorting the open rows of the C2PA 2.4 reading; measured** *(confirmed by Maurice van Loon, 2026-10-25)* —
+   Amendment 8 kept a fallback to SHA-256 when neither the BMFF hash nor
+   the claim names an algorithm. C2PA 2.4 §15.4.1 says that case is
+   `algorithm.unsupported`, and `DataHashCheck` already reports it so. A
+   version 2 claim need not carry `alg` when every hashed-URI entry names
+   its own (§15.4.2), so the case can be reached with a hard binding the
+   hashed-URI check accepts. Measured on probes built by
+   `bin/make-claim-alg-variants.php` (step 427): a claim whose `alg` was
+   moved into its two entries, with the BMFF hash's own `alg` removed, was
+   `Trusted` here; `c2patool` 0.28.1 and 0.28.3 refuse any claim without
+   `alg` ("unknown algorithm", no report). `assertionOf()` now falls back on
+   the claim's `alg` and on nothing else; with neither, `check()` reports
+   `algorithm.unsupported`, naming §15.4.1. A merkle map's own `alg`
+   still comes before the assertion's. New AC10.
+
+   A claim without `alg` whose binding and entries all name their own is
+   left `Trusted`, by the letter of §15.4.1 and §15.4.2, where `c2patool`
+   gives no report (Maurice's decision, 2026-10-25; a row in
+   `docs/comparison.md`). The SHA-256 fallbacks for an ingredient's
+   reference (`IngredientManifestCheck`, SPEC-052 amendment 1) are out of
+   scope.
+
+   **Weight A: a file wrongly `Trusted` becomes `Invalid`.** No corpus file
+   moves: every one names an algorithm (checked in step 427).
+
 ## Open questions
 
 1. **A file whose first top-level box is included.** Both fixtures begin
@@ -344,3 +379,4 @@ the source is `src/Hash/BmffHashCheck.php` unless another file is named.
 | AC7 | `AC7: no image fixture changes its answer because ISOBMFF gained a hard binding` | `src/Verifier/Verifier.php` (the dispatch), `DataHashCheck` unchanged |
 | AC8 | tests/Unit/Hash/BmffHashCheckTest.php :: AC8 / SPEC-027 | src/Hash/BmffHashCheck.php (`withTail()`, in `check()` and `checkFragment()`); bin/make-bmff-tail-variants.php |
 | AC9 (amendment 8) | tests/Unit/Hash/BmffProbesTest.php :: AC9: a BMFF hash without alg uses the claim's algorithm / SPEC-027 | src/Hash/BmffHashCheck.php :: assertionOf() (\$claimAlg), check(); bin/make-bmff-probe-variants.php |
+| AC10 (amendment 9) | tests/Unit/Hash/ClaimAlgTest.php :: AC10 / SPEC-027 | src/Hash/BmffHashCheck.php :: assertionOf(), check() (`AlgorithmUnsupported`); bin/make-claim-alg-variants.php |

@@ -125,6 +125,9 @@ final readonly class BmffHashCheck
         }
         try {
             $assertion = $this->assertionOf($data, $manifest->claim->alg);
+            if ($assertion['alg'] === null) {
+                return [new ValidationStatus(StatusCode::AlgorithmUnsupported, $url, sprintf('no algorithm is specified for %s: neither the assertion nor the claim carries an alg (C2PA 2.4 §15.4.1)', $label))];
+            }
             $this->bound($assertion['exclusions']);
             // SPEC-071: only what c2pa-rs writes may be excluded, judged by path before a byte is hashed
             foreach ($assertion['exclusions'] as $exclusion) {
@@ -630,9 +633,10 @@ final readonly class BmffHashCheck
     /**
      * The assertion, read whole before a byte of the asset is touched. Without its own `alg`, the
      * claim's applies, as for a data hash and as c2pa-rs does (C2PA 2.4 §13.1, §15.4.1;
-     * SPEC-027 amendment 8); SHA-256 only when the claim names none either.
+     * SPEC-027 amendment 8). With neither, `alg` is null: no algorithm is assumed, and check()
+     * reports algorithm.unsupported (SPEC-027 amendment 9).
      *
-     * @return array{alg: string, hash: string|null, merkle: mixed, exclusions: list<array<string, mixed>>}
+     * @return array{alg: string|null, hash: string|null, merkle: mixed, exclusions: list<array<string, mixed>>}
      *
      * @throws HashException
      */
@@ -641,8 +645,8 @@ final readonly class BmffHashCheck
         if (! is_array($data) || array_is_list($data)) {
             throw new HashException(self::LABEL.' is not a CBOR map');
         }
-        $alg = $data['alg'] ?? $claimAlg ?? 'sha256';
-        if (! is_string($alg) || ! in_array($alg, self::ALGORITHMS, true)) {
+        $alg = $data['alg'] ?? $claimAlg;
+        if ($alg !== null && (! is_string($alg) || ! in_array($alg, self::ALGORITHMS, true))) {
             throw new HashException(sprintf('%s: hash algorithm %s is not one this verifier implements', self::LABEL, is_string($alg) ? $alg : gettype($alg)));
         }
 
