@@ -421,5 +421,6 @@ must meet been implemented, before 2.5 is taken on? The source is
 | 432 | The covered rows checked, §15.10–§15.12: 93 mutations; 10 caught by no test, six now tested, two stricter-only and one equivalent recorded, one left for step 433 | done 2026-10-25 |
 | 433 | External references in an ingredient manifest: three probes by `c2patool` 0.28.3 with a SPEC-032 probe as parent; a recorded fault is shown and not counted, an unrecorded one fails the file, as `c2patool` says; tested | done 2026-10-25 |
 | 434 | The covered rows of §14 (35): 48 mutations, 38 caught by the cited test, 3 by others (citations fixed), 7 by none; all 7 now tested (two trust-matrix probes, SPEC-061 amendment 6; three delegated-responder OCSP responses; one test made exact; one allowed-list test) | done 2026-10-25 |
-| — | The covered rows checked, the rest (about 160 rows) | next, Maurice's choice of scope |
+| 435 | The covered rows of §13 (18): 35 mutations, 28 caught by the cited test, 1 by another (citation fixed), 6 by none; all 6 now tested (two BMFF cases made exact, a merkle-map alg fixture, an RSA key above 16,384 bits, the PSS padding, a text alg) | done 2026-10-25 |
+| — | The covered rows checked, the rest (about 140 rows) | next, Maurice's choice of scope |
 | — | What the sorting leaves to build, one spec each | after that |

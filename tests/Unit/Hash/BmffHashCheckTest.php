@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Hash\BmffHashCheck;
 use Provemark\C2paVerifier\Hash\HashException;
 use Provemark\C2paVerifier\Report\StatusCode;
@@ -190,13 +191,18 @@ it('AC5: an exclusion this verifier cannot honour is refused, not ignored', func
 })->group('SPEC-027');
 
 it('AC6: the assertion\'s own shape is checked before a digest is computed', function (): void {
+    // each case wrong in one way only, and named by its message (step 435: the unknown alg once carried a
+    // text hash too, so it was refused for the hash and the algorithm list went untested)
+    $hash = new CborBytes(str_repeat("\0", 32));
     foreach ([
-        'no hash' => ['alg' => 'sha256', 'exclusions' => []],
-        'unknown alg' => ['alg' => 'sha3-512', 'hash' => 'x', 'exclusions' => []],
-        'exclusions not a list' => ['alg' => 'sha256', 'hash' => 'x', 'exclusions' => 'everything'],
-    ] as $name => $data) {
+        'no hash' => [['alg' => 'sha256', 'exclusions' => []], 'has no hash and no merkle'],
+        'unknown alg' => [['alg' => 'sha3-512', 'hash' => $hash, 'exclusions' => []], 'hash algorithm sha3-512 is not one this verifier implements'],
+        'SHA-1' => [['alg' => 'sha1', 'hash' => $hash, 'exclusions' => []], 'hash algorithm sha1 is not one this verifier implements'],
+        'hash not a byte string' => [['alg' => 'sha256', 'hash' => 'x', 'exclusions' => []], 'or a hash that is not a byte string'],
+        'exclusions not a list' => [['alg' => 'sha256', 'hash' => $hash, 'exclusions' => 'everything'], ''],
+    ] as $name => [$data, $message]) {
         expect(fn () => (new BmffHashCheck)->assertionOf($data))
-            ->toThrow(HashException::class, '', $name);
+            ->toThrow(HashException::class, $message, $name);
     }
 })->group('SPEC-027');
 

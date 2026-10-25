@@ -8,6 +8,7 @@ up, each with exactly one thing wrong.
 | `init-byte-changed.mp4` | one byte of the init segment's `moov`, which `initHash` covers | AC2 |
 | `seg_3-byte-changed.m4s` | one byte of `seg_3`'s `mdat`: a leaf | AC3 |
 | `seg_3-no-merkle.m4s` | `seg_3`'s C2PA `uuid` box retyped `free`: no merkle box places it in the tree (step 432; `c2patool` 0.28.1 and 0.28.3: "Fragment had no MerkleMap") | AC3 |
+| `init-merkle-alg-sha384.mp4` | the merkle map's own `alg` set to `sha384`, the assertion's left at `sha256`; not re-signed, so the assertion's hashed URI fails too (step 435) | AC2 |
 
 AC4 uses `../foreign-seg_3.m4s`, which is `seg_3` of the seven-fragment
 stream of step 82 — correctly signed material from a real stream, belonging

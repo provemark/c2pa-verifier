@@ -151,6 +151,16 @@ it('AC3: a fragment with no merkle box is a mismatch naming it, as c2patool says
     }
 })->group('SPEC-028');
 
+it('AC2: the init segment is hashed with the merkle map\'s own alg, the nearest identifier (C2PA 2.4 §13.1; step 435)', function (): void {
+    // the map's alg set to sha384, the assertion's still sha256, not re-signed: the map's alg is used, so the
+    // 32-byte initHash cannot match, beside the hashed URI that no longer matches either
+    $report = spec028Verify(spec028Five(), 'broken/init-merkle-alg-sha384.mp4', trusted: false);
+
+    expect($report->result->state)->toBe(ValidationState::Invalid)
+        ->and(spec028Codes($report))->toContain(StatusCode::AssertionBmffHashMismatch->value)
+        ->and(spec028Explanations($report))->toContain('the init segment does not match its initHash');
+})->group('SPEC-028');
+
 it('AC5: the count is part of the promise', function (): void {
     $short = spec028Five();
     array_pop($short);

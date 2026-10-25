@@ -11835,3 +11835,11 @@ README are where the disclosure lives.
 - Produced: SPEC-061 amendment 6 marked confirmed; the step-434 note says so.
 - Measured: none / Reasoned: none.
 - Decided by Maurice: SPEC-061 amendment 6 confirmed; push step 434; §13 as the next scope.
+
+## 2026-10-25 — Step 435: the covered rows of §13, each broken once
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendement 6 bevestigd, push en ga door met §13".
+- Produced: a variant in `bin/make-fragmented-variants.php` and `tests/Fixtures/bmff-fragmented/broken/init-merkle-alg-sha384.mp4`; tests in `BmffHashCheckTest`, `CoseSign1Test`, `SignatureVerifierTest`, `FragmentedVerifierTest`; seven rows of `docs/reading-c2pa-2.4.md`; the fragmented README; `notes/step-435-covered-rows-13.md`, `NOTES.md`, `docs/milestones.md`. No change under `src/`. Step 434 and the amendment's confirmation pushed.
+- Measured: 35 mutations of `src/`, each restored; the corpus with per-directory settings, with and without the six surviving mutations (none moved a file); each new test red under its mutation; `composer check`.
+- Decided by Maurice: SPEC-061 amendment 6 confirmed; §13 as the next scope.
+

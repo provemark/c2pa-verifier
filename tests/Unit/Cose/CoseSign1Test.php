@@ -213,6 +213,9 @@ it('AC9: the protected header must be a map with an integer alg', function (): v
         ->toThrow(CoseException::class, 'the protected header has no alg (label 1)');
     expect(fn () => spec008Parse(spec008Variant('alg-string-label')))
         ->toThrow(CoseException::class, 'alg under the string label "alg" is not allowed');
+    // under label 1, but text: {1: "ES256"}, an empty unprotected header, nil, an empty signature (step 435)
+    expect(fn () => CoseSign1::fromBytes("\xd2\x84\x48\xa1\x01\x65ES256\xa0\xf6\x40"))
+        ->toThrow(CoseException::class, 'alg is not an integer but');
 })->group('SPEC-008');
 
 it('AC10: a missing or malformed chain is an error', function (): void {

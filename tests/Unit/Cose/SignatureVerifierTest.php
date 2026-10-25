@@ -266,14 +266,22 @@ function spec009Mgf1(string $seed, int $length, string $hash): string
     return substr($mask, 0, $length);
 }
 
-/** EMSA-PSS-ENCODE (RFC 8017 §9.1.1) with sLen = hLen, the trailer byte left open. */
-function spec009PssEncode(string $message, string $salt, int $emBits, string $hash, string $trailer): string
+/**
+ * EMSA-PSS-ENCODE (RFC 8017 §9.1.1) with sLen = hLen, the trailer byte left open, and DB open to one edit
+ * before it is masked (step 435).
+ *
+ * @param  (callable(string): string)|null  $edit
+ */
+function spec009PssEncode(string $message, string $salt, int $emBits, string $hash, string $trailer, ?callable $edit = null): string
 {
     $mHash = hash($hash, $message, true);
     $hLen = strlen($mHash);
     $emLen = intdiv($emBits + 7, 8);
     $h = hash($hash, str_repeat("\0", 8).$mHash.$salt, true);
     $db = str_repeat("\0", $emLen - strlen($salt) - $hLen - 2)."\x01".$salt;
+    if ($edit !== null) {
+        $db = $edit($db);
+    }
     $maskedDb = $db ^ spec009Mgf1($h, $emLen - $hLen - 1, $hash);
     $topBits = 8 * $emLen - $emBits;
     if ($topBits > 0) {
@@ -314,6 +322,80 @@ it('AC7: the EMSA-PSS trailer byte is checked: 0xbc verifies, anything else does
 
     expect(RsaPss::verify($message, $signatures['whole'], $public, 'sha256', 2048))->toBeTrue()
         ->and(RsaPss::verify($message, $signatures['wrong'], $public, 'sha256', 2048))->toBeFalse();
+})->group('SPEC-009');
+
+it('AC7: the EMSA-PSS padding is checked: zeros, then 0x01, then the salt (RFC 8017 §9.1.2 step 10; step 435)', function (): void {
+    $key = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_RSA, 'private_key_bits' => 2048]);
+    assert($key instanceof OpenSSLAsymmetricKey);
+    $details = openssl_pkey_get_details($key);
+    assert(is_array($details) && is_string($details['key']));
+    $public = openssl_pkey_get_public($details['key']);
+    assert($public instanceof OpenSSLAsymmetricKey);
+
+    $message = 'the Sig_structure this test stands in for';
+    $salt = random_bytes(32);
+    // the salt and H stay where a verifier looks for them; only the bytes before the salt change
+    $separator = 256 - 32 - 32 - 2;
+    $cases = [
+        'whole' => null,
+        'a padding byte not zero' => static fn (string $db): string => substr_replace($db, "\x07", 10, 1),
+        'the separator not 0x01' => static fn (string $db): string => substr_replace($db, "\x02", $separator, 1),
+    ];
+    $verified = [];
+    foreach ($cases as $name => $edit) {
+        $em = spec009PssEncode($message, $salt, 2047, 'sha256', "\xbc", $edit);
+        $signature = null;
+        expect(openssl_private_encrypt($em, $signature, $key, OPENSSL_NO_PADDING))->toBeTrue($name);
+        assert(is_string($signature));
+        $verified[$name] = RsaPss::verify($message, $signature, $public, 'sha256', 2048);
+    }
+
+    expect($verified)->toBe(['whole' => true, 'a padding byte not zero' => false, 'the separator not 0x01' => false]);
+})->group('SPEC-009');
+
+it('AC5: an RSA key above 16,384 bits is refused before any arithmetic (C2PA 2.4 §13.2.1; step 435)', function (): void {
+    // a certificate made here for a 2048-bit key generated in memory, then its public key swapped for one with a
+    // random 16,392-bit modulus: a public key only, which nobody holds the private half of
+    $key = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_RSA, 'private_key_bits' => 2048]);
+    assert($key instanceof OpenSSLAsymmetricKey);
+    $signer = $key;   // openssl_csr_new takes the key by reference
+    $csr = openssl_csr_new(['commonName' => 'step 435'], $signer);
+    assert($csr instanceof OpenSSLCertificateSigningRequest);
+    $x509 = openssl_csr_sign($csr, null, $key, 1);
+    assert($x509 instanceof OpenSSLCertificate);
+    $pem = '';
+    expect(openssl_x509_export($x509, $pem))->toBeTrue();
+    assert(is_string($pem));
+    $der = (string) base64_decode((string) preg_replace('/-----[^-]+-----|\s/', '', $pem), true);
+    $details = openssl_pkey_get_details($key);
+    assert(is_array($details) && is_string($details['key']));
+    $old = (string) base64_decode((string) preg_replace('/-----[^-]+-----|\s/', '', $details['key']), true);
+
+    $length = static function (int $n): string {
+        $bytes = ltrim(pack('N', $n), "\0");
+
+        return $n < 128 ? pack('C', $n) : pack('C', 0x80 | strlen($bytes)).$bytes;
+    };
+    $modulus = random_bytes(2049);
+    $modulus[0] = "\x80";
+    $integers = "\x02".$length(2050)."\0".$modulus."\x02\x03\x01\x00\x01";
+    $sequence = "\x30".$length(strlen($integers)).$integers;
+    $bits = "\x03".$length(strlen($sequence) + 1)."\0".$sequence;
+    $rsa = "\x30\x0d\x06\x09\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01\x05\x00";
+    $new = "\x30".$length(strlen($rsa.$bits)).$rsa.$bits;
+    // the certificate and its tbsCertificate both carry two-byte lengths, before and after
+    expect(substr($der, 0, 2))->toBe("\x30\x82")
+        ->and(substr($der, 4, 2))->toBe("\x30\x82")
+        ->and(substr_count($der, $old))->toBe(1);
+    $grow = strlen($new) - strlen($old);
+    $u16 = static fn (string $at): int => (ord($at[0]) << 8) | ord($at[1]);
+    $der = substr_replace(str_replace($old, $new, $der), pack('n', $u16(substr($der, 2, 2)) + $grow), 2, 2);
+    $der = substr_replace($der, pack('n', $u16(substr($der, 6, 2)) + $grow), 6, 2);
+
+    // {1: PS256, 33: the certificate}, and a signature of the modulus's length
+    $cose = CoseSign1::fromBytes(spec009CoseBytes("\xa2\x01\x38\x24\x18\x21".spec009Bstr($der), str_repeat("\x01", 2049)));
+    expect(fn () => (new SignatureVerifier)->verify($cose, 'a claim'))
+        ->toThrow(CoseException::class, 'RSA key of 2048 to 16384 bits');
 })->group('SPEC-009');
 
 it('AC12: under an id-RSASSA-PSS key the salt is the hash length too (amendment 3, step 247)', function (): void {

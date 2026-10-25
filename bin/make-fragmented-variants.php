@@ -61,6 +61,15 @@ if ($at === false || substr_count($bytes, 'uuid') !== 1) {
 }
 file_put_contents($directory.'/seg_3-no-merkle.m4s', substr_replace($bytes, 'free', $at, 4));
 
-printf("5 variants in %s\n", $directory);
+// step 435: the merkle map's own alg (C2PA 2.4 §13.1: the nearest identifier) set to sha384, the assertion's left
+// at sha256; the same length, not re-signed, so the assertion's hashed URI no longer matches either
+$bytes = (string) file_get_contents($source.'/init.mp4');
+$map = "\x65count\x05\x63alg\x66sha256\x68initHash";
+if (substr_count($bytes, $map) !== 1) {
+    throw new RuntimeException('expected one merkle map with alg sha256 in init.mp4');
+}
+file_put_contents($directory.'/init-merkle-alg-sha384.mp4', str_replace($map, str_replace('sha256', 'sha384', $map), $bytes));
+
+printf("6 variants in %s\n", $directory);
 printf("AC4 uses ../foreign-seg_3.m4s, a fragment of the seven-fragment stream\n");
 printf("AC5 needs no file: the test offers four fragments, then five with one repeated\n");
