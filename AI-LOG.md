@@ -11913,3 +11913,11 @@ README are where the disclosure lives.
 - Measured: none. Reasoned: none new.
 - Decided by Maurice: SPEC-080 approved, with the four proposals of the draft (open questions 1–4).
 
+## 2026-10-25 — Step 446: the fixtures of SPEC-080
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en ga door met de fixtures".
+- Produced: `bin/make-mdat-merkle-variants.php`; `tests/Fixtures/mdat-merkle/` (24 MP4s, public root, settings, README); `tests/Fixtures/c2patool/mdat-merkle/` (48 answers); `notes/step-446-mdat-merkle-fixtures.md`; `NOTES.md`, `docs/milestones.md`. No code in `src/`. Step 445 pushed.
+- Measured: `php bin/make-mdat-merkle-variants.php <scratch> <c2patool-0.28.3> <c2patool-0.28.1>` (three runs; the first re-signed without recomputing the file `hash` and was discarded); the stored root against both tree shapes, the shapes compared for counts 1–1,999; `c2patool` 0.28.3 30 times and 0.28.1 20 times on `two-mdat.mp4`, 30 times on each of two changed copies; four changed bytes in each of five variants `c2patool` trusts; `php bin/c2pa-verify` on all 24; `composer check` (1,375 passed, 1 skipped).
+- Reasoned: the bytes a whole-`mdat` exclusion leaves unbound; which of the measured answers SPEC-080 refuses where `c2patool` accepts (ADR-0005, SPEC-071).
+- Decided by Maurice: none in this step (the fixtures were his go).
+

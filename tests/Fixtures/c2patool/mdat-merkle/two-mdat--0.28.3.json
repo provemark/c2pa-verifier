@@ -1,0 +1,218 @@
+{
+  "active_manifest": "urn:c2pa:c6198ba9-94d6-4a20-85bd-28ce1e398d02",
+  "manifests": {
+    "urn:c2pa:c6198ba9-94d6-4a20-85bd-28ce1e398d02": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier mdat Merkle fixtures",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.6"
+        }
+      ],
+      "title": "two-mdat.mp4",
+      "instance_id": "xmp.iid:e60b1d13-d951-4a4e-a79a-b7ba9546021c",
+      "assertions": [
+        {
+          "label": "c2pa.hash.bmff.v3",
+          "data": {
+            "exclusions": [
+              {
+                "xpath": "/uuid",
+                "data": [
+                  {
+                    "offset": 8,
+                    "value": "2P7D1hsOSDySl1goh37EgQ=="
+                  }
+                ]
+              },
+              {
+                "xpath": "/ftyp"
+              },
+              {
+                "xpath": "/mfra"
+              },
+              {
+                "xpath": "/free"
+              },
+              {
+                "xpath": "/skip"
+              },
+              {
+                "xpath": "/mdat",
+                "subset": [
+                  {
+                    "offset": 16,
+                    "length": 0
+                  }
+                ]
+              }
+            ],
+            "alg": "sha256",
+            "hash": "dNiPr3gcKfdKk1MDGxwT67fwP+VkDpWVrAwW+pILTP4=",
+            "merkle": [
+              {
+                "uniqueId": 0,
+                "localId": 0,
+                "count": 3,
+                "alg": "sha256",
+                "hashes": [
+                  [
+                    48,
+                    178,
+                    254,
+                    47,
+                    186,
+                    161,
+                    212,
+                    180,
+                    104,
+                    166,
+                    42,
+                    101,
+                    252,
+                    67,
+                    32,
+                    169,
+                    254,
+                    219,
+                    191,
+                    62,
+                    227,
+                    249,
+                    199,
+                    22,
+                    201,
+                    94,
+                    215,
+                    141,
+                    42,
+                    202,
+                    164,
+                    83
+                  ]
+                ],
+                "fixedBlockSize": 1024
+              },
+              {
+                "uniqueId": 0,
+                "localId": 1,
+                "count": 3,
+                "alg": "sha256",
+                "hashes": [
+                  [
+                    130,
+                    250,
+                    93,
+                    132,
+                    85,
+                    249,
+                    17,
+                    225,
+                    243,
+                    250,
+                    97,
+                    91,
+                    57,
+                    106,
+                    42,
+                    203,
+                    3,
+                    26,
+                    128,
+                    118,
+                    86,
+                    172,
+                    109,
+                    43,
+                    107,
+                    224,
+                    198,
+                    223,
+                    84,
+                    145,
+                    139,
+                    220
+                  ]
+                ],
+                "fixedBlockSize": 1024
+              }
+            ],
+            "name": "jumbf manifest"
+          },
+          "created": true
+        },
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              }
+            ]
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "C2PA Verifier throw-away hierarchy",
+        "common_name": "mdat Merkle signer",
+        "cert_serial_number": "293712"
+      },
+      "label": "urn:c2pa:c6198ba9-94d6-4a20-85bd-28ce1e398d02",
+      "claim_version": 2
+    }
+  },
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:c6198ba9-94d6-4a20-85bd-28ce1e398d02/c2pa.signature",
+          "explanation": "signing certificate trusted, found in [system_anchors] trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:c6198ba9-94d6-4a20-85bd-28ce1e398d02/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:c6198ba9-94d6-4a20-85bd-28ce1e398d02/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:c6198ba9-94d6-4a20-85bd-28ce1e398d02/c2pa.assertions/c2pa.hash.bmff.v3",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.bmff.v3"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:c6198ba9-94d6-4a20-85bd-28ce1e398d02/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.bmffHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:c6198ba9-94d6-4a20-85bd-28ce1e398d02/c2pa.assertions/c2pa.hash.bmff.v3",
+          "explanation": "BMFF hash valid"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:c6198ba9-94d6-4a20-85bd-28ce1e398d02/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        },
+        {
+          "code": "assertion.bmffHash.additionalExclusionsPresent",
+          "url": "self#jumbf=/c2pa/urn:c2pa:c6198ba9-94d6-4a20-85bd-28ce1e398d02/c2pa.assertions/c2pa.hash.bmff.v3",
+          "explanation": "extra BMFF hash exclusion(s) found"
+        }
+      ],
+      "failure": []
+    },
+    "specVersion": "2.4.0",
+    "trustListUri": "system_anchors"
+  },
+  "validation_state": "Trusted"
+}
