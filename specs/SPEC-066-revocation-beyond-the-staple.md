@@ -122,6 +122,15 @@ adopting them is stricter than `c2patool`, by the specification's rule.
   - The corpus, before and after: a file without such responses keeps its
     verdict and its codes.
 
+- **AC8 — an ingredient's own stapled `revoked` is a failure** *(amendment 2; required: error path; oracle: `c2patool` 0.28.1 and 0.28.3)*
+  - Given the six probes of `tests/Fixtures/ingredient-staple/`
+  - When the Verifier runs under the probes' settings
+  - Then `child-staple-revoked` is `Invalid`, with exactly one
+    `signingCredential.ocsp.revoked`, under its ingredient;
+    `child-control` and `child-staple-good` are `Trusted` with no OCSP code
+    under the ingredient; `parent-staple-revoked` is `Invalid` (SPEC-030);
+    and `c2patool` calls all six `Trusted`
+
 ## References
 
 - Specification: C2PA 2.4 §15.9, §15.9.1, §14.5.2, §18.19; RFC 6960
@@ -161,6 +170,29 @@ final readonly class OcspCheck
 
    **Weight B: no verdict changes.**
 
+2. **2026-10-25, steps 426 and 430, found by sorting the open rows of the C2PA 2.4 reading; measured** *(confirmed by Maurice van Loon, 2026-10-25)* —
+   Amendment 1 left an ingredient manifest's own stapled responses unread
+   when the store carries no certificate-status responses. An ingredient
+   whose signer stapled a verified `revoked` therefore left the file
+   `Trusted`, while the same response on the active manifest makes it
+   `Invalid` (SPEC-030). C2PA 2.4 §15.11.3.3.1 asks for an ingredient's
+   revocation to be validated as §15.9 describes. Measured with
+   `bin/make-ingredient-staple-variants.php`: `c2patool` 0.28.1 and 0.28.3
+   emit no OCSP code for these responses, on the active manifest or on an
+   ingredient, and call all six probes `Trusted` (as SPEC-030's open
+   question 2 found for the active manifest).
+
+   Without certificate-status responses, an ingredient manifest's own
+   staple is now read, and **only a `signingCredential.ocsp.revoked`** is
+   kept, under that ingredient; `notRevoked` and `skipped` are not
+   reported for it, so the `c2pa-rs/ocsp.jpg` delta amendment 1 avoided
+   does not appear and no file that passed changes its codes. A revoked
+   ingredient signer makes the file `Invalid`, as an ingredient's failure
+   does (SPEC-021). Stricter than `c2patool`, in line with SPEC-030 for the
+   active manifest (Maurice's choice, 2026-10-25). New AC8.
+
+   **Weight A: a file wrongly `Trusted` becomes `Invalid`.**
+
 ## Open questions
 
 - 1. **The anchor.** Excluded: an anchor is trusted by configuration, and
@@ -183,3 +215,4 @@ final readonly class OcspCheck
 | AC5 | tests/Unit/Trust/RevocationBeyondStapleTest.php :: AC5: several responses: each is tried; open question 2 / SPEC-066 | src/Trust/OcspCheck.php :: check() (the pool) |
 | AC6 | tests/Unit/Trust/RevocationBeyondStapleTest.php :: AC6: both c2patool versions ignore all of it / SPEC-066 | bin/make-revocation-variants.php |
 | AC7 | the corpus before and after (notes/step-338-revocation-beyond-the-staple.md); tests/Unit/Trust/OcspCheckTest.php (SPEC-030) unchanged | src/Verifier/IngredientManifestCheck.php (amendment 1) |
+| AC8 (amendment 2) | tests/Unit/Trust/IngredientStapleTest.php :: AC8 / SPEC-066 | src/Verifier/IngredientManifestCheck.php :: manifest() (the staple without certificate-status responses); bin/make-ingredient-staple-variants.php |

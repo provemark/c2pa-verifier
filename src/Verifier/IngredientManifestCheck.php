@@ -218,9 +218,9 @@ final readonly class IngredientManifestCheck
         if ($trustSettings->verifyTrust) {
             $statuses = [...$statuses, ...$this->trust->check($manifest, $trustSettings, $at)];
         }
-        // revocation of this manifest's signer (SPEC-066): only where the store carries certificate-status
-        // responses, which may name it; its own stapled responses join them then. Without any, an ingredient's
-        // report stays as it was (SPEC-030 reads the active manifest's staple only), as c2patool reports it
+        // revocation of this manifest's signer (SPEC-066): where the store carries certificate-status
+        // responses, which may name it, its own stapled responses join them. Without any, its own staple is
+        // read for a revoked only (amendment 2): notRevoked and skipped stay unreported, as c2patool reports it
         try {
             $cose = CoseSign1::ofManifest($manifest);
             $chain = Certificate::chainOf($cose);
@@ -228,8 +228,9 @@ final readonly class IngredientManifestCheck
             $cose = null;
             $chain = [];
         }
-        if ($cose !== null && $responses !== []) {
-            $statuses = [...$statuses, ...(new OcspCheck)->check($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses)];
+        if ($cose !== null) {
+            $revocation = (new OcspCheck)->check($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses);
+            $statuses = [...$statuses, ...($responses !== [] ? $revocation : array_filter($revocation, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialOcspRevoked))];
         }
 
         $hashedUris = $this->hashedUris->check($manifest);

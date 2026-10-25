@@ -11778,3 +11778,22 @@ README are where the disclosure lives.
 - Decided by Maurice: option 2 (refuse rather than record); the wider
   rule (every reference must be the one parent) over the narrower one
   (unresolvable references only).
+
+## 2026-10-25 — An ingredient's own stapled `revoked` (step 430)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en ga door met vraag 4", then "akkoord, optie 2,
+  bouw het amendement".
+- Produced: `bin/make-ingredient-staple-variants.php` (built from the
+  helpers of `bin/make-revocation-variants.php`),
+  `tests/Fixtures/ingredient-staple/` (six probes, the public root,
+  settings, README) and their `c2patool` answers; SPEC-066 amendment 2 and
+  AC8; `tests/Unit/Trust/IngredientStapleTest.php`; the change in
+  `src/Verifier/IngredientManifestCheck.php`; a row in
+  `docs/comparison.md`; `docs/reading-c2pa-2.4.md`, `docs/milestones.md`,
+  `notes/step-430-ingredient-staple.md`, a row in `NOTES.md`; step 429
+  pushed.
+- Measured: the probes with `c2patool` 0.28.1, 0.28.2 and 0.28.3 and this
+  verifier; the test red, then green; all 963 fixtures before and after,
+  every code compared; `composer check`.
+- Decided by Maurice: option 2 (read an ingredient's own staple for a
+  `revoked` only) over recording the equality alone.
