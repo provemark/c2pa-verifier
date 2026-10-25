@@ -94,7 +94,9 @@ it('AC1: an unknown name in the merkle map is refused, not thrown', function (st
     expect($report->result->state)->toBe(ValidationState::Invalid)
         ->and($bmff)->toHaveCount(1)
         ->and($bmff[0]->code)->toBe(StatusCode::AssertionBmffHashMismatch)
-        ->and($bmff[0]->explanation)->toContain('fooooo');
+        ->and($bmff[0]->explanation)->toContain('fooooo')
+        // the merkle map's own check, not the digest's second guard behind it (step 439)
+        ->and($bmff[0]->explanation)->toContain($route === 'fragmented' ? 'the merkle map names the hash algorithm' : '');
 })->with(['whole', 'fragmented'])->group('SPEC-051');
 
 it('AC2: a name PHP knows but C2PA does not is refused', function (string $route): void {
@@ -105,7 +107,9 @@ it('AC2: a name PHP knows but C2PA does not is refused', function (string $route
 
     expect($bmff)->toHaveCount(1)
         ->and($bmff[0]->code)->toBe(StatusCode::AssertionBmffHashMismatch)
-        ->and($bmff[0]->explanation)->toContain('crc32b');
+        ->and($bmff[0]->explanation)->toContain('crc32b')
+        // the merkle map's own check, not the digest's second guard behind it (step 439)
+        ->and($bmff[0]->explanation)->toContain($route === 'fragmented' ? 'the merkle map names the hash algorithm' : '');
 })->with(['whole', 'fragmented'])->group('SPEC-051');
 
 it('AC3: a merkle map alg that is not text is refused, not replaced', function (string $route): void {

@@ -425,6 +425,6 @@ must meet been implemented, before 2.5 is taken on? The source is
 | 436 | The covered rows of §10 (19): 21 mutations, 14 caught by the cited test, 2 by others (citations fixed), 5 by none; 4 now tested (empty assertion lists, a null required field, a name that is not text, a list for a tstContainer), 1 recorded (relative redaction entries excuse nothing) | done 2026-10-25 |
 | 437 | The covered rows of §11 (21): 28 mutations, 22 caught by the cited test, 2 by others (citations fixed), 4 by none; all 4 now tested (three label rules, one assertion store and one signature box per manifest) | done 2026-10-25 |
 | 438 | The covered rows of §18.15 and §18.16 (16): 25 mutations, 20 caught by the cited test, 1 by another (citation fixed), 1 only by a later rule (messages pinned), 3 by none; all 3 now tested at their seam | done 2026-10-25 |
-| 439 | The other covered rows of §18 (40) | next |
-| — | The covered rows checked, the rest (Appendix A, §6–§9 and C, about 47 rows) | after that, Maurice's choice of scope |
+| 439 | The other covered rows of §18 (40): 50 mutations, 30 caught by the cited test, 10 by others (citations added), 1 by a hang, 9 by none; all 9 now tested | done 2026-10-25 |
+| — | The covered rows checked, the rest (Appendix A, §6–§9 and C, about 47 rows) | next, Maurice's choice of scope |
 | — | What the sorting leaves to build, one spec each | after that |

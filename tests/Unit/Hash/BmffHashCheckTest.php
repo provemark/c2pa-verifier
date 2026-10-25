@@ -253,3 +253,10 @@ it('AC8: the bytes after the last top-level box are hashed, as c2pa-rs hashes th
         ->and(spec027Codes($report))->toContain(StatusCode::AssertionBmffHashMismatch->value)
         ->and(str_contains($recorded, 'code: "assertion.bmffHash.mismatch"'))->toBeTrue();
 })->group('SPEC-027');
+
+it('AC5: an xpath without its leading slash is refused, not matched loosely (C2PA 2.4 §18.6.2; step 439)', function (): void {
+    $boxes = [['offset' => 0, 'length' => 32, 'type' => 'ftyp'], ['offset' => 32, 'length' => 945, 'type' => 'moov']];
+    $zeros = static fn (int $at, int $length): string => str_repeat("\x00", $length);
+    expect(BmffHashCheck::included($boxes, [['xpath' => '/ftyp']], $zeros))->toBe([['offset' => 32, 'length' => 945]])
+        ->and(fn () => BmffHashCheck::included($boxes, [['xpath' => 'ftyp']], $zeros))->toThrow(HashException::class, 'an exclusion has no usable xpath');
+})->group('SPEC-027');

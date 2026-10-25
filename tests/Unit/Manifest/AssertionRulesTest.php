@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Manifest\ExternalReferenceCheck;
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
@@ -172,4 +173,16 @@ it('AC7: the vocabulary grows by one code, verbatim', function (): void {
     $surface = (array) file(dirname(__DIR__, 2).'/Fixtures/api/public-surface.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     // SPEC-032 amendment 2: this spec's symbol is recorded; the surface's size is ApiSurfaceTest's alone
     expect(in_array('Report\StatusCode :: const AssertionExternalReferenceMalformed', $surface, true))->toBeTrue();
+})->group('SPEC-032');
+
+it('AC4: each of the thirteen labels §18.24.1 lists is refused, one at a time (step 439)', function (): void {
+    $thirteen = [
+        'c2pa.actions', 'c2pa.actions.v2', 'c2pa.cloud-data', 'c2pa.external-reference', 'c2pa.hash.bmff.v2', 'c2pa.hash.bmff.v3',
+        'c2pa.hash.boxes', 'c2pa.hash.collection.data', 'c2pa.hash.data', 'c2pa.hash.multi-asset', 'c2pa.ingredient', 'c2pa.ingredient.v2', 'c2pa.ingredient.v3',
+    ];
+    $reference = static fn (string $label): array => ['location' => ['url' => 'https://example.com/data'], 'label' => $label];
+    expect(ExternalReferenceCheck::fault($reference('c2pa.thumbnail.claim')))->toBeNull();
+    foreach ($thirteen as $label) {
+        expect(ExternalReferenceCheck::fault($reference($label)))->toBe("label {$label} names an assertion an external reference shall not reference", $label);
+    }
 })->group('SPEC-032');

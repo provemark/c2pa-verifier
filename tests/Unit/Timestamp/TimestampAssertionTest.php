@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
+use Provemark\C2paVerifier\Timestamp\TimestampAssertions;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\VerificationReport;
 use Provemark\C2paVerifier\Verifier\Verifier;
@@ -129,4 +131,13 @@ it('AC1 (amendment 1): a real update manifest\'s token, over the whole COSE_Sign
         ->and($from)->not->toContain('timeStamp.mismatch')
         ->and($from)->toContain('timeStamp.untrusted')
         ->and($report->result->state->value)->toBe('Trusted');
+})->group('SPEC-064');
+
+it('AC4: an empty key is malformed, as an empty token is (C2PA 2.4 §18.18.3; step 439)', function (): void {
+    // a key that names no manifest is not refused: its token is never used for one (TimestampCheck::forManifest())
+    $token = new CborBytes("\x30\x00");
+    expect(TimestampAssertions::fault(['urn:c2pa:00000000-0000-4000-8000-00000000000a' => $token]))->toBeNull()
+        ->and(TimestampAssertions::fault(['' => $token]))->not->toBeNull()
+        ->and(TimestampAssertions::fault(['  ' => $token]))->not->toBeNull()
+        ->and(TimestampAssertions::fault(['urn:c2pa:00000000-0000-4000-8000-00000000000a' => new CborBytes('')]))->not->toBeNull();
 })->group('SPEC-064');

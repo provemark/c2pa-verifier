@@ -11,6 +11,7 @@ use Provemark\C2paVerifier\Cose\ClaimSignatureCheck;
 use Provemark\C2paVerifier\Hash\DataHashCheck;
 use Provemark\C2paVerifier\Hash\ExclusionAllowance;
 use Provemark\C2paVerifier\Hash\ExclusionRegion;
+use Provemark\C2paVerifier\Hash\HardBindings;
 use Provemark\C2paVerifier\Hash\HashedUriCheck;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
 use Provemark\C2paVerifier\Manifest\Manifest;
@@ -501,4 +502,46 @@ it('AC11: c2pa.hash.data beside c2pa.hash.bmff.v2 is two hard bindings, counted 
     [$failures] = spec247Codes(spec020Verify('binding/hard-bindings-mixed.png'));
 
     expect($failures)->toBe(['assertion.multipleHardBindings', 'claimSignature.mismatch', 'signingCredential.untrusted']);
+})->group('SPEC-012');
+
+it('AC6, AC7, AC11: an alg that is not text, a hash of the wrong length, every hard binding of the table (C2PA 2.4 §18.4, §18.5.1; step 439)', function (): void {
+    // a byte-for-byte edit of alg-sha384.png's data hash; the check reads the decoded assertion, not its hashed URI
+    $patched = static function (string $from, string $to): array {
+        $bytes = (string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/binding/alg-sha384.png');
+        expect(substr_count($bytes, $from))->toBe(1);
+        $stream = fopen('php://memory', 'w+b');
+        assert($stream !== false);
+        $bytes = str_replace($from, $to, $bytes);
+        // the caBX chunk's CRC, recomputed over its type and data (the chunk starts at offset 33)
+        $header = unpack('Nlength', substr($bytes, 33, 4));
+        if ($header === false || ! is_int($header['length'] ?? null)) {
+            throw new RuntimeException('no caBX chunk at offset 33');
+        }
+        $length = $header['length'];
+        $bytes = substr_replace($bytes, pack('N', crc32(substr($bytes, 37, 4 + $length))), 41 + $length, 4);
+        fwrite($stream, $bytes);
+        rewind($stream);
+        $store = (new PngManifestStoreExtractor)->extract($stream);
+        assert($store !== null);
+
+        return (new DataHashCheck)->check(ManifestStore::fromTree((new JumbfParser)->parse($store->bytes))->active, $stream, $store);
+    };
+
+    // "sha384" as a byte string: malformed, never read as an algorithm name
+    $bytes = $patched("\x63alg\x66sha384", "\x63alg\x46sha384");
+    expect(spec012Codes($bytes))->toBe(['assertion.dataHash.malformed'])
+        ->and($bytes[0]->explanation)->toContain('alg is Provemark\\C2paVerifier\\Cbor\\CborBytes, not text');
+    // sha256 named over a 48-byte hash: the length is refused before a byte is hashed
+    $short = $patched("\x63alg\x66sha384", "\x63alg\x66sha256");
+    expect(spec012Codes($short))->toBe(['assertion.dataHash.mismatch'])
+        ->and($short[0]->explanation)->toBe('c2pa.hash.data carries a 48-byte hash, but sha256 produces 32 bytes');
+
+    // §18.4: the standard hard bindings, an instance of each included; the removed c2pa.hash.bmff still counts
+    foreach (['c2pa.hash.data', 'c2pa.hash.boxes', 'c2pa.hash.collection.data', 'c2pa.hash.bmff', 'c2pa.hash.bmff.v2', 'c2pa.hash.bmff.v3'] as $label) {
+        expect(HardBindings::isHardBinding($label))->toBeTrue($label)
+            ->and(HardBindings::isHardBinding($label.'__1'))->toBeTrue($label.'__1');
+    }
+    foreach (['c2pa.hash.database', 'c2pa.hash.boxesx', 'c2pa.soft-binding', 'c2pa.thumbnail.claim'] as $label) {
+        expect(HardBindings::isHardBinding($label))->toBeFalse($label);
+    }
 })->group('SPEC-012');
