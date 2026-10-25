@@ -11899,3 +11899,10 @@ README are where the disclosure lives.
 - Measured: `c2patool` 0.28.3 signing `fixture-unsigned.mp4` with a throw-away P-256 hierarchy (keys zeroed and deleted), with and without `core.merkle_tree_chunk_size_in_kb`; verdicts from `c2patool` 0.28.3 and 0.28.1 and `bin/c2pa-verify` on the files and on byte-changed copies; leaf, root and proof recomputed by hand. Reasoned: the `c2pa` 0.91.1 source (`bmff_hash.rs`, `settings/mod.rs`).
 - Decided by Maurice: to measure first.
 
+## 2026-10-25 — Step 444: SPEC-080 drafted
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en schrijf de SPEC als draft".
+- Produced: `specs/SPEC-080-mdat-merkle-tree.md` (draft); `NOTES.md`, `docs/milestones.md`. No code. Step 443 pushed.
+- Measured: nothing new; the spec rests on step 443. Reasoned: the `c2pa` 0.91.1 source (`validate_merkle_maps_mdat_boxes()`, `check_merkle_tree()`, `split_bmff_merkle_map()`), this verifier's `BmffHashCheck` and `IsobmffManifestStoreExtractor`, ADR-0005.
+- Decided by Maurice: to have a spec for group E; its approval is his.
+
