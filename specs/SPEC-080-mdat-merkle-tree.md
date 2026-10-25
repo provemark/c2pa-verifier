@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-25                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -194,19 +194,30 @@ final class IsobmffManifestStoreExtractor
    measured the shape for fragmented files; `check_merkle_tree()` walks the
    index bit by bit. If the two differ for a count that is not a power of
    two, the measured `c2patool` file decides.
+   *Status 2026-10-25 (step 445):* decided by Maurice: settled by
+   measurement, not by reading. The first test step signs the AC1 fixture
+   and checks its stored row against the shape of step 82 (the largest
+   power of two on the left); where they differ, the `c2patool` file
+   decides and the step's note says so. Blocking for AC1 until measured.
 2. **The status code of a shape fault** (AC6). `c2pa-rs` raises most as
-   `HashMismatch`, one as a validation error. Proposal: `mismatch` as
-   `c2patool` reports it, `malformed` only where SPEC-038 already uses it;
-   each pinned against the oracle's output.
-3. **`variableBlockSizes` and the single-leaf form** (AC8). Proposal:
-   refuse by name until a writer is found; the rule (the sizes add up to
-   the `mdat` size minus 16) is written down in this spec so that a later
-   one can build on it.
-4. **The fixtures.** Proposal: `bin/make-mdat-merkle-variants.php`, as
+   `HashMismatch`, one as a validation error.
+   *Status 2026-10-25 (step 445):* decided by Maurice: the proposal.
+   `assertion.bmffHash.mismatch`, as `c2patool` reports it;
+   `assertion.bmffHash.malformed` only where SPEC-038 already uses it. Each
+   case pinned against the oracle's output.
+3. **`variableBlockSizes` and the single-leaf form** (AC8).
+   *Status 2026-10-25 (step 445):* decided by Maurice: the proposal.
+   Refused by name until a writer is found. The rule for a later spec: the
+   variable sizes add up to the `mdat` size minus 16; a map with neither
+   field is one leaf over the whole `mdat` from offset 16.
+4. **The fixtures.**
+   *Status 2026-10-25 (step 445):* decided by Maurice: the proposal.
+   `bin/make-mdat-merkle-variants.php`, built like
    `bin/make-bmff-probe-variants.php`: a throw-away hierarchy in a
-   temporary directory, deleted at the end; an unsigned MP4 made with
-   `ffmpeg` large enough for AC1; the files, the public root and the
-   `c2patool` outputs committed under `tests/Fixtures/mdat-merkle/`.
+   temporary directory, overwritten and deleted at the end; an unsigned MP4
+   made with `ffmpeg`, large enough for AC1. The signed files, the public
+   root and the `c2patool` outputs are committed under
+   `tests/Fixtures/mdat-merkle/`; no key ever is.
 
 ## Traceability
 

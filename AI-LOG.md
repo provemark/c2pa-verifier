@@ -11906,3 +11906,10 @@ README are where the disclosure lives.
 - Measured: nothing new; the spec rests on step 443. Reasoned: the `c2pa` 0.91.1 source (`validate_merkle_maps_mdat_boxes()`, `check_merkle_tree()`, `split_bmff_merkle_map()`), this verifier's `BmffHashCheck` and `IsobmffManifestStoreExtractor`, ADR-0005.
 - Decided by Maurice: to have a spec for group E; its approval is his.
 
+## 2026-10-25 — Step 445: SPEC-080 approved
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en zet SPEC-080 op approved met je voorstellen".
+- Produced: `specs/SPEC-080-mdat-merkle-tree.md` (status, approval, open questions rewritten as decisions); `NOTES.md`, `docs/milestones.md`. No code. Step 444 pushed.
+- Measured: none. Reasoned: none new.
+- Decided by Maurice: SPEC-080 approved, with the four proposals of the draft (open questions 1–4).
+
