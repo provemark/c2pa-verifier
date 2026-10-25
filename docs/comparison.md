@@ -49,6 +49,10 @@ the same state and codes. The corpus holds no file for three of the
 four validation changes in between (an Ed25519 certificate with
 parameters, a SHA-1 time-stamp imprint, a crossed ECDSA curve), so their
 not moving shows nothing.
+One of the three was then probed (step 420, SPEC-062 amendment 3): a
+time-stamp with a SHA-1 imprint keeps an expired signer `Trusted` in
+0.28.2 and `Invalid` in 0.28.3, as here; this verifier reports
+`timeStamp.malformed` where 0.28.3 says `timeStamp.untrusted`.
 
 **Since 0.2.0** (SPEC-033 to SPEC-040), every new rule was measured on
 signed probes under **both** versions before it was built. Their answers

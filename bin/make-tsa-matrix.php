@@ -16,7 +16,7 @@ declare(strict_types=1);
  * the base TSA extensions, and `openssl cms -sign -cades` signs that TSTInfo again
  * with the probe's TSA certificate (`sign => cms`; `control-cms` checks the route).
  *
- * Every probe is judged by c2patool 0.27.22 and 0.28.1, by `openssl ts -verify` and
+ * Every probe is judged by two c2patool versions (0.27.22 and 0.28.1 for the fixtures), by `openssl ts -verify` and
  * by this verifier. The probes whose signer is short-lived are judged only after the
  * signer has expired, so that only a trusted timestamp can keep them valid.
  *
@@ -280,7 +280,7 @@ $base = [
 /**
  * probe => [certificate changes [who => [field, value]], options]
  * options: trust (both|signer-only|tsa-as-manifest|legacy), header (sigTst2|sigTst|both|none), over (right|wrong),
- * sign (ts|cms)
+ * sign (ts|cms), tokens (1|2), imprint (sha256|sha1)
  *
  * @var array<string, array{0: array<string, array{0: 'ext'|'key'|'md'|'validity', 1: list<string>|string}>, 1: array<string, string>}> $variants
  */
@@ -314,6 +314,9 @@ $variants = [
     // two tokens in sigTst2's tstTokens (step 314): the second made right after the first, by the same TSA
     'two-tokens' => [[], ['tokens' => '2']],
     'expired-signer-two-tokens' => [['leaf' => ['validity', $SHORT]], ['tokens' => '2']],
+    // a SHA-1 message imprint (step 420): outside C2PA 2.4 §13.1, so §15.8.2 ignores the token
+    'imprint-sha1' => [[], ['imprint' => 'sha1']],
+    'expired-signer-imprint-sha1' => [['leaf' => ['validity', $SHORT]], ['imprint' => 'sha1']],
     // the TSA leaf's extended key usage (step 292), signed through cms
     'control-cms' => [[], ['sign' => 'cms']],
     'tsa-leaf-eku-not-critical' => [['tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', 'timeStamping')]], ['sign' => 'cms']],
@@ -341,7 +344,7 @@ if ($COSE === false) {
 }
 $COSE_LENGTH = strlen($manifest->signatureBytes());
 $issuerOf = ['root' => null, 'int' => 'root', 'leaf' => 'int', 'tsa-root' => null, 'tsa-int' => 'tsa-root', 'tsa-leaf' => 'tsa-int'];
-file_put_contents("{$keys}/tsa.cnf", "[tsa]\ndefault_tsa = t\n[t]\nserial = {$keys}/tsa-serial\ncrypto_device = builtin\nsigner_digest = sha256\ndefault_policy = 1.3.6.1.4.1.99999.10\ndigests = sha256\naccuracy = secs:1\ness_cert_id_alg = sha256\ness_cert_id_chain = no\n");
+file_put_contents("{$keys}/tsa.cnf", "[tsa]\ndefault_tsa = t\n[t]\nserial = {$keys}/tsa-serial\ncrypto_device = builtin\nsigner_digest = sha256\ndefault_policy = 1.3.6.1.4.1.99999.10\ndigests = sha256, sha1\naccuracy = secs:1\ness_cert_id_alg = sha256\ness_cert_id_chain = no\n");
 file_put_contents("{$keys}/tsa-serial", "01\n");
 
 if ($set !== '') {
@@ -391,8 +394,9 @@ foreach ($variants as $probe => [$changes, $options]) {
     $header = $options['header'] ?? 'sigTst2';
     $tokenFor = static function (string $payload) use ($keys, $protected, $options, $TSA): string {
         $countersigned = "\x84\x70CounterSignature".txBstr($protected)."\x40".txBstr($payload);
-        $digest = hash('sha256', ($options['over'] ?? 'right') === 'wrong' ? $countersigned.'!' : $countersigned);
-        txRun(txSh('openssl', 'ts', '-query', '-digest', $digest, '-sha256', '-cert', '-out', "{$keys}/q.tsq"));
+        $imprint = $options['imprint'] ?? 'sha256';
+        $digest = hash($imprint, ($options['over'] ?? 'right') === 'wrong' ? $countersigned.'!' : $countersigned);
+        txRun(txSh('openssl', 'ts', '-query', '-digest', $digest, '-'.$imprint, '-cert', '-out', "{$keys}/q.tsq"));
         file_put_contents("{$keys}/tsa-chain.pem", (string) file_get_contents("{$keys}/tsa-int.pem"));
         $cms = ($options['sign'] ?? 'ts') === 'cms';
         $tsSigner = "{$keys}/tsa-leaf.pem";
@@ -503,10 +507,18 @@ $codes = static function (string $json): string {
 
     return $j['validation_state'].' ['.implode(',', array_values(array_unique($timestamp))).'] '.implode(',', array_values(array_unique($failures)));
 };
-$tsv = ["probe\tc2patool-0.27.22\tc2patool-0.28.1\topenssl-ts\tthis-verifier"];
+// each c2patool labelled by the version it reports (the fixtures' alarm reads 0.28.1 and 0.27.22)
+$versionOf = static function (string $tool): string {
+    $lines = [];
+    exec(txSh($tool, '--version').' 2>&1', $lines);
+
+    return preg_match('/(\d+\.\d+\.\d+)/', implode(' ', $lines), $m) === 1 ? $m[1] : throw new RuntimeException("no version from {$tool}");
+};
+$tools = [$versionOf($old) => $old, $versionOf($new) => $new];
+$tsv = ['probe'."\t".implode("\t", array_map(static fn (string $v): string => "c2patool-{$v}", array_keys($tools)))."\topenssl-ts\tthis-verifier"];
 foreach ($built as $probe => $ossl) {
     $row = [$probe];
-    foreach (['0.27.22' => $old, '0.28.1' => $new] as $v => $tool) {
+    foreach ($tools as $v => $tool) {
         $lines = [];
         exec(txSh($tool, "{$out}/{$probe}.png", '--settings', "{$out}/{$probe}.settings.json").' 2>&1', $lines);
         $row[] = $codes(implode("\n", $lines));

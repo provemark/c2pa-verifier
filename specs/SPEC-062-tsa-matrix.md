@@ -209,6 +209,34 @@ const SPEC062_CODES_DIFFER = [
    and the rule that a signer is judged at a trusted timestamp's time, else
    now, in §15.8.2. The citations are corrected; no rule changes.
 
+3. **2026-10-25, step 420, approved by Maurice van Loon ("akkoord, leg vast en push")** —
+   Two new probes carry a token whose `messageImprint` is SHA-1:
+   `imprint-sha1` (a valid signer) and `expired-signer-imprint-sha1` (a
+   signer that expired after it was stamped). C2PA 2.4 §15.8.2: an
+   imprint hash algorithm outside §13.1 gives `timeStamp.untrusted` and
+   the time-stamp is ignored. `c2pa-rs` accepted SHA-1 until 0.91.4
+   (its PR 2830 calls it a vulnerability: an expired signer reported
+   `Trusted`), so 0.28.1, the alarm, still does; 0.28.3 (`c2pa` 0.91.6)
+   does not. The generator gains the option `imprint` and labels each
+   `c2patool` by the version it reports. The matrix holds 33 probes; AC7
+   counts 33.
+
+   - `expired-signer-imprint-sha1` joins `SPEC062_STRICTER`: `Invalid`
+     here, `Trusted` in 0.28.1, `Invalid` in 0.28.3.
+   - `imprint-sha1` joins `SPEC062_CODES_DIFFER`: `Trusted` in both,
+     with `timeStamp.malformed` here and `timeStamp.validated` and
+     `timeStamp.trusted` in 0.28.1. The code differs from the one §15.8.2
+     names (`untrusted`, as 0.28.3 reports); the time-stamp is ignored as
+     the rule wants (`docs/reading-c2pa-2.4.md`, P05-9).
+   - **AC8 (new) — a SHA-1 imprint keeps no expired signer valid.**
+     Given `expired-signer-imprint-sha1` with its settings, the state is
+     `Invalid` with `signingCredential.expired` and no
+     `timeStamp.trusted`; `imprint-sha1` stays `Trusted` without
+     `timeStamp.trusted`; and the recorded 0.28.3 answers
+     (`<probe>--0.28.3.json`) agree on both states.
+
+   **Weight C: no verdict of the existing probes moves.**
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -223,3 +251,4 @@ least one test; every source file maps back to this spec.
 | AC5 | tests/Unit/Timestamp/TsaMatrixTest.php :: AC5: without settings no probe is trusted and no timestamp is trusted / SPEC-062 | src/Timestamp/TimestampCheck.php :: judge() (no TSA anchors: timeStamp.untrusted) |
 | AC6 | tests/Unit/Timestamp/TsaMatrixTest.php :: AC6: an expired signer is kept only by a trusted timestamp / SPEC-062 | src/Trust/ChainCheck.php (the signer judged at the trusted timestamp's time, ADR-0004) |
 | AC7 | tests/Unit/Timestamp/TsaMatrixTest.php :: AC7: every probe the generator defines has a fixture and four answers, and no fixture is left over / SPEC-062 | bin/make-tsa-matrix.php ($variants, fixture mode) |
+| AC8 (amendment 3) | tests/Unit/Timestamp/TsaMatrixTest.php :: AC8: a SHA-1 imprint keeps no expired signer valid, as c2patool 0.28.3 judges it / SPEC-062 | src/Timestamp/TstInfo.php :: DIGEST_LENGTHS (no SHA-1); src/Timestamp/TimestampCheck.php |

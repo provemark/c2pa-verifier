@@ -47,3 +47,11 @@ these probe names: `two-tokens` and `expired-signer-two-tokens`. They hold
 two tokens from the trusted TSA in `sigTst2`'s `tstTokens`, the second made
 right after the first. `openssl ts -verify` accepts the first token of
 each.
+
+Added on 2026-10-25 (SPEC-062 amendment 3, step 420), with the same command
+and these probe names: `imprint-sha1` and `expired-signer-imprint-sha1`.
+Their token's `messageImprint` is SHA-1 (the generator's `imprint` option);
+`openssl ts -verify` accepts both tokens. C2PA 2.4 §15.8.2 ignores such a
+token. 0.28.1 trusts it (`c2pa-rs` fixed this in 0.91.4), so beside the
+usual answers `c2patool` 0.28.3's are recorded too:
+`../../c2patool/tsa-matrix/<probe>--0.28.3[--no-settings].json`.

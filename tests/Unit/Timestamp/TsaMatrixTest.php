@@ -15,7 +15,9 @@ use Provemark\C2paVerifier\Verifier\Verifier;
  */
 
 /** Where this verifier is stricter than c2patool 0.28.1 on the state on purpose, and the rule that makes it so. */
-const SPEC062_STRICTER = [];
+const SPEC062_STRICTER = [
+    'expired-signer-imprint-sha1' => 'C2PA 2.4 §15.8.2: an imprint hash outside §13.1 is ignored (0.28.1 trusts a SHA-1 imprint; 0.28.3 does not, amendment 3)',
+];
 
 /**
  * The same state as 0.28.1, other codes: probe => [rule, [0.28.1's timeStamp codes, failures], [this verifier's]].
@@ -45,6 +47,11 @@ const SPEC062_CODES_DIFFER = [
         '0.28.1 adds signingCredential.untrusted to signingCredential.expired',
         [[], ['signingCredential.expired', 'signingCredential.untrusted']],
         [[], ['signingCredential.expired']],
+    ],
+    'imprint-sha1' => [
+        'C2PA 2.4 §15.8.2: a SHA-1 imprint is ignored; malformed here, untrusted by the rule (P05-9), trusted by 0.28.1 (amendment 3)',
+        [['timeStamp.trusted', 'timeStamp.validated'], []],
+        [['timeStamp.malformed'], []],
     ],
     'expired-signer-two-tokens' => [
         '0.28.1 adds signingCredential.untrusted to signingCredential.expired (SPEC-017 amendment 9: two tokens drop the timestamp)',
@@ -124,7 +131,7 @@ function spec062Codes(VerificationReport $report): array
 it('AC7: every probe the generator defines has a fixture and four answers, and no fixture is left over', function (): void {
     $defined = spec062GeneratorProbes();
 
-    expect($defined)->toHaveCount(31)
+    expect($defined)->toHaveCount(33)
         ->and(spec062FixtureProbes())->toBe($defined);
     foreach ($defined as $probe) {
         foreach (['0.27.22', '0.28.1'] as $version) {
@@ -204,4 +211,20 @@ it('AC6: an expired signer is kept only by a trusted timestamp', function (): vo
         expect($report->result->state->value)->toBe('Invalid', $probe)
             ->and(spec062Codes($report)[1])->toContain('signingCredential.expired');
     }
+})->group('SPEC-062');
+
+it('AC8: a SHA-1 imprint keeps no expired signer valid, as c2patool 0.28.3 judges it', function (): void {
+    $expired = spec062Verify('expired-signer-imprint-sha1');
+    expect($expired->result->state->value)->toBe('Invalid')
+        ->and(spec062Codes($expired)[1])->toContain('signingCredential.expired')
+        ->and(spec062Codes($expired)[0])->toBe(['timeStamp.malformed']);
+
+    $valid = spec062Verify('imprint-sha1');
+    expect($valid->result->state->value)->toBe('Trusted')
+        ->and(spec062Codes($valid)[0])->toBe(['timeStamp.malformed']);
+
+    // the c2pa-rs fix (0.91.4) is in 0.28.3; 0.28.1 still trusts the SHA-1 token
+    expect(spec062Oracle('expired-signer-imprint-sha1', '0.28.3')['state'])->toBe('Invalid')
+        ->and(spec062Oracle('imprint-sha1', '0.28.3')['state'])->toBe('Trusted')
+        ->and(spec062Oracle('expired-signer-imprint-sha1', '0.28.1')['state'])->toBe('Trusted');
 })->group('SPEC-062');

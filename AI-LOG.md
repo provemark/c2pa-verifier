@@ -11619,3 +11619,21 @@ README are where the disclosure lives.
   interleaved attempt discarded); `bin/c2pa-verify` on the moved file.
   Reasoned: why the file moved and that keeping the refusal is right.
 - Decided by Maurice: measure, then document without code.
+
+## 2026-10-25 — A time-stamp with a SHA-1 imprint (step 420)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, leg de drie probes uit", "akkoord, begin met probe 1",
+  then "akkoord, leg vast en push".
+- Produced: the `imprint` option, two probes and version labels in
+  `bin/make-tsa-matrix.php`; the two probes' fixtures and `c2patool`
+  answers (0.27.22, 0.28.1, 0.28.3); SPEC-062 amendment 3 and AC8;
+  `TsaMatrixTest` (count, the named lists, AC8); the matrix README;
+  a paragraph in `docs/comparison.md`; `notes/step-420-sha1-imprint-probe.md`,
+  a row in `NOTES.md`.
+- Measured: `c2pa-rs` PRs 2785 and 2830 read; `TstInfo` read; the matrix
+  in scratch with 0.28.2 and 0.28.3 (a first run with the unedited
+  generator discarded); the fixtures with 0.28.1 and 0.27.22; 0.28.3 on
+  the fixtures; `bin/c2pa-verify` without settings; AC8 red by a SHA-1
+  mutation, then green; `composer check`. Reasoned: that no code is
+  needed.
+- Decided by Maurice: the probe, and SPEC-062 amendment 3.
