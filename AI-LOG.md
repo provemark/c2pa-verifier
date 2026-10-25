@@ -11878,3 +11878,10 @@ README are where the disclosure lives.
 - Measured: 35 mutations of `src/`, each restored; the corpus with per-directory settings, with and without the seven surviving mutations (none moved a file); each new test red under its mutation; `composer check`.
 - Decided by Maurice: Appendix A as the next scope.
 
+## 2026-10-25 — Step 441: the covered rows of §6–§9 and Appendix C, each broken once
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en ga door met §6–§9 en C".
+- Produced: tests in `ManifestStoreTest`, `ActionsCheckTest`; five rows of `docs/reading-c2pa-2.4.md`; `notes/step-441-covered-rows-6-9-c.md`, `NOTES.md`, `docs/milestones.md`. No change under `src/`. Step 440 pushed.
+- Measured: 23 mutations of `src/`, each restored; the corpus with per-directory settings, with and without the four surviving mutations (none moved a file); each new test red under its mutation; `composer check`.
+- Decided by Maurice: §6–§9 and C as the last scope of step 3.
+

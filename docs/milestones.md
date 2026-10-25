@@ -427,5 +427,5 @@ must meet been implemented, before 2.5 is taken on? The source is
 | 438 | The covered rows of §18.15 and §18.16 (16): 25 mutations, 20 caught by the cited test, 1 by another (citation fixed), 1 only by a later rule (messages pinned), 3 by none; all 3 now tested at their seam | done 2026-10-25 |
 | 439 | The other covered rows of §18 (40): 50 mutations, 30 caught by the cited test, 10 by others (citations added), 1 by a hang, 9 by none; all 9 now tested | done 2026-10-25 |
 | 440 | The covered rows of Appendix A (24): 35 mutations, 27 caught by the cited test, 1 by others (citation added), 7 by none; 6 now tested, 1 equivalent | done 2026-10-25 |
-| — | The covered rows checked, the rest (§6–§9 and C, about 23 rows) | next |
+| 441 | The covered rows of §6–§9 and C (23): 23 mutations, 18 caught by the cited test, 1 by another (citation added), 4 by none; all 4 now tested. Step 3 is complete | done 2026-10-25 |
 | — | What the sorting leaves to build, one spec each | after that |

@@ -198,3 +198,12 @@ test('SPEC-018 AC7: the version 1 label in a version 2 claim gets the version 2 
     'c2pa.actions in a v2 claim' => ['actions-v1-label-in-v2-claim', 'Trusted'],
     'the same, first action c2pa.edited' => ['actions-v1-label-first-edited', 'Invalid'],
 ])->group('SPEC-018');
+
+it('AC7: an actions assertion is known by its base label, an instance included (C2PA 2.4 §6.4; step 441)', function (): void {
+    foreach (['c2pa.actions', 'c2pa.actions.v2', 'c2pa.actions__1', 'c2pa.actions.v2__2'] as $label) {
+        expect(ActionsCheck::isActionsLabel($label))->toBeTrue($label);
+    }
+    foreach (['c2pa.actions.v3', 'c2pa.actions.v2__', 'c2pa.actions.v2_1', 'c2pa.action'] as $label) {
+        expect(ActionsCheck::isActionsLabel($label))->toBeFalse($label);
+    }
+})->group('SPEC-018');

@@ -428,3 +428,17 @@ it('AC21: of two assertion boxes with one label, every check reads the one the c
         // the second box is still reported, so the file stays Invalid
         ->and(array_map(static fn ($s): string => $s->code->value, (new HashedUriCheck)->check($active)))->toContain('assertion.undeclared');
 })->group('SPEC-007');
+
+it('AC4: a URI resolves only as self#jumbf, only into its own manifest, and without a leading slash only relative to it (C2PA 2.4 §8.4.1, §8.4.2.1; step 441)', function (): void {
+    $manifest = spec007Store('fixture-signed.png')->active;
+    $url = $manifest->claim->createdAssertions[0]->url;
+    $label = substr($url, (int) strrpos($url, '/') + 1);
+    $offset = $manifest->resolve($url)->offset;
+
+    expect($manifest->resolve("self#jumbf=/c2pa/{$manifest->label}/c2pa.assertions/{$label}")->offset)->toBe($offset)
+        // the prefix has the length of self#jumbf= and is not it
+        ->and(fn () => $manifest->resolve("http://x.y/c2pa.assertions/{$label}"))->toThrow(ManifestException::class, 'does not start with self#jumbf=')
+        ->and(fn () => $manifest->resolve("self#jumbf=/c2pa/urn:c2pa:00000000-0000-4000-8000-00000000000b/c2pa.assertions/{$label}"))->toThrow(ManifestException::class, 'refers to another manifest')
+        // no leading slash: relative, so its first segment is a child named c2pa, which there is not (c2pa-rs reads it as absolute)
+        ->and(fn () => $manifest->resolve("self#jumbf=c2pa/{$manifest->label}/c2pa.assertions/{$label}"))->toThrow(ManifestException::class, 'does not resolve to a box (no c2pa)');
+})->group('SPEC-007');
