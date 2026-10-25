@@ -134,6 +134,13 @@ two others by the TSA leniency below) — on every corpus file that is not in an
 own variant, the state and the failure codes with their URLs are
 `c2patool`'s. Nothing is more lenient.
 
+A claim whose `alg` is outside §13.1 (`sha224`) while every hashed-URI
+entry and the hard binding name their own is `Trusted` here and in
+`c2patool` 0.28.1 and 0.28.3: the claim's algorithm is a fallback, and
+nothing falls back on it (`claim-alg/entries-alg-claim-sha224.mp4`, step
+428). Where something does fall back on it, both say `Invalid` (the
+divergence on `binding/claim-alg-sha1.png` below is a code, not a state).
+
 Since step 247 three more are equal. An unknown critical X.509 extension
 is `signingCredential.invalid` on the signer and makes an intermediate
 `signingCredential.untrusted`, as both versions say (SPEC-046, measured

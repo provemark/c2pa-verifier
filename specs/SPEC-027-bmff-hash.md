@@ -177,6 +177,10 @@ range — none of which any fixture here exercises.
     `algorithm.unsupported` at the BMFF hash, naming §15.4.1, and no
     `assertion.bmffHash.match`; `c2patool` reads the first and refuses the
     other two ("unknown algorithm")
+  - And `entries-alg-claim-sha224.mp4` (`entries-alg.mp4` with `alg:
+    sha224` added to the claim, step 428) is `Trusted`: the binding and the
+    entries name their own, so the claim's is never used; `c2patool` 0.28.1
+    and 0.28.3 say `Trusted` too
 
 ## References
 
@@ -379,4 +383,4 @@ the source is `src/Hash/BmffHashCheck.php` unless another file is named.
 | AC7 | `AC7: no image fixture changes its answer because ISOBMFF gained a hard binding` | `src/Verifier/Verifier.php` (the dispatch), `DataHashCheck` unchanged |
 | AC8 | tests/Unit/Hash/BmffHashCheckTest.php :: AC8 / SPEC-027 | src/Hash/BmffHashCheck.php (`withTail()`, in `check()` and `checkFragment()`); bin/make-bmff-tail-variants.php |
 | AC9 (amendment 8) | tests/Unit/Hash/BmffProbesTest.php :: AC9: a BMFF hash without alg uses the claim's algorithm / SPEC-027 | src/Hash/BmffHashCheck.php :: assertionOf() (\$claimAlg), check(); bin/make-bmff-probe-variants.php |
-| AC10 (amendment 9) | tests/Unit/Hash/ClaimAlgTest.php :: AC10 / SPEC-027 | src/Hash/BmffHashCheck.php :: assertionOf(), check() (`AlgorithmUnsupported`); bin/make-claim-alg-variants.php |
+| AC10 (amendment 9) | tests/Unit/Hash/ClaimAlgTest.php :: AC10 (both tests) / SPEC-027 | src/Hash/BmffHashCheck.php :: assertionOf(), check() (`AlgorithmUnsupported`); bin/make-claim-alg-variants.php |

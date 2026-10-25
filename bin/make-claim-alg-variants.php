@@ -16,6 +16,9 @@ declare(strict_types=1);
  *                            their own, which C2PA 2.4 §15.4.2 allows
  *   entries-alg-bmff-no-alg  the same, the BMFF hash's alg key renamed: no algorithm is named for the binding,
  *                            §15.4.1's algorithm.unsupported
+ *   entries-alg-claim-sha224 entries-alg with `alg: sha224` added to the claim (step 428): a claim algorithm
+ *                            outside §13.1 that no entry and no binding falls back on; 11 more bytes off the
+ *                            instanceID, whose length becomes a short CBOR length (23 characters)
  *
  * Usage: php bin/make-claim-alg-variants.php <scratch-dir> <c2patool-0.28.3> <c2patool-0.28.1>
  * Needs `openssl`. Tooling, not the verification path.
@@ -183,6 +186,28 @@ function caEntriesAlg(string $file, string $key): string
     return substr_replace($bytes, caResign($s, $manifest, $claim, $edited, $key), $storeAt, strlen($s));
 }
 
+/**
+ * `alg: sha224` added to a claim that carries none (step 428); the 11 bytes come off the instanceID, which is cut
+ * to 23 characters so that its length moves into the initial byte.
+ */
+function caClaimSha224(string $file, string $key): string
+{
+    [$bytes, $s, $storeAt, $manifest] = caParts($file);
+    $claim = $manifest->claimBytes();
+    if (str_contains($claim, "\x63alg\x66sha") && substr_count($claim, "\x63alg") !== 2 || ! in_array(ord($claim[0]), [0xA5, 0xA6, 0xA7], true)) {
+        throw new RuntimeException('the claim is not the shape this script edits');
+    }
+    $id = strpos($claim, "\x6ainstanceID\x78");
+    $l = $id === false ? 0 : ord($claim[$id + 12]);
+    if ($id === false || 2 + $l - 11 !== 1 + 23) {
+        throw new RuntimeException('the instanceID is not 33 characters long');
+    }
+    $edited = substr($claim, 0, $id + 11).chr(0x60 + 23).substr($claim, $id + 13, 23).substr($claim, $id + 13 + $l)."\x63alg\x66sha224";
+    $edited[0] = chr(ord($claim[0]) + 1);
+
+    return substr_replace($bytes, caResign($s, $manifest, $claim, $edited, $key), $storeAt, strlen($s));
+}
+
 $root = dirname(__DIR__);
 $dir = $root.'/tests/Fixtures/claim-alg';
 $oracles = $root.'/tests/Fixtures/c2patool/claim-alg';
@@ -214,9 +239,10 @@ caRun(caSh($new, $root.'/tests/Fixtures/fixture-unsigned.mp4', '-m', "{$keys}/m.
 file_put_contents("{$dir}/entries-alg.mp4", caEntriesAlg("{$dir}/control.mp4", "{$keys}/leaf.key"));
 file_put_contents("{$keys}/bmff-no-alg.mp4", caBmffNoAlg("{$dir}/control.mp4", "{$keys}/leaf.key"));
 file_put_contents("{$dir}/entries-alg-bmff-no-alg.mp4", caEntriesAlg("{$keys}/bmff-no-alg.mp4", "{$keys}/leaf.key"));
+file_put_contents("{$dir}/entries-alg-claim-sha224.mp4", caClaimSha224("{$dir}/entries-alg.mp4", "{$keys}/leaf.key"));
 
 // ---- the oracles ----
-foreach (['control', 'entries-alg', 'entries-alg-bmff-no-alg'] as $name) {
+foreach (['control', 'entries-alg', 'entries-alg-bmff-no-alg', 'entries-alg-claim-sha224'] as $name) {
     foreach (['0.28.3' => $new, '0.28.1' => $old] as $v => $tool) {
         $lines = [];
         exec(caSh($tool, "{$dir}/{$name}.mp4", '--settings', "{$dir}/throw-away-root.settings.json").' 2>&1', $lines);

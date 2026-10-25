@@ -57,3 +57,10 @@ it('AC10: a BMFF hash with no algorithm named, here or in the claim, is algorith
             ->and(claimAlgOracle('entries-alg-bmff-no-alg', $version))->toBe('Error: unknown algorithm');
     }
 })->group('SPEC-027');
+
+it('AC10: a claim alg outside §13.1 that no entry and no binding falls back on is not judged, as in c2patool (step 428)', function (): void {
+    expect(claimAlgProbe('entries-alg-claim-sha224')->result->state->value)->toBe('Trusted');
+    foreach (['0.28.1', '0.28.3'] as $version) {
+        expect(claimAlgOracle('entries-alg-claim-sha224', $version))->toBe('Trusted', $version);
+    }
+})->group('SPEC-027');

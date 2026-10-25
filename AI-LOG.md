@@ -11743,3 +11743,17 @@ README are where the disclosure lives.
 - Decided by Maurice: amendment 9; for a claim without `alg` whose entries
   name their own, follow the specification and record the difference
   (option 1).
+
+## 2026-10-25 — A claim `alg` outside §13.1 (step 428)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en ga door met vraag 2".
+- Produced: a fourth probe in `bin/make-claim-alg-variants.php` (all four
+  rebuilt with new throw-away keys) and its `c2patool` answers; a second
+  AC10 test in `ClaimAlgTest`; SPEC-027 AC10 extended;
+  `docs/comparison.md`, `docs/reading-c2pa-2.4.md`, `docs/milestones.md`,
+  the fixture README, `notes/step-428-claim-alg-outside-the-list.md`, a
+  row in `NOTES.md`; step 427 pushed.
+- Measured: the probe with `c2patool` 0.28.1 and 0.28.3 and this verifier
+  (all `Trusted`); the pinning test red under a one-run mutation of
+  `assertionOf()`, green without it; `composer check`.
+- Decided by Maurice: none in this step.

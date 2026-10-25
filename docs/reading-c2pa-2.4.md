@@ -91,12 +91,12 @@ four questions).** None is measured.
 | question | rows | what could happen |
 |---|---|---|
 | A claim without `alg` | §15.4.1 (fallback), §15.12.2 (algorithm per §15.4) | **closed in step 427** (measured): a BMFF hash with no `alg` on either side was `Trusted` here by a SHA-256 fallback, and is `algorithm.unsupported` now (SPEC-027 amendment 9). A claim without `alg` whose entries name their own stays judged, a difference recorded in `docs/comparison.md` |
-| A claim `alg` outside §13.1 | §10.2.2 | not refused here when every entry names its own; `c2pa-rs` not read (P02-5) |
+| A claim `alg` outside §13.1 | §10.2.2 | **answered in step 428** (measured): a claim `alg: sha224` that no entry and no binding falls back on is `Trusted` here and in `c2patool` 0.28.1 and 0.28.3. Equal; no code |
 | `c2pa.opened` with a good and an unresolvable reference | §15.10.3.2.3 (`opened`) | passes here; `c2pa-rs` lets the last reference decide, so `ingredientMismatch` there (P06-6, read, not measured) |
 | An ingredient's own stapled `revoked`, with no certificate-status assertion in the store | §15.11.3.3.1 | not read here (SPEC-066 amendment 1); whether `c2patool` reports it is not measured (P06-3) |
 
-After step 427 the tally reads 329 covered and 51 partial; the other
-columns are unchanged.
+After step 428 the tally reads 329 covered, 50 partial and 78 by design;
+the other columns are unchanged.
 
 **B. The letter is stricter than both implementations; equal to
 `c2patool` (27 rows).** Form and consistency the signer wrote: names,
@@ -315,7 +315,7 @@ and run through `bin/c2pa-verify` and `c2patool` 0.28.1.
 | 10.1 | Validators should still accept the deprecated `c2pa.claim` label and its claim-map. | `Manifest::read()` maps `c2pa.claim` to version 1; `Claim::fromMap()` has the v1 field set | covered | measured: `ManifestStoreTest` AC5 (the Adobe v1 store) |
 | 10.2.1, 10.2.2 | The required claim fields are present: v2 `instanceID`, `claim_generator_info`, `signature`, `created_assertions`; v1 its own five. | `Claim::fromMap()`: absent or null is `claim.malformed`; a text field that is not text is refused | covered | measured: `ManifestStoreTest` AC9 |
 | 10.2.1 | `instanceID`, `dc:title` and `alg` are text of at least one character. | `Claim::fromMap()` checks the type, not the length; an empty string is read | **partial** | read → candidate P02-6 |
-| 10.2.2 | The claim's `alg`, when present, is one of the §13.1 algorithms. | `HashedUriCheck::check()` and `DataHashCheck` refuse it (`algorithm.unsupported`) when they fall back on it. A claim `alg` outside the list that no entry falls back on is not refused | **partial** | measured: `HashedUriCheckTest` AC7, `DataHashCheckTest` AC7; the rest read → candidate P02-5 |
+| 10.2.2 | The claim's `alg`, when present, is one of the §13.1 algorithms. | `HashedUriCheck::check()`, `DataHashCheck` and `BmffHashCheck` refuse it (`algorithm.unsupported`, or a mismatch for BMFF) when they fall back on it. A claim `alg` outside the list that no entry and no binding falls back on is not refused, as in `c2patool` 0.28.1 and 0.28.3 (step 428) | by design (equal to `c2patool`, measured) | measured: `HashedUriCheckTest` AC7, `DataHashCheckTest` AC7; `ClaimAlgTest` "AC10: a claim alg outside §13.1 that no entry and no binding falls back on…" (`claim-alg/entries-alg-claim-sha224.mp4`, `Trusted` in both) → P02-5 |
 | 10.2.2 | Without a claim `alg`, every hashed URI and hard binding names its own. | the entry's `alg`, else the claim's, else `algorithm.unsupported` | covered | measured: `HashedUriCheckTest` AC7, `DataHashCheckTest` AC7; `c2pa-rs/no_alg.jpg` is `Invalid` with `algorithm.unsupported` (ran `bin/c2pa-verify`) |
 | 10.2.2 | `signature` is present and names the claim signature of the same manifest by absolute URI. | `Manifest::checkReferences()`: the URI must resolve to this manifest's own signature box, else `claim.signature.missing`. A relative URI is also resolved, the form the spec's own example writes | covered | measured: `ManifestStoreTest` AC9, AC10 |
 | 10.2.2, 10.3.2.1 | `created_assertions` is present and holds at least one reference. | `Claim::hashedUris()` refuses an empty or non-list value | covered | measured: `ManifestStoreTest` AC9; read |
