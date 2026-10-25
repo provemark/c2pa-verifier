@@ -40,7 +40,7 @@ The seven, and what became of them:
 
 Each of the seven was seen red under its mutation after the change, and
 green without it. The two matrix probes are SPEC-061 amendment 6 (tests
-only, awaiting confirmation). `composer check`: 1,360 passed, 1 skipped.
+only, confirmed by Maurice on 2026-10-25). `composer check`: 1,360 passed, 1 skipped.
 
 ## What was reasoned
 

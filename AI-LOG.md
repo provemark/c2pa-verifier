@@ -11828,3 +11828,10 @@ README are where the disclosure lives.
 - Measured: 48 mutations of `src/`, each restored; the corpus with per-directory settings, with and without the seven surviving mutations; `c2patool` 0.27.22, 0.28.1 and 0.28.3 and `openssl verify` on the new probes; each new test red under its mutation; `composer check`.
 - Decided by Maurice: push step 433; §14 as the next scope.
 
+
+## 2026-10-25 — SPEC-061 amendment 6 confirmed
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendement 6 bevestigd, push en ga door met §13".
+- Produced: SPEC-061 amendment 6 marked confirmed; the step-434 note says so.
+- Measured: none / Reasoned: none.
+- Decided by Maurice: SPEC-061 amendment 6 confirmed; push step 434; §13 as the next scope.
