@@ -412,6 +412,7 @@ must meet been implemented, before 2.5 is taken on? The source is
 | step | what | status |
 |---|---|---|
 | 425 | The reading brought up to date: every open row and every row a later spec touched, checked in the code; the tally recounted (327 covered, 53 partial, 77 by design, 98 n/a, 7 candidates of 563) | done 2026-10-25 |
-| — | The partial rows and candidates sorted: may give a wrong `Valid`, stricter than `c2patool`, by design, or still to build | next |
+| 426 | The partial rows and candidates sorted (`docs/reading-c2pa-2.4.md`, *The open rows sorted*): 5 rows possibly more lenient than `c2patool` (four questions to probe), 27 stricter by the letter than both implementations, 7 already stricter, 7 without a verdict, 6 unsupported and failing closed, 8 a different code only | done 2026-10-25 |
+| — | The four questions of group A probed against `c2patool` 0.28.3 | next, Maurice's choice |
 | — | The covered rows checked: a test that fails when the rule breaks, for each | after the sorting, Maurice's choice of scope |
 | — | What the sorting leaves to build, one spec each | after that |

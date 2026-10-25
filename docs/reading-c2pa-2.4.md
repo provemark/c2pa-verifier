@@ -77,6 +77,71 @@ design, 101 n/a, 8 candidates. Counted by script on 2026-10-25, the rows
 then held 563 (two *covered* rows were written *yes*, and one *n/a* fewer
 than the table said); the difference is the tally's, not a rule's.
 
+### The open rows sorted (step 426)
+
+The 53 *partial* rows and 7 *candidates*, sorted by what the gap can do to
+a verdict. The question for each: can it give a `Valid` (or `Trusted`)
+that `c2patool` would not give, or that leaves an asset byte or the
+signature unchecked? Rows are named by section and a short tag, since line
+numbers move.
+
+**A. Possibly more lenient than `c2patool`; to be probed first (5 rows,
+four questions).** None is measured.
+
+| question | rows | what could happen |
+|---|---|---|
+| A claim without `alg` | §15.4.1 (fallback), §15.12.2 (algorithm per §15.4) | a BMFF hash with no `alg` on either side is hashed with SHA-256 here; `c2pa-rs` refuses any claim without `alg` (P02-5), so `c2patool` says `Invalid` where this verifier may say `Valid` |
+| A claim `alg` outside §13.1 | §10.2.2 | not refused here when every entry names its own; `c2pa-rs` not read (P02-5) |
+| `c2pa.opened` with a good and an unresolvable reference | §15.10.3.2.3 (`opened`) | passes here; `c2pa-rs` lets the last reference decide, so `ingredientMismatch` there (P06-6, read, not measured) |
+| An ingredient's own stapled `revoked`, with no certificate-status assertion in the store | §15.11.3.3.1 | not read here (SPEC-066 amendment 1); whether `c2patool` reports it is not measured (P06-3) |
+
+**B. The letter is stricter than both implementations; equal to
+`c2patool` (27 rows).** Form and consistency the signer wrote: names,
+syntax, label choices, references inside assertions, which bucket an
+assertion sits in. No asset byte leaves the hard binding and no signature
+goes unchecked in any of them (reasoned). Adopting any would make this
+verifier differ from `c2patool` without preventing a wrong `Valid`, which
+ADR-0005 does not allow. Rows: §10.2.1 (empty text), §10.2.3.2 (icon
+label), §11.2.2 (a borrowed binding, P02-4), §13.2.2 (`crit`), §15.8.2
+(RSA PKCS#1 v1.5 time-stamps, P05-3; CA validity at the judged time, two
+rows, P05-4, measured in `AnchorValidityTest` AC12), §15.10.3.2.3
+(`placed`, `removed`, `transcoded`: each reference, P06-7;
+`relatedAssertions` hash, P06-5), §15.10.3.3 (hashes inside assertions,
+P06-5), §18.11 (fields inside `location`), §18.12.2 (description-box
+toggle), §18.15.1 (action names), §18.15.2 (actions only gathered, P08-4),
+§18.15.4.7 (BCP 47; a bare `c2pa.redacted`), §18.15.6.3 (icon target,
+P08-5), §18.16.3 (an ingredient no action names, P08-7), §18.16.4–6
+(media-type syntax), §18.16.10 (thumbnail target), §18.17.2 (CBOR
+metadata), §18.24.1 (URI syntax), §A.5.1.2 (FullBox version and flags),
+§A.5.3 (box position; the offsets are hashed), §A.5.4.1 (fragment order
+across files). The equality with `c2pa-rs` is read from its source
+(2026-10-09 notes), not measured, except where a test is named.
+
+**C. Already stricter than `c2patool` (7 rows).** Kept: each refuses what
+cannot be checked. §5.1 (`c2tm`; compressed manifests, box and collection
+hashes refused by name), §C.1 (`c2pa.hash.bmff` without a version), §18.6.1
+(the same, counted as a binding), §15.8.2 (no accuracy margin on a TSA
+leaf), §A.5.3 (`original` and `update` purposes refused; padding after the
+store refused by the JUMBF parser).
+
+**D. No verdict depends on it (7 rows).** §15.3 (the non-attribution
+warning is the caller's), §15.9.1 (two rows: only `notRevoked` against
+skipped, P05-7), §15.10.3.1 (a zeroed redacted box, P06-9), §15.11.3.3
+(the merge, P06-11), §15.12.1.3 (a text fragment is not named one),
+§18.16.12.4 (custom-code syntax; the v3 kind is stricter, SPEC-070
+amendment 2).
+
+**E. Not supported; fails closed; could be built (6 rows).** The
+non-fragmented Merkle tree: §15.12.2.1 (two rows), §18.6.2 (`hash` and
+`merkle` together), §18.6.3 (`initHash`; block sizes), §A.5.6. Each such
+file is `Invalid` here. Whether `c2pa-rs` verifies them, and whether any
+writer produces them, is not measured.
+
+**F. Another code, the same verdict (8 rows).** §15.2.2 (47 codes not
+held, listed above), §15.4.3, §15.4.4, §15.8.2 (three time-stamp code
+names, P05-9), §15.10.3.1 (`assertion.cbor.invalid`), §15.10.3.3
+(`hashedURI.missing`).
+
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
 several rows share.

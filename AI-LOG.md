@@ -11714,3 +11714,13 @@ README are where the disclosure lives.
   and compared with `StatusCode` with `comm`; the verdicts counted by
   script before and after (`git show HEAD:` against the working copy).
 - Decided by Maurice: the four-step approach; this step first.
+
+## 2026-10-25 — The open rows of the 2.4 reading sorted (step 426)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en doe stap 2".
+- Produced: a section *The open rows sorted* in `docs/reading-c2pa-2.4.md`,
+  a row in `docs/milestones.md`, `notes/step-426-open-rows-sorted.md`, a
+  row in `NOTES.md`; step 425 pushed.
+- Measured: none. Reasoned: each of the 60 open rows and its pack note
+  read against the question whether it can give a wrong `Valid`.
+- Decided by Maurice: none in this step; the probes wait for his word.
