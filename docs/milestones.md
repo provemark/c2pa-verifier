@@ -428,4 +428,5 @@ must meet been implemented, before 2.5 is taken on? The source is
 | 439 | The other covered rows of §18 (40): 50 mutations, 30 caught by the cited test, 10 by others (citations added), 1 by a hang, 9 by none; all 9 now tested | done 2026-10-25 |
 | 440 | The covered rows of Appendix A (24): 35 mutations, 27 caught by the cited test, 1 by others (citation added), 7 by none; 6 now tested, 1 equivalent | done 2026-10-25 |
 | 441 | The covered rows of §6–§9 and C (23): 23 mutations, 18 caught by the cited test, 1 by another (citation added), 4 by none; all 4 now tested. Step 3 is complete | done 2026-10-25 |
+| 442 | A plural found in step 437: "2 assertion storees" now reads "2 assertion stores"; the explanation only, code and verdict unchanged | done 2026-10-25 |
 | — | What the sorting leaves to build, one spec each | after that |

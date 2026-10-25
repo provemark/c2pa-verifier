@@ -11885,3 +11885,10 @@ README are where the disclosure lives.
 - Measured: 23 mutations of `src/`, each restored; the corpus with per-directory settings, with and without the four surviving mutations (none moved a file); each new test red under its mutation; `composer check`.
 - Decided by Maurice: §6–§9 and C as the last scope of step 3.
 
+## 2026-10-25 — Step 442: each refusal its own plural
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en ga door met storees".
+- Produced: `src/Manifest/Manifest.php` (`theOne()` takes the plural from its callers); `ManifestStoreTest` AC12 asks for the exact words; `notes/step-442-plural.md`, `NOTES.md`, `docs/milestones.md`. Step 441 pushed.
+- Measured: the test red before the change ("2 assertion storees"), green after; `composer check`.
+- Decided by Maurice: to fix it as a step of its own.
+

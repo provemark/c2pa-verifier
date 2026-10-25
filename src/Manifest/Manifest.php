@@ -155,7 +155,7 @@ final readonly class Manifest
         $budget ??= new CborBudget;
         $label = $box->description->label;
         $manifestUrl = sprintf('self#jumbf=/c2pa/%s', $label);
-        $assertionStore = self::theOne($box, JumbfParser::UUID_ASSERTION_STORE, 'c2pa.assertions', 'assertion store', $label, StatusCode::ClaimMalformed, $manifestUrl);
+        $assertionStore = self::theOne($box, JumbfParser::UUID_ASSERTION_STORE, 'c2pa.assertions', 'assertion store', 'assertion stores', $label, StatusCode::ClaimMalformed, $manifestUrl);
         $claims = array_values(array_filter($box->superboxes(), static fn (Superbox $child): bool => $child->description->uuid === JumbfParser::UUID_CLAIM));
         if (count($claims) !== 1) {
             throw new ManifestException(
@@ -168,7 +168,7 @@ final readonly class Manifest
         $claimBox = $claims[0];
         $claimUrl = sprintf('%s/%s', $manifestUrl, $claimBox->description->label);
         $signatureUrl = sprintf('%s/c2pa.signature', $manifestUrl);
-        $signatureBox = self::theOne($box, JumbfParser::UUID_CLAIM_SIGNATURE, 'c2pa.signature', 'signature box', $label, StatusCode::ClaimSignatureMissing, $signatureUrl);
+        $signatureBox = self::theOne($box, JumbfParser::UUID_CLAIM_SIGNATURE, 'c2pa.signature', 'signature box', 'signature boxes', $label, StatusCode::ClaimSignatureMissing, $signatureUrl);
 
         $claim = self::at($claimUrl, static function () use ($claimBox, $label, $budget): Claim {
             $version = match ($claimBox->description->label) {
@@ -310,7 +310,7 @@ final readonly class Manifest
     }
 
     /** The one child superbox with this UUID and label. */
-    private static function theOne(Superbox $box, string $uuid, string $label, string $what, string $manifestLabel, StatusCode $status, string $url): Superbox
+    private static function theOne(Superbox $box, string $uuid, string $label, string $what, string $whats, string $manifestLabel, StatusCode $status, string $url): Superbox
     {
         $matches = array_values(array_filter(
             $box->superboxes(),
@@ -320,7 +320,7 @@ final readonly class Manifest
             throw new ManifestException(sprintf('manifest %s: no %s (%s)', $manifestLabel, $what, $label), $status, null, $url);
         }
         if (count($matches) > 1) {
-            throw new ManifestException(sprintf('manifest %s: %d %ses (%s), expected one', $manifestLabel, count($matches), $what, $label), $status, null, $url);
+            throw new ManifestException(sprintf('manifest %s: %d %s (%s), expected one', $manifestLabel, count($matches), $whats, $label), $status, null, $url);
         }
 
         return $matches[0];

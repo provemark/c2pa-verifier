@@ -305,7 +305,7 @@ it('AC12: a manifest holds one assertion store and one claim signature, never tw
     $manifests = $root->superboxes();
     $manifest = end($manifests);
     assert($manifest instanceof Superbox);
-    foreach (['c2pa.assertions' => 'assertion store', 'c2pa.signature' => 'signature box'] as $label => $what) {
+    foreach (['c2pa.assertions' => 'assertion stores', 'c2pa.signature' => 'signature boxes'] as $label => $what) {
         $box = array_values(array_filter($manifest->superboxes(), static fn (Superbox $b): bool => $b->description->label === $label))[0];
         // the box once more after itself; the manifest's and the store's LBox grow by its length
         $copy = substr($bytes, $box->offset, $box->length);
@@ -316,7 +316,7 @@ it('AC12: a manifest holds one assertion store and one claim signature, never tw
             $grown = substr_replace($grown, pack('N', $length[1] + $box->length), $at, 4);
         }
         expect(fn () => ManifestStore::fromTree((new JumbfParser)->parse($grown)))
-            ->toThrow(ManifestException::class, "2 {$what}");   // the plural is written \"{$what}es\"; the count is what matters
+            ->toThrow(ManifestException::class, "2 {$what} ({$label}), expected one");   // each its own plural (step 442)
     }
 })->group('SPEC-007');
 
