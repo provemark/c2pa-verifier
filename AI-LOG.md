@@ -11944,3 +11944,10 @@ README are where the disclosure lives.
 - Reasoned: the test measures time and a single hash, not the budget, which SPEC-024's tests measure in a process of their own.
 - Decided by Maurice: amendment 2 of SPEC-080 approved; to take up this test.
 
+## 2026-10-26 — Step 450: the 2.4 reading after SPEC-080
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "loopt nu de verifier in pas met spec 2.4?"; then "akkoord, werk het leesverslag bij".
+- Produced: `docs/reading-c2pa-2.4.md` (six group E rows, the §18.6.2 purpose row, the tally after step 448); `notes/step-450-reading-group-e.md`; `NOTES.md`.
+- Measured: the cited tests exist; the codes of `fixed-and-variable`, `count-five` and `init-hash` read from the stored `c2patool` 0.28.3 answers; the verdict column counted by script before and after (+6 covered, −3 partial, −3 candidate).
+- Decided by Maurice: none beyond the go.
+
