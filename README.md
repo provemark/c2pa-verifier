@@ -83,7 +83,10 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.8.2`**, still a `0.x` on purpose. `0.8.2` refuses
+The current tag is **`v0.8.3`**, still a `0.x` on purpose. `0.8.3` reads
+an MP4 whose `mdat` carries a Merkle tree, as `c2patool` writes it on
+request, and follows `c2patool` in two cases where this verifier said
+`Trusted` and `c2patool` `Invalid`; `0.8.2` refuses
 two signatures that every `c2patool` measured refuses (an ECDSA algorithm
 under a key on another curve, an Ed25519 signer certificate with
 parameters); `0.8.1` closes two ways to a wrong `Trusted` that a fuzzer

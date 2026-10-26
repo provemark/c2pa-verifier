@@ -73,7 +73,7 @@ final readonly class Verifier
     public const STORE_URL = 'self#jumbf=/c2pa';
 
     /** This package's version, SemVer 2.0, for crJSON's jsonGenerator (SPEC-075); the release commit sets it. */
-    public const string VERSION = '0.8.2';
+    public const string VERSION = '0.8.3';
 
     public function __construct(
         private FormatDetector $formats = new FormatDetector,

@@ -5,6 +5,69 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.8.3 — 2026-10-26
+
+A patch release. Before reading C2PA 2.5 further, every rule of 2.4 was
+checked against this verifier once more (`docs/reading-c2pa-2.4.md`, 563
+rules). Four questions asked whether it could be more lenient than
+`c2patool`: two found it was, and both now say `Invalid`, as `c2patool`
+does. Nothing was forged in either case. An MP4 with a Merkle tree over
+its `mdat`, which `c2patool` writes on request, is now read. The public
+contract is unchanged (142 symbols), so a caller on `^0.8` receives this
+release without changing its constraint.
+
+### Added
+
+- **A Merkle tree over the `mdat` of a non-fragmented MP4 (SPEC-080).**
+  `c2patool` writes one when `core.merkle_tree_chunk_size_in_kb` is set:
+  the file hash beside a merkle map, and one proof box per block after the
+  `mdat`. Such files were `Invalid` here (two C2PA boxes, or "both a hash
+  and a merkle list") and are now verified: the file hash, then every
+  block against its proof and the stored root or leaves. A changed byte
+  names its block. Where `c2patool` 0.28.3 and 0.28.1 call a file
+  `Trusted` with bytes under neither the hash nor a leaf (the whole `mdat`
+  excluded), or with a stored row the tree does not have, this verifier
+  says `Invalid` (`docs/comparison.md`). Variable block sizes and several
+  `mdat` boxes, which `c2pa-rs` writes by no setting, are refused by name.
+
+### Changed
+
+- **A BMFF hash with no algorithm named anywhere is
+  `algorithm.unsupported` (SPEC-027 amendment 9).** It was `Trusted` by a
+  SHA-256 fallback when neither the assertion nor the claim named one;
+  `c2patool` 0.28.1 and 0.28.3 refuse such a claim. C2PA 2.4 §15.4.1
+  names the code. The data hash already did this.
+- **Every reference of a `c2pa.opened` action must be the one parent
+  ingredient (SPEC-033 amendment 3).** The parent followed by a reference
+  to nothing, or to a `componentOf` ingredient, was `Trusted` here and is
+  `Invalid` in `c2patool`, which lets the last reference decide. Now
+  `assertion.action.ingredientMismatch` in either order, as C2PA 2.4
+  §15.10.3.2.3 says ("exactly one"); in the other order that is stricter
+  than `c2patool`.
+- **An ingredient's own stapled `revoked` counts (SPEC-066 amendment 2).**
+  A revoked signer already made the active manifest `Invalid` (SPEC-030);
+  the same response stapled in an ingredient's signature now makes the
+  ingredient fail too. `c2patool` reads neither, so this is stricter than
+  it. `good` responses on ingredients stay unreported.
+- A refusal of a manifest with two assertion stores now says "assertion
+  stores", not "assertion storees".
+
+### Documentation
+
+- `docs/reading-c2pa-2.4.md` brought up to date (steps 425, 426, 450):
+  337 rules covered, 78 by design, 98 not for a validator, 45 partial and
+  4 candidates, the open ones sorted by what they can do to a verdict.
+  None of them can give a `Valid` that `c2patool` would not give.
+- Each covered rule of §6 to §11, §13 to §15, §18 and Appendices A and
+  C broken once on purpose (steps 431–441, 393 mutations): a break that
+  no test caught was given a test, or recorded in its step's note as
+  equivalent or left by design.
+
+Measured: the corpus against `0.8.2` (`vendor/` copied into the
+worktree, the same fixtures in both trees), 33 of 874 files moved, every
+one a fixture new since `0.8.2`: the 28 of `mdat-merkle/`, and the five
+probes of the three changes above.
+
 ## 0.8.2 — 2026-10-25
 
 A patch release. `c2patool` 0.28.3 (`c2pa` 0.91.6) and C2PA 2.5 both

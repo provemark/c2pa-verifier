@@ -11951,3 +11951,10 @@ README are where the disclosure lives.
 - Measured: the cited tests exist; the codes of `fixed-and-variable`, `count-five` and `init-hash` read from the stored `c2patool` 0.28.3 answers; the verdict column counted by script before and after (+6 covered, −3 partial, −3 candidate).
 - Decided by Maurice: none beyond the go.
 
+## 2026-10-26 — Step 451: the release commit for 0.8.3
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "Ik wil dat de verifier de spec goed volgt. Wat adviseer je?"; "ik wil gewoon niet teveel minor-versies achter elkaar. Ik wil dat de Drupal-module rustig wordt aangepast en niet steeds dat moet bij een wijziging van de verifier"; "akkoord, bereid 0.8.3 voor".
+- Produced: `CHANGELOG.md` (0.8.3), `README.md`, `SECURITY.md`, `src/Verifier/Verifier.php` (`VERSION`); `notes/step-451-release-0.8.3.md`; `NOTES.md`.
+- Measured: the corpus against `v0.8.2` in a worktree with a copied `vendor/` (33 of 874 files moved, all new since 0.8.2); `bin/package-check.php`; `bin/api-check.php`; `composer check`; `bin/spec-check.php`.
+- Decided by Maurice: a patch release (0.8.3), not a minor; contract changes to be gathered into one later minor.
+

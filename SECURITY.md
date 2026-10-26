@@ -330,6 +330,18 @@ for the manifest graph, fixed in `0.8.1`:
   follow `c2patool` rather than fix one that broke. SPEC-009 amendment 5,
   SPEC-015 amendment 11.
 
+- **2026-10-25, the reading of C2PA 2.4 checked again — not counted
+  above, changed in `0.8.3`** (`notes/step-427-claim-without-alg.md`,
+  `notes/step-429-opened-references.md`). Two files were `Trusted` here
+  and `Invalid` in `c2patool` 0.28.1 and 0.28.3 (confirmed on `0.8.2`): a
+  BMFF hash with no algorithm named anywhere, checked with SHA-256 by a
+  fallback, and a `c2pa.opened` action whose parent reference was followed
+  by a reference to nothing or to a `componentOf` ingredient. In neither
+  was a byte left unhashed or a signature unchecked: the BMFF hash still
+  matched the media, and the parent still resolved and matched. Not
+  counted, for the reason given for `0.8.2`. SPEC-027 amendment 9,
+  SPEC-033 amendment 3.
+
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now
 tooling (`bin/make-absence-variants.php`) and part of every new spec.
