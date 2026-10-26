@@ -1,7 +1,7 @@
 # A Merkle tree over the mdat of a non-fragmented MP4 (SPEC-080)
 
 Built by `bin/make-mdat-merkle-variants.php <scratch> <c2patool-0.28.3>
-<c2patool-0.28.1>` on 2026-10-25 (step 446), with ffmpeg 9.0.2. `c2patool`
+<c2patool-0.28.1>` on 2026-10-25 (step 446) and again on 2026-10-26 with four more files (step 448), with ffmpeg 9.0.2. `c2patool`
 0.28.3 signed with `core.merkle_tree_chunk_size_in_kb` and a throw-away
 P-256 hierarchy; the keys lived in a scratch directory and were overwritten
 and deleted. `throw-away-root.pem` is the public root, and
@@ -42,6 +42,10 @@ would notice, neither verifier reads them.
 | `mdat-length-1.mp4` | re-signed: the `/mdat` subset from offset 16, length 1 (AC7) | Trusted | Trusted |  |
 | `variable-sizes.mp4` | re-signed: `fixedBlockSize` replaced by `variableBlockSizes` [1024 ×5, 482] (AC8) | Trusted | Trusted |  |
 | `no-block-field.mp4` | re-signed: `fixedBlockSize` removed, neither block field (AC8) | Invalid | Invalid | Merkle location not found |
+| `local-id-one.mp4` | re-signed (step 448): the merkle map's `localId` 1 (AC6) | Trusted | Trusted |  |
+| `row-of-six.mp4` | re-signed (step 448): `hashes` the six leaves, the proof boxes turned into `free` boxes of the same size (AC2) | Trusted | Trusted |  |
+| `row-of-three.mp4` | re-signed (step 448): `hashes` the row of three between the root and the leaves, the proof boxes turned into `free` (AC6) | Invalid | Invalid | chunk hash did not match |
+| `two-mdat-one-map.mp4` | re-signed (step 448): `two-mdat` with its second merkle map removed (AC8) | Invalid | Invalid | number of MerkleMaps does not match number of mdat boxes |
 
 The answers are under `../c2patool/mdat-merkle/<file>--<version>.json`
 (for `two-mdat`, the answer of one run). Certificates are valid for ten

@@ -43,8 +43,7 @@ final readonly class CborDecoder
      */
     public function decode(string $bytes, ?CborBudget $budget = null): mixed
     {
-        $offset = 0;
-        $value = $this->item($bytes, $offset, 0, $budget ?? new CborBudget);
+        [$value, $offset] = $this->decodePrefix($bytes, $budget);
         if ($offset !== strlen($bytes)) {
             throw new CborException(sprintf(
                 '%d byte(s) remain after the value, which ended at offset %d',
@@ -54,6 +53,22 @@ final readonly class CborDecoder
         }
 
         return $value;
+    }
+
+    /**
+     * The one data item at the start of $bytes and the offset where it ends; what follows is the
+     * caller's to judge (SPEC-080: c2pa-rs pads its merkle proof boxes to one size with zero bytes).
+     *
+     * @return array{mixed, int}
+     *
+     * @throws CborException
+     */
+    public function decodePrefix(string $bytes, ?CborBudget $budget = null): array
+    {
+        $offset = 0;
+        $value = $this->item($bytes, $offset, 0, $budget ?? new CborBudget);
+
+        return [$value, $offset];
     }
 
     /** One data item at $offset; $offset is left after it. */

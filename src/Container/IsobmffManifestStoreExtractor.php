@@ -20,6 +20,9 @@ use Provemark\C2paVerifier\Support\MemoryBudget;
  * A purpose this verifier does not read is an error, never silence. `merkle` is
  * the case that matters: treating a fragmented file's merkle data as a store, or
  * reporting it as a file with no credentials, would both be worse than saying so.
+ * SPEC-080 reads one case of it: beside the manifest box of a file without `moof`,
+ * a `merkle` box is the proof of one block of the `mdat`, and merkleProofs() hands
+ * those to the hash check. They are never a store.
  *
  * Nothing here interprets the store, and nothing here checks the hash: the BMFF
  * hard binding (`c2pa.hash.bmff.v3`) is a different algorithm from SPEC-012's
@@ -37,6 +40,9 @@ final readonly class IsobmffManifestStoreExtractor
 
     /** The only purpose this spec reads. `merkle` belongs to fragmented files. */
     public const PURPOSE_MANIFEST = 'manifest';
+
+    /** SPEC-080: a proof box, beside the manifest box of a file without `moof`. */
+    public const PURPOSE_MERKLE = 'merkle';
 
     /**
      * The longest purpose string read, NUL excluded (SPEC-043 AC2). The purposes C2PA defines are
@@ -243,6 +249,54 @@ final readonly class IsobmffManifestStoreExtractor
     }
 
     /**
+     * SPEC-080: the CBOR of every top-level C2PA box of purpose `merkle`, in file order, each
+     * with its offset: the proofs of a Merkle tree over the `mdat` of a file without `moof`.
+     * Each is bounded as a store is (SPEC-043 AC2). extract() decides whether they may be there;
+     * this only reads them.
+     *
+     * @param  resource  $stream  a readable, seekable stream positioned at 0
+     * @return list<array{offset: int, payload: string}>
+     *
+     * @throws ContainerException on every malformed case
+     */
+    public function merkleProofs($stream): array
+    {
+        $reader = new StreamReader($stream, 'box');
+        $end = $reader->end();
+        $proofs = [];
+        $offset = 0;
+        $boxes = 0;
+        while ($offset + self::BOX_HEADER_LENGTH <= $end) {
+            if (++$boxes > $this->maxBoxes) {
+                throw new ContainerException(sprintf('more than %d top-level boxes (offset %d)', $this->maxBoxes, $offset));
+            }
+            [$size, $header, $type] = $this->boxHeader($reader, $offset, $end);
+            $read = $header;
+            if ($type === self::TYPE_UUID && $size >= $header + 16) {
+                $read += 16;
+                if ($reader->readExactly(16, $offset, 'the UUID') === self::C2PA_UUID) {
+                    [$purpose, $remaining] = $this->readPurpose($reader, $offset, $size - $read);
+                    $read = $size - $remaining;
+                    if ($purpose === self::PURPOSE_MERKLE) {
+                        if ($remaining > $this->maxBoxLength) {
+                            throw new ContainerException(sprintf('C2PA merkle box at offset %d holds %d bytes, over the limit of %d', $offset, $remaining, $this->maxBoxLength));
+                        }
+                        if (! $this->budget->allows($remaining)) {
+                            throw new ContainerException(sprintf('C2PA merkle box at offset %d holds %d bytes, which does not fit this host: %d bytes of memory remain', $offset, $remaining, $this->budget->remainingBytes() ?? 0));
+                        }
+                        $proofs[] = ['offset' => $offset, 'payload' => $reader->readExactly($remaining, $offset, 'the merkle data')];
+                        $read = $size;
+                    }
+                }
+            }
+            $reader->skip($size - $read, $offset);
+            $offset += $size;
+        }
+
+        return $proofs;
+    }
+
+    /**
      * The top-level boxes, in file order (SPEC-027 needs the same walk this class
      * already does, and duplicating it would be a second truth).
      *
@@ -300,6 +354,8 @@ final readonly class IsobmffManifestStoreExtractor
         $store = null;
         $storeOffset = null;
         $storeLength = 0;
+        $proofs = [];   // SPEC-080: the offsets of merkle boxes, judged once the walk knows the whole file
+        $fragmented = false;
         $offset = 0;
         $boxes = 0;
         // The reader is sequential: $offset is where we are, and every read moves it.
@@ -320,6 +376,7 @@ final readonly class IsobmffManifestStoreExtractor
                 throw $e;
             }
             $read = $header;   // bytes of this box already consumed
+            $fragmented = $fragmented || $type === 'moof';
 
             $isC2pa = false;
             if ($type === self::TYPE_UUID) {
@@ -336,6 +393,14 @@ final readonly class IsobmffManifestStoreExtractor
 
             if ($isC2pa) {
                 $reached = true;   // a C2PA uuid box: the store is reached (amendment 3)
+                [$purpose, $remaining] = $this->readPurpose($reader, $offset, $size - $read);
+                if ($purpose === self::PURPOSE_MERKLE) {
+                    $proofs[] = $offset;
+                    $reader->skip($remaining, $offset);
+                    $offset += $size;
+
+                    continue;
+                }
                 if ($storeOffset !== null) {
                     throw new ContainerException(sprintf(
                         'two C2PA uuid boxes at offsets %d and %d; a file carries at most one manifest store',
@@ -343,7 +408,7 @@ final readonly class IsobmffManifestStoreExtractor
                         $offset,
                     ));
                 }
-                $store = $this->readStore($reader, $offset, $size - $read);
+                $store = $this->readStore($reader, $offset, $purpose, $remaining);
                 $storeOffset = $offset;
                 $storeLength = $size;
                 $read = $size;
@@ -353,6 +418,11 @@ final readonly class IsobmffManifestStoreExtractor
             $offset += $size;
         }
 
+        // SPEC-080: a merkle box is a proof only beside a manifest box, in a file without moof; anywhere else
+        // it is what it was before, a purpose this walk does not read
+        if ($proofs !== [] && ($storeOffset === null || $fragmented)) {
+            throw self::unreadPurpose($proofs[0], self::PURPOSE_MERKLE);
+        }
         if ($store === null || $storeOffset === null) {
             return null;
         }
@@ -438,7 +508,12 @@ final readonly class IsobmffManifestStoreExtractor
     }
 
     /** The JUMBF bytes of a C2PA box, after its twenty-one bytes of preamble. */
-    private function readStore(StreamReader $reader, int $offset, int $available): string
+    /**
+     * Version and flags, then the NUL-terminated purpose of a C2PA box.
+     *
+     * @return array{string, int} the purpose and the bytes of the box left after it
+     */
+    private function readPurpose(StreamReader $reader, int $offset, int $available): array
     {
         if ($available < self::MIN_PREAMBLE_LENGTH) {
             throw new ContainerException(sprintf(
@@ -476,13 +551,23 @@ final readonly class IsobmffManifestStoreExtractor
             $purpose .= $byte;
         }
 
+        return [$purpose, $remaining];
+    }
+
+    private static function unreadPurpose(int $offset, string $purpose): ContainerException
+    {
+        return new ContainerException(sprintf(
+            'C2PA box at offset %d has purpose %s; this verifier reads only %s, and a box it cannot read is not a file without credentials',
+            $offset,
+            Bytes::printableText($purpose),
+            self::PURPOSE_MANIFEST,
+        ));
+    }
+
+    private function readStore(StreamReader $reader, int $offset, string $purpose, int $remaining): string
+    {
         if ($purpose !== self::PURPOSE_MANIFEST) {
-            throw new ContainerException(sprintf(
-                'C2PA box at offset %d has purpose %s; this verifier reads only %s, and a box it cannot read is not a file without credentials',
-                $offset,
-                Bytes::printableText($purpose),
-                self::PURPOSE_MANIFEST,
-            ));
+            throw self::unreadPurpose($offset, $purpose);
         }
 
         if ($remaining < 8) {

@@ -78,6 +78,9 @@ final readonly class BmffHashCheck
     /** SPEC-071: the boxes an exclusion may take whole, as c2pa-rs writes them. */
     private const ALLOWED_WHOLE = ['/ftyp', '/mfra', '/free', '/skip', '/mfra/tfra', '/moov/free', '/moov/udta', '/moov/meta'];   // the last three: Pixel Camera (SPEC-072)
 
+    /** SPEC-080: where the leaves of a Merkle tree over the mdat begin, from the box's start, whatever its header (as c2pa-rs). */
+    private const MDAT_LEAVES_FROM = 16;
+
     /** SPEC-072: a track excluded by index, allowed only when its handler is timed metadata (checked after the walk). */
     private const INDEXED_TRACK = '#^/moov\[1\]/trak\[([1-9][0-9]{0,8})\]$#';
 
@@ -129,9 +132,11 @@ final readonly class BmffHashCheck
                 return [new ValidationStatus(StatusCode::AlgorithmUnsupported, $url, sprintf('no algorithm is specified for %s: neither the assertion nor the claim carries an alg (C2PA 2.4 §15.4.1)', $label))];
             }
             $this->bound($assertion['exclusions']);
+            // SPEC-080: a hash beside a merkle list binds the mdat through the tree, so /mdat may be narrowed
+            $mdatMerkle = $assertion['merkle'] !== null && $assertion['hash'] !== null;
             // SPEC-071: only what c2pa-rs writes may be excluded, judged by path before a byte is hashed
             foreach ($assertion['exclusions'] as $exclusion) {
-                $refused = self::refusedExclusion($exclusion);
+                $refused = self::refusedExclusion($exclusion, $mdatMerkle);
                 if ($refused !== null) {
                     $xpath = $exclusion['xpath'] ?? null;
                     throw new HashException(sprintf('%s: the exclusion %s is refused: %s', $label, is_string($xpath) ? $xpath : '(no xpath)', $refused));
@@ -177,7 +182,7 @@ final readonly class BmffHashCheck
         $notes = self::hasAdditionalExclusions($assertion['exclusions'])
             ? [new ValidationStatus(StatusCode::AssertionBmffHashAdditionalExclusionsPresent, $url, 'extra BMFF hash exclusion(s) found: beyond the C2PA uuid box, ftyp and mfra'.($unsigned ? '; these boxes are not covered by the signature: what they hold (user data, metadata, a timed-metadata track, such as a location or a capture time) is not verified' : ''))]   // SPEC-072
             : [];
-        if ($assertion['merkle'] !== null) {
+        if ($assertion['merkle'] !== null && $assertion['hash'] === null) {
             return [...$notes, ...$this->checkMerkle($url, $stream, $included, $assertion)];
         }
 
@@ -201,11 +206,244 @@ final readonly class BmffHashCheck
             )];
         }
 
-        return [...$notes, new ValidationStatus(
-            StatusCode::AssertionBmffHashMatch,
-            $url,
-            sprintf('the %s hash of %d top-level box(es) matches, each bound to its own offset', $assertion['alg'], count($included)),
-        )];
+        $matched = sprintf('the %s hash of %d top-level box(es) matches, each bound to its own offset', $assertion['alg'], count($included));
+        if ($assertion['merkle'] !== null) {
+            $topLevel = array_values(array_filter($boxes, static fn (array $box): bool => substr_count($box['path'], '/') === 1));
+
+            return [...$notes, $this->checkMdatMerkle($url, $stream, $topLevel, $assertion, $matched)];
+        }
+
+        return [...$notes, new ValidationStatus(StatusCode::AssertionBmffHashMatch, $url, $matched)];
+    }
+
+    /**
+     * SPEC-080: the Merkle tree over the mdat of a non-fragmented file, once the file `hash` has matched.
+     *
+     * As c2pa-rs 0.91 writes it under `core.merkle_tree_chunk_size_in_kb` (step 443): one map, one mdat,
+     * blocks of `fixedBlockSize` from the mdat's start + 16 to its end, each leaf the digest of its block
+     * alone; `hashes` a row of the tree, and optionally one top-level `merkle` box per block holding its
+     * location and the sibling hashes up to that row. The tree is step 82's (the largest power of two on
+     * the left), which step 446 showed to be the same tree c2pa-rs's layer-by-layer walk builds, for every
+     * count from 1 to 1,999. The blocks are streamed: memory holds the stored row, the proofs and a stack
+     * of one hash per level, never the leaves.
+     *
+     * @param  resource  $stream
+     * @param  list<array{offset: int, length: int, type: string, path: string}>  $topLevel
+     * @param  array{alg: string|null, hash: string|null, merkle: mixed, exclusions: list<array<string, mixed>>}  $assertion
+     */
+    private function checkMdatMerkle(string $url, $stream, array $topLevel, array $assertion, string $matched): ValidationStatus
+    {
+        $mismatch = static fn (string $why): ValidationStatus => new ValidationStatus(StatusCode::AssertionBmffHashMismatch, $url, self::LABEL.': '.$why);
+        $merkle = $assertion['merkle'];
+
+        if (! (is_array($this->fragments) && $this->fragments === []) || in_array('moof', array_column($topLevel, 'type'), true)) {
+            return $mismatch('a hash beside a merkle list is the form of a non-fragmented file, and this one is fragmented');
+        }
+        if (is_array($merkle) && array_is_list($merkle) && count($merkle) > 1) {
+            return $mismatch(sprintf('the assertion carries %d merkle maps, one per mdat; this verifier does not read more than one (SPEC-080)', count($merkle)));
+        }
+        try {
+            $map = self::merkleMapOf($merkle);
+        } catch (HashException $e) {
+            return new ValidationStatus(StatusCode::AssertionBmffHashMismatch, $url, $e->getMessage());
+        }
+        // uniqueId and localId select among several maps; with one map and one mdat they select nothing
+        // (c2patool 0.28.3 and 0.28.1 trust a map whose localId is 1, measured in step 448; ADR-0005)
+        if (array_key_exists('initHash', $map)) {
+            return $mismatch('the merkle map carries an initHash, which a non-fragmented file must not (C2PA 2.4 §15.12.2.1)');
+        }
+        $fixed = $map['fixedBlockSize'] ?? null;
+        $variable = array_key_exists('variableBlockSizes', $map);
+        if ($fixed !== null && $variable) {
+            return $mismatch('the merkle map carries both fixedBlockSize and variableBlockSizes; a map has one or neither');
+        }
+        if ($variable) {
+            return $mismatch('the merkle map has variableBlockSizes; this verifier does not read variable block sizes, only fixedBlockSize (SPEC-080)');
+        }
+        if ($fixed === null) {
+            return $mismatch('the merkle map has neither fixedBlockSize nor variableBlockSizes, one leaf over the whole mdat; this verifier does not read that form (SPEC-080)');
+        }
+        if (! is_int($fixed)) {
+            return new ValidationStatus(StatusCode::AssertionBmffHashMalformed, $url, sprintf('%s: the merkle map\'s fixedBlockSize is %s, not an integer', self::LABEL, get_debug_type($fixed)));
+        }
+        if ($fixed < 2) {
+            return $mismatch(sprintf('the merkle map\'s fixedBlockSize is %d; a block is at least 2 bytes', $fixed));
+        }
+        // merkleMapOf() has held a present alg to the three (SPEC-051); check() has refused an assertion without one
+        $alg = is_string($map['alg'] ?? null) ? $map['alg'] : (string) $assertion['alg'];
+
+        $mdats = array_values(array_filter($topLevel, static fn (array $box): bool => $box['type'] === 'mdat'));
+        if (count($mdats) !== 1) {
+            return $mismatch(sprintf('the file has %d mdat boxes; this verifier does not read a merkle tree over other than one (SPEC-080)', count($mdats)));
+        }
+        $start = $mdats[0]['offset'] + self::MDAT_LEAVES_FROM;
+        $size = $mdats[0]['length'] - self::MDAT_LEAVES_FROM;
+        if ($size < 1) {
+            return $mismatch('the mdat holds nothing after its first 16 bytes, so no block');
+        }
+        $blocks = intdiv($size + $fixed - 1, $fixed);
+        $count = $map['count'] ?? null;
+        if ($count !== $blocks) {
+            return $mismatch(sprintf('the merkle map says count %s, and the mdat holds %d block(s) of %d bytes', is_int($count) ? (string) $count : get_debug_type($count), $blocks, $fixed));
+        }
+
+        $width = strlen(hash($alg, '', true));
+        $hashes = $map['hashes'] ?? null;
+        if (! is_array($hashes) || ! array_is_list($hashes) || $hashes === []) {
+            return $mismatch('the merkle map has no hashes');
+        }
+        $row = [];
+        foreach ($hashes as $h) {
+            if (! $h instanceof CborBytes || strlen($h->bytes) !== $width) {
+                return $mismatch(sprintf('a stored hash is not a %d-byte %s digest', $width, $alg));
+            }
+            $row[] = $h->bytes;
+        }
+        $widths = [$blocks];
+        for ($w = $blocks; $w > 1;) {
+            $w = intdiv($w + 1, 2);
+            $widths[] = $w;
+        }
+        $layer = array_search(count($row), $widths, true);
+        if (! is_int($layer)) {
+            return $mismatch(sprintf('the stored hashes are a row of %d, and a tree of %d leaves has rows of %s only', count($row), $blocks, implode(', ', $widths)));
+        }
+        // without proofs c2pa-rs reads a row as the root or as the leaves, and calls one between them a mismatch
+        // (row-of-three, step 448); with proofs no file was measured. The verdict means what c2patool's means
+        if (count($row) !== 1 && count($row) !== $blocks) {
+            return $mismatch(sprintf('the stored hashes are the row of %d between the root and the %d leaves; this verifier does not read a row other than those two (SPEC-080)', count($row), $blocks));
+        }
+
+        $proofs = [];
+        try {
+            rewind($stream);
+            foreach ($this->boxes->merkleProofs($stream) as $box) {
+                // c2pa-rs writes every proof box at one size, a shorter proof followed by zero bytes, and reads
+                // the proof alone: other bytes after it are Trusted in c2patool 0.28.3 and 0.28.1 too (measured,
+                // step 448). No signature covers the box and the proof is checked, so they bind nothing (ADR-0005)
+                [$proof] = (new CborDecoder)->decodePrefix($box['payload']);
+                $proofs[] = ['offset' => $box['offset'], 'proof' => $proof];
+            }
+        } catch (ContainerException|CborException $e) {
+            return $mismatch('a merkle proof box cannot be read: '.$e->getMessage());
+        }
+        $byLocation = [];
+        if ($proofs !== [] && count($proofs) !== $blocks) {
+            return $mismatch(sprintf('the file holds %d proof boxes for %d blocks', count($proofs), $blocks));
+        }
+        foreach ($proofs as ['offset' => $at, 'proof' => $proof]) {
+            $location = is_array($proof) ? ($proof['location'] ?? null) : null;
+            $siblings = is_array($proof) ? ($proof['hashes'] ?? null) : null;
+            // uniqueId and localId are not read: with one map there is nothing to select, and a proof is
+            // checked against the signed row whatever it says it belongs to (c2patool 0.28.3 and 0.28.1 trust
+            // a proof whose uniqueId is 1, measured in step 448; ADR-0005)
+            if (! is_array($proof) || ! is_int($location) || ! is_array($siblings) || ! array_is_list($siblings)) {
+                return $mismatch(sprintf('the proof box at offset %d is not a proof: a map with a location and a list of hashes', $at));
+            }
+            if ($location < 0 || $location >= $blocks) {
+                return $mismatch(sprintf('the proof box at offset %d claims location %d, outside the %d blocks', $at, $location, $blocks));
+            }
+            if (array_key_exists($location, $byLocation)) {
+                return $mismatch(sprintf('location %d appears in two proof boxes, at offsets %d and %d', $location, $byLocation[$location]['offset'], $at));
+            }
+            $list = [];
+            foreach ($siblings as $s) {
+                if (! $s instanceof CborBytes || strlen($s->bytes) !== $width) {
+                    return $mismatch(sprintf('the proof box at offset %d holds a hash that is not a %d-byte %s digest', $at, $width, $alg));
+                }
+                $list[] = $s->bytes;
+            }
+            $byLocation[$location] = ['offset' => $at, 'siblings' => $list];
+        }
+
+        // the blocks in order: each against its proof, and each run of 2^layer leaves folded into its stored node
+        $span = 1 << $layer;
+        /** @var list<array{int, string}> $stack a height and a node, the heights falling from the bottom */
+        $stack = [];
+        /** @var list<string> $computed */
+        $computed = [];
+        for ($i = 0; $i < $blocks; $i++) {
+            try {
+                $leaf = $this->digest($stream, [['offset' => $start + $i * $fixed, 'length' => min($fixed, $size - $i * $fixed), 'marker' => false]], $alg);
+            } catch (HashException $e) {
+                return $mismatch($e->getMessage());
+            }
+            if (isset($byLocation[$i])) {
+                $node = self::climb($alg, $leaf, $i, $blocks, $layer, $byLocation[$i]['siblings']);
+                if ($node === null || ! hash_equals($row[$i >> $layer], $node)) {
+                    return $mismatch(sprintf('block %d does not reach the stored row through the proof box at offset %d (location %d)', $i, $byLocation[$i]['offset'], $i));
+                }
+            }
+            $stack[] = [0, $leaf];
+            while (count($stack) > 1 && $stack[count($stack) - 1][0] === $stack[count($stack) - 2][0]) {
+                [$height, $right] = array_pop($stack);
+                [, $left] = array_pop($stack);
+                $stack[] = [$height + 1, hash($alg, $left.$right, true)];
+            }
+            if (($i + 1) % $span === 0 || $i === $blocks - 1) {
+                // fold from the top: the largest power of two ends up on the left (step 82)
+                $node = null;
+                while ($stack !== []) {
+                    [, $part] = array_pop($stack);
+                    $node = $node === null ? $part : hash($alg, $part.$node, true);
+                }
+                $computed[] = (string) $node;
+            }
+        }
+        foreach ($computed as $j => $node) {
+            if (! hash_equals($row[$j], $node)) {
+                $first = $j * $span;
+                $last = min(($j + 1) * $span, $blocks) - 1;
+
+                return $mismatch($first === $last
+                    ? sprintf('block %d does not match the stored row', $first)
+                    : sprintf('blocks %d to %d do not match the stored row', $first, $last));
+            }
+        }
+
+        return new ValidationStatus(StatusCode::AssertionBmffHashMatch, $url, sprintf(
+            '%s; the merkle tree over the mdat, %d block%s of %d bytes, matches its stored %s%s',
+            $matched,
+            $blocks,
+            $blocks === 1 ? '' : 's',
+            $fixed,
+            count($row) === 1 ? 'root' : 'row of '.count($row),
+            $proofs === [] ? '' : sprintf(', and all %d proof boxes lead their block to it', count($proofs)),
+        ));
+    }
+
+    /**
+     * A leaf climbed `$layers` levels with its proof, layer by layer as c2pa-rs's check_merkle_tree() walks
+     * (SPEC-080): an odd index takes its sibling from the left, an even one from the right, and the last node
+     * of an odd-width layer moves up alone, consuming nothing. Null when the proof is too short. Hashes past
+     * the climb are not read, as c2pa-rs does not read them (Trusted in c2patool 0.28.3 and 0.28.1, step 448):
+     * the node reached is compared with the signed row either way.
+     *
+     * @param  list<string>  $siblings
+     */
+    private static function climb(string $alg, string $leaf, int $index, int $width, int $layers, array $siblings): ?string
+    {
+        $node = $leaf;
+        $used = 0;
+        for ($k = 0; $k < $layers; $k++) {
+            if ($index % 2 === 1) {
+                $sibling = $siblings[$used++] ?? null;
+                if ($sibling === null) {
+                    return null;
+                }
+                $node = hash($alg, $sibling.$node, true);
+            } elseif ($index + 1 < $width) {
+                $sibling = $siblings[$used++] ?? null;
+                if ($sibling === null) {
+                    return null;
+                }
+                $node = hash($alg, $node.$sibling, true);
+            }
+            $index = intdiv($index, 2);
+            $width = intdiv($width + 1, 2);
+        }
+
+        return $node;
     }
 
     /**
@@ -584,7 +822,7 @@ final readonly class BmffHashCheck
      *
      * @param  array<string, mixed>  $exclusion
      */
-    public static function refusedExclusion(array $exclusion): ?string
+    public static function refusedExclusion(array $exclusion, bool $mdatMerkle = false): ?string
     {
         $xpath = $exclusion['xpath'] ?? null;
         if ($xpath === '/uuid') {
@@ -596,11 +834,40 @@ final readonly class BmffHashCheck
             }
         } elseif (in_array($xpath, self::ALLOWED_WHOLE, true) || (is_string($xpath) && preg_match(self::INDEXED_TRACK, $xpath) === 1)) {
             return null;   // an indexed track: its handler is checked after the box walk (SPEC-072)
+        } elseif ($xpath === '/mdat' && $mdatMerkle) {
+            return self::mdatRefusal($exclusion);
         } elseif (in_array($xpath, self::OFFSET_TABLES, true)) {
             return 'an offset table is hashed, never excluded: with it excluded, which bytes are read as the media can change without changing the hash (C2PA 2.4 §18.6.2 hashes every offset at its post-embed value; an older c2pa-rs excluded these, today\'s does not)';
         }
 
         return 'a BMFF hash may exclude only the C2PA uuid box, ftyp, mfra, free, skip and mfra/tfra, which is what c2pa-rs writes, and moov/free, moov/udta, moov/meta and a timed-metadata track, which is what Pixel Camera writes; any other box could hold the media';
+    }
+
+    /**
+     * SPEC-080 amendment 1: an `/mdat` exclusion beside a merkle tree over the mdat may leave out only what
+     * the leaves bind, from offset 16 on. c2pa-rs writes `subset [{offset: 16, length: 0}]`; a subset that
+     * starts later leaves no byte unbound either. The whole box, or a subset from before 16, would leave
+     * bytes between the header and the first leaf under neither the hash nor a leaf.
+     *
+     * @param  array<string, mixed>  $exclusion
+     */
+    private static function mdatRefusal(array $exclusion): ?string
+    {
+        $subsets = $exclusion['subset'] ?? null;
+        if ($subsets === null) {
+            return 'the whole mdat is excluded, and the merkle tree binds it only from offset 16: the bytes between its header and the first leaf would be under neither the hash nor a leaf (SPEC-080)';
+        }
+        if (! is_array($subsets) || ! array_is_list($subsets) || $subsets === []) {
+            return 'an /mdat exclusion beside a merkle tree is a list of subsets, each from offset 16 on (SPEC-080)';
+        }
+        foreach ($subsets as $subset) {
+            $offset = is_array($subset) ? ($subset['offset'] ?? null) : null;
+            if (! is_int($offset) || $offset < self::MDAT_LEAVES_FROM) {
+                return sprintf('an /mdat subset from offset %s leaves bytes before 16, where the leaves begin, under neither the hash nor a leaf (SPEC-080)', is_int($offset) ? (string) $offset : 'that is not an integer');
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -655,9 +922,7 @@ final readonly class BmffHashCheck
         if ($merkle === null && ! $hash instanceof CborBytes) {
             throw new HashException(self::LABEL.' has no hash and no merkle, or a hash that is not a byte string');
         }
-        if ($merkle !== null && $hash instanceof CborBytes) {
-            throw new HashException(self::LABEL.' carries both a hash and a merkle list; a binding is one or the other');
-        }
+        // both together: SPEC-080's Merkle tree over the mdat of a non-fragmented file, judged in check()
 
         $exclusions = $data['exclusions'] ?? [];
         if (! is_array($exclusions) || ! array_is_list($exclusions)) {

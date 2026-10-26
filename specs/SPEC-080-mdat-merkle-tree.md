@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-25                      |
 | Supersedes | —                                                 |
@@ -288,18 +288,55 @@ final class IsobmffManifestStoreExtractor
    - The differences of AC6, AC7 and AC8 get rows in `docs/comparison.md`
      when this spec is implemented.
 
+2. **2026-10-26, step 448, approved by Maurice van Loon ("akkoord")** — what building the spec showed. Four mutants of the first
+   implementation survived its tests; the files made to catch them
+   (`local-id-one`, `row-of-six`, `row-of-three`, `two-mdat-one-map`,
+   signed by the same script) and four changes made in memory were asked
+   of both `c2patool` versions first.
+   - **The stored row is the root or the leaves.** The Scope's fourth
+     bullet ("the row of the computed tree that has as many nodes") is
+     narrowed: a row between the two is refused by name. Without proof
+     boxes `c2pa-rs` calls such a row a mismatch (`row-of-three`: `Invalid`
+     in both versions, "chunk hash did not match"); with proof boxes no file
+     was measured. The verdict means what `c2patool`'s means. `row-of-six`
+     (the leaves stored, no proof boxes) is `Trusted`, as in both versions
+     (AC2).
+   - **What a proof box says beyond its proof is not read.** Bytes after the
+     proof (`c2pa-rs` pads every proof box to one size with zeros), sibling
+     hashes past the stored row, and the proof's `uniqueId` and `localId`
+     are each `Trusted` in both `c2patool` versions, measured on
+     `six-blocks.mp4` changed in memory. No signature covers a proof box,
+     and the node a proof reaches is compared with the signed row whatever
+     else the box holds, so refusing them would protect nothing (ADR-0005).
+     A proof too short for the climb is still a mismatch.
+   - **A map's `uniqueId` and `localId` select nothing when there is one map
+     and one `mdat`.** `local-id-one` is `Trusted`, as in both versions.
+     More than one map, or more than one `mdat`, stays out of scope
+     (`two-mdat-one-map`: `Invalid` here and in both versions).
+   - **Only without `moof`.** Proof boxes in a file with `moof` are refused
+     by the extractor as before (a purpose it does not read), and a hash
+     beside a merkle list in such a file is a mismatch. Without the `hash`,
+     a merkle list is SPEC-028's fragmented form, and an `/mdat` exclusion
+     stays refused there by SPEC-071's allow-list.
+   - **A bound that follows.** SPEC-043's limit of 4,096 top-level boxes
+     holds; with one proof box per block it refuses a file of more than
+     about 4,000 blocks.
+   - `CborDecoder::decodePrefix()` reads one data item and says where it
+     ends, for the padded proof boxes. `decode()` is unchanged.
+
 ## Traceability
 
-Filled when status becomes `implemented`.
+All in `tests/Unit/Hash/MdatMerkleTest.php`, group `SPEC-080`, unless named
+otherwise.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
+| AC1                  | AC1: six blocks with six proof boxes are Trusted, as c2patool says | src/Hash/BmffHashCheck.php :: check(), checkMdatMerkle() |
+| AC2 (amendment 2)    | AC2: one block, the leaf stored and no proof boxes, is Trusted, as c2patool says; AC2: the leaves stored as the row, with no proof boxes, are Trusted, as c2patool says | src/Hash/BmffHashCheck.php :: checkMdatMerkle() |
+| AC3                  | AC3: a changed byte in a block, before the first block or in moov is found, and named (4 datasets); AC3: with no proof boxes, a changed block is found by the stored row | src/Hash/BmffHashCheck.php :: check() (the file hash), checkMdatMerkle() (the fold) |
+| AC4 (amendment 2)    | AC4: a proof box is checked, not trusted (5 datasets); AC4: what follows a proof in its box is not read, as c2patool does not read it; AC4: a proof box's ids and any hash past the climb are not read, as c2patool does not read them | src/Hash/BmffHashCheck.php :: checkMdatMerkle(), climb(); src/Cbor/CborDecoder.php :: decodePrefix() |
+| AC5 (amendment 2)    | AC5: the proof boxes are not stores; a second manifest box, or a purpose this verifier does not read, still is refused; AC5: a hash beside a merkle list is read only in a file without moof | src/Container/IsobmffManifestStoreExtractor.php :: walk(), readPurpose(), merkleProofs() |
+| AC6 (amendment 2)    | AC6: a merkle map or a proof that is not the shape SPEC-080 reads is refused, with the reason named (8 datasets); AC6: a map's localId selects nothing when there is one map and one mdat, as c2patool reads it | src/Hash/BmffHashCheck.php :: checkMdatMerkle() |
+| AC7 (amendment 1)    | AC7: an /mdat subset from offset 16 on leaves no byte unbound and is read, as c2patool reads it; AC7: an /mdat exclusion is read only beside a merkle tree, and only from offset 16 on; AC7: the whole /mdat excluded leaves eight bytes under neither the hash nor a leaf, and is refused where c2patool trusts it; AC7: without the file hash, a merkle list is a fragmented stream's, and /mdat stays refused there | src/Hash/BmffHashCheck.php :: refusedExclusion(), mdatRefusal() |
+| AC8                  | AC8: the forms SPEC-080 leaves out are refused by name (4 datasets); AC8: what c2patool says of those forms, kept beside the refusal | src/Hash/BmffHashCheck.php :: checkMdatMerkle() |
+| AC9                  | tests/Unit/Verifier/FragmentedVerifierTest.php and tests/Unit/Hash/BmffHashCheckTest.php (SPEC-027, SPEC-028), unchanged and green; the corpus before and after (step 448): only `tests/Fixtures/mdat-merkle/` moves | — |

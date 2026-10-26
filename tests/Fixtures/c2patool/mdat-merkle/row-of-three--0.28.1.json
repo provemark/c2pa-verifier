@@ -1,0 +1,251 @@
+{
+  "active_manifest": "urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d",
+  "manifests": {
+    "urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier mdat Merkle fixtures",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.6"
+        }
+      ],
+      "title": "six-blocks.mp4",
+      "instance_id": "xmp.iid:0fab50fa-b823-4b59-b140-43e09dd8c0aa",
+      "assertions": [
+        {
+          "label": "c2pa.hash.bmff.v3",
+          "data": {
+            "exclusions": [
+              {
+                "xpath": "/uuid",
+                "data": [
+                  {
+                    "offset": 8,
+                    "value": "2P7D1hsOSDySl1goh37EgQ=="
+                  }
+                ]
+              },
+              {
+                "xpath": "/ftyp"
+              },
+              {
+                "xpath": "/mfra"
+              },
+              {
+                "xpath": "/free"
+              },
+              {
+                "xpath": "/skip"
+              },
+              {
+                "xpath": "/mdat",
+                "subset": [
+                  {
+                    "offset": 16,
+                    "length": 0
+                  }
+                ]
+              }
+            ],
+            "alg": "sha256",
+            "hash": "ZT4fRSpJqRBJkWXZ/9l3CT2L88CFJu7GoBpxole5CtU=",
+            "merkle": [
+              {
+                "uniqueId": 0,
+                "localId": 0,
+                "count": 6,
+                "alg": "sha256",
+                "hashes": [
+                  [
+                    38,
+                    116,
+                    35,
+                    46,
+                    250,
+                    214,
+                    92,
+                    56,
+                    99,
+                    135,
+                    145,
+                    59,
+                    67,
+                    119,
+                    89,
+                    129,
+                    234,
+                    251,
+                    222,
+                    97,
+                    38,
+                    42,
+                    89,
+                    179,
+                    151,
+                    70,
+                    193,
+                    141,
+                    82,
+                    91,
+                    220,
+                    103
+                  ],
+                  [
+                    208,
+                    195,
+                    98,
+                    102,
+                    190,
+                    100,
+                    216,
+                    0,
+                    50,
+                    181,
+                    92,
+                    1,
+                    109,
+                    98,
+                    77,
+                    130,
+                    182,
+                    147,
+                    117,
+                    223,
+                    49,
+                    245,
+                    130,
+                    40,
+                    160,
+                    213,
+                    202,
+                    213,
+                    199,
+                    233,
+                    50,
+                    141
+                  ],
+                  [
+                    122,
+                    155,
+                    47,
+                    188,
+                    63,
+                    146,
+                    58,
+                    134,
+                    208,
+                    124,
+                    84,
+                    222,
+                    112,
+                    109,
+                    61,
+                    245,
+                    248,
+                    238,
+                    180,
+                    166,
+                    90,
+                    43,
+                    199,
+                    161,
+                    102,
+                    158,
+                    25,
+                    140,
+                    236,
+                    223,
+                    61,
+                    162
+                  ]
+                ],
+                "fixedBlockSize": 1024
+              }
+            ],
+            "name": "jumbf manifest"
+          },
+          "created": true
+        },
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              }
+            ]
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "C2PA Verifier throw-away hierarchy",
+        "common_name": "mdat Merkle signer",
+        "cert_serial_number": "545801"
+      },
+      "label": "urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d",
+      "claim_version": 2
+    }
+  },
+  "validation_status": [
+    {
+      "code": "assertion.bmffHash.mismatch",
+      "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.hash.bmff.v3",
+      "explanation": "asset hash error, name: jumbf manifest, error: hash verification( chunk hash did not match )"
+    }
+  ],
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.signature",
+          "explanation": "signing certificate trusted, found in [system_anchors] trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.hash.bmff.v3",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.bmff.v3"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        },
+        {
+          "code": "assertion.bmffHash.additionalExclusionsPresent",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.hash.bmff.v3",
+          "explanation": "extra BMFF hash exclusion(s) found"
+        }
+      ],
+      "failure": [
+        {
+          "code": "assertion.bmffHash.mismatch",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.hash.bmff.v3",
+          "explanation": "asset hash error, name: jumbf manifest, error: hash verification( chunk hash did not match )"
+        }
+      ]
+    },
+    "specVersion": "2.4.0",
+    "trustListUri": "system_anchors"
+  },
+  "validation_state": "Invalid"
+}

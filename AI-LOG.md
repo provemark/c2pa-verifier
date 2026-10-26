@@ -11928,3 +11928,11 @@ README are where the disclosure lives.
 - Measured: none new; the amendment rests on step 446. Reasoned: ADR-0005 for each difference from `c2patool`; `docs/comparison.md` (the `/mdat` exclusion row of SPEC-071).
 - Decided by Maurice: to push step 446 with its findings public; amendment 1 approved as proposed ("akkoord").
 
+## 2026-10-26 — Step 448: SPEC-080 built
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en ga door met de tests"; "akkoord, ga door met de implementatie"; "ga maar door".
+- Produced: `tests/Unit/Hash/MdatMerkleTest.php`; `src/Hash/BmffHashCheck.php` (checkMdatMerkle(), climb(), mdatRefusal(), the /mdat rule), `src/Container/IsobmffManifestStoreExtractor.php` (proof boxes, readPurpose(), merkleProofs()), `src/Cbor/CborDecoder.php` (decodePrefix()); `bin/make-mdat-merkle-variants.php` (four more files) and `tests/Fixtures/mdat-merkle/` signed again; `specs/SPEC-080-mdat-merkle-tree.md` (amendment 2 proposed, Traceability); `docs/comparison.md`; `notes/step-448-mdat-merkle-implemented.md`; `NOTES.md`, `docs/milestones.md`. Step 447 pushed.
+- Measured: the tests red before the code (24 of 25); 35 mutations against the test file; `c2patool` 0.28.3 and 0.28.1 on four new signed files and four in-memory changes; the corpus before and after (874 files); `composer check`, `composer test:parallel`, `pest` with `memory_limit=-1`; `HostileInputSecondRoundTest` AC2 on the code of step 447 in a worktree, with memory dumped.
+- Reasoned: ADR-0005 for each case where this verifier was stricter or more lenient than `c2patool`.
+- Decided by Maurice: amendment 2 approved ("akkoord"); SPEC-080 implemented.
+

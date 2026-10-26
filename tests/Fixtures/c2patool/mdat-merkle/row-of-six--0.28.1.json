@@ -1,0 +1,345 @@
+{
+  "active_manifest": "urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d",
+  "manifests": {
+    "urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier mdat Merkle fixtures",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.6"
+        }
+      ],
+      "title": "six-blocks.mp4",
+      "instance_id": "xmp.iid:0fab50fa-b823-4b59-b140-43e09dd8c0aa",
+      "assertions": [
+        {
+          "label": "c2pa.hash.bmff.v3",
+          "data": {
+            "exclusions": [
+              {
+                "xpath": "/uuid",
+                "data": [
+                  {
+                    "offset": 8,
+                    "value": "2P7D1hsOSDySl1goh37EgQ=="
+                  }
+                ]
+              },
+              {
+                "xpath": "/ftyp"
+              },
+              {
+                "xpath": "/mfra"
+              },
+              {
+                "xpath": "/free"
+              },
+              {
+                "xpath": "/skip"
+              },
+              {
+                "xpath": "/mdat",
+                "subset": [
+                  {
+                    "offset": 16,
+                    "length": 0
+                  }
+                ]
+              }
+            ],
+            "alg": "sha256",
+            "hash": "dq4I5+imds41uAPMlp52UFT0uPcN7k6sh36D9VkGIq8=",
+            "merkle": [
+              {
+                "uniqueId": 0,
+                "localId": 0,
+                "count": 6,
+                "alg": "sha256",
+                "hashes": [
+                  [
+                    168,
+                    82,
+                    118,
+                    70,
+                    209,
+                    211,
+                    40,
+                    209,
+                    11,
+                    159,
+                    251,
+                    148,
+                    17,
+                    165,
+                    28,
+                    217,
+                    229,
+                    217,
+                    114,
+                    194,
+                    124,
+                    85,
+                    212,
+                    247,
+                    144,
+                    110,
+                    194,
+                    106,
+                    225,
+                    232,
+                    90,
+                    40
+                  ],
+                  [
+                    221,
+                    226,
+                    196,
+                    61,
+                    78,
+                    73,
+                    176,
+                    28,
+                    251,
+                    238,
+                    172,
+                    248,
+                    113,
+                    7,
+                    238,
+                    106,
+                    62,
+                    229,
+                    47,
+                    24,
+                    246,
+                    29,
+                    47,
+                    73,
+                    165,
+                    86,
+                    152,
+                    59,
+                    117,
+                    89,
+                    87,
+                    194
+                  ],
+                  [
+                    156,
+                    180,
+                    214,
+                    32,
+                    106,
+                    36,
+                    109,
+                    231,
+                    253,
+                    239,
+                    167,
+                    147,
+                    208,
+                    81,
+                    146,
+                    210,
+                    22,
+                    60,
+                    245,
+                    189,
+                    2,
+                    149,
+                    132,
+                    23,
+                    5,
+                    163,
+                    143,
+                    226,
+                    119,
+                    106,
+                    0,
+                    43
+                  ],
+                  [
+                    230,
+                    193,
+                    181,
+                    143,
+                    147,
+                    254,
+                    76,
+                    202,
+                    223,
+                    83,
+                    248,
+                    177,
+                    108,
+                    11,
+                    97,
+                    174,
+                    200,
+                    53,
+                    213,
+                    188,
+                    192,
+                    116,
+                    86,
+                    145,
+                    231,
+                    26,
+                    14,
+                    197,
+                    133,
+                    205,
+                    121,
+                    156
+                  ],
+                  [
+                    111,
+                    18,
+                    132,
+                    10,
+                    239,
+                    249,
+                    136,
+                    73,
+                    88,
+                    191,
+                    172,
+                    65,
+                    13,
+                    14,
+                    127,
+                    169,
+                    250,
+                    219,
+                    126,
+                    254,
+                    185,
+                    0,
+                    116,
+                    85,
+                    212,
+                    31,
+                    152,
+                    181,
+                    3,
+                    209,
+                    128,
+                    133
+                  ],
+                  [
+                    248,
+                    83,
+                    243,
+                    12,
+                    72,
+                    178,
+                    87,
+                    66,
+                    147,
+                    128,
+                    0,
+                    203,
+                    218,
+                    47,
+                    195,
+                    106,
+                    14,
+                    176,
+                    185,
+                    11,
+                    14,
+                    174,
+                    251,
+                    182,
+                    44,
+                    140,
+                    186,
+                    114,
+                    139,
+                    71,
+                    145,
+                    15
+                  ]
+                ],
+                "fixedBlockSize": 1024
+              }
+            ],
+            "name": "jumbf manifest"
+          },
+          "created": true
+        },
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              }
+            ]
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "C2PA Verifier throw-away hierarchy",
+        "common_name": "mdat Merkle signer",
+        "cert_serial_number": "545801"
+      },
+      "label": "urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d",
+      "claim_version": 2
+    }
+  },
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.signature",
+          "explanation": "signing certificate trusted, found in [system_anchors] trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.hash.bmff.v3",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.bmff.v3"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.bmffHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.hash.bmff.v3",
+          "explanation": "BMFF hash valid"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        },
+        {
+          "code": "assertion.bmffHash.additionalExclusionsPresent",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.hash.bmff.v3",
+          "explanation": "extra BMFF hash exclusion(s) found"
+        }
+      ],
+      "failure": []
+    },
+    "specVersion": "2.4.0",
+    "trustListUri": "system_anchors"
+  },
+  "validation_state": "Trusted"
+}

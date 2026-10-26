@@ -431,6 +431,34 @@ foreach ($edits as $name => $edit) {
     $variants[$name] = mmResign($good, $edit, $key);
 }
 
+// ---- step 448: what only a new signature can make, for the mutants the first tests let through ----
+// a map that selects another tree among several
+$variants['local-id-one'] = mmResign($good, mmOnMap(static fn (string $b, int $m): array => mmPair($b, $m, 'localId', mmText('localId')."\x01")), $key);
+// a stored row other than the root, the proof boxes turned into free boxes of the same size (nothing moves)
+$leaves = [];
+for ($o = $mdat['offset'] + 16; $o < $mdat['offset'] + $mdat['length']; $o += 1024) {
+    $leaves[] = hash('sha256', substr($good, $o, min(1024, $mdat['offset'] + $mdat['length'] - $o)), true);
+}
+$third = [hash('sha256', $leaves[0].$leaves[1], true), hash('sha256', $leaves[2].$leaves[3], true), hash('sha256', $leaves[4].$leaves[5], true)];
+foreach (['row-of-six' => $leaves, 'row-of-three' => $third] as $name => $row) {
+    $cbor = mmByte(0x80 + count($row));
+    foreach ($row as $h) {
+        $cbor .= "\x58\x20".$h;
+    }
+    $bytes = mmResign($good, mmOnMap(static fn (string $b, int $m): array => mmPair($b, $m, 'hashes', mmText('hashes').$cbor)), $key);
+    foreach (mmC2paBoxes($bytes, 'merkle') as $box) {
+        $bytes = bReplace($bytes, $box['offset'] + 4, 'uuid', 'free');
+    }
+    $variants[$name] = $bytes;
+}
+// two mdat boxes and one map: the second map removed from the list
+$variants['two-mdat-one-map'] = mmResign($variants['two-mdat'], static function (string $b, int $s, int $e): array {
+    $list = bFind($b, "\x66merkle\x82", $s, $e) + 7;
+    $first = bCborEnd($b, $list + 1);
+
+    return [[$list, 1, "\x81"], [$first, bCborEnd($b, $first) - $first, '']];
+}, $key);
+
 // ---- written, and asked of c2patool ----
 printf("  %-26s %-9s %-9s\n", 'file', '0.28.3', '0.28.1');
 foreach ($variants as $name => $bytes) {

@@ -1,7 +1,7 @@
 {
-  "active_manifest": "urn:c2pa:fd9cfe0e-ec2b-468d-a847-4f3dbbb84775",
+  "active_manifest": "urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d",
   "manifests": {
-    "urn:c2pa:fd9cfe0e-ec2b-468d-a847-4f3dbbb84775": {
+    "urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d": {
       "claim_generator_info": [
         {
           "name": "c2pa-verifier mdat Merkle fixtures",
@@ -10,7 +10,7 @@
         }
       ],
       "title": "six-blocks.mp4",
-      "instance_id": "xmp.iid:c387b460-d901-45d8-a9f9-a25fea524f16",
+      "instance_id": "xmp.iid:0fab50fa-b823-4b59-b140-43e09dd8c0aa",
       "assertions": [
         {
           "label": "c2pa.hash.bmff.v3",
@@ -114,16 +114,16 @@
         "alg": "Es256",
         "issuer": "C2PA Verifier throw-away hierarchy",
         "common_name": "mdat Merkle signer",
-        "cert_serial_number": "293712"
+        "cert_serial_number": "545801"
       },
-      "label": "urn:c2pa:fd9cfe0e-ec2b-468d-a847-4f3dbbb84775",
+      "label": "urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d",
       "claim_version": 2
     }
   },
   "validation_status": [
     {
       "code": "assertion.bmffHash.mismatch",
-      "url": "self#jumbf=/c2pa/urn:c2pa:fd9cfe0e-ec2b-468d-a847-4f3dbbb84775/c2pa.assertions/c2pa.hash.bmff.v3",
+      "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.hash.bmff.v3",
       "explanation": "asset hash error, name: jumbf manifest, error: hash verification( fixed block size must be positive integer )"
     }
   ],
@@ -132,46 +132,46 @@
       "success": [
         {
           "code": "signingCredential.trusted",
-          "url": "self#jumbf=/c2pa/urn:c2pa:fd9cfe0e-ec2b-468d-a847-4f3dbbb84775/c2pa.signature",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.signature",
           "explanation": "signing certificate trusted, found in [system_anchors] trust anchors"
         },
         {
           "code": "claimSignature.insideValidity",
-          "url": "self#jumbf=/c2pa/urn:c2pa:fd9cfe0e-ec2b-468d-a847-4f3dbbb84775/c2pa.signature",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.signature",
           "explanation": "claim signature valid"
         },
         {
           "code": "claimSignature.validated",
-          "url": "self#jumbf=/c2pa/urn:c2pa:fd9cfe0e-ec2b-468d-a847-4f3dbbb84775/c2pa.signature",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.signature",
           "explanation": "claim signature valid"
         },
         {
           "code": "assertion.hashedURI.match",
-          "url": "self#jumbf=/c2pa/urn:c2pa:fd9cfe0e-ec2b-468d-a847-4f3dbbb84775/c2pa.assertions/c2pa.hash.bmff.v3",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.hash.bmff.v3",
           "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.bmff.v3"
         },
         {
           "code": "assertion.hashedURI.match",
-          "url": "self#jumbf=/c2pa/urn:c2pa:fd9cfe0e-ec2b-468d-a847-4f3dbbb84775/c2pa.assertions/c2pa.actions.v2",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.actions.v2",
           "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
         }
       ],
       "informational": [
         {
           "code": "signingCredential.ocsp.skipped",
-          "url": "self#jumbf=/c2pa/urn:c2pa:fd9cfe0e-ec2b-468d-a847-4f3dbbb84775/c2pa.signature",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.signature",
           "explanation": "OCSP fetching skipped"
         },
         {
           "code": "assertion.bmffHash.additionalExclusionsPresent",
-          "url": "self#jumbf=/c2pa/urn:c2pa:fd9cfe0e-ec2b-468d-a847-4f3dbbb84775/c2pa.assertions/c2pa.hash.bmff.v3",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.hash.bmff.v3",
           "explanation": "extra BMFF hash exclusion(s) found"
         }
       ],
       "failure": [
         {
           "code": "assertion.bmffHash.mismatch",
-          "url": "self#jumbf=/c2pa/urn:c2pa:fd9cfe0e-ec2b-468d-a847-4f3dbbb84775/c2pa.assertions/c2pa.hash.bmff.v3",
+          "url": "self#jumbf=/c2pa/urn:c2pa:f042c87c-f8ac-45d3-92dc-9487290bed7d/c2pa.assertions/c2pa.hash.bmff.v3",
           "explanation": "asset hash error, name: jumbf manifest, error: hash verification( fixed block size must be positive integer )"
         }
       ]
