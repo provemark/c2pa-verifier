@@ -11936,3 +11936,11 @@ README are where the disclosure lives.
 - Reasoned: ADR-0005 for each case where this verifier was stricter or more lenient than `c2patool`.
 - Decided by Maurice: amendment 2 approved ("akkoord"); SPEC-080 implemented.
 
+## 2026-10-26 — Step 449: the memory a timing test leaned on
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en pak de geheugentest op".
+- Produced: `tests/Unit/Verifier/HostileInputSecondRoundTest.php` (AC2 raises `memory_limit` for what it times); `notes/step-449-memory-in-the-serial-suite.md`; `NOTES.md`. Step 448 pushed, SPEC-080 implemented (amendment 2 approved).
+- Measured: the failing report dumped in a full serial run; memory after every test (a temporary `afterEach`, removed); `gc_collect_cycles()` before the test; `composer check` before (red on this test) and after (green, 1,410 passed, 1 skipped).
+- Reasoned: the test measures time and a single hash, not the budget, which SPEC-024's tests measure in a process of their own.
+- Decided by Maurice: amendment 2 of SPEC-080 approved; to take up this test.
+

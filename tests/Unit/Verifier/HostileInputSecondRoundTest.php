@@ -207,9 +207,17 @@ it('AC1: a JSON assertion is bounded', function (): void {
 
 it('AC2: one assertion referenced many times is hashed once', function (): void {
     $file = spec045References(1000, 8 * 1048576);
-    $start = microtime(true);
-    $report = spec045Verify($file);
-    $seconds = microtime(true) - $start;
+    // the time and the one hash are measured here, not the budget (SPEC-024): room for the 8 MiB assertion whatever
+    // ran before. A serial run holds about 60 MB by now, and under a 128 MB limit the budget refused it (step 449)
+    $limit = (string) ini_get('memory_limit');
+    ini_set('memory_limit', '512M');
+    try {
+        $start = microtime(true);
+        $report = spec045Verify($file);
+        $seconds = microtime(true) - $start;
+    } finally {
+        ini_set('memory_limit', $limit);
+    }
     $hashed = array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => str_starts_with($s->code->value, 'assertion.hashedURI.') && str_ends_with($s->url, '/org.example.big'));
     expect($seconds)->toBeLessThan(2.0)
         ->and(count($hashed))->toBe(1000);
