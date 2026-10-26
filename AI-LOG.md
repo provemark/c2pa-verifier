@@ -11958,3 +11958,10 @@ README are where the disclosure lives.
 - Measured: the corpus against `v0.8.2` in a worktree with a copied `vendor/` (33 of 874 files moved, all new since 0.8.2); `bin/package-check.php`; `bin/api-check.php`; `composer check`; `bin/spec-check.php`.
 - Decided by Maurice: a patch release (0.8.3), not a minor; contract changes to be gathered into one later minor.
 
+## 2026-10-26 — Step 452: 0.8.3 released
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en tag v0.8.3"; "akkoord, begin met de library"; "akkoord, optie 1, ga door met Drupal"; "akkoord, ga door met de WordPress-plugin"; "akkoord, doe daarna ook de demo".
+- Produced: `notes/step-452-release-0.8.3-released.md`; `NOTES.md`. In the other repositories: plugin 0.7.3 and the demo on 0.8.3.
+- Measured: CI on `main` and the tag; Packagist; a fresh install with four fixtures; the library's `composer check` and the Drupal module's unit suite, PHPStan and phpcs with 0.8.3 installed.
+- Decided by Maurice: a patch; the library's floor stays at 0.8.2; no Drupal change now.
+
