@@ -9,9 +9,12 @@ namespace Provemark\C2paVerifier\Report;
  * (SPEC-010; SPEC-011 adds the three assertion.hashedURI / undeclared
  * codes, SPEC-012 the six of the data hash, SPEC-014 the two of the
  * signing credential's trust, SPEC-015 signingCredential.expired, SPEC-017 the six of the timestamp, SPEC-018 assertion.action.malformed). No word of our own: a case enters here only
- * through the spec that emits it. Success, informational and failure are
- * the table's three kinds: the successes are claimSignature.validated,
- * assertion.hashedURI.match, assertion.dataHash.match and
+ * through the spec that emits it. One code comes from an older table:
+ * signingCredential.expired, in the C2PA 1.0–2.1 tables and gone from 2.2
+ * on, kept because c2pa-rs still emits it; 2.4 names that case
+ * claimSignature.outsideValidity (§15.8.2). Success, informational and
+ * failure are the table's three kinds: the successes are
+ * claimSignature.validated, assertion.hashedURI.match, assertion.dataHash.match and
  * signingCredential.trusted; the one informational so far is
  * assertion.dataHash.additionalExclusionsPresent.
  */

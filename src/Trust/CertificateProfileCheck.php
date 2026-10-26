@@ -18,10 +18,11 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * permits signing, an ExtendedKeyUsage from the accepted list — the
  * built-in six plus what the settings add, never fewer (ADR-0003) — and an
  * AuthorityKeyIdentifier. Every fault is its own signingCredential.invalid;
- * validity is signingCredential.expired. The rules are c2pa-rs's
- * certificate_profile.rs, read to the end in step 33, on what ext-openssl
- * reports, and, from the certificate's own DER, no critical extension it
- * does not process (SPEC-046).
+ * validity is signingCredential.expired, as c2pa-rs names it (a code of
+ * the C2PA 1.0–2.1 tables; 2.4 says claimSignature.outsideValidity). The
+ * rules are c2pa-rs's certificate_profile.rs, read to the end in step 33,
+ * on what ext-openssl reports, and, from the certificate's own DER, no
+ * critical extension it does not process (SPEC-046).
  *
  * @internal SPEC-025: not part of the public API. It may change, move or be
  * removed in any release; the contract is the nine classes named in the README.

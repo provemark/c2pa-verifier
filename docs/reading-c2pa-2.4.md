@@ -736,7 +736,8 @@ SPEC-065):
   (`c2tm` is refused).
 - *Reported under another code* (5): `assertion.cbor.invalid`
   (`general.error`), `claimSignature.outsideValidity`
-  (`signingCredential.expired`, as `c2pa-rs`), `hashedURI.missing`
+  (`signingCredential.expired`, as `c2pa-rs`; a code of the C2PA 1.0–2.1
+  tables, gone from 2.2 on), `hashedURI.missing`
   (`assertion.missing`), `hashedURI.mismatch` (`assertion.hashedURI.mismatch`
   for icons, SPEC-034), all in `docs/conformance.md` §3 or SPEC-039; and
   `assertion.alternativeContentRepresentation.missing`, an embedded reference

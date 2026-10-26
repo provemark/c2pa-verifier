@@ -11965,3 +11965,9 @@ README are where the disclosure lives.
 - Measured: CI on `main` and the tag; Packagist; a fresh install with four fixtures; the library's `composer check` and the Drupal module's unit suite, PHPStan and phpcs with 0.8.3 installed.
 - Decided by Maurice: a patch; the library's floor stays at 0.8.2; no Drupal change now.
 
+## 2026-10-26 — Step 453: `signingCredential.expired` is a code of older tables
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "Er staat een nieuw voorstel. Wat vind je daarvan. Bouw nog niets, maar bekijk het."; "akkoord, begin met C4"; "akkoord, bouw stap 453".
+- Produced: `src/Report/StatusCode.php` and `src/Trust/CertificateProfileCheck.php` (docblocks only); `docs/comparison.md`; `docs/reading-c2pa-2.4.md`; `notes/step-453-expired-is-a-legacy-code.md`; `NOTES.md`.
+- Measured: both codes counted in the C2PA specifications 1.0, 1.4, 2.0, 2.1, 2.2, 2.3, 2.4 and 2.5 as published on spec.c2pa.org; the stored `c2patool` answers under `tests/Fixtures/` grepped for the code per version; `composer check`.
+- Decided by Maurice: documentation only, no release; whether `claimSignature.outsideValidity` is added waits for the minor release that gathers the codes.
