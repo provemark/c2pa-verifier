@@ -176,11 +176,13 @@ function apiContract(): array
         'Report\ValidationResult',
         'Report\ValidationState',
         'Report\ValidationStatus',
+        'Trust\AnchorEvidence',
         'Trust\TrustAnchorSet',
         'Trust\TrustException',
         'Trust\TrustListIdentity',
         'Trust\TrustSettings',
         'Verifier\FragmentedVerifier',
+        'Verifier\ManifestEvidence',
         'Verifier\VerificationReport',
         'Verifier\Verifier',
     ];

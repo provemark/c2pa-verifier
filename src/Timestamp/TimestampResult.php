@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Provemark\C2paVerifier\Timestamp;
 
 use Provemark\C2paVerifier\Report\ValidationStatus;
+use Provemark\C2paVerifier\Trust\AnchorEvidence;
 
 /**
  * What the timestamp check found (SPEC-017): whether a header was there,
@@ -23,6 +24,7 @@ final readonly class TimestampResult
      * @param  list<ValidationStatus>  $statuses
      * @param  int|null  $time  genTime when validated, else null
      * @param  string|null  $timeFraction  genTime's fractional-second digits, for signature_info.time (SPEC-017 amendment 2)
+     * @param  AnchorEvidence|null  $anchor  what made the TSA trusted, when it was (SPEC-082)
      */
     public function __construct(
         public bool $present,
@@ -30,6 +32,7 @@ final readonly class TimestampResult
         public ?int $time,
         public bool $trusted,
         public ?string $timeFraction = null,
+        public ?AnchorEvidence $anchor = null,
     ) {}
 
     /** The time as c2patool prints it: ISO 8601, UTC, the token's own fraction digits. */

@@ -124,7 +124,7 @@ final readonly class Verifier
         // SPEC-081: the lists given, named, whether or not the verdict came to need them
         $lists = array_values(array_filter(array_map(static fn (TrustAnchorSet $set): ?TrustListIdentity => $set->identity, $settings->anchorSets ?? [])));
 
-        return new VerificationReport($report->format, $report->hasManifest, $report->store, $report->result, $report->signatureInfo, $report->remoteManifestUrl, $judgedAt, $lists);
+        return new VerificationReport($report->format, $report->hasManifest, $report->store, $report->result, $report->signatureInfo, $report->remoteManifestUrl, $judgedAt, $lists, $report->evidence());
     }
 
     /**
@@ -203,7 +203,8 @@ final readonly class Verifier
 
         // the header's token, else a time-stamp assertion's from any manifest of the store (SPEC-064)
         $timestamp = $this->timestamp->forManifest($manifestStore->active, $settings, TimestampAssertions::collect($manifestStore));
-        $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp, $graphStatuses, $graph, $format, $now, $clock);
+        $evidence = [];
+        $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp, $graphStatuses, $graph, $format, $now, $clock, $evidence);
         $refusals = [];
         // a CAWG identity assertion carries a credential of its own that c2pa-rs validates; this verifier
         // does not yet, and will not call Trusted what it has not looked at (SPEC-013 amendment 7)
@@ -216,7 +217,7 @@ final readonly class Verifier
             $result = ValidationResult::fromStatuses([...$result->statuses, ...$refusals], $result->checksPerformed);
         }
 
-        return new VerificationReport($format, true, $manifestStore, $result, $this->signatureInfo($manifestStore, $timestamp));
+        return new VerificationReport($format, true, $manifestStore, $result, $this->signatureInfo($manifestStore, $timestamp), evidence: $evidence);
     }
 
     /**
@@ -275,12 +276,13 @@ final readonly class Verifier
      *
      * @param  resource  $stream
      * @param  list<ValidationStatus>  $graphStatuses  the ingredient graph's, each scoped (SPEC-020)
+     * @param  array<string, ManifestEvidence>  $evidence  filled: the active manifest's, then each ingredient manifest's (SPEC-082)
      * @param  ManifestGraph|null  $graph  null when the graph could not be built (a bound was exceeded)
      * @param  string  $format  the detected format, which says where an exclusion beyond the store may lie (SPEC-069)
      * @param  int|null  $now  the given validation time, or null for the clock (SPEC-073)
      * @param  int  $clock  the clock as verify() read it, once (SPEC-073 amendment 1)
      */
-    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings, TimestampResult $timestamp, array $graphStatuses, ?ManifestGraph $graph, string $format, ?int $now, int $clock): ValidationResult
+    private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings, TimestampResult $timestamp, array $graphStatuses, ?ManifestGraph $graph, string $format, ?int $now, int $clock, array &$evidence = []): ValidationResult
     {
         $manifest = $manifestStore->active;
         // the timestamp first, as c2patool lists it; informational only, but it supplies the time below (SPEC-017)
@@ -310,10 +312,14 @@ final readonly class Verifier
         // trust: without settings there are no anchors and the answer is untrusted, as c2patool's;
         // only verify_trust false keeps quiet (SPEC-014 amendment 1)
         $trustSettings = $settings ?? new TrustSettings([], []);
+        $anchor = null;
         if ($trustSettings->verifyTrust) {
-            $statuses = [...$statuses, ...$this->trust->check($manifest, $trustSettings, $at)];
+            [$trust, $anchor] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at);
+            $statuses = [...$statuses, ...$trust];
             $checks[] = 'trust';
         }
+        // SPEC-082: what this verdict rests on, from the checks themselves
+        $evidence[$manifest->label] = IngredientManifestCheck::evidenceOf($manifest->label, $at, $timestamp, $now !== null, $anchor);
 
         // revocation, as far as it can be known without a network: the OCSP responses the
         // signer stapled into its own signature (SPEC-030). It runs after the chain, which
@@ -378,7 +384,7 @@ final readonly class Verifier
         // the manifests the graph found: their box hash and everything the active manifest gets
         // except the data hash, scoped to the assertion that named them (SPEC-021)
         if ($graph !== null && $graph->referenced !== []) {
-            $statuses = [...$statuses, ...$this->ingredients->check($manifestStore, $graph, $settings, $now, $clock)];
+            $statuses = [...$statuses, ...$this->ingredients->check($manifestStore, $graph, $settings, $now, $clock, $evidence)];
             $checks[] = 'ingredients';
         }
 

@@ -94,12 +94,12 @@ final readonly class TimestampCheck
         $faults = $assertions->faultsOf($manifest->label);
         $offered = $assertions->tokensFor($manifest->label);
         if ($header->trustedTime() !== null || $offered === []) {
-            return $faults === [] ? $header : new TimestampResult(true, [...$header->statuses, ...$faults], $header->time, $header->trusted, $header->timeFraction);
+            return $faults === [] ? $header : new TimestampResult(true, [...$header->statuses, ...$faults], $header->time, $header->trusted, $header->timeFraction, $header->anchor);
         }
         try {
             $cose = CoseSign1::ofManifest($manifest);
         } catch (CoseException) {
-            return $faults === [] ? $header : new TimestampResult(true, [...$header->statuses, ...$faults], $header->time, $header->trusted, $header->timeFraction);
+            return $faults === [] ? $header : new TimestampResult(true, [...$header->statuses, ...$faults], $header->time, $header->trusted, $header->timeFraction, $header->anchor);
         }
         $tried = [];
         foreach ($offered as [$der, $url]) {
@@ -120,12 +120,12 @@ final readonly class TimestampCheck
                 }
             }
             if ($result->trustedTime() !== null) {
-                return new TimestampResult(true, [...$header->statuses, ...$tried, ...$result->statuses, ...$faults], $result->time, true, $result->timeFraction);
+                return new TimestampResult(true, [...$header->statuses, ...$tried, ...$result->statuses, ...$faults], $result->time, true, $result->timeFraction, $result->anchor);
             }
             $tried = [...$tried, ...$result->statuses];
         }
 
-        return new TimestampResult(true, [...$header->statuses, ...$tried, ...$faults], $header->time, $header->trusted, $header->timeFraction);
+        return new TimestampResult(true, [...$header->statuses, ...$tried, ...$faults], $header->time, $header->trusted, $header->timeFraction, $header->anchor);
     }
 
     /**
@@ -272,6 +272,7 @@ final readonly class TimestampCheck
             return new TimestampResult(true, $statuses, $tst->genTime, false, $tst->genTimeFraction);
         }
         $trusted = false;
+        $anchor = null;
         $faults = $this->profile->checkLeaf($signer, $tsaSettings, $tst->genTime, $url, ekus: [self::OID_EKU_TIME_STAMPING], manifestSigner: false);
         if ($faults !== []) {
             $statuses[] = $this->status(StatusCode::TimeStampUntrusted, $url, sprintf('timestamp cert untrusted: %s — %s', $tsaName, implode('; ', array_map(static fn (ValidationStatus $s): string => $s->explanation, $faults))));
@@ -288,7 +289,8 @@ final readonly class TimestampCheck
             } catch (TrustException $e) {
                 return new TimestampResult(true, [...$statuses, $this->status(StatusCode::TimeStampUntrusted, $url, sprintf('timestamp cert untrusted: %s — a certificate in the token could not be read: %s', $tsaName, $e->getMessage()))], $tst->genTime, false, $tst->genTimeFraction);
             }
-            foreach ($this->chain->checkCertificates($ordered, $tsaSettings, $url, $tst->genTime) as $outcome) {
+            [$outcomes, $anchor] = $this->chain->walk($ordered, $tsaSettings, $url, $tst->genTime);   // the anchor too (SPEC-082)
+            foreach ($outcomes as $outcome) {
                 $trusted = $outcome->code === StatusCode::SigningCredentialTrusted;
                 $statuses[] = $this->status(
                     $trusted ? StatusCode::TimeStampTrusted : StatusCode::TimeStampUntrusted,
@@ -299,7 +301,7 @@ final readonly class TimestampCheck
             }
         }
 
-        return new TimestampResult(true, $statuses, $tst->genTime, $trusted, $tst->genTimeFraction);
+        return new TimestampResult(true, $statuses, $tst->genTime, $trusted, $tst->genTimeFraction, $trusted ? $anchor : null);
     }
 
     /**
@@ -328,9 +330,9 @@ final readonly class TimestampCheck
             return new TrustSettings([], [], [self::OID_EKU_TIME_STAMPING], true);
         }
 
-        // the operator's "tsa" entries become this check's signer entries, their dates kept (SPEC-079)
+        // the operator's "tsa" entries become this check's signer entries, their dates kept (SPEC-079) and their list named (SPEC-082)
         $sets = array_values(array_map(
-            static fn (TrustAnchorSet $set): TrustAnchorSet => new TrustAnchorSet(TrustAnchorSet::MANIFEST, $set->anchors, windows: $set->windows, reasons: $set->reasons),
+            static fn (TrustAnchorSet $set): TrustAnchorSet => new TrustAnchorSet(TrustAnchorSet::MANIFEST, $set->anchors, windows: $set->windows, reasons: $set->reasons, identity: $set->identity),
             array_filter($operator->anchorSets, static fn (TrustAnchorSet $set): bool => $set->kind === TrustAnchorSet::TSA),
         ));
 

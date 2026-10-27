@@ -274,7 +274,7 @@ file whether revocation was checked, which `c2patool` does not.
 
 ## Public API
 
-Twelve classes are the contract. Their public members are what this package
+Fourteen classes are the contract. Their public members are what this package
 promises; a release may add to them, and will not remove or rename them
 without saying so.
 
@@ -282,13 +282,15 @@ without saying so.
 |---|---|
 | `Verifier\Verifier` | the one call: `verify($stream, $settings)` |
 | `Verifier\FragmentedVerifier` | a DASH init segment and its fragments as one verdict: `verify($init, $fragments, $settings)`, one open fragment stream at a time |
-| `Verifier\VerificationReport` | what comes back: `$result`, `$format`, `$hasManifest`, `$remoteManifestUrl`, `$signatureInfo`, `toArray()`, `toJson()`, `trustLists()` |
+| `Verifier\VerificationReport` | what comes back: `$result`, `$format`, `$hasManifest`, `$remoteManifestUrl`, `$signatureInfo`, `toArray()`, `toJson()`, `trustLists()`, `evidence()` |
+| `Verifier\ManifestEvidence` | what one manifest's verdict rested on: the time judged at and its source, and the anchors reached |
 | `Report\ValidationResult` | the verdict and the statuses behind it |
 | `Report\ValidationStatus` | one status: its code, the JUMBF URI it concerns, a sentence |
 | `Report\ValidationState` | `Trusted`, `Valid`, `Invalid` |
 | `Report\StatusCode` | the C2PA 2.4 §15 vocabulary, verbatim |
 | `Trust\TrustSettings` | the trust file, through `fromJson()` |
 | `Trust\TrustAnchorSet` | one `trust.anchors` entry, as `TrustSettings::$anchorSets` holds it |
+| `Trust\AnchorEvidence` | what made a chain trusted: the anchor reached (or the leaf on the allowed list), its depth, list and dates |
 | `Trust\TrustListIdentity` | which list a verdict was judged against: its digest, form, and a LoTE list's number and date |
 | `Trust\TrustException` | the one exception that reaches you: settings that are not settings |
 | `Cli\Command` | what `bin/c2pa-verify` runs |

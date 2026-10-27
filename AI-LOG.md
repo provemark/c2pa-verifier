@@ -12006,3 +12006,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-082-evidence-time-and-anchor.md` (status, approval, the two open questions settled); `NOTES.md`.
 - Reasoned: nothing new; the decisions are the draft's proposals.
 - Decided by Maurice: SPEC-082 approved; open questions 1 and 2 as proposed.
+
+## 2026-10-27 — Step 459: SPEC-082 built (evidence: time and anchor), amendment 1
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-082 approved met beide voorstellen" (then tests first and the build); "akkoord, amendment 1 approved, commit stap 459".
+- Produced: `src/Trust/AnchorEvidence.php`, `src/Verifier/ManifestEvidence.php` (new); `src/Trust/ChainCheck.php`, `src/Timestamp/TimestampCheck.php`, `src/Timestamp/TimestampResult.php`, `src/Verifier/IngredientManifestCheck.php`, `src/Verifier/Verifier.php`, `src/Verifier/VerificationReport.php`; `bin/api-check.php`; `tests/Unit/Verifier/EvidenceTest.php` (new); `tests/Unit/ApiSurfaceTest.php`; `tests/Fixtures/api/public-surface.txt`; `README.md`; `specs/SPEC-082-evidence-time-and-anchor.md` (amendment 1, implemented, traceability); `docs/milestones.md`; `notes/step-459-evidence-time-and-anchor.md`; `NOTES.md`.
+- Measured: `vendor/bin/pest --group=SPEC-082 --group=SPEC-025` red (13 + 1) then green; a scratch search for the AC5 and AC6 fixtures; eight hand mutations, each red; `composer check` (1,446 passed, 1 skipped); a scratch script over every fixture under three settings for AC7 (no disagreement, 8 not compared) and, before (worktree at `4ef8b02`, `vendor/` copied) and after, for AC9 (identical, 3,060 runs).
+- Decided by Maurice: amendment 1 (`AnchorEvidence` in `Trust`; an ingredient manifest whose recorded success lines are dropped keeps its evidence).

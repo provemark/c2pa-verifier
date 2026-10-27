@@ -24,6 +24,7 @@ final readonly class VerificationReport
      * @param  string|null  $remoteManifestUrl  a manifest declared by URL in the file's XMP, never fetched (SPEC-013 amendment 9)
      * @param  \DateTimeImmutable|null  $validationTime  the time judged at where no trusted timestamp gave one: SPEC-073's, or the clock when verify() started (SPEC-075)
      * @param  list<TrustListIdentity>  $trustLists  the lists given to verify() (SPEC-081), read through trustLists()
+     * @param  array<string, ManifestEvidence>  $evidence  by manifest label (SPEC-082), read through evidence()
      */
     public function __construct(
         public string $format,
@@ -44,7 +45,20 @@ final readonly class VerificationReport
         public ?string $remoteManifestUrl = null,
         public ?\DateTimeImmutable $validationTime = null,
         private array $trustLists = [],
+        private array $evidence = [],
     ) {}
+
+    /**
+     * What the verdict rested on (SPEC-082), one entry per manifest whose signature was judged, by its
+     * label: the active manifest first, then each ingredient manifest in the order checked. Empty when no
+     * manifest was judged. Not in toArray() or toCrJson(), whose shapes stay as they are.
+     *
+     * @return array<string, ManifestEvidence>
+     */
+    public function evidence(): array
+    {
+        return $this->evidence;
+    }
 
     /**
      * Which trust lists the verdict was judged against (SPEC-081): one identity per list given to

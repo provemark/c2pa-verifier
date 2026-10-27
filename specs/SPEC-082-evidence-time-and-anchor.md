@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-27                      |
 | Supersedes | —                                                 |
@@ -61,7 +61,7 @@ token's time is 2026-10-09T05:30:24Z (SPEC-079's measurement).
   manifest first, then each ingredient manifest in the order checked.
 - On each: `judgedAt` (epoch seconds) and `timeSource` (`timestamp`,
   `given` or `clock`), and `signer` and `tsa`, each a
-  `Verifier\AnchorEvidence` or null.
+  `Trust\AnchorEvidence` or null (amendment 1).
 - `AnchorEvidence`: how the chain was trusted (`anchor` or `allowedList`),
   the SHA-256 of the anchor's DER (of the listed leaf for `allowedList`),
   the depth (links from the leaf to the anchor: 0 when the leaf is itself
@@ -189,6 +189,7 @@ final readonly class ManifestEvidence
     ) {}
 }
 
+// namespace Provemark\C2paVerifier\Trust (amendment 1)
 final readonly class AnchorEvidence
 {
     public const ANCHOR = 'anchor';
@@ -224,19 +225,45 @@ public function evidence(): array;
    drift alarm either way. Non-blocker.
    *Status 2026-10-27 (step 458):* decided by Maurice as proposed.
 
+## Amendments
+
+1. **2026-10-27, step 459, approved by Maurice van Loon ("akkoord").** Two
+   things the build found.
+   - **`AnchorEvidence` lives in `Trust`, not in `Verifier`.** The walk that
+     makes it is `Trust\ChainCheck`, and the layer rules (`deptrac.yaml`)
+     let `Trust` depend on nothing in `Verifier`. So the class is
+     `Trust\AnchorEvidence`, beside `TrustListIdentity`; `ManifestEvidence`
+     stays in `Verifier`. *Scope* and the API sketch read accordingly.
+   - **AC7 for an ingredient manifest whose success lines were dropped.**
+     When a writer recorded an ingredient manifest's success lines in its
+     ingredient assertion, the report drops them, as `c2pa-rs` does
+     (SPEC-021 amendment 1); the walk still trusted the signer and the
+     evidence says so. Measured over the corpus: 8 such manifests, all in
+     update-manifest files under `trust/full.settings.json`
+     (`c2pa-rs/update_manifest.jpg` and seven under `update-manifest/`). AC7
+     becomes: every manifest whose signature has a status in the report
+     appears in `evidence()`, and for each manifest in `evidence()` whose
+     signature has a status in the report, `signer` and `tsa` follow
+     `signingCredential.trusted` and `timeStamp.trusted` as before; a
+     manifest in `evidence()` whose signature has no status in the report is
+     such an ingredient manifest, and keeps its evidence. Pinned on
+     `c2pa-rs/update_manifest.jpg`.
+
 ## Traceability
 
-Filled when status becomes `implemented`.
+All in `tests/Unit/Verifier/EvidenceTest.php`, group `SPEC-082`, unless
+named otherwise. Seen red before the implementation (13 tests, all on the
+missing `evidence()`; `ApiSurfaceTest` AC1 on the nineteen new symbols).
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
+| AC1                  | AC1: a trusted signer and a trusted time-stamp, each with its anchor | src/Trust/ChainCheck.php :: walk(), reached(); src/Timestamp/TimestampCheck.php :: judge(); src/Verifier/Verifier.php :: check() |
+| AC2                  | AC2: the list that made each anchor count is the one trustLists() names | src/Trust/ChainCheck.php :: reached(); src/Timestamp/TimestampCheck.php :: tsaSettings() |
+| AC3                  | AC3: the stretch of a dated list that held the time judged at | src/Trust/ChainCheck.php :: reached() |
+| AC4                  | AC4: the time when no time-stamp gave one: given, or the clock | src/Verifier/IngredientManifestCheck.php :: evidenceOf() |
+| AC5                  | AC5: a leaf on the allowed list | src/Trust/ChainCheck.php :: walk(), allowingList() |
+| AC6                  | AC6: an ingredient manifest has its own evidence, after the active one | src/Verifier/IngredientManifestCheck.php :: check(), manifest() |
+| AC7 (amendment 1)    | AC7: the evidence agrees with the statuses (5 datasets); AC7 (amendment 1): an ingredient manifest whose recorded success lines were dropped keeps its evidence; measured over the corpus (step 459) | src/Trust/ChainCheck.php :: checkWithAnchor(), timeStampingSigner() |
+| AC8                  | AC8: nothing to show, and nothing thrown | src/Verifier/Verifier.php :: inspect(); src/Trust/ChainCheck.php :: checkWithAnchor() |
+| AC9                  | AC9: the reports are the same with the evidence as without; measured over the corpus (step 459) | src/Verifier/VerificationReport.php :: evidence() |
+| AC10                 | tests/Unit/ApiSurfaceTest.php :: AC1: the recorded surface is exactly what the contract classes expose today | src/Trust/AnchorEvidence.php; src/Verifier/ManifestEvidence.php; bin/api-check.php :: apiContract() |

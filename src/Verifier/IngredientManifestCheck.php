@@ -21,6 +21,8 @@ use Provemark\C2paVerifier\Report\StatusCode;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Timestamp\TimestampAssertions;
 use Provemark\C2paVerifier\Timestamp\TimestampCheck;
+use Provemark\C2paVerifier\Timestamp\TimestampResult;
+use Provemark\C2paVerifier\Trust\AnchorEvidence;
 use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\ChainCheck;
@@ -70,9 +72,10 @@ final readonly class IngredientManifestCheck
      * Every manifest the graph reached, in walk order, each scoped to the assertion that named it first;
      * the hash of every assertion that names it, each under that assertion (SPEC-021 amendment 7).
      *
+     * @param  array<string, ManifestEvidence>  $evidence  each validated manifest's, added by label in walk order (SPEC-082)
      * @return list<ValidationStatus>
      */
-    public function check(ManifestStore $store, ManifestGraph $graph, ?TrustSettings $settings, ?int $now = null, ?int $clock = null): array
+    public function check(ManifestStore $store, ManifestGraph $graph, ?TrustSettings $settings, ?int $now = null, ?int $clock = null, array &$evidence = []): array
     {
         $byUrl = [];
         foreach ($graph->ingredients as $list) {
@@ -90,7 +93,7 @@ final readonly class IngredientManifestCheck
             }
             $manifest = $store->manifests[$label];
             $mine = $this->hash($manifest, $ingredient);
-            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests), $assertions, $responses, $now, $clock)];
+            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests), $assertions, $responses, $now, $clock, $evidence)];
             // every later reference states a hash of its own, and each is checked under the assertion that
             // states it (amendment 7; C2PA 2.4 §15.11.3.3.2); the manifest itself is validated once (AC9)
             foreach (array_slice($urls, 1) as $url) {
@@ -196,9 +199,10 @@ final readonly class IngredientManifestCheck
      *
      * @param  array<string, list<string>>  $storeLabels  the store's claims, for SPEC-037's c2pa.redacted rule
      * @param  list<array{0: string, 1: string}>  $responses  the store's certificate-status responses (SPEC-066)
+     * @param  array<string, ManifestEvidence>  $evidence
      * @return list<ValidationStatus>
      */
-    private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings, array $storeLabels, ?TimestampAssertions $assertions = null, array $responses = [], ?int $now = null, ?int $clock = null): array
+    private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings, array $storeLabels, ?TimestampAssertions $assertions = null, array $responses = [], ?int $now = null, ?int $clock = null, array &$evidence = []): array
     {
         $timestamp = $this->timestamp->forManifest($manifest, $settings, $assertions ?? TimestampAssertions::none());
         $statuses = $timestamp->present ? $timestamp->statuses : [];
@@ -215,9 +219,12 @@ final readonly class IngredientManifestCheck
         $statuses = [...$statuses, ...$this->certificate->check($manifest, $settings, $at, $reason, $trusted === null ? ($now !== null ? 'the given validation time' : 'now') : null)];
 
         $trustSettings = $settings ?? new TrustSettings([], []);
+        $anchor = null;
         if ($trustSettings->verifyTrust) {
-            $statuses = [...$statuses, ...$this->trust->check($manifest, $trustSettings, $at)];
+            [$trust, $anchor] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at);
+            $statuses = [...$statuses, ...$trust];
         }
+        $evidence[$manifest->label] = self::evidenceOf($manifest->label, $at ?? time(), $timestamp, $now !== null, $anchor);   // no clock given: the checks read it themselves
         // revocation of this manifest's signer (SPEC-066): where the store carries certificate-status
         // responses, which may name it, its own stapled responses join them. Without any, its own staple is
         // read for a revoked only (amendment 2): notRevoked and skipped stay unreported, as c2patool reports it
@@ -252,6 +259,17 @@ final readonly class IngredientManifestCheck
             static fn (ValidationStatus $status): ValidationStatus => new ValidationStatus($status->code, $status->url, $status->explanation, $scope),
             $statuses,
         );
+    }
+
+    /**
+     * A manifest's evidence (SPEC-082): judged at $at, whose source is the trusted time-stamp when it gave
+     * the time, else the caller's validation time, else the clock; the TSA's anchor only in the first case.
+     */
+    public static function evidenceOf(string $label, int $at, TimestampResult $timestamp, bool $given, ?AnchorEvidence $signer): ManifestEvidence
+    {
+        $fromTimestamp = $timestamp->trustedTime() !== null;
+
+        return new ManifestEvidence($label, $at, $fromTimestamp ? ManifestEvidence::TIMESTAMP : ($given ? ManifestEvidence::GIVEN : ManifestEvidence::CLOCK), $signer, $fromTimestamp ? $timestamp->anchor : null);
     }
 
     /**
