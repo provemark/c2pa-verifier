@@ -26,6 +26,12 @@ const SPEC084_CONTROL_CERTIFICATES = [
 ];
 
 /** @return list<TimestampEvidence> the time-stamps of the manifest in evidence() with this label, or of the active one */
+// its own, not EvidenceTest's: a parallel worker loads only some test files
+function spec084Epoch(string $iso): int
+{
+    return (new DateTimeImmutable($iso))->getTimestamp();
+}
+
 function spec084Timestamps(VerificationReport $report, ?string $label = null): array
 {
     $label ??= $report->store->active->label ?? '';
@@ -76,7 +82,7 @@ it('AC1: the token that gave the time', function (): void {
         TimestampEvidence::SIG_TST2,
         spec084Signature($label),
         SPEC084_CONTROL_TOKEN,
-        spec082Epoch('2026-10-09T05:30:24Z'),
+        spec084Epoch('2026-10-09T05:30:24Z'),
         SPEC084_CONTROL_CERTIFICATES,
         TimestampEvidence::USED,
         ['timeStamp.validated', 'timeStamp.trusted'],
@@ -92,7 +98,7 @@ it('AC2: the same token, rejected without settings', function (): void {
         TimestampEvidence::SIG_TST2,
         spec084Signature($report->store->active->label ?? ''),
         SPEC084_CONTROL_TOKEN,
-        spec082Epoch('2026-10-09T05:30:24Z'),
+        spec084Epoch('2026-10-09T05:30:24Z'),
         SPEC084_CONTROL_CERTIFICATES,
         TimestampEvidence::REJECTED,
         ['timeStamp.validated', 'timeStamp.untrusted'],
@@ -107,11 +113,11 @@ it('AC3: a token an assertion offers, used and rejected', function (): void {
     $shape = spec084WithoutCertificates(...);
 
     expect($shape($used))->toBe([[
-        TimestampEvidence::ASSERTION, $assertion, '0201f3b59a4b9a8770d2c766af9c7e2efb0ed5547bc70e0c752a1446d96266cc', spec082Epoch('2026-10-09T13:38:13Z'),
+        TimestampEvidence::ASSERTION, $assertion, '0201f3b59a4b9a8770d2c766af9c7e2efb0ed5547bc70e0c752a1446d96266cc', spec084Epoch('2026-10-09T13:38:13Z'),
         5 => TimestampEvidence::USED, 6 => ['timeStamp.validated', 'timeStamp.trusted'],
     ]])
         ->and($shape($rejected))->toBe([[
-            TimestampEvidence::ASSERTION, $assertion, '0201f3b59a4b9a8770d2c766af9c7e2efb0ed5547bc70e0c752a1446d96266cc', spec082Epoch('2026-10-09T13:38:13Z'),
+            TimestampEvidence::ASSERTION, $assertion, '0201f3b59a4b9a8770d2c766af9c7e2efb0ed5547bc70e0c752a1446d96266cc', spec084Epoch('2026-10-09T13:38:13Z'),
             5 => TimestampEvidence::REJECTED, 6 => ['timeStamp.validated', 'timeStamp.untrusted'],
         ]]);
 })->group('SPEC-084');
@@ -127,7 +133,7 @@ it('AC4: a token after the one that gave the time is not tried', function (): vo
             TimestampEvidence::ASSERTION,
             'self#jumbf=/c2pa/urn:c2pa:f66fe0a9-1cad-404d-b191-9fdc78e9e365/c2pa.assertions/c2pa.time-stamp',
             'af27feaa16d3bedd449852c84ab87bbc9bc4595d989c0ef0eb64cf19ff3a03db',
-            spec082Epoch('2026-10-09T13:38:13Z'),
+            spec084Epoch('2026-10-09T13:38:13Z'),
             [['735d754b362fec394c32cfe0543ab7c85decf4929c5d23fd8a6799454c484052', 610]],
             TimestampEvidence::NOT_TRIED,
             [],

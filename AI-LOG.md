@@ -12069,3 +12069,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-085-evidence-ocsp.md` (status, approval); `NOTES.md`.
 - Reasoned: nothing new; the draft had no open questions.
 - Decided by Maurice: SPEC-085 approved.
+
+## 2026-10-27 — Step 468: CI fix, a test helper borrowed across files
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "run failed" (the CI of step 465).
+- Produced: `tests/Unit/Verifier/EvidenceTimestampsTest.php` (its own `spec084Epoch()`); `NOTES.md`.
+- Measured: `gh run view` of the failed run: 4 failures in `EvidenceTimestampsTest` (AC1–AC4) on PHP 8.3, 8.4 and 8.5, each at a call to `spec082Epoch()`; after the fix `vendor/bin/pest --parallel` passes everything except the 14 SPEC-085 tests that are red by design (uncommitted, not in this commit). / Reasoned: Pest's parallel workers load only the files they run, so a function defined in another test file is missing there; the serial `composer check` used locally always loads every file.
+- Decided by Maurice: none.
