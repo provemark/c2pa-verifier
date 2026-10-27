@@ -25,6 +25,7 @@ final readonly class TimestampResult
      * @param  int|null  $time  genTime when validated, else null
      * @param  string|null  $timeFraction  genTime's fractional-second digits, for signature_info.time (SPEC-017 amendment 2)
      * @param  AnchorEvidence|null  $anchor  what made the TSA trusted, when it was (SPEC-082)
+     * @param  list<TimestampEvidence>  $evidence  every token offered, in the order tried (SPEC-084)
      */
     public function __construct(
         public bool $present,
@@ -33,7 +34,19 @@ final readonly class TimestampResult
         public bool $trusted,
         public ?string $timeFraction = null,
         public ?AnchorEvidence $anchor = null,
+        public array $evidence = [],
     ) {}
+
+    /**
+     * The same result with these statuses and tokens after its own (SPEC-084).
+     *
+     * @param  list<ValidationStatus>  $statuses
+     * @param  list<TimestampEvidence>  $evidence
+     */
+    public function with(array $statuses, array $evidence): self
+    {
+        return new self($this->present, [...$this->statuses, ...$statuses], $this->time, $this->trusted, $this->timeFraction, $this->anchor, [...$this->evidence, ...$evidence]);
+    }
 
     /** The time as c2patool prints it: ISO 8601, UTC, the token's own fraction digits. */
     public function timeIso(): ?string

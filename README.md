@@ -274,7 +274,7 @@ file whether revocation was checked, which `c2patool` does not.
 
 ## Public API
 
-Fourteen classes are the contract. Their public members are what this package
+Fifteen classes are the contract. Their public members are what this package
 promises; a release may add to them, and will not remove or rename them
 without saying so.
 
@@ -283,7 +283,8 @@ without saying so.
 | `Verifier\Verifier` | the one call: `verify($stream, $settings)` |
 | `Verifier\FragmentedVerifier` | a DASH init segment and its fragments as one verdict: `verify($init, $fragments, $settings)`, one open fragment stream at a time |
 | `Verifier\VerificationReport` | what comes back: `$result`, `$format`, `$hasManifest`, `$remoteManifestUrl`, `$signatureInfo`, `toArray()`, `toJson()`, `trustLists()`, `evidence()` |
-| `Verifier\ManifestEvidence` | what one manifest's verdict rested on: the time judged at and its source, the anchors reached, and the signer's `x5chain` certificates as DER |
+| `Verifier\ManifestEvidence` | what one manifest's verdict rested on: the time judged at and its source, the anchors reached, the signer's `x5chain` certificates as DER, and every time-stamp token offered |
+| `Timestamp\TimestampEvidence` | one time-stamp token: where it came from, its bytes, time and certificates, and whether it was used, rejected or not tried, with its codes |
 | `Report\ValidationResult` | the verdict and the statuses behind it |
 | `Report\ValidationStatus` | one status: its code, the JUMBF URI it concerns, a sentence |
 | `Report\ValidationState` | `Trusted`, `Valid`, `Invalid` |

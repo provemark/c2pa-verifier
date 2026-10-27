@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-27                      |
 | Supersedes | —                                                 |
@@ -69,8 +69,9 @@ Measured on 2026-10-27 (the verifier at `ebecb10`, over every file under
     in the token's order (RFC 5652 §5.1), empty when the token cannot be
     read;
   - `outcome`: `used` (it gave the time judged at), `rejected` (it was
-    judged and did not), or `notTried` (an earlier token already gave the
-    time);
+    judged and did not), or `notTried` (not judged: an earlier token
+    already gave the time, or the claim signature could not be read;
+    amendment 1);
   - `codes`: the `timeStamp.*` codes the check gave this token, in order,
     as `StatusCode` values, before the report scopes or drops any line
     (SPEC-021 amendment 1); empty for `notTried`.
@@ -214,19 +215,41 @@ final readonly class TimestampEvidence
 
 None.
 
+## Amendments
+
+1. **2026-10-27, step 465, approved by Maurice van Loon ("akkoord").** One
+   case the build found that *Scope* does not settle.
+   - **Tokens offered when the COSE reader refuses the signature.** A
+     time-stamp assertion can offer a token for a manifest whose claim
+     signature the COSE reader refuses. The check then tries none of them:
+     there are no countersigned bytes to judge a token against. *Scope*
+     asks for one entry per token offered, but defines `notTried` as "an
+     earlier token already gave the time", which does not hold here.
+     Decided: they are listed as `notTried`, with no codes, and the
+     definition reads "not judged: an earlier token already gave the time,
+     or the claim signature could not be read". *Scope* reads accordingly.
+     Measured over the corpus: 0 such manifests, so no fixture moves.
+
 ## Traceability
 
-Filled when status becomes `implemented`.
+All in `tests/Unit/Verifier/EvidenceTimestampsTest.php`, group `SPEC-084`,
+unless named otherwise. Seen red before the implementation (all 14 tests,
+on the missing class and property). Two tests for *Scope* lines that no
+corpus file shows on its own were added after the build, when mutations
+M7 and M9 survived; each now fails under its mutation.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
+| AC1                  | AC1: the token that gave the time | src/Timestamp/TimestampCheck.php :: checkHeader(), evidence(); src/Verifier/IngredientManifestCheck.php :: evidenceOf() |
+| AC2                  | AC2: the same token, rejected without settings | src/Timestamp/TimestampCheck.php :: checkHeader() |
+| AC3                  | AC3: a token an assertion offers, used and rejected | src/Timestamp/TimestampCheck.php :: forManifest() |
+| AC4                  | AC4: a token after the one that gave the time is not tried | src/Timestamp/TimestampCheck.php :: forManifest(), untried() |
+| AC5                  | AC5: both tokens of a two-token header are listed, rejected | src/Timestamp/TimestampCheck.php :: checkHeader() |
+| AC6                  | AC6: a token that cannot be read keeps its bytes (2 datasets) | src/Timestamp/TimestampCheck.php :: checkHeader(), evidence() |
+| AC7                  | AC7: nothing to list (2 datasets) | src/Timestamp/TimestampCheck.php :: check() |
+| AC8                  | AC8: over the corpus, the time-stamps agree with the verdict and the statuses (3 datasets) | src/Timestamp/TimestampCheck.php :: forManifest(), checkHeader() |
+| AC9                  | AC9: the reports carry no token bytes; measured over the corpus (step 465) | src/Verifier/ManifestEvidence.php |
+| AC10                 | AC10: TimestampEvidence and timestamps are in the contract; tests/Unit/ApiSurfaceTest.php :: AC1: the recorded surface is exactly what the contract classes expose today | src/Timestamp/TimestampEvidence.php; bin/api-check.php :: apiContract() |
+| Scope (notTried after used) | scope: an assertion token after the one that gave the time is not tried | src/Timestamp/TimestampCheck.php :: forManifest() |
+| Scope (unreadable assertion token) | scope: an assertion token that cannot be read is listed, rejected, and the next is tried | src/Timestamp/TimestampCheck.php :: forManifest() |
+| Amendment 1          | no fixture (0 cases in the corpus) | src/Timestamp/TimestampCheck.php :: forManifest() |

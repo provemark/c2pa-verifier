@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Verifier;
 
+use Provemark\C2paVerifier\Timestamp\TimestampEvidence;
 use Provemark\C2paVerifier\Trust\AnchorEvidence;
 
 /**
@@ -14,7 +15,8 @@ use Provemark\C2paVerifier\Trust\AnchorEvidence;
  * where they were not. Each manifest has its own: an ingredient manifest is
  * judged at its own time (SPEC-021). Its certificates are the signer's
  * `x5chain` exactly as the file carries them, leaf first (C2PA 2.4 §14.5;
- * SPEC-083), whether or not X.509 could read them.
+ * SPEC-083), whether or not X.509 could read them; its time-stamps every
+ * token offered for it, and what became of each (SPEC-084).
  */
 final readonly class ManifestEvidence
 {
@@ -30,6 +32,7 @@ final readonly class ManifestEvidence
      * @param  AnchorEvidence|null  $signer  set exactly when the signature has signingCredential.trusted
      * @param  AnchorEvidence|null  $tsa  set exactly when the time-stamp was trusted and gave the time
      * @param  list<string>  $certificates  DER, x5chain's order, the leaf first; empty when the COSE reader refused the signature
+     * @param  list<TimestampEvidence>  $timestamps  the header's tokens, then the assertions', in the order tried
      */
     public function __construct(
         public string $label,
@@ -38,5 +41,6 @@ final readonly class ManifestEvidence
         public ?AnchorEvidence $signer,
         public ?AnchorEvidence $tsa,
         public array $certificates = [],
+        public array $timestamps = [],
     ) {}
 }

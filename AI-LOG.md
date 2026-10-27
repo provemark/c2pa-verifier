@@ -12048,3 +12048,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-084-evidence-timestamps.md` (status, approval); `NOTES.md`.
 - Reasoned: nothing new; the draft had no open questions.
 - Decided by Maurice: SPEC-084 approved.
+
+## 2026-10-27 — Step 465: SPEC-084 built, the time-stamps found
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-084 approved" — then tests first and the build; then "akkoord, amendment 1 approved, commit stap 465".
+- Produced: `src/Timestamp/TimestampEvidence.php` (new, contract), `src/Timestamp/TimestampResult.php` (`$evidence`, `with()`), `src/Timestamp/TimestampCheck.php` (`checkHeader()`, `forManifest()`, `untried()`, `evidence()`), `src/Verifier/ManifestEvidence.php` (`$timestamps`), `src/Verifier/IngredientManifestCheck.php`; `bin/api-check.php`; `tests/Unit/Verifier/EvidenceTimestampsTest.php` (new, 16 tests); `tests/Fixtures/api/public-surface.txt`, `tests/Unit/ApiSurfaceTest.php` (187); `README.md`; `specs/SPEC-084-evidence-timestamps.md` (amendment 1, implemented, traceability); `notes/step-465-evidence-timestamps.md`; `NOTES.md`; `docs/milestones.md`.
+- Measured: `vendor/bin/pest --group=SPEC-084` red (14 failed) before the build, green after; `composer check` 1,471 passed, 1 skipped; ten hand mutations, eight caught at once, two (M7, M9) caught after two tests were added; AC8 over the corpus under three settings, no disagreement; 3,060 runs before (worktree at `3e8ec9a`, own `vendor/` copy) and after, SHA-256 of `toJson()` and `toCrJson()` identical; 0 corpus manifests offered an assertion token while COSE refuses their signature. / Reasoned: the two added tests use a real file with settings built from the token's own chain, and a TimestampAssertions built in the test (no corpus file has an unreadable assertion token).
+- Decided by Maurice: amendment 1 (tokens offered to a manifest whose signature COSE refuses are listed as notTried).

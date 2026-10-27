@@ -94,38 +94,45 @@ final readonly class TimestampCheck
         $faults = $assertions->faultsOf($manifest->label);
         $offered = $assertions->tokensFor($manifest->label);
         if ($header->trustedTime() !== null || $offered === []) {
-            return $faults === [] ? $header : new TimestampResult(true, [...$header->statuses, ...$faults], $header->time, $header->trusted, $header->timeFraction, $header->anchor);
+            return $faults === [] ? $header->with([], $this->untried($offered)) : new TimestampResult(true, [...$header->statuses, ...$faults], $header->time, $header->trusted, $header->timeFraction, $header->anchor, [...$header->evidence, ...$this->untried($offered)]);
         }
         try {
             $cose = CoseSign1::ofManifest($manifest);
         } catch (CoseException) {
-            return $faults === [] ? $header : new TimestampResult(true, [...$header->statuses, ...$faults], $header->time, $header->trusted, $header->timeFraction, $header->anchor);
+            // nothing to judge a token against; the tokens are listed, not tried (SPEC-084 amendment 1)
+            return $faults === [] ? $header->with([], $this->untried($offered)) : new TimestampResult(true, [...$header->statuses, ...$faults], $header->time, $header->trusted, $header->timeFraction, $header->anchor, [...$header->evidence, ...$this->untried($offered)]);
         }
         $tried = [];
-        foreach ($offered as [$der, $url]) {
+        $evidence = $header->evidence;
+        foreach ($offered as $i => [$der, $url]) {
             try {
                 $token = TimeStampToken::fromHeaderValue($der, $this->reader);
             } catch (TimestampException $e) {
-                $tried[] = $this->status(StatusCode::TimeStampMalformed, $url, sprintf('the token for %s: %s', $manifest->label, $e->getMessage()));
+                $status = $this->status(StatusCode::TimeStampMalformed, $url, sprintf('the token for %s: %s', $manifest->label, $e->getMessage()));
+                $tried[] = $status;
+                $evidence = [...$evidence, $this->evidence(TimestampEvidence::ASSERTION, $url, $der, null, TimestampEvidence::REJECTED, [$status])];
 
                 continue;
             }
             // the three forms a token has been taken over, each binding the same signature (amendment 1): the
             // signature field (c2pa-rs 0.91), the whole COSE_Sign1 (earlier c2pa-rs, Claim::signature_val();
             // c2pa-rs/update_manifest.jpg), the CounterSignature structure of a sigTst2 header (§18.18.3)
-            foreach ([$cose->signature, $manifest->signatureBytes(), self::countersignedBytes($cose, 'sigTst2', $manifest->claimBytes())] as $i => $covered) {
+            foreach ([$cose->signature, $manifest->signatureBytes(), self::countersignedBytes($cose, 'sigTst2', $manifest->claimBytes())] as $covered) {
                 $result = $this->judge($token, $covered, $settings, $url, $manifest->claim->version);
                 if ($result->trustedTime() !== null || ! in_array(StatusCode::TimeStampMismatch, array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $result->statuses), true)) {
                     break;
                 }
             }
             if ($result->trustedTime() !== null) {
-                return new TimestampResult(true, [...$header->statuses, ...$tried, ...$result->statuses, ...$faults], $result->time, true, $result->timeFraction, $result->anchor);
+                $evidence = [...$evidence, $this->evidence(TimestampEvidence::ASSERTION, $url, $der, $token, TimestampEvidence::USED, $result->statuses)];
+
+                return new TimestampResult(true, [...$header->statuses, ...$tried, ...$result->statuses, ...$faults], $result->time, true, $result->timeFraction, $result->anchor, [...$evidence, ...$this->untried(array_slice($offered, $i + 1))]);
             }
             $tried = [...$tried, ...$result->statuses];
+            $evidence = [...$evidence, $this->evidence(TimestampEvidence::ASSERTION, $url, $der, $token, TimestampEvidence::REJECTED, $result->statuses)];
         }
 
-        return new TimestampResult(true, [...$header->statuses, ...$tried, ...$faults], $header->time, $header->trusted, $header->timeFraction, $header->anchor);
+        return new TimestampResult(true, [...$header->statuses, ...$tried, ...$faults], $header->time, $header->trusted, $header->timeFraction, $header->anchor, $evidence);
     }
 
     /**
@@ -183,16 +190,63 @@ final readonly class TimestampCheck
     public function checkHeader(TimestampHeader $header, CoseSign1 $cose, string $claimBytes, ?TrustSettings $settings, string $url, int $claimVersion = 2): TimestampResult
     {
         if (count($header->tokens) > 1) {
-            return new TimestampResult(true, [$this->status(StatusCode::TimeStampMalformed, $url, sprintf('the %s header carries %d tokens; a claim signature has one timestamp, so none is used (C2PA 2.4 §15.8.1.1)', $header->header, count($header->tokens)))], null, false);
+            $status = $this->status(StatusCode::TimeStampMalformed, $url, sprintf('the %s header carries %d tokens; a claim signature has one timestamp, so none is used (C2PA 2.4 §15.8.1.1)', $header->header, count($header->tokens)));
+
+            return new TimestampResult(true, [$status], null, false, evidence: array_map(fn (string $der): TimestampEvidence => $this->evidence($header->header, $url, $der, null, TimestampEvidence::REJECTED, [$status]), $header->tokens));
         }
+        $der = $header->tokens[0];
         try {
-            $token = TimeStampToken::fromHeaderValue($header->tokens[0], $this->reader);
+            $token = TimeStampToken::fromHeaderValue($der, $this->reader);
         } catch (TimestampException $e) {
-            return new TimestampResult(true, [$this->status(StatusCode::TimeStampMalformed, $url, $e->getMessage())], null, false);
+            $status = $this->status(StatusCode::TimeStampMalformed, $url, $e->getMessage());
+
+            return new TimestampResult(true, [$status], null, false, evidence: [$this->evidence($header->header, $url, $der, null, TimestampEvidence::REJECTED, [$status])]);
         }
         $tbs = self::countersignedBytes($cose, $header->header, $claimBytes);
+        $result = $this->judge($token, $tbs, $settings, $url, $claimVersion);
 
-        return $this->judge($token, $tbs, $settings, $url, $claimVersion);
+        return $result->with([], [$this->evidence($header->header, $url, $der, $token, $result->trustedTime() !== null ? TimestampEvidence::USED : TimestampEvidence::REJECTED, $result->statuses)]);
+    }
+
+    /**
+     * The tokens no one judged, listed all the same (SPEC-084).
+     *
+     * @param  list<array{0: string, 1: string}>  $tokens  [token DER, the assertion's url]
+     * @return list<TimestampEvidence>
+     */
+    private function untried(array $tokens): array
+    {
+        $evidence = [];
+        foreach ($tokens as [$der, $url]) {
+            $evidence[] = $this->evidence(TimestampEvidence::ASSERTION, $url, $der, null, TimestampEvidence::NOT_TRIED, []);
+        }
+
+        return $evidence;
+    }
+
+    /**
+     * One token as evidence (SPEC-084): its bytes, what could be read of it — read here when the caller has not
+     * — and the timeStamp.* codes among the statuses the check gave it.
+     *
+     * @param  list<ValidationStatus>  $statuses
+     */
+    private function evidence(string $source, string $url, string $der, ?TimeStampToken $token, string $outcome, array $statuses): TimestampEvidence
+    {
+        if ($token === null) {
+            try {
+                $token = TimeStampToken::fromHeaderValue($der, $this->reader);
+            } catch (TimestampException) {
+                // unreadable: its bytes are the evidence, and the status says why
+            }
+        }
+        $codes = [];
+        foreach ($statuses as $status) {
+            if (str_starts_with($status->code->value, 'timeStamp.')) {
+                $codes[] = $status->code;
+            }
+        }
+
+        return new TimestampEvidence($source, $url, $der, $token?->tstInfo->genTime, $token === null ? [] : $token->signedData->certificates, $outcome, $codes);
     }
 
     /**

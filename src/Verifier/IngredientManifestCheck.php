@@ -265,7 +265,8 @@ final readonly class IngredientManifestCheck
     /**
      * A manifest's evidence (SPEC-082): judged at $at, whose source is the trusted time-stamp when it gave
      * the time, else the caller's validation time, else the clock; the TSA's anchor only in the first case.
-     * Its certificates are x5chain's DER as the COSE reader took them (SPEC-083), none when it refused.
+     * Its certificates are x5chain's DER as the COSE reader took them (SPEC-083), none when it refused; its
+     * time-stamps every token offered, as the timestamp check judged them (SPEC-084).
      */
     public static function evidenceOf(Manifest $manifest, int $at, TimestampResult $timestamp, bool $given, ?AnchorEvidence $signer): ManifestEvidence
     {
@@ -276,7 +277,7 @@ final readonly class IngredientManifestCheck
             $certificates = [];   // the signature check has already said why
         }
 
-        return new ManifestEvidence($manifest->label, $at, $fromTimestamp ? ManifestEvidence::TIMESTAMP : ($given ? ManifestEvidence::GIVEN : ManifestEvidence::CLOCK), $signer, $fromTimestamp ? $timestamp->anchor : null, $certificates);
+        return new ManifestEvidence($manifest->label, $at, $fromTimestamp ? ManifestEvidence::TIMESTAMP : ($given ? ManifestEvidence::GIVEN : ManifestEvidence::CLOCK), $signer, $fromTimestamp ? $timestamp->anchor : null, $certificates, $timestamp->evidence);
     }
 
     /**
