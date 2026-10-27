@@ -25,13 +25,13 @@ const SPEC084_CONTROL_CERTIFICATES = [
     ['d09e9495cebfeb1e019faeb1be361ed172415ecf1259a48a0694be31e3f65900', 532],
 ];
 
-/** @return list<TimestampEvidence> the time-stamps of the manifest in evidence() with this label, or of the active one */
 // its own, not EvidenceTest's: a parallel worker loads only some test files
 function spec084Epoch(string $iso): int
 {
     return (new DateTimeImmutable($iso))->getTimestamp();
 }
 
+/** @return list<TimestampEvidence> the time-stamps of the manifest in evidence() with this label, or of the active one */
 function spec084Timestamps(VerificationReport $report, ?string $label = null): array
 {
     $label ??= $report->store->active->label ?? '';

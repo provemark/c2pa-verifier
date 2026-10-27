@@ -12076,3 +12076,10 @@ README are where the disclosure lives.
 - Produced: `tests/Unit/Verifier/EvidenceTimestampsTest.php` (its own `spec084Epoch()`); `NOTES.md`.
 - Measured: `gh run view` of the failed run: 4 failures in `EvidenceTimestampsTest` (AC1–AC4) on PHP 8.3, 8.4 and 8.5, each at a call to `spec082Epoch()`; after the fix `vendor/bin/pest --parallel` passes everything except the 14 SPEC-085 tests that are red by design (uncommitted, not in this commit). / Reasoned: Pest's parallel workers load only the files they run, so a function defined in another test file is missing there; the serial `composer check` used locally always loads every file.
 - Decided by Maurice: none.
+
+## 2026-10-27 — Step 469: CI fix, the helper of step 468 took a docblock
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en bouw daarna SPEC-085"; the CI of the push (step 468) failed again.
+- Produced: `tests/Unit/Verifier/EvidenceTimestampsTest.php` (the helper moved above the docblock it had taken); `NOTES.md`.
+- Measured: `gh run view` of the failed run: PHPStan, 30 errors in `EvidenceTimestampsTest`, all from `spec084Timestamps()` returning mixed; after the fix, in a clean worktree of this commit with its own `vendor/` copy, `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0 (1,471 passed, 1 skipped each). / Reasoned: inserting the helper before the first `function` put it between a function and its docblock.
+- Decided by Maurice: none.
