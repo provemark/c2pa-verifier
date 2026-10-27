@@ -168,11 +168,12 @@ final readonly class TrustSettings
             if ($pem === null) {
                 continue;
             }
+            $sha256 = hash('sha256', $pem);   // SPEC-081: of the list as given, before anything is taken off
             if (str_starts_with($pem, "\u{FEFF}")) {
                 $pem = substr($pem, 3);   // a byte order mark: not part of the list (SPEC-079 amendment 2)
             }
             if (str_starts_with(ltrim($pem), '{')) {
-                $sets[] = self::fromLote($pem, $kind, $what, $maxCertificates);   // SPEC-079: the programme's JSON form
+                $sets[] = self::fromLote($pem, $kind, $what, $maxCertificates, $sha256);   // SPEC-079: the programme's JSON form
 
                 continue;
             }
@@ -180,7 +181,7 @@ final readonly class TrustSettings
             if ($certificates === []) {
                 throw new TrustException(sprintf('%s holds no certificate', $what));
             }
-            $sets[] = new TrustAnchorSet($kind, $certificates);
+            $sets[] = new TrustAnchorSet($kind, $certificates, identity: new TrustListIdentity($kind, TrustListIdentity::PEM, $sha256));
         }
 
         return new self([], [], [], true, $sets);
@@ -197,7 +198,7 @@ final readonly class TrustSettings
      * §14.4.1's notAfter). A service whose entry could hide a removal is kept, never trusted, with
      * its reason.
      */
-    private static function fromLote(string $json, string $kind, string $what, int $max): TrustAnchorSet
+    private static function fromLote(string $json, string $kind, string $what, int $max, string $sha256): TrustAnchorSet
     {
         try {
             $decoded = json_decode($json, true, 64, JSON_THROW_ON_ERROR);
@@ -255,7 +256,29 @@ final readonly class TrustSettings
             throw new TrustException(sprintf('%s holds no usable anchor: no service is trusted at any time', $what));
         }
 
-        return new TrustAnchorSet($kind, $anchors, windows: $windows, reasons: $reasons);
+        return new TrustAnchorSet($kind, $anchors, windows: $windows, reasons: $reasons, identity: self::loteIdentity($lote, $kind, $sha256));
+    }
+
+    /**
+     * A LoTE list's identity (SPEC-081): its digest, and its number and date where each is what
+     * ETSI TS 119 602 says it is. Anything else is null and refuses nothing, so the list is read
+     * exactly as before (AC7); the digest identifies it either way.
+     *
+     * @param  array<mixed>  $lote
+     */
+    private static function loteIdentity(array $lote, string $kind, string $sha256): TrustListIdentity
+    {
+        $information = is_array($lote['ListAndSchemeInformation'] ?? null) ? $lote['ListAndSchemeInformation'] : [];
+        $number = $information['LoTESequenceNumber'] ?? null;
+        $issued = $information['ListIssueDateTime'] ?? null;
+
+        return new TrustListIdentity(
+            $kind,
+            TrustListIdentity::LOTE,
+            $sha256,
+            is_int($number) && $number >= 1 ? $number : null,
+            is_string($issued) && self::rfc3339($issued) !== null ? $issued : null,
+        );
     }
 
     /**

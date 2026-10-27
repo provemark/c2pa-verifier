@@ -52,7 +52,9 @@ use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\ChainCheck;
 use Provemark\C2paVerifier\Trust\OcspCheck;
+use Provemark\C2paVerifier\Trust\TrustAnchorSet;
 use Provemark\C2paVerifier\Trust\TrustException;
+use Provemark\C2paVerifier\Trust\TrustListIdentity;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 
 /**
@@ -119,7 +121,10 @@ final readonly class Verifier
         $judgedAt = new \DateTimeImmutable('@'.($validationTime?->getTimestamp() ?? $clock));
         $report = $this->inspect($stream, $settings, $validationTime, $clock);
 
-        return new VerificationReport($report->format, $report->hasManifest, $report->store, $report->result, $report->signatureInfo, $report->remoteManifestUrl, $judgedAt);
+        // SPEC-081: the lists given, named, whether or not the verdict came to need them
+        $lists = array_values(array_filter(array_map(static fn (TrustAnchorSet $set): ?TrustListIdentity => $set->identity, $settings->anchorSets ?? [])));
+
+        return new VerificationReport($report->format, $report->hasManifest, $report->store, $report->result, $report->signatureInfo, $report->remoteManifestUrl, $judgedAt, $lists);
     }
 
     /**

@@ -6,6 +6,7 @@ namespace Provemark\C2paVerifier\Verifier;
 
 use Provemark\C2paVerifier\Manifest\ManifestStore;
 use Provemark\C2paVerifier\Report\ValidationResult;
+use Provemark\C2paVerifier\Trust\TrustListIdentity;
 
 /**
  * What Verifier::verify() answers (SPEC-013): the container format, whether
@@ -22,6 +23,7 @@ final readonly class VerificationReport
      * @param  array{alg: string, issuer: ?string, common_name: string, cert_serial_number: string, time?: string}|null  $signatureInfo  the active manifest's signer as c2patool prints it (SPEC-015), with `time` when the timestamp validated (SPEC-017); null when the chain could not be read
      * @param  string|null  $remoteManifestUrl  a manifest declared by URL in the file's XMP, never fetched (SPEC-013 amendment 9)
      * @param  \DateTimeImmutable|null  $validationTime  the time judged at where no trusted timestamp gave one: SPEC-073's, or the clock when verify() started (SPEC-075)
+     * @param  list<TrustListIdentity>  $trustLists  the lists given to verify() (SPEC-081), read through trustLists()
      */
     public function __construct(
         public string $format,
@@ -41,7 +43,20 @@ final readonly class VerificationReport
         public ?array $signatureInfo = null,
         public ?string $remoteManifestUrl = null,
         public ?\DateTimeImmutable $validationTime = null,
+        private array $trustLists = [],
     ) {}
+
+    /**
+     * Which trust lists the verdict was judged against (SPEC-081): one identity per list given to
+     * verify() through TrustSettings::fromTrustLists(), in the order given; empty without settings
+     * or with a settings document. Not in toArray() or toCrJson(), whose shapes stay as they are.
+     *
+     * @return list<TrustListIdentity>
+     */
+    public function trustLists(): array
+    {
+        return $this->trustLists;
+    }
 
     /** @return array<string, mixed> */
     public function toArray(): array

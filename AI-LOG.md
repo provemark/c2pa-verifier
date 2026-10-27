@@ -11985,3 +11985,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-081-trust-list-identity.md` (status, approval, the two open questions settled); `NOTES.md`.
 - Reasoned: nothing new; the decisions are the draft's proposals.
 - Decided by Maurice: SPEC-081 approved; open question 1 (settings document not named for now) and 2 (malformed number or date becomes null) as proposed.
+
+## 2026-10-27 — Step 456: SPEC-081 built (trust list identity)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-081 approved met beide voorstellen" (then tests first and the build, per the way of working).
+- Produced: `src/Trust/TrustListIdentity.php` (new); `src/Trust/TrustAnchorSet.php`, `src/Trust/TrustSettings.php`, `src/Verifier/Verifier.php`, `src/Verifier/VerificationReport.php`; `bin/api-check.php`; `tests/Unit/Trust/TrustListIdentityTest.php` (new); `tests/Unit/ApiSurfaceTest.php`; `tests/Fixtures/api/public-surface.txt`; `README.md`; `specs/SPEC-081-trust-list-identity.md` (implemented, traceability); `docs/milestones.md`; `notes/step-456-trust-list-identity.md`; `NOTES.md`.
+- Measured: `vendor/bin/pest --group=SPEC-081 --group=SPEC-025` red (23 + 1) then green; four hand mutations of `TrustSettings`, each red; `composer check` (1,432 passed, 1 skipped); a scratch script verifying every fixture under both list forms before (worktree at `3dbbe28`, `vendor/` copied) and after, digests compared with `cmp` (identical, 2,040 runs).
+- Decided by Maurice: none in this step beyond the approval of SPEC-081.

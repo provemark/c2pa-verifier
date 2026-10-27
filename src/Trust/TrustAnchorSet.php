@@ -33,6 +33,7 @@ final readonly class TrustAnchorSet
      *                                                                           here has no dates (a PEM bundle); an empty list
      *                                                                           means never
      * @param  array<string, string>  $reasons  SPEC-079: by SHA-256 (hex), why an anchor could not be placed on a timeline
+     * @param  TrustListIdentity|null  $identity  SPEC-081: the list this set was read from; null for a set built otherwise
      */
     public function __construct(
         public string $kind,
@@ -42,6 +43,7 @@ final readonly class TrustAnchorSet
         public ?string $uri = null,
         public array $windows = [],
         public array $reasons = [],
+        public ?TrustListIdentity $identity = null,
     ) {
         if (! in_array($kind, self::KINDS, true)) {
             throw new TrustException(sprintf('trust_kind %s is not one of %s', $kind, implode(', ', self::KINDS)));

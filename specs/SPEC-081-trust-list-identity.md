@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-27                      |
 | Supersedes | —                                                 |
@@ -195,15 +195,18 @@ public function trustLists(): array;
 
 ## Traceability
 
-Filled when status becomes `implemented`.
+All in `tests/Unit/Trust/TrustListIdentityTest.php`, group `SPEC-081`,
+unless named otherwise. Seen red before the implementation (23 tests, all
+on the missing `trustLists()`; `ApiSurfaceTest` AC1 on the ten new
+symbols).
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
+| AC1                  | AC1: a PEM list is named by its bytes | src/Trust/TrustSettings.php :: fromTrustLists(); src/Verifier/Verifier.php :: verify(); src/Verifier/VerificationReport.php :: trustLists() |
+| AC2                  | AC2: a LoTE list also carries its number and date; AC2: one list alone is named alone, of its own kind | src/Trust/TrustSettings.php :: fromLote(), loteIdentity() |
+| AC3                  | AC3: one byte apart, two identities that differ in the digest alone | src/Trust/TrustSettings.php :: fromTrustLists() |
+| AC4                  | AC4: the digest is of the bytes as given, a byte order mark included | src/Trust/TrustSettings.php :: fromTrustLists() |
+| AC5                  | AC5: without lists, and with a settings document, nothing is named | src/Verifier/Verifier.php :: verify(); src/Trust/TrustAnchorSet.php :: $identity |
+| AC6                  | AC6: the verdict and both report shapes are the same with the identities as without (PEM, LoTE); measured over the corpus (step 456) | src/Verifier/VerificationReport.php :: toArray(), toCrJson() unchanged |
+| AC7                  | AC7: a number or date that is not one is null, and the list is read as before (13 cases); AC7: a well-formed number and date are kept verbatim, offset and fraction included | src/Trust/TrustSettings.php :: loteIdentity() |
+| AC8                  | tests/Unit/ApiSurfaceTest.php :: AC1: the recorded surface is exactly what the contract classes expose today (`tests/Fixtures/api/public-surface.txt`) | src/Trust/TrustListIdentity.php; bin/api-check.php :: apiContract() |

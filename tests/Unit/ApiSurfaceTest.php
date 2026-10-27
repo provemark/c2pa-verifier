@@ -23,7 +23,7 @@ if (is_file($apiCheckScript)) {
 }
 
 /**
- * The eleven classes a caller may build on (SPEC-025 AC1, amendment 2; the eleventh from SPEC-031), read from
+ * The twelve classes a caller may build on (SPEC-025 AC1, amendment 2; the eleventh from SPEC-031, the twelfth from SPEC-081), read from
  * `bin/api-check.php` rather than copied.
  *
  * This function held a second copy of the list until step 89, and the two drifted:
@@ -80,7 +80,7 @@ it('AC1: the recorded surface is exactly what the contract classes expose today'
     }
 
     expect($live)->toBe(spec025Recorded())
-        ->and($live)->toHaveCount(142);   // 91, then two bmffHash codes, then SPEC-028's tenth class, then SPEC-030's four ocsp codes, then SPEC-031's eleventh class, then SPEC-063's three cloud-data codes, then SPEC-060's two text codes, then SPEC-064's one, then SPEC-065's three (10) and two members of TrustSettings, then SPEC-032's code, then SPEC-033's two, then SPEC-035's six, then SPEC-036's one, then SPEC-037's one, then SPEC-038's two, then SPEC-039's one, then SPEC-040's one, then SPEC-070's acknowledged, then SPEC-075's three (VERSION, validationTime, toCrJson), then SPEC-077's fromTrustLists, then SPEC-079's two TrustAnchorSet properties (windows, reasons)
+        ->and($live)->toHaveCount(152);   // 91, then two bmffHash codes, then SPEC-028's tenth class, then SPEC-030's four ocsp codes, then SPEC-031's eleventh class, then SPEC-063's three cloud-data codes, then SPEC-060's two text codes, then SPEC-064's one, then SPEC-065's three (10) and two members of TrustSettings, then SPEC-032's code, then SPEC-033's two, then SPEC-035's six, then SPEC-036's one, then SPEC-037's one, then SPEC-038's two, then SPEC-039's one, then SPEC-040's one, then SPEC-070's acknowledged, then SPEC-075's three (VERSION, validationTime, toCrJson), then SPEC-077's fromTrustLists, then SPEC-079's two TrustAnchorSet properties (windows, reasons), then SPEC-081's ten (TrustListIdentity's eight, TrustAnchorSet::identity, VerificationReport::trustLists)
 })->group('SPEC-025');
 
 it('AC1: no class of the contract is marked internal', function (): void {
