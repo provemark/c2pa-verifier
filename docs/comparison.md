@@ -51,8 +51,9 @@ parameters, a SHA-1 time-stamp imprint, a crossed ECDSA curve), so their
 not moving shows nothing.
 One of the three was then probed (step 420, SPEC-062 amendment 3): a
 time-stamp with a SHA-1 imprint keeps an expired signer `Trusted` in
-0.28.2 and `Invalid` in 0.28.3, as here; this verifier reports
-`timeStamp.malformed` where 0.28.3 says `timeStamp.untrusted`.
+0.28.2 and `Invalid` in 0.28.3, as here; this verifier reported
+`timeStamp.malformed` where 0.28.3 says `timeStamp.untrusted`, and says
+`timeStamp.untrusted` too since SPEC-088.
 The second was probed too (step 421, SPEC-015 amendment 11): a signer
 certificate signed with `id-Ed25519` and a parameter was `Trusted` here
 and in 0.28.2, `Invalid` in 0.28.3; it is `Invalid` here now. An
@@ -288,6 +289,25 @@ its file keeps `signingCredential.ocsp.skipped`, where `c2patool` with
 file, step 471). Revocation changes nothing about an untrusted verdict, and
 asking only for a trusted signer means the url comes from a CA the caller
 trusts, not from whoever made the file.
+
+A time-stamp token whose `certificates` hold the TSA's intermediate but not
+the TSA certificate itself (`timestamp/tsa-matrix/tsa-cert-absent-chain-only.png`):
+`timeStamp.untrusted` here, as C2PA 2.4 §15.8.2 names it; `c2patool`
+0.28.3 and 0.28.1 drop the token without any time-stamp code. With no
+certificates at all, both say `timeStamp.untrusted`. The token is ignored
+either way (SPEC-088, step 481).
+
+An assertion that is not well-formed CBOR (`claim/assertion-cbor-break.png`,
+`assertion-cbor-reserved.png`): `assertion.cbor.invalid` here, the store
+refused; `c2patool` 0.28.3 refuses the file with an error and no report
+(`c2pa-rs` logs `assertion.cbor.invalid` before it stops). Until SPEC-088
+this verifier said `general.error`.
+
+Codes that stay where C2PA 2.4 names another (SPEC-088, measured in step
+479): a CMS signature that does not verify is `timeStamp.untrusted`, the
+rule says `timeStamp.mismatch` — as both `c2patool` versions; a BMFF hash
+whose `alg` is outside §13.1 is `assertion.bmffHash.mismatch`, the rule
+says `algorithm.unsupported` — as both `c2patool` versions.
 
 ## Trust anchors with dates (SPEC-079)
 

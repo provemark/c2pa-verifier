@@ -280,7 +280,7 @@ $base = [
 /**
  * probe => [certificate changes [who => [field, value]], options]
  * options: trust (both|signer-only|tsa-as-manifest|legacy), header (sigTst2|sigTst|both|none), over (right|wrong),
- * sign (ts|cms), tokens (1|2), imprint (sha256|sha1)
+ * sign (ts|cms), tokens (1|2), imprint (sha256|sha1), certs (none|chain-only: the token without the TSA certificate)
  *
  * @var array<string, array{0: array<string, array{0: 'ext'|'key'|'md'|'validity', 1: list<string>|string}>, 1: array<string, string>}> $variants
  */
@@ -317,6 +317,9 @@ $variants = [
     // a SHA-1 message imprint (step 420): outside C2PA 2.4 §13.1, so §15.8.2 ignores the token
     'imprint-sha1' => [[], ['imprint' => 'sha1']],
     'expired-signer-imprint-sha1' => [['leaf' => ['validity', $SHORT]], ['imprint' => 'sha1']],
+    // the TSA certificate not in the token (SPEC-088, step 481): §15.8.2's timeStamp.untrusted
+    'tsa-cert-absent' => [[], ['certs' => 'none']],
+    'tsa-cert-absent-chain-only' => [[], ['certs' => 'chain-only']],
     // the TSA leaf's extended key usage (step 292), signed through cms
     'control-cms' => [[], ['sign' => 'cms']],
     'tsa-leaf-eku-not-critical' => [['tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', 'timeStamping')]], ['sign' => 'cms']],
@@ -407,6 +410,13 @@ foreach ($variants as $probe => [$changes, $options]) {
             $tsSigner = "{$keys}/tsa-helper.pem";
         }
         txRun(txSh('openssl', 'ts', '-reply', '-config', "{$keys}/tsa.cnf", '-queryfile', "{$keys}/q.tsq", '-signer', $tsSigner, '-inkey', "{$keys}/tsa-leaf.key", '-chain', "{$keys}/tsa-chain.pem", '-token_out', '-out', "{$keys}/tok.der"));
+        if (isset($options['certs'])) {
+            // the same TSTInfo signed again without the TSA certificate in the token (SPEC-088 AC3, step 481):
+            // no certificates at all, or the intermediate only
+            txRun(txSh('openssl', 'cms', '-verify', '-inform', 'DER', '-in', "{$keys}/tok.der", '-noverify', '-binary', '-out', "{$keys}/tstinfo.der"));
+            $extra = $options['certs'] === 'chain-only' ? ['-certfile', "{$keys}/tsa-chain.pem"] : [];
+            txRun(txSh('openssl', 'cms', '-sign', '-binary', '-nodetach', '-cades', '-nocerts', '-md', 'sha256', '-econtent_type', 'id-smime-ct-TSTInfo', '-signer', "{$keys}/tsa-leaf.pem", '-inkey', "{$keys}/tsa-leaf.key", ...$extra, ...['-in', "{$keys}/tstinfo.der", '-outform', 'DER', '-out', "{$keys}/tok.der"]));
+        }
         if ($cms) {
             // the same TSTInfo, signed again by the probe's TSA certificate, with signingCertificateV2 (-cades)
             txRun(txSh('openssl', 'cms', '-verify', '-inform', 'DER', '-in', "{$keys}/tok.der", '-noverify', '-binary', '-out', "{$keys}/tstinfo.der"));

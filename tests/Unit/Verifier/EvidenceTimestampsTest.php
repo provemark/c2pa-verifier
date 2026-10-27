@@ -152,16 +152,17 @@ it('AC5: both tokens of a two-token header are listed, rejected', function (): v
         ->and($report->evidence()[$label]->timeSource)->not->toBe(ManifestEvidence::TIMESTAMP);
 })->group('SPEC-084');
 
-it('AC6: a token that cannot be read keeps its bytes', function (string $relative, ?string $settings, string $source): void {
+it('AC6: a token that cannot be read keeps its bytes', function (string $relative, ?string $settings, string $source, StatusCode $code): void {
     $timestamps = spec084Timestamps(spec075Report($relative, $settings));
 
     expect(count($timestamps))->toBe(1)
         ->and($timestamps[0]->token)->not->toBe('')
         ->and([$timestamps[0]->source, $timestamps[0]->genTime, $timestamps[0]->certificates, $timestamps[0]->outcome, $timestamps[0]->codes])
-        ->toBe([$source, null, [], TimestampEvidence::REJECTED, [StatusCode::TimeStampMalformed]]);
+        ->toBe([$source, null, [], TimestampEvidence::REJECTED, [$code]]);
 })->with([
-    'genTime with minute 63' => ['c2pa-rs/CA_ct.jpg', null, 'sigTst'],
-    'SHA-1 imprint' => ['timestamp/tsa-matrix/imprint-sha1.png', 'timestamp/tsa-matrix/imprint-sha1.settings.json', 'sigTst2'],
+    'genTime with minute 63' => ['c2pa-rs/CA_ct.jpg', null, 'sigTst', StatusCode::TimeStampMalformed],
+    // SPEC-088: an imprint outside §13.1 is untrusted (amendment 2); the token stays unread
+    'SHA-1 imprint' => ['timestamp/tsa-matrix/imprint-sha1.png', 'timestamp/tsa-matrix/imprint-sha1.settings.json', 'sigTst2', StatusCode::TimeStampUntrusted],
 ])->group('SPEC-084');
 
 it('AC7: nothing to list', function (string $relative, ?string $settings): void {

@@ -645,6 +645,13 @@ final readonly class TimestampCheck
    and the rule that a signer is judged at a trusted timestamp's time, else
    now, in §15.8.2. The citations are corrected; no rule changes.
 
+11. **2026-10-27, step 481, with SPEC-088** *(approved by Maurice van Loon, 2026-10-27)* —
+   AC4 (b) pins `timeStamp.malformed` for a token whose `certificates` hold
+   no certificate matching the SignerInfo's `sid`. C2PA 2.4 §15.8.2 names
+   that case `timeStamp.untrusted`, and SPEC-088 reports it so; the test
+   now expects `timeStamp.untrusted`, with the same explanation. The token
+   is ignored as before.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

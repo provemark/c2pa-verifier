@@ -58,3 +58,12 @@ Step 47: `no-hard-binding` (`../../binding/no-hard-binding.png`, a signed
 manifest without any hard binding) — `Error: claim missing hard binding`,
 exit 1, no report, with and without `no-hard-binding-root.settings.json`.
 
+
+## Two assertions that are not CBOR (SPEC-088)
+
+`assertion-cbor-reserved--0.28.3.txt` and `assertion-cbor-break--0.28.3.txt`
+hold what `c2patool` 0.28.3 prints for `../../claim/assertion-cbor-reserved.png`
+and `../../claim/assertion-cbor-break.png` (recorded 2026-10-27, step 481):
+no report, only the error "could not decode assertion c2pa.actions.v2
+(version 2, content type application/cbor): Syntax error: Invalid CBOR
+value", exit status 1.

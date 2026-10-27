@@ -230,6 +230,12 @@ None.
      or the claim signature could not be read". *Scope* reads accordingly.
      Measured over the corpus: 0 such manifests, so no fixture moves.
 
+2. **2026-10-27, step 481, with SPEC-088** *(approved by Maurice van Loon, 2026-10-27)* —
+   AC6 lists the SHA-1 imprint token among the tokens that cannot be read,
+   with the code `timeStamp.malformed`. SPEC-088 reports it as
+   `timeStamp.untrusted`; the entry is otherwise unchanged (rejected, the
+   bytes kept, no time, no certificates). The test takes the code per case.
+
 ## Traceability
 
 All in `tests/Unit/Verifier/EvidenceTimestampsTest.php`, group `SPEC-084`,

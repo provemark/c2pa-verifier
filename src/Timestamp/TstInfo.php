@@ -87,7 +87,7 @@ final readonly class TstInfo
         $hashedMessage = $imprint[1]->octets();
         $expected = self::DIGEST_LENGTHS[$hashAlgorithm] ?? null;
         if ($expected === null) {
-            throw new TimestampException(sprintf('messageImprint: hash algorithm %s is not supported', $hashAlgorithm));
+            throw new TimestampException(sprintf('messageImprint: hash algorithm %s is not on the C2PA 2.4 §13.1 list (§15.8.2)', $hashAlgorithm), TimestampException::UNTRUSTED);
         }
         if (strlen($hashedMessage) !== $expected) {
             throw new TimestampException(sprintf('messageImprint: %d bytes is not a %s digest (%d bytes)', strlen($hashedMessage), self::digestName($hashAlgorithm), $expected));

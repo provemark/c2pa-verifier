@@ -64,13 +64,13 @@ written on 2026-10-09; what became of each is in the rows.
 | §13, §16, §17, Appendix C | 29 | 19 | 2 | 2 | 6 | 0 |
 | §14 | 42 | 35 | 0 | 6 | 1 | 0 |
 | §15.1 to §15.6 | 33 | 14 | 5 | 4 | 10 | 0 |
-| §15.7 to §15.9 | 47 | 34 | 9 | 2 | 2 | 0 |
-| §15.10 to the end of §15 | 124 | 87 | 15 | 13 | 9 | 0 |
+| §15.7 to §15.9 | 47 | 36 | 7 | 2 | 2 | 0 |
+| §15.10 to the end of §15 | 124 | 88 | 14 | 13 | 9 | 0 |
 | §18.1 to §18.9 | 50 | 28 | 2 | 7 | 11 | 2 |
 | §18.10 to §18.16 | 58 | 21 | 11 | 14 | 12 | 0 |
 | §18.17 to the end of §18 | 34 | 7 | 2 | 13 | 11 | 0 (and 1 other) |
 | Appendix A | 50 | 24 | 1 | 7 | 13 | 5 |
-| **all** | **563** | **331** | **53** | **75** | **96** | **7** |
+| **all** | **563** | **334** | **50** | **75** | **96** | **7** |
 
 On 2026-10-09 the same table read 562 rules: 310 covered, 63 partial, 79 by
 design, 101 n/a, 8 candidates. Counted by script on 2026-10-25, the rows
@@ -151,10 +151,14 @@ rows are covered, the forms `c2pa-rs` writes by no setting refused by
 name; after it the tally reads 337 covered, 45 partial and 4 candidates,
 the other columns unchanged.
 
-**F. Another code, the same verdict (8 rows).** §15.2.2 (47 codes not
+**F. Another code, the same verdict (8 rows).** §15.2.2 (45 codes not
 held, listed above), §15.4.3, §15.4.4, §15.8.2 (three time-stamp code
 names, P05-9), §15.10.3.1 (`assertion.cbor.invalid`), §15.10.3.3
-(`hashedURI.missing`).
+(`hashedURI.missing`). SPEC-088 (steps 479–481) brought three to the
+letter — `assertion.cbor.invalid`, and `timeStamp.untrusted` for an
+imprint outside §13.1 and for a token without its TSA certificate — and
+kept the other five, each with its reason in the spec; after it the tally
+reads 334 covered and 50 partial.
 
 The counts read the verdict column; a row marked "covered for the leaf"
 counts as covered, and a candidate row can stand for a candidate that
@@ -684,7 +688,7 @@ Link header) get one row each. `c2pa-rs` means 0.91.1, read in its source.
 | 15.2.1 | Results are success, informational and failure codes; each status has a code, optionally a url and an explanation. | `ValidationResult`, `ValidationStatus` | covered | measured: `ReportTest` AC9 (the array shape), AC10 (verbatim codes) |
 | 15.2.1 | A custom code follows the entity-specific namespace syntax. | the one code emitted outside the table, `signingCredential.expired` (`c2pa-rs`'s), fits the syntax. Custom codes an ingredient *recorded* are §15.11's (`PRED-STRU-002` in `docs/conformance.md`) | covered | read (`StatusCode`) |
 | 15.2.1 | A claim generator adding an ingredient validates it and records `validationResults`, optionally with `specVersion` and `trustListUri`. | a rule for writers; nothing is signed here | n/a | — |
-| 15.2.2 | The standard codes, verbatim. | `StatusCode`: 68 of the table's 115 codes, none spelled differently; one extra, `signingCredential.expired`. The 47 missing are listed below the table | **partial** | measured: the `comm` comparison, again on 2026-10-25 (step 425) → P04-5 |
+| 15.2.2 | The standard codes, verbatim. | `StatusCode`: 70 of the table's 115 codes, none spelled differently; one extra, `signingCredential.expired`. The 45 missing are listed below the table | **partial** | measured: the `comm` comparison, again on 2026-10-25 (step 425), then counted: two codes joined since (SPEC-086, SPEC-088) → P04-5 |
 | 15.2.2 | Each code in its own kind (success, informational, failure). | `StatusCode::isSuccess()`, `isInformational()`: all as the table, except `ingredient.claimSignature.validated`, informational here and a success in the table | by design: "as `c2patool` 0.28.0 records it" (comment in `StatusCode::isInformational()`, SPEC-035) | read |
 | 15.3 | A consumer should not show data of a manifest or asset that is not Valid; if it does, it warns that it is not valid and is not to be attributed to the signer (nor, for an ingredient, to the asset's signer). | the report carries `validation_state` and every failure beside the manifest data, in `c2patool`'s shape; it states no non-attribution warning. Display is the caller's (the WordPress plugin) | **partial** | read (`Cli\Command`, `VerificationReport`) → P04-6 |
 | 15.4.1 | A hard binding's hash algorithm is its own `alg`, else the claim's; with neither, `algorithm.unsupported`. | `DataHashCheck::check()` and `BmffHashCheck::assertionOf()`: the assertion's own `alg`, else the claim's (SPEC-027 amendment 8); with neither, `algorithm.unsupported` (SPEC-027 amendment 9, step 427). A claim without `alg` whose entries and binding name their own is judged; `c2patool` refuses it (`docs/comparison.md`) | covered (SPEC-027 amendment 9) | measured: `DataHashCheckTest` AC7 (with neither, `binding/alg-missing-everywhere.png`, step 431), `BmffProbesTest` "AC9: a BMFF hash without alg uses the claim's…", `ClaimAlgTest` "AC10: a BMFF hash with no algorithm named…" |
@@ -714,14 +718,15 @@ Link header) get one row each. `c2pa-rs` means 0.91.1, read in its source.
 | 15.6.2 | A `claim_generator_info` without `name` is `claim.malformed`. | `Claim::generatorInfo()` refuses a map without `name`. A version 2 claim whose `claim_generator_info` is an empty map is `claim.malformed` too (SPEC-007 amendment 7, step 318); only a version 1 claim may carry an empty list (amendment 4) | covered (SPEC-007 amendment 7) | measured: `ManifestStoreTest` AC14; `ManifestProbesTest` "AC19: a version 2 claim whose claim_generator_info is an empty map is claim.malformed…" |
 | 15.6.2 | An `icon` in the generator info is validated as §15.10.3.3 says. | `IconReferenceCheck` (SPEC-034) | covered | measured: `IconReferenceTest` AC2, AC3 |
 
-**The 47 codes of the §15.2.2 table that `StatusCode` does not hold**, by reason
+**The 45 codes of the §15.2.2 table that `StatusCode` does not hold**, by reason
 (measured again on 2026-10-25, step 425: the table's 115 codes extracted
 from the HTML and compared with the enum's 69 with `comm`; nine codes joined
 the enum since 2026-10-09, by SPEC-060 amendment 3, SPEC-063, SPEC-064 and
-SPEC-065):
+SPEC-065; two more since, `signingCredential.ocsp.inaccessible` by SPEC-086
+and `assertion.cbor.invalid` by SPEC-088, so the enum holds 71):
 
-- *No network* (4): `assertion.accessible`, `assertion.inaccessible`,
-  `manifest.inaccessible`, `signingCredential.ocsp.inaccessible`.
+- *No network* (3): `assertion.accessible`, `assertion.inaccessible`,
+  `manifest.inaccessible`.
 - *Hard bindings refused by name* (`general.error`) (10):
   `assertion.boxesHash.{match, mismatch, malformed, unknownBox,
   additionalExclusionsPresent}`, `assertion.collectionHash.{match, mismatch,
@@ -734,8 +739,7 @@ SPEC-065):
   `manifest.structuredText.*` (5), `manifest.compressed.invalid`.
 - *Time-stamp manifests* (2): `manifest.timestamp.{invalid, wrongParents}`
   (`c2tm` is refused).
-- *Reported under another code* (5): `assertion.cbor.invalid`
-  (`general.error`), `claimSignature.outsideValidity`
+- *Reported under another code* (4): `claimSignature.outsideValidity`
   (`signingCredential.expired`, as `c2pa-rs`; a code of the C2PA 1.0–2.1
   tables, gone from 2.2 on), `hashedURI.missing`
   (`assertion.missing`), `hashedURI.mismatch` (`assertion.hashedURI.mismatch`
@@ -861,9 +865,9 @@ period. `c2pa-rs` here means 0.91.1, the engine of `c2patool` 0.28.1.
 | 15.8.2 | The token's signature algorithm not on the §13.2 lists: `timeStamp.untrusted`, ignored. | an OID outside `TimestampCheck::SIGNATURE_ALGORITHMS` is `timeStamp.untrusted` naming it. That table holds RSA PKCS#1 v1.5 (`rsaEncryption`, `sha*WithRSAEncryption`), which §13.2.1 does not list (its deprecated list is empty) | **partial** | measured: `TimestampCheckTest` SPEC-017 AC3; the rest read → P05-3 |
 | 15.8.2 | The token's signature does not validate (RFC 2630 §5.6): `timeStamp.mismatch`, ignored. | a `messageDigest` that does not match the TSTInfo is `timeStamp.mismatch`; a CMS signature that does not verify is `timeStamp.untrusted`, as `c2pa-rs` (`time_stamp/verify.rs`). Ignored either way | partial (the code only) | measured: `TimestampCheckTest` SPEC-017 AC4 → P05-9 |
 | 15.8.2 | No `messageImprint`: `timeStamp.malformed`, ignored. | `TstInfo::fromDer()` requires it and its two fields | covered | measured: `MissingElementTest` AC11 (every element of a token cut short; step 431) |
-| 15.8.2 | Imprint hash algorithm not on the §13.1 list: `timeStamp.untrusted`, ignored. | only SHA-256/384/512 are read; another is refused at parse, so it reports `timeStamp.malformed` (`c2pa-rs`: untrusted). Ignored either way. A SHA-1 imprint keeps no expired signer valid here, as in `c2patool` 0.28.3; 0.28.1 and 0.28.2 say `Trusted` (SPEC-062 amendment 3, step 420) | partial (the code only) | measured: `TsaMatrixTest` "AC8: a SHA-1 imprint keeps no expired signer valid, as c2patool 0.28.3 judges it"; `TstInfo::fromDer()` read → P05-9 |
+| 15.8.2 | Imprint hash algorithm not on the §13.1 list: `timeStamp.untrusted`, ignored. | only SHA-256/384/512 are read; another is `timeStamp.untrusted` naming it, and the token is ignored (SPEC-088; `timeStamp.malformed` until then), as `c2patool` 0.28.3. A SHA-1 imprint keeps no expired signer valid here, as in 0.28.3; 0.28.1 and 0.28.2 say `Trusted` (SPEC-062 amendment 3, step 420) | covered (SPEC-088) | measured: `StatusCodesByTheLetterTest` AC2 |
 | 15.8.2 | The imprint matches the claim (`sigTst`) or the signature (`sigTst2`) per §10.3.2.5.2; else `timeStamp.mismatch`. | `TimestampCheck::countersignedBytes()`, step 6 of `judge()` | covered | measured: `TimestampCheckTest` SPEC-017 AC5; probe `token-over-wrong-bytes` (SPEC-062) |
-| 15.8.2 | `certificates` present, the TSA certificate in it, a chain to a TSA anchor; else `timeStamp.untrusted`. | the chain: `ChainCheck` with `TimestampCheck::tsaSettings()` (TSA anchors only, SPEC-031), untrusted when it fails. No certificates, or none matching the `sid`, is `timeStamp.malformed` instead. Ignored either way | partial (the code only) | measured: `TimestampCheckTest` SPEC-017 AC6, `TsaMatrixTest` AC5, `TimeStampTokenTest` SPEC-016 AC7 ("no certificates at all") → P05-9 |
+| 15.8.2 | `certificates` present, the TSA certificate in it, a chain to a TSA anchor; else `timeStamp.untrusted`. | the chain: `ChainCheck` with `TimestampCheck::tsaSettings()` (TSA anchors only, SPEC-031), untrusted when it fails. No certificates, or none matching the `sid`, is `timeStamp.untrusted` too (SPEC-088; `timeStamp.malformed` until then; `c2patool` gives no code for the second). Ignored either way | covered (SPEC-088) | measured: `StatusCodesByTheLetterTest` AC3 |
 | 15.8.2 | A validator may add `timeStamp.credentialInvalid` for an invalid certificate. | not issued; a TSA leaf off the profile is `timeStamp.untrusted`, and for a v2 claim also `signingCredential.invalid` (a failure), as `c2pa-rs` logs it | by design: SPEC-017 amendment 8 (the verdicts compare with `c2patool`) | measured: `TsaMatrixTest` AC1–AC4 (the `tsa-leaf-*` probes) |
 | 15.8.2 | `genTime` within the TSA certificate's and every CA's validity; else `timeStamp.outsideValidity`, ignored. | the leaf: step 5 of `judge()`, `timeStamp.outsideValidity` (no accuracy margin; `c2pa-rs` allows one). A CA outside its validity at `genTime` breaks the chain walk (`ChainCheck::issuerFault()`) and reports `timeStamp.untrusted`. Ignored either way | partial (the code for CAs) | measured: `TimestampCheckTest` SPEC-017 AC4; probes `tsa-leaf-expired`, `tsa-int-expired`, `tsa-root-expired` (SPEC-062) |
 | 15.8.2 | All checks passed: `timeStamp.trusted` and `timeStamp.validated`. | `judge()`; with `verify_trust: false` only `validated`, and the time is then not used | covered | measured: `TimestampCheckTest` SPEC-017 AC6 |
@@ -967,13 +971,13 @@ period. `c2pa-rs` here means 0.91.1, the engine of `c2patool` 0.28.1.
   code (SPEC-030), which fits responders that do not reach an anchor.
   Next: two probes with a responder under a configured anchor, judged by
   both versions, to decide whether this belongs in `docs/comparison.md`.
-- **P05-9 — informational code names.** Three faults carry a different
+- **P05-9 — informational code names.** Three faults carried a different
   `timeStamp.*` code than §15.8.2 names: a CMS signature that fails
   (`untrusted`, the rule says `mismatch`), an imprint hash outside §13.1
   (`malformed`, the rule says `untrusted`), a token with no certificate
   for its signer (`malformed`, the rule says `untrusted`). In every case
   the time-stamp is ignored, as the rule wants. The first matches
-  `c2pa-rs`. Documentation only.
+  `c2pa-rs` and stays; SPEC-088 gave the other two the rule's code.
 
 ## §15.10 to the end of §15 — Assertions, Ingredients and the Asset's Content
 
@@ -1007,7 +1011,7 @@ decision*, which follows `c2pa-rs` without `verify.strict_v1_validation`.
 | 15.10.3.1 | A URI outside the same manifest is rejected, `assertion.outsideManifest`. | `Manifest::checkReferences()` (SPEC-040) | covered | measured: `OutsideManifestTest` "AC1", "AC4" |
 | 15.10.3.1 | A URI that cannot be resolved is rejected, `assertion.missing`. | `Manifest::resolve()`, `checkReferences()` | covered | measured: `ManifestStoreTest` "AC10" |
 | 15.10.3.1 | Hash per §15.4 and §8.4.2.3; mismatch `assertion.hashedURI.mismatch`, else `.match`. | `HashedUriCheck::entry()` | covered | measured: `HashedUriCheckTest` "AC1", "AC2", "AC7" |
-| 15.10.3.1 | CBOR that is not well-formed: `assertion.cbor.invalid`; bad JSON: `assertion.json.invalid`. | `Manifest::assertionData()`: JSON as specified; CBOR refused as `general.error` | partial (code differs; still `Invalid`) | measured: `ManifestStoreTest` "AC13"; CBOR read (`PRED-ASSE-007`) → P06-10 |
+| 15.10.3.1 | CBOR that is not well-formed: `assertion.cbor.invalid`; bad JSON: `assertion.json.invalid`. | `Manifest::assertionData()`: JSON as specified; CBOR that does not decode is `assertion.cbor.invalid` (SPEC-088; `general.error` until then) | covered (SPEC-088) | measured: `StatusCodesByTheLetterTest` AC1 |
 | 15.10.3.1 | An assertion in the store that no claim list names: `assertion.undeclared`. | `HashedUriCheck::check()`, unknown boxes included | covered | measured: `HashedUriCheckTest` "AC5", "AC6" |
 | 15.10.3.1 | The contents of a `metadata` field are not validated. | nothing reads it | covered by construction | read |
 | 15.10.3.2 | Dispatch by label to the assertion-specific steps. | `Verifier::check()`: actions, external references, icons, ingredients (via the graph), `c2pa.cloud-data` (`CloudDataCheck`, SPEC-063), `c2pa.time-stamp` (`TimestampAssertions`, SPEC-064), `c2pa.alternative-content-representation` (`AlternativeContentCheck`, SPEC-065). Not dispatched: `c2pa.session-keys` | covered; by design for `c2pa.session-keys` (step 334) | read; the three dispatches measured in `CloudDataCheckTest`, `TimestampAssertionTest`, `AlternativeContentCheckTest` → P06-1, P06-2, P06-8 |

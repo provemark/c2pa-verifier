@@ -108,7 +108,7 @@ final readonly class TimestampCheck
             try {
                 $token = TimeStampToken::fromHeaderValue($der, $this->reader);
             } catch (TimestampException $e) {
-                $status = $this->status(StatusCode::TimeStampMalformed, $url, sprintf('the token for %s: %s', $manifest->label, $e->getMessage()));
+                $status = $this->status($e->statusCode(), $url, sprintf('the token for %s: %s', $manifest->label, $e->getMessage()));   // SPEC-088
                 $tried[] = $status;
                 $evidence = [...$evidence, $this->evidence(TimestampEvidence::ASSERTION, $url, $der, null, TimestampEvidence::REJECTED, [$status])];
 
@@ -198,7 +198,7 @@ final readonly class TimestampCheck
         try {
             $token = TimeStampToken::fromHeaderValue($der, $this->reader);
         } catch (TimestampException $e) {
-            $status = $this->status(StatusCode::TimeStampMalformed, $url, $e->getMessage());
+            $status = $this->status($e->statusCode(), $url, $e->getMessage());   // SPEC-088
 
             return new TimestampResult(true, [$status], null, false, evidence: [$this->evidence($header->header, $url, $der, null, TimestampEvidence::REJECTED, [$status])]);
         }
@@ -271,11 +271,12 @@ final readonly class TimestampCheck
             return $malformed($e->getMessage());
         }
         if ($signerDer === null) {
-            return $malformed(sprintf(
+            // §15.8.2: the TSA certificate not in certificates is timeStamp.untrusted (SPEC-088)
+            return new TimestampResult(true, [$this->status(StatusCode::TimeStampUntrusted, $url, sprintf(
                 'no certificate in the token matches the SignerInfo sid (%s) among its %d certificate(s)',
                 $si->sidSubjectKeyId !== null ? 'subjectKeyIdentifier '.bin2hex($si->sidSubjectKeyId) : 'serial '.($si->sidSerial ?? '?'),
                 count($sd->certificates),
-            ));
+            ).' (C2PA 2.4 §15.8.2)')], null, false);
         }
         try {
             $signer = Certificate::fromDer($signerDer);

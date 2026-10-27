@@ -37,8 +37,8 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | verdict | predicates |
 |---|---|
-| **yes** | 77 |
-| partial | 10 |
+| **yes** | 78 |
+| partial | 9 |
 | closed | 4 |
 | by design | 18 |
 | **gap** | 2 |
@@ -147,7 +147,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-ASSE-004` | shall | Assertion URI must reference same manifest | **yes** — since 2026-09-24 (SPEC-040): a claim entry naming another manifest is `assertion.outsideManifest`, on the entry as written |
 | `PRED-ASSE-005` | shall | Assertion URI must be resolvable | **yes** — `assertion.missing` when a claim's hashed URI names no assertion (SPEC-011) |
 | `PRED-ASSE-006` | shall | Assertion hashed-URI integrity check | **yes** — `HashedUriCheck`: `assertion.hashedURI.match` / `.mismatch` over every entry |
-| `PRED-ASSE-007` | shall | Standard assertion encoding validity | partial — JSON gets `assertion.json.invalid`; malformed **CBOR** is caught but reported as `general.error` — this verifier has no `assertion.cbor.invalid` code |
+| `PRED-ASSE-007` | shall | Standard assertion encoding validity | **yes** — JSON that does not decode is `assertion.json.invalid`, CBOR that does not decode `assertion.cbor.invalid` (SPEC-088; `general.error` until then) — SPEC-088 AC1 |
 | `PRED-ASSE-008` | shall | Undeclared assertion detection | **yes** — `assertion.undeclared` for a box in the store that no claim list references (SPEC-011) |
 | `PRED-ASSE-009` | shall | Self-redaction prohibition | **yes** — since 2026-09-24 (SPEC-035): an entry naming the claim's own manifest is `assertion.selfRedacted` |
 | `PRED-ASSE-010` | shall | Assertion metadata field not validated | **yes** — assertion `metadata` fields are never validated |
@@ -306,11 +306,11 @@ c2patool is never a surprise.
 
 - `PRED-ASSE-021`, `PRED-ABMF-001` — no `c2pa.hash.multi-asset` fallback: a
   failed hard binding stays failed, where the rule says to try another
-- `PRED-ASSE-007`, `PRED-STRU-018`, `PRED-CRYP-016` — the check happens,
-  the status code differs
-  (`general.error` for
-  `assertion.cbor.invalid`, `assertion.missing` for `hashedURI.missing`,
-  `signingCredential.expired` for `claimSignature.outsideValidity`)
+- `PRED-STRU-018`, `PRED-CRYP-016` — the check happens, the status code
+  differs (`assertion.missing` for `hashedURI.missing`,
+  `signingCredential.expired` for `claimSignature.outsideValidity`; both
+  as `c2pa-rs`). `PRED-ASSE-007` stood here until SPEC-088 gave
+  `assertion.cbor.invalid` its own code.
 - (`PRED-STRU-002` stood here, a syntax check on custom codes an ingredient
   recorded; set aside by design on 2026-10-23. `PRED-BMFF-002` stood here
   too, as changing no verdict. Step 133 measured that it did, and SPEC-038

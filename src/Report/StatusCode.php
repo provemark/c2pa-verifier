@@ -32,6 +32,8 @@ enum StatusCode: string
     case ClaimCborInvalid = 'claim.cbor.invalid';
     case ClaimMalformed = 'claim.malformed';
     case AssertionJsonInvalid = 'assertion.json.invalid';
+    // SPEC-088: an assertion's CBOR that does not decode (§15.10.3.1), as c2pa-rs logs it; it was general.error
+    case AssertionCborInvalid = 'assertion.cbor.invalid';
     case AssertionMissing = 'assertion.missing';
     // SPEC-040: a claim entry naming another manifest (§15.10.3.1)
     case AssertionOutsideManifest = 'assertion.outsideManifest';

@@ -55,3 +55,14 @@ Their token's `messageImprint` is SHA-1 (the generator's `imprint` option);
 token. 0.28.1 trusts it (`c2pa-rs` fixed this in 0.91.4), so beside the
 usual answers `c2patool` 0.28.3's are recorded too:
 `../../c2patool/tsa-matrix/<probe>--0.28.3[--no-settings].json`.
+
+Added on 2026-10-27 (SPEC-088, SPEC-062 amendment 4, step 481), with the
+same command and these probe names: `tsa-cert-absent` and
+`tsa-cert-absent-chain-only`. Their token is the control's TSTInfo signed
+again with `openssl cms -sign -nocerts` (the generator's `certs` option):
+the first carries no certificates, the second only the TSA's intermediate,
+never the TSA certificate. `openssl ts -verify` refuses both (signer
+certificate not found). C2PA 2.4 §15.8.2 makes both `timeStamp.untrusted`;
+`c2patool` 0.28.3 says so for the first and gives no time-stamp code for
+the second. Its answers are recorded beside the usual ones:
+`../../c2patool/tsa-matrix/<probe>--0.28.3[--no-settings].json`.

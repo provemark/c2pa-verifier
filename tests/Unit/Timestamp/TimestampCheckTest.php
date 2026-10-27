@@ -367,8 +367,9 @@ test('SPEC-017 AC4: messageDigest, sid and validity each give exactly one status
     $lastByte = $serialAt + $serial['headerLength'] + $serial['length'] - 1;
     $patched = substr_replace($value, chr(ord($value[$lastByte]) ^ 0x01), $lastByte, 1);
     $b = $check->judge(TimeStampToken::fromHeaderValue($patched), $tbs, null, $url);
-    expect(spec017Codes($b))->toBe(['timeStamp.malformed'])
-        ->and(spec017Status($b, StatusCode::TimeStampMalformed)?->explanation)->toContain('no certificate')
+    // SPEC-088: no certificate matching the sid is §15.8.2's timeStamp.untrusted (amendment 11; malformed until then)
+    expect(spec017Codes($b))->toBe(['timeStamp.untrusted'])
+        ->and(spec017Status($b, StatusCode::TimeStampUntrusted)?->explanation)->toContain('no certificate')
         ->and($b->time)->toBeNull();
 
     // (c) a genTime outside the TSA certificate's validity (DigiCert Timestamp 2023: 2023-07-14 .. 2034-10-13)

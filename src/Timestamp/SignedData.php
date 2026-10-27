@@ -138,7 +138,7 @@ final readonly class SignedData
             $i++;
         }
         if ($certificates === []) {
-            throw new TimestampException('SignedData carries no certificates; the TSA certificate must be in the token');
+            throw new TimestampException('SignedData carries no certificates; the TSA certificate must be in the token (C2PA 2.4 §15.8.2)', TimestampException::UNTRUSTED);
         }
         if (count($fields) > $i && $fields[$i]->is(TagClass::ContextSpecific, 1)) {
             $i++;   // crls, ignored

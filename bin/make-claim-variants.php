@@ -209,6 +209,17 @@ if ($jsonAt === false) {
 }
 $variants['json-broken'] = claimReplace($adobe, $jsonAt + 4, '{', '[');
 
+// SPEC-088 AC1: the actions assertion's CBOR not well-formed (RFC 8949 §3), its first byte given the reserved
+// additional information 28, or made a top-level break; same length, so no LBox moves (the claim's hash of the
+// assertion no longer matches, but the CBOR fault comes first)
+$actions = strpos($s, 'c2pa.actions.v2');
+$actionsCbor = $actions === false ? false : strpos($s, 'cbor', $actions);
+if ($actionsCbor === false || $s[$actionsCbor + 4] !== "\xa1") {
+    throw new RuntimeException('the actions assertion is not the shape this script edits');
+}
+$variants['assertion-cbor-reserved'] = claimReplace($s, $actionsCbor + 4, "\xa1", "\xbc");
+$variants['assertion-cbor-break'] = claimReplace($s, $actionsCbor + 4, "\xa1", "\xff");
+
 $dir = $root.'/tests/Fixtures/claim';
 if (! is_dir($dir) && ! mkdir($dir, 0755, true)) {
     throw new RuntimeException("cannot create {$dir}");

@@ -49,9 +49,14 @@ const SPEC062_CODES_DIFFER = [
         [[], ['signingCredential.expired']],
     ],
     'imprint-sha1' => [
-        'C2PA 2.4 §15.8.2: a SHA-1 imprint is ignored; malformed here, untrusted by the rule (P05-9), trusted by 0.28.1 (amendment 3)',
+        'C2PA 2.4 §15.8.2: a SHA-1 imprint is ignored as untrusted (SPEC-088), trusted by 0.28.1 (amendment 3)',
         [['timeStamp.trusted', 'timeStamp.validated'], []],
-        [['timeStamp.malformed'], []],
+        [['timeStamp.untrusted'], []],
+    ],
+    'tsa-cert-absent-chain-only' => [
+        'C2PA 2.4 §15.8.2: the TSA certificate not in the token is timeStamp.untrusted; c2patool drops the token without a code (SPEC-088, amendment 4)',
+        [[], []],
+        [['timeStamp.untrusted'], []],
     ],
     'expired-signer-two-tokens' => [
         '0.28.1 adds signingCredential.untrusted to signingCredential.expired (SPEC-017 amendment 9: two tokens drop the timestamp)',
@@ -131,7 +136,7 @@ function spec062Codes(VerificationReport $report): array
 it('AC7: every probe the generator defines has a fixture and four answers, and no fixture is left over', function (): void {
     $defined = spec062GeneratorProbes();
 
-    expect($defined)->toHaveCount(33)
+    expect($defined)->toHaveCount(35)   // amendment 4: two probes without the TSA certificate (SPEC-088)
         ->and(spec062FixtureProbes())->toBe($defined);
     foreach ($defined as $probe) {
         foreach (['0.27.22', '0.28.1'] as $version) {
@@ -217,11 +222,11 @@ it('AC8: a SHA-1 imprint keeps no expired signer valid, as c2patool 0.28.3 judge
     $expired = spec062Verify('expired-signer-imprint-sha1');
     expect($expired->result->state->value)->toBe('Invalid')
         ->and(spec062Codes($expired)[1])->toContain('signingCredential.expired')
-        ->and(spec062Codes($expired)[0])->toBe(['timeStamp.malformed']);
+        ->and(spec062Codes($expired)[0])->toBe(['timeStamp.untrusted']);   // SPEC-088: malformed until then
 
     $valid = spec062Verify('imprint-sha1');
     expect($valid->result->state->value)->toBe('Trusted')
-        ->and(spec062Codes($valid)[0])->toBe(['timeStamp.malformed']);
+        ->and(spec062Codes($valid)[0])->toBe(['timeStamp.untrusted']);   // SPEC-088, as 0.28.3
 
     // the c2pa-rs fix (0.91.4) is in 0.28.3; 0.28.1 still trusts the SHA-1 token
     expect(spec062Oracle('expired-signer-imprint-sha1', '0.28.3')['state'])->toBe('Invalid')

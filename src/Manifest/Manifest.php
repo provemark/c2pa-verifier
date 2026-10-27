@@ -361,7 +361,7 @@ final readonly class Manifest
         }
         $kinds = array_keys($byType);
         if ($kinds === ['cbor']) {
-            return self::decodeCbor(self::only($byType['cbor'], $label), sprintf('assertion %s', $label), $budget);
+            return self::decodeCbor(self::only($byType['cbor'], $label), sprintf('assertion %s', $label), $budget, StatusCode::AssertionCborInvalid);   // SPEC-088
         }
         if ($kinds === ['json']) {
             $json = self::only($byType['json'], $label);

@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-27                      |
 | Supersedes | —                                                 |
@@ -153,11 +153,19 @@ None yet.
 
 ## Traceability
 
+All in `tests/Unit/Report/StatusCodesByTheLetterTest.php`, group `SPEC-088`. Before the implementation 7 of 11 tests
+failed (AC1, AC2, AC3's codes, AC6); 4 passed already: AC4's three guards
+that other faults stay `timeStamp.malformed`, and AC3's check that the
+explanation names what is missing — both true before this spec. One test
+for a token offered by a time-stamp assertion was added after the build,
+when mutation M6 survived. Four earlier tests followed, as amendments:
+SPEC-017 amendment 11, SPEC-062 amendment 4, SPEC-084 amendment 2.
+
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  |                             |                      |
-| AC2                  |                             |                      |
-| AC3                  |                             |                      |
-| AC4                  |                             |                      |
-| AC5                  |                             |                      |
-| AC6                  |                             |                      |
+| AC1                  | AC1: an assertion that is not well-formed CBOR is assertion.cbor.invalid (reserved, break) | src/Manifest/Manifest.php :: assertionData(); src/Report/StatusCode.php :: AssertionCborInvalid |
+| AC2                  | AC2: a SHA-1 messageImprint is timeStamp.untrusted (both probes); scope: a time-stamp assertion's token with a SHA-1 imprint is timeStamp.untrusted too | src/Timestamp/TstInfo.php; src/Timestamp/TimestampException.php :: UNTRUSTED, statusCode(); src/Timestamp/TimestampCheck.php :: forManifest(), checkHeader() |
+| AC3                  | AC3: a token without its TSA certificate is timeStamp.untrusted (no certificates, the intermediate only); AC3: the explanation names what is missing | src/Timestamp/SignedData.php; src/Timestamp/TimestampCheck.php :: judge() |
+| AC4                  | AC4: other faults of a token stay timeStamp.malformed (genTime, two tokens, both headers) | src/Timestamp/TimestampException.php :: statusCode() |
+| AC5                  | 3,042 corpus runs before (worktree at `1ad620d`, own `vendor/` copy) and after: 18 differ, the six files named, only in code and explanation, every `validation_state` equal (`notes/step-481-status-codes-by-the-letter.md`) | — |
+| AC6                  | AC6: assertion.cbor.invalid is a failure code; `ApiSurfaceTest` (209) | src/Report/StatusCode.php |

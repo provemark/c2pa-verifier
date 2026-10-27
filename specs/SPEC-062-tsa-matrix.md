@@ -237,6 +237,18 @@ const SPEC062_CODES_DIFFER = [
 
    **Weight C: no verdict of the existing probes moves.**
 
+4. **2026-10-27, step 481, with SPEC-088** *(approved by Maurice van Loon, 2026-10-27)* —
+   - **Two probes join the matrix:** `tsa-cert-absent` (no certificates in
+     the token) and `tsa-cert-absent-chain-only` (the intermediate only),
+     made by the generator's new `certs` option. AC7 counts 35 probes.
+   - **Codes.** `imprint-sha1` and `expired-signer-imprint-sha1` report
+     `timeStamp.untrusted` where amendment 3 pinned `timeStamp.malformed`
+     (SPEC-088; as 0.28.3). `imprint-sha1`'s entry in the probes whose codes
+     differ from 0.28.1 now reads untrusted; `tsa-cert-absent-chain-only`
+     joins that list (0.28.1 gives no time-stamp code; here
+     `timeStamp.untrusted`). `tsa-cert-absent` agrees with 0.28.1. No state
+     moves.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

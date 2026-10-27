@@ -30,6 +30,8 @@ and these are the values committed on 2026-09-21. Measured with c2patool
 | `no-manifest` | the manifest superbox's UUID `c2ma` → `c2as` (no manifest left) | `Error: C2PA provenance not found in XMP` | AC12 error |
 | `generator-info-no-name` | `claim_generator_info.name` → `nome` | `Error: claim could not be converted from CBOR` | AC14 error |
 | `json-broken` | the Adobe store with the `stds.schema-org.CreativeWork` JSON's first `{` → `[` (carried in the PNG, so the data hash also fails) | extracts; `Invalid`, **`assertion.json.invalid`** and `assertion.required.missing` — a status code, not a parse error | AC13 error here; the Verifier layer maps it to `assertion.json.invalid` later |
+| `assertion-cbor-reserved` | the actions assertion's first CBOR byte `a1` → `bc` (additional information 28, reserved; RFC 8949 §3), same length (SPEC-088, step 481) | `Invalid`, **`assertion.cbor.invalid`** at the actions assertion; `c2patool` 0.28.3 refuses the file with an error | SPEC-088 AC1 |
+| `assertion-cbor-break` | the same byte → `ff`, a break outside an indefinite-length item | the same | SPEC-088 AC1 |
 
 `tests/Fixtures/jumbf/unknown-uuid.bin` (step 10) is AC10's third case: a URI
 that resolves to an `UnknownBox`; c2patool → `Error: could not create valid
@@ -53,4 +55,6 @@ d33b2cd95bc967b67b8cd2c2efb7fbdaafc12843807e6daf258c7d7149b0d42a  two-cbor-boxes
 8ccc7779620b2f16fea2ecf4e162ac25b4d22a3a86fed3d714772c20312edd89  no-manifest.bin
 ee6d1d2af9c9a1014c8db1f2da5101f779e8d735879c35f61576fafef31a84db  generator-info-no-name.bin
 f8c776ec2a496e0287823655f04005b738ebcc342b808c82e7bdad77bad9d277  json-broken.bin
+fb2d7c5ecb799011394de55efc5f9c0b20cd6de95fac7f26053a5b58399e2ea6  assertion-cbor-reserved.bin
+66f8d073184e99fe89eea8807bba5b92cb08d7a25f70df84f7b54f8aac19c729  assertion-cbor-break.bin
 ```
