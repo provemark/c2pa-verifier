@@ -317,9 +317,10 @@ final readonly class Verifier
         // only verify_trust false keeps quiet (SPEC-014 amendment 1)
         $trustSettings = $settings ?? new TrustSettings([], []);
         $anchor = null;
+        $issuer = null;
         $trust = [];
         if ($trustSettings->verifyTrust) {
-            [$trust, $anchor] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at, $this->source());   // SPEC-087: the source for the CAs of the path
+            [$trust, $anchor, $issuer] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at, $this->source());   // SPEC-087: the source for the CAs of the path
             $statuses = [...$statuses, ...$trust];
             $checks[] = 'trust';
         }
@@ -336,6 +337,7 @@ final readonly class Verifier
             sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label),
             OcspCheck::assertionResponses($manifestStore),   // SPEC-066: certificate-status assertions of the store
             IngredientManifestCheck::trusted($trust) ? $this->source() : null,
+            $issuer,   // SPEC-086 amendment 2: the issuer the walk verified
         );
         $statuses = [...$statuses, ...$revocation];
         $checks[] = 'revocation';

@@ -266,6 +266,38 @@ None.
    those whose subject is some judged manifest's signer
    (`spec086SignerCalls()`).
 
+2. **2026-10-27, step 483, found by the review of step 482; measured** *(approved by Maurice van Loon, 2026-10-27, option b)* —
+   The source was told that `x5chain[1]` issued the signer, whatever that
+   certificate was, and was not asked when `x5chain` held the signer
+   alone. The chain walk (SPEC-016) does not need `x5chain[1]` when an
+   anchor issued the signer itself, so a signer issued directly by an
+   anchor escaped the source by leaving `x5chain[1]` out or putting an
+   unrelated certificate there: the source got a question it cannot
+   answer about the right certificate, or none, and a revoked signer
+   stayed `Trusted`. Measured with
+   `bin/make-revocation-issuer-variants.php`: a signer L issued by the
+   anchor R, with `x5chain` [L], [L, B] (unrelated), [L, N] (R's subject,
+   another key) and [L, R]; a source that answers L revoked turned only
+   [L, R] `Invalid`.
+
+   The source is now told **the issuer the chain walk verified**: the
+   certificate above the signer in the path that reached the anchor — the
+   anchor itself when it issued the signer. Where the walk vouches for the
+   signer without a certificate above it (the signer on the allowed list,
+   or itself an anchor), **option b**: `x5chain[1]` is used only when it
+   demonstrably issued the signer — its subject is the signer's issuer and
+   its key verifies the signer's signature — and otherwise the source is
+   not asked, as when the issuer was not in `x5chain` before.
+   `OcspCheck::checkWithEvidence()` takes the issuer as a new last
+   parameter (null: not asked); `ChainCheck::checkWithAnchor()` and
+   `walk()` return it as a third element. No contract symbol is added.
+   `c2patool` 0.28.3 calls all the probes `Trusted`: it asks no source.
+   Tests: `tests/Unit/Verifier/RevocationIssuerTest.php`, group
+   `SPEC-086`. The *Scope* test "the source is not asked when the issuer
+   is not in x5chain" now reads "… without an issuer the walk verified".
+
+   **Weight A: a revoked signer wrongly `Trusted` under a source becomes `Invalid`.**
+
 ## Traceability
 
 All in `tests/Unit/Verifier/RevocationSourceTest.php`, group `SPEC-086`. Seen red before the implementation (all
@@ -287,4 +319,5 @@ when mutations M5, M8 and M16 survived; each now fails under its mutation.
 | AC9                  | AC9: the default source changes nothing; and 3,066 corpus runs before (worktree at `738e1dd`, own `vendor/` copy) and after, with no source and with `NoRevocationSource`, identical (`notes/step-475-revocation-source.md`) | src/Trust/NoRevocationSource.php; src/Verifier/Verifier.php :: source() |
 | AC10                 | AC10: over the corpus, the source is asked exactly where allowed (none, full, lists) | src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |
 | AC11                 | tests/Unit/ApiSurfaceTest.php :: AC1 / SPEC-025 | src/Trust/RevocationSource.php; src/Trust/NoRevocationSource.php; src/Trust/OcspEvidence.php :: FETCHED; bin/api-check.php |
-| *Scope*              | scope: a fetched response follows the stored ones in the evidence; scope: the source is not asked when the issuer is not in x5chain; scope: a fetched response over the size limit is not read | src/Trust/OcspCheck.php :: checkWithEvidence(), fetched() |
+| *Scope*              | scope: a fetched response follows the stored ones in the evidence; scope: the source is not asked without an issuer the walk verified; scope: a fetched response over the size limit is not read | src/Trust/OcspCheck.php :: checkWithEvidence(), fetched() |
+| Amendment 2          | tests/Unit/Verifier/RevocationIssuerTest.php :: the signer is asked about with the anchor that issued it, whatever x5chain carries second; option b: an allowed-list signer …; option b: a signer that is itself an anchor … / SPEC-086 (11 of 16 tests of the file red before the build) | src/Trust/ChainCheck.php :: walk(), provenIssuer(); src/Trust/OcspCheck.php :: checkWithEvidence(); src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |

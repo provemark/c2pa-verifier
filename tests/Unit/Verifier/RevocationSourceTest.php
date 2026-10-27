@@ -357,7 +357,8 @@ it('scope: a fetched response follows the stored ones in the evidence', function
         ->and(spec086Codes($report, $label))->toBe(['signingCredential.ocsp.revoked']);
 })->group('SPEC-086');
 
-it('scope: the source is not asked when the issuer is not in x5chain', function (): void {
+// amendment 2: what counts is the issuer the chain walk verified, passed in; none is passed here
+it('scope: the source is not asked without an issuer the walk verified', function (): void {
     $calls = new Spec086Calls;
     [$statuses, $evidence] = (new OcspCheck)->checkWithEvidence([], [spec086OcspChain()[0]], null, 'self#jumbf=/c2pa/test/c2pa.signature', [], spec086Source($calls));
 
@@ -368,7 +369,7 @@ it('scope: the source is not asked when the issuer is not in x5chain', function 
 
 it('scope: a fetched response over the size limit is not read', function (): void {
     $calls = new Spec086Calls;
-    [$statuses, $evidence] = (new OcspCheck)->checkWithEvidence([], spec086OcspChain(), null, 'self#jumbf=/c2pa/test/c2pa.signature', [], spec086Source($calls, str_repeat("\x30", OcspCheck::DEFAULT_MAX_RESPONSE_BYTES + 1)));
+    [$statuses, $evidence] = (new OcspCheck)->checkWithEvidence([], spec086OcspChain(), null, 'self#jumbf=/c2pa/test/c2pa.signature', [], spec086Source($calls, str_repeat("\x30", OcspCheck::DEFAULT_MAX_RESPONSE_BYTES + 1)), spec086OcspChain()[1]);
 
     expect($statuses[0]->code->value)->toBe('signingCredential.ocsp.inaccessible')
         ->and($statuses[0]->explanation)->toContain('over the limit')

@@ -85,6 +85,23 @@ over every case has to name. Nothing was removed or renamed; a caller on
   broken assertion outright, and drops a token that carries only its
   authority's intermediate without any code (`docs/comparison.md`).
 
+### Fixed
+
+Found by a review of the new code before the tag (step 482).
+
+- **The revocation source is told the issuer the chain walk verified
+  (SPEC-086 amendment 2).** It was told that `x5chain`'s second
+  certificate issued the signer, whatever that certificate was, and was
+  not asked when `x5chain` held the signer alone. A signer issued directly
+  by an anchor could thus escape the source and stay `Trusted` though
+  revoked. For a signer on the allowed list, or itself an anchor, the
+  second certificate is used only when it demonstrably issued the signer.
+- **A signer with only the Time Stamping EKU: its path's CAs are checked
+  on the second walk too (SPEC-087 amendment 1, SPEC-066 amendment 3).**
+  The walk without the legacy anchors read neither a stapled response
+  about a CA nor the source, so a revoked intermediate left the file
+  `Trusted`. The stapled half dates from 0.6.0.
+
 ### Documentation
 
 - `docs/adr/ADR-0007-revocation-from-an-injected-source.md`: why online

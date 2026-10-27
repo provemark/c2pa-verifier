@@ -205,7 +205,23 @@ None.
 
 ## Amendments
 
-None yet.
+1. **2026-10-27, step 483, found by the review of step 482; measured** *(approved by Maurice van Loon, 2026-10-27)* —
+   A signer whose only EKU is Time Stamping and that reaches only the
+   legacy `trust_anchors` is walked a second time without them (SPEC-031
+   amendment, step 159). That second walk got neither the source nor the
+   unprotected header, so a revoked CA on its path was not seen: a source
+   that answered the intermediate revoked left the file `Trusted`.
+   Measured with `bin/make-revocation-issuer-variants.php`: signer T
+   (Time Stamping only) under intermediate I under root R, I as the
+   legacy anchor and R as a "manifest" entry. The second walk now asks the
+   source about the CAs of its path as the first does, and its
+   `signingCredential.untrusted` explanation ends with the second walk's
+   reason ("without the legacy anchors: …"), which names the revoked CA.
+   SPEC-066 amendment 3 is the same fix for a stapled response.
+   `c2patool` 0.28.3 calls the probe `Trusted`. Test:
+   `tests/Unit/Verifier/RevocationIssuerTest.php`, group `SPEC-087`.
+
+   **Weight A: a wrongly `Trusted` file under a source becomes `Valid` (untrusted).**
 
 ## Traceability
 
@@ -232,3 +248,4 @@ amendment 1).
 | AC9                  | AC9: the default source changes nothing; and 3,066 corpus runs before (worktree at `aa04153`, own `vendor/` copy) and after, with no source and with `NoRevocationSource`, identical (`notes/step-478-revocation-source-cas.md`) | src/Verifier/Verifier.php :: source() |
 | AC10                 | AC10: over the corpus, the source is asked exactly where allowed (none, full, lists) | src/Trust/ChainCheck.php :: walk(); src/Trust/OcspCheck.php :: fetchedCaRevocation() |
 | *Scope*              | scope: every CA is asked, from the top down; scope: a revocation after the judged time does not count | src/Trust/OcspCheck.php :: fetchedCaRevocation() |
+| Amendment 1          | tests/Unit/Verifier/RevocationIssuerTest.php :: a time-stamping signer's second walk asks the source about the CAs of its path; guard: the time-stamping signer without a revocation stays trusted / SPEC-087 | src/Trust/ChainCheck.php :: timeStampingSigner() |

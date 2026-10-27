@@ -36,12 +36,12 @@ final readonly class ChainCheck
      * The trust check and, when it trusted the signer, what made it so (SPEC-082): handed out by the
      * walk itself, so that the evidence cannot drift from the verdict.
      *
-     * @return array{0: list<ValidationStatus>, 1: AnchorEvidence|null}
+     * @return array{0: list<ValidationStatus>, 1: AnchorEvidence|null, 2: Certificate|null}
      */
     public function checkWithAnchor(Manifest $manifest, TrustSettings $settings, ?int $at = null, ?RevocationSource $source = null): array
     {
         if (! $settings->verifyTrust) {
-            return [[], null];
+            return [[], null, null];
         }
         $url = sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label);
 
@@ -49,25 +49,25 @@ final readonly class ChainCheck
             $cose = CoseSign1::ofManifest($manifest);
             $chain = Certificate::chainOf($cose);   // built once per signature (step 255)
         } catch (CoseException $e) {
-            return [[new ValidationStatus($e->status, $url, $e->getMessage())], null];
+            return [[new ValidationStatus($e->status, $url, $e->getMessage())], null, null];
         } catch (TrustException $e) {
-            return [[new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, sprintf('a certificate in x5chain could not be read: %s', $e->getMessage()))], null];
+            return [[new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, sprintf('a certificate in x5chain could not be read: %s', $e->getMessage()))], null, null];
         }
         if ($chain === []) {
-            return [[new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, 'x5chain holds no certificate')], null];
+            return [[new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, 'x5chain holds no certificate')], null, null];
         }
 
-        [$statuses, $anchor] = $this->walk($chain, $settings, $url, $at, $cose->unprotected, $source);
-        [$statuses, $anchor] = $this->timeStampingSigner($chain, $settings, $url, $at, $statuses, $anchor);
+        [$statuses, $anchor, $issuer] = $this->walk($chain, $settings, $url, $at, $cose->unprotected, $source);
+        [$statuses, $anchor, $issuer] = $this->timeStampingSigner($chain, $settings, $url, $at, $statuses, $anchor, $issuer, $cose->unprotected, $source);
         $note = self::kindNote($settings, TrustAnchorSet::MANIFEST, $chain, $at);
         if ($note === '') {
-            return [$statuses, $anchor];
+            return [$statuses, $anchor, $issuer];
         }
 
         // an untrusted signer, with entries of another kind configured: say they were not used, and why (SPEC-031 AC6)
         return [array_map(static fn (ValidationStatus $s): ValidationStatus => $s->code === StatusCode::SigningCredentialUntrusted
             ? new ValidationStatus($s->code, $s->url, $s->explanation.$note)
-            : $s, $statuses), $anchor];
+            : $s, $statuses), $anchor, $issuer];
     }
 
     /**
@@ -78,22 +78,25 @@ final readonly class ChainCheck
      * Time Stamping beside another EKU is already a profile fault (SPEC-015), so it is left alone.
      *
      * @param  non-empty-list<Certificate>  $chain
+     *                                              The second walk checks the CAs of its own path as the first does: a stapled response about one (SPEC-066
+     *                                              amendment 3), then the caller's source (SPEC-087 amendment 1); its outcome is the one kept.
      * @param  list<ValidationStatus>  $statuses  the outcome under the whole settings
-     * @return array{0: list<ValidationStatus>, 1: AnchorEvidence|null}
+     * @param  array<int|string, mixed>  $unprotected
+     * @return array{0: list<ValidationStatus>, 1: AnchorEvidence|null, 2: Certificate|null}
      */
-    private function timeStampingSigner(array $chain, TrustSettings $settings, string $url, ?int $at, array $statuses, ?AnchorEvidence $anchor): array
+    private function timeStampingSigner(array $chain, TrustSettings $settings, string $url, ?int $at, array $statuses, ?AnchorEvidence $anchor, ?Certificate $issuer, array $unprotected, ?RevocationSource $source): array
     {
         $trusted = array_filter($statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialTrusted) !== [];
         if (! $trusted || $settings->trustAnchors === [] || $chain[0]->extendedKeyUsage !== [self::EKU_TIME_STAMPING]) {
-            return [$statuses, $anchor];
+            return [$statuses, $anchor, $issuer];
         }
         $signersOnly = new TrustSettings([], $settings->allowedList, $settings->trustConfig, $settings->verifyTrust, $settings->anchorSets);
-        [$without, $anchor] = $this->walk($chain, $signersOnly, $url, $at);
+        [$without, $anchor, $issuer] = $this->walk($chain, $signersOnly, $url, $at, $unprotected, $source);
         if (array_filter($without, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialTrusted) !== []) {
-            return [$without, $anchor];
+            return [$without, $anchor, $issuer];
         }
 
-        return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s carries only the Time Stamping EKU and reaches only the legacy trust_anchors, which anchor time-stamping authorities as well as signers; a "manifest" entry of trust.anchors or the allowed list must vouch for it as a signer', $chain[0]->subjectCn()))], null];
+        return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s carries only the Time Stamping EKU and reaches only the legacy trust_anchors, which anchor time-stamping authorities as well as signers; a "manifest" entry of trust.anchors or the allowed list must vouch for it as a signer; without the legacy anchors: %s', $chain[0]->subjectCn(), preg_replace('/^signing certificate untrusted: /', '', $without[0]->explanation ?? '') ?? ''))], null, null];
     }
 
     /**
@@ -117,13 +120,14 @@ final readonly class ChainCheck
 
     /**
      * checkCertificates(), and what made a trusted outcome trusted (SPEC-082): the anchor reached, or the
-     * leaf on the allowed list, with the list that made it count. Null for every other outcome.
+     * leaf on the allowed list, with the list that made it count; and the certificate the walk verified as the
+     * leaf's issuer, which a revocation source is told about (SPEC-086 amendment 2). Null for every other outcome.
      *
      * With a revocation source (SPEC-087), each CA of the path found is asked about after the stored responses.
      *
      * @param  non-empty-list<Certificate>  $chain
      * @param  array<int|string, mixed>  $unprotected
-     * @return array{0: list<ValidationStatus>, 1: AnchorEvidence|null}
+     * @return array{0: list<ValidationStatus>, 1: AnchorEvidence|null, 2: Certificate|null}
      */
     public function walk(array $chain, TrustSettings $settings, string $url, ?int $at = null, array $unprotected = [], ?RevocationSource $source = null): array
     {
@@ -133,11 +137,11 @@ final readonly class ChainCheck
         $anchors = self::anchorsOf($settings);
         foreach (self::allowedListOf($settings) as $allowed) {
             if (hash_equals($allowed->sha256, $leaf->sha256)) {
-                return [[new ValidationStatus(StatusCode::SigningCredentialTrusted, $url, sprintf('signing certificate trusted: %s is on the allowed list (sha256 %s)', $leaf->subjectCn(), bin2hex($leaf->sha256)))], new AnchorEvidence(AnchorEvidence::ALLOWED_LIST, bin2hex($leaf->sha256), 0, self::allowingList($settings, $leaf), null, null)];
+                return [[new ValidationStatus(StatusCode::SigningCredentialTrusted, $url, sprintf('signing certificate trusted: %s is on the allowed list (sha256 %s)', $leaf->subjectCn(), bin2hex($leaf->sha256)))], new AnchorEvidence(AnchorEvidence::ALLOWED_LIST, bin2hex($leaf->sha256), 0, self::allowingList($settings, $leaf), null, null), self::provenIssuer($chain)];
             }
         }
         if ($anchors === []) {
-            return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s is not on the allowed list and no trust anchors are configured', $leaf->subjectCn()))], null];
+            return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s is not on the allowed list and no trust anchors are configured', $leaf->subjectCn()))], null, null];
         }
 
         // the walk, from the leaf, through the chain the signer supplied
@@ -151,10 +155,10 @@ final readonly class ChainCheck
                     $path = array_reverse(array_slice($chain, 0, $depth + 1));
                     $fault = self::listedFault($settings, $anchor, $at) ?? self::pathFault($path) ?? (new OcspCheck)->revokedCa($unprotected, $path, $at) ?? (new OcspCheck)->fetchedCaRevocation($source, $path, $at);
                     if ($fault !== null) {
-                        return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))], null];
+                        return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))], null, null];
                     }
 
-                    return [[new ValidationStatus(StatusCode::SigningCredentialTrusted, $url, sprintf('signing certificate trusted: %s is itself a trust anchor (depth %d)', $current->subjectCn(), $depth))], self::reached($settings, $anchor, $depth, $at)];
+                    return [[new ValidationStatus(StatusCode::SigningCredentialTrusted, $url, sprintf('signing certificate trusted: %s is itself a trust anchor (depth %d)', $current->subjectCn(), $depth))], self::reached($settings, $anchor, $depth, $at), $depth >= 1 ? $chain[1] : self::provenIssuer($chain)];
                 }
                 if ($current->issuer === $anchor->subject && $current->signedBy($anchor)) {
                     // the anchor issued $current: $depth intermediates lie between it and the leaf
@@ -168,38 +172,52 @@ final readonly class ChainCheck
                     $path = [$anchor, ...array_reverse(array_slice($chain, 0, $depth + 1))];
                     $fault = self::pathFault($path) ?? (new OcspCheck)->revokedCa($unprotected, $path, $at) ?? (new OcspCheck)->fetchedCaRevocation($source, $path, $at);
                     if ($fault !== null) {
-                        return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))], null];
+                        return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))], null, null];
                     }
 
-                    return [[new ValidationStatus(StatusCode::SigningCredentialTrusted, $url, sprintf('signing certificate trusted: the chain reaches the trust anchor %s at depth %d (%s)', $anchor->subjectCn(), $depth + 1, implode(' → ', [...array_map(static fn (Certificate $c): string => $c->subjectCn(), array_slice($chain, 0, $depth + 1)), $anchor->subjectCn()])))], self::reached($settings, $anchor, $depth + 1, $at)];
+                    return [[new ValidationStatus(StatusCode::SigningCredentialTrusted, $url, sprintf('signing certificate trusted: the chain reaches the trust anchor %s at depth %d (%s)', $anchor->subjectCn(), $depth + 1, implode(' → ', [...array_map(static fn (Certificate $c): string => $c->subjectCn(), array_slice($chain, 0, $depth + 1)), $anchor->subjectCn()])))], self::reached($settings, $anchor, $depth + 1, $at), $depth === 0 ? $anchor : $chain[1]];
                 }
             }
             $next = $chain[$depth + 1] ?? null;
             if ($next === null) {
                 if ($anchorFault !== null) {
-                    return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $anchorFault))], null];
+                    return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $anchorFault))], null, null];
                 }
                 $nameMatch = $this->anchorWithSubject($settings, $current->issuer);
 
                 return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, $nameMatch === null
                     ? sprintf('signing certificate untrusted: the chain ends at %s (depth %d), issued by %s, which the chain does not carry and no trust anchor signs', $current->subjectCn(), $depth, $current->issuerCn())
                     : sprintf('signing certificate untrusted: the chain ends at %s (depth %d); a trust anchor carries the issuer name %s but its key did not make the signature — a name is not a proof', $current->subjectCn(), $depth, $current->issuerCn()),
-                )], null];
+                )], null, null];
             }
             if ($current->issuer !== $next->subject) {
-                return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s (depth %d) is issued by %s, but the next certificate in x5chain is %s', $current->subjectCn(), $depth, $current->issuerCn(), $next->subjectCn()))], null];
+                return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s (depth %d) is issued by %s, but the next certificate in x5chain is %s', $current->subjectCn(), $depth, $current->issuerCn(), $next->subjectCn()))], null, null];
             }
             if (! $current->signedBy($next)) {
-                return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: the signature of %s (depth %d) does not verify under %s', $current->subjectCn(), $depth, $next->subjectCn()))], null];
+                return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: the signature of %s (depth %d) does not verify under %s', $current->subjectCn(), $depth, $next->subjectCn()))], null, null];
             }
             $fault = self::issuerFault($next, $current, $depth, $at, 'intermediate');
             if ($fault !== null) {
-                return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))], null];
+                return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))], null, null];
             }
             $current = $next;
         }
 
-        return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %d certificates walked, none an anchor or signed by one', count($chain)))], null];
+        return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %d certificates walked, none an anchor or signed by one', count($chain)))], null, null];
+    }
+
+    /**
+     * The certificate x5chain carries second, when it demonstrably issued the leaf: its subject is the leaf's
+     * issuer and its key verifies the leaf's signature (SPEC-086 amendment 2, option b). For a leaf the walk
+     * vouched for without a certificate above it — on the allowed list, or itself an anchor.
+     *
+     * @param  non-empty-list<Certificate>  $chain
+     */
+    private static function provenIssuer(array $chain): ?Certificate
+    {
+        $next = $chain[1] ?? null;
+
+        return $next !== null && $chain[0]->issuer === $next->subject && $chain[0]->signedBy($next) ? $next : null;
     }
 
     /**

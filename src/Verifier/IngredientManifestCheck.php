@@ -223,9 +223,10 @@ final readonly class IngredientManifestCheck
 
         $trustSettings = $settings ?? new TrustSettings([], []);
         $anchor = null;
+        $issuer = null;
         $trust = [];
         if ($trustSettings->verifyTrust) {
-            [$trust, $anchor] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at, $source);   // SPEC-087: the source for the CAs of the path
+            [$trust, $anchor, $issuer] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at, $source);   // SPEC-087: the source for the CAs of the path
             $statuses = [...$statuses, ...$trust];
         }
         // revocation of this manifest's signer (SPEC-066): where the store carries certificate-status
@@ -240,7 +241,7 @@ final readonly class IngredientManifestCheck
         }
         $ocsp = [];
         if ($cose !== null) {
-            [$revocation, $ocsp] = (new OcspCheck)->checkWithEvidence($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses, self::trusted($trust) ? $source : null);   // SPEC-086: a trusted signer only
+            [$revocation, $ocsp] = (new OcspCheck)->checkWithEvidence($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses, self::trusted($trust) ? $source : null, $issuer);   // SPEC-086: a trusted signer only, told the issuer the walk verified (amendment 2)
             $statuses = [...$statuses, ...($responses !== [] ? $revocation : array_filter($revocation, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialOcspRevoked))];
         }
         $evidence[$manifest->label] = self::evidenceOf($manifest, $at ?? time(), $timestamp, $now !== null, $anchor, $ocsp);   // no clock given: the checks read it themselves

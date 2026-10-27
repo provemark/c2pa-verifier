@@ -193,6 +193,19 @@ final readonly class OcspCheck
 
    **Weight A: a file wrongly `Trusted` becomes `Invalid`.**
 
+3. **2026-10-27, step 483, found by the review of step 482; measured** *(approved by Maurice van Loon, 2026-10-27)* —
+   AC1 holds for a path found by the second walk of a signer whose only
+   EKU is Time Stamping (SPEC-031 amendment, step 159) as well: that walk
+   got no unprotected header, so a stapled `revoked` about a CA of its
+   path was not read, and the file stayed `Trusted` (since 0.6.0, when
+   AC1 was built). Measured with `bin/make-revocation-issuer-variants.php`
+   (`tsa-signer-staple.png`: the intermediate's revocation stapled). The
+   second walk now reads the staple as the first does; the file is
+   `Valid`, `signingCredential.untrusted` naming the intermediate.
+   `c2patool` 0.28.3 calls it `Trusted` (it checks no CA's revocation).
+
+   **Weight A: a file wrongly `Trusted` becomes `Valid` (untrusted).**
+
 ## Open questions
 
 - 1. **The anchor.** Excluded: an anchor is trusted by configuration, and
@@ -216,3 +229,4 @@ final readonly class OcspCheck
 | AC6 | tests/Unit/Trust/RevocationBeyondStapleTest.php :: AC6: both c2patool versions ignore all of it / SPEC-066 | bin/make-revocation-variants.php |
 | AC7 | the corpus before and after (notes/step-338-revocation-beyond-the-staple.md); tests/Unit/Trust/OcspCheckTest.php (SPEC-030) unchanged | src/Verifier/IngredientManifestCheck.php (amendment 1) |
 | AC8 (amendment 2) | tests/Unit/Trust/IngredientStapleTest.php :: AC8 / SPEC-066 | src/Verifier/IngredientManifestCheck.php :: manifest() (the staple without certificate-status responses); bin/make-ingredient-staple-variants.php |
+| AC1 (amendment 3) | tests/Unit/Verifier/RevocationIssuerTest.php :: a time-stamping signer's second walk reads a stapled response about a CA of its path / SPEC-066 | src/Trust/ChainCheck.php :: timeStampingSigner(); bin/make-revocation-issuer-variants.php |

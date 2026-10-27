@@ -122,16 +122,18 @@ final readonly class OcspCheck
      * @param  array<int|string, mixed>  $unprotected
      * @param  list<Certificate>  $chain
      * @param  list<array{0: string, 1: string}>  $extra
+     * @param  Certificate|null  $issuer  the signer's issuer as the chain walk verified it, which the source is told
+     *                                    about — never merely x5chain's second certificate (SPEC-086 amendment 2)
      * @return array{0: list<ValidationStatus>, 1: list<OcspEvidence>}
      */
-    public function checkWithEvidence(array $unprotected, array $chain, ?int $at, string $url, array $extra = [], ?RevocationSource $source = null): array
+    public function checkWithEvidence(array $unprotected, array $chain, ?int $at, string $url, array $extra = [], ?RevocationSource $source = null, ?Certificate $issuer = null): array
     {
         [$statuses, $evidence] = $this->stored($unprotected, $chain, $at, $url, $extra);
-        if ($source === null || count($chain) < 2 || $statuses[0]->code !== StatusCode::SigningCredentialOcspSkipped) {
+        if ($source === null || $issuer === null || $chain === [] || $statuses[0]->code !== StatusCode::SigningCredentialOcspSkipped) {
             return [$statuses, $evidence];
         }
 
-        return $this->fetched($source, $chain[0], $chain[1], $at ?? time(), $url, $evidence);
+        return $this->fetched($source, $chain[0], $issuer, $at ?? time(), $url, $evidence);
     }
 
     /**
