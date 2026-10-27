@@ -12132,3 +12132,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-087-revocation-source-cas.md` (draft); `NOTES.md`.
 - Measured: over the verifier at `bc3aef5`, the chains, verdicts and stapled responses (status, reason, times via `openssl ocsp -resp_text`) of `revocation/ca-control.png`, `ca-revoked.png`, `ca-good.png`, `ca-removed.png` and `anchor-in-chain/*.png` under their settings; the Google and OpenAI writer files' chains and AIA under the programme's lists; the OpenAI file at 2026-08-26T12:00:00Z (`Trusted`, `notRevoked`). / Reasoned: from `ChainCheck`, that one path per manifest is walked, so each CA is asked once.
 - Decided by Maurice: the eight proposals for the spec's content.
+
+## 2026-10-27 — Step 477: SPEC-087 approved
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-087 approved, push 476".
+- Produced: `specs/SPEC-087-revocation-source-cas.md` (status, approval); `NOTES.md`.
+- Reasoned: nothing new; the draft had no open questions.
+- Decided by Maurice: SPEC-087 approved.
