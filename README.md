@@ -283,7 +283,7 @@ without saying so.
 | `Verifier\Verifier` | the one call: `verify($stream, $settings)` |
 | `Verifier\FragmentedVerifier` | a DASH init segment and its fragments as one verdict: `verify($init, $fragments, $settings)`, one open fragment stream at a time |
 | `Verifier\VerificationReport` | what comes back: `$result`, `$format`, `$hasManifest`, `$remoteManifestUrl`, `$signatureInfo`, `toArray()`, `toJson()`, `trustLists()`, `evidence()` |
-| `Verifier\ManifestEvidence` | what one manifest's verdict rested on: the time judged at and its source, and the anchors reached |
+| `Verifier\ManifestEvidence` | what one manifest's verdict rested on: the time judged at and its source, the anchors reached, and the signer's `x5chain` certificates as DER |
 | `Report\ValidationResult` | the verdict and the statuses behind it |
 | `Report\ValidationStatus` | one status: its code, the JUMBF URI it concerns, a sentence |
 | `Report\ValidationState` | `Trusted`, `Valid`, `Invalid` |

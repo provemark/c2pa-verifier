@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-27                      |
 | Supersedes | —                                                 |
@@ -151,14 +151,20 @@ None.
 
 ## Traceability
 
-Filled when status becomes `implemented`.
+All in `tests/Unit/Verifier/EvidenceCertificatesTest.php`, group
+`SPEC-083`, unless named otherwise. Seen red before the implementation (all
+9 tests, on the missing property and the missing line in the recorded
+surface). AC3 adds `c2pa-rs/ocsp.jpg` to `CACA.jpg`: the two manifests of
+`CACA.jpg` turned out to share one signer's chain, so only a file whose
+manifests differ shows that each gets its own (measured 2026-10-27: 35
+corpus files have manifests with different chains).
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
+| AC1                  | AC1: the chain, byte for byte, the same with settings as without | src/Verifier/IngredientManifestCheck.php :: evidenceOf() |
+| AC2                  | AC2: certificates X.509 refuses are still handed out as their bytes | src/Verifier/IngredientManifestCheck.php :: evidenceOf() |
+| AC3                  | AC3: each manifest carries its own chain | src/Verifier/IngredientManifestCheck.php :: evidenceOf(), manifest(); src/Verifier/Verifier.php :: check() |
+| AC4                  | AC4: no chain to show when COSE refuses the signature (3 datasets) | src/Verifier/IngredientManifestCheck.php :: evidenceOf() |
+| AC5                  | AC5: over the corpus, the evidence agrees with the COSE reader | src/Verifier/IngredientManifestCheck.php :: evidenceOf(); src/Cose/CoseSign1.php :: ofManifest() |
+| AC6                  | AC6: the reports carry no certificate bytes; measured over the corpus (step 462) | src/Verifier/ManifestEvidence.php |
+| AC7                  | AC7: certificates is a contract property; tests/Unit/ApiSurfaceTest.php :: AC1: the recorded surface is exactly what the contract classes expose today | src/Verifier/ManifestEvidence.php :: $certificates; tests/Fixtures/api/public-surface.txt |

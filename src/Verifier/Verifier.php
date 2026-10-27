@@ -319,7 +319,7 @@ final readonly class Verifier
             $checks[] = 'trust';
         }
         // SPEC-082: what this verdict rests on, from the checks themselves
-        $evidence[$manifest->label] = IngredientManifestCheck::evidenceOf($manifest->label, $at, $timestamp, $now !== null, $anchor);
+        $evidence[$manifest->label] = IngredientManifestCheck::evidenceOf($manifest, $at, $timestamp, $now !== null, $anchor);
 
         // revocation, as far as it can be known without a network: the OCSP responses the
         // signer stapled into its own signature (SPEC-030). It runs after the chain, which

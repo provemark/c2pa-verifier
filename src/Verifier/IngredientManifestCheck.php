@@ -15,6 +15,7 @@ use Provemark\C2paVerifier\Manifest\ExternalReferenceCheck;
 use Provemark\C2paVerifier\Manifest\IconReferenceCheck;
 use Provemark\C2paVerifier\Manifest\IngredientAssertion;
 use Provemark\C2paVerifier\Manifest\Manifest;
+use Provemark\C2paVerifier\Manifest\ManifestException;
 use Provemark\C2paVerifier\Manifest\ManifestGraph;
 use Provemark\C2paVerifier\Manifest\ManifestStore;
 use Provemark\C2paVerifier\Report\StatusCode;
@@ -224,7 +225,7 @@ final readonly class IngredientManifestCheck
             [$trust, $anchor] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at);
             $statuses = [...$statuses, ...$trust];
         }
-        $evidence[$manifest->label] = self::evidenceOf($manifest->label, $at ?? time(), $timestamp, $now !== null, $anchor);   // no clock given: the checks read it themselves
+        $evidence[$manifest->label] = self::evidenceOf($manifest, $at ?? time(), $timestamp, $now !== null, $anchor);   // no clock given: the checks read it themselves
         // revocation of this manifest's signer (SPEC-066): where the store carries certificate-status
         // responses, which may name it, its own stapled responses join them. Without any, its own staple is
         // read for a revoked only (amendment 2): notRevoked and skipped stay unreported, as c2patool reports it
@@ -264,12 +265,18 @@ final readonly class IngredientManifestCheck
     /**
      * A manifest's evidence (SPEC-082): judged at $at, whose source is the trusted time-stamp when it gave
      * the time, else the caller's validation time, else the clock; the TSA's anchor only in the first case.
+     * Its certificates are x5chain's DER as the COSE reader took them (SPEC-083), none when it refused.
      */
-    public static function evidenceOf(string $label, int $at, TimestampResult $timestamp, bool $given, ?AnchorEvidence $signer): ManifestEvidence
+    public static function evidenceOf(Manifest $manifest, int $at, TimestampResult $timestamp, bool $given, ?AnchorEvidence $signer): ManifestEvidence
     {
         $fromTimestamp = $timestamp->trustedTime() !== null;
+        try {
+            $certificates = array_map(static fn ($certificate): string => $certificate->bytes, CoseSign1::ofManifest($manifest)->chain);
+        } catch (CoseException|ManifestException) {
+            $certificates = [];   // the signature check has already said why
+        }
 
-        return new ManifestEvidence($label, $at, $fromTimestamp ? ManifestEvidence::TIMESTAMP : ($given ? ManifestEvidence::GIVEN : ManifestEvidence::CLOCK), $signer, $fromTimestamp ? $timestamp->anchor : null);
+        return new ManifestEvidence($manifest->label, $at, $fromTimestamp ? ManifestEvidence::TIMESTAMP : ($given ? ManifestEvidence::GIVEN : ManifestEvidence::CLOCK), $signer, $fromTimestamp ? $timestamp->anchor : null, $certificates);
     }
 
     /**

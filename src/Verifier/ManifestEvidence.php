@@ -12,7 +12,9 @@ use Provemark\C2paVerifier\Trust\AnchorEvidence;
  * the caller's validation time, or the clock (C2PA 2.4 §15.8.2; SPEC-073) —
  * and what made its signer and its time-stamp authority trusted, or null
  * where they were not. Each manifest has its own: an ingredient manifest is
- * judged at its own time (SPEC-021).
+ * judged at its own time (SPEC-021). Its certificates are the signer's
+ * `x5chain` exactly as the file carries them, leaf first (C2PA 2.4 §14.5;
+ * SPEC-083), whether or not X.509 could read them.
  */
 final readonly class ManifestEvidence
 {
@@ -27,6 +29,7 @@ final readonly class ManifestEvidence
      * @param  string  $timeSource  self::TIMESTAMP, self::GIVEN or self::CLOCK
      * @param  AnchorEvidence|null  $signer  set exactly when the signature has signingCredential.trusted
      * @param  AnchorEvidence|null  $tsa  set exactly when the time-stamp was trusted and gave the time
+     * @param  list<string>  $certificates  DER, x5chain's order, the leaf first; empty when the COSE reader refused the signature
      */
     public function __construct(
         public string $label,
@@ -34,5 +37,6 @@ final readonly class ManifestEvidence
         public string $timeSource,
         public ?AnchorEvidence $signer,
         public ?AnchorEvidence $tsa,
+        public array $certificates = [],
     ) {}
 }

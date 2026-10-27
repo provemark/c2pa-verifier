@@ -12027,3 +12027,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-083-evidence-certificates.md` (status, approval); `NOTES.md`.
 - Reasoned: nothing new; the draft had no open questions.
 - Decided by Maurice: SPEC-083 approved.
+
+## 2026-10-27 — Step 462: SPEC-083 built, the certificates of x5chain
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-083 approved" — then tests first, the build, and the log.
+- Produced: `src/Verifier/ManifestEvidence.php` (`$certificates`), `src/Verifier/IngredientManifestCheck.php` (`evidenceOf()` takes the manifest and reads its chain), `src/Verifier/Verifier.php`; `tests/Unit/Verifier/EvidenceCertificatesTest.php` (new, 9 tests); `tests/Fixtures/api/public-surface.txt`, `tests/Unit/ApiSurfaceTest.php` (172); `README.md`; `specs/SPEC-083-evidence-certificates.md` (implemented, traceability); `notes/step-462-evidence-certificates.md`; `NOTES.md`; `docs/milestones.md`.
+- Measured: `vendor/bin/pest --group=SPEC-083` red (9 failed) before the build, green after; `composer check` 1,455 passed, 1 skipped; six hand mutations, each caught; a corpus walk (1,025 files, 755 manifests; 35 files whose manifests have different chains); 3,060 runs before (worktree at `9eecfc2`, own `vendor/` copy) and after, SHA-256 of `toJson()` and `toCrJson()` identical. / Reasoned: `CACA.jpg`'s two manifests share one chain, so AC3 also reads `ocsp.jpg` to show each manifest gets its own (recorded in the traceability).
+- Decided by Maurice: none in this step beyond the approval (step 461).

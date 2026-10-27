@@ -147,6 +147,7 @@ Verifier\ManifestEvidence :: const CLOCK
 Verifier\ManifestEvidence :: const GIVEN
 Verifier\ManifestEvidence :: const TIMESTAMP
 Verifier\ManifestEvidence :: method __construct
+Verifier\ManifestEvidence :: property certificates
 Verifier\ManifestEvidence :: property judgedAt
 Verifier\ManifestEvidence :: property label
 Verifier\ManifestEvidence :: property signer
