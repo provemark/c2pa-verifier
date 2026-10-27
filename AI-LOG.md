@@ -11971,3 +11971,10 @@ README are where the disclosure lives.
 - Produced: `src/Report/StatusCode.php` and `src/Trust/CertificateProfileCheck.php` (docblocks only); `docs/comparison.md`; `docs/reading-c2pa-2.4.md`; `notes/step-453-expired-is-a-legacy-code.md`; `NOTES.md`.
 - Measured: both codes counted in the C2PA specifications 1.0, 1.4, 2.0, 2.1, 2.2, 2.3, 2.4 and 2.5 as published on spec.c2pa.org; the stored `c2patool` answers under `tests/Fixtures/` grepped for the code per version; `composer check`.
 - Decided by Maurice: documentation only, no release; whether `claimSignature.outsideValidity` is added waits for the minor release that gathers the codes.
+
+## 2026-10-27 — Step 454: SPEC-081 drafted (trust list identity)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "kan je doorgaan?"; "akkoord, beide voorstellen" (a `trustLists()` method returning value objects, and in the contract).
+- Produced: `specs/SPEC-081-trust-list-identity.md` (draft); `NOTES.md`.
+- Measured: `c2patool` 0.28.1, 0.28.2 and 0.28.3 `--crjson` on the sister repository's `out/signed.png` with its trust settings (no trust-list field), and `strings` over the three binaries (`trustListUri`, `timestampTrustListUri`, no `trustListUris`); `shasum -a 256` and the LoTE number and date of the four fixture lists; `php bin/spec-check.php`.
+- Decided by Maurice: a `trustLists()` method returning `readonly` value objects; part of the contract, so it waits for the next minor.
