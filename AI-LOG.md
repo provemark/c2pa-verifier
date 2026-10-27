@@ -12020,3 +12020,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-083-evidence-certificates.md` (draft); `NOTES.md`. Pushed steps 457–459 before (CI green on `15d378c`).
 - Measured: the `x5chain` of `control.png`, `certificate-time-nul.jpg`, the three `cose/` probes and `CACA.jpg` with `CoseSign1::ofManifest()` (PHP one-liners over the verifier at `15d378c`); a corpus search for certificates X.509 refuses; `php bin/spec-check.php`.
 - Decided by Maurice: raw DER as an optional last parameter of `ManifestEvidence`; refused certificates handed out as bytes, an empty list where COSE refuses; `x5chain` only (the TSA's certificates come with the tokens); the header bucket left for later.
+
+## 2026-10-27 — Step 461: SPEC-083 approved
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-083 approved".
+- Produced: `specs/SPEC-083-evidence-certificates.md` (status, approval); `NOTES.md`.
+- Reasoned: nothing new; the draft had no open questions.
+- Decided by Maurice: SPEC-083 approved.
