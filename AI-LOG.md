@@ -12111,3 +12111,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-086-revocation-source.md` (draft); `NOTES.md`.
 - Measured: over the verifier at `c0eaf42`, the evidence and statuses of `revocation/cs-good.png`, `cs-revoked.png`, `cs-own.png`, `cs-parent.png`, `ca-control.png` under `revocation/throw-away-root.settings.json` and of the Google writer file under the programme's lists (the responses' hashes and windows, the leaves' AIA via `openssl_x509_parse`). / Reasoned: which probe combines with which recorded response for each criterion; the url limits (four, 2,048 bytes) set by analogy with the response limits.
 - Decided by Maurice: the nine proposals for the spec's content.
+
+## 2026-10-27 — Step 474: SPEC-086 approved
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-086 approved, push 473".
+- Produced: `specs/SPEC-086-revocation-source.md` (status, approval); `NOTES.md`.
+- Reasoned: nothing new; the draft had no open questions.
+- Decided by Maurice: SPEC-086 approved.
