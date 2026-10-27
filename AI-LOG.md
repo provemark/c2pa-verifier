@@ -12062,3 +12062,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-085-evidence-ocsp.md` (draft); `NOTES.md`.
 - Measured: a scratch walk over every file under `tests/Fixtures/` (verifier at `13839bf`): 18 manifests in 16 files with one stapled response each, all readable, matched and verified, all `skipped` now; `openai-20260826-c2pa_2x.png` and `adobe-20260425-lightroom-classic-church.jpg` give `notRevoked` at a validation time inside the response's week; 5 stores with 7 certificate-status responses; per-response readings (through `OcspCheck`'s private methods, by reflection, in the scratch script only) for `ocsp_with_assertion.jpg`, `cs-two.png`, `cs-good.png` and the `tests/Fixtures/ocsp/` responses; `good.der` then `revoked.der` gives `revoked`. / Reasoned: the AC8 invariants follow from `OcspCheck::check()`'s loop; the corpus run will hold them.
 - Decided by Maurice: all four proposals.
+
+## 2026-10-27 — Step 467: SPEC-085 approved
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-085 approved".
+- Produced: `specs/SPEC-085-evidence-ocsp.md` (status, approval); `NOTES.md`.
+- Reasoned: nothing new; the draft had no open questions.
+- Decided by Maurice: SPEC-085 approved.
