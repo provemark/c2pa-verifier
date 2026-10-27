@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-27                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -184,10 +184,14 @@ public function trustLists(): array;
    one per `trust.anchors` entry. Proposal: not now. That shape is built
    by the caller, who already holds its bytes; the programme's lists are
    what an archive takes from outside. Non-blocker.
+   *Status 2026-10-27 (step 455):* decided by Maurice as proposed: not
+   now; `trustLists()` is empty for such settings (AC5).
 2. **A malformed number or date.** Refusing the list would add a refusal
    that a list read today does not meet, and a verdict could move with it.
    Proposal: null, as in AC7, since the digest identifies the list either
    way. Non-blocker.
+   *Status 2026-10-27 (step 455):* decided by Maurice as proposed: null,
+   no new refusal (AC7).
 
 ## Traceability
 

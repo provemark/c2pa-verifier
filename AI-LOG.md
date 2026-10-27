@@ -11978,3 +11978,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-081-trust-list-identity.md` (draft); `NOTES.md`.
 - Measured: `c2patool` 0.28.1, 0.28.2 and 0.28.3 `--crjson` on the sister repository's `out/signed.png` with its trust settings (no trust-list field), and `strings` over the three binaries (`trustListUri`, `timestampTrustListUri`, no `trustListUris`); `shasum -a 256` and the LoTE number and date of the four fixture lists; `php bin/spec-check.php`.
 - Decided by Maurice: a `trustLists()` method returning `readonly` value objects; part of the contract, so it waits for the next minor.
+
+## 2026-10-27 — Step 455: SPEC-081 approved
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-081 approved met beide voorstellen".
+- Produced: `specs/SPEC-081-trust-list-identity.md` (status, approval, the two open questions settled); `NOTES.md`.
+- Reasoned: nothing new; the decisions are the draft's proposals.
+- Decided by Maurice: SPEC-081 approved; open question 1 (settings document not named for now) and 2 (malformed number or date becomes null) as proposed.
