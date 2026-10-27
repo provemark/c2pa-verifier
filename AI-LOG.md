@@ -12041,3 +12041,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-084-evidence-timestamps.md` (draft); `NOTES.md`.
 - Measured: a scratch walk over every file under `tests/Fixtures/` with `TimestampHeader`, `TimestampAssertions` and `TimeStampToken` (verifier at `ebecb10`): 755 manifests, 125 with a header token (78 `sigTst`, 47 `sigTst2`), 14 assertion tokens for 13 manifests, one manifest with both, 2 two-token headers, 3 unreadable tokens, 1 unreadable header, 138 readable tokens with 1–3 certificates each; the tokens, times, certificates and statuses of the AC fixtures. / Reasoned: the AC8 invariants follow from SPEC-064's order; the corpus run will hold them.
 - Decided by Maurice: all five proposals.
+
+## 2026-10-27 — Step 464: SPEC-084 approved
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-084 approved".
+- Produced: `specs/SPEC-084-evidence-timestamps.md` (status, approval); `NOTES.md`.
+- Reasoned: nothing new; the draft had no open questions.
+- Decided by Maurice: SPEC-084 approved.
