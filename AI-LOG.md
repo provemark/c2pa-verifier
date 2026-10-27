@@ -12104,3 +12104,10 @@ README are where the disclosure lives.
 - Produced: `docs/adr/ADR-0007-revocation-from-an-injected-source.md` (accepted, decided questions); `notes/step-472-adr-0007-accepted.md`; `NOTES.md`; `docs/milestones.md`.
 - Measured: nothing new (step 471 holds the measurement). / Reasoned: none beyond recording the decision.
 - Decided by Maurice: ADR-0007 accepted; the `c2patool` side effect not copied on the opt-in path; the source on the `Verifier` constructor.
+
+## 2026-10-27 — Step 473: SPEC-086 drafted, revocation data from an injected source
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push 472 en leg daarna SPEC-086 uit"; then "akkoord, alle voorstellen, schrijf SPEC-086".
+- Produced: `specs/SPEC-086-revocation-source.md` (draft); `NOTES.md`.
+- Measured: over the verifier at `c0eaf42`, the evidence and statuses of `revocation/cs-good.png`, `cs-revoked.png`, `cs-own.png`, `cs-parent.png`, `ca-control.png` under `revocation/throw-away-root.settings.json` and of the Google writer file under the programme's lists (the responses' hashes and windows, the leaves' AIA via `openssl_x509_parse`). / Reasoned: which probe combines with which recorded response for each criterion; the url limits (four, 2,048 bytes) set by analogy with the response limits.
+- Decided by Maurice: the nine proposals for the spec's content.
