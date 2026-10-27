@@ -29,6 +29,7 @@ use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\ChainCheck;
 use Provemark\C2paVerifier\Trust\OcspCheck;
 use Provemark\C2paVerifier\Trust\OcspEvidence;
+use Provemark\C2paVerifier\Trust\RevocationSource;
 use Provemark\C2paVerifier\Trust\TrustException;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 
@@ -77,7 +78,7 @@ final readonly class IngredientManifestCheck
      * @param  array<string, ManifestEvidence>  $evidence  each validated manifest's, added by label in walk order (SPEC-082)
      * @return list<ValidationStatus>
      */
-    public function check(ManifestStore $store, ManifestGraph $graph, ?TrustSettings $settings, ?int $now = null, ?int $clock = null, array &$evidence = []): array
+    public function check(ManifestStore $store, ManifestGraph $graph, ?TrustSettings $settings, ?int $now = null, ?int $clock = null, array &$evidence = [], ?RevocationSource $source = null): array
     {
         $byUrl = [];
         foreach ($graph->ingredients as $list) {
@@ -95,7 +96,7 @@ final readonly class IngredientManifestCheck
             }
             $manifest = $store->manifests[$label];
             $mine = $this->hash($manifest, $ingredient);
-            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests), $assertions, $responses, $now, $clock, $evidence)];
+            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests), $assertions, $responses, $now, $clock, $evidence, $source)];
             // every later reference states a hash of its own, and each is checked under the assertion that
             // states it (amendment 7; C2PA 2.4 §15.11.3.3.2); the manifest itself is validated once (AC9)
             foreach (array_slice($urls, 1) as $url) {
@@ -204,7 +205,7 @@ final readonly class IngredientManifestCheck
      * @param  array<string, ManifestEvidence>  $evidence
      * @return list<ValidationStatus>
      */
-    private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings, array $storeLabels, ?TimestampAssertions $assertions = null, array $responses = [], ?int $now = null, ?int $clock = null, array &$evidence = []): array
+    private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings, array $storeLabels, ?TimestampAssertions $assertions = null, array $responses = [], ?int $now = null, ?int $clock = null, array &$evidence = [], ?RevocationSource $source = null): array
     {
         $timestamp = $this->timestamp->forManifest($manifest, $settings, $assertions ?? TimestampAssertions::none());
         $statuses = $timestamp->present ? $timestamp->statuses : [];
@@ -222,6 +223,7 @@ final readonly class IngredientManifestCheck
 
         $trustSettings = $settings ?? new TrustSettings([], []);
         $anchor = null;
+        $trust = [];
         if ($trustSettings->verifyTrust) {
             [$trust, $anchor] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at);
             $statuses = [...$statuses, ...$trust];
@@ -238,7 +240,7 @@ final readonly class IngredientManifestCheck
         }
         $ocsp = [];
         if ($cose !== null) {
-            [$revocation, $ocsp] = (new OcspCheck)->checkWithEvidence($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses);
+            [$revocation, $ocsp] = (new OcspCheck)->checkWithEvidence($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses, self::trusted($trust) ? $source : null);   // SPEC-086: a trusted signer only
             $statuses = [...$statuses, ...($responses !== [] ? $revocation : array_filter($revocation, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialOcspRevoked))];
         }
         $evidence[$manifest->label] = self::evidenceOf($manifest, $at ?? time(), $timestamp, $now !== null, $anchor, $ocsp);   // no clock given: the checks read it themselves
@@ -262,6 +264,22 @@ final readonly class IngredientManifestCheck
             static fn (ValidationStatus $status): ValidationStatus => new ValidationStatus($status->code, $status->url, $status->explanation, $scope),
             $statuses,
         );
+    }
+
+    /**
+     * Whether the trust check reached an anchor: only then is a revocation source asked (SPEC-086).
+     *
+     * @param  list<ValidationStatus>  $trust
+     */
+    public static function trusted(array $trust): bool
+    {
+        foreach ($trust as $status) {
+            if ($status->code === StatusCode::SigningCredentialTrusted) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

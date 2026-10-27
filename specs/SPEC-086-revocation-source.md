@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-27                      |
 | Supersedes | —                                                 |
@@ -259,16 +259,23 @@ None yet.
 
 ## Traceability
 
+All in `tests/Unit/Verifier/RevocationSourceTest.php`, group `SPEC-086`. Seen red before the implementation (all
+21 tests: the missing interface, the unknown constructor parameter and the
+missing `ocspUrls()`), and the surface test on the four new symbols. Three
+tests for *Scope* lines no corpus file shows were added after the build,
+when mutations M5, M8 and M16 survived; each now fails under its mutation.
+
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  |                             |                      |
-| AC2                  |                             |                      |
-| AC3                  |                             |                      |
-| AC4                  |                             |                      |
-| AC5                  |                             |                      |
-| AC6                  |                             |                      |
-| AC7                  |                             |                      |
-| AC8                  |                             |                      |
-| AC9                  |                             |                      |
-| AC10                 |                             |                      |
-| AC11                 |                             |                      |
+| AC1                  | AC1: a fetched good | src/Trust/OcspCheck.php :: checkWithEvidence(), fetched(), statusOf(); src/Verifier/Verifier.php :: check(), source() |
+| AC2                  | AC2: a fetched revoked | src/Trust/OcspCheck.php :: fetched(), statusOf() |
+| AC3                  | AC3: an answer about another certificate is inaccessible | src/Trust/OcspCheck.php :: fetched(); src/Report/StatusCode.php :: SigningCredentialOcspInaccessible |
+| AC4                  | AC4: no answer is inaccessible, and nothing escapes (null, an exception, an error, not DER) | src/Trust/OcspCheck.php :: fetched() |
+| AC5                  | AC5: not asked where a stored response proves something (cs-good, cs-own) | src/Trust/OcspCheck.php :: checkWithEvidence(); src/Verifier/IngredientManifestCheck.php :: check(), manifest() |
+| AC6                  | AC6: not asked for an untrusted signer | src/Verifier/IngredientManifestCheck.php :: trusted(); src/Verifier/Verifier.php :: check() |
+| AC7                  | AC7: the urls from the AIA | src/Trust/CertificateExtensions.php :: ocspUrls(); src/Trust/OcspCheck.php :: fetched() |
+| AC8                  | AC8: urls that are not kept; fixtures from `bin/make-aia-certificates.php` | src/Trust/CertificateExtensions.php :: ocspUrls() |
+| AC9                  | AC9: the default source changes nothing; and 3,066 corpus runs before (worktree at `738e1dd`, own `vendor/` copy) and after, with no source and with `NoRevocationSource`, identical (`notes/step-475-revocation-source.md`) | src/Trust/NoRevocationSource.php; src/Verifier/Verifier.php :: source() |
+| AC10                 | AC10: over the corpus, the source is asked exactly where allowed (none, full, lists) | src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |
+| AC11                 | tests/Unit/ApiSurfaceTest.php :: AC1 / SPEC-025 | src/Trust/RevocationSource.php; src/Trust/NoRevocationSource.php; src/Trust/OcspEvidence.php :: FETCHED; bin/api-check.php |
+| *Scope*              | scope: a fetched response follows the stored ones in the evidence; scope: the source is not asked when the issuer is not in x5chain; scope: a fetched response over the size limit is not read | src/Trust/OcspCheck.php :: checkWithEvidence(), fetched() |

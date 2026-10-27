@@ -390,6 +390,21 @@ needs an amendment with this spec — the same shape as when
    escapes before, one per fixture, all at that line. **Weight B**: a
    warning becomes a status; no verdict changes. New criterion AC11.
 
+4. **2026-10-27, step 475, with SPEC-086 (ADR-0007)** *(approved by Maurice van Loon, 2026-10-27)* —
+   *Out of scope* rules out "any network access, in any form", online
+   OCSP included, as a rule of the project. ADR-0007 (accepted
+   2026-10-27) changes that rule: this package still opens no connection,
+   but the signer's revocation may be asked of a source the caller
+   injects, off by default. The first bullet is read as: *any network
+   access by this package, in any form — an AIA fetch, a CRL download, a
+   trust list retrieval. An online OCSP response for the signer comes in
+   only through the caller's revocation source (SPEC-086).* The four
+   principles above hold for a fetched response as for a stapled one: it
+   is read by the same code, and one that cannot be used is
+   `signingCredential.ocsp.inaccessible`, informational, never a failure.
+   No acceptance criterion of this spec changes; with the default source
+   every report is byte-identical (SPEC-086 AC9, 3,066 runs).
+
 ## Open questions
 
 All three were answered on approval (Maurice van Loon, 2026-09-22) by

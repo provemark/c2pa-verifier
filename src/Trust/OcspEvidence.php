@@ -9,8 +9,9 @@ use Provemark\C2paVerifier\Report\StatusCode;
 /**
  * One OCSP response offered for a manifest's signer, and what became of it
  * (SPEC-085): stapled in the claim signature's unprotected `rVals` header, or
- * held by a `c2pa.certificate-status` assertion (C2PA 2.4 §14, §15.9, §18.19).
- * The response is the file's own bytes. It was chosen when the signer was
+ * held by a `c2pa.certificate-status` assertion (C2PA 2.4 §14, §15.9, §18.19),
+ * or fetched from the caller's revocation source (SPEC-086, ADR-0007). The
+ * response is the bytes the file or the source gave. It was chosen when the signer was
  * judged by it, not chosen when it was usable and another was, unusable when
  * it could not be read, was about another certificate or did not verify under
  * a responder tied to the signer's issuer, and not tried when a revoked answer
@@ -23,6 +24,8 @@ final readonly class OcspEvidence
 
     public const ASSERTION = 'assertion';
 
+    public const FETCHED = 'fetched';
+
     public const CHOSEN = 'chosen';
 
     public const NOT_CHOSEN = 'notChosen';
@@ -32,9 +35,9 @@ final readonly class OcspEvidence
     public const NOT_TRIED = 'notTried';
 
     /**
-     * @param  string  $source  self::RVALS or self::ASSERTION
-     * @param  string  $url  the claim signature's for a stapled response, the assertion's for an assertion's
-     * @param  string  $response  DER, as the file carries it
+     * @param  string  $source  self::RVALS, self::ASSERTION or self::FETCHED
+     * @param  string  $url  the claim signature's for a stapled or fetched response, the assertion's for an assertion's
+     * @param  string  $response  DER, as the file carries it or the source returned it
      * @param  string  $outcome  self::CHOSEN, self::NOT_CHOSEN, self::UNUSABLE or self::NOT_TRIED
      * @param  StatusCode|null  $code  the signingCredential.ocsp.* code the chosen response gave; null for every other
      * @param  string|null  $certStatus  'good', 'revoked' or 'unknown', for a chosen or not-chosen response

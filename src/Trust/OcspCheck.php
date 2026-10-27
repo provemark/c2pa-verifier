@@ -116,12 +116,33 @@ final readonly class OcspCheck
      * The check, and every response it walked with what became of it (SPEC-085): the check itself records them,
      * so there is no second reading that could drift.
      *
+     * With a revocation source (SPEC-086), it is asked once when no stored response proves anything and the issuer
+     * is known; the caller passes one only for a trusted signer.
+     *
      * @param  array<int|string, mixed>  $unprotected
      * @param  list<Certificate>  $chain
      * @param  list<array{0: string, 1: string}>  $extra
      * @return array{0: list<ValidationStatus>, 1: list<OcspEvidence>}
      */
-    public function checkWithEvidence(array $unprotected, array $chain, ?int $at, string $url, array $extra = []): array
+    public function checkWithEvidence(array $unprotected, array $chain, ?int $at, string $url, array $extra = [], ?RevocationSource $source = null): array
+    {
+        [$statuses, $evidence] = $this->stored($unprotected, $chain, $at, $url, $extra);
+        if ($source === null || count($chain) < 2 || $statuses[0]->code !== StatusCode::SigningCredentialOcspSkipped) {
+            return [$statuses, $evidence];
+        }
+
+        return $this->fetched($source, $chain[0], $chain[1], $at ?? time(), $url, $evidence);
+    }
+
+    /**
+     * The stored responses only: stapled, then those of certificate-status assertions.
+     *
+     * @param  array<int|string, mixed>  $unprotected
+     * @param  list<Certificate>  $chain
+     * @param  list<array{0: string, 1: string}>  $extra
+     * @return array{0: non-empty-list<ValidationStatus>, 1: list<OcspEvidence>}
+     */
+    private function stored(array $unprotected, array $chain, ?int $at, string $url, array $extra): array
     {
         $time = $at ?? time();
         $skipped = fn (string $why): array => [new ValidationStatus(StatusCode::SigningCredentialOcspSkipped, $url, 'revocation not checked: '.$why)];
@@ -179,6 +200,38 @@ final readonly class OcspCheck
         $status = $this->statusOf($best, $leaf, $time, $url, $skipped, $bestFrom);
 
         return [[$status], $this->evidence($pool, $url, $readings, $bestAt, $status->code)];
+    }
+
+    /**
+     * The caller's source asked (SPEC-086, ADR-0007): its answer is read and judged as a stored one, and appended to
+     * the evidence. No answer, a failing source or an answer that cannot be used is signingCredential.ocsp.inaccessible.
+     *
+     * @param  list<OcspEvidence>  $evidence  the stored responses'
+     * @return array{0: non-empty-list<ValidationStatus>, 1: list<OcspEvidence>}
+     */
+    private function fetched(RevocationSource $source, Certificate $leaf, Certificate $issuer, int $time, string $url, array $evidence): array
+    {
+        $inaccessible = static fn (string $why): array => [new ValidationStatus(StatusCode::SigningCredentialOcspInaccessible, $url, 'revocation not checked: '.$why)];
+        try {
+            $der = $source->ocspResponse($leaf->der, $issuer->der, $leaf->x509->ocspUrls());
+        } catch (\Throwable $e) {
+            // the class is not named: an anonymous class's name holds a NUL byte, and a message is the caller's text
+            return [$inaccessible(sprintf('the caller\'s revocation source failed with %s, so no response was fetched (C2PA 2.4 §15.9.2)', $e instanceof \Error ? 'an error' : 'an exception')), $evidence];
+        }
+        if ($der === null) {
+            return [$inaccessible('the caller\'s revocation source returned no response for the signer (C2PA 2.4 §15.9.2)'), $evidence];
+        }
+        $i = count($evidence);
+        $single = strlen($der) > self::DEFAULT_MAX_RESPONSE_BYTES
+            ? sprintf('response %d is %d bytes, over the limit of %d', $i, strlen($der), self::DEFAULT_MAX_RESPONSE_BYTES)
+            : $this->usable($der, $leaf, $issuer, $i);
+        if (is_string($single)) {
+            return [$inaccessible('the response the caller\'s revocation source returned cannot be used: '.$single), [...$evidence, new OcspEvidence(OcspEvidence::FETCHED, $url, $der, OcspEvidence::UNUSABLE, null, null, null, null, null)]];
+        }
+        $skipped = fn (string $why): array => [new ValidationStatus(StatusCode::SigningCredentialOcspSkipped, $url, 'revocation not checked: '.$why)];
+        $status = $this->statusOf($single, $leaf, $time, $url, $skipped, null, true);
+
+        return [[$status], [...$evidence, new OcspEvidence(OcspEvidence::FETCHED, $url, $der, OcspEvidence::CHOSEN, $status->code, $single['status'], $single['producedAt'], $single['thisUpdate'], $single['nextUpdate'])]];
     }
 
     /**
@@ -552,12 +605,15 @@ final readonly class OcspCheck
      * @param  array{status: string, revokedAt: int|null, reason: int|null, thisUpdate: int, nextUpdate: int|null, responder: string, producedAt: int}  $single
      * @param  callable(string): list<ValidationStatus>  $skipped
      */
-    private function statusOf(array $single, Certificate $leaf, int $time, string $url, callable $skipped, ?string $from = null): ValidationStatus
+    private function statusOf(array $single, Certificate $leaf, int $time, string $url, callable $skipped, ?string $from = null, bool $fetched = false): ValidationStatus
     {
         $when = static fn (?int $t): string => $t === null ? 'never' : gmdate('Y-m-d\TH:i:s\Z', $t);
-        $source = $from === null
-            ? 'the response comes from the unsigned rVals header, so it is not evidence the certificate was never revoked'
-            : sprintf('the response comes from the certificate-status assertion %s (C2PA 2.4 §15.9, SPEC-066)', $from);
+        $source = match (true) {
+            $fetched => 'the response was fetched from the caller\'s revocation source, not taken from the file (SPEC-086)',
+            $from === null => 'the response comes from the unsigned rVals header, so it is not evidence the certificate was never revoked',
+            default => sprintf('the response comes from the certificate-status assertion %s (C2PA 2.4 §15.9, SPEC-066)', $from),
+        };
+        $noun = $fetched ? 'the fetched response' : 'the stapled response';
 
         if ($single['status'] === 'revoked' && $single['reason'] !== self::REASON_REMOVE_FROM_CRL
             && ($single['revokedAt'] === null || $single['revokedAt'] <= $time)) {
@@ -569,14 +625,14 @@ final readonly class OcspCheck
                 self::reasonName($single['reason'], 'unspecified'),
                 $single['responder'],
                 $when($single['producedAt']),
-            ));
+            ).($fetched ? '; '.$source : ''));
         }
         if ($single['status'] === 'revoked') {
             // removeFromCRL is a re-instatement (RFC 6960 §4.2.1), and a revocation after
             // the signing time says nothing about a signature made before it
             return $skipped(sprintf(
-                'the stapled response reports %s at %s for %s, which is not a revocation at the judged time %s',
-                self::reasonName($single['reason'], 'a revocation'), $when($single['revokedAt']), $leaf->subjectCn(), $when($time),
+                '%s reports %s at %s for %s, which is not a revocation at the judged time %s',
+                $noun, self::reasonName($single['reason'], 'a revocation'), $when($single['revokedAt']), $leaf->subjectCn(), $when($time),
             ))[0];
         }
         if ($single['status'] !== 'good') {
@@ -587,8 +643,8 @@ final readonly class OcspCheck
         }
         if ($single['thisUpdate'] > $time || ($single['nextUpdate'] !== null && $single['nextUpdate'] < $time)) {
             return $skipped(sprintf(
-                'the stapled response was valid from %s to %s and the judged time is %s, so it is not current (RFC 5019 §3.2); this verifier makes no online query to refresh it',
-                $when($single['thisUpdate']), $when($single['nextUpdate']), $when($time),
+                '%s was valid from %s to %s and the judged time is %s, so it is not current (RFC 5019 §3.2)%s',
+                $noun, $when($single['thisUpdate']), $when($single['nextUpdate']), $when($time), $fetched ? '; '.$source : '; this verifier makes no online query to refresh it',
             ))[0];
         }
 

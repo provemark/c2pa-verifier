@@ -83,6 +83,8 @@ enum StatusCode: string
     case SigningCredentialOcspNotRevoked = 'signingCredential.ocsp.notRevoked';
     case SigningCredentialOcspUnknown = 'signingCredential.ocsp.unknown';
     case SigningCredentialOcspSkipped = 'signingCredential.ocsp.skipped';
+    // SPEC-086: the caller's revocation source was asked and gave nothing usable (C2PA 2.4 §15.9.2); informational
+    case SigningCredentialOcspInaccessible = 'signingCredential.ocsp.inaccessible';
     // SPEC-035: redactions (C2PA 2.4 §6.8, §15.10.3.1) and the claim-signature method an ingredient
     // whose manifest lost a redacted assertion is checked by instead of its box hash (§15.11.3.3.1)
     case AssertionActionRedacted = 'assertion.action.redacted';
@@ -121,7 +123,8 @@ enum StatusCode: string
             // SPEC-030: a response this verifier could not use costs nothing. The header is
             // unsigned, so failing a file over one would let an attacker deny any valid asset
             // by editing a byte no signature covers.
-            || $this === self::SigningCredentialOcspSkipped || $this === self::SigningCredentialOcspUnknown;
+            || $this === self::SigningCredentialOcspSkipped || $this === self::SigningCredentialOcspUnknown
+            || $this === self::SigningCredentialOcspInaccessible;   // SPEC-086: an unanswered query, as c2pa-rs records it
     }
 
     public function isFailure(): bool

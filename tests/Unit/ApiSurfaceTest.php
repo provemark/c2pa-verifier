@@ -23,7 +23,7 @@ if (is_file($apiCheckScript)) {
 }
 
 /**
- * The sixteen classes a caller may build on (SPEC-025 AC1, amendment 2; the eleventh from SPEC-031, the twelfth from SPEC-081, two more from SPEC-082, the fifteenth from SPEC-084, the sixteenth from SPEC-085), read from
+ * The eighteen classes a caller may build on (SPEC-025 AC1, amendment 2; the eleventh from SPEC-031, the twelfth from SPEC-081, two more from SPEC-082, the fifteenth from SPEC-084, the sixteenth from SPEC-085, two more from SPEC-086), read from
  * `bin/api-check.php` rather than copied.
  *
  * This function held a second copy of the list until step 89, and the two drifted:
@@ -80,7 +80,7 @@ it('AC1: the recorded surface is exactly what the contract classes expose today'
     }
 
     expect($live)->toBe(spec025Recorded())
-        ->and($live)->toHaveCount(204);   // 91, then two bmffHash codes, then SPEC-028's tenth class, then SPEC-030's four ocsp codes, then SPEC-031's eleventh class, then SPEC-063's three cloud-data codes, then SPEC-060's two text codes, then SPEC-064's one, then SPEC-065's three (10) and two members of TrustSettings, then SPEC-032's code, then SPEC-033's two, then SPEC-035's six, then SPEC-036's one, then SPEC-037's one, then SPEC-038's two, then SPEC-039's one, then SPEC-040's one, then SPEC-070's acknowledged, then SPEC-075's three (VERSION, validationTime, toCrJson), then SPEC-077's fromTrustLists, then SPEC-079's two TrustAnchorSet properties (windows, reasons), then SPEC-081's ten (TrustListIdentity's eight, TrustAnchorSet::identity, VerificationReport::trustLists), then SPEC-082's nineteen (AnchorEvidence's nine, ManifestEvidence's nine, VerificationReport::evidence), then SPEC-083's one (ManifestEvidence::certificates), then SPEC-084's fifteen (TimestampEvidence's fourteen, ManifestEvidence::timestamps), then SPEC-085's seventeen (OcspEvidence's sixteen, ManifestEvidence::ocsp)
+        ->and($live)->toHaveCount(208);   // 91, then two bmffHash codes, then SPEC-028's tenth class, then SPEC-030's four ocsp codes, then SPEC-031's eleventh class, then SPEC-063's three cloud-data codes, then SPEC-060's two text codes, then SPEC-064's one, then SPEC-065's three (10) and two members of TrustSettings, then SPEC-032's code, then SPEC-033's two, then SPEC-035's six, then SPEC-036's one, then SPEC-037's one, then SPEC-038's two, then SPEC-039's one, then SPEC-040's one, then SPEC-070's acknowledged, then SPEC-075's three (VERSION, validationTime, toCrJson), then SPEC-077's fromTrustLists, then SPEC-079's two TrustAnchorSet properties (windows, reasons), then SPEC-081's ten (TrustListIdentity's eight, TrustAnchorSet::identity, VerificationReport::trustLists), then SPEC-082's nineteen (AnchorEvidence's nine, ManifestEvidence's nine, VerificationReport::evidence), then SPEC-083's one (ManifestEvidence::certificates), then SPEC-084's fifteen (TimestampEvidence's fourteen, ManifestEvidence::timestamps), then SPEC-085's seventeen (OcspEvidence's sixteen, ManifestEvidence::ocsp), then SPEC-086's four (RevocationSource::ocspResponse, NoRevocationSource::ocspResponse, the inaccessible code, OcspEvidence::FETCHED)
 })->group('SPEC-025');
 
 it('AC1: no class of the contract is marked internal', function (): void {

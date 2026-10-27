@@ -34,6 +34,15 @@ final readonly class CertificateExtensions
 
     private const OID_ED25519 = '1.3.101.112';
 
+    private const OID_AUTHORITY_INFO_ACCESS = '1.3.6.1.5.5.7.1.1';
+
+    private const OID_AD_OCSP = '1.3.6.1.5.5.7.48.1';
+
+    /** SPEC-086: the most OCSP urls handed to a revocation source, and the longest */
+    private const MAX_OCSP_URLS = 4;
+
+    private const MAX_OCSP_URL_BYTES = 2048;
+
     /** The hashes an RSASSA-PSS certificate may name, by OID (C2PA 2.4 §14.5), and the others by name for messages. */
     public const PSS_HASHES = [
         '2.16.840.1.101.3.4.2.1' => 'SHA-256',
@@ -249,6 +258,38 @@ final readonly class CertificateExtensions
     private static function hashName(string $oid): string
     {
         return self::PSS_HASHES[$oid] ?? self::OTHER_HASHES[$oid] ?? $oid;
+    }
+
+    /**
+     * The OCSP responders the certificate names (RFC 5280 §4.2.2.1): the id-ad-ocsp access locations of its
+     * authority information access, in order, kept when they are http or https URIs of at most 2,048 bytes, at most
+     * four (SPEC-086). An extension that cannot be read names none.
+     *
+     * @return list<string>
+     */
+    public function ocspUrls(): array
+    {
+        $urls = [];
+        foreach ($this->extensions as $extension) {
+            if ($extension['oid'] !== self::OID_AUTHORITY_INFO_ACCESS) {
+                continue;
+            }
+            try {
+                // AuthorityInfoAccessSyntax ::= SEQUENCE OF AccessDescription { accessMethod OID, accessLocation GeneralName }
+                foreach ((new DerReader)->read($extension['value'])->sequence() as $description) {
+                    $location = $description->element(1);
+                    // uniformResourceIdentifier [6] IA5String
+                    if ($description->element(0)->oid() === self::OID_AD_OCSP && $location->is(TagClass::ContextSpecific, 6)
+                        && strlen($location->contents) <= self::MAX_OCSP_URL_BYTES && preg_match('#^https?://#i', $location->contents) === 1) {
+                        $urls[] = $location->contents;
+                    }
+                }
+            } catch (Asn1Exception) {
+                return [];
+            }
+        }
+
+        return array_slice($urls, 0, self::MAX_OCSP_URLS);
     }
 
     /** @return list<string> the OIDs of critical extensions this verifier does not understand */

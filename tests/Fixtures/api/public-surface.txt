@@ -58,6 +58,7 @@ Report\StatusCode :: const ManifestUpdateInvalid
 Report\StatusCode :: const ManifestUpdateWrongParents
 Report\StatusCode :: const SigningCredentialExpired
 Report\StatusCode :: const SigningCredentialInvalid
+Report\StatusCode :: const SigningCredentialOcspInaccessible
 Report\StatusCode :: const SigningCredentialOcspNotRevoked
 Report\StatusCode :: const SigningCredentialOcspRevoked
 Report\StatusCode :: const SigningCredentialOcspSkipped
@@ -121,8 +122,10 @@ Trust\AnchorEvidence :: property route
 Trust\AnchorEvidence :: property sha256
 Trust\AnchorEvidence :: property trustedFrom
 Trust\AnchorEvidence :: property trustedUntil
+Trust\NoRevocationSource :: method ocspResponse
 Trust\OcspEvidence :: const ASSERTION
 Trust\OcspEvidence :: const CHOSEN
+Trust\OcspEvidence :: const FETCHED
 Trust\OcspEvidence :: const NOT_CHOSEN
 Trust\OcspEvidence :: const NOT_TRIED
 Trust\OcspEvidence :: const RVALS
@@ -137,6 +140,7 @@ Trust\OcspEvidence :: property response
 Trust\OcspEvidence :: property source
 Trust\OcspEvidence :: property thisUpdate
 Trust\OcspEvidence :: property url
+Trust\RevocationSource :: method ocspResponse
 Trust\TrustAnchorSet :: const CAWG
 Trust\TrustAnchorSet :: const KINDS
 Trust\TrustAnchorSet :: const MANIFEST

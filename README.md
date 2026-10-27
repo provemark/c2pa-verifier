@@ -42,7 +42,8 @@ trust list you supply, and the RFC 3161 timestamp, and returns a verdict that
 means the same as [`c2patool`](https://github.com/contentauth/c2pa-rs)'s —
 the same `validation_state`, the same C2PA 2.4 §15 status codes. It does
 not sign, it holds no keys, and it opens no network connection while
-verifying.
+verifying; revocation data from outside the file comes in only through a
+source you hand it, and by default there is none (ADR-0007).
 
 It is for hosts that can run **no** second process, **no** native PHP
 extension and **no** binary — shared hosting, which is where most
@@ -69,8 +70,13 @@ own signature**, so a certificate its own manifest reports as revoked is no
 longer called trusted — and every file says whether revocation was checked
 at all.
 
-Not yet: revocation that needs the network (an online OCSP query, an AIA
-fetch, a CRL), which this verifier will not make, and the assertion-content
+Since SPEC-086 you may hand it a **revocation source** of your own: for a
+trusted signer whose file proves nothing about revocation, the verifier asks
+your source for an OCSP response and judges it exactly as a stapled one.
+This package opens no connection itself; the source decides what it fetches,
+and what that tells a CA about which file is being checked.
+
+Not yet: an AIA query for the CAs of the path, a CRL, and the assertion-content
 rules beyond the actions and ingredient assertions.
 [`docs/conformance.md`](docs/conformance.md) is the honest version of that
 sentence: all 111 applicable obligations of C2PA 2.4, one by one, with what
@@ -274,7 +280,7 @@ file whether revocation was checked, which `c2patool` does not.
 
 ## Public API
 
-Sixteen classes are the contract. Their public members are what this package
+Eighteen classes are the contract. Their public members are what this package
 promises; a release may add to them, and will not remove or rename them
 without saying so.
 
@@ -285,7 +291,9 @@ without saying so.
 | `Verifier\VerificationReport` | what comes back: `$result`, `$format`, `$hasManifest`, `$remoteManifestUrl`, `$signatureInfo`, `toArray()`, `toJson()`, `trustLists()`, `evidence()` |
 | `Verifier\ManifestEvidence` | what one manifest's verdict rested on: the time judged at and its source, the anchors reached, the signer's `x5chain` certificates as DER, every time-stamp token offered, and every OCSP response its signer's revocation check walked |
 | `Timestamp\TimestampEvidence` | one time-stamp token: where it came from, its bytes, time and certificates, and whether it was used, rejected or not tried, with its codes |
-| `Trust\OcspEvidence` | one OCSP response: where it came from, its bytes, whether it was chosen, not chosen, unusable or not tried, and for a usable one its status and times |
+| `Trust\OcspEvidence` | one OCSP response: where it came from (stapled, an assertion, or your source), its bytes, whether it was chosen, not chosen, unusable or not tried, and for a usable one its status and times |
+| `Trust\RevocationSource` | the interface you implement to hand the verifier OCSP responses from outside the file: `ocspResponse($subject, $issuer, $urls)`; pass it as the `Verifier`'s `revocationSource` |
+| `Trust\NoRevocationSource` | the default: asks nothing, changes nothing |
 | `Report\ValidationResult` | the verdict and the statuses behind it |
 | `Report\ValidationStatus` | one status: its code, the JUMBF URI it concerns, a sentence |
 | `Report\ValidationState` | `Trusted`, `Valid`, `Invalid` |
@@ -329,8 +337,9 @@ alone.
   deleted before the script ends.
 - **Pure PHP `^8.3`.** `strict_types`, `final`, `readonly` value objects,
   PHPStan level max, Deptrac boundaries. No `ext-*` beyond `openssl` and
-  `mbstring` (`sodium` opt-in for Ed25519). No `exec`, no network in the
-  verification path. No dependencies: CBOR, JUMBF, COSE, DER and the
+  `mbstring` (`sodium` opt-in for Ed25519). No `exec`, no network in this
+  package; revocation data from outside only through a source the caller
+  injects, off by default (ADR-0007). No dependencies: CBOR, JUMBF, COSE, DER and the
   timestamp are read by code in this repository (ADR-0001, ADR-0003,
   ADR-0004).
 - **`c2patool`'s verdict, verbatim.** `validation_state` and the C2PA 2.4

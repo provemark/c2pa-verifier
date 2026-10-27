@@ -64,13 +64,13 @@ written on 2026-10-09; what became of each is in the rows.
 | §13, §16, §17, Appendix C | 29 | 19 | 2 | 2 | 6 | 0 |
 | §14 | 42 | 35 | 0 | 6 | 1 | 0 |
 | §15.1 to §15.6 | 33 | 14 | 5 | 4 | 10 | 0 |
-| §15.7 to §15.9 | 47 | 30 | 9 | 4 | 4 | 0 |
+| §15.7 to §15.9 | 47 | 33 | 9 | 3 | 2 | 0 |
 | §15.10 to the end of §15 | 124 | 87 | 15 | 13 | 9 | 0 |
 | §18.1 to §18.9 | 50 | 28 | 2 | 7 | 11 | 2 |
 | §18.10 to §18.16 | 58 | 21 | 11 | 14 | 12 | 0 |
 | §18.17 to the end of §18 | 34 | 7 | 2 | 13 | 11 | 0 (and 1 other) |
 | Appendix A | 50 | 24 | 1 | 7 | 13 | 5 |
-| **all** | **563** | **327** | **53** | **77** | **98** | **7** |
+| **all** | **563** | **330** | **53** | **76** | **96** | **7** |
 
 On 2026-10-09 the same table read 562 rules: 310 covered, 63 partial, 79 by
 design, 101 n/a, 8 candidates. Counted by script on 2026-10-25, the rows
@@ -830,9 +830,10 @@ These three sections are all validator rules: how the claim signature is
 judged (§15.7), how a time-stamp is found and judged and which time the
 signer's certificate is then judged at (§15.8), and how revocation is
 established (§15.9). The verifier makes no network request by design, so
-revocation is known only from the OCSP responses the signer stapled into
-`rVals` (SPEC-030); everything §15.9 says about online queries and AIA
-fetches is out by that rule. Two status-code habits run through the rows:
+revocation is known from the OCSP responses the signer stapled into `rVals`
+(SPEC-030) and the store's certificate-status assertions (SPEC-066), and —
+since SPEC-086, opt-in — from a revocation source the caller injects for
+the signer (ADR-0007); AIA fetches for the CAs remain out. Two status-code habits run through the rows:
 like `c2pa-rs`, this verifier reports an expired signer as
 `signingCredential.expired` and issues `claimSignature.insideValidity` with
 every verified signature (SPEC-039), where §15.8.2 names
@@ -884,10 +885,10 @@ period. `c2pa-rs` here means 0.91.1, the engine of `c2patool` 0.28.1.
 | 15.9.1 | Check `revocationReason` to tell `removeFromCRL` from a revocation. | `OcspCheck::statusOf()`, `REASON_REMOVE_FROM_CRL` | covered | measured: `OcspCheckTest` AC8 |
 | 15.9.1 | Conditions met: `signingCredential.ocsp.notRevoked` (or an online check). | `statusOf()`; a success that changes no state | covered | measured: `OcspCheckTest` AC1 |
 | 15.9.1 | Conditions met but `revoked`: reject with `signingCredential.ocsp.revoked`. | `statusOf()`. Stricter than the rule: a stale `revoked` and one without a time-stamp still count (SPEC-030 open question 1, decided) | covered | measured: `OcspCheckTest` AC3 |
-| 15.9.2 | A validator may query the OCSP responder online. | no network | by design | read |
+| 15.9.2 | A validator may query the OCSP responder online. | through a revocation source the caller injects, for a trusted signer whose stored responses prove nothing; off by default, and this package opens no connection (ADR-0007) | covered (SPEC-086) | measured: `RevocationSourceTest` AC1, AC5, AC6, AC10 |
 | 15.9.2 | No online check: issue `signingCredential.ocsp.skipped`. | issued whenever no stapled response gives an answer, with the reason | covered | measured: `OcspCheckTest` AC5, AC6, AC7 |
-| 15.9.2 | A query without a response: `signingCredential.ocsp.inaccessible`. | no query is ever made | n/a | read |
-| 15.9.2 | The rules for an online response: the window, `good` or `removeFromCRL`, an authorized responder, a revocation after the stamped time, `unknown` recorded, else revoked. | no online response exists. The stapled `unknown` is recorded as `signingCredential.ocsp.unknown` | n/a | read |
+| 15.9.2 | A query without a response: `signingCredential.ocsp.inaccessible`. | issued when the source returns nothing, fails, or returns a response that cannot be used, with the reason | covered (SPEC-086) | measured: `RevocationSourceTest` AC3, AC4 |
+| 15.9.2 | The rules for an online response: the window, `good` or `removeFromCRL`, an authorized responder, a revocation after the stamped time, `unknown` recorded, else revoked. | a fetched response is read and judged by the same code as a stapled one (SPEC-030, SPEC-066) | covered (SPEC-086) | measured: `RevocationSourceTest` AC1, AC2, AC3 |
 
 ### Candidates
 

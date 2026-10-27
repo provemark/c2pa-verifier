@@ -37,10 +37,10 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | verdict | predicates |
 |---|---|
-| **yes** | 71 |
+| **yes** | 75 |
 | partial | 10 |
 | closed | 4 |
-| by design | 24 |
+| by design | 20 |
 | **gap** | 2 |
 | **total** | 111 |
 
@@ -99,10 +99,10 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-STRU-010` | should | CA certificate revocation via AIA OCSP | by design — revocation via AIA OCSP needs the network (SPEC-014 puts revocation out of scope) |
 | `PRED-STRU-011` | shall | Signer certificate revocation validation process | **yes** — `Trust\OcspCheck` reads `rVals.ocspVals` and applies `certStatus` (SPEC-030); a certificate with no revocation information is treated as not revoked, by saying `skipped` |
 | `PRED-STRU-012` | shall | Multiple OCSP responses: try each until one passes | **yes** — `Trust\OcspCheck::check()` tries each stapled response and stops at the first that proves something, a `revoked` winning over a `good` |
-| `PRED-STRU-013` | should | Online OCSP fallback when no revocation info in manifest | by design — online OCSP fallback needs the network |
+| `PRED-STRU-013` | should | Online OCSP fallback when no revocation info in manifest | **yes**, opt-in — a revocation source the caller injects is asked for a trusted signer whose stored responses prove nothing; this package opens no connection (ADR-0007) — SPEC-086 AC1, AC5 |
 | `PRED-STRU-014` | shall | OCSP revoked certStatus disambiguation and rejection | **yes** — `Trust\OcspCheck::statusOf()` separates `removeFromCRL` from a real revocation (RFC 6960 §4.2.1) and rejects only the latter |
-| `PRED-STRU-015` | shall | OCSP skipped and OCSP inaccessible informational codes | **yes** — every file now carries one `signingCredential.ocsp.*` line, and a skipped check says so — SPEC-030 AC5 |
-| `PRED-STRU-016` | shall | Online OCSP certStatus unknown/revoked outcome handling | by design — online OCSP outcomes need the network |
+| `PRED-STRU-015` | shall | OCSP skipped and OCSP inaccessible informational codes | **yes** — every file now carries one `signingCredential.ocsp.*` line, and a skipped check says so — SPEC-030 AC5; a source that gives nothing usable is `signingCredential.ocsp.inaccessible` — SPEC-086 AC3, AC4 |
+| `PRED-STRU-016` | shall | Online OCSP certStatus unknown/revoked outcome handling | **yes**, opt-in — a fetched response is judged exactly as a stapled one (`revoked`, `unknown`, a revocation after the stamped time) — SPEC-086 AC2 |
 | `PRED-STRU-017` | should | Forward-compatible c2pa.metadata assertion field tolerance | **yes** — `c2pa.metadata` is not validated at all, so unknown fields cannot be rejected |
 | `PRED-STRU-018` | shall | Hashed URI field presence and destination reachability | partial — an absent or unresolvable hashed URI is caught, and reported as `assertion.missing`: this verifier has no `hashedURI.missing` code |
 | `PRED-STRU-019` | shall | JPEG APP11 exclusion range total length matches manifest store length | partial — the store is extracted from the APP11 segments themselves, so a tampered segment length changes it and the hash fails; the declared exclusion length is checked to *cover* the store (SPEC-012 amendment 5), not to equal the summed segment length |
@@ -132,8 +132,8 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-CRYP-019` | shall | Claimed time of signing inside/outside validity informational code | by design — follows from CRYP-018: no `timeOfSigning.*` codes exist here; issue #10 closed as not planned (the maintainer's decision) |
 | `PRED-CRYP-020` | shall | CA certificate revocation check at signing time | by design — CA revocation at signing time needs revocation data (SPEC-014) |
 | `PRED-CRYP-021` | shall | OCSP response from manifest store revocation check | **yes** — the same stapled-OCSP path; `notRevoked` is recorded with the caveat that the header carrying it is unsigned |
-| `PRED-CRYP-022` | may | Online OCSP query fallback | by design — online OCSP query; no network |
-| `PRED-CRYP-023` | shall | Online OCSP response acceptance and not-revoked determination | by design — online OCSP acceptance; no network |
+| `PRED-CRYP-022` | may | Online OCSP query fallback | **yes**, opt-in — through the caller's revocation source, with the signer's AIA OCSP urls (ADR-0007) — SPEC-086 AC7 |
+| `PRED-CRYP-023` | shall | Online OCSP response acceptance and not-revoked determination | **yes**, opt-in — a fetched response passes the stapled one's tests (about the signer, an authorised responder, current) or is `inaccessible` — SPEC-086 AC1, AC3 |
 | `PRED-CRYP-024` | shall | c2pa.session-keys signerBinding signature verification | **gap** — `c2pa.session-keys` is not recognised, so its `signerBinding` signature is not verified Parked 2026-10-23 (step 387): no measured writer emits `c2pa.session-keys`, `c2pa-rs` 0.91.1 does not recognise it, and a fixture would have to be built from the specification alone (issue #8) |
 | `PRED-CRYP-025` | shall | No hash mismatch codes for activeManifest field in claim signature hash validation | **yes** — the claim-signature hash method and `c2pa.ingredient.v3`'s `activeManifest` field are not implemented, so no mismatch can be recorded for it |
 
@@ -256,9 +256,12 @@ SPEC-030 closed it on 2026-09-22 (steps 91–92).
 The reasoning is kept because it is what shaped the fix. Revocation as a
 whole is out of scope and has been since SPEC-014, for a stated reason: an
 OCSP query is a network call, and there is no network in the verification
-path. That covers the *online* predicates (`STRU-010`, `013`, `016`,
-`CRYP-020`, `022`, `023`), which are still marked *by design* above. It
-never covered a response the signer had already placed **inside the file**.
+path. That covered the *online* predicates (`STRU-010`, `013`, `016`,
+`CRYP-020`, `022`, `023`). It never covered a response the signer had
+already placed **inside the file**. Since SPEC-086 (ADR-0007) the signer's
+online query is possible through a source the caller injects, so `013`,
+`016`, `022` and `023` are *yes*, opt-in; the CAs of the path (`STRU-010`,
+`CRYP-020`) are still *by design*.
 
 What `ocsp.jpg` actually carries, measured:
 

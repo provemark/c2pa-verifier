@@ -628,6 +628,19 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
    **Weight A: stricter than `c2patool` on purpose, by the
    specification's own rule.**
 
+9. **2026-10-27, step 475, with SPEC-086 (ADR-0007)** *(approved by Maurice van Loon, 2026-10-27)* —
+   *Out of scope* names revocation and the C2PA Trust List as fetched
+   from the network, "never in the verification path". ADR-0007 (accepted
+   2026-10-27) keeps the trust list there and changes the rule for
+   revocation: this package still makes no network request, but a caller
+   may inject a revocation source that the verifier asks for a trusted
+   signer whose stored OCSP responses prove nothing (SPEC-086). The line
+   is read as: *revocation from outside the file only through a source the
+   caller injects (SPEC-086), off by default; CRLs and the C2PA Trust List
+   itself are never fetched — an operator supplies the list as
+   `trust_anchors` contents.* No acceptance criterion of this spec
+   changes.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

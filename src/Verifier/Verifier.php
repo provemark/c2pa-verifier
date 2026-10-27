@@ -51,7 +51,9 @@ use Provemark\C2paVerifier\Timestamp\TimestampResult;
 use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\ChainCheck;
+use Provemark\C2paVerifier\Trust\NoRevocationSource;
 use Provemark\C2paVerifier\Trust\OcspCheck;
+use Provemark\C2paVerifier\Trust\RevocationSource;
 use Provemark\C2paVerifier\Trust\TrustAnchorSet;
 use Provemark\C2paVerifier\Trust\TrustException;
 use Provemark\C2paVerifier\Trust\TrustListIdentity;
@@ -106,6 +108,8 @@ final readonly class Verifier
         private GifManifestStoreExtractor $gif = new GifManifestStoreExtractor,
         // SPEC-060: last, for the same reason; null is text off, the default (open question 1)
         private ?PlainTextManifestStoreExtractor $text = null,
+        // SPEC-086: last, for the same reason; null, like NoRevocationSource, asks nothing (ADR-0007)
+        private ?RevocationSource $revocationSource = null,
     ) {}
 
     /**
@@ -313,22 +317,25 @@ final readonly class Verifier
         // only verify_trust false keeps quiet (SPEC-014 amendment 1)
         $trustSettings = $settings ?? new TrustSettings([], []);
         $anchor = null;
+        $trust = [];
         if ($trustSettings->verifyTrust) {
             [$trust, $anchor] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at);
             $statuses = [...$statuses, ...$trust];
             $checks[] = 'trust';
         }
-        // revocation, as far as it can be known without a network: the OCSP responses the
-        // signer stapled into its own signature (SPEC-030). It runs after the chain, which
-        // supplies the issuer, and after the timestamp, which supplies the judged time. It
-        // speaks on every file, including those with nothing stapled: what was not checked
-        // has to be visible, or a caller cannot tell silence from a clean answer.
+        // revocation: the OCSP responses the signer stapled into its own signature (SPEC-030), then
+        // the store's certificate-status assertions (SPEC-066), then — for a trusted signer only — the
+        // caller's revocation source (SPEC-086). It runs after the chain, which supplies the issuer,
+        // and after the timestamp, which supplies the judged time. It speaks on every file, including
+        // those with nothing stapled: what was not checked has to be visible, or a caller cannot tell
+        // silence from a clean answer.
         [$revocation, $ocsp] = $this->revocation->checkWithEvidence(
             $this->unprotectedHeader($manifest),
             $this->chainOf($manifest),
             $at,
             sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label),
             OcspCheck::assertionResponses($manifestStore),   // SPEC-066: certificate-status assertions of the store
+            IngredientManifestCheck::trusted($trust) ? $this->source() : null,
         );
         $statuses = [...$statuses, ...$revocation];
         $checks[] = 'revocation';
@@ -384,7 +391,7 @@ final readonly class Verifier
         // the manifests the graph found: their box hash and everything the active manifest gets
         // except the data hash, scoped to the assertion that named them (SPEC-021)
         if ($graph !== null && $graph->referenced !== []) {
-            $statuses = [...$statuses, ...$this->ingredients->check($manifestStore, $graph, $settings, $now, $clock, $evidence)];
+            $statuses = [...$statuses, ...$this->ingredients->check($manifestStore, $graph, $settings, $now, $clock, $evidence, $this->source())];
             $checks[] = 'ingredients';
         }
 
@@ -519,6 +526,12 @@ final readonly class Verifier
         }
 
         return null;
+    }
+
+    /** The caller's revocation source, or null when there is none: the default asks nothing (SPEC-086). */
+    private function source(): ?RevocationSource
+    {
+        return $this->revocationSource instanceof NoRevocationSource ? null : $this->revocationSource;
     }
 
     /**
