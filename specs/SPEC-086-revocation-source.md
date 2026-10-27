@@ -298,6 +298,34 @@ None.
 
    **Weight A: a revoked signer wrongly `Trusted` under a source becomes `Invalid`.**
 
+3. **2026-10-27, step 484, found by the review of step 482; measured** *(approved by Maurice van Loon, 2026-10-27)* —
+   A stored response that answers `unknown` about the signer gave
+   `signingCredential.ocsp.unknown`, and the source was asked only after a
+   `skipped`. The `rVals` header is not signed, so anyone could staple an
+   `unknown` and keep a source from being asked: a revoked signer stayed
+   `Trusted`. C2PA 2.4 §15.9.2 lets a validator query online when the
+   stored information does not establish the status, and `unknown` does
+   not; `c2pa-rs` 0.91.1 fetches when a stapled response is neither revoked
+   nor not-revoked (read: `crypto/cose/ocsp.rs`, `check_ocsp_status()`).
+
+   After a stored `unknown` the source is now asked as well, with the
+   issuer the walk verified (amendment 2). A **decisive** answer counts: a
+   `revoked` at the judged time, or a current `good`; the stored response
+   becomes `notChosen` in the evidence and loses its code. **Anything
+   else** — no answer, a failing source, an answer that cannot be used, a
+   stale `good`, a revocation that does not count, another `unknown` —
+   leaves `signingCredential.ocsp.unknown`, its explanation ending with
+   what the source gave; a usable fetched response is then `notChosen`.
+   One `signingCredential.ocsp.*` status per manifest, as before.
+
+   Measured with `bin/make-revocation-unknown-variants.php`: signer L
+   under root R, `x5chain` [L, R], L's `unknown` stapled. The first file
+   to reach the `unknown` branch at all: no test or fixture did before.
+   `c2patool` 0.28.3 calls it `Trusted` and reports no OCSP code. Tests:
+   `tests/Unit/Verifier/RevocationUnknownTest.php`, group `SPEC-086`.
+
+   **Weight A: a revoked signer wrongly `Trusted` under a source becomes `Invalid`.**
+
 ## Traceability
 
 All in `tests/Unit/Verifier/RevocationSourceTest.php`, group `SPEC-086`. Seen red before the implementation (all
@@ -320,4 +348,5 @@ when mutations M5, M8 and M16 survived; each now fails under its mutation.
 | AC10                 | AC10: over the corpus, the source is asked exactly where allowed (none, full, lists) | src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |
 | AC11                 | tests/Unit/ApiSurfaceTest.php :: AC1 / SPEC-025 | src/Trust/RevocationSource.php; src/Trust/NoRevocationSource.php; src/Trust/OcspEvidence.php :: FETCHED; bin/api-check.php |
 | *Scope*              | scope: a fetched response follows the stored ones in the evidence; scope: the source is not asked without an issuer the walk verified; scope: a fetched response over the size limit is not read | src/Trust/OcspCheck.php :: checkWithEvidence(), fetched() |
+| Amendment 3          | tests/Unit/Verifier/RevocationUnknownTest.php / SPEC-086 (6 of 7 tests red before the build; the guard without a source passed) | src/Trust/OcspCheck.php :: checkWithEvidence(); bin/make-revocation-unknown-variants.php |
 | Amendment 2          | tests/Unit/Verifier/RevocationIssuerTest.php :: the signer is asked about with the anchor that issued it, whatever x5chain carries second; option b: an allowed-list signer …; option b: a signer that is itself an anchor … / SPEC-086 (11 of 16 tests of the file red before the build) | src/Trust/ChainCheck.php :: walk(), provenIssuer(); src/Trust/OcspCheck.php :: checkWithEvidence(); src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |

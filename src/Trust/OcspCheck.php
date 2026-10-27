@@ -117,7 +117,8 @@ final readonly class OcspCheck
      * so there is no second reading that could drift.
      *
      * With a revocation source (SPEC-086), it is asked once when no stored response proves anything and the issuer
-     * is known; the caller passes one only for a trusted signer.
+     * is known; the caller passes one only for a trusted signer. After a stored `unknown` it is asked too, and only a
+     * revoked or a current good from it replaces the unknown (amendment 3).
      *
      * @param  array<int|string, mixed>  $unprotected
      * @param  list<Certificate>  $chain
@@ -129,11 +130,34 @@ final readonly class OcspCheck
     public function checkWithEvidence(array $unprotected, array $chain, ?int $at, string $url, array $extra = [], ?RevocationSource $source = null, ?Certificate $issuer = null): array
     {
         [$statuses, $evidence] = $this->stored($unprotected, $chain, $at, $url, $extra);
-        if ($source === null || $issuer === null || $chain === [] || $statuses[0]->code !== StatusCode::SigningCredentialOcspSkipped) {
+        $unknown = $statuses[0]->code === StatusCode::SigningCredentialOcspUnknown;
+        if ($source === null || $issuer === null || $chain === [] || ($statuses[0]->code !== StatusCode::SigningCredentialOcspSkipped && ! $unknown)) {
             return [$statuses, $evidence];
         }
+        [$fetched, $after] = $this->fetched($source, $chain[0], $issuer, $at ?? time(), $url, $evidence);
+        if (! $unknown) {
+            return [$fetched, $after];
+        }
 
-        return $this->fetched($source, $chain[0], $issuer, $at ?? time(), $url, $evidence);
+        // SPEC-086 amendment 3: after a stored unknown, only a decisive answer counts; anything else leaves the
+        // unknown, saying what the source gave
+        $decisive = in_array($fetched[0]->code, [StatusCode::SigningCredentialOcspRevoked, StatusCode::SigningCredentialOcspNotRevoked], true);
+        $marked = [];
+        foreach ($after as $i => $entry) {
+            $demoted = $decisive ? $i < count($evidence) : $i >= count($evidence);
+            $marked[] = $demoted && $entry->outcome === OcspEvidence::CHOSEN
+                ? new OcspEvidence($entry->source, $entry->url, $entry->response, OcspEvidence::NOT_CHOSEN, null, $entry->certStatus, $entry->producedAt, $entry->thisUpdate, $entry->nextUpdate)
+                : $entry;
+        }
+        if ($decisive) {
+            return [$fetched, $marked];
+        }
+
+        return [[new ValidationStatus(StatusCode::SigningCredentialOcspUnknown, $url, sprintf(
+            '%s; the caller\'s revocation source was asked as well: %s',
+            $statuses[0]->explanation,
+            preg_replace('/^revocation not checked: /', '', $fetched[0]->explanation) ?? $fetched[0]->explanation,
+        ))], $marked];
     }
 
     /**

@@ -101,6 +101,11 @@ Found by a review of the new code before the tag (step 482).
   The walk without the legacy anchors read neither a stapled response
   about a CA nor the source, so a revoked intermediate left the file
   `Trusted`. The stapled half dates from 0.6.0.
+- **A stored `unknown` no longer keeps the source from being asked
+  (SPEC-086 amendment 3).** The unsigned `rVals` header could carry an
+  `unknown` about the signer and so block the lookup. The source is now
+  asked after it; its `revoked` or current `good` counts, anything else
+  leaves `signingCredential.ocsp.unknown`.
 
 ### Documentation
 
