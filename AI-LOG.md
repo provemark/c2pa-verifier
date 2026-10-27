@@ -12013,3 +12013,10 @@ README are where the disclosure lives.
 - Produced: `src/Trust/AnchorEvidence.php`, `src/Verifier/ManifestEvidence.php` (new); `src/Trust/ChainCheck.php`, `src/Timestamp/TimestampCheck.php`, `src/Timestamp/TimestampResult.php`, `src/Verifier/IngredientManifestCheck.php`, `src/Verifier/Verifier.php`, `src/Verifier/VerificationReport.php`; `bin/api-check.php`; `tests/Unit/Verifier/EvidenceTest.php` (new); `tests/Unit/ApiSurfaceTest.php`; `tests/Fixtures/api/public-surface.txt`; `README.md`; `specs/SPEC-082-evidence-time-and-anchor.md` (amendment 1, implemented, traceability); `docs/milestones.md`; `notes/step-459-evidence-time-and-anchor.md`; `NOTES.md`.
 - Measured: `vendor/bin/pest --group=SPEC-082 --group=SPEC-025` red (13 + 1) then green; a scratch search for the AC5 and AC6 fixtures; eight hand mutations, each red; `composer check` (1,446 passed, 1 skipped); a scratch script over every fixture under three settings for AC7 (no disagreement, 8 not compared) and, before (worktree at `4ef8b02`, `vendor/` copied) and after, for AC9 (identical, 3,060 runs).
 - Decided by Maurice: amendment 1 (`AnchorEvidence` in `Trust`; an ingredient manifest whose recorded success lines are dropped keeps its evidence).
+
+## 2026-10-27 — Step 460: SPEC-083 drafted (evidence: the certificates of x5chain)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en leg daarna SPEC-083 uit"; "akkoord, alle voorstellen, schrijf SPEC-083".
+- Produced: `specs/SPEC-083-evidence-certificates.md` (draft); `NOTES.md`. Pushed steps 457–459 before (CI green on `15d378c`).
+- Measured: the `x5chain` of `control.png`, `certificate-time-nul.jpg`, the three `cose/` probes and `CACA.jpg` with `CoseSign1::ofManifest()` (PHP one-liners over the verifier at `15d378c`); a corpus search for certificates X.509 refuses; `php bin/spec-check.php`.
+- Decided by Maurice: raw DER as an optional last parameter of `ManifestEvidence`; refused certificates handed out as bytes, an empty list where COSE refuses; `x5chain` only (the TSA's certificates come with the tokens); the header bucket left for later.
