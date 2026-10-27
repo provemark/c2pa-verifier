@@ -12153,3 +12153,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-088-status-codes-by-the-letter.md` (draft); `NOTES.md`.
 - Measured: scratch copies of `bin/make-tsa-matrix.php` (three probes: no certificates, the intermediate only, one bit of the CMS signature flipped), `bin/make-claim-variants.php` (an actions assertion with a reserved and a break first CBOR byte) and `bin/make-claim-alg-variants.php` (a BMFF hash with `alg: sha224`), judged by `c2patool` 0.28.3 and 0.28.1 and this verifier; throw-away keys deleted, nothing written into the repository. A corpus count (1,022 files, three settings) of the three cases: only the two SHA-1 imprint probes. / Reasoned: from `c2pa` 0.91.1 `store.rs` that `c2pa-rs` logs `assertion.cbor.invalid` before it stops.
 - Decided by Maurice: none yet (the draft awaits approval).
+
+## 2026-10-27 — Step 480: SPEC-088 approved
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-088 approved, push 479".
+- Produced: `specs/SPEC-088-status-codes-by-the-letter.md` (status, approval, open question 1 decided); `NOTES.md`.
+- Reasoned: nothing new.
+- Decided by Maurice: SPEC-088 approved; open question 1 as proposed (`timeStamp.untrusted` where `c2patool` gives no code).

@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-27                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -143,8 +143,9 @@ case AssertionCborInvalid = 'assertion.cbor.invalid';   // failure
 
 1. F4's second case: `c2patool` drops a token whose TSA certificate is
    missing without any code. Proposed: `timeStamp.untrusted` here, the
-   letter's code, since a silent drop tells the reader nothing; recorded
-   in `docs/comparison.md` as a code `c2patool` does not give.
+   letter's code, since a silent drop tells the reader nothing; recorded in
+   `docs/comparison.md` as a code `c2patool` does not give.
+   *Status 2026-10-27 (step 480):* decided by Maurice: the proposal.
 
 ## Amendments
 
@@ -152,4 +153,11 @@ None yet.
 
 ## Traceability
 
-To be filled at the build.
+| Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
+|----------------------|-----------------------------|----------------------|
+| AC1                  |                             |                      |
+| AC2                  |                             |                      |
+| AC3                  |                             |                      |
+| AC4                  |                             |                      |
+| AC5                  |                             |                      |
+| AC6                  |                             |                      |
