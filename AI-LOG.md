@@ -11999,3 +11999,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-082-evidence-time-and-anchor.md` (draft); `NOTES.md`. Pushed steps 454–456 before (CI green on `e01b800`).
 - Measured: the anchors, depths and verdict of `timestamp/tsa-matrix/control.png` with its settings (a PHP one-liner over the verifier at `e01b800`); the section numbers checked in `docs/reading-c2pa-2.4.md`.
 - Decided by Maurice: C1 split into four specs; `evidence()` returning readonly value objects; part of the contract, in the same minor as SPEC-081.
+
+## 2026-10-27 — Step 458: SPEC-082 approved
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, SPEC-082 approved met beide voorstellen".
+- Produced: `specs/SPEC-082-evidence-time-and-anchor.md` (status, approval, the two open questions settled); `NOTES.md`.
+- Reasoned: nothing new; the decisions are the draft's proposals.
+- Decided by Maurice: SPEC-082 approved; open questions 1 and 2 as proposed.

@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-10-27                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -216,11 +216,13 @@ public function evidence(): array;
    made it count, in the order the check consults them (the legacy list
    first, as `ChainCheck::listedFault()` does), so the evidence says what
    the verdict used. Non-blocker.
+   *Status 2026-10-27 (step 458):* decided by Maurice as proposed.
 2. **Where the evidence is computed.** Re-running the walk afterwards
    would be a second implementation that could drift; the walk itself
    should hand it out. Proposal: `checkCertificates()` returns the anchor
    beside its status, internally, and the checks pass it up; AC7 is the
    drift alarm either way. Non-blocker.
+   *Status 2026-10-27 (step 458):* decided by Maurice as proposed.
 
 ## Traceability
 
