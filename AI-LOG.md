@@ -11992,3 +11992,10 @@ README are where the disclosure lives.
 - Produced: `src/Trust/TrustListIdentity.php` (new); `src/Trust/TrustAnchorSet.php`, `src/Trust/TrustSettings.php`, `src/Verifier/Verifier.php`, `src/Verifier/VerificationReport.php`; `bin/api-check.php`; `tests/Unit/Trust/TrustListIdentityTest.php` (new); `tests/Unit/ApiSurfaceTest.php`; `tests/Fixtures/api/public-surface.txt`; `README.md`; `specs/SPEC-081-trust-list-identity.md` (implemented, traceability); `docs/milestones.md`; `notes/step-456-trust-list-identity.md`; `NOTES.md`.
 - Measured: `vendor/bin/pest --group=SPEC-081 --group=SPEC-025` red (23 + 1) then green; four hand mutations of `TrustSettings`, each red; `composer check` (1,432 passed, 1 skipped); a scratch script verifying every fixture under both list forms before (worktree at `3dbbe28`, `vendor/` copied) and after, digests compared with `cmp` (identical, 2,040 runs).
 - Decided by Maurice: none in this step beyond the approval of SPEC-081.
+
+## 2026-10-27 — Step 457: SPEC-082 drafted (evidence: time and anchor)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push en leg daarna C1 uit"; "akkoord, alle drie voorstellen, schrijf SPEC-082" (an `evidence()` method with readonly value objects, in the contract, C1 split into four specs starting with time and anchor).
+- Produced: `specs/SPEC-082-evidence-time-and-anchor.md` (draft); `NOTES.md`. Pushed steps 454–456 before (CI green on `e01b800`).
+- Measured: the anchors, depths and verdict of `timestamp/tsa-matrix/control.png` with its settings (a PHP one-liner over the verifier at `e01b800`); the section numbers checked in `docs/reading-c2pa-2.4.md`.
+- Decided by Maurice: C1 split into four specs; `evidence()` returning readonly value objects; part of the contract, in the same minor as SPEC-081.
