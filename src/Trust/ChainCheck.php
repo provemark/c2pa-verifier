@@ -38,7 +38,7 @@ final readonly class ChainCheck
      *
      * @return array{0: list<ValidationStatus>, 1: AnchorEvidence|null}
      */
-    public function checkWithAnchor(Manifest $manifest, TrustSettings $settings, ?int $at = null): array
+    public function checkWithAnchor(Manifest $manifest, TrustSettings $settings, ?int $at = null, ?RevocationSource $source = null): array
     {
         if (! $settings->verifyTrust) {
             return [[], null];
@@ -57,7 +57,7 @@ final readonly class ChainCheck
             return [[new ValidationStatus(StatusCode::SigningCredentialInvalid, $url, 'x5chain holds no certificate')], null];
         }
 
-        [$statuses, $anchor] = $this->walk($chain, $settings, $url, $at, $cose->unprotected);
+        [$statuses, $anchor] = $this->walk($chain, $settings, $url, $at, $cose->unprotected, $source);
         [$statuses, $anchor] = $this->timeStampingSigner($chain, $settings, $url, $at, $statuses, $anchor);
         $note = self::kindNote($settings, TrustAnchorSet::MANIFEST, $chain, $at);
         if ($note === '') {
@@ -119,11 +119,13 @@ final readonly class ChainCheck
      * checkCertificates(), and what made a trusted outcome trusted (SPEC-082): the anchor reached, or the
      * leaf on the allowed list, with the list that made it count. Null for every other outcome.
      *
+     * With a revocation source (SPEC-087), each CA of the path found is asked about after the stored responses.
+     *
      * @param  non-empty-list<Certificate>  $chain
      * @param  array<int|string, mixed>  $unprotected
      * @return array{0: list<ValidationStatus>, 1: AnchorEvidence|null}
      */
-    public function walk(array $chain, TrustSettings $settings, string $url, ?int $at = null, array $unprotected = []): array
+    public function walk(array $chain, TrustSettings $settings, string $url, ?int $at = null, array $unprotected = [], ?RevocationSource $source = null): array
     {
         $leaf = $chain[0];
 
@@ -147,7 +149,7 @@ final readonly class ChainCheck
                 // depth = links walked from the leaf to the anchor: the leaf itself an anchor is 0, the leaf signed by one is 1
                 if ($current->sameAs($anchor)) {
                     $path = array_reverse(array_slice($chain, 0, $depth + 1));
-                    $fault = self::listedFault($settings, $anchor, $at) ?? self::pathFault($path) ?? (new OcspCheck)->revokedCa($unprotected, $path, $at);
+                    $fault = self::listedFault($settings, $anchor, $at) ?? self::pathFault($path) ?? (new OcspCheck)->revokedCa($unprotected, $path, $at) ?? (new OcspCheck)->fetchedCaRevocation($source, $path, $at);
                     if ($fault !== null) {
                         return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))], null];
                     }
@@ -162,9 +164,9 @@ final readonly class ChainCheck
 
                         continue;
                     }
-                    // the path, then a stapled OCSP response about a CA of it (SPEC-066)
+                    // the path, then a stapled OCSP response about a CA of it (SPEC-066), then the caller's source (SPEC-087)
                     $path = [$anchor, ...array_reverse(array_slice($chain, 0, $depth + 1))];
-                    $fault = self::pathFault($path) ?? (new OcspCheck)->revokedCa($unprotected, $path, $at);
+                    $fault = self::pathFault($path) ?? (new OcspCheck)->revokedCa($unprotected, $path, $at) ?? (new OcspCheck)->fetchedCaRevocation($source, $path, $at);
                     if ($fault !== null) {
                         return [[new ValidationStatus(StatusCode::SigningCredentialUntrusted, $url, sprintf('signing certificate untrusted: %s', $fault))], null];
                     }

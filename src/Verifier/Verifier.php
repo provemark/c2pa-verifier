@@ -319,7 +319,7 @@ final readonly class Verifier
         $anchor = null;
         $trust = [];
         if ($trustSettings->verifyTrust) {
-            [$trust, $anchor] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at);
+            [$trust, $anchor] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at, $this->source());   // SPEC-087: the source for the CAs of the path
             $statuses = [...$statuses, ...$trust];
             $checks[] = 'trust';
         }

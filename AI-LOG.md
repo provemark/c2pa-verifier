@@ -12139,3 +12139,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-087-revocation-source-cas.md` (status, approval); `NOTES.md`.
 - Reasoned: nothing new; the draft had no open questions.
 - Decided by Maurice: SPEC-087 approved.
+
+## 2026-10-27 — Step 478: SPEC-087 built, the revocation source asked about the CAs
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push 477 en bouw daarna SPEC-087"; then "akkoord, amendment 1 approved, commit stap 478".
+- Produced: `src/Trust/OcspCheck.php` (`fetchedCaRevocation()`); `src/Trust/ChainCheck.php` (the source in `checkWithAnchor()` and `walk()`, after `revokedCa()`); `src/Verifier/Verifier.php`, `src/Verifier/IngredientManifestCheck.php` (the source passed to the chain check); `src/Trust/RevocationSource.php` (docblock); `tests/Unit/Verifier/RevocationSourceCasTest.php` (new, 23 tests); `tests/Unit/Verifier/RevocationSourceTest.php` (signer calls only, `spec086SignerCalls()`; a spec reference corrected); `README.md`; `docs/comparison.md`, `docs/conformance.md`, `docs/reading-c2pa-2.4.md`; `specs/SPEC-087-revocation-source-cas.md` (implemented, traceability); `specs/SPEC-086-revocation-source.md` (amendment 1); `notes/step-478-revocation-source-cas.md`; `NOTES.md`; `docs/milestones.md`.
+- Measured: `vendor/bin/pest --group=SPEC-087` before the build (12 failed, 9 guards passed) and after (green); after the build ten SPEC-086 tests failed on the added CA calls, which led to amendment 1; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0 (1,533 passed, 1 skipped); 3,066 corpus runs before (worktree at `aa04153`, own `vendor/` copy) and after, with no source and with `NoRevocationSource`, identical; CA and signer calls per settings (0/0, 222/222, 2/2); fifteen hand mutations, ten caught at once, three after added tests, two not caught (documented). A flaky AC9 of my own (two runs straddling a second) fixed with a fixed validation time; a mutation-runner crash that left a mutation in `Verifier.php`, restored by hand and checked. / Reasoned: M14 unreachable for a valid chain; M8 guards work, not the verdict.
+- Decided by Maurice: SPEC-086 amendment 1 approved.

@@ -302,6 +302,44 @@ final readonly class OcspCheck
     }
 
     /**
+     * Why a CA of the path was revoked at the judged time, by a response the caller's source returned about it, or
+     * null (SPEC-087, ADR-0007; C2PA 2.4 §15.9). Each CA below the anchor is asked once, from the top down, with the
+     * certificate above it as its issuer and its own AIA OCSP urls; the first revoked answer ends the walk. The answer
+     * is read as a stapled one about a CA: only a response that verifies under that issuer's responder counts, and
+     * any other answer — good, unknown, removeFromCRL, a revocation after the judged time, none, a failing source, an
+     * unusable response — adds nothing, for §15.9 has no code for it and an unanswered question lowers nothing.
+     *
+     * @param  list<Certificate>  $path  the anchor first, the leaf last
+     */
+    public function fetchedCaRevocation(?RevocationSource $source, array $path, int $time): ?string
+    {
+        if ($source === null) {
+            return null;
+        }
+        $when = static fn (?int $t): string => $t === null ? 'an unknown time' : gmdate('Y-m-d\TH:i:s\Z', $t);
+        for ($i = 1; $i < count($path) - 1; $i++) {
+            try {
+                $der = $source->ocspResponse($path[$i]->der, $path[$i - 1]->der, $path[$i]->x509->ocspUrls());
+            } catch (\Throwable) {
+                continue;
+            }
+            if ($der === null || strlen($der) > self::DEFAULT_MAX_RESPONSE_BYTES) {
+                continue;
+            }
+            $single = $this->usable($der, $path[$i], $path[$i - 1], 0);
+            if (is_array($single) && $single['status'] === 'revoked' && $single['reason'] !== self::REASON_REMOVE_FROM_CRL
+                && ($single['revokedAt'] === null || $single['revokedAt'] <= $time)) {
+                return sprintf(
+                    'the CA certificate %s was revoked at %s (%s), as %s answered in an OCSP response fetched from the caller\'s revocation source on %s (C2PA 2.4 §15.9, SPEC-087)',
+                    $path[$i]->subjectCn(), $when($single['revokedAt']), self::reasonName($single['reason'], 'unspecified'), $single['responder'], $when($single['producedAt']),
+                );
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Why a CA of the path was revoked at the judged time, by a stapled response about it, or null (SPEC-066; C2PA
      * 2.4 §15.9). Every CA below the anchor is offered each stapled response, with the certificate above it as its
      * issuer; only a response that verifies under that issuer's responder counts, as for the signer. A good,

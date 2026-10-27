@@ -64,13 +64,13 @@ written on 2026-10-09; what became of each is in the rows.
 | §13, §16, §17, Appendix C | 29 | 19 | 2 | 2 | 6 | 0 |
 | §14 | 42 | 35 | 0 | 6 | 1 | 0 |
 | §15.1 to §15.6 | 33 | 14 | 5 | 4 | 10 | 0 |
-| §15.7 to §15.9 | 47 | 33 | 9 | 3 | 2 | 0 |
+| §15.7 to §15.9 | 47 | 34 | 9 | 2 | 2 | 0 |
 | §15.10 to the end of §15 | 124 | 87 | 15 | 13 | 9 | 0 |
 | §18.1 to §18.9 | 50 | 28 | 2 | 7 | 11 | 2 |
 | §18.10 to §18.16 | 58 | 21 | 11 | 14 | 12 | 0 |
 | §18.17 to the end of §18 | 34 | 7 | 2 | 13 | 11 | 0 (and 1 other) |
 | Appendix A | 50 | 24 | 1 | 7 | 13 | 5 |
-| **all** | **563** | **330** | **53** | **76** | **96** | **7** |
+| **all** | **563** | **331** | **53** | **75** | **96** | **7** |
 
 On 2026-10-09 the same table read 562 rules: 310 covered, 63 partial, 79 by
 design, 101 n/a, 8 candidates. Counted by script on 2026-10-25, the rows
@@ -833,7 +833,7 @@ established (§15.9). The verifier makes no network request by design, so
 revocation is known from the OCSP responses the signer stapled into `rVals`
 (SPEC-030) and the store's certificate-status assertions (SPEC-066), and —
 since SPEC-086, opt-in — from a revocation source the caller injects for
-the signer (ADR-0007); AIA fetches for the CAs remain out. Two status-code habits run through the rows:
+the signer and the CAs of its path (SPEC-087, ADR-0007). Two status-code habits run through the rows:
 like `c2pa-rs`, this verifier reports an expired signer as
 `signingCredential.expired` and issues `claimSignature.insideValidity` with
 every verified signature (SPEC-039), where §15.8.2 names
@@ -873,7 +873,7 @@ period. `c2pa-rs` here means 0.91.1, the engine of `c2patool` 0.28.1.
 | 15.8.2 | TSA revocation need not be captured nor checked. | not checked | n/a | read |
 | 15.8.2 | No usable time-stamp: the signer and every CA at now; `claimSignature.insideValidity`, or reject with `claimSignature.outsideValidity`. | the signer at now, or at the validation time the caller gives (SPEC-073), `signingCredential.expired` when outside (SPEC-017 AC8, Nikon). `insideValidity` is issued with every verified signature, an expired signer included, as `c2patool` (SPEC-039). CAs as in the row two above | **partial**: the codes by design (SPEC-039), the CAs → P05-4 | measured: `TimestampCheckTest` SPEC-017 AC8; `InsideValidityTest` AC2 |
 | 15.8.3 | A validator may check the `iat` header against the signer's validity and the time-stamp; if it does, `timeOfSigning.insideValidity` / `outsideValidity`. | `iat` is not read; `c2pa-rs` defines the two codes but issues neither | n/a (the option is not taken) | read |
-| 15.9 | For CA certificates, revocation should be determined as their AIA indicates. | no network in the verification path (`OcspCheck` class comment, SPEC-030) | by design | read |
+| 15.9 | For CA certificates, revocation should be determined as their AIA indicates. | through a revocation source the caller injects, asked about each CA of the path with its AIA OCSP urls; off by default, and this package opens no connection (ADR-0007) | covered (SPEC-087) | measured: `RevocationSourceCasTest` AC1, AC4, AC5, AC10 |
 | 15.9 | For CA certificates, stapled OCSP responses should be used where AIA offers OCSP. | stapled responses about a CA of the path, and certificate-status assertions, read since step 338 (SPEC-066); online OCSP and AIA stay out | covered (SPEC-066) | read → P05-5 |
 | 15.9 | A CA revoked at the judged time rejects the claim with `signingCredential.untrusted`. | stapled responses about a CA of the path, and certificate-status assertions, read since step 338 (SPEC-066); online OCSP and AIA stay out | covered (SPEC-066) | measured: `RevocationBeyondStapleTest` AC1, also with the anchor carried in `x5chain` (`anchor-in-chain/`, step 431) → P05-5 |
 | 15.9 | A certificate with no revocation method is treated as not revoked. | no `rVals`: one `signingCredential.ocsp.skipped`, no failure | covered | measured: `OcspCheckTest` AC5 |

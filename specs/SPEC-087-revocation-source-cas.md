@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-27                      |
 | Supersedes | —                                                 |
@@ -209,15 +209,26 @@ None yet.
 
 ## Traceability
 
+All in `tests/Unit/Verifier/RevocationSourceCasTest.php`, group `SPEC-087`. Before the implementation 12 tests failed
+(the new behaviour: AC1, AC2, AC3, AC4's first case, AC5, AC8, AC10 under
+`full` and the lists); 9 passed already, each a guard that nothing is asked
+or changed where it may not be (AC4 with the intermediate as anchor, AC6,
+AC7, AC9, AC10 without settings) — true before this spec, since nothing
+asked about a CA. Three tests for *Scope* lines no corpus file shows were
+added after the build, when mutations M4, M6 and M11 survived. With the
+build, SPEC-086's call counts were narrowed to the signer (SPEC-086
+amendment 1).
+
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  |                             |                      |
-| AC2                  |                             |                      |
-| AC3                  |                             |                      |
-| AC4                  |                             |                      |
-| AC5                  |                             |                      |
-| AC6                  |                             |                      |
-| AC7                  |                             |                      |
-| AC8                  |                             |                      |
-| AC9                  |                             |                      |
-| AC10                 |                             |                      |
+| AC1                  | AC1: a revoked CA | src/Trust/OcspCheck.php :: fetchedCaRevocation(); src/Trust/ChainCheck.php :: checkWithAnchor(), walk() |
+| AC2                  | AC2: a good CA, then the signer | src/Trust/ChainCheck.php :: walk(); src/Verifier/Verifier.php :: check() |
+| AC3                  | AC3: answers that change nothing (removeFromCRL, null, an exception, not DER, about another certificate) | src/Trust/OcspCheck.php :: fetchedCaRevocation() |
+| AC4                  | AC4: the anchor is not asked about; AC4: with the intermediate as the anchor, only the signer is asked | src/Trust/OcspCheck.php :: fetchedCaRevocation() (the loop's bounds) |
+| AC5                  | AC5: asked although the signer's staple proves something | src/Trust/ChainCheck.php :: walk(); src/Trust/CertificateExtensions.php :: ocspUrls() |
+| AC6                  | AC6: not asked where a stored response already shows the CA revoked | src/Trust/ChainCheck.php :: walk() (`revokedCa()` first) |
+| AC7                  | AC7: not asked without an anchor | src/Trust/ChainCheck.php :: walk() |
+| AC8                  | AC8: an ingredient's CA | src/Verifier/IngredientManifestCheck.php :: manifest() |
+| AC9                  | AC9: the default source changes nothing; and 3,066 corpus runs before (worktree at `aa04153`, own `vendor/` copy) and after, with no source and with `NoRevocationSource`, identical (`notes/step-478-revocation-source-cas.md`) | src/Verifier/Verifier.php :: source() |
+| AC10                 | AC10: over the corpus, the source is asked exactly where allowed (none, full, lists) | src/Trust/ChainCheck.php :: walk(); src/Trust/OcspCheck.php :: fetchedCaRevocation() |
+| *Scope*              | scope: every CA is asked, from the top down; scope: a revocation after the judged time does not count | src/Trust/OcspCheck.php :: fetchedCaRevocation() |

@@ -37,10 +37,10 @@ accept; its predicate list does not depend on its cryptography being right.
 
 | verdict | predicates |
 |---|---|
-| **yes** | 75 |
+| **yes** | 77 |
 | partial | 10 |
 | closed | 4 |
-| by design | 20 |
+| by design | 18 |
 | **gap** | 2 |
 | **total** | 111 |
 
@@ -96,7 +96,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-STRU-007` | may | Optional manifest-asset association verification | by design — optional manifest-asset association check; not done |
 | `PRED-STRU-008` | shall | Claim required fields and claim_generator_info name presence | **yes** — `Claim::fromMap()` requires every required field and a `name` in `claim_generator_info`, both `claim.malformed` (SPEC-007) |
 | `PRED-STRU-009` | shall | Generator-info icon field structural validation | **yes** — since 2026-09-24 (SPEC-034): an `icon` that is a hashed URI must name an assertion the claim lists, with the hash the claim records, else `assertion.hashedURI.mismatch` / `assertion.missing` (§10.2.3.2, §15.10.3.3); the same for actions icons in v2 claims; an external url or a data box is `assertion.missing` |
-| `PRED-STRU-010` | should | CA certificate revocation via AIA OCSP | by design — revocation via AIA OCSP needs the network (SPEC-014 puts revocation out of scope) |
+| `PRED-STRU-010` | should | CA certificate revocation via AIA OCSP | **yes**, opt-in — each CA of the path is asked of the caller's revocation source with its AIA OCSP urls; a revoked CA makes the signer untrusted (ADR-0007) — SPEC-087 AC1, AC5 |
 | `PRED-STRU-011` | shall | Signer certificate revocation validation process | **yes** — `Trust\OcspCheck` reads `rVals.ocspVals` and applies `certStatus` (SPEC-030); a certificate with no revocation information is treated as not revoked, by saying `skipped` |
 | `PRED-STRU-012` | shall | Multiple OCSP responses: try each until one passes | **yes** — `Trust\OcspCheck::check()` tries each stapled response and stops at the first that proves something, a `revoked` winning over a `good` |
 | `PRED-STRU-013` | should | Online OCSP fallback when no revocation info in manifest | **yes**, opt-in — a revocation source the caller injects is asked for a trusted signer whose stored responses prove nothing; this package opens no connection (ADR-0007) — SPEC-086 AC1, AC5 |
@@ -130,7 +130,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-CRYP-017` | shall | Use attested time for certificate validity when trusted timestamp present | **yes** — `CertificateProfileCheck::check($at)` takes the trusted timestamp's time; `now` only without one, and the explanation says which (SPEC-017) |
 | `PRED-CRYP-018` | may | Claimed time of signing via iat header validation | by design — the `iat` claimed time of signing is not read; a `may` |
 | `PRED-CRYP-019` | shall | Claimed time of signing inside/outside validity informational code | by design — follows from CRYP-018: no `timeOfSigning.*` codes exist here; issue #10 closed as not planned (the maintainer's decision) |
-| `PRED-CRYP-020` | shall | CA certificate revocation check at signing time | by design — CA revocation at signing time needs revocation data (SPEC-014) |
+| `PRED-CRYP-020` | shall | CA certificate revocation check at signing time | **yes** — from stapled responses and certificate-status assertions (SPEC-066), and, opt-in, from the caller's revocation source, judged at the trusted time-stamp's time or the validation time — SPEC-087 AC1, AC8 |
 | `PRED-CRYP-021` | shall | OCSP response from manifest store revocation check | **yes** — the same stapled-OCSP path; `notRevoked` is recorded with the caveat that the header carrying it is unsigned |
 | `PRED-CRYP-022` | may | Online OCSP query fallback | **yes**, opt-in — through the caller's revocation source, with the signer's AIA OCSP urls (ADR-0007) — SPEC-086 AC7 |
 | `PRED-CRYP-023` | shall | Online OCSP response acceptance and not-revoked determination | **yes**, opt-in — a fetched response passes the stapled one's tests (about the signer, an authorised responder, current) or is `inaccessible` — SPEC-086 AC1, AC3 |
@@ -260,8 +260,8 @@ path. That covered the *online* predicates (`STRU-010`, `013`, `016`,
 `CRYP-020`, `022`, `023`). It never covered a response the signer had
 already placed **inside the file**. Since SPEC-086 (ADR-0007) the signer's
 online query is possible through a source the caller injects, so `013`,
-`016`, `022` and `023` are *yes*, opt-in; the CAs of the path (`STRU-010`,
-`CRYP-020`) are still *by design*.
+`016`, `022` and `023` are *yes*, opt-in; since SPEC-087 the CAs of the
+path are asked too (`STRU-010`, `CRYP-020`).
 
 What `ocsp.jpg` actually carries, measured:
 

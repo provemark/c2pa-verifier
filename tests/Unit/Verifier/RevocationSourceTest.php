@@ -133,6 +133,24 @@ function spec086State(VerificationReport $report): string
     return is_string($state) ? $state : '';
 }
 
+/**
+ * The calls about a judged manifest's signer (amendment 1): since SPEC-087 the source is first asked about the CAs
+ * of each path, and those calls are SPEC-087's to count.
+ *
+ * @return list<array{0: string, 1: string, 2: list<string>}>
+ */
+function spec086SignerCalls(VerificationReport $report, Spec086Calls $calls): array
+{
+    $signers = [];
+    foreach ($report->evidence() as $evidence) {
+        if (isset($evidence->certificates[0])) {
+            $signers[$evidence->certificates[0]] = true;
+        }
+    }
+
+    return array_values(array_filter($calls->calls, static fn (array $call): bool => isset($signers[$call[0]])));
+}
+
 function spec086Parent(?RevocationSource $source, string $settings = 'throwaway'): VerificationReport
 {
     return spec086Verify(Corpus::fixtures().'/'.SPEC086_PARENT, spec086Settings($settings), $source);
@@ -143,7 +161,7 @@ it('AC1: a fetched good', function (): void {
     $report = spec086Parent(spec086Source($calls, spec086Response('revocation/cs-good.png', SPEC086_P_GOOD)));
     $chain = $report->evidence()[SPEC086_P]->certificates;
 
-    expect($calls->calls)->toBe([[$chain[0], $chain[1], []]])
+    expect(spec086SignerCalls($report, $calls))->toBe([[$chain[0], $chain[1], []]])
         ->and(spec086Codes($report, SPEC086_P))->toBe(['signingCredential.ocsp.notRevoked'])
         ->and(spec086Explanation($report, SPEC086_P, 'signingCredential.ocsp.notRevoked'))->toContain('fetched')
         ->and(spec086State($report))->toBe('Trusted')
@@ -172,7 +190,7 @@ it('AC4: no answer is inaccessible, and nothing escapes', function (?string $ans
     $calls = new Spec086Calls;
     $report = spec086Parent(spec086Source($calls, $answer, $throw));
 
-    expect($calls->calls)->toHaveCount(1)
+    expect(spec086SignerCalls($report, $calls))->toHaveCount(1)
         ->and(spec086Codes($report, SPEC086_P))->toBe(['signingCredential.ocsp.inaccessible'])
         ->and(spec086Explanation($report, SPEC086_P, 'signingCredential.ocsp.inaccessible'))->toContain('source')
         ->and(spec086State($report))->toBe('Trusted')
@@ -189,8 +207,10 @@ it('AC5: not asked where a stored response proves something', function (string $
     $report = spec086Verify(Corpus::fixtures()."/{$file}", spec086Settings('throwaway'), spec086Source($calls));
     $label = $asked === 'active' ? ($report->store->active->label ?? '') : SPEC086_P;
 
-    expect($calls->calls)->toHaveCount(1)
-        ->and($calls->calls[0][0] ?? null)->toBe($report->evidence()[$label]->certificates[0]);
+    $signerCalls = spec086SignerCalls($report, $calls);
+
+    expect($signerCalls)->toHaveCount(1)
+        ->and($signerCalls[0][0] ?? null)->toBe($report->evidence()[$label]->certificates[0]);
 })->with([
     'cs-good: U, not P' => ['revocation/cs-good.png', 'active'],
     'cs-own: P, not U' => ['revocation/cs-own.png', 'ingredient'],
@@ -213,8 +233,10 @@ it('AC7: the urls from the AIA', function (): void {
     $report = spec086Verify(Corpus::fixtures().'/'.SPEC086_GOOGLE, spec086Settings('lists'), spec086Source($calls));
     $label = $report->store->active->label ?? '';
 
-    expect($calls->calls)->toHaveCount(1)
-        ->and($calls->calls[0][2] ?? null)->toBe(['http://c2pa-ocsp.pki.goog/'])
+    $signerCalls = spec086SignerCalls($report, $calls);
+
+    expect($signerCalls)->toHaveCount(1)
+        ->and($signerCalls[0][2] ?? null)->toBe(['http://c2pa-ocsp.pki.goog/'])
         ->and(spec086Codes($report, $label))->toBe(['signingCredential.ocsp.inaccessible']);
 })->group('SPEC-086');
 
@@ -247,7 +269,8 @@ it('AC9: the default source changes nothing', function (string $file, string $se
  * Where the calls of one run disagree with the manifests that may be asked (AC10): a trusted signer with its issuer
  * in x5chain whose stored responses proved nothing, read from the run without a source. Trusted is the report's
  * signingCredential.trusted; where the report holds no trust status for a manifest (an ingredient whose statuses the
- * store recorded, SPEC-024), the evidence's anchor, which agrees with it wherever both are present.
+ * store recorded, SPEC-021), the evidence's anchor, which agrees with it wherever both are present. The calls counted
+ * are those about a signer (amendment 1); SPEC-087 counts those about the CAs.
  *
  * @return list<string>
  */
@@ -276,7 +299,7 @@ function spec086Disagreements(VerificationReport $without, VerificationReport $w
             $eligible[$label] = true;
         }
     }
-    $called = array_map(static fn (array $call): string => hash('sha256', $call[0]), $calls->calls);
+    $called = array_map(static fn (array $call): string => hash('sha256', $call[0]), spec086SignerCalls($without, $calls));
     sort($expected);
     sort($called);
     if ($called !== $expected) {

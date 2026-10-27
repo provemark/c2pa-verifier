@@ -255,7 +255,16 @@ None.
 
 ## Amendments
 
-None yet.
+1. **2026-10-27, step 478, with SPEC-087** *(approved by Maurice van Loon, 2026-10-27)* —
+   SPEC-087 lets the source be asked about the CAs of the path too, each
+   before the signer. AC1, AC4, AC5, AC7 and AC10 count the calls the
+   source receives ("called once", "each call belongs to …"), written when
+   only the signer was asked. They now count **the calls about a judged
+   manifest's signer**; the calls about the CAs are SPEC-087's (its AC2,
+   AC4, AC10). Nothing else changes: when the signer is asked, with what,
+   and what becomes of the answer. The tests filter the recorded calls to
+   those whose subject is some judged manifest's signer
+   (`spec086SignerCalls()`).
 
 ## Traceability
 

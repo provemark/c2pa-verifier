@@ -225,7 +225,7 @@ final readonly class IngredientManifestCheck
         $anchor = null;
         $trust = [];
         if ($trustSettings->verifyTrust) {
-            [$trust, $anchor] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at);
+            [$trust, $anchor] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at, $source);   // SPEC-087: the source for the CAs of the path
             $statuses = [...$statuses, ...$trust];
         }
         // revocation of this manifest's signer (SPEC-066): where the store carries certificate-status
