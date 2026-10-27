@@ -219,6 +219,18 @@ if ($actionsCbor === false || $s[$actionsCbor + 4] !== "\xa1") {
 }
 $variants['assertion-cbor-reserved'] = claimReplace($s, $actionsCbor + 4, "\xa1", "\xbc");
 $variants['assertion-cbor-break'] = claimReplace($s, $actionsCbor + 4, "\xa1", "\xff");
+// SPEC-088 amendment 1 (step 485): the start of the same content overwritten, same length. Not valid CBOR (RFC 8949
+// §5.3): bytes after the item, a text string that is not UTF-8, a duplicate map key. Beyond this decoder's limits or
+// subset, though possibly valid CBOR: depth 33, the simple value undefined, an unsigned integer above 2^63 - 1.
+$overwrite = static fn (string $with): string => claimReplace($s, $actionsCbor + 4, substr($s, $actionsCbor + 4, strlen($with)), $with);
+$variants['assertion-cbor-trailing'] = $overwrite("\x00");
+$variants['assertion-cbor-utf8'] = $overwrite("\x61\xff");
+$variants['assertion-cbor-duplicate'] = $overwrite("\xa2\x61a\x00\x61a\x00");
+$variants['assertion-cbor-depth'] = $overwrite(str_repeat("\x81", 33)."\x00");
+$variants['assertion-cbor-undefined'] = $overwrite("\xf7");
+$variants['assertion-cbor-bigint'] = $overwrite("\x1b".str_repeat("\xff", 8));
+// and the claim's own CBOR given the same limit fault: it stays claim.cbor.invalid (SPEC-013), the amendment is the assertion's
+$variants['claim-cbor-undefined'] = claimReplace($s, $CLAIM_CBOR + 8, $s[$CLAIM_CBOR + 8], "\xf7");
 
 $dir = $root.'/tests/Fixtures/claim';
 if (! is_dir($dir) && ! mkdir($dir, 0755, true)) {

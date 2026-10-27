@@ -347,6 +347,12 @@ final readonly class Manifest
         try {
             return (new CborDecoder)->decode($data, $budget);
         } catch (CborException $e) {
+            // SPEC-088 amendment 1: a limit or an item outside the subset is not invalid CBOR; it stays general.error
+            // where the caller's code is assertion.cbor.invalid (the claim keeps claim.cbor.invalid, SPEC-013)
+            if ($e->getCode() === CborException::LIMIT && $status === StatusCode::AssertionCborInvalid) {
+                throw new ManifestException(sprintf('%s: CBOR beyond what this verifier decodes: %s', $what, $e->getMessage()), StatusCode::GeneralError, $e);
+            }
+
             throw new ManifestException(sprintf('%s: invalid CBOR: %s', $what, $e->getMessage()), $status, $e);
         }
     }

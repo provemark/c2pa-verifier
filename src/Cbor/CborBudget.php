@@ -28,7 +28,7 @@ final class CborBudget
     public function take(int $offset): void
     {
         if (--$this->remaining < 0) {
-            throw new CborException(sprintf('the item at offset %d is beyond the limit of %d CBOR items for this manifest store (SPEC-043)', $offset, $this->items));
+            throw new CborException(sprintf('the item at offset %d is beyond the limit of %d CBOR items for this manifest store (SPEC-043)', $offset, $this->items), CborException::LIMIT);
         }
     }
 }

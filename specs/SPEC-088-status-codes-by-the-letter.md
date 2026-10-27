@@ -149,7 +149,35 @@ case AssertionCborInvalid = 'assertion.cbor.invalid';   // failure
 
 ## Amendments
 
-None yet.
+1. **2026-10-27, step 485, found by the review of step 482; measured** *(approved by Maurice van Loon, 2026-10-27)* —
+   F1's *Behavior* made every fault of the CBOR decoder
+   `assertion.cbor.invalid`, "the item and depth limits included". A limit
+   of this decoder (items, depth, the store-wide budget of SPEC-043) or an
+   item outside the subset it decodes (an integer or tag above 2^63 − 1, a
+   simple value other than false, true and null, a map key that is not an
+   integer or text, a text key that would collide with an integer) says
+   nothing about the CBOR: it may be valid. Reporting
+   `assertion.cbor.invalid` there tells a caller the file is malformed
+   when only this verifier stops. Measured with six new variants of
+   `bin/make-claim-variants.php` (the actions assertion's content
+   overwritten at its start, same length): `c2patool` 0.28.3 decodes depth
+   33, `undefined` and 2^64 − 1 as CBOR and refuses them only against the
+   actions schema ("invalid type"); `c2pa-rs` 0.91.1 logs
+   `assertion.cbor.invalid` only when the bytes do not decode as a generic
+   CBOR value (read: `store.rs`, `get_assertion_from_jumbf_store`).
+
+   Now an assertion's CBOR is `assertion.cbor.invalid` only when it is not
+   well-formed or not valid (RFC 8949 §5.3): a reserved or misplaced byte,
+   truncation, an indefinite length or chunk where none may be, bytes
+   after the item, text that is not UTF-8, a duplicate map key. A limit or
+   an item outside the subset stays `general.error`, as before SPEC-088,
+   its explanation reading "CBOR beyond what this verifier decodes". The
+   store is refused in every case, as before. `CborException::LIMIT`
+   (internal) marks the second kind. The claim keeps
+   `claim.cbor.invalid` for every fault (SPEC-013); a guard pins it. No
+   contract symbol changes.
+
+   **Weight C: a code, no verdict.**
 
 ## Traceability
 
@@ -169,3 +197,4 @@ SPEC-017 amendment 11, SPEC-062 amendment 4, SPEC-084 amendment 2.
 | AC4                  | AC4: other faults of a token stay timeStamp.malformed (genTime, two tokens, both headers) | src/Timestamp/TimestampException.php :: statusCode() |
 | AC5                  | 3,042 corpus runs before (worktree at `1ad620d`, own `vendor/` copy) and after: 18 differ, the six files named, only in code and explanation, every `validation_state` equal (`notes/step-481-status-codes-by-the-letter.md`) | — |
 | AC6                  | AC6: assertion.cbor.invalid is a failure code; `ApiSurfaceTest` (209) | src/Report/StatusCode.php |
+| Amendment 1          | amendment 1: an assertion that is not valid CBOR is assertion.cbor.invalid; one beyond this decoder is general.error (eight probes); amendment 1: the decoder tells a limit or an item outside its subset from CBOR that is not valid (ten inputs); amendment 1: the claim keeps claim.cbor.invalid (added after mutation M2 survived). Before the build 9 failed, the cases that stay `assertion.cbor.invalid` passed; 3,102 corpus runs before (`fa6914d`) and after: only the three limit probes differ, in code and explanation | src/Cbor/CborException.php :: LIMIT; src/Cbor/CborDecoder.php; src/Cbor/CborBudget.php; src/Manifest/Manifest.php :: decodeCbor() |

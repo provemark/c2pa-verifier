@@ -32,6 +32,13 @@ and these are the values committed on 2026-09-21. Measured with c2patool
 | `json-broken` | the Adobe store with the `stds.schema-org.CreativeWork` JSON's first `{` → `[` (carried in the PNG, so the data hash also fails) | extracts; `Invalid`, **`assertion.json.invalid`** and `assertion.required.missing` — a status code, not a parse error | AC13 error here; the Verifier layer maps it to `assertion.json.invalid` later |
 | `assertion-cbor-reserved` | the actions assertion's first CBOR byte `a1` → `bc` (additional information 28, reserved; RFC 8949 §3), same length (SPEC-088, step 481) | `Invalid`, **`assertion.cbor.invalid`** at the actions assertion; `c2patool` 0.28.3 refuses the file with an error | SPEC-088 AC1 |
 | `assertion-cbor-break` | the same byte → `ff`, a break outside an indefinite-length item | the same | SPEC-088 AC1 |
+| `assertion-cbor-trailing` | the same content's first byte → `00`, so bytes remain after the item (step 485) | `Invalid`, `assertion.cbor.invalid`; `c2patool` 0.28.3: "invalid type: integer `0`" | SPEC-088 amendment 1 |
+| `assertion-cbor-utf8` | its start → `61 ff`, a text string that is not UTF-8 | `Invalid`, `assertion.cbor.invalid`; 0.28.3: "Invalid UTF-8" | SPEC-088 amendment 1 |
+| `assertion-cbor-duplicate` | its start → `{"a": 0, "a": 0}` | `Invalid`, `assertion.cbor.invalid`; 0.28.3: "missing field `actions`" | SPEC-088 amendment 1 |
+| `assertion-cbor-depth` | its start → 33 nested one-item arrays | `Invalid`, `general.error` (depth limit 32); 0.28.3: "invalid type: sequence" | SPEC-088 amendment 1 |
+| `assertion-cbor-undefined` | its first byte → `f7`, the simple value undefined | `Invalid`, `general.error` (outside the subset); 0.28.3: "invalid type: unit value" | SPEC-088 amendment 1 |
+| `assertion-cbor-bigint` | its start → `1b ff…ff`, 2^64 − 1 | `Invalid`, `general.error` (outside the subset); 0.28.3: "invalid type: integer `18446744073709551615`" | SPEC-088 amendment 1 |
+| `claim-cbor-undefined` | the claim's first CBOR byte → `f7` | `Invalid`, `claim.cbor.invalid` (unchanged, SPEC-013); 0.28.3: "claim could not be converted from CBOR" | SPEC-088 amendment 1 (guard) |
 
 `tests/Fixtures/jumbf/unknown-uuid.bin` (step 10) is AC10's third case: a URI
 that resolves to an `UnknownBox`; c2patool → `Error: could not create valid
@@ -57,4 +64,11 @@ ee6d1d2af9c9a1014c8db1f2da5101f779e8d735879c35f61576fafef31a84db  generator-info
 f8c776ec2a496e0287823655f04005b738ebcc342b808c82e7bdad77bad9d277  json-broken.bin
 fb2d7c5ecb799011394de55efc5f9c0b20cd6de95fac7f26053a5b58399e2ea6  assertion-cbor-reserved.bin
 66f8d073184e99fe89eea8807bba5b92cb08d7a25f70df84f7b54f8aac19c729  assertion-cbor-break.bin
+8765c765e63bf061324c2c7fb3c41d3ebf76c781bda0eda0b854b00894af8cb7  assertion-cbor-trailing.bin
+f1d732e18f9d10ae8b5bef1ee97cc47730d304c65286b9f7200697b754e87e4b  assertion-cbor-utf8.bin
+8ed8cbdac98d0b6057710cd3cefb3a134d736afc8bfcd378143a1d7d1a10e352  assertion-cbor-duplicate.bin
+ded3c7f978a11362fb3a5dd2b86762e678b2521246ad12a6ad2b81cc8646d95f  assertion-cbor-depth.bin
+1d26849828e984616e4fc2a3f8df21454ae5c8110d7c6c386feefc924f61fe59  assertion-cbor-undefined.bin
+c57d7502d0eefdffaeb2dd6efd964a81e2b1eab8a970d3947b13b43aa4510875  assertion-cbor-bigint.bin
+28c17ca748266695c0c406394a4802109fdc91f6247cdbf7eb736bddd6181dac  claim-cbor-undefined.bin
 ```

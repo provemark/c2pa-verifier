@@ -75,7 +75,10 @@ over every case has to name. Nothing was removed or renamed; a caller on
 
 - **Three status codes follow C2PA 2.4 (SPEC-088).** An assertion that is
   not well-formed CBOR is `assertion.cbor.invalid` (§15.10.3.1), where it
-  was `general.error`; the store is refused as before. A time-stamp token
+  was `general.error`; the store is refused as before. A limit of this
+  decoder or an item outside the subset it reads (depth, the item budget,
+  `undefined`, an integer above 2^63 − 1) stays `general.error`: such CBOR
+  may be valid (amendment 1). A time-stamp token
   whose `messageImprint` names a hash outside §13.1 (SHA-1, for instance),
   or that does not carry its time-stamp authority's certificate, is
   `timeStamp.untrusted` (§15.8.2), where it was `timeStamp.malformed`;

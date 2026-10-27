@@ -1,0 +1,4 @@
+Error: could not decode assertion c2pa.actions.v2 (version 2, content type application/cbor): Invalid UTF-8
+
+Caused by:
+    Invalid UTF-8

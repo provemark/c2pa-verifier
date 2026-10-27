@@ -67,3 +67,10 @@ and `../../claim/assertion-cbor-break.png` (recorded 2026-10-27, step 481):
 no report, only the error "could not decode assertion c2pa.actions.v2
 (version 2, content type application/cbor): Syntax error: Invalid CBOR
 value", exit status 1.
+
+`assertion-cbor-{trailing,utf8,duplicate,depth,undefined,bigint}--0.28.3.txt`
+and `claim-cbor-undefined--0.28.3.txt` (recorded 2026-10-27, step 485,
+SPEC-088 amendment 1): an error and no report for each. Only `utf8` fails
+in `c2patool`'s CBOR decoder ("Invalid UTF-8"); the other assertions decode
+as CBOR and fail against the actions schema ("invalid type: …", "missing
+field `actions`"). The claim: "claim could not be converted from CBOR".

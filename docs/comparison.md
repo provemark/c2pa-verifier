@@ -303,7 +303,12 @@ An assertion that is not well-formed CBOR (`claim/assertion-cbor-break.png`,
 `assertion-cbor-reserved.png`): `assertion.cbor.invalid` here, the store
 refused; `c2patool` 0.28.3 refuses the file with an error and no report
 (`c2pa-rs` logs `assertion.cbor.invalid` before it stops). Until SPEC-088
-this verifier said `general.error`.
+this verifier said `general.error`. Since its amendment 1 (step 485) only
+CBOR that is not well-formed or not valid is `assertion.cbor.invalid`
+(also bytes after the item and a duplicate key, which `c2patool` 0.28.3
+lets through to the actions schema); a limit of this decoder or an item
+outside its subset (depth 33, `undefined`, 2^64 − 1) stays `general.error`,
+where `c2patool` decodes the CBOR and refuses the schema.
 
 Codes that stay where C2PA 2.4 names another (SPEC-088, measured in step
 479): a CMS signature that does not verify is `timeStamp.untrusted`, the

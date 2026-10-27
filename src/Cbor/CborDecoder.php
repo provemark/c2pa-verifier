@@ -141,7 +141,7 @@ final readonly class CborDecoder
     private function fits(int $argument, int $head): int
     {
         if ($argument < 0) {
-            throw new CborException(sprintf('integer at offset %d does not fit a 64-bit signed integer', $head));
+            throw new CborException(sprintf('integer at offset %d does not fit a 64-bit signed integer', $head), CborException::LIMIT);
         }
 
         return $argument;
@@ -155,17 +155,17 @@ final readonly class CborDecoder
         }
         if ($additional === 24) {
             $value = ord($this->take($bytes, $offset, 1, sprintf('the simple value at offset %d', $head)));
-            throw new CborException($value < 32
-                ? sprintf('simple value %d at offset %d in the two-byte form is not well-formed', $value, $head)
-                : sprintf('simple value %d at offset %d is not supported', $value, $head));
+            throw $value < 32
+                ? new CborException(sprintf('simple value %d at offset %d in the two-byte form is not well-formed', $value, $head))
+                : new CborException(sprintf('simple value %d at offset %d is not supported', $value, $head), CborException::LIMIT);
         }
 
         return match ($additional) {
             20 => false,
             21 => true,
             22 => null,
-            23 => throw new CborException(sprintf('simple value 23 (undefined) at offset %d is not supported', $head)),
-            default => throw new CborException(sprintf('simple value %d at offset %d is not supported', $additional, $head)),
+            23 => throw new CborException(sprintf('simple value 23 (undefined) at offset %d is not supported', $head), CborException::LIMIT),
+            default => throw new CborException(sprintf('simple value %d at offset %d is not supported', $additional, $head), CborException::LIMIT),
         };
     }
 
@@ -321,11 +321,11 @@ final readonly class CborDecoder
             $keyOffset = $offset;
             $key = $this->item($bytes, $offset, $depth + 1, $budget);
             if (! is_int($key) && ! is_string($key)) {
-                throw new CborException(sprintf('map key at offset %d is %s; keys must be integers or text', $keyOffset, self::kind($key)));
+                throw new CborException(sprintf('map key at offset %d is %s; keys must be integers or text', $keyOffset, self::kind($key)), CborException::LIMIT);
             }
             if (is_string($key) && (string) (int) $key === $key) {
                 // "1" and 1 are different CBOR keys but the same PHP array offset.
-                throw new CborException(sprintf('map key %s at offset %d would collide with an integer key', self::show($key), $keyOffset));
+                throw new CborException(sprintf('map key %s at offset %d would collide with an integer key', self::show($key), $keyOffset), CborException::LIMIT);
             }
             // The value first, so a truncated map is reported as truncation
             // (RFC 8949 Appendix F lists "a2 00 00 00" that way), then the key.
@@ -342,14 +342,14 @@ final readonly class CborDecoder
     private function countable(string $what, int $head, int $count): void
     {
         if ($count < 0 || $count > $this->maxItems) {
-            throw new CborException(sprintf('%s at offset %d declares %s items, above the limit of %d', $what, $head, $count < 0 ? 'more than 9223372036854775807' : (string) $count, $this->maxItems));
+            throw new CborException(sprintf('%s at offset %d declares %s items, above the limit of %d', $what, $head, $count < 0 ? 'more than 9223372036854775807' : (string) $count, $this->maxItems), CborException::LIMIT);
         }
     }
 
     private function enter(int $depth, int $head): void
     {
         if ($depth + 1 > $this->maxDepth) {
-            throw new CborException(sprintf('depth %d exceeds the limit of %d (item at offset %d)', $depth + 1, $this->maxDepth, $head));
+            throw new CborException(sprintf('depth %d exceeds the limit of %d (item at offset %d)', $depth + 1, $this->maxDepth, $head), CborException::LIMIT);
         }
     }
 

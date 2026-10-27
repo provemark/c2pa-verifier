@@ -147,7 +147,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-ASSE-004` | shall | Assertion URI must reference same manifest | **yes** — since 2026-09-24 (SPEC-040): a claim entry naming another manifest is `assertion.outsideManifest`, on the entry as written |
 | `PRED-ASSE-005` | shall | Assertion URI must be resolvable | **yes** — `assertion.missing` when a claim's hashed URI names no assertion (SPEC-011) |
 | `PRED-ASSE-006` | shall | Assertion hashed-URI integrity check | **yes** — `HashedUriCheck`: `assertion.hashedURI.match` / `.mismatch` over every entry |
-| `PRED-ASSE-007` | shall | Standard assertion encoding validity | **yes** — JSON that does not decode is `assertion.json.invalid`, CBOR that does not decode `assertion.cbor.invalid` (SPEC-088; `general.error` until then) — SPEC-088 AC1 |
+| `PRED-ASSE-007` | shall | Standard assertion encoding validity | **yes** — JSON that does not decode is `assertion.json.invalid`, CBOR that is not well-formed or not valid `assertion.cbor.invalid` (SPEC-088; `general.error` until then; a limit of this decoder stays `general.error`, amendment 1) — SPEC-088 AC1 |
 | `PRED-ASSE-008` | shall | Undeclared assertion detection | **yes** — `assertion.undeclared` for a box in the store that no claim list references (SPEC-011) |
 | `PRED-ASSE-009` | shall | Self-redaction prohibition | **yes** — since 2026-09-24 (SPEC-035): an entry naming the claim's own manifest is `assertion.selfRedacted` |
 | `PRED-ASSE-010` | shall | Assertion metadata field not validated | **yes** — assertion `metadata` fields are never validated |
