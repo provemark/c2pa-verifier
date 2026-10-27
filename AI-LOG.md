@@ -12097,3 +12097,10 @@ README are where the disclosure lives.
 - Produced: `docs/adr/ADR-0007-revocation-from-an-injected-source.md` (status proposed); `notes/step-471-adr-0007-proposed.md`; `NOTES.md`.
 - Measured: `c2patool` 0.28.3 on the eight `tests/Fixtures/writers/` files with the programme's trust lists, `verify.ocsp_fetch` off, on and absent (live requests to the CAs' OCSP responders, with Maurice's consent); the same files in this verifier with the same lists. / Reasoned: from the `c2pa` 0.91.1 source, the default, the order (stapled, then CAs via AIA, then the signer) and the `inaccessible` code; the TrustNXT side effect read as a second time-stamp validation on the fetch path.
 - Decided by Maurice: the six proposals for the ADR's content, and the live measurement.
+
+## 2026-10-27 — Step 472: ADR-0007 accepted
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, beide voorstellen, ADR-0007 accepted, push 471".
+- Produced: `docs/adr/ADR-0007-revocation-from-an-injected-source.md` (accepted, decided questions); `notes/step-472-adr-0007-accepted.md`; `NOTES.md`; `docs/milestones.md`.
+- Measured: nothing new (step 471 holds the measurement). / Reasoned: none beyond recording the decision.
+- Decided by Maurice: ADR-0007 accepted; the `c2patool` side effect not copied on the opt-in path; the source on the `Verifier` constructor.

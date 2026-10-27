@@ -2,9 +2,9 @@
 
 | Field    | Value                          |
 |----------|--------------------------------|
-| Status   | proposed                       |
+| Status   | accepted                       |
 | Date     | 2026-10-27                     |
-| Decided  | —                              |
+| Decided  | Maurice van Loon               |
 
 ## Context
 
@@ -55,7 +55,7 @@ the programme's trust lists as `trust_anchors`, and read in the `c2pa`
   fetched at all (`ocsp.inaccessible`). The Bing file gains the same two
   time-stamp lines.
 
-## Decision (proposed)
+## Decision
 
 **The verifier accepts revocation data from a source the caller injects.
 The package itself still opens no connection.**
@@ -87,12 +87,12 @@ The package itself still opens no connection.**
    the `signingCredential.ocsp.*` status, and a revoked CA may make the
    signer `signingCredential.untrusted`; it changes nothing else. The
    side effect measured above — a second time-stamp validation that adds
-   a `signingCredential.invalid` — is not copied (open question 1).
+   a `signingCredential.invalid` — is not copied (decided question 1).
 
 The first spec under this ADR covers the signer's certificate; the CAs of
 the path through their AIA responders may follow as a second.
 
-## Open questions
+## Decided questions
 
 1. **Not copying `c2patool`'s side effect.** Point 6 makes the verdict on
    the opt-in path differ from `c2patool`'s where `c2pa-rs` logs extra
@@ -103,10 +103,14 @@ the path through their AIA responders may follow as a second.
    extra failure has nothing to do with revocation. Proposal: accept the
    difference for this opt-in path, record it in `docs/comparison.md`,
    and report the side effect upstream only if Maurice wants that.
+   **Decided: accepted.** This is an explicit exception beside ADR-0005,
+   limited to the opt-in path: with the default source nothing differs
+   from `c2patool`'s default.
 2. **Where the source is passed.** On the `Verifier` constructor (once
    per verifier) or as an argument of `verify()` (per call). Proposal: the
    constructor, beside the other collaborators, so `verify()`'s signature
    stays as it is; the spec decides.
+   **Decided: the constructor.**
 
 ## Consequences
 
