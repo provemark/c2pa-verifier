@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-10-27                      |
 | Supersedes | —                                                 |
@@ -38,11 +38,13 @@ decision of 2026-10-27).
 Measured on 2026-10-27 (the verifier at `13839bf`, over every file under
 `tests/Fixtures/`, 755 manifests in `evidence()` under no settings):
 
-- 18 manifests in 16 files staple one response each in `rVals`, from real
-  writers (OpenAI, Adobe, Amazon, `c2pa-rs`). Every one is readable, about
-  the signer and verified under its issuer's responder, and every one is
-  `signingCredential.ocsp.skipped` today: each was current for a week, and
-  the judged time is now.
+- 18 manifests in 16 files staple one response each in `rVals`
+  (amendment 1). The 7 from real writers (OpenAI, Adobe, Amazon,
+  `c2pa-rs`) are each readable, about the signer and verified under its
+  issuer's responder, and each is `signingCredential.ocsp.skipped` today:
+  each was current for a week, and the judged time is now. 7 probes staple
+  a response about a CA of the path, unusable for the signer (SPEC-066); 4
+  `ingredient-staple/` probes give `notRevoked` or `revoked`.
 - With a validation time inside that week (SPEC-073), the same response is
   `signingCredential.ocsp.notRevoked`:
   `writers/openai-20260826-c2pa_2x.png` at 2026-08-26T12:00:00Z (the
@@ -222,19 +224,48 @@ final readonly class OcspEvidence
 
 None.
 
+## Amendments
+
+1. **2026-10-27, step 470, approved by Maurice van Loon ("akkoord").** A
+   measurement in *Problem* that the build showed to be wrong.
+   - **Not every stapled response is from a real writer, or usable.**
+     *Problem* says the 18 manifests with a stapled response are all from
+     real writers, each readable, about the signer, verified and `skipped`
+     today. The build's corpus run (every manifest with `rVals`, its
+     evidence and its status) shows three groups:
+     - 7 manifests from real writers (`writers/openai-20260826-c2pa_2x.png`,
+       `writers/adobe-20260425-lightroom-classic-church.jpg`,
+       `writers/amazon-20240925-titan-g1.png`, `c2pa-rs/ocsp.jpg` twice,
+       `c2pa-rs/ocsp_with_assertion.jpg` twice): usable, chosen, and
+       `skipped` today because their week has passed — what *Problem*
+       claims, for these;
+     - 7 probes whose stapled response is about a CA in the path, not the
+       signer (`revocation/ca-*.png`, `anchor-in-chain/*-ca-*.png`):
+       `unusable` for the signer, as SPEC-066 made them;
+     - 4 `ingredient-staple/` probes: usable, chosen, `notRevoked` or
+       `revoked`.
+     The claim was generalised from five of the files. Decided: *Problem*
+     reads as above. No acceptance criterion changes.
+
 ## Traceability
 
-Filled when status becomes `implemented`.
+All in `tests/Unit/Verifier/EvidenceOcspTest.php`, group `SPEC-085`,
+unless named otherwise. Seen red before the implementation (all 14 tests,
+on the missing class and method). One test for a *Scope* line no corpus
+file shows was added after the build, when mutation M8 survived; it now
+fails under that mutation.
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1                  | —                           | —                    |
-| AC2                  | —                           | —                    |
-| AC3                  | —                           | —                    |
-| AC4                  | —                           | —                    |
-| AC5                  | —                           | —                    |
-| AC6                  | —                           | —                    |
-| AC7                  | —                           | —                    |
-| AC8                  | —                           | —                    |
-| AC9                  | —                           | —                    |
-| AC10                 | —                           | —                    |
+| AC1                  | AC1: a current response, chosen | src/Trust/OcspCheck.php :: checkWithEvidence(), evidence(); src/Verifier/Verifier.php :: check() |
+| AC2                  | AC2: the same response, no longer current, keeps its bytes and times | src/Trust/OcspCheck.php :: checkWithEvidence() |
+| AC3                  | AC3: chosen, not chosen and unusable in one manifest | src/Trust/OcspCheck.php :: checkWithEvidence(), evidence() |
+| AC4                  | AC4: a revocation in an assertion, for the ingredient and not for the active signer | src/Verifier/IngredientManifestCheck.php :: manifest(), evidenceOf() |
+| AC5                  | AC5: a revoked answer stops the check, and wins over an earlier good one | src/Trust/OcspCheck.php :: checkWithEvidence(), evidence() |
+| AC6                  | AC6: nothing usable, and nothing thrown (3 datasets) | src/Trust/OcspCheck.php :: checkWithEvidence() |
+| AC7                  | AC7: nothing to list | src/Trust/OcspCheck.php :: checkWithEvidence() |
+| AC8                  | AC8: over the corpus, the responses agree with the verdict and the statuses (3 datasets) | src/Trust/OcspCheck.php :: checkWithEvidence() |
+| AC9                  | AC9: the reports carry no response bytes; measured over the corpus (step 470) | src/Verifier/ManifestEvidence.php |
+| AC10                 | AC10: OcspEvidence and ocsp are in the contract; tests/Unit/ApiSurfaceTest.php :: AC1: the recorded surface is exactly what the contract classes expose today | src/Trust/OcspEvidence.php; bin/api-check.php :: apiContract() |
+| Scope (an assertion response over the size limit) | scope: an assertion response over the size limit is listed, unusable | src/Trust/OcspCheck.php :: checkWithEvidence() |
+| Amendment 1          | measured over the corpus (step 470) | — |

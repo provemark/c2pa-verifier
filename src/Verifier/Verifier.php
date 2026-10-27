@@ -318,22 +318,22 @@ final readonly class Verifier
             $statuses = [...$statuses, ...$trust];
             $checks[] = 'trust';
         }
-        // SPEC-082: what this verdict rests on, from the checks themselves
-        $evidence[$manifest->label] = IngredientManifestCheck::evidenceOf($manifest, $at, $timestamp, $now !== null, $anchor);
-
         // revocation, as far as it can be known without a network: the OCSP responses the
         // signer stapled into its own signature (SPEC-030). It runs after the chain, which
         // supplies the issuer, and after the timestamp, which supplies the judged time. It
         // speaks on every file, including those with nothing stapled: what was not checked
         // has to be visible, or a caller cannot tell silence from a clean answer.
-        $statuses = [...$statuses, ...$this->revocation->check(
+        [$revocation, $ocsp] = $this->revocation->checkWithEvidence(
             $this->unprotectedHeader($manifest),
             $this->chainOf($manifest),
             $at,
             sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label),
             OcspCheck::assertionResponses($manifestStore),   // SPEC-066: certificate-status assertions of the store
-        )];
+        );
+        $statuses = [...$statuses, ...$revocation];
         $checks[] = 'revocation';
+        // SPEC-082: what this verdict rests on, from the checks themselves
+        $evidence[$manifest->label] = IngredientManifestCheck::evidenceOf($manifest, $at, $timestamp, $now !== null, $anchor, $ocsp);
 
         $hashedUris = $this->hashedUris->check($manifest);
         $statuses = [...$statuses, ...$hashedUris];

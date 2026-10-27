@@ -28,6 +28,7 @@ use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\ChainCheck;
 use Provemark\C2paVerifier\Trust\OcspCheck;
+use Provemark\C2paVerifier\Trust\OcspEvidence;
 use Provemark\C2paVerifier\Trust\TrustException;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 
@@ -225,7 +226,6 @@ final readonly class IngredientManifestCheck
             [$trust, $anchor] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at);
             $statuses = [...$statuses, ...$trust];
         }
-        $evidence[$manifest->label] = self::evidenceOf($manifest, $at ?? time(), $timestamp, $now !== null, $anchor);   // no clock given: the checks read it themselves
         // revocation of this manifest's signer (SPEC-066): where the store carries certificate-status
         // responses, which may name it, its own stapled responses join them. Without any, its own staple is
         // read for a revoked only (amendment 2): notRevoked and skipped stay unreported, as c2patool reports it
@@ -236,10 +236,12 @@ final readonly class IngredientManifestCheck
             $cose = null;
             $chain = [];
         }
+        $ocsp = [];
         if ($cose !== null) {
-            $revocation = (new OcspCheck)->check($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses);
+            [$revocation, $ocsp] = (new OcspCheck)->checkWithEvidence($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses);
             $statuses = [...$statuses, ...($responses !== [] ? $revocation : array_filter($revocation, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialOcspRevoked))];
         }
+        $evidence[$manifest->label] = self::evidenceOf($manifest, $at ?? time(), $timestamp, $now !== null, $anchor, $ocsp);   // no clock given: the checks read it themselves
 
         $hashedUris = $this->hashedUris->check($manifest);
         $statuses = [...$statuses, ...$hashedUris];
@@ -266,9 +268,12 @@ final readonly class IngredientManifestCheck
      * A manifest's evidence (SPEC-082): judged at $at, whose source is the trusted time-stamp when it gave
      * the time, else the caller's validation time, else the clock; the TSA's anchor only in the first case.
      * Its certificates are x5chain's DER as the COSE reader took them (SPEC-083), none when it refused; its
-     * time-stamps every token offered, as the timestamp check judged them (SPEC-084).
+     * time-stamps every token offered, as the timestamp check judged them (SPEC-084); its ocsp the responses
+     * the signer's revocation check walked (SPEC-085).
+     *
+     * @param  list<OcspEvidence>  $ocsp
      */
-    public static function evidenceOf(Manifest $manifest, int $at, TimestampResult $timestamp, bool $given, ?AnchorEvidence $signer): ManifestEvidence
+    public static function evidenceOf(Manifest $manifest, int $at, TimestampResult $timestamp, bool $given, ?AnchorEvidence $signer, array $ocsp = []): ManifestEvidence
     {
         $fromTimestamp = $timestamp->trustedTime() !== null;
         try {
@@ -277,7 +282,7 @@ final readonly class IngredientManifestCheck
             $certificates = [];   // the signature check has already said why
         }
 
-        return new ManifestEvidence($manifest->label, $at, $fromTimestamp ? ManifestEvidence::TIMESTAMP : ($given ? ManifestEvidence::GIVEN : ManifestEvidence::CLOCK), $signer, $fromTimestamp ? $timestamp->anchor : null, $certificates, $timestamp->evidence);
+        return new ManifestEvidence($manifest->label, $at, $fromTimestamp ? ManifestEvidence::TIMESTAMP : ($given ? ManifestEvidence::GIVEN : ManifestEvidence::CLOCK), $signer, $fromTimestamp ? $timestamp->anchor : null, $certificates, $timestamp->evidence, $ocsp);
     }
 
     /**

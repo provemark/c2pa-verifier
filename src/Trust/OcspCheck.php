@@ -109,21 +109,37 @@ final readonly class OcspCheck
      */
     public function check(array $unprotected, array $chain, ?int $at, string $url, array $extra = []): array
     {
+        return $this->checkWithEvidence($unprotected, $chain, $at, $url, $extra)[0];
+    }
+
+    /**
+     * The check, and every response it walked with what became of it (SPEC-085): the check itself records them,
+     * so there is no second reading that could drift.
+     *
+     * @param  array<int|string, mixed>  $unprotected
+     * @param  list<Certificate>  $chain
+     * @param  list<array{0: string, 1: string}>  $extra
+     * @return array{0: list<ValidationStatus>, 1: list<OcspEvidence>}
+     */
+    public function checkWithEvidence(array $unprotected, array $chain, ?int $at, string $url, array $extra = []): array
+    {
         $time = $at ?? time();
         $skipped = fn (string $why): array => [new ValidationStatus(StatusCode::SigningCredentialOcspSkipped, $url, 'revocation not checked: '.$why)];
 
         $stapled = $this->responseBytes($unprotected);
         if (is_string($stapled) && $extra === []) {
-            return $skipped($stapled);
+            return [$skipped($stapled), []];
         }
         $stapledReason = is_string($stapled) ? [$stapled] : [];
         /** @var list<array{0: string, 1: string|null}> $pool */
         $pool = [...array_map(static fn (string $der): array => [$der, null], is_string($stapled) ? [] : $stapled), ...array_slice($extra, 0, self::DEFAULT_MAX_RESPONSES)];
         if ($pool === []) {
-            return $skipped('the signature staples no OCSP response, and this verifier makes no network request (SPEC-014); absence is not evidence that the certificate was never revoked');
+            return [$skipped('the signature staples no OCSP response, and this verifier makes no network request (SPEC-014); absence is not evidence that the certificate was never revoked'), []];
         }
+        // what became of each response (SPEC-085): its reading when usable, false when unusable, absent when not tried
+        $readings = [];
         if (count($chain) < 2) {
-            return $skipped(sprintf('the signer\'s issuer is not in the x5chain (%d certificate(s)), so no response can be matched to it', count($chain)));
+            return [$skipped(sprintf('the signer\'s issuer is not in the x5chain (%d certificate(s)), so no response can be matched to it', count($chain))), $this->evidence($pool, $url, array_fill(0, count($pool), false), null, null)];
         }
         $leaf = $chain[0];
         $issuer = $chain[1];
@@ -131,33 +147,73 @@ final readonly class OcspCheck
         $reasons = $stapledReason;
         $best = null;
         $bestFrom = null;
+        $bestAt = null;
         foreach ($pool as $i => [$der, $from]) {
             if (strlen($der) > self::DEFAULT_MAX_RESPONSE_BYTES) {
                 $reasons[] = sprintf('response %d is %d bytes, over the limit of %d', $i, strlen($der), self::DEFAULT_MAX_RESPONSE_BYTES);
+                $readings[$i] = false;
 
                 continue;
             }
             $single = $this->usable($der, $leaf, $issuer, $i);
             if (is_string($single)) {
                 $reasons[] = $single;
+                $readings[$i] = false;
 
                 continue;
             }
+            $readings[$i] = $single;
             // a revoked answer wins over any other, whichever order they were stapled in
             if ($single['status'] === 'revoked') {
-                [$best, $bestFrom] = [$single, $from];
+                [$best, $bestFrom, $bestAt] = [$single, $from, $i];
                 break;
             }
             if ($best === null) {
-                [$best, $bestFrom] = [$single, $from];
+                [$best, $bestFrom, $bestAt] = [$single, $from, $i];
             }
         }
 
         if ($best === null) {
-            return $skipped(implode('; ', $reasons));
+            return [$skipped(implode('; ', $reasons)), $this->evidence($pool, $url, $readings, null, null)];
+        }
+        $status = $this->statusOf($best, $leaf, $time, $url, $skipped, $bestFrom);
+
+        return [[$status], $this->evidence($pool, $url, $readings, $bestAt, $status->code)];
+    }
+
+    /**
+     * The pool as evidence: each response with its outcome, and what a usable one says.
+     *
+     * @param  list<array{0: string, 1: string|null}>  $pool
+     * @param  array<int, array{status: string, thisUpdate: int, nextUpdate: int|null, producedAt: int}|false>  $readings
+     * @return list<OcspEvidence>
+     */
+    private function evidence(array $pool, string $url, array $readings, ?int $chosen, ?StatusCode $code): array
+    {
+        $evidence = [];
+        foreach ($pool as $i => [$der, $from]) {
+            $reading = $readings[$i] ?? null;
+            $outcome = match (true) {
+                $i === $chosen => OcspEvidence::CHOSEN,
+                $reading === null => OcspEvidence::NOT_TRIED,
+                $reading === false => OcspEvidence::UNUSABLE,
+                default => OcspEvidence::NOT_CHOSEN,
+            };
+            $read = is_array($reading) ? $reading : null;
+            $evidence[] = new OcspEvidence(
+                $from === null ? OcspEvidence::RVALS : OcspEvidence::ASSERTION,
+                $from ?? $url,
+                $der,
+                $outcome,
+                $i === $chosen ? $code : null,
+                $read['status'] ?? null,
+                $read['producedAt'] ?? null,
+                $read['thisUpdate'] ?? null,
+                $read['nextUpdate'] ?? null,
+            );
         }
 
-        return [$this->statusOf($best, $leaf, $time, $url, $skipped, $bestFrom)];
+        return $evidence;
     }
 
     /**

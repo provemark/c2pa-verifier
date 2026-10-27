@@ -6,6 +6,7 @@ namespace Provemark\C2paVerifier\Verifier;
 
 use Provemark\C2paVerifier\Timestamp\TimestampEvidence;
 use Provemark\C2paVerifier\Trust\AnchorEvidence;
+use Provemark\C2paVerifier\Trust\OcspEvidence;
 
 /**
  * What one manifest's verdict rested on (SPEC-082): the time its signer was
@@ -16,7 +17,8 @@ use Provemark\C2paVerifier\Trust\AnchorEvidence;
  * judged at its own time (SPEC-021). Its certificates are the signer's
  * `x5chain` exactly as the file carries them, leaf first (C2PA 2.4 §14.5;
  * SPEC-083), whether or not X.509 could read them; its time-stamps every
- * token offered for it, and what became of each (SPEC-084).
+ * token offered for it, and what became of each (SPEC-084); its ocsp every
+ * OCSP response its signer's revocation check walked (SPEC-085).
  */
 final readonly class ManifestEvidence
 {
@@ -33,6 +35,7 @@ final readonly class ManifestEvidence
      * @param  AnchorEvidence|null  $tsa  set exactly when the time-stamp was trusted and gave the time
      * @param  list<string>  $certificates  DER, x5chain's order, the leaf first; empty when the COSE reader refused the signature
      * @param  list<TimestampEvidence>  $timestamps  the header's tokens, then the assertions', in the order tried
+     * @param  list<OcspEvidence>  $ocsp  stapled, then from certificate-status assertions, in the order walked
      */
     public function __construct(
         public string $label,
@@ -42,5 +45,6 @@ final readonly class ManifestEvidence
         public ?AnchorEvidence $tsa,
         public array $certificates = [],
         public array $timestamps = [],
+        public array $ocsp = [],
     ) {}
 }
