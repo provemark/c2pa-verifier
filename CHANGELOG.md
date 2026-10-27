@@ -5,6 +5,99 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.9.0 — 2026-10-27
+
+A minor release. A report can now show what its verdict rests on: which
+trust lists it was judged against, the time and the anchor each manifest
+was judged at, the certificates, the time-stamps found and the OCSP
+responses offered. A caller may also hand the verifier a revocation
+source of its own, so that a file that carries no revocation data can be
+checked online; this package itself still opens no connection, and
+without a source nothing changes. Three faults now carry the status code
+C2PA 2.4 names. No verdict changes: over the corpus, against `0.8.3`,
+the reports of six files differ, all in their codes only (below).
+
+**A `0.9`, not an `0.8.4`:** the public contract grows from 142 to 209
+symbols in eighteen classes (below), the `Verifier` takes an optional last
+constructor argument, and `StatusCode` gains two cases, which a `match`
+over every case has to name. Nothing was removed or renamed; a caller on
+`^0.8` keeps 0.8.3 until it asks for `^0.9`.
+
+### Added
+
+- **Which trust lists (SPEC-081).** `TrustListIdentity` — the list's kind
+  (signers or time-stamp authorities), its form (PEM or the programme's
+  JSON, `PEM`/`LOTE`), the SHA-256 of the list as given, and for a JSON
+  list its sequence number and issue date — on each set
+  `TrustSettings::fromTrustLists()` builds (`TrustAnchorSet::$identity`),
+  and `VerificationReport::trustLists()`.
+- **The evidence behind each verdict (SPEC-082 to SPEC-085).**
+  `VerificationReport::evidence()` gives one `Verifier\ManifestEvidence`
+  per judged manifest:
+  - the time it was judged at and where that time came from (`TIMESTAMP`,
+    `GIVEN`, `CLOCK`), and the anchor its signer's chain and its
+    time-stamp authority's chain reached (`Trust\AnchorEvidence`: the
+    anchor's SHA-256, the list, the depth, the route through an anchor or
+    the allowed list, the dates the list trusts it between) — SPEC-082;
+  - the certificates of `x5chain` as the file carries them, leaf first —
+    SPEC-083;
+  - every time-stamp token offered, from the header and from time-stamp
+    assertions (`Timestamp\TimestampEvidence`: its bytes, time,
+    certificates, outcome — used, rejected, not tried — and its own
+    `timeStamp.*` codes) — SPEC-084;
+  - every OCSP response the signer's revocation check walked, stapled or
+    from certificate-status assertions (`Trust\OcspEvidence`: its bytes,
+    outcome — chosen, not chosen, unusable, not tried — the chosen one's
+    code, a usable one's status and times) — SPEC-085.
+
+  The evidence is read from the checks where they judge; it never decides
+  anything, and `toJson()` and `toCrJson()` are unchanged by it.
+- **A revocation source of your own (SPEC-086, SPEC-087, ADR-0007).**
+  `Trust\RevocationSource` has one method, `ocspResponse($subject,
+  $issuer, $urls)`: the DER of a certificate, its issuer's DER and the
+  OCSP urls of its authority information access; it returns an OCSP
+  response, or null. Pass it as `new Verifier(revocationSource: …)`. The
+  verifier asks it about each CA between the anchor and the signer (a
+  revoked CA makes the signer `signingCredential.untrusted`), then about a
+  trusted signer whose file proves nothing about revocation, and judges
+  every answer exactly as a stapled response. No answer, a source that
+  throws, or an answer that cannot be used is the new informational
+  `signingCredential.ocsp.inaccessible` for the signer, and nothing for a
+  CA. A fetched response is listed in the evidence as
+  `OcspEvidence::FETCHED`. `Trust\NoRevocationSource`, the default, is
+  never asked. The urls come only from certificates on a path to an anchor
+  you configured.
+- `StatusCode::SigningCredentialOcspInaccessible`
+  (`signingCredential.ocsp.inaccessible`, informational) and
+  `StatusCode::AssertionCborInvalid` (`assertion.cbor.invalid`, failure).
+
+### Changed
+
+- **Three status codes follow C2PA 2.4 (SPEC-088).** An assertion that is
+  not well-formed CBOR is `assertion.cbor.invalid` (§15.10.3.1), where it
+  was `general.error`; the store is refused as before. A time-stamp token
+  whose `messageImprint` names a hash outside §13.1 (SHA-1, for instance),
+  or that does not carry its time-stamp authority's certificate, is
+  `timeStamp.untrusted` (§15.8.2), where it was `timeStamp.malformed`;
+  the token is ignored as before. A caller that filters on the old codes
+  should look for the new ones. `c2patool` 0.28.3 reports the imprint and
+  the token without certificates the same way, refuses the file with the
+  broken assertion outright, and drops a token that carries only its
+  authority's intermediate without any code (`docs/comparison.md`).
+
+### Documentation
+
+- `docs/adr/ADR-0007-revocation-from-an-injected-source.md`: why online
+  revocation comes in only through a source the caller injects, and what
+  of `c2patool`'s fetch path was not copied.
+- `docs/conformance.md`: `PRED-STRU-010`, `-013`, `-016`, `PRED-CRYP-020`,
+  `-022`, `-023` *yes* (opt-in where they need the network), and
+  `PRED-ASSE-007` *yes*: 78 yes, 9 partial, 18 by design.
+- `docs/reading-c2pa-2.4.md`: 334 rules covered, 50 partial; group F
+  (another code, the same verdict) worked through, five rows kept with
+  their reasons. `signingCredential.expired` recorded as a code of the
+  C2PA 1.0–2.1 tables that `c2patool` still reports.
+
 ## 0.8.3 — 2026-10-26
 
 A patch release. Before reading C2PA 2.5 further, every rule of 2.4 was

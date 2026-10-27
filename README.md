@@ -91,7 +91,11 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.8.3`**, still a `0.x` on purpose. `0.8.3` reads
+The current tag is **`v0.9.0`**, still a `0.x` on purpose. `0.9.0` shows
+what each verdict rests on (`VerificationReport::evidence()` and
+`trustLists()`), takes a revocation source of your own, and reports three
+faults under the status code C2PA 2.4 names; a caller on `^0.8` keeps
+0.8.3 until it asks for `^0.9` (see [`CHANGELOG.md`](CHANGELOG.md)). `0.8.3` reads
 an MP4 whose `mdat` carries a Merkle tree, as `c2patool` writes it on
 request, and follows `c2patool` in two cases where this verifier said
 `Trusted` and `c2patool` `Invalid`; `0.8.2` refuses
