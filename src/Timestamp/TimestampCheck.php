@@ -110,7 +110,7 @@ final readonly class TimestampCheck
             } catch (TimestampException $e) {
                 $status = $this->status($e->statusCode(), $url, sprintf('the token for %s: %s', $manifest->label, $e->getMessage()));   // SPEC-088
                 $tried[] = $status;
-                $evidence = [...$evidence, $this->evidence(TimestampEvidence::ASSERTION, $url, $der, null, TimestampEvidence::REJECTED, [$status])];
+                $evidence = [...$evidence, $this->evidence(TimestampEvidence::ASSERTION, $url, $der, false, TimestampEvidence::REJECTED, [$status])];
 
                 continue;
             }
@@ -200,7 +200,7 @@ final readonly class TimestampCheck
         } catch (TimestampException $e) {
             $status = $this->status($e->statusCode(), $url, $e->getMessage());   // SPEC-088
 
-            return new TimestampResult(true, [$status], null, false, evidence: [$this->evidence($header->header, $url, $der, null, TimestampEvidence::REJECTED, [$status])]);
+            return new TimestampResult(true, [$status], null, false, evidence: [$this->evidence($header->header, $url, $der, false, TimestampEvidence::REJECTED, [$status])]);
         }
         $tbs = self::countersignedBytes($cose, $header->header, $claimBytes);
         $result = $this->judge($token, $tbs, $settings, $url, $claimVersion);
@@ -228,11 +228,15 @@ final readonly class TimestampCheck
      * One token as evidence (SPEC-084): its bytes, what could be read of it — read here when the caller has not
      * — and the timeStamp.* codes among the statuses the check gave it.
      *
+     * @param  TimeStampToken|false|null  $token  the token as the caller read it; false when the caller's read
+     *                                            refused it, so it is not read a second time (step 498); null when not read
      * @param  list<ValidationStatus>  $statuses
      */
-    private function evidence(string $source, string $url, string $der, ?TimeStampToken $token, string $outcome, array $statuses): TimestampEvidence
+    private function evidence(string $source, string $url, string $der, TimeStampToken|false|null $token, string $outcome, array $statuses): TimestampEvidence
     {
-        if ($token === null) {
+        if ($token === false) {
+            $token = null;
+        } elseif ($token === null) {
             try {
                 $token = TimeStampToken::fromHeaderValue($der, $this->reader);
             } catch (TimestampException) {

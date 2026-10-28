@@ -12279,3 +12279,10 @@ README are where the disclosure lives.
 - Produced: `src/Verifier/Verifier.php`, `src/Verifier/IngredientManifestCheck.php` (`trusted()` removed), `src/Trust/ChainCheck.php` (`timeStampingSigner()`); `tests/Unit/Trust/TrustAnchorsTest.php` (one AC9 test), SPEC-031 Traceability; `notes/step-497-one-answer-to-trusted.md`, `NOTES.md`.
 - Measured: every return of `ChainCheck::walk()` read for its anchor; hand mutations, first run void (`pest --parallel` with several `--group` options runs one group), run again: three killed, one survivor killed by a new SPEC-031 AC9 test, two equivalent (whole suite and corpus unchanged); the corpus against `7a2098e` with and without a recording source (6,264 runs, identical); `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0. Reasoned: SPEC-082 AC7 already guards the equivalence, so no new test.
 - Decided by Maurice: the order 497 (finding 9), 498 (finding 8), then 499 (finding 5) with an amendment shown first.
+
+## 2026-10-28 — Step 498: a refused time-stamp token is read once
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, begin met 497 en 498".
+- Produced: `src/Timestamp/TimestampCheck.php` (`evidence()` takes false for a refused token); `notes/step-498-a-refused-token-read-once.md`, `NOTES.md`.
+- Measured: token reads counted in two instrumented scratch copies over the corpus (294 with 16 refused, then 286 with 8); a hand mutation (12 tests fail); the corpus against step 497 (6,264 runs, identical); `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0. Reasoned: reading untried tokens lazily would change `TimestampEvidence`, so that part of the finding is left.
+- Decided by Maurice: none beyond the go.
