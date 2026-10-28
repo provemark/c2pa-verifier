@@ -78,7 +78,7 @@ function revIssuerVerify(string $png, TrustSettings $settings, ?RevocationSource
         throw new RuntimeException("cannot open {$png}");
     }
     try {
-        return (new Verifier(revocationSource: $source))->verify($stream, $settings);
+        return ($source === null ? new Verifier : new Verifier(revocationSource: $source))->verify($stream, $settings);
     } finally {
         fclose($stream);
     }

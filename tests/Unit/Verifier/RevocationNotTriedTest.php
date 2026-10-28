@@ -54,7 +54,7 @@ function revNotTriedVerify(?RevocationSource $source = null): VerificationReport
         throw new RuntimeException('cannot open leaf-alone-stapled.png');
     }
     try {
-        return (new Verifier(revocationSource: $source))->verify($stream, TrustSettings::fromJson((string) file_get_contents(revNotTriedFile('root.settings.json'))));
+        return ($source === null ? new Verifier : new Verifier(revocationSource: $source))->verify($stream, TrustSettings::fromJson((string) file_get_contents(revNotTriedFile('root.settings.json'))));
     } finally {
         fclose($stream);
     }

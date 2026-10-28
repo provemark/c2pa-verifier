@@ -108,8 +108,9 @@ final readonly class Verifier
         private GifManifestStoreExtractor $gif = new GifManifestStoreExtractor,
         // SPEC-060: last, for the same reason; null is text off, the default (open question 1)
         private ?PlainTextManifestStoreExtractor $text = null,
-        // SPEC-086: last, for the same reason; null, like NoRevocationSource, asks nothing (ADR-0007)
-        private ?RevocationSource $revocationSource = null,
+        // SPEC-086: last, for the same reason; the default asks nothing (ADR-0007), and is the only spelling of "no
+        // source" (amendment 5)
+        private RevocationSource $revocationSource = new NoRevocationSource,
     ) {}
 
     /**
@@ -530,7 +531,7 @@ final readonly class Verifier
         return null;
     }
 
-    /** The caller's revocation source, or null when there is none: the default asks nothing (SPEC-086). */
+    /** The caller's revocation source, or null for the default, which is never asked (SPEC-086). */
     private function source(): ?RevocationSource
     {
         return $this->revocationSource instanceof NoRevocationSource ? null : $this->revocationSource;

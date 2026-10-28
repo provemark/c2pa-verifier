@@ -14,6 +14,10 @@ namespace Provemark\C2paVerifier\Trust;
  * judged manifest. What it returns is untrusted input: it is read and judged
  * exactly as a stapled response. This package ships no source that opens a connection; a caller
  * that wants online checks provides one, and chooses what it costs in privacy.
+ *
+ * A caller that wants no source gives none: the `Verifier`'s default, NoRevocationSource, is never asked and
+ * changes nothing. A source of the caller's that answers null was asked, and the signer's status says so
+ * (`signingCredential.ocsp.inaccessible`; SPEC-086 AC4, amendment 5).
  */
 interface RevocationSource
 {

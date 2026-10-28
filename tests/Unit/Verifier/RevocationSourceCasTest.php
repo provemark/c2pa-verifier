@@ -84,7 +84,7 @@ function spec087Verify(string $file, ?TrustSettings $settings, ?RevocationSource
         throw new RuntimeException("cannot open {$path}");
     }
     try {
-        return (new Verifier(revocationSource: $source))->verify($stream, $settings, $at === null ? null : new DateTimeImmutable($at));
+        return ($source === null ? new Verifier : new Verifier(revocationSource: $source))->verify($stream, $settings, $at === null ? null : new DateTimeImmutable($at));
     } finally {
         fclose($stream);
     }

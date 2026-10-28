@@ -12209,3 +12209,10 @@ README are where the disclosure lives.
 - Produced: `src/Trust/CertificateExtensions.php` (`ocspUrls()`), `src/Trust/RevocationSource.php` (docblock); `bin/make-aia-certificates.php` (probe names, `control`); `tests/Fixtures/aia/control.crt`; `tests/Unit/Verifier/RevocationSourceTest.php` (AC8 dataset); SPEC-086 amendment 4; `CHANGELOG.md` (0.9.0, Fixed), `docs/comparison.md`, `notes/step-487-ocsp-url-bytes.md`, `NOTES.md`.
 - Measured: the new dataset against the old check (four bad urls passed) and the new (only the plain url); seven mutations, all caught (one after adding a final-LF url); the OCSP urls of 414 corpus certificates at `46ec540` and now, identical; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0. Reasoned: `c2pa-rs` 0.91.1 strips tab, CR and LF through `url::Url::parse`, read in `crypto/ocsp/fetch.rs`.
 - Decided by Maurice: SPEC-086 amendment 4 approved (drop, not repair, a url with bytes outside 0x21–0x7E).
+
+## 2026-10-28 — Step 488: one spelling for "no source"
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push 486 en 487 en ga verder met bevinding 10"; then "akkoord, amendement 5 approved, bouw bevinding 10".
+- Produced: `src/Verifier/Verifier.php` (constructor parameter, `source()` docblock), `src/Trust/RevocationSource.php` (docblock); `tests/Unit/Verifier/RevocationSourceTest.php` (two tests), the `Verifier` helpers of `RevocationSourceTest`, `RevocationSourceCasTest`, `RevocationIssuerTest`, `RevocationUnknownTest`, `RevocationNotTriedTest`; SPEC-086 amendment 5; `CHANGELOG.md` (0.9.0), `notes/step-488-one-spelling-for-no-source.md`, `NOTES.md`.
+- Measured: the new test before the build (failed) and after (passed), the guard passing both times; four mutations, all caught; 3,111 corpus runs at `6ef5017` and now, identical; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0. Reasoned: the contract keeps 209 symbols because the recorded surface holds names, not types.
+- Decided by Maurice: SPEC-086 amendment 5 approved (a non-nullable parameter defaulting to `NoRevocationSource`; a null answer from a caller's source stays `inaccessible`).

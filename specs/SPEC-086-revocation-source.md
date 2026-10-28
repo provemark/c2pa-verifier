@@ -65,7 +65,9 @@ ADR-0007 and `notes/step-471-adr-0007-proposed.md`):
   is never called by the verifier: with it (the default) no status, report
   or evidence changes.
 - A new last parameter of the `Verifier` constructor,
-  `?RevocationSource $revocationSource = null`, null meaning the default.
+  `RevocationSource $revocationSource = new NoRevocationSource`: no source
+  is given by giving none (amendment 5; it read
+  `?RevocationSource $revocationSource = null`, null meaning the default).
 - **When the source is asked:** for each judged manifest (active and
   ingredient alike, as `OcspCheck` runs for both), exactly once, only when
   - its signer's chain reaches an anchor (the manifest's
@@ -247,7 +249,7 @@ final readonly class NoRevocationSource implements RevocationSource
 
 // OcspEvidence gains: public const FETCHED = 'fetched';
 // StatusCode gains:   case SigningCredentialOcspInaccessible = 'signingCredential.ocsp.inaccessible';
-// Verifier::__construct gains, last: private ?RevocationSource $revocationSource = null
+// Verifier::__construct gains, last: private RevocationSource $revocationSource = new NoRevocationSource (amendment 5)
 ```
 
 ## Open questions
@@ -353,6 +355,25 @@ None.
 
    **Weight B: protects the caller's source; no verdict changes.**
 
+5. **2026-10-28, step 488, found by the review of step 482** *(approved by Maurice van Loon, 2026-10-28)* —
+   "No source" had two spellings in the contract: no argument or `null`,
+   and `new NoRevocationSource`. A caller had to know that both mean the
+   same, and once 0.9.0 is tagged the contract could not be narrowed to
+   one without a breaking change. No caller uses the parameter yet.
+
+   The parameter is now **`RevocationSource $revocationSource = new
+   NoRevocationSource`**, not nullable: giving no argument works as
+   before, passing `null` is a `TypeError`. Inside the verifier null still
+   means "not asked"; that is not part of the contract. What the review
+   also noted stays, on purpose: a source of the caller's that answers
+   null was asked and gives `signingCredential.ocsp.inaccessible` (AC4),
+   where `NoRevocationSource` is never asked and changes nothing (AC9).
+   `RevocationSource`'s docblock says both. The contract keeps its 209
+   symbols: the recorded surface holds names, not types. Tests:
+   `RevocationSourceTest.php`, group `SPEC-086`.
+
+   **Weight C: one spelling for "no source"; no verdict changes.**
+
 ## Traceability
 
 All in `tests/Unit/Verifier/RevocationSourceTest.php`, group `SPEC-086`. Seen red before the implementation (all
@@ -375,6 +396,7 @@ when mutations M5, M8 and M16 survived; each now fails under its mutation.
 | AC10                 | AC10: over the corpus, the source is asked exactly where allowed (none, full, lists) | src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |
 | AC11                 | tests/Unit/ApiSurfaceTest.php :: AC1 / SPEC-025 | src/Trust/RevocationSource.php; src/Trust/NoRevocationSource.php; src/Trust/OcspEvidence.php :: FETCHED; bin/api-check.php |
 | *Scope*              | scope: a fetched response follows the stored ones in the evidence; scope: the source is not asked without an issuer the walk verified; scope: a fetched response over the size limit is not read | src/Trust/OcspCheck.php :: checkWithEvidence(), fetched() |
+| Amendment 5          | amendment 5: no source has one spelling; amendment 5: a source of the caller's that answers null was asked / SPEC-086 | src/Verifier/Verifier.php :: __construct(), source(); src/Trust/RevocationSource.php |
 | Amendment 4          | AC8: urls that are not kept (control bytes) / SPEC-086 | src/Trust/CertificateExtensions.php :: ocspUrls(); bin/make-aia-certificates.php |
 | Amendment 3          | tests/Unit/Verifier/RevocationUnknownTest.php / SPEC-086 (6 of 7 tests red before the build; the guard without a source passed) | src/Trust/OcspCheck.php :: checkWithEvidence(); bin/make-revocation-unknown-variants.php |
 | Amendment 2          | tests/Unit/Verifier/RevocationIssuerTest.php :: the signer is asked about with the anchor that issued it, whatever x5chain carries second; option b: an allowed-list signer …; option b: a signer that is itself an anchor … / SPEC-086 (11 of 16 tests of the file red before the build) | src/Trust/ChainCheck.php :: walk(), provenIssuer(); src/Trust/OcspCheck.php :: checkWithEvidence(); src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |

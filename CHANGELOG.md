@@ -65,7 +65,8 @@ over every case has to name. Nothing was removed or renamed; a caller on
   `signingCredential.ocsp.inaccessible` for the signer, and nothing for a
   CA. A fetched response is listed in the evidence as
   `OcspEvidence::FETCHED`. `Trust\NoRevocationSource`, the default, is
-  never asked. The urls come only from certificates on a path to an anchor
+  never asked; to give no source, give none (the parameter is not
+  nullable, SPEC-086 amendment 5). The urls come only from certificates on a path to an anchor
   you configured.
 - `StatusCode::SigningCredentialOcspInaccessible`
   (`signingCredential.ocsp.inaccessible`, informational) and

@@ -72,7 +72,7 @@ function spec086Verify(string $path, ?TrustSettings $settings, ?RevocationSource
         throw new RuntimeException("cannot open {$path}");
     }
     try {
-        return (new Verifier(revocationSource: $source))->verify($stream, $settings);
+        return ($source === null ? new Verifier : new Verifier(revocationSource: $source))->verify($stream, $settings);
     } finally {
         fclose($stream);
     }
@@ -376,4 +376,26 @@ it('scope: a fetched response over the size limit is not read', function (): voi
     expect($statuses[0]->code->value)->toBe('signingCredential.ocsp.inaccessible')
         ->and($statuses[0]->explanation)->toContain('over the limit')
         ->and(array_map(static fn (OcspEvidence $e): string => $e->outcome, $evidence))->toBe(['unusable']);
+})->group('SPEC-086');
+
+it('amendment 5: no source has one spelling', function (): void {
+    $parameter = array_values(array_filter((new ReflectionMethod(Verifier::class, '__construct'))->getParameters(), static fn (ReflectionParameter $p): bool => $p->getName() === 'revocationSource'))[0] ?? throw new RuntimeException('no revocationSource parameter');
+    $type = $parameter->getType();
+
+    expect($type instanceof ReflectionNamedType ? $type->getName() : null)->toBe(RevocationSource::class)
+        ->and($type?->allowsNull())->toBeFalse()
+        ->and($parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null)->toBeInstanceOf(NoRevocationSource::class)
+        // null on purpose, through reflection, as a caller without static analysis would pass it
+        ->and(static fn (): object => (new ReflectionClass(Verifier::class))->newInstanceArgs(['revocationSource' => null]))->toThrow(TypeError::class);
+})->group('SPEC-086');
+
+it('amendment 5: a source of the caller\'s that answers null was asked; NoRevocationSource never is', function (): void {
+    $calls = new Spec086Calls;
+    $asked = spec086Parent(spec086Source($calls));
+    $default = spec086Parent(new NoRevocationSource);
+
+    expect(spec086SignerCalls($asked, $calls))->toHaveCount(1)
+        ->and(spec086Codes($asked, SPEC086_P))->toBe(['signingCredential.ocsp.inaccessible'])
+        ->and(spec086Codes($default, SPEC086_P))->toBe(['signingCredential.ocsp.skipped'])
+        ->and($default->toJson())->toBe(spec086Parent(null)->toJson());
 })->group('SPEC-086');
