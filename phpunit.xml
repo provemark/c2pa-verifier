@@ -16,6 +16,11 @@
             <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
+    <php>
+        <!-- A serial run holds 60–90 MB by its end, so a host's 128 MB left the large tests to chance (step 501).
+             The tests of the memory budget (SPEC-024) set their own limit and stay as they are. -->
+        <ini name="memory_limit" value="512M"/>
+    </php>
     <source>
         <include>
             <directory>src</directory>
