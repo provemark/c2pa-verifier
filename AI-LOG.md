@@ -12251,3 +12251,10 @@ README are where the disclosure lives.
 - Produced: `src/Cbor/CborDecoder.php` (`array()`, `map()`: the depth first); `tests/Unit/Report/StatusCodesByTheLetterTest.php` (two rows); a correction note under SPEC-088 amendment 2; `notes/step-493-cbor-depth-before-count.md`, `NOTES.md`.
 - Measured: the reviewer's case before (33 × `0x81` code 0); the two rows before (failed) and after; two mutations, both caught; 3,132 corpus runs at `47500b9` and now, identical; against v0.8.3 still twelve files differ, no verdict; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0.
 - Decided by Maurice: the correction approved with S1.
+
+## 2026-10-28 — Step 494: 0.9.0 released
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push 492 en 493", "akkoord, tag v0.9.0 op cf09fcc", "akkoord, doe de released-notitie".
+- Produced: tag `v0.9.0` (annotated) on `cf09fcc`, pushed; `notes/step-494-release-0.9.0-released.md`, `NOTES.md`.
+- Measured: CI on `main` and on the tag (8 of 8 each); Packagist's metadata (`v0.9.0`, `cf09fcc`); the zipball's file count against `php bin/package-check.php` (629); a fresh `composer require provemark/c2pa-verifier:^0.9` and five files through it.
+- Decided by Maurice: the tag on `cf09fcc`.
