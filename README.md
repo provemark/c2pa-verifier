@@ -91,7 +91,11 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.9.0`**, still a `0.x` on purpose. `0.9.0` shows
+The current tag is **`v0.10.0`**, still a `0.x` on purpose. `0.10.0` writes
+the evidence behind a verdict down as a document to keep (`VerificationReport::evidenceToJson()`,
+[`docs/evidence-format.md`](docs/evidence-format.md)), and asks a revocation
+source each question once per verification; a caller on `^0.9` keeps 0.9.0
+until it asks for `^0.10`. `0.9.0` shows
 what each verdict rests on (`VerificationReport::evidence()` and
 `trustLists()`), takes a revocation source of your own, and reports three
 faults under the status code C2PA 2.4 names; a caller on `^0.8` keeps

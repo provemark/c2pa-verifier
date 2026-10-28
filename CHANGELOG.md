@@ -5,7 +5,20 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.10.0 — 2026-10-28
+
+A minor release. The evidence behind a verdict, which 0.9.0 made
+readable, can now be written down as one versioned document to keep next
+to the file — base64 DER for every certificate, time-stamp token and OCSP
+response, so that an archive can be checked later without this verifier.
+A caller's revocation source is asked each question once per
+verification. No verdict changes: over the corpus, against `0.9.0`, every
+report is identical (6,264 runs, with and without a revocation source).
+
+**A `0.10`, not a `0.9.1`:** the public contract grows from 209 to 211
+symbols (below). Nothing was removed or renamed; a caller on `^0.9` keeps
+0.9.0 until it asks for `^0.10`. The C2PA 2.5 additions are not in it:
+they wait until `c2patool` applies them (`docs/milestones.md`).
 
 ### Added
 
@@ -28,6 +41,10 @@ committed.
   gets the first answer, an exception included. Each manifest still judges
   the answer at its own time. Over the corpus, 448 calls become 378, and
   no report changes.
+- Two findings of the review of 0.9's code tidied, with no change a caller
+  can see: one answer to "is the signer trusted?" inside the verifier
+  (the anchor the chain walk hands out), and a time-stamp token whose read
+  was refused is not read a second time.
 
 ### Fixed
 

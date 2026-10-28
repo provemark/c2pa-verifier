@@ -12293,3 +12293,10 @@ README are where the disclosure lives.
 - Produced: SPEC-086 amendment 6 and SPEC-087 amendment 2 with their Traceability (and SPEC-086's AC6 row, which still named the `trusted()` step 497 removed); `src/Trust/RememberedRevocationSource.php` (new, internal); `src/Verifier/Verifier.php` (`check()`); `src/Trust/RevocationSource.php` (docblock); `tests/Unit/Verifier/RevocationSourceTest.php` (AC10, AC12, AC13), `tests/Unit/Verifier/RevocationSourceCasTest.php` (AC10); `CHANGELOG.md`, `notes/step-499-one-question-one-call.md`, `NOTES.md`.
 - Measured: repeated calls over the corpus before the amendment (70 of 448, 23 runs); the tests red (6 failed) then green; hand mutations after a green baseline (4 of 4 killed, a fifth killed by a direct test added for it); the corpus against `69a7772` (6,264 runs, reports identical, 448 calls to 378); `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0.
 - Decided by Maurice: the amendments.
+
+## 2026-10-28 — Step 500: the release commit for 0.10.0
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, kijk eerst naar groep F en 2.5"; then "akkoord, bereid 0.10.0 nu voor".
+- Produced: `CHANGELOG.md` (0.10.0), `README.md`, `src/Verifier/Verifier.php` (`VERSION`); `notes/step-500-release-0.10.0.md`, `NOTES.md`.
+- Measured: group F against SPEC-088 (done in 0.9.0); the latest `c2pa-rs` and `c2patool` releases, `c2pa-rs` `main` since 0.91.7 and its pull requests for the 2.5 rows (`gh`); the corpus against `v0.9.0` (6,264 runs, none differs); `bin/package-check.php`, `bin/api-check.php`, `bin/spec-check.php`; `composer check` exit 0 (after three runs that exhausted the 128 MB limit in a hostile-input test, recorded in the note) and `vendor/bin/pest --parallel` exit 0.
+- Decided by Maurice: release 0.10.0 now, without the 2.5 additions.
