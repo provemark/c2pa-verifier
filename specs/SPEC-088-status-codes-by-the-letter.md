@@ -179,6 +179,34 @@ case AssertionCborInvalid = 'assertion.cbor.invalid';   // failure
 
    **Weight C: a code, no verdict.**
 
+2. **2026-10-28, step 491, found by the review of steps 483–489; measured** *(approved by Maurice van Loon, 2026-10-28)* —
+   A decoder limit can be met before the end of the input is: an array
+   declaring 2^64 − 1 items in nine bytes, or a million items followed by
+   one byte, was `general.error` (a limit), while a byte string declaring
+   2^63 bytes was `assertion.cbor.invalid` (truncation). Every item takes
+   at least one byte, every map entry two, so a definite count that the
+   remaining bytes cannot hold is truncation: the CBOR is not well-formed,
+   whatever this decoder's limits. Such a count is now
+   `assertion.cbor.invalid`, checked before the item limit.
+
+   Where the limit is met first and the input could still go on — the
+   depth (33 nested arrays, then the bytes stop) or a map key outside the
+   subset (a one-entry map whose byte-string key is followed by nothing;
+   the reviewer's two-entry map in three bytes is now truncation, by the
+   count) — the first fault met
+   decides, as everywhere in the decoder: reading past a limit to look
+   for a later fault is what the limit exists to prevent. These stay
+   `general.error`. The store is refused in every case; no verdict
+   changes. Measured with the reviewer's inputs (scratch, not committed):
+   four classified as a limit before; the two count cases and the
+   two-entry map are invalid now, the depth case stays a limit. The
+   message names where the bytes run out, as SPEC-006 AC10 asks.
+   Tests: `StatusCodesByTheLetterTest.php`, group `SPEC-088`; the
+   dataset row "a declared count above the limit" now carries the items
+   it declares.
+
+   **Weight C: a code, no verdict.**
+
 ## Traceability
 
 All in `tests/Unit/Report/StatusCodesByTheLetterTest.php`, group `SPEC-088`. Before the implementation 7 of 11 tests
@@ -198,3 +226,4 @@ SPEC-017 amendment 11, SPEC-062 amendment 4, SPEC-084 amendment 2.
 | AC5                  | 3,042 corpus runs before (worktree at `1ad620d`, own `vendor/` copy) and after: 18 differ, the six files named, only in code and explanation, every `validation_state` equal (`notes/step-481-status-codes-by-the-letter.md`) | — |
 | AC6                  | AC6: assertion.cbor.invalid is a failure code; `ApiSurfaceTest` (209) | src/Report/StatusCode.php |
 | Amendment 1          | amendment 1: an assertion that is not valid CBOR is assertion.cbor.invalid; one beyond this decoder is general.error (eight probes); amendment 1: the decoder tells a limit or an item outside its subset from CBOR that is not valid (ten inputs); amendment 1: the claim keeps claim.cbor.invalid (added after mutation M2 survived). Before the build 9 failed, the cases that stay `assertion.cbor.invalid` passed; 3,102 corpus runs before (`fa6914d`) and after: only the three limit probes differ, in code and explanation | src/Cbor/CborException.php :: LIMIT; src/Cbor/CborDecoder.php; src/Cbor/CborBudget.php; src/Manifest/Manifest.php :: decodeCbor() |
+| Amendment 2          | amendment 1: the decoder tells a limit or an item outside its subset from CBOR that is not valid (rows for a count the bytes cannot hold, and a count above the limit with its items); amendment 2: a count the remaining bytes cannot hold is not well-formed | src/Cbor/CborDecoder.php :: array(), map(), holds() |

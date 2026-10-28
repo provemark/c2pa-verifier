@@ -81,7 +81,10 @@ over every case has to name. Nothing was removed or renamed; a caller on
   decoder or an item outside the subset it reads (depth, the item budget,
   `undefined`, an integer above 2^63 − 1) stays `general.error`: such CBOR
   may be valid (amendment 1), and the explanation now says "CBOR beyond
-  what this verifier decodes" instead of "invalid CBOR". A time-stamp token
+  what this verifier decodes" instead of "invalid CBOR". An array or map
+  declaring more items than its remaining bytes can hold is truncation,
+  so `assertion.cbor.invalid`, even when the count is also above the
+  limit (amendment 2). A time-stamp token
   whose `messageImprint` names a hash outside §13.1 (SHA-1, for instance),
   or that does not carry its time-stamp authority's certificate, is
   `timeStamp.untrusted` (§15.8.2), where it was `timeStamp.malformed`;

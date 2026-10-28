@@ -12230,3 +12230,10 @@ README are where the disclosure lives.
 - Produced: an independent review of `git diff 6785511..4a090f5 -- src` by one subagent (two findings, both re-measured here); `src/Trust/OcspCheck.php` (`checkWithEvidence()`, `stored()`), `src/Verifier/Verifier.php`, `src/Verifier/IngredientManifestCheck.php`; `bin/make-revocation-stored-issuer-variants.php`; `tests/Fixtures/revocation-stored-issuer/`, `tests/Fixtures/c2patool/revocation-stored-issuer/`; `tests/Unit/Verifier/RevocationStoredIssuerTest.php`, `RevocationNotTriedTest.php`, `EvidenceOcspTest.php` (AC8); SPEC-030 amendment 5, a note under SPEC-085 amendment 2; `CHANGELOG.md`, `docs/comparison.md`, fixture READMEs, `notes/step-490-stored-responses-verified-issuer.md`, `NOTES.md`.
 - Measured: the reviewer's script; the probes before the build (the forged staple kept the source from being asked) and `c2patool` 0.28.3 on them (all `Trusted`); the new tests before (8 failed) and after; six mutations, all caught; 3,126 corpus runs at `4a090f5` and now, identical; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0.
 - Decided by Maurice: a second review of the fixes before the tag; SPEC-030 amendment 5 approved, its side effect (stricter than `c2patool` on [L]) included.
+
+## 2026-10-28 — Step 491: a CBOR count the bytes cannot hold is truncation
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendementen approved, bouw R1 en R2".
+- Produced: `src/Cbor/CborDecoder.php` (`holds()`); `tests/Unit/Report/StatusCodesByTheLetterTest.php` (decoder dataset); SPEC-088 amendment 2; `CHANGELOG.md`, `notes/step-491-cbor-count-truncation.md`, `NOTES.md`.
+- Measured: the reviewer's inputs before and after; the dataset before the build (3 rows failed) and after; six mutations, all caught; 3,126 corpus runs at `1696779` and now, identical; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0.
+- Decided by Maurice: SPEC-088 amendment 2 approved.

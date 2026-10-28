@@ -188,7 +188,17 @@ it('amendment 1: the decoder tells a limit or an item outside its subset from CB
     expect($code)->toBe($limit ? CborException::LIMIT : 0);
 })->with([
     'the store-wide budget' => ["\x82\x00\x00", 2, true],
-    'a declared count above the limit' => ["\x9b\x7f\xff\xff\xff\xff\xff\xff\xff", 10, true],
+    // amendment 2: a count above the limit whose items are there is a limit; one the bytes cannot hold is truncation
+    'a declared count above the limit' => ["\x9a\x00\x01\x00\x01".str_repeat("\x00", 65537), 70000, true],
+    'a count of 2^63 - 1 in nine bytes' => ["\x9b\x7f\xff\xff\xff\xff\xff\xff\xff", 10, false],
+    'a count of 2^64 - 1 in nine bytes' => ["\x9b".str_repeat("\xff", 8), 10, false],
+    'a million items, then one byte' => ["\x9a\x00\x0f\x42\x40\x01", 10, false],
+    'a map of two entries in three bytes' => ["\xa2\x00\x00", 10, false],
+    'a map of two entries in four bytes' => ["\xa2\x00\x00\x01", 10, false],
+    // the first fault met decides: a limit before the end of the input stays a limit
+    'depth 33, then the bytes stop' => [str_repeat("\x81", 40), 100, true],
+    'a byte-string key, then the bytes stop' => ["\xa1\x41\x61", 10, true],
+    'a map of two entries in three bytes, a byte-string key first' => ["\xa2\x41\x61", 10, false],
     'a key that is not an integer or text' => ["\xa1\x80\x00", 10, true],
     'a text key that would collide with an integer' => ["\xa1\x61\x31\x00", 10, true],
     'a simple value of 32 or more' => ["\xf8\x20", 10, true],

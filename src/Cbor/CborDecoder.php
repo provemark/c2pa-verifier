@@ -292,6 +292,7 @@ final readonly class CborDecoder
      */
     private function array(string $bytes, int &$offset, int $head, ?int $count, int $depth, CborBudget $budget): array
     {
+        $this->holds($bytes, $offset, $head, $count, 1, 'array');
         $this->countable('array', $head, $count ?? 0);
         $this->enter($depth, $head);
         $items = [];
@@ -311,6 +312,7 @@ final readonly class CborDecoder
      */
     private function map(string $bytes, int &$offset, int $head, ?int $count, int $depth, CborBudget $budget): array|CborMap
     {
+        $this->holds($bytes, $offset, $head, $count, 2, 'map');
         $this->countable('map', $head, $count ?? 0);
         $this->enter($depth, $head);
         $map = [];
@@ -337,6 +339,26 @@ final readonly class CborDecoder
         }
 
         return $this->keepMaps ? new CborMap($map) : $map;
+    }
+
+    /**
+     * A definite count the remaining bytes cannot hold is truncation, not a limit: every item takes at least one
+     * byte, every map entry two (SPEC-088 amendment 2). Checked before the item limit, so it is not mistaken for one.
+     */
+    private function holds(string $bytes, int $offset, int $head, ?int $count, int $per, string $what): void
+    {
+        $available = strlen($bytes) - $offset;
+        if ($count !== null && ($count < 0 || $count > intdiv($available, $per))) {
+            throw new CborException(sprintf(
+                'unexpected end of input at offset %d: %s at offset %d declares %s items, which need at least %s bytes, %d available',
+                strlen($bytes),   // where the bytes run out, as for every other truncation (SPEC-006 AC10)
+                $what,
+                $head,
+                $count < 0 ? 'more than 9223372036854775807' : (string) $count,
+                $count < 0 || $count > intdiv(PHP_INT_MAX, $per) ? 'more than 9223372036854775807' : (string) ($count * $per),
+                $available,
+            ));
+        }
     }
 
     private function countable(string $what, int $head, int $count): void
