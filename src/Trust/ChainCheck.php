@@ -86,13 +86,12 @@ final readonly class ChainCheck
      */
     private function timeStampingSigner(array $chain, TrustSettings $settings, string $url, ?int $at, array $statuses, ?AnchorEvidence $anchor, ?Certificate $issuer, array $unprotected, ?RevocationSource $source): array
     {
-        $trusted = array_filter($statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialTrusted) !== [];
-        if (! $trusted || $settings->trustAnchors === [] || $chain[0]->extendedKeyUsage !== [self::EKU_TIME_STAMPING]) {
+        if ($anchor === null || $settings->trustAnchors === [] || $chain[0]->extendedKeyUsage !== [self::EKU_TIME_STAMPING]) {
             return [$statuses, $anchor, $issuer];
         }
         $signersOnly = new TrustSettings([], $settings->allowedList, $settings->trustConfig, $settings->verifyTrust, $settings->anchorSets);
         [$without, $anchor, $issuer] = $this->walk($chain, $signersOnly, $url, $at, $unprotected, $source);
-        if (array_filter($without, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialTrusted) !== []) {
+        if ($anchor !== null) {   // the walk hands out an anchor exactly when it trusts
             return [$without, $anchor, $issuer];
         }
 

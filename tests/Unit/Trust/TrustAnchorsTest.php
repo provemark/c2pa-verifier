@@ -295,3 +295,12 @@ it('AC9: under the legacy anchors a time-stamping certificate signs nothing (ame
     expect($verify('tsa-only', 'manifest-entry')->result->state->value)->toBe('Trusted')
         ->and($oracle('tsa-only', 'manifest-entry', '0.28.0'))->toBe('Trusted');
 })->group('SPEC-031');
+
+it('AC9: a time-stamping certificate no anchor reaches keeps the walk\'s own reason (amendment 3, step 497)', function (): void {
+    // the Time Stamping refusal speaks only when the legacy anchors trusted the leaf; here none reaches it
+    $report = spec031Verify('tsa-signer/tsa-only.png', spec031Settings('trust/full.settings.json'));
+    $untrusted = spec031Status($report, 'signingCredential.untrusted');
+
+    expect($report->result->state->value)->toBe('Valid')
+        ->and($untrusted?->explanation)->toBe('signing certificate untrusted: the chain ends at Throw-away TSA-signer Root (depth 1), issued by Throw-away TSA-signer Root, which the chain does not carry and no trust anchor signs');
+})->group('SPEC-031');

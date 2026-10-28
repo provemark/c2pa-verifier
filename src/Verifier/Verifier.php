@@ -319,7 +319,6 @@ final readonly class Verifier
         $trustSettings = $settings ?? new TrustSettings([], []);
         $anchor = null;
         $issuer = null;
-        $trust = [];
         if ($trustSettings->verifyTrust) {
             [$trust, $anchor, $issuer] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at, $this->source());   // SPEC-087: the source for the CAs of the path
             $statuses = [...$statuses, ...$trust];
@@ -337,9 +336,9 @@ final readonly class Verifier
             $at,
             sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label),
             OcspCheck::assertionResponses($manifestStore),   // SPEC-066: certificate-status assertions of the store
-            IngredientManifestCheck::trusted($trust) ? $this->source() : null,
+            $anchor !== null ? $this->source() : null,   // the walk hands out an anchor exactly when it trusts the signer
             $issuer,   // SPEC-086 amendment 2: the issuer the walk verified
-            IngredientManifestCheck::trusted($trust),   // SPEC-030 amendment 5: the stored responses read against it too
+            $anchor !== null,   // SPEC-030 amendment 5: the stored responses read against it too
             IngredientManifestCheck::anchored($anchor),   // SPEC-030 amendment 6: a good from it only when an anchor binds it
         );
         $statuses = [...$statuses, ...$revocation];

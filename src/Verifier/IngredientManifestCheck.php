@@ -224,7 +224,6 @@ final readonly class IngredientManifestCheck
         $trustSettings = $settings ?? new TrustSettings([], []);
         $anchor = null;
         $issuer = null;
-        $trust = [];
         if ($trustSettings->verifyTrust) {
             [$trust, $anchor, $issuer] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at, $source);   // SPEC-087: the source for the CAs of the path
             $statuses = [...$statuses, ...$trust];
@@ -241,7 +240,7 @@ final readonly class IngredientManifestCheck
         }
         $ocsp = [];
         if ($cose !== null) {
-            [$revocation, $ocsp] = (new OcspCheck)->checkWithEvidence($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses, self::trusted($trust) ? $source : null, $issuer, self::trusted($trust), self::anchored($anchor));   // SPEC-086: a trusted signer only, told the issuer the walk verified (amendment 2); SPEC-030 amendments 5 and 6: its stored responses read against it, a good only when an anchor binds it
+            [$revocation, $ocsp] = (new OcspCheck)->checkWithEvidence($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses, $anchor !== null ? $source : null, $issuer, $anchor !== null, self::anchored($anchor));   // SPEC-086: a trusted signer only (the walk hands out an anchor exactly then), told the issuer the walk verified (amendment 2); SPEC-030 amendments 5 and 6: its stored responses read against it, a good only when an anchor binds it
             $statuses = [...$statuses, ...($responses !== [] ? $revocation : array_filter($revocation, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialOcspRevoked))];
         }
         $evidence[$manifest->label] = self::evidenceOf($manifest, $at ?? time(), $timestamp, $now !== null, $anchor, $ocsp);   // no clock given: the checks read it themselves
@@ -275,22 +274,6 @@ final readonly class IngredientManifestCheck
     public static function anchored(?AnchorEvidence $anchor): bool
     {
         return $anchor !== null && $anchor->depth >= 1;
-    }
-
-    /**
-     * Whether the trust check reached an anchor: only then is a revocation source asked (SPEC-086).
-     *
-     * @param  list<ValidationStatus>  $trust
-     */
-    public static function trusted(array $trust): bool
-    {
-        foreach ($trust as $status) {
-            if ($status->code === StatusCode::SigningCredentialTrusted) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

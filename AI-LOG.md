@@ -12272,3 +12272,10 @@ README are where the disclosure lives.
 - Produced: `src/Cli/Command.php` (`shown()`); `tests/Unit/Cli/CommandTest.php` (three cases); a correction note under SPEC-019 amendment 4 and its traceability; SPEC-089 amendment 2's last sentence; `CHANGELOG.md`, `notes/step-496-cli-replacement-character.md`, `NOTES.md`.
 - Measured: the new test before (3 failed, `'caf??x'`) and after; what `mb_scrub()` writes; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0. Reasoned: no corpus run, the command is not on its path.
 - Decided by Maurice: U+FFFD in the command line as the amendment says; explanations keep `?`.
+
+## 2026-10-28 — Step 497: one answer to "is the signer trusted?"
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, begin met bevindingen 5, 8 en 9"; then, after the proposal of three steps, "akkoord, begin met 497 en 498".
+- Produced: `src/Verifier/Verifier.php`, `src/Verifier/IngredientManifestCheck.php` (`trusted()` removed), `src/Trust/ChainCheck.php` (`timeStampingSigner()`); `tests/Unit/Trust/TrustAnchorsTest.php` (one AC9 test), SPEC-031 Traceability; `notes/step-497-one-answer-to-trusted.md`, `NOTES.md`.
+- Measured: every return of `ChainCheck::walk()` read for its anchor; hand mutations, first run void (`pest --parallel` with several `--group` options runs one group), run again: three killed, one survivor killed by a new SPEC-031 AC9 test, two equivalent (whole suite and corpus unchanged); the corpus against `7a2098e` with and without a recording source (6,264 runs, identical); `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0. Reasoned: SPEC-082 AC7 already guards the equivalence, so no new test.
+- Decided by Maurice: the order 497 (finding 9), 498 (finding 8), then 499 (finding 5) with an amendment shown first.
