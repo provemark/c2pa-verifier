@@ -12216,3 +12216,10 @@ README are where the disclosure lives.
 - Produced: `src/Verifier/Verifier.php` (constructor parameter, `source()` docblock), `src/Trust/RevocationSource.php` (docblock); `tests/Unit/Verifier/RevocationSourceTest.php` (two tests), the `Verifier` helpers of `RevocationSourceTest`, `RevocationSourceCasTest`, `RevocationIssuerTest`, `RevocationUnknownTest`, `RevocationNotTriedTest`; SPEC-086 amendment 5; `CHANGELOG.md` (0.9.0), `notes/step-488-one-spelling-for-no-source.md`, `NOTES.md`.
 - Measured: the new test before the build (failed) and after (passed), the guard passing both times; four mutations, all caught; 3,111 corpus runs at `6ef5017` and now, identical; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0. Reasoned: the contract keeps 209 symbols because the recorded surface holds names, not types.
 - Decided by Maurice: SPEC-086 amendment 5 approved (a non-nullable parameter defaulting to `NoRevocationSource`; a null answer from a caller's source stays `inaccessible`).
+
+## 2026-10-28 — Step 489: 0.9.0 measured again before the tag
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push 488 en doe 489".
+- Produced: `CHANGELOG.md` (0.9.0 date, introduction, the SPEC-088 bullet), `notes/step-489-release-0.9.0-remeasured.md`, `NOTES.md`.
+- Measured: the corpus at `v0.8.3` and now (3,111 runs, fixed validation time, version string removed; 36 differ in twelve files, no state moved); the status lines of the limit probes in both versions; `bin/package-check.php`, `bin/api-check.php`; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0.
+- Decided by Maurice: none in this step (the tag waits for his word).

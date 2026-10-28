@@ -5,7 +5,7 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## 0.9.0 — 2026-10-27
+## 0.9.0 — 2026-10-28
 
 A minor release. A report can now show what its verdict rests on: which
 trust lists it was judged against, the time and the anchor each manifest
@@ -15,7 +15,8 @@ source of its own, so that a file that carries no revocation data can be
 checked online; this package itself still opens no connection, and
 without a source nothing changes. Three faults now carry the status code
 C2PA 2.4 names. No verdict changes: over the corpus, against `0.8.3`,
-the reports of six files differ, all in their codes only (below).
+the reports of twelve files differ — nine in a status code, three in an
+explanation only (below).
 
 **A `0.9`, not an `0.8.4`:** the public contract grows from 142 to 209
 symbols in eighteen classes (below), the `Verifier` takes an optional last
@@ -79,7 +80,8 @@ over every case has to name. Nothing was removed or renamed; a caller on
   was `general.error`; the store is refused as before. A limit of this
   decoder or an item outside the subset it reads (depth, the item budget,
   `undefined`, an integer above 2^63 − 1) stays `general.error`: such CBOR
-  may be valid (amendment 1). A time-stamp token
+  may be valid (amendment 1), and the explanation now says "CBOR beyond
+  what this verifier decodes" instead of "invalid CBOR". A time-stamp token
   whose `messageImprint` names a hash outside §13.1 (SHA-1, for instance),
   or that does not carry its time-stamp authority's certificate, is
   `timeStamp.untrusted` (§15.8.2), where it was `timeStamp.malformed`;
