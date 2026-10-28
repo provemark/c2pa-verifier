@@ -49,12 +49,28 @@ function revStoredVerify(string $probe, ?string $settings, ?RevocationSource $so
         throw new RuntimeException("cannot open {$probe}.png");
     }
     try {
-        $trust = $settings === null ? null : TrustSettings::fromJson((string) file_get_contents(revStoredFile("{$settings}.settings.json")));
+        $trust = match ($settings) {
+            null => null,
+            'self' => revStoredSelfAnchor(),
+            default => TrustSettings::fromJson((string) file_get_contents(revStoredFile("{$settings}.settings.json"))),
+        };
 
         return ($source === null ? new Verifier : new Verifier(revocationSource: $source))->verify($stream, $trust);
     } finally {
         fclose($stream);
     }
+}
+
+/** root.settings.json with L itself as the only anchor: the walk vouches for L at depth 0 */
+function revStoredSelfAnchor(): TrustSettings
+{
+    $json = json_decode((string) file_get_contents(revStoredFile('root.settings.json')), true);
+    if (! is_array($json) || ! is_array($json['trust'] ?? null)) {
+        throw new RuntimeException('no trust in root.settings.json');
+    }
+    $json['trust']['trust_anchors'] = (string) file_get_contents(revStoredFile('signer-l.pem'));
+
+    return TrustSettings::fromJson((string) json_encode($json));
 }
 
 /** @return array{0: string, 1: list<string>, 2: list<string>, 3: string} state, signingCredential.ocsp.* codes, evidence source:outcome, the ocsp explanation */
@@ -91,8 +107,48 @@ it('a trusted signer\'s stored responses are read against the issuer the walk ve
     'allowed, [L, N] forged good' => ['allowed', 'leaf-twin-forged', false, 'Trusted', 'signingCredential.ocsp.skipped', ['rVals:notTried'], 0],
     'allowed, [L, N] forged good, a source' => ['allowed', 'leaf-twin-forged', true, 'Trusted', 'signingCredential.ocsp.skipped', ['rVals:notTried'], 0],
     'allowed, [L, B] forged good' => ['allowed', 'leaf-bogus-forged', false, 'Trusted', 'signingCredential.ocsp.skipped', ['rVals:notTried'], 0],
-    'allowed, [L, R] R\'s good (control)' => ['allowed', 'leaf-root-good', false, 'Trusted', 'signingCredential.ocsp.notRevoked', ['rVals:chosen'], 0],
 ])->group('SPEC-030');
+
+it('amendment 6: from an issuer proven only by its signature, a stored good proves nothing and a revoked counts', function (string $settings, string $probe, bool $withSource, string $state, string $code, array $outcomes, int $asked): void {
+    $calls = new RevStoredCalls;
+    [$gotState, $codes, $gotOutcomes] = revStoredShape(revStoredVerify($probe, $settings, $withSource ? revStoredSource($calls) : null));
+
+    expect([$gotState, $codes, $gotOutcomes, $calls->count])->toBe([$state, [$code], $outcomes, $asked]);
+})->with([
+    // L on the allowed list, or itself an anchor: R in x5chain[1] is proven by its signature on L alone (option b)
+    'allowed, [L, R] R\'s good' => ['allowed', 'leaf-root-good', false, 'Trusted', 'signingCredential.ocsp.skipped', ['rVals:notChosen'], 0],
+    'allowed, [L, R] R\'s good, a source' => ['allowed', 'leaf-root-good', true, 'Invalid', 'signingCredential.ocsp.revoked', ['rVals:notChosen', 'fetched:chosen'], 1],
+    'allowed, [L, R] R\'s revoked' => ['allowed', 'leaf-root-revoked', false, 'Invalid', 'signingCredential.ocsp.revoked', ['rVals:chosen'], 0],
+    'L an anchor, [L, R] R\'s good' => ['self', 'leaf-root-good', false, 'Trusted', 'signingCredential.ocsp.skipped', ['rVals:notChosen'], 0],
+    'L an anchor, [L, R] R\'s good, a source' => ['self', 'leaf-root-good', true, 'Invalid', 'signingCredential.ocsp.revoked', ['rVals:notChosen', 'fetched:chosen'], 1],
+    'L an anchor, [L, R] R\'s revoked' => ['self', 'leaf-root-revoked', false, 'Invalid', 'signingCredential.ocsp.revoked', ['rVals:chosen'], 0],
+    // R the anchor: the issuer is bound by the anchor, and its good is read as before (amendment 5)
+    'root, [L, R] R\'s revoked (control)' => ['root', 'leaf-root-revoked', false, 'Invalid', 'signingCredential.ocsp.revoked', ['rVals:chosen'], 0],
+])->group('SPEC-030');
+
+// Written with the build, before mutating the ingredient caller: under the allowed list M is untrusted and the
+// ingredient's L trusted at depth 0, so only the ingredient's staple and source answer are at stake.
+it('amendment 6: an ingredient manifest\'s stored good from such an issuer proves nothing either', function (bool $withSource, string $state, array $ingredientOcsp, array $outcomes, int $asked): void {
+    $calls = new RevStoredCalls;
+    $report = revStoredVerify('child-root-good', 'allowed', $withSource ? revStoredSource($calls) : null);
+    $codes = array_values(array_map(static fn ($s): string => $s->code->value, array_filter($report->result->statuses, static fn ($s): bool => $s->ingredientUri !== null && str_starts_with($s->code->value, 'signingCredential.ocsp.'))));
+    $got = [];
+    foreach ($report->evidence() as $label => $evidence) {
+        if ($label !== ($report->store->active->label ?? '')) {
+            $got = array_map(static fn (OcspEvidence $e): string => "{$e->source}:{$e->outcome}", $evidence->ocsp);
+        }
+    }
+    $gotState = $report->toArray()['validation_state'] ?? '';
+
+    expect([$gotState, $codes, $got, $calls->count])->toBe([$state, $ingredientOcsp, $outcomes, $asked]);
+})->with([
+    'no source' => [false, 'Valid', [], ['rVals:notChosen'], 0],   // an ingredient's skipped is not reported
+    'a source' => [true, 'Invalid', ['signingCredential.ocsp.revoked'], ['rVals:notChosen', 'fetched:chosen'], 1],
+])->group('SPEC-030');
+
+it('amendment 6: the explanation says why a good from such an issuer was not taken', function (): void {
+    expect(revStoredShape(revStoredVerify('leaf-root-good', 'allowed'))[3])->toContain('proven only by its signature on the signer, not by a trust anchor');
+})->group('SPEC-030');
 
 it('an ingredient manifest\'s stored responses are read against its verified issuer too', function (bool $withSource, string $state, array $ingredientOcsp, int $asked): void {
     $calls = new RevStoredCalls;
@@ -126,9 +182,9 @@ it('guard: for a signer that is not trusted nothing changes', function (): void 
     expect([$state, $codes, $outcomes])->toBe(['Valid', ['signingCredential.ocsp.notRevoked'], ['rVals:chosen']]);
 })->group('SPEC-030');
 
-it('c2patool 0.28.3 calls every probe Trusted, and reports no OCSP code on the four leaf probes', function (string $probe): void {
+it('c2patool 0.28.3 calls every probe Trusted, and reports no OCSP code on the five leaf probes', function (string $probe): void {
     $oracle = (string) file_get_contents(Corpus::fixtures()."/c2patool/revocation-stored-issuer/{$probe}--0.28.3.json");
 
     expect($oracle)->toContain('"validation_state": "Trusted"')
-        ->and(str_contains($oracle, 'signingCredential.ocsp'))->toBe($probe === 'child-twin-forged');   // the child: skipped, for the active signer
-})->with(['leaf-twin-forged', 'leaf-bogus-forged', 'leaf-alone-revoked', 'leaf-root-good', 'child-twin-forged'])->group('SPEC-030');
+        ->and(str_contains($oracle, 'signingCredential.ocsp'))->toBe(str_starts_with($probe, 'child-'));   // a child: skipped, for the active signer
+})->with(['leaf-twin-forged', 'leaf-bogus-forged', 'leaf-alone-revoked', 'leaf-root-good', 'leaf-root-revoked', 'child-twin-forged', 'child-root-good'])->group('SPEC-030');

@@ -127,11 +127,13 @@ final readonly class OcspCheck
      *                                    about — never merely x5chain's second certificate (SPEC-086 amendment 2)
      * @param  bool  $trusted  whether the signer is trusted: then the stored responses too are read against $issuer,
      *                         and none when it is null (SPEC-030 amendment 5); otherwise against x5chain[1]
+     * @param  bool  $anchored  whether a trust anchor binds $issuer; when only its signature on the signer proves it,
+     *                          a stored response from it counts only when it says revoked (SPEC-030 amendment 6)
      * @return array{0: list<ValidationStatus>, 1: list<OcspEvidence>}
      */
-    public function checkWithEvidence(array $unprotected, array $chain, ?int $at, string $url, array $extra = [], ?RevocationSource $source = null, ?Certificate $issuer = null, bool $trusted = false): array
+    public function checkWithEvidence(array $unprotected, array $chain, ?int $at, string $url, array $extra = [], ?RevocationSource $source = null, ?Certificate $issuer = null, bool $trusted = false, bool $anchored = true): array
     {
-        [$statuses, $evidence] = $this->stored($unprotected, $chain, $at, $url, $extra, $trusted, $issuer);
+        [$statuses, $evidence] = $this->stored($unprotected, $chain, $at, $url, $extra, $trusted, $issuer, $anchored);
         $unknown = $statuses[0]->code === StatusCode::SigningCredentialOcspUnknown;
         if ($source === null || $issuer === null || $chain === [] || ($statuses[0]->code !== StatusCode::SigningCredentialOcspSkipped && ! $unknown)) {
             return [$statuses, $evidence];
@@ -169,9 +171,10 @@ final readonly class OcspCheck
      * @param  list<Certificate>  $chain
      * @param  list<array{0: string, 1: string}>  $extra
      * @param  bool  $trusted  read against $verified, the issuer the chain walk verified, rather than x5chain[1]
+     * @param  bool  $anchored  whether a trust anchor binds $verified (SPEC-030 amendment 6)
      * @return array{0: non-empty-list<ValidationStatus>, 1: list<OcspEvidence>}
      */
-    private function stored(array $unprotected, array $chain, ?int $at, string $url, array $extra, bool $trusted = false, ?Certificate $verified = null): array
+    private function stored(array $unprotected, array $chain, ?int $at, string $url, array $extra, bool $trusted = false, ?Certificate $verified = null, bool $anchored = true): array
     {
         $time = $at ?? time();
         $skipped = fn (string $why): array => [new ValidationStatus(StatusCode::SigningCredentialOcspSkipped, $url, 'revocation not checked: '.$why)];
@@ -231,6 +234,11 @@ final readonly class OcspCheck
 
         if ($best === null) {
             return [$skipped(implode('; ', $reasons)), $this->evidence($pool, $url, $readings, null, null)];
+        }
+        // an issuer proven only by its signature on the signer may be a key the author constructed to verify that
+        // one signature: its revoked harms only its forger, its good proves nothing (SPEC-030 amendment 6)
+        if ($trusted && ! $anchored && $best['status'] !== 'revoked') {
+            return [$skipped(sprintf('the signer\'s issuer is proven only by its signature on the signer, not by a trust anchor, so a %s response from it proves nothing', $best['status'])), $this->evidence($pool, $url, $readings, null, null)];
         }
         $status = $this->statusOf($best, $leaf, $time, $url, $skipped, $bestFrom);
 

@@ -12237,3 +12237,10 @@ README are where the disclosure lives.
 - Produced: `src/Cbor/CborDecoder.php` (`holds()`); `tests/Unit/Report/StatusCodesByTheLetterTest.php` (decoder dataset); SPEC-088 amendment 2; `CHANGELOG.md`, `notes/step-491-cbor-count-truncation.md`, `NOTES.md`.
 - Measured: the reviewer's inputs before and after; the dataset before the build (3 rows failed) and after; six mutations, all caught; 3,126 corpus runs at `1696779` and now, identical; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0.
 - Decided by Maurice: SPEC-088 amendment 2 approved.
+
+## 2026-10-28 — Step 492: a good from an issuer only its signature proves
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, eerst een korte review van 490 en 491"; then "akkoord, amendementen approved, bouw S1 en S2".
+- Produced: an independent review of `git diff 4a090f5..af68ccd -- src` by one subagent (two findings; S2 re-measured here, S1 reasoned); `src/Trust/OcspCheck.php`, `src/Verifier/Verifier.php`, `src/Verifier/IngredientManifestCheck.php` (`anchored()`); `bin/make-revocation-stored-issuer-variants.php` (two probes, all fixtures regenerated); `tests/Unit/Verifier/RevocationStoredIssuerTest.php`; SPEC-030 amendment 6, a limit under SPEC-086 amendment 2; `CHANGELOG.md`, the fixture README, `notes/step-492-signature-proven-issuer.md`, `NOTES.md`.
+- Measured: the new tests with the source changes stashed (7 failed) and with them; seven mutations, all caught; `c2patool` 0.28.3 on the probes (all `Trusted`); 3,132 corpus runs at `af68ccd` and now, identical; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0. Reasoned, not built: the RSA key construction.
+- Decided by Maurice: a third, short review before the tag; SPEC-030 amendment 6 approved.

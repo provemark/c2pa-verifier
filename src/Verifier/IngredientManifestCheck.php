@@ -241,7 +241,7 @@ final readonly class IngredientManifestCheck
         }
         $ocsp = [];
         if ($cose !== null) {
-            [$revocation, $ocsp] = (new OcspCheck)->checkWithEvidence($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses, self::trusted($trust) ? $source : null, $issuer, self::trusted($trust));   // SPEC-086: a trusted signer only, told the issuer the walk verified (amendment 2); SPEC-030 amendment 5: its stored responses read against it
+            [$revocation, $ocsp] = (new OcspCheck)->checkWithEvidence($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses, self::trusted($trust) ? $source : null, $issuer, self::trusted($trust), self::anchored($anchor));   // SPEC-086: a trusted signer only, told the issuer the walk verified (amendment 2); SPEC-030 amendments 5 and 6: its stored responses read against it, a good only when an anchor binds it
             $statuses = [...$statuses, ...($responses !== [] ? $revocation : array_filter($revocation, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialOcspRevoked))];
         }
         $evidence[$manifest->label] = self::evidenceOf($manifest, $at ?? time(), $timestamp, $now !== null, $anchor, $ocsp);   // no clock given: the checks read it themselves
@@ -265,6 +265,16 @@ final readonly class IngredientManifestCheck
             static fn (ValidationStatus $status): ValidationStatus => new ValidationStatus($status->code, $status->url, $status->explanation, $scope),
             $statuses,
         );
+    }
+
+    /**
+     * Whether a trust anchor binds the issuer the walk verified: the path reached the anchor at depth one or more.
+     * At depth 0 (the signer on the allowed list, or itself an anchor) only the issuer's signature on the signer
+     * proves it (SPEC-086 amendment 2, option b; SPEC-030 amendment 6).
+     */
+    public static function anchored(?AnchorEvidence $anchor): bool
+    {
+        return $anchor !== null && $anchor->depth >= 1;
     }
 
     /**

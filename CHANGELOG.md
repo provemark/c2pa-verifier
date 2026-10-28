@@ -124,6 +124,14 @@ Found by a review of the new code before the tag (step 482).
   side effect, a signer issued directly by an anchor has its staple read
   even when `x5chain` holds the signer alone; a verified `revoked` there
   is now `Invalid`, where `c2patool` 0.28.3 says `Trusted`.
+- **A stored `good` proves nothing from an issuer only its own signature
+  proves (SPEC-030 amendment 6).** For a signer on the allowed list, or
+  itself an anchor, the issuer is the second certificate of `x5chain`
+  when its key verifies the signer's signature. For an RSA signature
+  another key that does so can be constructed, so a stapled `good` from
+  it is now `notChosen` and the status `skipped`, and a revocation source
+  is asked; a stapled `revoked` still counts. The verdict is unchanged.
+  Found by a third review, of the fix above.
 - **A stored response that was never read is `notTried` (SPEC-085
   amendment 2).** When the signer's issuer is not in `x5chain`, no stored
   response can be matched to the signer; the evidence called each one

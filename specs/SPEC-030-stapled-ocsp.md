@@ -448,6 +448,48 @@ needs an amendment with this spec — the same shape as when
 
    **Weight A: a revoked signer wrongly `Trusted` under a source becomes `Invalid`.**
 
+6. **2026-10-28, step 492, found by the review of steps 490–491; reasoned, the attack not built** *(approved by Maurice van Loon, 2026-10-28)* —
+   Amendment 5 reads a trusted signer's stored responses against the
+   issuer the walk verified. Where the walk vouches for the signer
+   without a certificate above it — the signer on the allowed list, or
+   itself an anchor — that issuer is `x5chain[1]` when its subject is the
+   signer's issuer and its key verifies the signer's signature (SPEC-086
+   amendment 2, option b). Nothing else binds that certificate. For an
+   RSA PKCS#1 v1.5 signature, a key other than the issuer's that verifies
+   one given signature can be constructed (duplicate-signature key
+   selection); `signedBy()` does not exclude it. An author holding such a
+   key could put a certificate with it in `x5chain[1]` and staple a
+   `good` signed by it, which was then `signingCredential.ocsp.notRevoked`
+   and kept the source from being asked. EC issuers are not open to this
+   (a named curve is required), nor is an issuer the anchor's signature
+   binds (a path of depth one or more). The verdict cannot be made right
+   here: with a constructed issuer in `x5chain[1]`, the source is told
+   that issuer and a genuine answer does not verify against it. On the
+   allowed list the verdict rests on the list. What can be made right is
+   the code: a `good` that proves nothing must not read as one that does.
+
+   Now, for a trusted signer whose issuer the walk proved by its
+   signature alone (the anchor evidence's depth is 0), a stored response
+   from that issuer counts only when it says `revoked` — a forged
+   `revoked` harms only its forger, the asymmetry of this spec. A `good`
+   or `unknown` from it proves nothing: it is `notChosen`, the status is
+   `skipped` ("proven only by its signature on the signer, not by a trust
+   anchor"), and the source, if any, is asked as when nothing was
+   stored. An issuer bound by an anchor (depth one or more, including the
+   anchor itself) is read as in amendment 5. A signer that is not trusted
+   is read as before.
+
+   Side effect: an allowed-list signer, or a signer that is itself an
+   anchor, with its genuine issuer's `good` stapled is `skipped` now,
+   where it was `notRevoked`; its verdict is unchanged. `c2patool` 0.28.3
+   reports no OCSP code on these probes. Measured with
+   `revocation-stored-issuer/leaf-root-good.png` and the new
+   `leaf-root-revoked.png` (`x5chain` [L, R]) under `allowed.settings.json`
+   and with L as the anchor; the construction itself was not built.
+   SPEC-086 amendment 2 records the limit of option b.
+
+   **Weight C: a code, no verdict.**
+
 ## Open questions
 
 All three were answered on approval (Maurice van Loon, 2026-09-22) by
@@ -520,3 +562,4 @@ least one test; every source file maps back to this spec.
 | AC10 | `tests/Unit/Trust/OcspCheckTest.php :: AC10: bounded, like every other parser here` | `Trust\OcspCheck::DEFAULT_MAX_RESPONSES`, `DEFAULT_MAX_RESPONSE_BYTES`, `responseBytes()` |
 | AC11 | `tests/Unit/Asn1/MissingElementTest.php :: AC11 / SPEC-030` | `Trust\OcspCheck` (ResponseData's first element through `Der::element()`) |
 | Amendment 5 | `tests/Unit/Verifier/RevocationStoredIssuerTest.php` (group `SPEC-030`) | `Trust\OcspCheck::checkWithEvidence(), stored()`; `Verifier\Verifier::check()`, `Verifier\IngredientManifestCheck::manifest()`; `bin/make-revocation-stored-issuer-variants.php` |
+| Amendment 6 | `tests/Unit/Verifier/RevocationStoredIssuerTest.php` (group `SPEC-030`), the tests named "amendment 6" | `Trust\OcspCheck::checkWithEvidence(), stored()`; `Verifier\Verifier::check()`, `Verifier\IngredientManifestCheck::manifest()`, `trusted()`, `anchored()` |

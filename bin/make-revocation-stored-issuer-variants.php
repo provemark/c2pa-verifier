@@ -16,8 +16,10 @@ declare(strict_types=1);
  *   leaf-bogus-forged.png   x5chain [L, B], B's forged good stapled
  *   leaf-alone-revoked.png  x5chain [L], R's revoked stapled
  *   leaf-root-good.png      x5chain [L, R], R's good stapled (the control)
+ *   leaf-root-revoked.png   x5chain [L, R], R's revoked stapled (SPEC-030 amendment 6, step 492)
  *   child-twin-forged.png   fixture-unsigned.png signed by M (another signer under R) with c2patool, its parentOf
  *                           ingredient leaf-twin-forged.png, whose manifest (N's forged good included) is in its store
+ *   child-root-good.png     the same with leaf-root-good.png as the ingredient (SPEC-030 amendment 6, step 492)
  *   *.der                   the responses; root.settings.json: R in the legacy trust_anchors;
  *   allowed.settings.json   L on an allowed list (a "manifest" entry whose anchor B reaches nothing)
  *
@@ -226,6 +228,7 @@ $probes = [
     'leaf-bogus-forged' => [['l', 'b'], 'bogus-forged-good'],
     'leaf-alone-revoked' => [['l'], 'leaf-revoked'],
     'leaf-root-good' => [['l', 'r'], 'leaf-good'],
+    'leaf-root-revoked' => [['l', 'r'], 'leaf-revoked'],
 ];
 foreach (glob("{$oracles}/*") ?: [] as $stale) {
     unlink($stale);
@@ -240,7 +243,8 @@ file_put_contents("{$keys}/m.json", (string) json_encode([
     'assertions' => [['label' => 'c2pa.actions.v2', 'data' => ['actions' => [['action' => 'c2pa.created', 'digitalSourceType' => 'http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture']]]]],
 ], JSON_UNESCAPED_SLASHES));
 rsiRun(rsiSh($tool, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m.json", '-p', "{$dir}/leaf-twin-forged.png", '-o', "{$dir}/child-twin-forged.png", '-f'));
-foreach ([...array_keys($probes), 'child-twin-forged'] as $name) {
+rsiRun(rsiSh($tool, $root.'/tests/Fixtures/fixture-unsigned.png', '-m', "{$keys}/m.json", '-p', "{$dir}/leaf-root-good.png", '-o', "{$dir}/child-root-good.png", '-f'));
+foreach ([...array_keys($probes), 'child-twin-forged', 'child-root-good'] as $name) {
 
     // ---- what c2patool 0.28.3 says ----
     $lines = [];

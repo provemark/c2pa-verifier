@@ -299,6 +299,15 @@ None.
    `SPEC-086`. The *Scope* test "the source is not asked when the issuer
    is not in x5chain" now reads "… without an issuer the walk verified".
 
+   *Limit, recorded with SPEC-030 amendment 6 (step 492):* option b proves
+   `x5chain[1]` by a signature, not by an anchor. For an RSA PKCS#1 v1.5
+   signature another key verifying the same signature can be constructed,
+   so a file's author can make the issuer told to the source one the
+   genuine answer does not verify against. For an allowed-list signer, or
+   one that is itself an anchor, the verdict then rests on the trust
+   configuration alone; a stored `good` from such an issuer is not taken
+   as proof (SPEC-030 amendment 6).
+
    **Weight A: a revoked signer wrongly `Trusted` under a source becomes `Invalid`.**
 
 3. **2026-10-27, step 484, found by the review of step 482; measured** *(approved by Maurice van Loon, 2026-10-27)* —
