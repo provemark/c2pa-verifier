@@ -23,7 +23,7 @@ interface RevocationSource
      * @param  string  $subject  DER of the certificate asked about: the signer, or a CA of its path
      * @param  string  $issuer  DER of the certificate above it in the path the chain walk verified — for the signer, the
      *                          anchor itself when the anchor issued it; never a certificate merely carried in x5chain
-     * @param  list<string>  $urls  the OCSP responder urls of $subject's AIA (http or https, at most four)
+     * @param  list<string>  $urls  the OCSP responder urls of $subject's AIA (http or https, visible ASCII only, at most four)
      * @return string|null DER of an OCSP response
      */
     public function ocspResponse(string $subject, string $issuer, array $urls): ?string;

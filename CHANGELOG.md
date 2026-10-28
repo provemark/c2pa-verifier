@@ -113,6 +113,10 @@ Found by a review of the new code before the tag (step 482).
   amendment 2).** When the signer's issuer is not in `x5chain`, no stored
   response can be matched to the signer; the evidence called each one
   `unusable`, as if it had been read and refused. No verdict changes.
+- **Responder urls with control characters are not passed to the source
+  (SPEC-086 amendment 4).** A url from the certificate's AIA is passed
+  only when every byte is visible ASCII; one with CR, LF, NUL, a space or
+  a tab could otherwise reach a caller that builds its own HTTP request.
 
 ### Documentation
 

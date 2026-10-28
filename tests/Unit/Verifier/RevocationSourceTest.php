@@ -250,6 +250,8 @@ it('AC8: urls that are not kept', function (string $file, array $urls): void {
 })->with([
     'ldap, caIssuers, five, too long' => ['aia/filter.crt', ['http://ocsp1.example/', 'HTTPS://ocsp2.example/', 'http://ocsp3.example/', 'http://ocsp4.example/']],
     'an AIA that is not DER' => ['aia/broken.crt', []],
+    // amendment 4: CR LF, a final LF, NUL, a space, a tab, DEL and a non-ASCII byte are not in a URI
+    'control bytes' => ['aia/control.crt', ['http://ocsp-plain.example/']],
     'no AIA' => ['ocsp/signer.crt', []],
 ])->group('SPEC-086');
 

@@ -278,9 +278,10 @@ final readonly class CertificateExtensions
                 // AuthorityInfoAccessSyntax ::= SEQUENCE OF AccessDescription { accessMethod OID, accessLocation GeneralName }
                 foreach ((new DerReader)->read($extension['value'])->sequence() as $description) {
                     $location = $description->element(1);
-                    // uniformResourceIdentifier [6] IA5String
+                    // uniformResourceIdentifier [6] IA5String; only visible ASCII is a URI (RFC 3986 §2), so CR, LF, NUL,
+                    // space and the rest never reach the caller's source (SPEC-086 amendment 4)
                     if ($description->element(0)->oid() === self::OID_AD_OCSP && $location->is(TagClass::ContextSpecific, 6)
-                        && strlen($location->contents) <= self::MAX_OCSP_URL_BYTES && preg_match('#^https?://#i', $location->contents) === 1) {
+                        && strlen($location->contents) <= self::MAX_OCSP_URL_BYTES && preg_match('#^https?://[\x21-\x7e]*$#iD', $location->contents) === 1) {
                         $urls[] = $location->contents;
                     }
                 }

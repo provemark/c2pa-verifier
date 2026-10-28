@@ -75,7 +75,8 @@ ADR-0007 and `notes/step-471-adr-0007-proposed.md`):
   - the signer's issuer is in `x5chain`, so a response can be matched.
 - **The urls:** the `id-ad-ocsp` access locations (RFC 5280 §4.2.2.1) of
   the signer's certificate's AIA extension, in order, kept only when they
-  are `http` or `https` URIs of at most 2,048 bytes, at most four. An AIA
+  are `http` or `https` URIs of at most 2,048 bytes, every byte visible
+  ASCII (0x21–0x7E, amendment 4), at most four. An AIA
   that cannot be read gives an empty list; the source is still asked.
 - **What becomes of the answer:**
   - a response that passes the same reading as a stored one (`OcspCheck`:
@@ -230,7 +231,7 @@ interface RevocationSource
      *
      * @param  string  $subject  DER of the signer's certificate
      * @param  string  $issuer  DER of its issuer
-     * @param  list<string>  $urls  the OCSP responder urls of $subject's AIA (http/https, at most four)
+     * @param  list<string>  $urls  the OCSP responder urls of $subject's AIA (http/https, visible ASCII only, at most four)
      * @return string|null  DER of an OCSP response; untrusted, read like any stored one
      */
     public function ocspResponse(string $subject, string $issuer, array $urls): ?string;
@@ -326,6 +327,32 @@ None.
 
    **Weight A: a revoked signer wrongly `Trusted` under a source becomes `Invalid`.**
 
+4. **2026-10-28, step 487, found by the review of step 482; measured** *(approved by Maurice van Loon, 2026-10-28)* —
+   The urls passed to the source were checked for their scheme and their
+   length only. A `uniformResourceIdentifier` is an IA5String, which
+   holds any ASCII byte, CR, LF, NUL, space and tab included, and the
+   certificate comes from whoever made the file. A caller that builds its
+   own HTTP request from such a url (on shared hosting, say with
+   `fsockopen`) could be made to send a header or a second request it
+   never meant to. RFC 3986 §2 allows none of these bytes in a URI, so no
+   such url is a valid one.
+
+   A url is now kept only when **every byte is visible ASCII, 0x21 to
+   0x7E**; any other is dropped, as an `ldap` url is. The limit of four
+   counts the kept ones, as before. AC8 gains a certificate whose AIA
+   holds OCSP urls with CR LF, a final LF, NUL, a space, a tab, DEL and a
+   non-ASCII byte, then one plain url: only the plain one is passed.
+
+   Measured with `bin/make-aia-certificates.php control` (the AIA written
+   as DER, since openssl's configuration refuses those bytes in a URI):
+   before, the first four of the eight were passed. Read, not measured: `c2pa-rs`
+   0.91.1 passes the url to `url::Url::parse` (`crypto/ocsp/fetch.rs`),
+   whose WHATWG parsing strips tab, CR and LF and uses the rest; this
+   verifier drops the url instead, stricter, on a path that changes no
+   verdict (ADR-0005).
+
+   **Weight B: protects the caller's source; no verdict changes.**
+
 ## Traceability
 
 All in `tests/Unit/Verifier/RevocationSourceTest.php`, group `SPEC-086`. Seen red before the implementation (all
@@ -348,5 +375,6 @@ when mutations M5, M8 and M16 survived; each now fails under its mutation.
 | AC10                 | AC10: over the corpus, the source is asked exactly where allowed (none, full, lists) | src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |
 | AC11                 | tests/Unit/ApiSurfaceTest.php :: AC1 / SPEC-025 | src/Trust/RevocationSource.php; src/Trust/NoRevocationSource.php; src/Trust/OcspEvidence.php :: FETCHED; bin/api-check.php |
 | *Scope*              | scope: a fetched response follows the stored ones in the evidence; scope: the source is not asked without an issuer the walk verified; scope: a fetched response over the size limit is not read | src/Trust/OcspCheck.php :: checkWithEvidence(), fetched() |
+| Amendment 4          | AC8: urls that are not kept (control bytes) / SPEC-086 | src/Trust/CertificateExtensions.php :: ocspUrls(); bin/make-aia-certificates.php |
 | Amendment 3          | tests/Unit/Verifier/RevocationUnknownTest.php / SPEC-086 (6 of 7 tests red before the build; the guard without a source passed) | src/Trust/OcspCheck.php :: checkWithEvidence(); bin/make-revocation-unknown-variants.php |
 | Amendment 2          | tests/Unit/Verifier/RevocationIssuerTest.php :: the signer is asked about with the anchor that issued it, whatever x5chain carries second; option b: an allowed-list signer …; option b: a signer that is itself an anchor … / SPEC-086 (11 of 16 tests of the file red before the build) | src/Trust/ChainCheck.php :: walk(), provenIssuer(); src/Trust/OcspCheck.php :: checkWithEvidence(); src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |

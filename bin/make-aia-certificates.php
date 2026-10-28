@@ -11,12 +11,15 @@ declare(strict_types=1);
  * process's memory; no key is written anywhere. What is committed is the
  * public certificates. Only their extensions matter to the test.
  *
- * Run:   php bin/make-aia-certificates.php
+ * Run:   php bin/make-aia-certificates.php [name ...]   (no name: all)
  * Needs: ext-openssl. Tooling, not the verification path.
  *
  * Writes:
- *   tests/Fixtures/aia/filter.crt  ldap, caIssuers, five http(s) OCSP urls and one over 2,048 bytes
- *   tests/Fixtures/aia/broken.crt  an AIA extension whose value is truncated DER
+ *   tests/Fixtures/aia/filter.crt   ldap, caIssuers, five http(s) OCSP urls and one over 2,048 bytes
+ *   tests/Fixtures/aia/broken.crt   an AIA extension whose value is truncated DER
+ *   tests/Fixtures/aia/control.crt  OCSP urls with CR LF, a final LF, NUL, a space, a tab, DEL and a non-ASCII byte, then
+ *                                   one plain url (SPEC-086 amendment 4, step 487); openssl's config refuses
+ *                                   those bytes in a URI, so the AIA is written as DER
  */
 
 $root = dirname(__DIR__);
@@ -26,6 +29,27 @@ if (! is_dir($out) && ! mkdir($out, 0o755, true)) {
     exit(1);
 }
 
+/**
+ * A DER element with a definite length.
+ *
+ * @param  int<0, 255>  $tag
+ */
+function aiaDer(int $tag, string $contents): string
+{
+    $n = strlen($contents);
+
+    return chr($tag).($n < 128 ? chr($n) : ($n < 256 ? "\x81".chr($n) : "\x82".pack('n', $n))).$contents;
+}
+
+/** An AIA extension value holding these OCSP urls, as openssl's DER: syntax. */
+function aiaOcsp(string ...$urls): string
+{
+    // AccessDescription { id-ad-ocsp, uniformResourceIdentifier [6] IA5String }
+    $descriptions = implode('', array_map(static fn (string $url): string => aiaDer(0x30, aiaDer(0x06, "\x2b\x06\x01\x05\x05\x07\x30\x01").aiaDer(0x86, $url)), $urls));
+
+    return '1.3.6.1.5.5.7.1.1 = DER:'.implode(':', str_split(strtoupper(bin2hex(aiaDer(0x30, $descriptions))), 2));
+}
+
 $long = 'http://ocsp-long.example/'.str_repeat('a', 2050);
 $probes = [
     'filter' => 'authorityInfoAccess = OCSP;URI:ldap://ocsp.example/, caIssuers;URI:http://ca.example/ca.crt, '
@@ -33,7 +57,23 @@ $probes = [
         .'OCSP;URI:http://ocsp3.example/, OCSP;URI:http://ocsp4.example/, OCSP;URI:http://ocsp5.example/',
     // SEQUENCE of length 5 holding three bytes: the reader runs out
     'broken' => '1.3.6.1.5.5.7.1.1 = DER:30:05:06:01:2B',
+    'control' => aiaOcsp(
+        "http://ocsp-crlf.example/\r\nX-Injected: 1",
+        "http://ocsp-lf.example/\n",
+        "http://ocsp-nul.example/\0",
+        'http://ocsp space.example/',
+        "http://ocsp-tab.example/\t",
+        "http://ocsp-del.example/\x7f",
+        "http://ocsp-high.example/\xc3\xa9",
+        'http://ocsp-plain.example/',
+    ),
 ];
+/** @var list<string> $argv */
+$argv = $_SERVER['argv'];
+$only = array_slice($argv, 1);
+if ($only !== []) {
+    $probes = array_intersect_key($probes, array_flip($only));
+}
 
 foreach ($probes as $name => $extension) {
     $config = tempnam(sys_get_temp_dir(), 'aia');
