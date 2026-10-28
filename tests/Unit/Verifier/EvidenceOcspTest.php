@@ -166,10 +166,11 @@ it('AC5: a revoked answer stops the check, and wins over an earlier good one', f
 })->group('SPEC-085');
 
 it('AC6: nothing usable, and nothing thrown', function (string $case): void {
-    [$ders, $chain] = match ($case) {
-        'another certificate' => [[spec085Der('other-good')], null],
-        'not DER' => [["\xff\x00not an OCSP response"], null],
-        'no issuer in the chain' => [[spec085Der('good')], [spec085Chain()[0]]],
+    // amendment 2: without the issuer in x5chain no response is read, so none is unusable
+    [$ders, $chain, $outcome] = match ($case) {
+        'another certificate' => [[spec085Der('other-good')], null, OcspEvidence::UNUSABLE],
+        'not DER' => [["\xff\x00not an OCSP response"], null, OcspEvidence::UNUSABLE],
+        'no issuer in the chain' => [[spec085Der('good')], [spec085Chain()[0]], OcspEvidence::NOT_TRIED],
         default => throw new LogicException("no case {$case}"),
     };
     $evidence = spec085Stapled($ders, $chain);
@@ -177,7 +178,7 @@ it('AC6: nothing usable, and nothing thrown', function (string $case): void {
     expect(count($evidence))->toBe(1)
         ->and($evidence[0]->response)->toBe($ders[0])
         ->and([$evidence[0]->outcome, $evidence[0]->code, $evidence[0]->certStatus, $evidence[0]->producedAt, $evidence[0]->thisUpdate, $evidence[0]->nextUpdate])
-        ->toBe([OcspEvidence::UNUSABLE, null, null, null, null, null]);
+        ->toBe([$outcome, null, null, null, null, null]);
 })->with(['another certificate', 'not DER', 'no issuer in the chain'])->group('SPEC-085');
 
 it('AC7: nothing to list', function (): void {
@@ -209,7 +210,12 @@ function spec085Disagreements(VerificationReport $report, string $label, Manifes
         if (($e->code !== null) !== ($e->outcome === OcspEvidence::CHOSEN)) {
             $found[] = "{$label}: entry {$i} is {$e->outcome} with a code of ".($e->code->value ?? 'none');
         }
-        if ($e->outcome === OcspEvidence::NOT_TRIED && ($chosen === [] || $chosen[0] > $i || $evidence->ocsp[$chosen[0]]->certStatus !== 'revoked')) {
+        // amendment 2: without the issuer in x5chain every stored entry is not tried
+        if ($e->source !== OcspEvidence::FETCHED && count($evidence->certificates) < 2) {
+            if ($e->outcome !== OcspEvidence::NOT_TRIED) {
+                $found[] = "{$label}: entry {$i} is {$e->outcome} with x5chain holding ".count($evidence->certificates).' certificate(s)';
+            }
+        } elseif ($e->outcome === OcspEvidence::NOT_TRIED && ($chosen === [] || $chosen[0] > $i || $evidence->ocsp[$chosen[0]]->certStatus !== 'revoked')) {
             $found[] = "{$label}: entry {$i} not tried without a revoked one before it";
         }
     }

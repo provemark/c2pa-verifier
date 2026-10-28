@@ -186,7 +186,8 @@ final readonly class OcspCheck
         // what became of each response (SPEC-085): its reading when usable, false when unusable, absent when not tried
         $readings = [];
         if (count($chain) < 2) {
-            return [$skipped(sprintf('the signer\'s issuer is not in the x5chain (%d certificate(s)), so no response can be matched to it', count($chain))), $this->evidence($pool, $url, array_fill(0, count($pool), false), null, null)];
+            // none is read, so none is unusable: each is not tried (SPEC-085 amendment 2)
+            return [$skipped(sprintf('the signer\'s issuer is not in the x5chain (%d certificate(s)), so no response can be matched to it', count($chain))), $this->evidence($pool, $url, [], null, null)];
         }
         $leaf = $chain[0];
         $issuer = $chain[1];

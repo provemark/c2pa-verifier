@@ -74,9 +74,9 @@ Measured on 2026-10-27 (the verifier at `13839bf`, over every file under
   - `outcome`: `chosen` (the response the signer was judged by), `notChosen`
     (usable, but another was chosen), `unusable` (it cannot be read, is not
     successful, is about another certificate, or does not verify under a
-    responder tied to the signer's issuer; also every response when the
-    signer's issuer is not in `x5chain`, so none can be matched), or
-    `notTried` (after a revoked answer the check stops);
+    responder tied to the signer's issuer), or `notTried` (not read: after
+    a revoked answer the check stops, or the signer's issuer is not in
+    `x5chain`, so none can be matched; amendment 2);
   - `code`: the `StatusCode` the chosen response gave — `notRevoked`,
     `revoked`, `unknown`, or `skipped` when it was not current or reported a
     revocation that does not count at the judged time — and null for every
@@ -247,6 +247,40 @@ None.
      The claim was generalised from five of the files. Decided: *Problem*
      reads as above. No acceptance criterion changes.
 
+2. **2026-10-28, step 486, found by the review of step 482; measured** *(approved by Maurice van Loon, 2026-10-28)* —
+   When the signer's issuer is not in `x5chain`, no stored response can
+   be matched to the signer, so none is read. *Design* nevertheless
+   called every such response `unusable`, which means read and refused:
+   a response that is fine, but could not be checked, looked the same as
+   one that is broken or about another certificate. A reader keeping the
+   evidence (the reason for this spec) drew the wrong conclusion.
+
+   Such responses are now **`notTried`**. *Design*'s `outcome` reads:
+   `unusable` (it cannot be read, is not successful, is about another
+   certificate, or does not verify under a responder tied to the signer's
+   issuer), or `notTried` (not read: after a revoked answer the check
+   stops, or the signer's issuer is not in `x5chain`). AC6's third case,
+   `good.der` stapled to a chain of one certificate, gives one entry
+   `notTried`, with the response's bytes, no code, no status and no
+   times. AC8's rule on `notTried` reads: a manifest whose `x5chain` holds
+   fewer than two certificates has every stored entry `notTried`;
+   otherwise a `notTried` entry follows only a `chosen` one whose status is
+   `revoked`. A `fetched` entry (SPEC-086) is not a stored one: since
+   SPEC-086 amendment 2 the source may still be asked, with the issuer the
+   walk verified, and its answer chosen.
+
+   No verdict and no status changes; only the outcome in the evidence.
+   No corpus file reached the case before. Measured with
+   `bin/make-revocation-notried-variants.php`: signer L issued by the
+   throw-away root R, `x5chain` [L], L's `good` stapled. `c2patool` 0.28.3
+   calls it `Trusted`; here it is `Trusted` with
+   `signingCredential.ocsp.skipped` and the staple `notTried`, and with a
+   source answering L revoked `Invalid`, the staple `notTried` and the
+   fetched response `chosen`. Tests: `EvidenceOcspTest.php` (AC6, AC8)
+   and `tests/Unit/Verifier/RevocationNotTriedTest.php`, group `SPEC-085`.
+
+   **Weight C: the evidence says what happened; no verdict changes.**
+
 ## Traceability
 
 All in `tests/Unit/Verifier/EvidenceOcspTest.php`, group `SPEC-085`,
@@ -269,3 +303,4 @@ fails under that mutation.
 | AC10                 | AC10: OcspEvidence and ocsp are in the contract; tests/Unit/ApiSurfaceTest.php :: AC1: the recorded surface is exactly what the contract classes expose today | src/Trust/OcspEvidence.php; bin/api-check.php :: apiContract() |
 | Scope (an assertion response over the size limit) | scope: an assertion response over the size limit is listed, unusable | src/Trust/OcspCheck.php :: checkWithEvidence() |
 | Amendment 1          | measured over the corpus (step 470) | — |
+| Amendment 2          | AC6: nothing usable, and nothing thrown (no issuer in the chain); AC8; tests/Unit/Verifier/RevocationNotTriedTest.php | src/Trust/OcspCheck.php :: stored() |

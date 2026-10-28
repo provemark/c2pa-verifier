@@ -14,8 +14,9 @@ use Provemark\C2paVerifier\Report\StatusCode;
  * response is the bytes the file or the source gave. It was chosen when the signer was
  * judged by it, not chosen when it was usable and another was, unusable when
  * it could not be read, was about another certificate or did not verify under
- * a responder tied to the signer's issuer, and not tried when a revoked answer
- * before it had ended the check. What it says — the status and its times
+ * a responder tied to the signer's issuer, and not tried when it was never
+ * read: a revoked answer before it had ended the check, or the signer's issuer
+ * is not in `x5chain` (SPEC-085 amendment 2). What it says — the status and its times
  * (RFC 6960 §4.2) — is read only from a usable one.
  */
 final readonly class OcspEvidence

@@ -109,6 +109,10 @@ Found by a review of the new code before the tag (step 482).
   `unknown` about the signer and so block the lookup. The source is now
   asked after it; its `revoked` or current `good` counts, anything else
   leaves `signingCredential.ocsp.unknown`.
+- **A stored response that was never read is `notTried` (SPEC-085
+  amendment 2).** When the signer's issuer is not in `x5chain`, no stored
+  response can be matched to the signer; the evidence called each one
+  `unusable`, as if it had been read and refused. No verdict changes.
 
 ### Documentation
 
