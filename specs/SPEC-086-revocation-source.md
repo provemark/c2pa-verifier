@@ -383,6 +383,63 @@ None.
 
    **Weight C: one spelling for "no source"; no verdict changes.**
 
+6. **2026-10-28, step 499, finding 5 of the review of 0.9's code; measured** *(approved by Maurice van Loon, 2026-10-28)* —
+   The source is asked "for each judged manifest ... exactly once", and
+   SPEC-087 asks it about each CA of the path, again per judged manifest.
+   Manifests that share a chain — an active manifest and its ingredient
+   manifests signed under the same certificates, as most of the corpus's
+   multi-manifest files are — ask the same question once each, and the
+   Time-Stamping second walk (SPEC-087 amendment 1) asks its CAs again.
+   With a source that goes to the network, each repeat is an outbound OCSP
+   request, and a file can be built to repeat it up to the graph's limit.
+   Measured over the corpus (1,044 files × none, full and lists, with a
+   source that records its calls and answers null, at `35ed0ab`): 448
+   calls in 189 runs, of which 70 repeat an earlier call of the same run,
+   in 23 runs; the most, `public-testfiles/adobe-20220124-CAIAIIICAICIICAIICICA.jpg`
+   under `full`, makes 12 calls for 2 distinct questions.
+
+   **Within one `verify()`, the source is asked at most once for each
+   certificate and issuer** (the SHA-256 of both DERs, and the urls). Every
+   later need for the same pair — another manifest, a CA question, the
+   second walk — gets the first answer: the same bytes, the same null, or
+   the same exception thrown again. What the source is asked about does
+   not change, nor when (only a trusted signer, after a stored result that
+   proves nothing; SPEC-087's CAs), nor what becomes of the answer: each
+   manifest still judges the response itself, at its own judged time, and
+   lists it in its own evidence as `fetched`. Nothing is kept between two
+   `verify()` calls; `Verifier` stays readonly and holds no state.
+
+   AC10 now reads: each call belongs to a judged manifest whose signer is
+   trusted and whose stored responses gave `skipped`; each such signer
+   and issuer is asked exactly once per run; every
+   `signingCredential.ocsp.inaccessible` status belongs to such a manifest.
+   AC1, AC4, AC5 and AC7 judge one manifest and are unchanged. New:
+
+   - **AC12 — one question, one call**
+     - Given `c2pa-rs/CACA.jpg` and
+       `public-testfiles/adobe-20220124-CAIAIIICAICIICAIICICA.jpg` under
+       `trust/full.settings.json`, with a source that records its calls
+       and answers null
+     - Then no pair of subject and issuer is asked twice, the CAIAII… file
+       makes 2 calls where it made 12, and the report equals the one at
+       `35ed0ab` with the same source.
+   - **AC13 — the first answer stands** *(error path)*
+     - Given the same files with a source that throws on its first call
+       and answers a good response after, and one that answers null first
+       and a good response after
+     - Then the source is called once per pair; every manifest that needs
+       the pair gives what the first answer gives
+       (`signingCredential.ocsp.inaccessible`, with the same explanation),
+       none a `notRevoked` from a later answer.
+
+   The `RevocationSource` docblock says it: asked at most once per
+   certificate and issuer in one verification. The remembering lives in an
+   internal class; the contract keeps its 211 symbols. SPEC-087 amendment
+   2 points here. Tests: `RevocationSourceTest.php`, group `SPEC-086`.
+
+   **Weight C: fewer calls to the caller's source; no verdict changes
+   expected, to be measured over the corpus before and after.**
+
 ## Traceability
 
 All in `tests/Unit/Verifier/RevocationSourceTest.php`, group `SPEC-086`. Seen red before the implementation (all
@@ -398,13 +455,16 @@ when mutations M5, M8 and M16 survived; each now fails under its mutation.
 | AC3                  | AC3: an answer about another certificate is inaccessible | src/Trust/OcspCheck.php :: fetched(); src/Report/StatusCode.php :: SigningCredentialOcspInaccessible |
 | AC4                  | AC4: no answer is inaccessible, and nothing escapes (null, an exception, an error, not DER) | src/Trust/OcspCheck.php :: fetched() |
 | AC5                  | AC5: not asked where a stored response proves something (cs-good, cs-own) | src/Trust/OcspCheck.php :: checkWithEvidence(); src/Verifier/IngredientManifestCheck.php :: check(), manifest() |
-| AC6                  | AC6: not asked for an untrusted signer | src/Verifier/IngredientManifestCheck.php :: trusted(); src/Verifier/Verifier.php :: check() |
+| AC6                  | AC6: not asked for an untrusted signer | src/Verifier/IngredientManifestCheck.php :: manifest(); src/Verifier/Verifier.php :: check() (the anchor the walk hands out; `trusted()` until step 497) |
 | AC7                  | AC7: the urls from the AIA | src/Trust/CertificateExtensions.php :: ocspUrls(); src/Trust/OcspCheck.php :: fetched() |
 | AC8                  | AC8: urls that are not kept; fixtures from `bin/make-aia-certificates.php` | src/Trust/CertificateExtensions.php :: ocspUrls() |
 | AC9                  | AC9: the default source changes nothing; and 3,066 corpus runs before (worktree at `738e1dd`, own `vendor/` copy) and after, with no source and with `NoRevocationSource`, identical (`notes/step-475-revocation-source.md`) | src/Trust/NoRevocationSource.php; src/Verifier/Verifier.php :: source() |
-| AC10                 | AC10: over the corpus, the source is asked exactly where allowed (none, full, lists) | src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |
+| AC10                 | AC10: over the corpus, the source is asked exactly where allowed (none, full, lists; once per signer and issuer in a run since amendment 6) | src/Verifier/Verifier.php :: check(); src/Verifier/IngredientManifestCheck.php :: manifest() |
 | AC11                 | tests/Unit/ApiSurfaceTest.php :: AC1 / SPEC-025 | src/Trust/RevocationSource.php; src/Trust/NoRevocationSource.php; src/Trust/OcspEvidence.php :: FETCHED; bin/api-check.php |
 | *Scope*              | scope: a fetched response follows the stored ones in the evidence; scope: the source is not asked without an issuer the walk verified; scope: a fetched response over the size limit is not read | src/Trust/OcspCheck.php :: checkWithEvidence(), fetched() |
+| AC12 (amendment 6)   | AC12: one question, one call (CACA, CAIAIIICAICIICAIICICA); AC12: the pair is the question: another issuer, or other urls, is asked again / SPEC-086 | src/Trust/RememberedRevocationSource.php; src/Verifier/Verifier.php :: check() |
+| AC13 (amendment 6)   | AC13: the first answer stands (null first, an exception first) / SPEC-086 | src/Trust/RememberedRevocationSource.php |
+| Amendment 6          | AC10 (once per run), AC12, AC13 / SPEC-086 (red before the build, but the direct AC12 test, added for a surviving mutation); 6,264 corpus runs before (`69a7772`) and after, reports identical, 448 calls to 378 | src/Trust/RememberedRevocationSource.php; src/Verifier/Verifier.php :: check(); src/Trust/RevocationSource.php (docblock) |
 | Amendment 5          | amendment 5: no source has one spelling; amendment 5: a source of the caller's that answers null was asked / SPEC-086 | src/Verifier/Verifier.php :: __construct(), source(); src/Trust/RevocationSource.php |
 | Amendment 4          | AC8: urls that are not kept (control bytes) / SPEC-086 | src/Trust/CertificateExtensions.php :: ocspUrls(); bin/make-aia-certificates.php |
 | Amendment 3          | tests/Unit/Verifier/RevocationUnknownTest.php / SPEC-086 (6 of 7 tests red before the build; the guard without a source passed) | src/Trust/OcspCheck.php :: checkWithEvidence(); bin/make-revocation-unknown-variants.php |

@@ -223,6 +223,15 @@ None.
 
    **Weight A: a wrongly `Trusted` file under a source becomes `Valid` (untrusted).**
 
+2. **2026-10-28, step 499, finding 5 of the review of 0.9's code** *(approved by Maurice van Loon, 2026-10-28)* —
+   A CA is asked about "once per judged manifest". Within one `verify()`
+   the source is now asked at most once for each certificate and issuer,
+   whichever manifest or walk needs it; a later need gets the first
+   answer (SPEC-086 amendment 6). AC10 now reads "each CA strictly between
+   the anchor and the signer is asked exactly once per run, before the
+   first signer that needs it"; the rest of AC10, and every other
+   criterion, is unchanged.
+
 ## Traceability
 
 All in `tests/Unit/Verifier/RevocationSourceCasTest.php`, group `SPEC-087`. Before the implementation 12 tests failed
@@ -246,6 +255,6 @@ amendment 1).
 | AC7                  | AC7: not asked without an anchor | src/Trust/ChainCheck.php :: walk() |
 | AC8                  | AC8: an ingredient's CA | src/Verifier/IngredientManifestCheck.php :: manifest() |
 | AC9                  | AC9: the default source changes nothing; and 3,066 corpus runs before (worktree at `aa04153`, own `vendor/` copy) and after, with no source and with `NoRevocationSource`, identical (`notes/step-478-revocation-source-cas.md`) | src/Verifier/Verifier.php :: source() |
-| AC10                 | AC10: over the corpus, the source is asked exactly where allowed (none, full, lists) | src/Trust/ChainCheck.php :: walk(); src/Trust/OcspCheck.php :: fetchedCaRevocation() |
+| AC10                 | AC10: over the corpus, the source is asked exactly where allowed (none, full, lists; once per CA and issuer in a run since amendment 2) | src/Trust/ChainCheck.php :: walk(); src/Trust/OcspCheck.php :: fetchedCaRevocation(); src/Trust/RememberedRevocationSource.php |
 | *Scope*              | scope: every CA is asked, from the top down; scope: a revocation after the judged time does not count | src/Trust/OcspCheck.php :: fetchedCaRevocation() |
 | Amendment 1          | tests/Unit/Verifier/RevocationIssuerTest.php :: a time-stamping signer's second walk asks the source about the CAs of its path; guard: the time-stamping signer without a revocation stays trusted / SPEC-087 | src/Trust/ChainCheck.php :: timeStampingSigner() |

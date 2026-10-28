@@ -10,8 +10,9 @@ namespace Provemark\C2paVerifier\Trust;
  * The verifier asks a source about each CA between the anchor and the signer
  * on a path that reaches an anchor (SPEC-087; a revoked CA makes the signer
  * untrusted), and then about the signer when it is trusted and its stored
- * OCSP responses prove nothing (SPEC-086; C2PA 2.4 §15.9.2), each once per
- * judged manifest. What it returns is untrusted input: it is read and judged
+ * OCSP responses prove nothing (SPEC-086; C2PA 2.4 §15.9.2). It is asked at
+ * most once for each certificate and issuer in one verification, whichever
+ * manifest of the store needs the answer (SPEC-086 amendment 6). What it returns is untrusted input: it is read and judged
  * exactly as a stapled response. This package ships no source that opens a connection; a caller
  * that wants online checks provides one, and chooses what it costs in privacy.
  *

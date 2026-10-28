@@ -292,6 +292,7 @@ function spec087Disagreements(VerificationReport $without, VerificationReport $w
         }
     }
     $called = $calls->subjects();
+    $expected = array_values(array_unique($expected));   // SPEC-086 amendment 6: once per certificate and issuer in a run
     sort($expected);
     sort($called);
     $found = [];

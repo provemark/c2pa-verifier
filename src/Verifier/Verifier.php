@@ -53,6 +53,7 @@ use Provemark\C2paVerifier\Trust\CertificateProfileCheck;
 use Provemark\C2paVerifier\Trust\ChainCheck;
 use Provemark\C2paVerifier\Trust\NoRevocationSource;
 use Provemark\C2paVerifier\Trust\OcspCheck;
+use Provemark\C2paVerifier\Trust\RememberedRevocationSource;
 use Provemark\C2paVerifier\Trust\RevocationSource;
 use Provemark\C2paVerifier\Trust\TrustAnchorSet;
 use Provemark\C2paVerifier\Trust\TrustException;
@@ -290,6 +291,9 @@ final readonly class Verifier
     private function check(ManifestStore $manifestStore, $stream, ManifestStoreBytes $store, ?TrustSettings $settings, TimestampResult $timestamp, array $graphStatuses, ?ManifestGraph $graph, string $format, ?int $now, int $clock, array &$evidence = []): ValidationResult
     {
         $manifest = $manifestStore->active;
+        // one per verification, so that each certificate and issuer is asked once, whichever manifest needs it (SPEC-086 amendment 6)
+        $source = $this->source();
+        $source = $source === null ? null : new RememberedRevocationSource($source);
         // the timestamp first, as c2patool lists it; informational only, but it supplies the time below (SPEC-017)
         $statuses = [];
         $checks = [];
@@ -320,7 +324,7 @@ final readonly class Verifier
         $anchor = null;
         $issuer = null;
         if ($trustSettings->verifyTrust) {
-            [$trust, $anchor, $issuer] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at, $this->source());   // SPEC-087: the source for the CAs of the path
+            [$trust, $anchor, $issuer] = $this->trust->checkWithAnchor($manifest, $trustSettings, $at, $source);   // SPEC-087: the source for the CAs of the path
             $statuses = [...$statuses, ...$trust];
             $checks[] = 'trust';
         }
@@ -336,7 +340,7 @@ final readonly class Verifier
             $at,
             sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label),
             OcspCheck::assertionResponses($manifestStore),   // SPEC-066: certificate-status assertions of the store
-            $anchor !== null ? $this->source() : null,   // the walk hands out an anchor exactly when it trusts the signer
+            $anchor !== null ? $source : null,   // the walk hands out an anchor exactly when it trusts the signer
             $issuer,   // SPEC-086 amendment 2: the issuer the walk verified
             $anchor !== null,   // SPEC-030 amendment 5: the stored responses read against it too
             IngredientManifestCheck::anchored($anchor),   // SPEC-030 amendment 6: a good from it only when an anchor binds it
@@ -395,7 +399,7 @@ final readonly class Verifier
         // the manifests the graph found: their box hash and everything the active manifest gets
         // except the data hash, scoped to the assertion that named them (SPEC-021)
         if ($graph !== null && $graph->referenced !== []) {
-            $statuses = [...$statuses, ...$this->ingredients->check($manifestStore, $graph, $settings, $now, $clock, $evidence, $this->source())];
+            $statuses = [...$statuses, ...$this->ingredients->check($manifestStore, $graph, $settings, $now, $clock, $evidence, $source)];
             $checks[] = 'ingredients';
         }
 

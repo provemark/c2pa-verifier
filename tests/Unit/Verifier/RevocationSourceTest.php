@@ -7,6 +7,7 @@ use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\NoRevocationSource;
 use Provemark\C2paVerifier\Trust\OcspCheck;
 use Provemark\C2paVerifier\Trust\OcspEvidence;
+use Provemark\C2paVerifier\Trust\RememberedRevocationSource;
 use Provemark\C2paVerifier\Trust\RevocationSource;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\VerificationReport;
@@ -272,7 +273,8 @@ it('AC9: the default source changes nothing', function (string $file, string $se
  * in x5chain whose stored responses proved nothing, read from the run without a source. Trusted is the report's
  * signingCredential.trusted; where the report holds no trust status for a manifest (an ingredient whose statuses the
  * store recorded, SPEC-021), the evidence's anchor, which agrees with it wherever both are present. The calls counted
- * are those about a signer (amendment 1); SPEC-087 counts those about the CAs.
+ * are those about a signer (amendment 1); SPEC-087 counts those about the CAs. Manifests sharing a signer share its
+ * one call (amendment 6).
  *
  * @return list<string>
  */
@@ -302,6 +304,7 @@ function spec086Disagreements(VerificationReport $without, VerificationReport $w
         }
     }
     $called = array_map(static fn (array $call): string => hash('sha256', $call[0]), spec086SignerCalls($without, $calls));
+    $expected = array_values(array_unique($expected));   // amendment 6: once per signer and issuer in a run, not per manifest
     sort($expected);
     sort($called);
     if ($called !== $expected) {
@@ -399,3 +402,87 @@ it('amendment 5: a source of the caller\'s that answers null was asked; NoRevoca
         ->and(spec086Codes($default, SPEC086_P))->toBe(['signingCredential.ocsp.skipped'])
         ->and($default->toJson())->toBe(spec086Parent(null)->toJson());
 })->group('SPEC-086');
+
+/** @return list<string> the pairs a run asked about, subject and issuer, as SHA-256 (amendment 6) */
+function spec086Pairs(Spec086Calls $calls): array
+{
+    return array_map(static fn (array $call): string => hash('sha256', $call[0]).'/'.hash('sha256', $call[1]), $calls->calls);
+}
+
+/**
+ * A source whose first answer about a subject is null, or an exception, and every later one $later (amendment 6): a
+ * verifier that asks again gets an answer the first one did not give.
+ */
+function spec086Fickle(Spec086Calls $calls, string $later, bool $throwFirst): RevocationSource
+{
+    return new class($calls, $later, $throwFirst) implements RevocationSource
+    {
+        /** @var array<string, true> */
+        private array $asked = [];
+
+        public function __construct(private Spec086Calls $calls, private string $later, private bool $throwFirst) {}
+
+        public function ocspResponse(string $subject, string $issuer, array $urls): ?string
+        {
+            $this->calls->calls[] = [$subject, $issuer, $urls];
+            if (isset($this->asked[$subject])) {
+                return $this->later;
+            }
+            $this->asked[$subject] = true;
+            if ($this->throwFirst) {
+                throw new RuntimeException('no route to the responder');
+            }
+
+            return null;
+        }
+    };
+}
+
+// amendment 6
+it('AC12: one question, one call', function (string $file, int $before): void {
+    $calls = new Spec086Calls;
+    $report = spec086Verify(Corpus::fixtures()."/{$file}", spec086Settings('full'), spec086Source($calls));
+    $pairs = spec086Pairs($calls);
+    $inaccessible = array_filter($report->result->statuses, static fn ($s): bool => $s->code->value === 'signingCredential.ocsp.inaccessible');
+
+    // measured at 35ed0ab: $before calls for 2 distinct pairs, one inaccessible status, Trusted
+    expect($before)->toBeGreaterThan(2)
+        ->and($pairs)->toBe(array_values(array_unique($pairs)))
+        ->and($pairs)->toHaveCount(2)
+        ->and($inaccessible)->toHaveCount(1)
+        ->and(spec086State($report))->toBe('Trusted')
+        ->and(count($report->evidence()))->toBeGreaterThan(1);
+})->with([
+    'CACA' => ['c2pa-rs/CACA.jpg', 4],
+    'CAIAIIICAICIICAIICICA' => ['public-testfiles/adobe-20220124-CAIAIIICAICIICAIICICA.jpg', 12],
+])->group('SPEC-086');
+
+it('AC12: the pair is the question: another issuer, or other urls, is asked again', function (): void {
+    $calls = new Spec086Calls;
+    $remembered = new RememberedRevocationSource(spec086Source($calls, 'answer'));
+    $remembered->ocspResponse('subject', 'issuer A', ['http://a']);
+    $remembered->ocspResponse('subject', 'issuer A', ['http://a']);
+    $remembered->ocspResponse('subject', 'issuer B', ['http://a']);
+    $remembered->ocspResponse('subject', 'issuer A', ['http://b']);
+
+    expect(array_map(static fn (array $call): string => $call[1].' '.implode(',', $call[2]), $calls->calls))
+        ->toBe(['issuer A http://a', 'issuer B http://a', 'issuer A http://b']);
+})->group('SPEC-086');
+
+it('AC13: the first answer stands', function (bool $throwFirst): void {
+    // cs-good.png: U's active manifest and P's ingredient manifest, both under the throw-away intermediate, which
+    // the source is asked about for each (SPEC-087); a revoked answer the second time would make P untrusted
+    $calls = new Spec086Calls;
+    $revoked = spec086Response('revocation/ca-revoked.png', 'c457d65b');
+    $report = spec086Verify(Corpus::fixtures().'/revocation/cs-good.png', spec086Settings('throwaway'), spec086Fickle($calls, $revoked, $throwFirst));
+    $pairs = spec086Pairs($calls);
+    $codes = array_map(static fn ($s): string => $s->code->value, $report->result->statuses);
+
+    expect($pairs)->toBe(array_values(array_unique($pairs)))
+        ->and($codes)->not->toContain('signingCredential.untrusted')
+        ->and(spec086State($report))->toBe('Trusted')
+        ->and(count($report->evidence()))->toBe(2);
+})->with([
+    'null first' => [false],
+    'an exception first' => [true],
+])->group('SPEC-086');

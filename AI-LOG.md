@@ -12286,3 +12286,10 @@ README are where the disclosure lives.
 - Produced: `src/Timestamp/TimestampCheck.php` (`evidence()` takes false for a refused token); `notes/step-498-a-refused-token-read-once.md`, `NOTES.md`.
 - Measured: token reads counted in two instrumented scratch copies over the corpus (294 with 16 refused, then 286 with 8); a hand mutation (12 tests fail); the corpus against step 497 (6,264 runs, identical); `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0. Reasoned: reading untried tokens lazily would change `TimestampEvidence`, so that part of the finding is left.
 - Decided by Maurice: none beyond the go.
+
+## 2026-10-28 — Step 499: one question, one call
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf het amendement voor 499"; then "akkoord, amendement approved, bouw 499".
+- Produced: SPEC-086 amendment 6 and SPEC-087 amendment 2 with their Traceability (and SPEC-086's AC6 row, which still named the `trusted()` step 497 removed); `src/Trust/RememberedRevocationSource.php` (new, internal); `src/Verifier/Verifier.php` (`check()`); `src/Trust/RevocationSource.php` (docblock); `tests/Unit/Verifier/RevocationSourceTest.php` (AC10, AC12, AC13), `tests/Unit/Verifier/RevocationSourceCasTest.php` (AC10); `CHANGELOG.md`, `notes/step-499-one-question-one-call.md`, `NOTES.md`.
+- Measured: repeated calls over the corpus before the amendment (70 of 448, 23 runs); the tests red (6 failed) then green; hand mutations after a green baseline (4 of 4 killed, a fifth killed by a direct test added for it); the corpus against `69a7772` (6,264 runs, reports identical, 448 calls to 378); `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0.
+- Decided by Maurice: the amendments.

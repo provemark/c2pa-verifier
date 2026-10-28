@@ -19,6 +19,16 @@ committed.
   without this verifier. Deterministic; `toJson()` and `toCrJson()` are
   unchanged. Two contract symbols (211).
 
+### Changed
+
+- **The revocation source is asked once per certificate and issuer
+  (SPEC-086 amendment 6, SPEC-087 amendment 2).** Within one `verify()`,
+  manifests that share a chain, and the Time-Stamping second walk, no
+  longer ask the caller's source the same question again: a later need
+  gets the first answer, an exception included. Each manifest still judges
+  the answer at its own time. Over the corpus, 448 calls become 378, and
+  no report changes.
+
 ### Fixed
 
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
