@@ -210,8 +210,9 @@ function spec085Disagreements(VerificationReport $report, string $label, Manifes
         if (($e->code !== null) !== ($e->outcome === OcspEvidence::CHOSEN)) {
             $found[] = "{$label}: entry {$i} is {$e->outcome} with a code of ".($e->code->value ?? 'none');
         }
-        // amendment 2: without the issuer in x5chain every stored entry is not tried
-        if ($e->source !== OcspEvidence::FETCHED && count($evidence->certificates) < 2) {
+        // amendment 2: without the issuer in x5chain every stored entry is not tried — for a signer that is not
+        // trusted; a trusted one's are read against the issuer the walk verified (SPEC-030 amendment 5)
+        if ($e->source !== OcspEvidence::FETCHED && count($evidence->certificates) < 2 && $evidence->signer === null) {
             if ($e->outcome !== OcspEvidence::NOT_TRIED) {
                 $found[] = "{$label}: entry {$i} is {$e->outcome} with x5chain holding ".count($evidence->certificates).' certificate(s)';
             }

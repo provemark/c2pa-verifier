@@ -112,6 +112,15 @@ Found by a review of the new code before the tag (step 482).
   `unknown` about the signer and so block the lookup. The source is now
   asked after it; its `revoked` or current `good` counts, anything else
   leaves `signingCredential.ocsp.unknown`.
+- **A trusted signer's stored OCSP responses are read against the issuer
+  the chain walk verified (SPEC-030 amendment 5).** They were read against
+  `x5chain`'s second certificate, which the author of a file chooses: a
+  certificate with the anchor's name and another key could staple a
+  `good` about a revoked signer and so keep the revocation source from
+  being asked. Found by a second review, of the fixes themselves. As a
+  side effect, a signer issued directly by an anchor has its staple read
+  even when `x5chain` holds the signer alone; a verified `revoked` there
+  is now `Invalid`, where `c2patool` 0.28.3 says `Trusted`.
 - **A stored response that was never read is `notTried` (SPEC-085
   amendment 2).** When the signer's issuer is not in `x5chain`, no stored
   response can be matched to the signer; the evidence called each one

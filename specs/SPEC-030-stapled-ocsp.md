@@ -405,6 +405,49 @@ needs an amendment with this spec — the same shape as when
    No acceptance criterion of this spec changes; with the default source
    every report is byte-identical (SPEC-086 AC9, 3,066 runs).
 
+5. **2026-10-28, step 490, found by the review of steps 483–489; measured** *(approved by Maurice van Loon, 2026-10-28)* —
+   *The signer's own issuer* in principle 3 and *Scope* was read as
+   `x5chain[1]`. Nothing checks that certificate when an anchor issued
+   the signer itself, so the author of a file could put there a
+   certificate with the anchor's name and a key of their own (N), and
+   staple a `good` about the signer signed by N. It verified, gave
+   `signingCredential.ocsp.notRevoked`, and since a stored response then
+   proved something, the caller's revocation source (SPEC-086) was not
+   asked: a revoked signer stayed `Trusted`. SPEC-086 amendment 2 had
+   told the source the verified issuer, but left the stored responses on
+   `x5chain[1]`.
+
+   For a **trusted** signer (`signingCredential.trusted`), the stored
+   responses — stapled, and from certificate-status assertions (SPEC-066)
+   — are now read against **the issuer the chain walk verified**
+   (SPEC-086 amendment 2: the anchor itself when it issued the signer,
+   `x5chain[1]` when the path ran through it, or for a signer on the
+   allowed list or itself an anchor `x5chain[1]` only when it
+   demonstrably issued the signer). When the walk verified no issuer,
+   every stored response is `notTried` (SPEC-085) and the status
+   `skipped`, naming why. For a signer that is not trusted nothing
+   changes: `x5chain[1]` is used as before, and no verdict hangs on it.
+
+   A side effect, accepted: a signer issued directly by an anchor with
+   `x5chain` [L] now has its staple read; a verified `revoked` there makes
+   the file `Invalid`, where `c2patool` 0.28.3 calls it `Trusted` with no
+   OCSP code (ADR-0005: stricter where it protects a verdict). SPEC-085
+   amendment 2's probe (`revocation-notried/leaf-alone-stapled.png`, a
+   current `good`) is now `notRevoked` under its root; its staple is
+   `notTried` when the signer is not trusted or is trusted without a
+   verified issuer.
+
+   Measured with `bin/make-revocation-stored-issuer-variants.php`: signer
+   L under the throw-away root R; `x5chain` [L, N] with N's forged `good`,
+   [L, B] with B's (unrelated) forged `good`, [L] with R's `revoked`, and
+   [L, R] with R's `good` as the control; L also on an allowed list.
+   Before: [L, N] under R and a source answering L revoked was `Trusted`,
+   the source not asked. `c2patool` 0.28.3 calls all four `Trusted` with
+   no OCSP code. Tests: `tests/Unit/Verifier/RevocationStoredIssuerTest.php`,
+   group `SPEC-030`.
+
+   **Weight A: a revoked signer wrongly `Trusted` under a source becomes `Invalid`.**
+
 ## Open questions
 
 All three were answered on approval (Maurice van Loon, 2026-09-22) by
@@ -476,3 +519,4 @@ least one test; every source file maps back to this spec.
 | AC9 | `tests/Unit/Trust/OcspCheckTest.php :: AC9: nothing that passed stops passing` | the twelve verdicts measured in step 92a; `Report\StatusCode::isInformational()` |
 | AC10 | `tests/Unit/Trust/OcspCheckTest.php :: AC10: bounded, like every other parser here` | `Trust\OcspCheck::DEFAULT_MAX_RESPONSES`, `DEFAULT_MAX_RESPONSE_BYTES`, `responseBytes()` |
 | AC11 | `tests/Unit/Asn1/MissingElementTest.php :: AC11 / SPEC-030` | `Trust\OcspCheck` (ResponseData's first element through `Der::element()`) |
+| Amendment 5 | `tests/Unit/Verifier/RevocationStoredIssuerTest.php` (group `SPEC-030`) | `Trust\OcspCheck::checkWithEvidence(), stored()`; `Verifier\Verifier::check()`, `Verifier\IngredientManifestCheck::manifest()`; `bin/make-revocation-stored-issuer-variants.php` |

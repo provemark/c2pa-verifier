@@ -339,6 +339,7 @@ final readonly class Verifier
             OcspCheck::assertionResponses($manifestStore),   // SPEC-066: certificate-status assertions of the store
             IngredientManifestCheck::trusted($trust) ? $this->source() : null,
             $issuer,   // SPEC-086 amendment 2: the issuer the walk verified
+            IngredientManifestCheck::trusted($trust),   // SPEC-030 amendment 5: the stored responses read against it too
         );
         $statuses = [...$statuses, ...$revocation];
         $checks[] = 'revocation';

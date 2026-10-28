@@ -281,6 +281,12 @@ None.
 
    **Weight C: the evidence says what happened; no verdict changes.**
 
+   *Since SPEC-030 amendment 5 (step 490):* a trusted signer's stored
+   responses are read against the issuer the chain walk verified, so
+   AC8's rule on fewer than two certificates applies to a signer that is
+   not trusted; a trusted signer without a verified issuer has every
+   stored entry `notTried` too.
+
 ## Traceability
 
 All in `tests/Unit/Verifier/EvidenceOcspTest.php`, group `SPEC-085`,

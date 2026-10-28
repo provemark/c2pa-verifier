@@ -22,3 +22,8 @@ the legacy anchor.
 | nothing | `Trusted`, `signingCredential.ocsp.inaccessible` | `notTried` | — |
 
 The answer is under `../c2patool/revocation-notried/leaf-alone-stapled--0.28.3.json`.
+
+*Since SPEC-030 amendment 5 (step 490):* under `root.settings.json` L is
+trusted and its staple is read against R, the issuer the chain walk
+verified: `Trusted`, `signingCredential.ocsp.notRevoked`, the staple
+`chosen`. It stays `notTried` when L is not trusted (no settings).

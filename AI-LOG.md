@@ -12223,3 +12223,10 @@ README are where the disclosure lives.
 - Produced: `CHANGELOG.md` (0.9.0 date, introduction, the SPEC-088 bullet), `notes/step-489-release-0.9.0-remeasured.md`, `NOTES.md`.
 - Measured: the corpus at `v0.8.3` and now (3,111 runs, fixed validation time, version string removed; 36 differ in twelve files, no state moved); the status lines of the limit probes in both versions; `bin/package-check.php`, `bin/api-check.php`; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0.
 - Decided by Maurice: none in this step (the tag waits for his word).
+
+## 2026-10-28 — Step 490: stored responses read against the issuer the walk verified
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "is er nog een review nodig?", "akkoord, start de review"; then "akkoord, amendementen approved, bouw R1 en R2".
+- Produced: an independent review of `git diff 6785511..4a090f5 -- src` by one subagent (two findings, both re-measured here); `src/Trust/OcspCheck.php` (`checkWithEvidence()`, `stored()`), `src/Verifier/Verifier.php`, `src/Verifier/IngredientManifestCheck.php`; `bin/make-revocation-stored-issuer-variants.php`; `tests/Fixtures/revocation-stored-issuer/`, `tests/Fixtures/c2patool/revocation-stored-issuer/`; `tests/Unit/Verifier/RevocationStoredIssuerTest.php`, `RevocationNotTriedTest.php`, `EvidenceOcspTest.php` (AC8); SPEC-030 amendment 5, a note under SPEC-085 amendment 2; `CHANGELOG.md`, `docs/comparison.md`, fixture READMEs, `notes/step-490-stored-responses-verified-issuer.md`, `NOTES.md`.
+- Measured: the reviewer's script; the probes before the build (the forged staple kept the source from being asked) and `c2patool` 0.28.3 on them (all `Trusted`); the new tests before (8 failed) and after; six mutations, all caught; 3,126 corpus runs at `4a090f5` and now, identical; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0.
+- Decided by Maurice: a second review of the fixes before the tag; SPEC-030 amendment 5 approved, its side effect (stricter than `c2patool` on [L]) included.

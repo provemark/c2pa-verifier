@@ -241,7 +241,7 @@ final readonly class IngredientManifestCheck
         }
         $ocsp = [];
         if ($cose !== null) {
-            [$revocation, $ocsp] = (new OcspCheck)->checkWithEvidence($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses, self::trusted($trust) ? $source : null, $issuer);   // SPEC-086: a trusted signer only, told the issuer the walk verified (amendment 2)
+            [$revocation, $ocsp] = (new OcspCheck)->checkWithEvidence($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses, self::trusted($trust) ? $source : null, $issuer, self::trusted($trust));   // SPEC-086: a trusted signer only, told the issuer the walk verified (amendment 2); SPEC-030 amendment 5: its stored responses read against it
             $statuses = [...$statuses, ...($responses !== [] ? $revocation : array_filter($revocation, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialOcspRevoked))];
         }
         $evidence[$manifest->label] = self::evidenceOf($manifest, $at ?? time(), $timestamp, $now !== null, $anchor, $ocsp);   // no clock given: the checks read it themselves
