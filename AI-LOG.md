@@ -12244,3 +12244,10 @@ README are where the disclosure lives.
 - Produced: an independent review of `git diff 4a090f5..af68ccd -- src` by one subagent (two findings; S2 re-measured here, S1 reasoned); `src/Trust/OcspCheck.php`, `src/Verifier/Verifier.php`, `src/Verifier/IngredientManifestCheck.php` (`anchored()`); `bin/make-revocation-stored-issuer-variants.php` (two probes, all fixtures regenerated); `tests/Unit/Verifier/RevocationStoredIssuerTest.php`; SPEC-030 amendment 6, a limit under SPEC-086 amendment 2; `CHANGELOG.md`, the fixture README, `notes/step-492-signature-proven-issuer.md`, `NOTES.md`.
 - Measured: the new tests with the source changes stashed (7 failed) and with them; seven mutations, all caught; `c2patool` 0.28.3 on the probes (all `Trusted`); 3,132 corpus runs at `af68ccd` and now, identical; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0. Reasoned, not built: the RSA key construction.
 - Decided by Maurice: a third, short review before the tag; SPEC-030 amendment 6 approved.
+
+## 2026-10-28 — Step 493: the depth before the count
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendementen approved, bouw S1 en S2".
+- Produced: `src/Cbor/CborDecoder.php` (`array()`, `map()`: the depth first); `tests/Unit/Report/StatusCodesByTheLetterTest.php` (two rows); a correction note under SPEC-088 amendment 2; `notes/step-493-cbor-depth-before-count.md`, `NOTES.md`.
+- Measured: the reviewer's case before (33 × `0x81` code 0); the two rows before (failed) and after; two mutations, both caught; 3,132 corpus runs at `47500b9` and now, identical; against v0.8.3 still twelve files differ, no verdict; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0.
+- Decided by Maurice: the correction approved with S1.

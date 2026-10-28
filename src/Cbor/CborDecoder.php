@@ -292,9 +292,9 @@ final readonly class CborDecoder
      */
     private function array(string $bytes, int &$offset, int $head, ?int $count, int $depth, CborBudget $budget): array
     {
+        $this->enter($depth, $head);   // a limit the head already meets, before the count is weighed (SPEC-088 amendment 2)
         $this->holds($bytes, $offset, $head, $count, 1, 'array');
         $this->countable('array', $head, $count ?? 0);
-        $this->enter($depth, $head);
         $items = [];
         for ($i = 0; $count === null ? ! $this->atBreak($bytes, $offset, $head, 'array') : $i < $count; $i++) {
             if ($count === null) {
@@ -312,9 +312,9 @@ final readonly class CborDecoder
      */
     private function map(string $bytes, int &$offset, int $head, ?int $count, int $depth, CborBudget $budget): array|CborMap
     {
+        $this->enter($depth, $head);   // a limit the head already meets, before the count is weighed (SPEC-088 amendment 2)
         $this->holds($bytes, $offset, $head, $count, 2, 'map');
         $this->countable('map', $head, $count ?? 0);
-        $this->enter($depth, $head);
         $map = [];
         for ($i = 0; $count === null ? ! $this->atBreak($bytes, $offset, $head, 'map') : $i < $count; $i++) {
             if ($count === null) {

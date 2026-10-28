@@ -197,6 +197,9 @@ it('amendment 1: the decoder tells a limit or an item outside its subset from CB
     'a map of two entries in four bytes' => ["\xa2\x00\x00\x01", 10, false],
     // the first fault met decides: a limit before the end of the input stays a limit
     'depth 33, then the bytes stop' => [str_repeat("\x81", 40), 100, true],
+    // step 493: the 33rd array's head is a limit before its count is weighed against the bytes left
+    'depth 33, the bytes stopping at the 33rd array' => [str_repeat("\x81", 33), 100, true],
+    'a map at depth 33, the bytes stopping there' => [str_repeat("\x81", 32)."\xa1", 100, true],
     'a byte-string key, then the bytes stop' => ["\xa1\x41\x61", 10, true],
     'a map of two entries in three bytes, a byte-string key first' => ["\xa2\x41\x61", 10, false],
     'a key that is not an integer or text' => ["\xa1\x80\x00", 10, true],

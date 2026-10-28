@@ -201,6 +201,14 @@ case AssertionCborInvalid = 'assertion.cbor.invalid';   // failure
    four classified as a limit before; the two count cases and the
    two-entry map are invalid now, the depth case stays a limit. The
    message names where the bytes run out, as SPEC-006 AC10 asks.
+
+   *Corrected in step 493, found by the review of steps 490–491:* as
+   built in step 491 the count was weighed before the depth, so exactly
+   33 nested arrays — the 33rd declaring one item with no byte left — was
+   truncation, against this amendment's own example. The depth is now
+   checked when a container's head is read, before its count: 33 arrays,
+   or 32 and a map, are a limit however the bytes end. Two dataset rows
+   pin it; they failed before the correction.
    Tests: `StatusCodesByTheLetterTest.php`, group `SPEC-088`; the
    dataset row "a declared count above the limit" now carries the items
    it declares.
@@ -226,4 +234,4 @@ SPEC-017 amendment 11, SPEC-062 amendment 4, SPEC-084 amendment 2.
 | AC5                  | 3,042 corpus runs before (worktree at `1ad620d`, own `vendor/` copy) and after: 18 differ, the six files named, only in code and explanation, every `validation_state` equal (`notes/step-481-status-codes-by-the-letter.md`) | — |
 | AC6                  | AC6: assertion.cbor.invalid is a failure code; `ApiSurfaceTest` (209) | src/Report/StatusCode.php |
 | Amendment 1          | amendment 1: an assertion that is not valid CBOR is assertion.cbor.invalid; one beyond this decoder is general.error (eight probes); amendment 1: the decoder tells a limit or an item outside its subset from CBOR that is not valid (ten inputs); amendment 1: the claim keeps claim.cbor.invalid (added after mutation M2 survived). Before the build 9 failed, the cases that stay `assertion.cbor.invalid` passed; 3,102 corpus runs before (`fa6914d`) and after: only the three limit probes differ, in code and explanation | src/Cbor/CborException.php :: LIMIT; src/Cbor/CborDecoder.php; src/Cbor/CborBudget.php; src/Manifest/Manifest.php :: decodeCbor() |
-| Amendment 2          | amendment 1: the decoder tells a limit or an item outside its subset from CBOR that is not valid (rows for a count the bytes cannot hold, and a count above the limit with its items); amendment 2: a count the remaining bytes cannot hold is not well-formed | src/Cbor/CborDecoder.php :: array(), map(), holds() |
+| Amendment 2          | amendment 1: the decoder tells a limit or an item outside its subset from CBOR that is not valid (rows for a count the bytes cannot hold, and a count above the limit with its items); amendment 2: a count the remaining bytes cannot hold is not well-formed | src/Cbor/CborDecoder.php :: array(), map(), holds(), enter() (step 493: the depth before the count) |
