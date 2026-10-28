@@ -272,7 +272,12 @@ final readonly class Command
     private static function shown(string $line): string
     {
         $newline = str_ends_with($line, "\n");
-        $text = mb_scrub($newline ? substr($line, 0, -1) : $line, 'UTF-8');
+        $text = $newline ? substr($line, 0, -1) : $line;
+        if (! mb_check_encoding($text, 'UTF-8')) {
+            // U+FFFD for each ill-formed sequence; mb_scrub() would write mb_substitute_character(), a `?` (step 496)
+            $scrubbed = json_decode(json_encode($text, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE), flags: JSON_THROW_ON_ERROR);
+            $text = is_string($scrubbed) ? $scrubbed : '';
+        }
         $text = (string) preg_replace_callback('/[\x00-\x1F\x7F]/', static fn (array $m): string => sprintf('\\x%02X', ord($m[0])), $text);
         $text = (string) preg_replace_callback('/[\x{80}-\x{9F}\x{202A}-\x{202E}\x{2066}-\x{2069}]/u', static fn (array $m): string => sprintf('\\u{%X}', mb_ord($m[0], 'UTF-8')), $text);
 

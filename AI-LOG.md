@@ -12265,3 +12265,10 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-089-evidence-document.md` (draft, approved, two amendments confirmed, implemented); `src/Verifier/EvidenceDocument.php`, `src/Verifier/VerificationReport.php` (`evidenceToArray()`, `evidenceToJson()`); `tests/Unit/Verifier/EvidenceDocumentTest.php`; `tests/Fixtures/api/public-surface.txt`; `docs/evidence-format.md`; README, `CHANGELOG.md`, `docs/milestones.md`, `notes/step-495-evidence-document.md`, `NOTES.md`.
 - Measured: the tests before the build (16 of 17 failed) and after; fourteen mutations, all caught; 3,132 corpus runs at `0581010` and now, `toJson()`/`toCrJson()` identical; what `mb_scrub()` writes (`?`); `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0.
 - Decided by Maurice: the plan (verifier format first, then the library, then Drupal once); SPEC-089 approved with the open questions as proposed; amendments 1 and 2 confirmed.
+
+## 2026-10-28 — Step 496: the command line writes U+FFFD, as promised
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, doe eerst punt 2"; then, after the correction that explanations follow SPEC-043 AC13, "akkoord, bouw stap 496".
+- Produced: `src/Cli/Command.php` (`shown()`); `tests/Unit/Cli/CommandTest.php` (three cases); a correction note under SPEC-019 amendment 4 and its traceability; SPEC-089 amendment 2's last sentence; `CHANGELOG.md`, `notes/step-496-cli-replacement-character.md`, `NOTES.md`.
+- Measured: the new test before (3 failed, `'caf??x'`) and after; what `mb_scrub()` writes; `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0. Reasoned: no corpus run, the command is not on its path.
+- Decided by Maurice: U+FFFD in the command line as the amendment says; explanations keep `?`.

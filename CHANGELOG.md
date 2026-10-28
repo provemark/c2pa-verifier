@@ -19,6 +19,13 @@ committed.
   without this verifier. Deterministic; `toJson()` and `toCrJson()` are
   unchanged. Two contract symbols (211).
 
+### Fixed
+
+- **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
+  amendment 4).** Its error lines on stderr wrote them as `?`, which can
+  also be a real character of what is echoed; amendment 4 had promised
+  U+FFFD. The report's explanations keep writing `?`, as SPEC-043 asks.
+
 ## 0.9.0 — 2026-10-28
 
 A minor release. A report can now show what its verdict rests on: which

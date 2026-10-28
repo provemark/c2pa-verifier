@@ -435,6 +435,20 @@ it('AC15: bidi overrides and C1 controls are escaped too, and printable text is 
         ->and(str_contains($err, "\u{202E}"))->toBeFalse();
 })->group('SPEC-019');
 
+// Step 496: amendment 4 promised U+FFFD for bytes that are not UTF-8; mb_scrub() wrote `?`, and no test looked.
+it('AC15: bytes that are not UTF-8 are shown as U+FFFD, not as a question mark', function (string ...$arguments): void {
+    [$status, , $err] = spec019Run(...$arguments);
+
+    expect($status)->toBe(2)
+        ->and(mb_check_encoding($err, 'UTF-8'))->toBeTrue()
+        ->and($err)->toContain("caf\u{FFFD}\u{FFFD}x")
+        ->and($err)->not->toContain('caf??x');
+})->with([
+    '--at' => ['--at', "caf\xff\xfex"],
+    'an unknown option' => ["--caf\xff\xfex"],
+    'a file that cannot be opened' => ["/nonexistent/caf\xff\xfex.jpg"],
+])->group('SPEC-019');
+
 it('AC15: the crJSON line for a file without a store reads as text, not as hex', function (): void {
     [, , $err] = spec019Run('--crjson', spec019Fixture('jumbf/not-a-superbox.png'));
 

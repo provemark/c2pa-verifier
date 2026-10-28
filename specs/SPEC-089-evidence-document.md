@@ -245,9 +245,9 @@ final readonly class VerificationReport
    U+FFFD (`php -r 'echo bin2hex(mb_scrub("a\xffb","UTF-8"));'` prints
    `613f62`). The document keeps the promise of U+FFFD — written through
    `JSON_INVALID_UTF8_SUBSTITUTE` — and drops the comparison with
-   `ValidationStatus`, which writes `?`. That an explanation and the CLI's
-   comment (`Cli\Command`, "as U+FFFD") disagree with what `mb_scrub()`
-   does is a finding of its own, outside this spec.
+   `ValidationStatus`, which writes `?` as SPEC-043 AC13 asks. The command
+   line, which SPEC-019 amendment 4 had promised U+FFFD and which wrote `?`,
+   was corrected in step 496.
 
 ## Traceability
 
