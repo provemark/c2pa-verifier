@@ -294,7 +294,7 @@ without saying so.
 |---|---|
 | `Verifier\Verifier` | the one call: `verify($stream, $settings)` |
 | `Verifier\FragmentedVerifier` | a DASH init segment and its fragments as one verdict: `verify($init, $fragments, $settings)`, one open fragment stream at a time |
-| `Verifier\VerificationReport` | what comes back: `$result`, `$format`, `$hasManifest`, `$remoteManifestUrl`, `$signatureInfo`, `toArray()`, `toJson()`, `trustLists()`, `evidence()` |
+| `Verifier\VerificationReport` | what comes back: `$result`, `$format`, `$hasManifest`, `$remoteManifestUrl`, `$signatureInfo`, `toArray()`, `toJson()`, `trustLists()`, `evidence()`, `evidenceToArray()`, `evidenceToJson()` (the evidence as a document to keep, [`docs/evidence-format.md`](docs/evidence-format.md)) |
 | `Verifier\ManifestEvidence` | what one manifest's verdict rested on: the time judged at and its source, the anchors reached, the signer's `x5chain` certificates as DER, every time-stamp token offered, and every OCSP response its signer's revocation check walked |
 | `Timestamp\TimestampEvidence` | one time-stamp token: where it came from, its bytes, time and certificates, and whether it was used, rejected or not tried, with its codes |
 | `Trust\OcspEvidence` | one OCSP response: where it came from (stapled, an assertion, or your source), its bytes, whether it was chosen, not chosen, unusable or not tried, and for a usable one its status and times |

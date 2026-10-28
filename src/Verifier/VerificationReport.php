@@ -72,6 +72,23 @@ final readonly class VerificationReport
         return $this->trustLists;
     }
 
+    /**
+     * The evidence as a document to keep (SPEC-089), format version 1 of docs/evidence-format.md: the verdict
+     * it is the evidence of, trustLists(), and evidence() with DER bytes in base64. Not in toArray().
+     *
+     * @return array<string, mixed>
+     */
+    public function evidenceToArray(): array
+    {
+        return EvidenceDocument::of($this);
+    }
+
+    /** evidenceToArray() as JSON, pretty-printed and deterministic: the same file, settings and time give the same text (SPEC-089). */
+    public function evidenceToJson(): string
+    {
+        return EvidenceDocument::json($this);
+    }
+
     /** @return array<string, mixed> */
     public function toArray(): array
     {

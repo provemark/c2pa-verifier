@@ -192,6 +192,8 @@ Verifier\ManifestEvidence :: property timestamps
 Verifier\ManifestEvidence :: property tsa
 Verifier\VerificationReport :: method __construct
 Verifier\VerificationReport :: method evidence
+Verifier\VerificationReport :: method evidenceToArray
+Verifier\VerificationReport :: method evidenceToJson
 Verifier\VerificationReport :: method toArray
 Verifier\VerificationReport :: method toCrJson
 Verifier\VerificationReport :: method toJson

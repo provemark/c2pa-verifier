@@ -5,6 +5,20 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Added
+
+- **The evidence as a document to keep (SPEC-089).**
+  `VerificationReport::evidenceToArray()` and `evidenceToJson()` write
+  `trustLists()` and `evidence()` down in one versioned format
+  ([`docs/evidence-format.md`](docs/evidence-format.md), version 1): the
+  verdict it is the evidence of, the trust lists, and per manifest the
+  time and anchors, with the certificates, time-stamp tokens and OCSP
+  responses as base64 DER, so that an archive can be checked later
+  without this verifier. Deterministic; `toJson()` and `toCrJson()` are
+  unchanged. Two contract symbols (211).
+
 ## 0.9.0 — 2026-10-28
 
 A minor release. A report can now show what its verdict rests on: which

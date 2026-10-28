@@ -12258,3 +12258,10 @@ README are where the disclosure lives.
 - Produced: tag `v0.9.0` (annotated) on `cf09fcc`, pushed; `notes/step-494-release-0.9.0-released.md`, `NOTES.md`.
 - Measured: CI on `main` and on the tag (8 of 8 each); Packagist's metadata (`v0.9.0`, `cf09fcc`); the zipball's file count against `php bin/package-check.php` (629); a fresh `composer require provemark/c2pa-verifier:^0.9` and five files through it.
 - Decided by Maurice: the tag on `cf09fcc`.
+
+## 2026-10-28 — Step 495: the evidence as a document to keep (SPEC-089)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "Welke mogelijkheden heeft nu content-credential gekregen? En moet dat niet in de documentatie?", then that the Drupal module should later store the evidence in an archive; "akkoord, merge 198 en schrijf het spec-voorstel"; "akkoord, open vragen zoals voorgesteld, spec approved".
+- Produced: `specs/SPEC-089-evidence-document.md` (draft, approved, two amendments confirmed, implemented); `src/Verifier/EvidenceDocument.php`, `src/Verifier/VerificationReport.php` (`evidenceToArray()`, `evidenceToJson()`); `tests/Unit/Verifier/EvidenceDocumentTest.php`; `tests/Fixtures/api/public-surface.txt`; `docs/evidence-format.md`; README, `CHANGELOG.md`, `docs/milestones.md`, `notes/step-495-evidence-document.md`, `NOTES.md`.
+- Measured: the tests before the build (16 of 17 failed) and after; fourteen mutations, all caught; 3,132 corpus runs at `0581010` and now, `toJson()`/`toCrJson()` identical; what `mb_scrub()` writes (`?`); `composer check` exit 0 and `vendor/bin/pest --parallel` exit 0.
+- Decided by Maurice: the plan (verifier format first, then the library, then Drupal once); SPEC-089 approved with the open questions as proposed; amendments 1 and 2 confirmed.
