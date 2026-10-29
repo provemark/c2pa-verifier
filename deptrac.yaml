@@ -79,6 +79,7 @@ deptrac:
       - Manifest
       - Cbor
       - Report
+      - Asn1           # SPEC-009 amendment 7: PublicKey reads the SPKI's AlgorithmIdentifier as a field
     Hash:
       - Manifest
       - Cbor

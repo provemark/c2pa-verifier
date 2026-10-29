@@ -49,3 +49,24 @@ a5a2b5e95d4be8dc8503eb5598ae10aa3f5c8655b6f2af44e20265f4f9f49217  double-label.b
 000fa25e38647fa27743d7eb70ff42d35119a087488e6afaec041e534b13cfe0  signature-changed.bin
 23ece603dde721e6d4e32b07aa8020bb1b11d0d64a12248054248e07ca484cc9  alg-eddsa-with-ec-key.bin
 ```
+
+## `ec-key-ed25519-bytes.der` (SPEC-009 amendment 7, step 516)
+
+A DER certificate, not a signed file. Its key is a valid P-256 point whose
+X coordinate begins with `06 03 2b 65 70`, the encoded OID of Ed25519, so
+those bytes sit within the first 32 bytes of its SubjectPublicKeyInfo.
+`openssl x509 -text` names the key `id-ecPublicKey`. Before amendment 7
+`PublicKey::fromCertificateDer()` read it as Ed25519.
+
+Made on 2026-10-29. An X with that prefix and 27 random bytes was drawn
+until x³ − 3x + b was a square mod p (Y its square root, p ≡ 3 mod 4).
+The point was written as a SubjectPublicKeyInfo and put into a
+certificate by `openssl x509 -req -force_pubkey`, issued by a throw-away
+P-256 CA (`CN=ca`, two days). The CA's key was deleted afterwards. The
+leaf's key is a point, not a generated key pair, so nobody holds its
+private key. Only the key is read; the certificate's signature and
+validity play no part.
+
+```
+0cc2685557f39d2d540dcceb33f2895b5f5197dbd404691e516b0824aacd5065  ec-key-ed25519-bytes.der
+```

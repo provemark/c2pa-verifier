@@ -122,6 +122,12 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   44.9 MB on a file of 1 MB. Elements now share the input and keep
   offsets: the same file peaks at 13.8 MB. The internal `Der::$contents`
   is now `Der::contents()`. No status changes.
+- **A key's kind is read from its AlgorithmIdentifier (SPEC-009 amendment
+  7).** The kind was found by searching the first bytes of the
+  SubjectPublicKeyInfo for an OID. A P-256 key whose X coordinate began
+  with Ed25519's OID was therefore read as Ed25519, and its signatures
+  were `Invalid`. The OID is now read as a field and compared exactly.
+  This was never a wrong `Valid`, and no other key moves.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

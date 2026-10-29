@@ -8,6 +8,7 @@ use Provemark\C2paVerifier\Container\WebpManifestStoreExtractor;
 use Provemark\C2paVerifier\Cose\CoseException;
 use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Cose\EcdsaSignature;
+use Provemark\C2paVerifier\Cose\PublicKey;
 use Provemark\C2paVerifier\Cose\RsaPss;
 use Provemark\C2paVerifier\Cose\SignatureVerifier;
 use Provemark\C2paVerifier\Jumbf\JumbfParser;
@@ -423,4 +424,31 @@ it('AC12: a sodium function that throws is a mismatch, not a crash (amendment 6)
     proc_close($process);
 
     expect(json_decode($stdout, true))->toBe(['called' => 1, 'result' => false], $stdout.$stderr);
+})->group('SPEC-009');
+
+it('AC14: a key\'s kind is its AlgorithmIdentifier, read as a field (amendment 7)', function (): void {
+    // a valid P-256 point whose X begins with 06 03 2b 65 70, Ed25519's OID: read as ed25519 before amendment 7
+    $constructed = PublicKey::fromCertificateDer((string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/cose/ec-key-ed25519-bytes.der'));
+    expect($constructed->kind)->toBe(PublicKey::KIND_EC)
+        ->and($constructed->curve)->toBe('prime256v1');
+
+    $kinds = [];
+    foreach (['fixture-signed.png', 'public-testfiles/adobe-20220124-C.jpg'] as $fixture) {
+        $key = PublicKey::fromCertificateDer(CoseSign1::fromBytes(spec009Manifest($fixture)->signatureBytes())->chain[0]->bytes);
+        $kinds[$fixture] = $key->kind.' '.($key->curve ?? '-');
+    }
+    foreach (['es256-p256k1', 'es384-p384', 'es512-p521', 'ps256-rsa2048', 'ps256-rsapss-salt32', 'eddsa-ed25519'] as $name) {
+        $key = PublicKey::fromCertificateDer(spec009Vector($name)['cose']->chain[0]->bytes);
+        $kinds[$name] = $key->kind.' '.($key->curve ?? '-');
+    }
+    expect($kinds)->toBe([
+        'fixture-signed.png' => 'ec prime256v1',
+        'public-testfiles/adobe-20220124-C.jpg' => 'rsa-pss -',   // rsassaPss, as openssl x509 -text names it
+        'es256-p256k1' => 'ec secp256k1',
+        'es384-p384' => 'ec secp384r1',
+        'es512-p521' => 'ec secp521r1',
+        'ps256-rsa2048' => 'rsa -',
+        'ps256-rsapss-salt32' => 'rsa-pss -',
+        'eddsa-ed25519' => 'ed25519 -',
+    ]);
 })->group('SPEC-009');

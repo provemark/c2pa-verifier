@@ -216,6 +216,19 @@ questions).
   - Then the answer is `false`, which the check reports as
     `claimSignature.mismatch`; no exception leaves the verifier
 
+- **AC14 — a key's kind is its AlgorithmIdentifier, read as a field** *(amendment 7; required: malformed input)*
+  - Given `tests/Fixtures/cose/ec-key-ed25519-bytes.der`, a certificate
+    whose key is a valid P-256 point whose X coordinate begins with the
+    five bytes of Ed25519's OID (`06 03 2b 65 70`), so that those bytes
+    sit within the first 32 bytes of its SubjectPublicKeyInfo
+  - When `PublicKey::fromCertificateDer()` reads it
+  - Then the kind is `ec` and the curve `prime256v1`, as `openssl x509
+    -text` names it (`id-ecPublicKey`); before amendment 7 it was
+    `ed25519`
+  - And the leaf keys of SPEC-009's existing fixtures and vectors keep
+    the kind they had (`ec`, `rsa`, `rsa-pss`, `ed25519`), and the corpus
+    does not move
+
 ## References
 
 - Specification: C2PA 2.4 §13.2.1 (the algorithm list and the
@@ -409,6 +422,40 @@ holds a private key or signs.
    Nothing moves where ext-sodium is loaded: the extension does not throw
    on a signature of the right length.
 
+7. **2026-10-29, step 516, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   `PublicKey::fromCertificateDer()` decided a key's kind by searching
+   the first 32 bytes of its SubjectPublicKeyInfo for the encoded OID of
+   RSA-PSS, RSA, Ed25519 and EC, in that order. It did not read the
+   field the algorithm is written in (RFC 5280 §4.1.2.7). For an EC key,
+   the start of the key's own X coordinate falls inside those 32 bytes:
+   5 bytes for P-256, 8 for P-384, 6 for P-521. A key whose X begins
+   with `06 03 2b 65 70`, Ed25519's OID, was read as Ed25519.
+
+   Measured: a valid P-256 point with such an X, put into a certificate
+   by `openssl x509 -force_pubkey` (it is a point, so nobody holds its
+   private key; the throw-away CA's key was deleted). `openssl x509
+   -text` names the key `id-ecPublicKey`; this verifier said `ed25519`.
+
+   The error fails closed. An EC signature on a key read as Ed25519
+   never verifies, so the outcome is `Invalid` with the wrong reason,
+   never a wrong `Valid`. By chance it happens to about one key in
+   2^38 (P-384) to 2^40 (P-256). A signer can also grind a key of their
+   own for it, and then only their own files turn `Invalid`. The four
+   readers of the key are affected alike: the claim signer
+   (`SignatureVerifier`), the time-stamp signer (`TimestampCheck`), and
+   the OCSP responder and issuer (`OcspCheck`).
+
+   Now the kind is the OID of the SubjectPublicKeyInfo's
+   AlgorithmIdentifier: the first element of its first element, read
+   with `DerReader` (SPEC-016) and compared exactly. An SPKI the reader
+   refuses, or one without that OID, is a `CoseException` with
+   `signingCredential.invalid`, as an unknown kind already is. OpenSSL
+   still reads the key; only the way its kind is told apart changes.
+   New criterion AC14.
+
+   **Weight A.** No verdict moves on any key except the constructed
+   kind, which is now read as the EC key it is.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -430,3 +477,4 @@ least one test; every source file maps back to this spec.
 | AC12 (amendment 6) | tests/Unit/Cose/SignatureVerifierTest.php :: AC12: a sodium function that throws is a mismatch, not a crash (amendment 6) / SPEC-009; tests/Support/sodium-throws-probe.php | src/Cose/SignatureVerifier.php :: ed25519() |
 | AC12 | tests/Unit/Cose/SignatureVerifierTest.php :: AC12: under an id-RSASSA-PSS key the salt is the hash length too (amendment 3, step 247) / SPEC-009 | src/Cose/SignatureVerifier.php :: rsaPss(); src/Cose/PublicKey.php :: asRsaEncryption() |
 | AC13 (amendment 5) | tests/Unit/Cose/EcdsaPairingTest.php :: AC13 (two tests) / SPEC-009 | src/Cose/SignatureVerifier.php :: requireFit() (`PAIRED_CURVES`); bin/make-ecdsa-pairing-variants.php |
+| AC14 (amendment 7) | tests/Unit/Cose/SignatureVerifierTest.php :: AC14: a key's kind is its AlgorithmIdentifier, read as a field (amendment 7) / SPEC-009; tests/Fixtures/cose/ec-key-ed25519-bytes.der | src/Cose/PublicKey.php :: fromCertificateDer() (the AlgorithmIdentifier through DerReader), asRsaEncryption() (`OID_RSA_DER`); deptrac.yaml (Cose → Asn1) |

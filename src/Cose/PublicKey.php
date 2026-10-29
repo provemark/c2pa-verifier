@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Provemark\C2paVerifier\Cose;
 
+use Provemark\C2paVerifier\Asn1\Asn1Exception;
+use Provemark\C2paVerifier\Asn1\DerReader;
 use Provemark\C2paVerifier\Report\StatusCode;
 
 /**
@@ -25,13 +27,16 @@ final readonly class PublicKey
 
     public const KIND_ED25519 = 'ed25519';
 
-    private const OID_EC = "\x06\x07\x2a\x86\x48\xce\x3d\x02\x01";           // 1.2.840.10045.2.1
+    private const OID_EC = '1.2.840.10045.2.1';
 
-    private const OID_RSA = "\x06\x09\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01";  // 1.2.840.113549.1.1.1
+    private const OID_RSA = '1.2.840.113549.1.1.1';
 
-    private const OID_RSA_PSS = "\x06\x09\x2a\x86\x48\x86\xf7\x0d\x01\x01\x0a";  // 1.2.840.113549.1.1.10
+    private const OID_RSA_PSS = '1.2.840.113549.1.1.10';
 
-    private const OID_ED25519 = "\x06\x03\x2b\x65\x70";                       // 1.3.101.112
+    private const OID_ED25519 = '1.3.101.112';
+
+    /** rsaEncryption's OID as DER, for the AlgorithmIdentifier asRsaEncryption() writes. */
+    private const OID_RSA_DER = "\x06\x09\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01";
 
     private function __construct(
         public string $kind,
@@ -57,18 +62,23 @@ final readonly class PublicKey
         if ($spki === false) {
             throw new CoseException('the leaf certificate\'s public key is not DER', StatusCode::SigningCredentialInvalid);
         }
-        // The algorithm identifier sits at the start of the SPKI, inside its first 32 bytes.
-        $head = substr($spki, 0, 32);
-        if (str_contains($head, self::OID_RSA_PSS)) {
+        // The kind is the SPKI's AlgorithmIdentifier, read as a field (RFC 5280 §4.1.2.7): searched for
+        // as bytes, an EC key whose X began with Ed25519's OID was read as Ed25519 (SPEC-009 amendment 7).
+        try {
+            $algorithm = (new DerReader)->read($spki)->element(0)->element(0)->oid();
+        } catch (Asn1Exception $e) {
+            throw new CoseException('the leaf certificate\'s SubjectPublicKeyInfo names no algorithm: '.$e->getMessage(), StatusCode::SigningCredentialInvalid);
+        }
+        if ($algorithm === self::OID_RSA_PSS) {
             return new self(self::KIND_RSA_PSS, null, $details['bits'], $key, $spki);
         }
-        if (str_contains($head, self::OID_RSA)) {
+        if ($algorithm === self::OID_RSA) {
             return new self(self::KIND_RSA, null, $details['bits'], $key, $spki);
         }
-        if (str_contains($head, self::OID_ED25519)) {
+        if ($algorithm === self::OID_ED25519) {
             return new self(self::KIND_ED25519, null, $details['bits'], $key, $spki);
         }
-        if (str_contains($head, self::OID_EC)) {
+        if ($algorithm === self::OID_EC) {
             $ec = $details['ec'] ?? null;
             $curve = is_array($ec) ? ($ec['curve_name'] ?? null) : null;
             if (! is_string($curve)) {
@@ -119,7 +129,7 @@ final readonly class PublicKey
         if ($bitsContent + $bitsLength !== strlen($this->spki)) {
             throw new CoseException('the RSA-PSS SubjectPublicKeyInfo holds more than its algorithm and key', StatusCode::SigningCredentialInvalid);
         }
-        $body = "\x30\x0d".self::OID_RSA."\x05\x00".substr($this->spki, $bitsAt);
+        $body = "\x30\x0d".self::OID_RSA_DER."\x05\x00".substr($this->spki, $bitsAt);
         $der = "\x30".self::length(strlen($body)).$body;
         $pem = "-----BEGIN PUBLIC KEY-----\n".chunk_split(base64_encode($der), 64, "\n")."-----END PUBLIC KEY-----\n";
         $key = OpenSsl::quiet(static fn () => openssl_pkey_get_public($pem));
