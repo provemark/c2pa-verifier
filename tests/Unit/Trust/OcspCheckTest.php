@@ -390,3 +390,42 @@ it('AC12: a good without nextUpdate is current for 24 hours after producedAt (am
         ->and($check($producedAt + 25 * 3600, $source)->code)->toBe(StatusCode::SigningCredentialOcspRevoked)
         ->and($source->asked)->toBe(1);
 })->group('SPEC-030');
+
+it('AC13: a delegated responder must be valid when it signed (amendment 8)', function (string $file, StatusCode $alone, StatusCode $withSource, int $asked): void {
+    // RFC 6960 §3.2 requirement 4: the signer is "currently authorized". bin/make-ocsp-window-variants.php
+    $dir = Corpus::fixtures().'/ocsp-window';
+    $der = static fn (string $name): string => (string) base64_decode((string) preg_replace('/-----[^-]+-----|\s/', '', (string) file_get_contents("{$dir}/{$name}.crt")), true);
+    $chain = [Certificate::fromDer($der('signer')), Certificate::fromDer($der('ca'))];
+    $stored = ['rVals' => ['ocspVals' => [new CborBytes((string) file_get_contents("{$dir}/{$file}.der"))]]];
+    $source = new class((string) file_get_contents("{$dir}/revoked.der")) implements RevocationSource
+    {
+        public int $asked = 0;
+
+        public function __construct(private readonly string $response) {}
+
+        public function ocspResponse(string $subject, string $issuer, array $urls): string
+        {
+            $this->asked++;
+
+            return $this->response;
+        }
+    };
+    $url = 'self#jumbf=/c2pa/u/c2pa.signature';
+    // both responses were made in one run; the control's producedAt, read by the check itself, dates them
+    $control = ['rVals' => ['ocspVals' => [new CborBytes((string) file_get_contents("{$dir}/good-by-responder.der"))]]];
+    [, $evidence] = (new OcspCheck)->checkWithEvidence($control, $chain, time(), $url, [], null, $chain[1], true, true);
+    $at = ($evidence[0]->producedAt ?? throw new RuntimeException('no producedAt')) + 3600;
+
+    [$statuses] = (new OcspCheck)->checkWithEvidence($stored, $chain, $at, $url, [], null, $chain[1], true, true);
+    expect($statuses[0]->code)->toBe($alone);
+    if ($alone === StatusCode::SigningCredentialOcspSkipped) {
+        expect($statuses[0]->explanation)->toContain('expired-responder')
+            ->and($statuses[0]->explanation)->toContain('producedAt');
+    }
+    [$statuses] = (new OcspCheck)->checkWithEvidence($stored, $chain, $at, $url, [], $source, $chain[1], true, true);
+    expect($statuses[0]->code)->toBe($withSource)
+        ->and($source->asked)->toBe($asked);
+})->with([
+    'a responder that expired before it signed' => ['good-by-expired-responder', StatusCode::SigningCredentialOcspSkipped, StatusCode::SigningCredentialOcspRevoked, 1],
+    'the control, a responder valid when it signed' => ['good-by-responder', StatusCode::SigningCredentialOcspNotRevoked, StatusCode::SigningCredentialOcspNotRevoked, 0],
+])->group('SPEC-030');

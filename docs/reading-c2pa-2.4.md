@@ -884,7 +884,7 @@ period. `c2pa-rs` here means 0.91.1, the engine of `c2patool` 0.28.1.
 | 15.9 | Stapled `rVals` responses are decoded and validated per §15.9.1. | `OcspCheck::check()` | covered | measured: `OcspCheckTest` AC1–AC4 |
 | 15.9 | Certificate status assertions in other manifests are used; several responses, each tried until one passes. | stapled responses about a CA of the path, and certificate-status assertions, read since step 338 (SPEC-066); online OCSP and AIA stay out | covered (SPEC-066) | read → P05-6 |
 | 15.9 | Nothing in the store and online: should query the OCSP responder. | no network | by design | read |
-| 15.9.1 | Decode responses per RFC 6960 §3.2 requirements 1 to 4. | `OcspCheck::usable()`: the `CertID` names the leaf under its issuer, the signature verifies, the signer is the issuer or a responder it issued with id-kp-OCSPSigning. Not checked: the delegated responder's own validity (requirement 4, "currently authorized") | **partial** | measured: `OcspCheckTest` AC2, AC4; the rest read → P05-7 |
+| 15.9.1 | Decode responses per RFC 6960 §3.2 requirements 1 to 4. | `OcspCheck::usable()`: the `CertID` names the leaf under its issuer, the signature verifies, the signer is the issuer or a responder it issued with id-kp-OCSPSigning. A delegated responder must be valid at `producedAt` (requirement 4, "currently authorized"; SPEC-030 amendment 8, step 505) | covered | measured: `OcspCheckTest` AC2, AC4; the rest read → P05-7 |
 | 15.9.1 | Not revoked is established only with a trusted time-stamp, `thisUpdate` not after now, the stamped time before `thisUpdate` or inside the window (`producedAt` + 24 h without `nextUpdate`), `good`, an authorized responder. | `OcspCheck::statusOf()`: `good` inside `[thisUpdate, nextUpdate]` at the judged time, which is now (or the caller's validation time, SPEC-073) when there is no trusted time-stamp; without `nextUpdate`, `producedAt` + 24 h (SPEC-030 amendment 7, step 504); a stamped time before `thisUpdate` is skipped | **partial** | measured: `OcspCheckTest` AC1, AC6; the rest read → P05-7 |
 | 15.9.1 | Check `revocationReason` to tell `removeFromCRL` from a revocation. | `OcspCheck::statusOf()`, `REASON_REMOVE_FROM_CRL` | covered | measured: `OcspCheckTest` AC8 |
 | 15.9.1 | Conditions met: `signingCredential.ocsp.notRevoked` (or an online check). | `statusOf()`; a success that changes no state | covered | measured: `OcspCheckTest` AC1 |
@@ -954,15 +954,16 @@ period. `c2pa-rs` here means 0.91.1, the engine of `c2patool` 0.28.1.
   state) and `skipped`: `notRevoked` is issued without a time-stamp, at
   now; `thisUpdate` is not compared with now when the time is the
   stamp's; a stamped time before `thisUpdate` is skipped where the rule
-  accepts it; a delegated responder's own validity is not checked (RFC
-  6960 §3.2 requirement 4). If the responder's validity were checked, a
-  `revoked` from an expired responder would stop counting. *Corrected
+  accepts it. *Corrected
   2026-10-29 (step 504):* "only between `notRevoked` and `skipped`" holds
   without a caller's revocation source, not with one — `skipped` is what
   makes the source be asked, so a `notRevoked` the rule would not give
   kept a revoked signer `Trusted` (found by the security review before
   0.10.0). The missing `producedAt` + 24 h bound is closed by SPEC-030
-  amendment 7; the responder's validity is the next step.
+  amendment 7; a delegated responder's own validity (RFC 6960 §3.2
+  requirement 4) by SPEC-030 amendment 8 (step 505): it must be valid at
+  `producedAt`, and a response it signed outside that, a `revoked`
+  included, is not usable.
 - **P05-8 — where `c2pa-rs` says revoked and the rule does not.** Read in
   `crypto/ocsp/mod.rs`: `c2pa-rs` logs `signingCredential.ocsp.revoked`
   for a `good` response whose window does not hold the stamped time, and

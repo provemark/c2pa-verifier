@@ -67,6 +67,10 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   C2PA 2.4 §15.9.1 does not allow. With a caller's revocation source that
   mattered: such a stored response, from before a revocation, kept the
   source from being asked, and a revoked signer stayed `Trusted`.
+- **A delegated OCSP responder must be valid when it signed (SPEC-030
+  amendment 8).** Its certificate's validity was not checked, so a
+  retired responder key could answer `good` for ever and, with a
+  caller's revocation source, keep a revoked signer `Trusted`.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

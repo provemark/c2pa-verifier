@@ -521,7 +521,7 @@ final readonly class OcspCheck
                 return sprintf('response %d answers about no certificate in this chain', $i);
             }
 
-            $responder = $this->responder($basic[3] ?? null, $issuer);
+            $responder = $this->responder($basic[3] ?? null, $issuer, $producedAt);
             if (is_string($responder)) {
                 return sprintf('response %d: %s', $i, $responder);
             }
@@ -624,12 +624,14 @@ final readonly class OcspCheck
      *
      * RFC 6960 §4.2.2.2 allows exactly these two. A certificate in `certs` that the
      * issuer did not sign, or that lacks id-kp-OCSPSigning, is not a responder —
-     * believing one would let anybody answer for anybody.
+     * believing one would let anybody answer for anybody. Nor is one that was not
+     * valid at $producedAt, when it signed: a retired responder key would otherwise
+     * answer good for ever (RFC 6960 §3.2 requirement 4).
      *
      *
      * @throws Asn1Exception
      */
-    private function responder(?Der $certs, Certificate $issuer): Certificate|string
+    private function responder(?Der $certs, Certificate $issuer, int $producedAt): Certificate|string
     {
         if ($certs === null) {
             return $issuer;
@@ -648,6 +650,13 @@ final readonly class OcspCheck
             }
             if (! in_array(self::OID_EKU_OCSP_SIGNING, $candidate->extendedKeyUsage ?? [], true)) {
                 return sprintf('the responder %s has no id-kp-OCSPSigning (RFC 6960 §4.2.2.2)', $candidate->subjectCn());
+            }
+            // "currently authorized" (RFC 6960 §3.2 requirement 4): valid when it signed (SPEC-030 amendment 8)
+            if ($producedAt < $candidate->validFrom || $producedAt > $candidate->validTo) {
+                return sprintf(
+                    'the responder %s was valid from %s to %s, and the response\'s producedAt %s lies outside that (RFC 6960 §3.2)',
+                    $candidate->subjectCn(), gmdate('Y-m-d\TH:i:s\Z', $candidate->validFrom), gmdate('Y-m-d\TH:i:s\Z', $candidate->validTo), gmdate('Y-m-d\TH:i:s\Z', $producedAt),
+                );
             }
 
             return $candidate;

@@ -12328,3 +12328,10 @@ README are where the disclosure lives.
 - Produced: SPEC-030 amendment 7 and AC12 with its Traceability; `src/Trust/OcspCheck.php` (`statusOf()`, `WITHOUT_NEXT_UPDATE`); `bin/make-ocsp-window-variants.php`; `tests/Fixtures/ocsp-window/` (two certificates, two responses, README); `tests/Unit/Trust/OcspCheckTest.php`; `docs/reading-c2pa-2.4.md` (P05-7 and the §15.9.1 row corrected); `CHANGELOG.md`; `notes/step-504-ocsp-good-without-next-update.md`, `NOTES.md`.
 - Measured: the reviewer's two T1 probes before and after (the old-good route closed, the expired-responder route open for step 505); the responses with `openssl ocsp -resp_text`; AC12 red on `395004a` (the +25-hour case) and green after; SPEC-030's 45 tests; the corpus against `395004a` (2,162 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0.
 - Decided by Maurice: route A (close P05-7's two gaps, keep ADR-0007's order); the amendment.
+
+## 2026-10-29 — Step 505: a delegated OCSP responder must be valid when it signed
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf het amendement voor 505"; then "akkoord, amendement approved, bouw 505".
+- Produced: SPEC-030 amendment 8 and AC13 with its Traceability; `src/Trust/OcspCheck.php` (`responder()` takes `producedAt`); `bin/make-ocsp-window-variants.php` (two delegated responders); `tests/Fixtures/ocsp-window/` (made again, two new responses, README); `tests/Unit/Trust/OcspCheckTest.php`; `docs/reading-c2pa-2.4.md`; `CHANGELOG.md`; `notes/step-505-ocsp-responder-valid-when-it-signed.md`, `NOTES.md`.
+- Measured: the reviewer's probe before and after; the responders with `openssl ocsp -resp_text`; AC13 red on `dd5c2bf` (the expired case) and green after, repeated on the final files; SPEC-030's 47 tests; the corpus against `dd5c2bf` (2,166 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0.
+- Decided by Maurice: the amendment.

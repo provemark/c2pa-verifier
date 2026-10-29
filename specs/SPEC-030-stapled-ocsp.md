@@ -251,6 +251,20 @@ assumption: this project fails closed.
     `producedAt` and the 24 hours, and with the source it is
     `signingCredential.ocsp.revoked`, the source asked once
 
+- **AC13 — a delegated responder must be valid when it signed** *(amendment 8; required: error path)*
+  - Given `tests/Fixtures/ocsp-window/good-by-expired-responder.der`, a
+    `good` for `signer.crt` signed by a responder the CA issued with
+    id-kp-OCSPSigning and a validity that ended before the response's
+    `producedAt`, and `good-by-responder.der`, the same signed by a
+    responder valid at `producedAt`
+  - When each is checked as a stored response of a trusted signer at
+    `producedAt` + 1 hour, once without a source and once with a source
+    that answers `revoked.der`
+  - Then the first is `signingCredential.ocsp.skipped` naming the
+    responder's validity and `producedAt`, and with the source
+    `signingCredential.ocsp.revoked`, the source asked once; the second is
+    `signingCredential.ocsp.notRevoked` and the source is not asked
+
 ## References
 
 - Specification: C2PA 2.4, the revocation steps of the signature
@@ -530,6 +544,34 @@ needs an amendment with this spec — the same shape as when
    `skipped`, which moves no state. No corpus file is expected to move:
    its stapled responses carry `nextUpdate`.
 
+8. **2026-10-29, step 505, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   A response signed by a delegated responder was usable when the issuer
+   had signed the responder's certificate and that certificate carried
+   id-kp-OCSPSigning. Its validity was not checked, although RFC 6960
+   §3.2 requirement 4 asks that the signer be "currently authorized" and
+   C2PA 2.4 §15.9.1 refers to it (`docs/reading-c2pa-2.4.md` P05-7). A
+   `good` signed today by a responder whose certificate expired in 2021
+   was `signingCredential.ocsp.notRevoked`, and with a caller's source
+   that kept the source from being asked (measured on the review's
+   probe: `notRevoked`, 0 calls): whoever holds a retired responder key
+   could keep a revoked signer `Trusted`.
+
+   Now the responder's certificate must be valid at the response's
+   `producedAt`, the moment it signed. If not, the whole response is not
+   usable, as a responder without id-kp-OCSPSigning already is: it is
+   `signingCredential.ocsp.skipped` with an explanation naming the
+   responder, its validity and `producedAt`, and a source is asked as
+   when nothing was stored. `producedAt`, not the judged time: a genuine
+   response signed while the responder was valid keeps counting however
+   late it is judged. It applies to every answer, a `revoked` included,
+   as the EKU rule does; a genuine `revoked` is signed inside its
+   responder's validity and is not touched. The issuer itself as signer
+   is unchanged (its validity is the chain walk's). New criterion AC13.
+
+   **Weight A.** With a revocation source, files that were wrongly
+   `Trusted` become `Invalid`; without one, a `notRevoked` becomes
+   `skipped`, which moves no state. No corpus file is expected to move.
+
 ## Open questions
 
 All three were answered on approval (Maurice van Loon, 2026-09-22) by
@@ -602,5 +644,6 @@ least one test; every source file maps back to this spec.
 | AC10 | `tests/Unit/Trust/OcspCheckTest.php :: AC10: bounded, like every other parser here` | `Trust\OcspCheck::DEFAULT_MAX_RESPONSES`, `DEFAULT_MAX_RESPONSE_BYTES`, `responseBytes()` |
 | AC11 | `tests/Unit/Asn1/MissingElementTest.php :: AC11 / SPEC-030` | `Trust\OcspCheck` (ResponseData's first element through `Der::element()`) |
 | AC12 (amendment 7) | tests/Unit/Trust/OcspCheckTest.php :: AC12: a good without nextUpdate is current for 24 hours after producedAt (amendment 7) / SPEC-030 | src/Trust/OcspCheck.php :: statusOf(), WITHOUT_NEXT_UPDATE; bin/make-ocsp-window-variants.php; tests/Fixtures/ocsp-window/ |
+| AC13 (amendment 8) | tests/Unit/Trust/OcspCheckTest.php :: AC13: a delegated responder must be valid when it signed (amendment 8) / SPEC-030 | src/Trust/OcspCheck.php :: responder() (validity at producedAt), usable(); bin/make-ocsp-window-variants.php; tests/Fixtures/ocsp-window/ |
 | Amendment 5 | `tests/Unit/Verifier/RevocationStoredIssuerTest.php` (group `SPEC-030`) | `Trust\OcspCheck::checkWithEvidence(), stored()`; `Verifier\Verifier::check()`, `Verifier\IngredientManifestCheck::manifest()`; `bin/make-revocation-stored-issuer-variants.php` |
 | Amendment 6 | `tests/Unit/Verifier/RevocationStoredIssuerTest.php` (group `SPEC-030`), the tests named "amendment 6" | `Trust\OcspCheck::checkWithEvidence(), stored()`; `Verifier\Verifier::check()`, `Verifier\IngredientManifestCheck::manifest()`, `trusted()`, `anchored()` |

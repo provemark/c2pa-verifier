@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 /*
- * Build the OCSP fixtures of SPEC-030 amendment 7 (step 504): a `good` response without
- * `nextUpdate`, whose window C2PA 2.4 §15.9.1 bounds by producedAt + 24 hours, and a `revoked`
- * one about the same certificate for the caller's revocation source to answer.
+ * Build the OCSP fixtures of SPEC-030 amendments 7 and 8 (steps 504, 505): a `good` response
+ * without `nextUpdate`, whose window C2PA 2.4 §15.9.1 bounds by producedAt + 24 hours; two `good`
+ * responses signed by delegated responders, one whose certificate expired before it signed
+ * (RFC 6960 §3.2 requirement 4) and one valid; and a `revoked` one about the same certificate
+ * for the caller's revocation source to answer.
  *
  * Made as bin/make-ocsp-variants.php makes step 92a's: a certificate authority and one
  * end-entity certificate under it, `openssl ocsp` answering from an index. Without `-ndays`
@@ -20,6 +22,8 @@ declare(strict_types=1);
  *   signer.crt        the subject of the responses, public
  *   good-no-next.der  signer.crt answered good, no nextUpdate
  *   revoked.der       signer.crt revoked (keyCompromise) a day before the run, nextUpdate in ten years
+ *   good-by-expired-responder.der  signer.crt good, signed by a responder valid 2020-01-01 to 2021-01-01
+ *   good-by-responder.der          signer.crt good, signed by a responder valid for ten years from the run
  */
 
 $out = dirname(__DIR__).'/tests/Fixtures/ocsp-window';
@@ -70,21 +74,37 @@ $run(sprintf(
     $q($tmp.'/signer.csr'), $q($tmp.'/ca.crt'), $q($tmp.'/ca.key'), $q($tmp.'/signer.crt'),
 ));
 
-// ---- the index, the request, and the two responses ----
+// ---- two delegated responders, issued by the CA with id-kp-OCSPSigning ----
+file_put_contents($tmp.'/responder.ext', "basicConstraints = critical, CA:FALSE\nkeyUsage = critical, digitalSignature\nextendedKeyUsage = OCSPSigning\n");
+foreach (['expired-responder' => ' -not_before 20200101000000Z -not_after 20210101000000Z', 'responder' => ' -days 3650'] as $name => $validity) {
+    $run(sprintf(
+        'openssl req -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -keyout %s -out %s -subj %s',
+        $q("{$tmp}/{$name}.key"), $q("{$tmp}/{$name}.csr"), $q("/CN=SPEC-030 window {$name}/O=provemark fixtures"),
+    ));
+    $run(sprintf(
+        'openssl x509 -req -in %s -CA %s -CAkey %s -set_serial 0x%s -extfile %s -out %s',
+        $q("{$tmp}/{$name}.csr"), $q($tmp.'/ca.crt'), $q($tmp.'/ca.key'), $name === 'responder' ? '02' : '03', $q($tmp.'/responder.ext'), $q("{$tmp}/{$name}.crt"),
+    ).$validity);
+}
+
+// ---- the index, the request, and the responses ----
 $expires = gmdate('ymdHis\Z', time() + 3650 * 86400);
 $revokedAt = gmdate('ymdHis\Z', time() - 86400);
 $subject = '/CN=SPEC-030 window signer/O=provemark fixtures';
 $run(sprintf('openssl ocsp -issuer %s -cert %s -reqout %s -no_nonce', $q($tmp.'/ca.crt'), $q($tmp.'/signer.crt'), $q($tmp.'/req.der')));
+$good = "V\t{$expires}\t\t01\tunknown\t{$subject}\n";
 $responses = [
     // no -ndays: openssl writes thisUpdate = producedAt = now and no nextUpdate
-    'good-no-next' => ["V\t{$expires}\t\t01\tunknown\t{$subject}\n", ''],
-    'revoked' => ["R\t{$expires}\t{$revokedAt},keyCompromise\t01\tunknown\t{$subject}\n", ' -ndays 3650'],
+    'good-no-next' => [$good, '', 'ca'],
+    'revoked' => ["R\t{$expires}\t{$revokedAt},keyCompromise\t01\tunknown\t{$subject}\n", ' -ndays 3650', 'ca'],
+    'good-by-expired-responder' => [$good, ' -ndays 7', 'expired-responder'],
+    'good-by-responder' => [$good, ' -ndays 7', 'responder'],
 ];
-foreach ($responses as $name => [$line, $days]) {
+foreach ($responses as $name => [$line, $days, $signer]) {
     file_put_contents($tmp.'/index.txt', $line);
     $run(sprintf(
         'openssl ocsp -index %s -CA %s -rsigner %s -rkey %s -reqin %s -respout %s',
-        $q($tmp.'/index.txt'), $q($tmp.'/ca.crt'), $q($tmp.'/ca.crt'), $q($tmp.'/ca.key'), $q($tmp.'/req.der'), $q("{$out}/{$name}.der"),
+        $q($tmp.'/index.txt'), $q($tmp.'/ca.crt'), $q("{$tmp}/{$signer}.crt"), $q("{$tmp}/{$signer}.key"), $q($tmp.'/req.der'), $q("{$out}/{$name}.der"),
     ).$days);
     printf("%-18s %6d bytes\n", $name.'.der', (int) filesize("{$out}/{$name}.der"));
 }
