@@ -337,6 +337,17 @@ scratch script did. Byte vectors for AC1–AC2 are literals in the test.
     `TimestampException` in well under a second. Known values
     (2^64, 2^256 − 1) are converted exactly.
 
+- **AC13 — an Extension without its extnID is a refusal, never a PHP error** *(amendment 7; required: malformed input)*
+  - Given the timestamp token of `c2pa-rs/C.jpg` with a TSTInfo
+    `extensions` field `[1] { SEQUENCE {} }` (one Extension, empty) added
+    by the test's own `DerPatch`, every enclosing length re-encoded
+  - When it is parsed, with every PHP warning turned into an exception,
+    and when the check judges it as the timestamp header of `C.jpg`'s
+    signature
+  - Then the parse is a `TimestampException` naming the missing element,
+    and the check reports `timeStamp.malformed`; no warning, no `Error`
+    escapes
+
 ## References
 
 - Specification: X.690 (2021) §8.1 (identifier and length octets),
@@ -587,6 +598,26 @@ final class TimestampException extends \RuntimeException {}
    and the rule that a signer is judged at a trusted timestamp's time, else
    now, in §15.8.2. The citations are corrected; no rule changes.
 
+7. **2026-10-29, step 509, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   `TstInfo::extensions()` read each Extension's `extnID` as `$parts[0]`
+   without asking whether it is there. An empty Extension (`30 00`,
+   RFC 5280 §4.1 requires `extnID`) made PHP warn "Undefined array key
+   0" and then throw `Error: Call to a member function oid() on null`,
+   which no check catches: measured on the review's probe, `verify()`
+   throws instead of returning a report. The token sits in the
+   unprotected header, so it can be put into any signed file without
+   breaking its signature. AC11 did not reach it: none of its three
+   corpus tokens carries extensions, so no Extension was emptied.
+
+   Now the `extnID` is read with `Der::element(0)`, which amendment 4
+   introduced for exactly this: a missing element is an `Asn1Exception`,
+   which the parse turns into a `TimestampException` and the check into
+   `timeStamp.malformed`, as for any other broken token. The optional
+   `critical` keeps its `isset`. New criterion AC13.
+
+   **Weight A.** A file that threw now gets a report. Nothing else moves:
+   an Extension that has its `extnID` is read as before.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -607,3 +638,4 @@ least one test; every source file maps back to this spec.
 | AC11 | tests/Unit/Asn1/MissingElementTest.php :: AC11 / SPEC-016 | src/Asn1/Der.php (`element()`); src/Timestamp/SignedData.php, SignerInfo.php, TstInfo.php (the six reads by position); tests/Support/DerPatch.php (`constructed()`) |
 | AC11 (amendment 3) | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC11: a negative INTEGER reads signed on request …; … GeneralizedTime fractions are kept …; … the writer token parses — * (3) / SPEC-016 | src/Asn1/Der.php :: integer(bool $signed), timeFraction(); src/Timestamp/TstInfo.php :: read() (nonce signed, $genTimeFraction) |
 | AC12 | tests/Unit/Asn1/IntegerBoundTest.php :: AC12 / SPEC-016 | src/Support/Bytes.php (`hexToDecimal()`, `MAX_DECIMAL_OCTETS`, `decimalOctets()`); src/Asn1/Der.php (`integer()`) |
+| AC13 (amendment 7) | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC13: an Extension without its extnID is a refusal, never a PHP error (amendment 7) / SPEC-016 | src/Timestamp/TstInfo.php :: extensions() |

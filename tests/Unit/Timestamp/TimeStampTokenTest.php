@@ -5,8 +5,11 @@ declare(strict_types=1);
 use Provemark\C2paVerifier\Asn1\Asn1Exception;
 use Provemark\C2paVerifier\Asn1\DerReader;
 use Provemark\C2paVerifier\Cbor\CborBytes;
+use Provemark\C2paVerifier\Cose\CoseSign1;
+use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
 use Provemark\C2paVerifier\Tests\Support\DerPatch;
+use Provemark\C2paVerifier\Timestamp\TimestampCheck;
 use Provemark\C2paVerifier\Timestamp\TimestampException;
 use Provemark\C2paVerifier\Timestamp\TimestampHeader;
 use Provemark\C2paVerifier\Timestamp\TimeStampToken;
@@ -442,3 +445,24 @@ foreach ([
             ->and($token->signedData->signerCertificate())->not->toBeNull();
     })->group('SPEC-016');
 }
+
+test('SPEC-016 AC13: an Extension without its extnID is a refusal, never a PHP error (amendment 7)', function (): void {
+    // extensions [1] IMPLICIT Extensions { Extension {} } appended to C.jpg's TSTInfo, as the AC7 critical case appends one
+    $patched = DerPatch::splice(spec016C(), 72 + 2 + 110, 0, "\xa1\x02\x30\x00", inside: 72);
+    set_error_handler(static function (int $severity, string $message): never {
+        throw new ErrorException($message, 0, $severity);
+    });
+    try {
+        expect(fn () => TimeStampToken::fromHeaderValue($patched))->toThrow(TimestampException::class, 'no element 0');
+
+        // and judged as the timestamp header of C.jpg's signature: timeStamp.malformed
+        $manifest = (Corpus::manifestStore('c2pa-rs/C.jpg') ?? throw new RuntimeException('C.jpg has no manifest'))->active;
+        $cose = CoseSign1::fromBytes($manifest->signatureBytes());
+        $header = TimestampHeader::fromUnprotected($cose->unprotected) ?? throw new RuntimeException('C.jpg has no timestamp header');
+        $result = (new TimestampCheck)->checkHeader(new TimestampHeader($header->header, [$patched]), $cose, $manifest->claimBytes(), null, 'self#jumbf=/c2pa/u/c2pa.signature');
+    } finally {
+        restore_error_handler();
+    }
+    expect(array_map(static fn (ValidationStatus $s): string => $s->code->value, $result->statuses))->toBe(['timeStamp.malformed'])
+        ->and($result->statuses[0]->explanation)->toContain('no element 0');
+})->group('SPEC-016');

@@ -177,7 +177,8 @@ final readonly class TstInfo
         }
         foreach ($der->children ?? [] as $extension) {
             $parts = $extension->sequence();
-            $oid = $parts[0]->oid();
+            // extnID is required (RFC 5280 §4.1): an empty Extension is a refusal, not a PHP error (SPEC-016 amendment 7)
+            $oid = $extension->element(0)->oid();
             $critical = isset($parts[1]) && $parts[1]->is(TagClass::Universal, Der::BOOLEAN) && $parts[1]->boolean();
             if ($critical) {
                 throw new TimestampException(sprintf('TSTInfo carries the critical extension %s, which this verifier does not know', $oid));

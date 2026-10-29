@@ -12356,3 +12356,10 @@ README are where the disclosure lives.
 - Produced: SPEC-080 amendment 3 and AC10 with its Traceability; `src/Hash/BmffHashCheck.php` (the block count in `checkMdatMerkle()`); `bin/make-mdat-merkle-variants.php` (`block-size-huge`); `tests/Fixtures/mdat-merkle/` and `tests/Fixtures/c2patool/mdat-merkle/` (signed again by the generator, one new file and its two oracles, README row); `tests/Unit/Hash/MdatMerkleTest.php`; `CHANGELOG.md`; `notes/step-508-merkle-block-size-overflow.md`, `NOTES.md`.
 - Measured: the reviewer's probe before (`TypeError`) and after (`Invalid`); the generator with `c2patool` 0.28.3 and 0.28.1 (every recorded state unchanged, the new file `Invalid` in both); AC10 red on `4ff78c9` and green after, repeated on the final test; SPEC-080's 36 tests; the corpus against `4ff78c9` (2,168 runs, only the new file differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0, `bin/package-check.php`.
 - Decided by Maurice: the amendment.
+
+## 2026-10-29 — Step 509: an empty Extension in a timestamp is a refusal, not a PHP error
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf het amendement voor 509"; then "akkoord, amendement approved, bouw 509".
+- Produced: SPEC-016 amendment 7 and AC13 with its Traceability; `src/Timestamp/TstInfo.php` (`extensions()`); `tests/Unit/Timestamp/TimeStampTokenTest.php`; `CHANGELOG.md`; `notes/step-509-empty-tstinfo-extension.md`, `NOTES.md`.
+- Measured: the reviewer's probe before (`Error`) and after (`timeStamp.malformed`); AC13 red on `c62259a` ("Undefined array key 0") and green after, repeated on the final test; SPEC-016's 72 and SPEC-017's 23 tests; the corpus against `c62259a` (2,168 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0.
+- Decided by Maurice: the amendment.

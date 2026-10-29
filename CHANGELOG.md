@@ -83,6 +83,10 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
 - **A huge `fixedBlockSize` in a merkle map gives a report, not a
   `TypeError` (SPEC-080 amendment 3).** The block count overflowed to a
   float near 2^63, and `verify()` threw instead of returning `Invalid`.
+- **An empty Extension in a timestamp's TSTInfo is `timeStamp.malformed`,
+  not a PHP `Error` (SPEC-016 amendment 7).** The token sits in the
+  unprotected header, so any signed file could be made to throw out of
+  `verify()` without breaking its signature.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised
