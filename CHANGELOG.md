@@ -71,6 +71,11 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   amendment 8).** Its certificate's validity was not checked, so a
   retired responder key could answer `good` for ever and, with a
   caller's revocation source, keep a revoked signer `Trusted`.
+- **The handler of an excluded track is read behind a 64-bit box header
+  too (SPEC-072 amendment 1).** It was always read at offset 16, where a
+  header with `size` 1 puts the version and flags, so a timed-metadata
+  track could be turned into an unsigned video track that stayed
+  `Trusted`, and a genuine one with that header was refused.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

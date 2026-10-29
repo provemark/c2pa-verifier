@@ -139,6 +139,18 @@ time.
   - Then no state or code changes outside the new fixtures. A file with an
     ISO `meta` (the HEIC and AVIF fixtures) walks as before.
 
+- **AC7 — the handler is read behind a 64-bit header too** *(amendment 1; required: error path)*
+  - Given the AC2 fixture with the `hdlr` of the excluded third track
+    rewritten in place, at the same total length, with a 64-bit header
+    (`size` 1, then `largesize`): once with version and flags `meta` and
+    handler type `vide`, once with handler type `meta`
+  - When verified under the AC2 settings
+  - Then the first is `assertion.bmffHash.mismatch` naming
+    `/moov[1]/trak[3]` and "this one's is vide", and is not `Trusted`;
+    the second keeps `assertion.bmffHash.match` and `Trusted`: the track
+    is excluded, so its bytes are not hashed, and only the handler
+    decides.
+
 ## References
 
 - Specification: C2PA 2.4 §18.6 (BMFF hash, `xpath`); ISO/IEC 14496-12
@@ -180,6 +192,31 @@ time.
   `meta` and the metadata track, not to `free`/`skip`, which are padding.
   *Status 2026-10-13 (step 360):* approved with the spec.
 
+## Amendments
+
+1. **2026-10-29, step 506, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   `trackRefusal()` read the handler type of a track's `hdlr` at its
+   box offset + 16, which is right only behind the ordinary 8-byte box
+   header. ISO/IEC 14496-12 §4.2 also allows a 16-byte header (`size` 1,
+   then a 64-bit `largesize`); behind it offset 16 holds the full box's
+   version and flags, and the handler type is at offset 24, where ffmpeg
+   and other readers take it. The check runs on the file as it is, and
+   the excluded track's bytes are free to change after signing, so an
+   `hdlr` whose version and flags read `meta` and whose handler is `vide`
+   passed (measured on the review's probe: accepted, where the handler
+   at header + 8 is `vide`): a timed-metadata track could be turned into
+   an unsigned video or audio track that players show, the file staying
+   `Trusted` under its signer.
+
+   Now the header length is read from the box's own size field (16 when
+   it is 1, else 8) and the handler type is taken at header + 8, after
+   version and flags and `pre_defined`; the box must hold header + 12
+   bytes. New criterion AC7.
+
+   **Weight A.** Files that were wrongly `Trusted` become `Invalid`. No
+   corpus file is expected to move: their `hdlr` boxes have 8-byte
+   headers.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -193,6 +230,7 @@ least one test; every source file maps back to this spec.
 | AC4 | tests/Unit/Hash/PixelVideoTest.php :: refuses a malformed index as malformed (6 cases); accepts the indexed and unindexed forms the allow-list names / SPEC-072 | src/Hash/BmffHashCheck.php :: shapeFault(), XPATH_STEP |
 | AC5 | tests/Unit/Hash/PixelVideoTest.php :: walks both forms of the meta box / SPEC-072 | src/Container/IsobmffManifestStoreExtractor.php :: metaSkip(); src/Container/StreamReader.php :: seek() |
 | AC6 | the corpus before and after (notes/step-360-pixel-video.md); tests/Unit/Hash/BmffExclusionAllowListTest.php (the indexed track now allowed by path) | — |
+| AC7 (amendment 1) | tests/Unit/Hash/PixelVideoTest.php :: reads the handler behind a 64-bit header too (amendment 1) (2 cases) / SPEC-072 | src/Hash/BmffHashCheck.php :: trackRefusal() |
 
 The tests were run red first: 11 failed (no classes changed yet, no
 fixtures). The AC2 fixture's digest is computed by this verifier and

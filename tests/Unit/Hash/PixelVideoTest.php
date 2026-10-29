@@ -115,3 +115,28 @@ it('walks both forms of the meta box', function (): void {
     $neither = spec072Box('moov', spec072Box('meta', "\0\0\0\0".spec072Box('free', 'abcd')));
     expect($paths($neither))->toBe(['/moov@0', '/moov/meta@8', '/moov/meta/free@20']);
 })->group('SPEC-072');
+
+it('reads the handler behind a 64-bit header too (amendment 1)', function (string $versionFlags, string $handler, StatusCode $code, string $state): void {
+    // the excluded third track's hdlr (45 bytes, handler meta) rewritten in place with size 1 and a
+    // largesize, the same total length: its bytes are excluded, so only the handler decides
+    $bytes = (string) file_get_contents(Corpus::fixtures().'/pixel-shape/pixel-shape.mp4');
+    $at = strrpos($bytes, "hdlr\x00\x00\x00\x00\x00\x00\x00\x00meta");
+    expect($at)->toBeInt();
+    $start = (int) $at - 4;
+    $length = 45;   // its size field, as bin/make-pixel-shape-variants.php writes it
+    expect(substr($bytes, $start, 4))->toBe(pack('N', $length));
+    $hdlr = pack('N', 1).'hdlr'.pack('J', $length).$versionFlags.pack('N', 0).$handler;
+    $hdlr .= substr($bytes, $start + 20, $length - strlen($hdlr));
+    expect(strlen($hdlr))->toBe($length);
+    $report = (new Verifier)->verify(spec072Memory(substr_replace($bytes, $hdlr, $start, $length)), TrustSettings::fromJson((string) file_get_contents(Corpus::fixtures().'/pixel-shape/probe-root.settings.json')));
+    $statuses = spec072Bmff($report);
+
+    expect(array_map(static fn (ValidationStatus $s): StatusCode => $s->code, $statuses))->toContain($code)
+        ->and($report->result->state->value)->toBe($state);
+    if ($code === StatusCode::AssertionBmffHashMismatch) {
+        expect($statuses[0]->explanation)->toContain("the exclusion /moov[1]/trak[3] is refused: a track may be excluded only when its handler is meta (timed metadata); this one's is vide");
+    }
+})->with([
+    'version and flags reading meta, handler vide' => ['meta', 'vide', StatusCode::AssertionBmffHashMismatch, 'Invalid'],
+    'the control, handler meta' => ["\x00\x00\x00\x00", 'meta', StatusCode::AssertionBmffHashMatch, 'Trusted'],
+])->group('SPEC-072');

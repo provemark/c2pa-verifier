@@ -12335,3 +12335,10 @@ README are where the disclosure lives.
 - Produced: SPEC-030 amendment 8 and AC13 with its Traceability; `src/Trust/OcspCheck.php` (`responder()` takes `producedAt`); `bin/make-ocsp-window-variants.php` (two delegated responders); `tests/Fixtures/ocsp-window/` (made again, two new responses, README); `tests/Unit/Trust/OcspCheckTest.php`; `docs/reading-c2pa-2.4.md`; `CHANGELOG.md`; `notes/step-505-ocsp-responder-valid-when-it-signed.md`, `NOTES.md`.
 - Measured: the reviewer's probe before and after; the responders with `openssl ocsp -resp_text`; AC13 red on `dd5c2bf` (the expired case) and green after, repeated on the final files; SPEC-030's 47 tests; the corpus against `dd5c2bf` (2,166 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0.
 - Decided by Maurice: the amendment.
+
+## 2026-10-29 — Step 506: the handler of an excluded track is read behind a 64-bit header too
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf het amendement voor 506"; then "Akkoord" (amendment approved, build).
+- Produced: SPEC-072 amendment 1 (the spec's first Amendments section) and AC7 with its Traceability; `src/Hash/BmffHashCheck.php` (`trackRefusal()`); `tests/Unit/Hash/PixelVideoTest.php`; `CHANGELOG.md`; `notes/step-506-hdlr-behind-64-bit-header.md`, `NOTES.md`.
+- Measured: the reviewer's probe before and after; both AC7 cases red on `447eb17` (the forged handler `Trusted`, the genuine 64-bit form refused) and green after, repeated on the final test; SPEC-072's tests; the corpus against `447eb17` (2,166 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0.
+- Decided by Maurice: the amendment.

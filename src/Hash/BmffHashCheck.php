@@ -791,8 +791,13 @@ final readonly class BmffHashCheck
             if ($ipath === $track) {
                 $found = true;
             }
-            if ($ipath === $track.'/mdia[1]/hdlr[1]' && $box['length'] >= 20) {
-                $handler = $readAt($box['offset'] + 16, 4);
+            if ($ipath === $track.'/mdia[1]/hdlr[1]') {
+                // the handler type follows version and flags and pre_defined, after a header of 8 bytes
+                // or of 16 when size is 1 (ISO/IEC 14496-12 §4.2; SPEC-072 amendment 1)
+                $header = $box['length'] >= 16 && $readAt($box['offset'], 4) === "\x00\x00\x00\x01" ? 16 : 8;
+                if ($box['length'] >= $header + 12) {
+                    $handler = $readAt($box['offset'] + $header + 8, 4);
+                }
             }
         }
         if ($handler === 'meta') {
