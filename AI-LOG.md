@@ -12433,3 +12433,10 @@ README are where the disclosure lives.
 - Produced: `CHANGELOG.md` (0.10.0 dated 2026-10-29, the introduction naming the review's four groups); `README.md` (the current-tag sentence); `SECURITY.md` (27 → 33, an entry for the review before 0.10.0); `notes/step-519-release-0.10.0-date.md`, `NOTES.md`.
 - Measured: before the push, `vendor/bin/pest --parallel` (1,709 passed, 1 skipped), the attribution check and a check for issue references in the 17 commits; CI on `8f0a133` (8/8). For `SECURITY.md`: the first release holding each faulty code path, through `git log -S` and `git tag --contains`, and each note's measured or reasoned status; `composer check`.
 - Decided by Maurice: push steps 502–518; date and introduction now, the tag on his word.
+
+## 2026-10-29 — Step 520: 0.10.0 released
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, push 519"; "akkoord, tag v0.10.0"; then "akkoord, schrijf de released-note".
+- Produced: step 519 pushed (`9831ee0`); the annotated tag `v0.10.0` on `9831ee0`, pushed; `notes/step-520-release-0.10.0-released.md`, `NOTES.md`.
+- Measured: before the push, `vendor/bin/pest --parallel`, the attribution check and a check for issue references; CI on `9831ee0` and on the tag (8/8 each); Packagist's `p2` metadata (`v0.10.0`, source `9831ee0`); GitHub's zipball of the tag (659 files) against `bin/package-check.php` (659); a fresh `composer require provemark/c2pa-verifier:^0.10` in an empty directory, `Verifier::VERSION`, four fixtures and `evidenceToJson()`.
+- Decided by Maurice: push 519, tag `v0.10.0`, no GitHub release, no advisory (decided at the start of the review).
