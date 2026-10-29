@@ -133,7 +133,13 @@ final readonly class SignatureVerifier
                 return false;
             }
 
-            return sodium_crypto_sign_verify_detached($signature, $message, $key->rawEd25519());
+            // sodium_compat, where ext-sodium is absent, throws for some bad signatures where the extension
+            // answers false; a throw is never a true (SPEC-009 amendment 6)
+            try {
+                return sodium_crypto_sign_verify_detached($signature, $message, $key->rawEd25519());
+            } catch (\Throwable) {
+                return false;
+            }
         }
         if ($this->useOpensslEd25519) {
             try {

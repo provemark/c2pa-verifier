@@ -409,3 +409,18 @@ it('AC12: under an id-RSASSA-PSS key the salt is the hash length too (amendment 
         ->and($verifier->verify($salt32['cose'], $salt32['claim']))->toBeTrue('salt 32')
         ->and($verifier->verify($salt32['cose'], spec009Flip($salt32['claim'])))->toBeFalse('salt 32 flipped');
 })->group('SPEC-009');
+
+it('AC12: a sodium function that throws is a mismatch, not a crash (amendment 6)', function (): void {
+    // in a process of its own: tests/Support/sodium-throws-probe.php puts a throwing sodium function in place
+    $process = proc_open([PHP_BINARY, dirname(__DIR__, 2).'/Support/sodium-throws-probe.php'], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    if (! is_resource($process)) {
+        throw new RuntimeException('cannot start the probe');
+    }
+    $stdout = (string) stream_get_contents($pipes[1]);
+    $stderr = (string) stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    proc_close($process);
+
+    expect(json_decode($stdout, true))->toBe(['called' => 1, 'result' => false], $stdout.$stderr);
+})->group('SPEC-009');

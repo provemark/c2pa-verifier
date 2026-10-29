@@ -12363,3 +12363,10 @@ README are where the disclosure lives.
 - Produced: SPEC-016 amendment 7 and AC13 with its Traceability; `src/Timestamp/TstInfo.php` (`extensions()`); `tests/Unit/Timestamp/TimeStampTokenTest.php`; `CHANGELOG.md`; `notes/step-509-empty-tstinfo-extension.md`, `NOTES.md`.
 - Measured: the reviewer's probe before (`Error`) and after (`timeStamp.malformed`); AC13 red on `c62259a` ("Undefined array key 0") and green after, repeated on the final test; SPEC-016's 72 and SPEC-017's 23 tests; the corpus against `c62259a` (2,168 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0.
 - Decided by Maurice: the amendment.
+
+## 2026-10-29 — Step 510: a bad Ed25519 signature is a mismatch under sodium_compat too
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf het amendement voor 510"; then "akkoord, amendement approved, bouw 510".
+- Produced: SPEC-009 amendment 6 and AC12 with its Traceability; `src/Cose/SignatureVerifier.php` (`ed25519()`); `tests/Support/sodium-throws-probe.php`; `tests/Unit/Cose/SignatureVerifierTest.php`; `CHANGELOG.md`; `notes/step-510-sodium-compat-throws.md`, `NOTES.md`.
+- Measured: the reviewer's probe with sodium_compat 1.21.1 before (`SodiumException`) and after (`claimSignature.mismatch`); the new probe on `5219a5c` (thrown) and after (`false`), the test repeated on the old code; SPEC-009's 18 tests; the corpus against `5219a5c` (2,168 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0, `bin/package-check.php`.
+- Decided by Maurice: the amendment.

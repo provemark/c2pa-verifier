@@ -205,6 +205,17 @@ questions).
   - Then it returns `false` — the intermediate's key does not verify the
     signature — and does not throw
 
+- **AC12 — a sodium function that throws is a mismatch, not a crash** *(amendment 6; required: error path)*
+  - Given a separate PHP process (`PHP_BINARY`, as SPEC-054 AC6 runs its
+    probe) in which `sodium_crypto_sign_verify_detached()` throws
+    `SodiumException` ("S < L - Invalid signature"), as sodium_compat
+    1.21.1 does where ext-sodium is absent, and AC8's EdDSA vector with
+    its signature changed
+  - When `SignatureVerifier(useSodium: true, useOpensslEd25519: false)`
+    verifies it
+  - Then the answer is `false`, which the check reports as
+    `claimSignature.mismatch`; no exception leaves the verifier
+
 ## References
 
 - Specification: C2PA 2.4 §13.2.1 (the algorithm list and the
@@ -377,6 +388,27 @@ holds a private key or signs.
    **Weight A: three new probes move from `Trusted` to `Invalid`, as in
    every `c2patool` measured. Nothing in the corpus moves.**
 
+6. **2026-10-29, step 510, found by the security review before 0.10.0; measured by simulation** *(approved by Maurice van Loon, 2026-10-29)* —
+   On a host without ext-sodium, WordPress loads sodium_compat, a PHP
+   polyfill that defines `sodium_crypto_sign_verify_detached()`. Where
+   the extension returns `false` for a bad signature, the polyfill throws
+   `SodiumException` for some (a non-canonical S: "S < L - Invalid
+   signature"). `ed25519()` did not catch it, nor did the `Verifier`:
+   measured on the review's probe (sodium_compat 1.21.1 in place of the
+   extension, an Ed25519 certificate, a signature of 64 `ff` bytes and a
+   random one), `verify()` throws instead of returning a report. Anyone
+   with an Ed25519 certificate of their own can make such a file.
+
+   Now an exception from the sodium function is a `false`:
+   `claimSignature.mismatch`, what the extension answers for the same
+   signature, since libsodium refuses a non-canonical S too. The OpenSSL
+   branch below it already reads a throw as a refusal. A throw never
+   becomes `true`. New criterion AC12.
+
+   **Weight A.** A file that threw on such a host now gets a report.
+   Nothing moves where ext-sodium is loaded: the extension does not throw
+   on a signature of the right length.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -395,5 +427,6 @@ least one test; every source file maps back to this spec.
 | AC9 | tests/Unit/Cose/SignatureVerifierTest.php :: AC9: an unsupported algorithm cannot be verified / SPEC-009 | src/Cose/SignatureVerifier.php :: verify() (`NAMES`) |
 | AC10 | tests/Unit/Cose/SignatureVerifierTest.php :: AC10: the R||S to DER conversion is exact / SPEC-009 | src/Cose/EcdsaSignature.php :: toDer(), integer(), length() |
 | AC11 | tests/Unit/Cose/SignatureVerifierTest.php :: AC11: the leaf key is read from chain[0], so a reversed chain is a mismatch, not an error / SPEC-009 | src/Cose/SignatureVerifier.php :: verify() (`chain[0]`) |
+| AC12 (amendment 6) | tests/Unit/Cose/SignatureVerifierTest.php :: AC12: a sodium function that throws is a mismatch, not a crash (amendment 6) / SPEC-009; tests/Support/sodium-throws-probe.php | src/Cose/SignatureVerifier.php :: ed25519() |
 | AC12 | tests/Unit/Cose/SignatureVerifierTest.php :: AC12: under an id-RSASSA-PSS key the salt is the hash length too (amendment 3, step 247) / SPEC-009 | src/Cose/SignatureVerifier.php :: rsaPss(); src/Cose/PublicKey.php :: asRsaEncryption() |
 | AC13 (amendment 5) | tests/Unit/Cose/EcdsaPairingTest.php :: AC13 (two tests) / SPEC-009 | src/Cose/SignatureVerifier.php :: requireFit() (`PAIRED_CURVES`); bin/make-ecdsa-pairing-variants.php |

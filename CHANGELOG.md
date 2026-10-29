@@ -87,6 +87,10 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   not a PHP `Error` (SPEC-016 amendment 7).** The token sits in the
   unprotected header, so any signed file could be made to throw out of
   `verify()` without breaking its signature.
+- **A bad Ed25519 signature is `claimSignature.mismatch` under
+  sodium_compat too (SPEC-009 amendment 6).** Where ext-sodium is absent
+  and WordPress loads the polyfill, it throws `SodiumException` for some
+  bad signatures, and `verify()` threw with it.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised
