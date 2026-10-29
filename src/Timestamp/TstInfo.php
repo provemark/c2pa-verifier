@@ -161,7 +161,7 @@ final readonly class TstInfo
     /** An IMPLICIT-tagged INTEGER of at most three bytes (millis and micros are 1..999). */
     private static function smallInteger(Der $der, string $what): int
     {
-        $bytes = $der->contents;
+        $bytes = $der->contents();
         if ($der->constructed || $bytes === '' || strlen($bytes) > 3) {
             throw new TimestampException(sprintf('%s at offset %d is not a small INTEGER', $what, $der->offset));
         }

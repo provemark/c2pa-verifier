@@ -126,8 +126,6 @@ final readonly class DerReader
         if ($cursor + $length > $end) {
             throw new Asn1Exception(sprintf('length %d at offset %d runs past the end (%d bytes)', $length, $offset + 1, $end));
         }
-        $contents = substr($bytes, $cursor, $length);
-
         $children = null;
         if ($constructed) {
             $children = [];
@@ -140,6 +138,7 @@ final readonly class DerReader
             }
         }
 
-        return new Der($class, $constructed, $tag, $offset, $headerLength, $contents, $children);
+        // the input itself, not a copy of the contents: a copy at every level held a value once per enclosing element (SPEC-016 amendment 8)
+        return new Der($class, $constructed, $tag, $offset, $headerLength, $bytes, $length, $children);
     }
 }

@@ -72,12 +72,12 @@ test('SPEC-016 AC1: the ten tags decode, and the values are X.690\'s — context
         ->and($explicit->tagged(0)->child(0)->integer())->toBe('5');
     $implicit = spec016Der('80 01 ff');
     expect($implicit->class)->toBe(TagClass::ContextSpecific)->and($implicit->constructed)->toBeFalse()
-        ->and($implicit->tagged(0)->contents)->toBe("\xff");
+        ->and($implicit->tagged(0)->contents())->toBe("\xff");
 })->group('SPEC-016');
 
 test('SPEC-016 AC1: the ten tags decode, and the values are X.690\'s — a long-form length: 04 82 01 00 and 256 bytes, header 4, whole element 260', function (): void {
     $der = (new DerReader)->read("\x04\x82\x01\x00".str_repeat('x', 256));
-    expect($der->headerLength)->toBe(4)->and(strlen($der->contents))->toBe(256)->and(strlen($der->encoded()))->toBe(260);
+    expect($der->headerLength)->toBe(4)->and(strlen($der->contents()))->toBe(256)->and(strlen($der->encoded()))->toBe(260);
 })->group('SPEC-016');
 
 test('SPEC-016 AC1: the ten tags decode, and the values are X.690\'s — the wrong accessor throws, naming the offset and both tags', function (): void {

@@ -108,7 +108,7 @@ final readonly class SignerInfo
             $sidIssuer = $sid->child(0)->encoded();
             $sidSerial = $sid->child(1)->integer();
         } elseif ($sid->is(TagClass::ContextSpecific, 0)) {
-            $sidSubjectKeyId = $sid->contents;
+            $sidSubjectKeyId = $sid->contents();
         } else {
             throw new TimestampException(sprintf('SignerInfo sid at offset %d is %s, neither issuerAndSerialNumber nor [0] subjectKeyIdentifier', $sid->offset, $sid->describe()));
         }

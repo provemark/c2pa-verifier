@@ -116,6 +116,12 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   box again: 255 references to a 15 MB manifest took 9.4 s. The digests
   are now computed once per `check()`, and each reference is still
   compared and reported under its own assertion. No status changes.
+- **What a DER parse holds no longer grows with depth (SPEC-016 amendment
+  8).** Every element kept its own copy of its contents, so a 1 MB
+  time-stamp token nested 31 deep held 33.6 MB, and `verify()` peaked at
+  44.9 MB on a file of 1 MB. Elements now share the input and keep
+  offsets: the same file peaks at 13.8 MB. The internal `Der::$contents`
+  is now `Der::contents()`. No status changes.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

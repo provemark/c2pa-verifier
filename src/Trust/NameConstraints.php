@@ -62,7 +62,7 @@ final readonly class NameConstraints
                 if ($base->is(TagClass::ContextSpecific, 4)) {
                     $directoryNames[$kind][] = CertificateExtensions::rdns($base->child(0));
                 } elseif ($base->is(TagClass::ContextSpecific, 1)) {
-                    $emails[$kind][] = strtolower($base->contents);
+                    $emails[$kind][] = strtolower($base->contents());
                 } else {
                     $unevaluated[] = $base->class === TagClass::ContextSpecific ? (self::FORMS[$base->tag] ?? $base->describe()) : $base->describe();
                 }

@@ -482,10 +482,10 @@ final readonly class OcspCheck
             $response = $this->reader->read($der);
             $parts = $response->sequence();
             $statusByte = $parts[0] ?? null;
-            if ($statusByte === null || ! $statusByte->is(TagClass::Universal, 10) || $statusByte->contents === '') {
+            if ($statusByte === null || ! $statusByte->is(TagClass::Universal, 10) || $statusByte->contents() === '') {
                 return sprintf('response %d has no OCSPResponseStatus', $i);
             }
-            $responseStatus = ord($statusByte->contents[0]);
+            $responseStatus = ord($statusByte->contents()[0]);
             if ($responseStatus !== 0) {
                 return sprintf('response %d is not successful: OCSPResponseStatus %d', $i, $responseStatus);
             }
@@ -611,7 +611,7 @@ final readonly class OcspCheck
         for ($i = 1; $i < $status->childCount(); $i++) {
             $child = $status->child($i);
             if ($child->class === TagClass::ContextSpecific && $child->tag === 0) {
-                $enumerated = $child->childCount() > 0 ? $child->child(0)->contents : $child->contents;
+                $enumerated = $child->childCount() > 0 ? $child->child(0)->contents() : $child->contents();
                 $reason = $enumerated === '' ? null : ord($enumerated[strlen($enumerated) - 1]);
             }
         }
@@ -674,7 +674,7 @@ final readonly class OcspCheck
             return sprintf('the response is signed with %s, which this verifier does not implement', $oid);
         }
         // BIT STRING is universal tag 3; Der names the ten tags it reads and this is not one of them
-        if (! $signature->is(TagClass::Universal, 3) || strlen($signature->contents) < 2) {
+        if (! $signature->is(TagClass::Universal, 3) || strlen($signature->contents()) < 2) {
             return 'the response carries no signature';
         }
         try {
@@ -682,7 +682,7 @@ final readonly class OcspCheck
         } catch (CoseException $e) {
             return sprintf('the responder\'s key cannot be read: %s', $e->getMessage());
         }
-        $bits = substr($signature->contents, 1);
+        $bits = substr($signature->contents(), 1);
         $algo = self::OPENSSL_ALGOS[$hash];
         $ok = OpenSsl::quiet(static fn (): int|false => openssl_verify($message, $bits, $key->key, $algo));
 
@@ -785,7 +785,7 @@ final readonly class OcspCheck
             $key = PublicKey::fromCertificateDer($issuer->der);
             $bits = (new DerReader)->read($key->spki)->child(1);
 
-            return substr($bits->contents, 1);
+            return substr($bits->contents(), 1);
         } catch (Asn1Exception|CoseException) {
             return null;
         }

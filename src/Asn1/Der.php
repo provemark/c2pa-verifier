@@ -60,7 +60,8 @@ final readonly class Der
     /**
      * @param  int  $offset  of the identifier octet in the input
      * @param  int  $headerLength  identifier + length octets
-     * @param  string  $contents  the content octets (for a constructed element: the same bytes its children were read from)
+     * @param  string  $input  the whole input the element was read from, one string shared by every element of the parse: nothing is copied (SPEC-016 amendment 8)
+     * @param  int  $contentsLength  the content octets' length; they start at $offset + $headerLength
      * @param  list<Der>|null  $children  constructed only
      */
     public function __construct(
@@ -69,20 +70,27 @@ final readonly class Der
         public int $tag,
         public int $offset,
         public int $headerLength,
-        public string $contents,
+        private string $input,
+        private int $contentsLength,
         public ?array $children,
     ) {}
+
+    /** The content octets (for a constructed element: the same bytes its children were read from), copied out when asked. */
+    public function contents(): string
+    {
+        return substr($this->input, $this->offset + $this->headerLength, $this->contentsLength);
+    }
 
     /** The whole element as it stood in the input: header + contents. */
     public function encoded(): string
     {
-        return $this->header().$this->contents;
+        return substr($this->input, $this->offset, $this->length());
     }
 
     /** The whole element's length: header + contents. */
     public function length(): int
     {
-        return $this->headerLength + strlen($this->contents);
+        return $this->headerLength + $this->contentsLength;
     }
 
     public function is(TagClass $class, int $tag): bool
@@ -251,7 +259,7 @@ final readonly class Der
             throw $this->wrongTag('UTCTime or GeneralizedTime');
         }
         $name = $this->describe();
-        $text = $this->contents;
+        $text = $this->contents();
         if ($this->constructed) {
             throw new Asn1Exception(sprintf('%s at offset %d is constructed; DER requires primitive', $name, $this->offset));
         }
@@ -298,7 +306,7 @@ final readonly class Der
             return null;
         }
 
-        return preg_match('/\.(\d+)Z\z/', $this->contents, $m) === 1 ? $m[1] : null;
+        return preg_match('/\.(\d+)Z\z/', $this->contents(), $m) === 1 ? $m[1] : null;
     }
 
     /** This element, asserted context-specific [n]. */
@@ -354,23 +362,11 @@ final readonly class Der
             throw new Asn1Exception(sprintf('%s at offset %d is constructed; DER requires primitive', $this->describe(), $this->offset));
         }
 
-        return $this->contents;
+        return $this->contents();
     }
 
     private function wrongTag(string $expected): Asn1Exception
     {
         return new Asn1Exception(sprintf('expected %s at offset %d, found %s', $expected, $this->offset, $this->describe()));
-    }
-
-    private function header(): string
-    {
-        $identifier = ($this->class->value << 6) | ($this->constructed ? 0x20 : 0) | $this->tag;
-        $length = strlen($this->contents);
-        if ($length < 0x80) {
-            return pack('CC', $identifier, $length);
-        }
-        $bytes = ltrim(pack('N', $length), "\0");
-
-        return pack('CC', $identifier, 0x80 | strlen($bytes)).$bytes;
     }
 }

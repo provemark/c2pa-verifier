@@ -62,7 +62,7 @@ function spec049WithExponent(Certificate $certificate, ?string $exponent): Certi
 
     $spki = (new DerReader)->read((string) base64_decode(preg_replace('/-----[^-]+-----|\s/', '', $key['key']) ?? '', true));
     [$algorithm, $bits] = $spki->sequence();
-    $rsaPublicKey = (new DerReader)->read(substr($bits->contents, 1));
+    $rsaPublicKey = (new DerReader)->read(substr($bits->contents(), 1));
     $modulus = $rsaPublicKey->element(0)->encoded();
     $inner = $exponent === null ? $modulus : $modulus.spec049Tlv(0x02, $exponent);
     $altered = spec049Tlv(0x30, $algorithm->encoded().spec049Tlv(0x03, "\0".spec049Tlv(0x30, $inner)));

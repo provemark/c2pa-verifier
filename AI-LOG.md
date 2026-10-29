@@ -12398,3 +12398,10 @@ README are where the disclosure lives.
 - Produced: SPEC-021 amendment 9 and AC14 with its Traceability; `src/Verifier/IngredientManifestCheck.php` (`check()`, `hashOnce()`, `digest()`, `claimSignature()`); `tests/Unit/Verifier/IngredientManifestCheckTest.php` (AC14, with a store built in memory); `CHANGELOG.md`; `notes/step-514-ingredient-digest-once.md`, `NOTES.md`.
 - Measured: the reviewer's probe (255 references to a 15 MB manifest) on `61cdf7b` (9.4 s) and after (0.14 s, the same 521 statuses); AC14 red on `61cdf7b` (1.22 s against about 0.03 s) and green after, repeated on the old source; SPEC-021's 24 tests; the corpus against `61cdf7b` (2,188 runs, none differs); `composer check`, `vendor/bin/pest --parallel`, `bin/package-check.php`.
 - Decided by Maurice: the amendment.
+
+## 2026-10-29 — Step 515: what a DER parse holds does not grow with depth
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf het amendement voor 515"; then "akkoord, amendement approved, bouw 515".
+- Produced: SPEC-016 amendment 8 and AC14 with its Traceability; `src/Asn1/Der.php` (`$input`, `$contentsLength`, `contents()`, `encoded()`, `length()`; `header()` removed); `src/Asn1/DerReader.php` (`element()` copies nothing); `->contents()` at the reads in `src/Trust/` (RsaExponent, NameConstraints, OcspCheck, CertificateExtensions) and `src/Timestamp/` (TimeStampToken, SignerInfo, TstInfo); `tests/Unit/Asn1/NestedCopiesTest.php` (AC14); `tests/Unit/Asn1/DerReaderTest.php`, `tests/Unit/Trust/RsaExponentTest.php`; `CHANGELOG.md`; `notes/step-515-der-no-copies.md`, `NOTES.md`.
+- Measured: memory held by `read()` of a 1 MB OCTET STRING at depths 1, 8, 16 and 31 on `71af85e` (2.2 to 33.6 MB) and after (0.1 MB at 31); the peak of `verify()` with it as a `sigTst2` token at depths 1 and 31 on `71af85e` (13.8 and 44.9 MB) and after (13.8 at both); AC14 red on `71af85e` and green after; the corpus against `71af85e` (2,188 runs, none differs); `composer check`, `vendor/bin/pest --parallel`, `bin/package-check.php`.
+- Decided by Maurice: the amendment.

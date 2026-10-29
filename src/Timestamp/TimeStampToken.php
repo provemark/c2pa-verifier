@@ -101,7 +101,7 @@ final readonly class TimeStampToken
         $texts = [];
         if (isset($parts[1]) && $parts[1]->is(TagClass::Universal, Der::SEQUENCE)) {
             foreach ($parts[1]->sequence() as $text) {
-                $texts[] = $text->is(TagClass::Universal, Der::UTF8_STRING) ? $text->contents : $text->describe();
+                $texts[] = $text->is(TagClass::Universal, Der::UTF8_STRING) ? $text->contents() : $text->describe();
             }
         }
         throw new TimestampException(sprintf(

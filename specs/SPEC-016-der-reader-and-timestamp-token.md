@@ -348,6 +348,20 @@ scratch script did. Byte vectors for AC1–AC2 are literals in the test.
     and the check reports `timeStamp.malformed`; no warning, no `Error`
     escapes
 
+- **AC14 — what a parse holds does not grow with depth** *(amendment 8; limits)*
+  - Given an OCTET STRING of 1,048,000 bytes, once inside one SEQUENCE
+    and once nested 31 SEQUENCEs deep (the depth limit is 32), within
+    the reader's 1 MiB `maxBytes`
+  - When each is read by `DerReader::read()` and the result is kept
+  - Then the memory the deep result holds (`memory_get_usage()` before
+    and after) is within 1 MB of what the shallow one holds, and below
+    2 MB for each; every element's `contents()` and `encoded()` are the
+    bytes at its offset in the input, at every depth
+  - And given the same deep string as the `sigTst2` token of a signed
+    file, `verify()` still reports `timeStamp.malformed`, and its peak
+    memory is within 3 MB of the same file with the string one level
+    deep
+
 ## References
 
 - Specification: X.690 (2021) §8.1 (identifier and length octets),
@@ -618,6 +632,48 @@ final class TimestampException extends \RuntimeException {}
    **Weight A.** A file that threw now gets a report. Nothing else moves:
    an Extension that has its `extnID` is read as before.
 
+8. **2026-10-29, step 515, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   `DerReader::element()` gave every element its own copy of its content
+   octets, constructed elements included. A value nested n levels deep
+   was therefore held n + 1 times: once by itself and once by each
+   enclosing element. The bounds stopped it from growing without end,
+   but they did not make it cheap. The limits are 1 MiB of input and
+   depth 32, so one parse could hold about 33 MB.
+
+   Measured with an OCTET STRING of 1 MB (`memory_get_usage()` around
+   `read()`):
+
+   | depth | held |
+   |---|---|
+   | 1 | 2.2 MB |
+   | 8 | 9.4 MB |
+   | 16 | 17.8 MB |
+   | 31 | 33.6 MB |
+
+   Through `verify()`, a signed PNG with that string as its `sigTst2`
+   token peaks at 44.9 MB. The same file with the string one level deep
+   peaks at 13.8 MB. Both answer `timeStamp.malformed` in under 20 ms.
+   More tokens add little, because a header of more than eight is
+   refused before any is read (AC8). The cost lies in memory, not time.
+   On a host with a `memory_limit` of 128 MB, one file of 1 MB takes a
+   third of it.
+
+   Now the reader copies nothing. Each `Der` keeps the input it was read
+   from, which is one string shared by every element of the parse, plus
+   where its content octets start and how long they are.
+   `Der::contents()` returns them when asked. It replaces the public
+   property `$contents`; `encoded()` and `length()` read the same
+   offsets. `Der` and `DerReader` are `@internal` (SPEC-025), so the
+   public API does not change. The 27 reads of `->contents` in `src/`
+   and `tests/` become `->contents()`.
+
+   What this costs: an element kept after the parse, such as a
+   certificate's extension, keeps the whole input alive with it. That
+   input is at most `maxBytes`, once, where today it is a copy at every
+   level. New criterion AC14.
+
+   **Weight A.** No verdict and no status moves. Only memory changes.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -639,3 +695,4 @@ least one test; every source file maps back to this spec.
 | AC11 (amendment 3) | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC11: a negative INTEGER reads signed on request …; … GeneralizedTime fractions are kept …; … the writer token parses — * (3) / SPEC-016 | src/Asn1/Der.php :: integer(bool $signed), timeFraction(); src/Timestamp/TstInfo.php :: read() (nonce signed, $genTimeFraction) |
 | AC12 | tests/Unit/Asn1/IntegerBoundTest.php :: AC12 / SPEC-016 | src/Support/Bytes.php (`hexToDecimal()`, `MAX_DECIMAL_OCTETS`, `decimalOctets()`); src/Asn1/Der.php (`integer()`) |
 | AC13 (amendment 7) | tests/Unit/Timestamp/TimeStampTokenTest.php :: SPEC-016 AC13: an Extension without its extnID is a refusal, never a PHP error (amendment 7) / SPEC-016 | src/Timestamp/TstInfo.php :: extensions() |
+| AC14 (amendment 8) | tests/Unit/Asn1/NestedCopiesTest.php :: AC14: what a parse holds does not grow with depth; AC14: a deep token through verify() is malformed, and costs what a shallow one costs / SPEC-016 | src/Asn1/Der.php :: contents(), encoded(), length() ($input, $contentsLength); src/Asn1/DerReader.php :: element() (no copy) |

@@ -29,10 +29,10 @@ final readonly class RsaExponent
     {
         try {
             $parts = (new DerReader)->read($spki)->sequence();
-            if (count($parts) !== 2 || ! $parts[1]->is(TagClass::Universal, 3) || ($parts[1]->contents[0] ?? null) !== "\0") {
+            if (count($parts) !== 2 || ! $parts[1]->is(TagClass::Universal, 3) || ($parts[1]->contents()[0] ?? null) !== "\0") {
                 return null;
             }
-            $rsaPublicKey = (new DerReader)->read(substr($parts[1]->contents, 1))->sequence();
+            $rsaPublicKey = (new DerReader)->read(substr($parts[1]->contents(), 1))->sequence();
             if (count($rsaPublicKey) !== 2) {
                 return null;
             }
