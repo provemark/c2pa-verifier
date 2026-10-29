@@ -213,10 +213,16 @@ final readonly class Verifier
         $result = $this->check($manifestStore, $stream, $store, $settings, $timestamp, $graphStatuses, $graph, $format, $now, $clock, $evidence);
         $refusals = [];
         // a CAWG identity assertion carries a credential of its own that c2pa-rs validates; this verifier
-        // does not yet, and will not call Trusted what it has not looked at (SPEC-013 amendment 7)
-        foreach (array_keys($manifestStore->active->assertions) as $label) {
-            if ($label === 'cawg.identity' || str_starts_with($label, 'cawg.identity.')) {
-                $refusals[] = new ValidationStatus(StatusCode::GeneralError, sprintf('self#jumbf=/c2pa/%s/c2pa.assertions/%s', $manifestStore->active->label, $label), sprintf('the assertion %s carries an identity credential of its own that this verifier does not validate yet; refused rather than trusted unseen', $label));
+        // does not yet, and will not call Trusted what it has not looked at (SPEC-013 amendment 7). Known by its
+        // base label, an `__n` instance included (amendment 24), in the active manifest and in every manifest the
+        // graph reaches (SPEC-021 amendment 8); never scoped to an ingredient, so no record acknowledges it away
+        $reached = [$manifestStore->active, ...array_map(static fn (int|string $label): ?Manifest => $manifestStore->manifests[(string) $label] ?? null, array_keys($graph->referenced ?? []))];
+        foreach (array_filter($reached) as $manifest) {
+            foreach (array_keys($manifest->assertions) as $label) {
+                $base = (string) preg_replace('/__\d+\z/', '', (string) $label);
+                if ($base === 'cawg.identity' || str_starts_with($base, 'cawg.identity.')) {
+                    $refusals[] = new ValidationStatus(StatusCode::GeneralError, sprintf('self#jumbf=/c2pa/%s/c2pa.assertions/%s', $manifest->label, $label), sprintf('the assertion %s carries an identity credential of its own that this verifier does not validate yet; refused rather than trusted unseen', $label));
+                }
             }
         }
         if ($refusals !== []) {

@@ -409,3 +409,30 @@ it('AC12: the controls — one reference with a wrong hash, and no fault at all 
     ['one-manifest', 'Trusted'],
     ['ingredient-wrong-hash', 'Invalid'],
 ])->group('SPEC-021');
+
+it('AC13: a CAWG identity assertion in a reached manifest is refused, unscoped', function (string $file, string $label): void {
+    // amendment 8: the ingredient manifest is held to SPEC-013 amendment 24's rule; the refusal is not scoped to
+    // an ingredient, so no recorded validationResults can acknowledge it away. bin/make-cawg-variants.php.
+    $report = spec020Verify("cawg/{$file}.png", 'cawg/throw-away-root.settings.json');
+    $refused = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::GeneralError));
+    $validated = array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::IngredientManifestValidated);
+    $ingredient = array_keys(array_filter($report->store->manifests ?? [], static fn ($m): bool => $m !== $report->store?->active))[0] ?? '';
+
+    expect($report->result->state)->toBe(ValidationState::Invalid)
+        ->and($refused)->toHaveCount(1)
+        ->and($refused[0]->url)->toBe("self#jumbf=/c2pa/{$ingredient}/c2pa.assertions/{$label}")
+        ->and($refused[0]->ingredientUri)->toBeNull()
+        ->and($refused[0]->acknowledged)->toBeFalse()
+        ->and($validated)->toHaveCount(1)
+        ->and(spec020Oracle("cawg/{$file}--0.28.3.json")['validation_state'])->toBe('Invalid');
+})->with([
+    'cawg.identity' => ['cawg-ingredient', 'cawg.identity'],
+    'an instance, cawg.identity__2' => ['cawg-ingredient-instance', 'cawg.identity__2'],
+])->group('SPEC-021');
+
+it('AC13: the control, an ingredient manifest without a CAWG label, stays Trusted', function (): void {
+    $report = spec020Verify('cawg/cawg-ingredient-control.png', 'cawg/throw-away-root.settings.json');
+
+    expect($report->result->state)->toBe(ValidationState::Trusted)
+        ->and(spec020Oracle('cawg/cawg-ingredient-control--0.28.3.json')['validation_state'])->toBe('Trusted');
+})->group('SPEC-021');

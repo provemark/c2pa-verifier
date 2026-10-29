@@ -329,6 +329,17 @@ a short one) are made in the tests.
     (`absence/no-thumbnail.png`, the same family with the binding in
     `created_assertions`) stays `Trusted`.
 
+- **AC20 — a CAWG identity assertion is refused under an instance label too** *(amendment 24; required: error path)*
+  - Given a signed PNG under a throw-away root whose active manifest
+    carries an assertion labelled `cawg.identity__1`, and its control
+    without that assertion, both verified with the root as the anchor
+  - When `Verifier::verify()` runs
+  - Then the first is `Invalid` with exactly one `general.error` on
+    `self#jumbf=/c2pa/<label>/c2pa.assertions/cawg.identity__1`, not
+    scoped to an ingredient, next to `claimSignature.validated` and
+    `signingCredential.trusted`; the control is `Trusted`. Recorded next
+    to it: `c2patool` 0.28.3 on the same file says `Invalid`
+
 ## References
 
 - Specification: C2PA 2.4 §15.3 (the validation algorithm: locate the
@@ -633,6 +644,26 @@ final class ManifestException extends \RuntimeException
 
     Approved with SPEC-060 (its open question 6) by Maurice van Loon,
     2026-10-07.
+24. **2026-10-29, step 502, found by the security review before 0.10.0.**
+    Amendment 7's refusal knew a CAWG identity assertion by its label
+    only when that label was `cawg.identity` or began with
+    `cawg.identity.`. C2PA 2.4 §6.2.2 and §6.4 let a further instance of
+    an assertion type carry `__n` after its label, and every other check
+    here strips it first (`HardBindings::baseLabel()`, `ActionsCheck`).
+    `cawg.identity__1` was therefore not refused: a trusted signer's file
+    carrying one, with a credential this verifier never looked at, was
+    `Trusted`; `c2patool` 0.28.3 says `Invalid`
+    (`assertion.required.missing`). The refusal now reads the base label,
+    `__n` removed, and refuses `cawg.identity` and every label beginning
+    with `cawg.identity.`, an instance of either included. Which
+    manifests it covers besides the active one is SPEC-021 amendment 8.
+    New criterion AC20.
+
+    **Weight A.** Files that were wrongly `Trusted` become `Invalid`. The
+    two corpus files with a CAWG identity assertion (`C_with_CAWG_data`,
+    `c2pa-rs-cawg_ica`) are `Invalid` already and must not move.
+
+    Approved by Maurice van Loon, 2026-10-29 (step 502).
 
 ## Traceability
 
@@ -656,6 +687,7 @@ least one test; every source file maps back to this spec.
 | AC13 (amendment 9) | tests/Unit/Verifier/VerifierTest.php :: AC13: the writers corpus is a fourth drift alarm — c2patool's state unless stricter by name / SPEC-013 | tests/Pest.php :: SPEC013_WRITERS_CORPUS, _MULTI, _REMOTE, _TSA_NOT_CONFIGURED; src/Verifier/Verifier.php |
 | AC14 (amendment 9) | tests/Unit/Verifier/VerifierTest.php :: AC14: a remote manifest is reported by its URL, never fetched / SPEC-013 | src/Container/RemoteManifestDetector.php :: detect(); src/Verifier/VerificationReport.php :: $remoteManifestUrl, toArray() (`remote_manifest`); src/Verifier/Verifier.php :: verify() (the store-less branch) |
 | AC19 (amendment 13) | tests/Unit/Verifier/VerifierTest.php :: AC19: a hard binding listed only in gathered_assertions is claim.hardBindings.missing / SPEC-013 | src/Verifier/Verifier.php :: check(), hardBindingGatheredOnly() |
+| AC20 (amendment 24) | tests/Unit/Verifier/VerifierTest.php :: AC20: a CAWG identity assertion is refused under an instance label too / SPEC-013 | src/Verifier/Verifier.php :: verify() (the CAWG refusal by base label); bin/make-cawg-variants.php; tests/Fixtures/cawg/ |
 | AC16 (amendment 12) | tests/Unit/Verifier/MatrixTest.php :: AC16: the matrix covers every algorithm this verifier implements, in every format it reads / SPEC-013 | tests/Fixtures/matrix/; bin/make-matrix-fixtures.php |
 | AC17 (amendment 12) | tests/Unit/Verifier/MatrixTest.php :: AC17: the matrix is the fifth drift alarm: c2patool's state and codes, with and without the test roots / SPEC-013 | src/Verifier/Verifier.php :: verify() |
 | AC18 (amendment 12) | tests/Unit/Verifier/MatrixTest.php :: AC18: every matrix file is Trusted with the roots and untrusted without them / SPEC-013 | src/Trust/ChainCheck.php :: check() |

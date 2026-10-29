@@ -12,8 +12,10 @@ readable, can now be written down as one versioned document to keep next
 to the file — base64 DER for every certificate, time-stamp token and OCSP
 response, so that an archive can be checked later without this verifier.
 A caller's revocation source is asked each question once per
-verification. No verdict changes: over the corpus, against `0.9.0`, every
-report is identical (6,264 runs, with and without a revocation source).
+verification. It also carries the fixes of a security review of the whole
+code made before the release (below, under Fixed): files that were wrongly
+`Trusted` become `Invalid`. No corpus file outside the new probes changes
+verdict.
 
 **A `0.10`, not a `0.9.1`:** the public contract grows from 209 to 211
 symbols (below). Nothing was removed or renamed; a caller on `^0.9` keeps
@@ -48,6 +50,13 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
 
 ### Fixed
 
+- **A CAWG identity assertion is refused wherever this verifier validates
+  (SPEC-013 amendment 24, SPEC-021 amendment 8).** The refusal knew
+  `cawg.identity` only by its exact label and only in the active
+  manifest: an instance (`cawg.identity__1`) or one in an ingredient
+  manifest, with a credential this verifier never examined, left a file
+  `Trusted` that `c2patool` calls `Invalid`. It now reads the base label
+  and covers every manifest the ingredient graph reaches.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

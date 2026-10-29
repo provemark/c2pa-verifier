@@ -619,3 +619,24 @@ it('AC19: a hard binding listed only in gathered_assertions is claim.hardBinding
     $control = (new Verifier)->verify(spec013Stream('absence/no-thumbnail.png'), $root);
     expect($control->result->state)->toBe(ValidationState::Trusted);
 })->group('SPEC-013');
+
+it('AC20: a CAWG identity assertion is refused under an instance label too', function (): void {
+    // amendment 24: C2PA 2.4 §6.2.2 and §6.4 let a further instance carry `__n`; step 502's probe was Trusted here
+    // and is Invalid in c2patool 0.28.3 (assertion.required.missing). bin/make-cawg-variants.php made both files.
+    $report = spec020Verify('cawg/cawg-instance.png', 'cawg/throw-away-root.settings.json');
+    $refused = array_values(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::GeneralError));
+    $codes = spec013Codes($report);
+
+    expect($report->result->state)->toBe(ValidationState::Invalid)
+        ->and($refused)->toHaveCount(1)
+        ->and($refused[0]->url)->toBe("self#jumbf=/c2pa/{$report->store?->active->label}/c2pa.assertions/cawg.identity__1")
+        ->and($refused[0]->ingredientUri)->toBeNull()
+        ->and(in_array('claimSignature.validated', $codes, true))->toBeTrue()
+        ->and(in_array('signingCredential.trusted', $codes, true))->toBeTrue()
+        ->and(spec020Oracle('cawg/cawg-instance--0.28.3.json')['validation_state'])->toBe('Invalid');
+
+    // the control: the same file before the rename, its label no CAWG label
+    $control = spec020Verify('cawg/cawg-instance-control.png', 'cawg/throw-away-root.settings.json');
+    expect($control->result->state)->toBe(ValidationState::Trusted)
+        ->and(spec020Oracle('cawg/cawg-instance-control--0.28.3.json')['validation_state'])->toBe('Trusted');
+})->group('SPEC-013');

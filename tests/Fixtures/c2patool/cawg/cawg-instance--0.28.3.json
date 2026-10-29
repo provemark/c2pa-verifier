@@ -1,0 +1,100 @@
+{
+  "active_manifest": "urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9",
+  "manifests": {},
+  "validation_status": [
+    {
+      "code": "assertion.required.missing",
+      "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9",
+      "explanation": "Failed to load manifest"
+    }
+  ],
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.signature",
+          "explanation": "signing certificate trusted, found in [system_anchors] trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.assertions/c2pa.hash.data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.assertions/c2pa.thumbnail.claim",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.assertions/c2pa.thumbnail.ingredient",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.ingredient"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.assertions/c2pa.ingredient.v3",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.ingredient.v3"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.assertions/cawg.identity__1",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/cawg.identity__1"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.assertions/c2pa.hash.data",
+          "explanation": "data hash valid"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        }
+      ],
+      "failure": [
+        {
+          "code": "assertion.required.missing",
+          "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9",
+          "explanation": "Failed to load manifest"
+        }
+      ]
+    },
+    "ingredientDeltas": [
+      {
+        "ingredientAssertionURI": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.assertions/c2pa.ingredient.v3",
+        "validationDeltas": {
+          "success": [],
+          "informational": [
+            {
+              "code": "ingredient.unknownProvenance",
+              "url": "self#jumbf=/c2pa/urn:c2pa:0670b7da-c9b0-4cb9-835d-b513106212d9/c2pa.assertions/c2pa.ingredient.v3",
+              "explanation": "no title: ingredient does not have provenance"
+            }
+          ],
+          "failure": []
+        }
+      }
+    ],
+    "specVersion": "2.4.0",
+    "trustListUri": "system_anchors"
+  },
+  "validation_state": "Invalid"
+}

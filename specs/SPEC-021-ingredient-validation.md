@@ -301,6 +301,21 @@ multi-manifest files.
     (AC9), and the state is `Invalid` with `c2patool` 0.28.2's failures
     delta by delta.
 
+- **AC13 — a CAWG identity assertion in a reached manifest is refused** *(amendment 8; required: error path)*
+  - Given a signed PNG under a throw-away root whose active manifest names
+    one ingredient manifest (v3 ingredient assertion, right hashes) that
+    carries a `cawg.identity` assertion, a second whose ingredient
+    manifest carries `cawg.identity__2`, and the control whose ingredient
+    manifest carries neither, all verified with the root as the anchor
+  - When the Verifier runs
+  - Then the first two are `Invalid`, each with exactly one
+    `general.error` on
+    `self#jumbf=/c2pa/<ingredient label>/c2pa.assertions/<that label>`
+    that is not scoped to an ingredient and not acknowledged, while
+    `ingredient.manifest.validated` still stands under the ingredient
+    assertion; the control is `Trusted`. Recorded next to it: `c2patool`
+    0.28.3 on the first says `Invalid`
+
 ## References
 
 - Specification: C2PA 2.4 §15.11.2 (validate each ingredient, whatever its
@@ -486,6 +501,28 @@ instead, beside the orchestration that already holds those collaborators.
 
    Confirmed by Maurice van Loon, 2026-10-24 (step 408, choice A).
 
+8. **2026-10-29, step 502, found by the security review before 0.10.0.**
+   The Scope names a CAWG identity assertion among what still refuses,
+   and the out-of-scope list says one in an ingredient manifest is
+   "refused as in the active manifest". The code looked at the active
+   manifest only (`Verifier::verify()`): an ingredient manifest the graph
+   reaches and validates could carry a `cawg.identity` assertion with a
+   credential this verifier never examined, and the file was `Trusted`;
+   `c2patool` 0.28.3 says `Invalid` (`assertion.required.missing`, listed
+   under the active manifest's failures). Now every manifest the graph
+   reaches is held to SPEC-013 amendment 24's rule, as the active one is.
+   The refusal is a `general.error` on that manifest's assertion URI and
+   is **not** scoped to an ingredient, so no recorded `validationResults`
+   can acknowledge it away (amendment 4's dropping rule matches scoped
+   statuses only). A manifest no assertion reaches is not validated and
+   stays outside this rule, as it stays outside every other. New
+   criterion AC13.
+
+   **Weight A.** Files that were wrongly `Trusted` become `Invalid`. No
+   corpus file is expected to move.
+
+   Approved by Maurice van Loon, 2026-10-29 (step 502).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -505,5 +542,6 @@ least one test; every source file maps back to this spec.
 | AC10 | tests/Unit/Verifier/VerifierTest.php :: AC10–AC13 / SPEC-013; tests/Unit/Cli/CommandTest.php :: AC11 / SPEC-019; bin/fuzz.php | the whole verification path |
 | AC11 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC11 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`recordedInStore()`, `drop()`); src/Verifier/Verifier.php (the binding manifest passed to `drop()`) |
 | AC12 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC12 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`check()`: the hash of every reference) |
+| AC13 (amendment 8) | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC13 / SPEC-021 | src/Verifier/Verifier.php :: verify() (the CAWG refusal over the manifests the graph reaches, unscoped); bin/make-cawg-variants.php; tests/Fixtures/cawg/ |
 
 `src/Verifier/IngredientManifestCheck.php` maps to this spec; `StatusCode`'s two new cases are its. Measured 2026-09-22: 7 red (2 already true) → 9 green, `composer check` exit 0, 336 tests, 312 fuzz runs with no fault.
