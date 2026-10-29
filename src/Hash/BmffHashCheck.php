@@ -281,7 +281,8 @@ final readonly class BmffHashCheck
         if ($size < 1) {
             return $mismatch('the mdat holds nothing after its first 16 bytes, so no block');
         }
-        $blocks = intdiv($size + $fixed - 1, $fixed);
+        // the blocks rounded up, without size + fixed - 1, which passes PHP_INT_MAX for a huge block (SPEC-080 amendment 3)
+        $blocks = intdiv($size - 1, $fixed) + 1;
         $count = $map['count'] ?? null;
         if ($count !== $blocks) {
             return $mismatch(sprintf('the merkle map says count %s, and the mdat holds %d block(s) of %d bytes', is_int($count) ? (string) $count : get_debug_type($count), $blocks, $fixed));

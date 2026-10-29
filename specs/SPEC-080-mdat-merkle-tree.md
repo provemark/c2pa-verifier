@@ -144,6 +144,15 @@ means the same as `c2patool`'s (ADR-0005).
   - Then only the files of this spec move; SPEC-028's fragmented files and
     every other BMFF file give the same statuses
 
+- **AC10 — a block larger than any file is a report, not a crash** *(amendment 3; required: malformed input)*
+  - Given `block-size-huge.mp4`, signed by `bin/make-mdat-merkle-variants.php`
+    as `six-blocks.mp4` but with `fixedBlockSize` 2^63 − 1, the largest
+    integer the CBOR decoder gives
+  - When verified under the directory's settings
+  - Then a report, not a thrown error: `assertion.bmffHash.mismatch` saying
+    the map's count 6 against the 1 block the `mdat` holds, not `Trusted`;
+    and `c2patool` 0.28.3's answer is recorded beside it
+
 ## References
 
 - Specification: C2PA 2.4 §15.12.2, §15.12.2.1, §18.6.2, §18.6.3, §A.5.4,
@@ -324,6 +333,24 @@ final class IsobmffManifestStoreExtractor
    - `CborDecoder::decodePrefix()` reads one data item and says where it
      ends, for the padded proof boxes. `decode()` is unchanged.
 
+3. **2026-10-29, step 508, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   The number of blocks was computed as `intdiv(size + fixedBlockSize − 1,
+   fixedBlockSize)`. With a `fixedBlockSize` near 2^63 the sum passes
+   `PHP_INT_MAX`, becomes a float, and `intdiv()` throws a `TypeError` that
+   no check catches: measured on the review's probe (`six-blocks.mp4` with
+   `fixedBlockSize` 2^63 − 1 and the assertion's hash recomputed),
+   `verify()` throws instead of returning a report. No wrong `Valid`, but
+   whoever can upload a file can make a caller fail.
+
+   Now the same number is computed as `intdiv(size − 1, fixedBlockSize) +
+   1`, equal for every size of at least 1 (checked just before) and free
+   of overflow. A block larger than the `mdat` makes one block, and the
+   `count` and hash checks that follow decide as for any other file. New
+   criterion AC10.
+
+   **Weight A.** A file that threw now gets a report. Nothing else moves:
+   for every value that did not overflow the two formulas agree.
+
 ## Traceability
 
 All in `tests/Unit/Hash/MdatMerkleTest.php`, group `SPEC-080`, unless named
@@ -340,3 +367,4 @@ otherwise.
 | AC7 (amendment 1)    | AC7: an /mdat subset from offset 16 on leaves no byte unbound and is read, as c2patool reads it; AC7: an /mdat exclusion is read only beside a merkle tree, and only from offset 16 on; AC7: the whole /mdat excluded leaves eight bytes under neither the hash nor a leaf, and is refused where c2patool trusts it; AC7: without the file hash, a merkle list is a fragmented stream's, and /mdat stays refused there | src/Hash/BmffHashCheck.php :: refusedExclusion(), mdatRefusal() |
 | AC8                  | AC8: the forms SPEC-080 leaves out are refused by name (4 datasets); AC8: what c2patool says of those forms, kept beside the refusal | src/Hash/BmffHashCheck.php :: checkMdatMerkle() |
 | AC9                  | tests/Unit/Verifier/FragmentedVerifierTest.php and tests/Unit/Hash/BmffHashCheckTest.php (SPEC-027, SPEC-028), unchanged and green; the corpus before and after (step 448): only `tests/Fixtures/mdat-merkle/` moves | — |
+| AC10 (amendment 3) | tests/Unit/Hash/MdatMerkleTest.php :: AC10: a block larger than any file is a report, not a crash (amendment 3) / SPEC-080 | src/Hash/BmffHashCheck.php :: checkMdatMerkle() (the block count); bin/make-mdat-merkle-variants.php (`block-size-huge`) |

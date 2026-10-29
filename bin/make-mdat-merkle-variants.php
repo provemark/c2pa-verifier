@@ -414,6 +414,8 @@ $edits = [
     'fixed-and-variable' => mmOnMap(static fn (string $b, int $m): array => mmAdd($b, $m, mmText('variableBlockSizes').$sizes)),
     'block-size-text' => mmOnMap(static fn (string $b, int $m): array => mmPair($b, $m, 'fixedBlockSize', mmText('fixedBlockSize').mmText('1024'))),
     'block-size-one' => mmOnMap(static fn (string $b, int $m): array => mmPair($b, $m, 'fixedBlockSize', mmText('fixedBlockSize')."\x01")),
+    // step 508: 2^63 - 1, the largest integer the decoder gives; size + fixedBlockSize - 1 passed PHP_INT_MAX
+    'block-size-huge' => mmOnMap(static fn (string $b, int $m): array => mmPair($b, $m, 'fixedBlockSize', mmText('fixedBlockSize')."\x1b\x7f\xff\xff\xff\xff\xff\xff\xff")),
     'count-five' => mmOnMap(static fn (string $b, int $m): array => mmPair($b, $m, 'count', mmText('count')."\x05")),
     'init-hash' => mmOnMap(static fn (string $b, int $m): array => mmAdd($b, $m, mmText('initHash')."\x58\x20".str_repeat("\0", 32))),
     'hashes-four' => mmOnMap(static function (string $b, int $m): array {

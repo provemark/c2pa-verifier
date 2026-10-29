@@ -12349,3 +12349,10 @@ README are where the disclosure lives.
 - Produced: SPEC-029 amendment 4 and AC8 with its Traceability; `src/Container/IsobmffManifestStoreExtractor.php` (`descend()`); `tests/Unit/Hash/BmffV2ExclusionsTest.php`; `CHANGELOG.md`; `notes/step-507-box-walk-resumes-after-container.md`, `NOTES.md`.
 - Measured: the review's probe before and after; AC8 on `2a0c2fb` (14 failed, the 2 controls passed) and after (16 passed), repeated on the final test; the extractor's other walks read; SPEC-026 to -029 and -072; the corpus against `2a0c2fb` (2,166 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0. Reasoned: what an out-of-step tree could do, not built end to end.
 - Decided by Maurice: the amendment.
+
+## 2026-10-29 — Step 508: a huge fixedBlockSize gives a report, not a crash
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf het amendement voor 508"; then "akkoord, amendement approved, bouw 508".
+- Produced: SPEC-080 amendment 3 and AC10 with its Traceability; `src/Hash/BmffHashCheck.php` (the block count in `checkMdatMerkle()`); `bin/make-mdat-merkle-variants.php` (`block-size-huge`); `tests/Fixtures/mdat-merkle/` and `tests/Fixtures/c2patool/mdat-merkle/` (signed again by the generator, one new file and its two oracles, README row); `tests/Unit/Hash/MdatMerkleTest.php`; `CHANGELOG.md`; `notes/step-508-merkle-block-size-overflow.md`, `NOTES.md`.
+- Measured: the reviewer's probe before (`TypeError`) and after (`Invalid`); the generator with `c2patool` 0.28.3 and 0.28.1 (every recorded state unchanged, the new file `Invalid` in both); AC10 red on `4ff78c9` and green after, repeated on the final test; SPEC-080's 36 tests; the corpus against `4ff78c9` (2,168 runs, only the new file differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0, `bin/package-check.php`.
+- Decided by Maurice: the amendment.

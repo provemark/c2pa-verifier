@@ -346,3 +346,11 @@ it('AC8: what c2patool says of those forms, kept beside the refusal', function (
         ->and([spec080Oracle('two-mdat-one-map', '0.28.3'), spec080Oracle('two-mdat-one-map', '0.28.1')])->toBe(['Invalid', 'Invalid']);
     // two-mdat: Trusted or Invalid from one run to the next (step 446); its stored answer is one run's, no oracle
 })->group('SPEC-080');
+
+it('AC10: a block larger than any file is a report, not a crash (amendment 3)', function (): void {
+    $report = spec080('block-size-huge');   // fixedBlockSize 2^63 - 1
+
+    expect(spec080Explanations($report, 'assertion.bmffHash.mismatch'))->toContain('c2pa.hash.bmff.v3: the merkle map says count 6, and the mdat holds 1 block(s) of 9223372036854775807 bytes')
+        ->and($report->result->state->value)->toBe('Invalid')
+        ->and([spec080Oracle('block-size-huge', '0.28.3'), spec080Oracle('block-size-huge', '0.28.1')])->toBe(['Invalid', 'Invalid']);
+})->group('SPEC-080');

@@ -80,6 +80,9 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   amendment 4).** One to seven bytes after a container's last child were
   not passed over, so every later box header was read out of step and
   the tree could list boxes the file does not hold there.
+- **A huge `fixedBlockSize` in a merkle map gives a report, not a
+  `TypeError` (SPEC-080 amendment 3).** The block count overflowed to a
+  float near 2^63, and `verify()` threw instead of returning `Invalid`.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

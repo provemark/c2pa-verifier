@@ -34,6 +34,7 @@ would notice, neither verifier reads them.
 | `fixed-and-variable.mp4` | re-signed: `variableBlockSizes` added beside `fixedBlockSize` (AC6) | Invalid | Invalid | C2PA Validation Error: MerkleMap block type must be either fixed or variable or both none |
 | `block-size-text.mp4` | re-signed: `fixedBlockSize` the text "1024" (AC6) | error: cannot decode | error: cannot decode | invalid type: string "1024", expected u64 |
 | `block-size-one.mp4` | re-signed: `fixedBlockSize` 1 (AC6) | Invalid | Invalid | fixed block size must be positive integer |
+| `block-size-huge.mp4` | re-signed: `fixedBlockSize` 2^63 − 1 (AC10, step 508) | Invalid | Invalid | number of hash ranges does not match BmffMerkleMap count |
 | `count-five.mp4` | re-signed: `count` 5 for six blocks (AC6) | Invalid | Invalid | number of hash ranges does not match BmffMerkleMap count |
 | `init-hash.mp4` | re-signed: an `initHash` of 32 zero bytes added (AC6) | Invalid | Invalid | BMFF inithash must not be present for non-fragmented media |
 | `hashes-four.mp4` | re-signed: `hashes` four times the root, a row the six-leaf tree does not have (AC6) | Trusted | Trusted |  |
