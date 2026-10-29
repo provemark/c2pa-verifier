@@ -133,6 +133,11 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   with Ed25519's OID was therefore read as Ed25519, and its signatures
   were `Invalid`. The OID is now read as a field and compared exactly.
   This was never a wrong `Valid`, and no other key moves.
+- **A JPEG has at most 4,096 segments before SOS, and a PNG at most 65,536
+  chunks (SPEC-001 amendment 6, SPEC-002 amendment 4).** A 64 MB JPEG of
+  empty segments took 22.5 s to walk. Such files are now refused by name
+  in well under a second. Real files have at most a few dozen. This is a
+  deliberate difference from `c2patool`, recorded in `docs/comparison.md`.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

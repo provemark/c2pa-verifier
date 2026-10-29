@@ -30,6 +30,9 @@ final readonly class JpegManifestStoreExtractor
     // ended a 128 MB host with a fatal error. Same figure in SPEC-002 and SPEC-003.
     public const DEFAULT_MAX_LBOX = 16 * 1024 * 1024;
 
+    /** Every segment before SOS, pieces included: room for maxPieces and as many others; real files have a few dozen (SPEC-001 amendment 6). */
+    public const DEFAULT_MAX_SEGMENTS = 4096;
+
     private const MARKER_SOS = 0xDA;
 
     private const MARKER_APP11 = 0xEB;
@@ -40,6 +43,7 @@ final readonly class JpegManifestStoreExtractor
     public function __construct(
         public int $maxPieces = self::DEFAULT_MAX_PIECES,
         public int $maxLBox = self::DEFAULT_MAX_LBOX,
+        public int $maxSegments = self::DEFAULT_MAX_SEGMENTS,
         private MemoryBudget $budget = new MemoryBudget,
     ) {}
 
@@ -76,6 +80,7 @@ final readonly class JpegManifestStoreExtractor
         }
 
         $pieces = 0;
+        $segments = 0;
         $instanceNumber = null;
         $lBox = null;
         $tBox = null;
@@ -88,6 +93,10 @@ final readonly class JpegManifestStoreExtractor
 
             if ($marker === self::MARKER_SOS) {
                 break;
+            }
+            // each segment costs a read and a skip, so their number is bounded as the pieces are (amendment 6)
+            if (++$segments > $this->maxSegments) {
+                throw new ContainerException(sprintf('segment %d at offset %d exceeds the limit of %d segments before SOS', $segments, $offset, $this->maxSegments));
             }
             if (! self::hasLengthField($marker)) {
                 // Reading a length where there is none would skip an arbitrary

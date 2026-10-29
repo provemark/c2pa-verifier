@@ -29,6 +29,9 @@ final readonly class PngManifestStoreExtractor
     // ended a 128 MB host with a fatal error. Same figure in SPEC-001 and SPEC-003.
     public const DEFAULT_MAX_CHUNK_LENGTH = 16 * 1024 * 1024;
 
+    /** Every chunk, IEND included: 8 KiB IDATs would need a 512 MiB file to reach it; real files have a few dozen (SPEC-002 amendment 4). */
+    public const DEFAULT_MAX_CHUNKS = 65536;
+
     private const SIGNATURE = "\x89PNG\r\n\x1a\n";
 
     private const TYPE_CABX = 'caBX';
@@ -40,6 +43,7 @@ final readonly class PngManifestStoreExtractor
 
     public function __construct(
         public int $maxChunkLength = self::DEFAULT_MAX_CHUNK_LENGTH,
+        public int $maxChunks = self::DEFAULT_MAX_CHUNKS,
         private MemoryBudget $budget = new MemoryBudget,
     ) {}
 
@@ -78,6 +82,7 @@ final readonly class PngManifestStoreExtractor
 
         $store = null;
         $storeOffset = null;
+        $chunks = 0;
 
         while (true) {
             $offset = $reader->tell();
@@ -88,6 +93,10 @@ final readonly class PngManifestStoreExtractor
                     $offset,
                     strlen($header),
                 ));
+            }
+            // each chunk costs a read and a skip, so their number is bounded (amendment 4)
+            if (++$chunks > $this->maxChunks) {
+                throw new ContainerException(sprintf('chunk %d at offset %d exceeds the limit of %d chunks', $chunks, $offset, $this->maxChunks));
             }
             /** @var array{length: int, type: string} $chunk */
             $chunk = unpack('Nlength/a4type', $header);

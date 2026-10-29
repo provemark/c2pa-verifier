@@ -188,6 +188,20 @@ assumption: this project fails closed.
   - Then it throws `ContainerException` naming the offset where a chunk
     header was expected, and does not return `null`
 
+- **AC16 — at most 65,536 chunks** *(amendment 4; limits; a deliberate difference: `c2patool` has no such bound)*
+  - Given a PNG built in the test: the signature, then N empty `tEXt`
+    chunks (length 0, the CRC right), then `IEND`; once with N = 65,535
+    and once with N = 65,536, so that `IEND` is chunk 65,536 or 65,537;
+    and the review's shape, 2,000,000 of them (24 MB)
+  - When the extractor runs, and when the 24 MB file is verified
+  - Then the first returns `null` (no store), the second throws
+    `ContainerException` naming the limit and the offset of chunk 65,537,
+    with `storeReached` false; the 24 MB file is `Invalid` with
+    `general.error` and `has_manifest` false, in under 0.5 s (4.3 s
+    before)
+  - And every PNG in `tests/Fixtures` still extracts as before (the most
+    chunks among them is 64)
+
 ## References
 
 - Specification: C2PA 2.4 §A.3 "Embedding manifests into PNG"; ISO/IEC
@@ -282,6 +296,29 @@ calls `file_get_contents`. `fread` with a length of 0 throws in PHP 8, and
 
    Held as **AC15**. Approved by Maurice van Loon, 2026-10-05 (step 223).
 
+4. **2026-10-29, step 518, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   As SPEC-001 amendment 6, for PNG. The walk to `IEND` has no limit on
+   the number of chunks. A PNG of nothing but empty chunks (12 bytes
+   each) costs about 2 µs per chunk: 2,000,000 chunks (24 MB) take 4.3 s
+   in `verify()`, 6.2 s in `c2patool` 0.28.3. Memory stays at 14 MB, and
+   the verdict is `Invalid`.
+
+   Now `PngManifestStoreExtractor` counts every chunk, `IEND` included,
+   against `maxChunks` (default 65,536). It throws `ContainerException`
+   on the chunk that exceeds it, naming the limit and the offset. With
+   libpng's default `IDAT` size of 8 KiB, a PNG would have to be 512 MiB
+   to reach the limit; at the limit the walk costs about 0.13 s.
+   Measured over `tests/Fixtures`, the sister repository's fixtures and
+   the measurement repository (518 PNGs), the most chunks is 98 (an
+   OpenAI image after WordPress; 64 in `tests/Fixtures`, `c2pa-rs/sample1.png`).
+
+   A fault before the `caBX` chunk is `storeReached` false (amendment 3).
+   New criterion AC16.
+
+   **Weight B**, as SPEC-001 amendment 6: a deliberate difference from
+   `c2patool`, which reads any number of chunks. No file measured comes
+   near the limit.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -304,3 +341,4 @@ least one test; every source file maps back to this spec.
 | AC13 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC13: the default limit is 16 MiB / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: DEFAULT_MAX_CHUNK_LENGTH, __construct() |
 | AC14 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC14: a file that ends before IEND is an error naming the offset where a chunk header was expected, not null / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (chunk header read via `readUpTo`), src/Container/StreamReader.php :: skip() |
 | AC15 | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC15: a fault says whether a caBX chunk header had been read (amendment 3) / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: extract() (`storeReached`) |
+| AC16 (amendment 4) | tests/Unit/Container/PngManifestStoreExtractorTest.php :: AC16: at most 65,536 chunks (amendment 4) / SPEC-002 | src/Container/PngManifestStoreExtractor.php :: walk() (`$chunks`), DEFAULT_MAX_CHUNKS, $maxChunks |

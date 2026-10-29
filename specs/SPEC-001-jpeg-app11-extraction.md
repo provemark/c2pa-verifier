@@ -184,6 +184,19 @@ assumption: this project fails closed.
   - Then it throws `ContainerException` naming a marker expected at offset
     20 — not "inside the segment at offset 2", which is whole
 
+- **AC18 — at most 4,096 segments before SOS** *(amendment 6; limits; a deliberate difference: `c2patool` has no such bound)*
+  - Given a JPEG built in the test: SOI, then N empty COM segments
+    (`FF FE 00 02`), then SOS; once with N = 4,096 and once with
+    N = 4,097; and the review's shape, 2,000,000 of them (8 MB)
+  - When the extractor runs, and when the 8 MB file is verified
+  - Then N = 4,096 returns `null` (no store), N = 4,097 throws
+    `ContainerException` naming the limit and the offset of segment
+    4,097, with `storeReached` false; the 8 MB file is `Invalid` with
+    `general.error` and `has_manifest` false, in under 0.5 s (2.8 s
+    before)
+  - And every JPEG in `tests/Fixtures` still extracts as before (the
+    most segments before SOS among them is 35)
+
 ## References
 
 - Specification: C2PA 2.4 §A.3.1 "Embedding manifests into JPEG" (quoted in
@@ -300,6 +313,45 @@ checks and limits pass. It never calls `file_get_contents`.
 
    Held as **AC17**. Approved by Maurice van Loon, 2026-10-05 (step 223).
 
+6. **2026-10-29, step 518, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   The walk from SOI to SOS has a limit on APP11 pieces (2,048) but none
+   on other segments. Each segment costs a marker read, a length read and
+   a skip, about 1.4 µs. A JPEG of nothing but empty COM segments
+   (`FF FE 00 02`, 4 bytes each) therefore costs time in proportion to
+   its size, at about 100 times the cost per byte of hashing it:
+
+   | file | segments | `verify()` | `c2patool` 0.28.3 |
+   |---|---|---|---|
+   | 8 MB | 2,000,000 | 2.8 s | 0.10 s |
+   | 64 MB | 16,000,000 | 22.5 s | – |
+
+   Memory stays at 6 MB, and the verdict is `Invalid` in every case.
+   64 MB is a common upload limit, and 22.5 s is close to PHP's usual
+   `max_execution_time` of 30 s.
+
+   The project brief asks every parser for hard limits, the segment
+   count among them. `JpegExclusionAllowance` already stops after 1,024
+   segments before SOS (SPEC-024). The extractor did not.
+
+   Now `JpegManifestStoreExtractor` counts every segment before SOS,
+   APP11 pieces included, against `maxSegments` (default 4,096). It
+   throws `ContainerException` on the segment that exceeds it, naming the
+   limit and the offset. The default leaves room for the 2,048 pieces
+   `maxPieces` allows, plus as many other segments. Measured over
+   `tests/Fixtures`, the sister repository's fixtures and the
+   measurement repository (191 JPEGs), the most segments before SOS is
+   35 (`adobe-20220124-CAIAIIICAICIICAIICICA.jpg`, 25 of them APP11).
+
+   As amendment 5 says, a fault before the store is reached is
+   `storeReached` false (`has_manifest` false). A fault after it stays a
+   fault in the manifest. Either way the file is `Invalid` with
+   `general.error`. New criterion AC18.
+
+   **Weight B.** This is a deliberate difference from `c2patool`, which
+   reads any number of segments: a signed JPEG with more than 4,096
+   segments before SOS would be `Valid` there and `Invalid` here. No file
+   measured comes near the limit. It goes into `docs/comparison.md`.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -324,3 +376,4 @@ least one test; every source file maps back to this spec.
 | AC15 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC15: a marker without a length field before SOS is an error naming the marker and its offset / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: hasLengthField(), extract() |
 | AC16 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC16: a file that ends exactly on a segment boundary is an error naming the offset where a marker was expected / SPEC-001 | src/Container/StreamReader.php :: skip() (ends exactly after: no error), src/Container/JpegManifestStoreExtractor.php :: readMarker() (the next read names offset 20) |
 | AC17 | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC17: a fault says whether an APP11 JUMBF piece had been read (amendment 5) / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: extract() (`storeReached`) |
+| AC18 (amendment 6) | tests/Unit/Container/JpegManifestStoreExtractorTest.php :: AC18: at most 4,096 segments before SOS (amendment 6) / SPEC-001 | src/Container/JpegManifestStoreExtractor.php :: walk() (`$segments`), DEFAULT_MAX_SEGMENTS, $maxSegments |

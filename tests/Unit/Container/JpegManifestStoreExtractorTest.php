@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\JpegManifestStoreExtractor;
 use Provemark\C2paVerifier\Container\ManifestStoreBytes;
+use Provemark\C2paVerifier\Verifier\Verifier;
 
 /*
  * SPEC-001: JPEG APP11 → manifest store bytes. The fixture and every
@@ -206,4 +207,65 @@ it('AC8, AC11: a long APP11 segment without JP, a TBox that differs, a later Z o
     $short = spec001Patched(2, 8, pack('N', 70000));
     $short = substr_replace($short, pack('N', 70000), (int) strpos($short, "\xFF\xEB") + 12, 4);
     expect(fn () => $extract($short))->toThrow(ContainerException::class, 'piece 2 carries the box past its LBox 70000');
+})->group('SPEC-001');
+
+/** SOI, $n empty COM segments, SOS: built here, no fixture. */
+function spec001ComSegments(int $n): string
+{
+    return "\xFF\xD8".str_repeat("\xFF\xFE\x00\x02", $n)."\xFF\xDA\x00\x02";
+}
+
+it('AC18: at most 4,096 segments before SOS (amendment 6)', function (): void {
+    $extract = static function (string $bytes): ?ManifestStoreBytes {
+        $stream = fopen('php://memory', 'w+b');
+        assert($stream !== false);
+        fwrite($stream, $bytes);
+        rewind($stream);
+
+        return (new JpegManifestStoreExtractor)->extract($stream);
+    };
+
+    expect($extract(spec001ComSegments(4096)))->toBeNull();
+    try {
+        $extract(spec001ComSegments(4097));
+        $thrown = null;
+    } catch (ContainerException $e) {
+        $thrown = $e;
+    }
+    expect($thrown)->toBeInstanceOf(ContainerException::class)
+        ->and($thrown?->getMessage())->toContain('4096')->toContain('offset '.(2 + 4096 * 4))
+        ->and($thrown?->storeReached)->toBeFalse();
+
+    // the review's shape: 2,000,000 segments, 8 MB; 2.8 s before amendment 6
+    $stream = fopen('php://memory', 'w+b');
+    assert($stream !== false);
+    fwrite($stream, spec001ComSegments(2_000_000));
+    rewind($stream);
+    $started = hrtime(true);
+    $report = (new Verifier)->verify($stream);
+    expect((hrtime(true) - $started) / 1e9)->toBeLessThan(0.5)
+        ->and($report->result->state->value)->toBe('Invalid')
+        ->and($report->hasManifest)->toBeFalse()
+        ->and(array_map(static fn ($s): string => $s->code->value, $report->result->statuses))->toContain('general.error');
+
+    // every JPEG fixture still extracts as before: the most segments before SOS among them is 35
+    $fixtures = dirname(__DIR__, 2).'/Fixtures';
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($fixtures, FilesystemIterator::SKIP_DOTS));
+    $refused = [];
+    foreach ($files as $file) {
+        assert($file instanceof SplFileInfo);
+        if (! in_array(strtolower($file->getExtension()), ['jpg', 'jpeg'], true)) {
+            continue;
+        }
+        $stream = fopen($file->getPathname(), 'rb');
+        assert($stream !== false);
+        try {
+            (new JpegManifestStoreExtractor)->extract($stream);
+        } catch (ContainerException $e) {
+            if (str_contains($e->getMessage(), 'segments before SOS')) {
+                $refused[] = $file->getPathname();
+            }
+        }
+    }
+    expect($refused)->toBe([]);
 })->group('SPEC-001');

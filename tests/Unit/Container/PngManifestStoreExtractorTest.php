@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\ManifestStoreBytes;
 use Provemark\C2paVerifier\Container\PngManifestStoreExtractor;
+use Provemark\C2paVerifier\Verifier\Verifier;
 
 /*
  * SPEC-002: PNG caBX → manifest store bytes. The fixture and every variant
@@ -156,4 +157,65 @@ it('AC15: a fault says whether a caBX chunk header had been read (amendment 3)',
     foreach (['png/crc-wrong.png', 'png/truncated-in-cabx.png', 'png/two-cabx.png'] as $name) {
         expect(spec002Reached($extract, $read($name)))->toBeTrue($name);
     }
+})->group('SPEC-002');
+
+/** The PNG signature, $n empty tEXt chunks, IEND: built here, no fixture. */
+function spec002EmptyChunks(int $n): string
+{
+    return "\x89PNG\r\n\x1a\n".str_repeat(pack('N', 0).'tEXt'.pack('N', crc32('tEXt')), $n).pack('N', 0).'IEND'.pack('N', crc32('IEND'));
+}
+
+it('AC16: at most 65,536 chunks (amendment 4)', function (): void {
+    $extract = static function (string $bytes): ?ManifestStoreBytes {
+        $stream = fopen('php://memory', 'w+b');
+        assert($stream !== false);
+        fwrite($stream, $bytes);
+        rewind($stream);
+
+        return (new PngManifestStoreExtractor)->extract($stream);
+    };
+
+    expect($extract(spec002EmptyChunks(65535)))->toBeNull();
+    try {
+        $extract(spec002EmptyChunks(65536));
+        $thrown = null;
+    } catch (ContainerException $e) {
+        $thrown = $e;
+    }
+    expect($thrown)->toBeInstanceOf(ContainerException::class)
+        ->and($thrown?->getMessage())->toContain('65536')->toContain('offset '.(8 + 65536 * 12))
+        ->and($thrown?->storeReached)->toBeFalse();
+
+    // the review's shape: 2,000,000 chunks, 24 MB; 4.3 s before amendment 4
+    $stream = fopen('php://memory', 'w+b');
+    assert($stream !== false);
+    fwrite($stream, spec002EmptyChunks(2_000_000));
+    rewind($stream);
+    $started = hrtime(true);
+    $report = (new Verifier)->verify($stream);
+    expect((hrtime(true) - $started) / 1e9)->toBeLessThan(0.5)
+        ->and($report->result->state->value)->toBe('Invalid')
+        ->and($report->hasManifest)->toBeFalse()
+        ->and(array_map(static fn ($s): string => $s->code->value, $report->result->statuses))->toContain('general.error');
+
+    // every PNG fixture still extracts as before: the most chunks among them is 64
+    $fixtures = dirname(__DIR__, 2).'/Fixtures';
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($fixtures, FilesystemIterator::SKIP_DOTS));
+    $refused = [];
+    foreach ($files as $file) {
+        assert($file instanceof SplFileInfo);
+        if (strtolower($file->getExtension()) !== 'png') {
+            continue;
+        }
+        $stream = fopen($file->getPathname(), 'rb');
+        assert($stream !== false);
+        try {
+            (new PngManifestStoreExtractor)->extract($stream);
+        } catch (ContainerException $e) {
+            if (preg_match('/limit of \d+ chunks/', $e->getMessage()) === 1) {
+                $refused[] = $file->getPathname();
+            }
+        }
+    }
+    expect($refused)->toBe([]);
 })->group('SPEC-002');
