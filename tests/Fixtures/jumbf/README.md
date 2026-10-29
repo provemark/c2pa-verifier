@@ -28,6 +28,8 @@ claim 33,026 (`jumd` 33,034, `cbor` 33,073).
 | `label-no-nul` | the claim label's NUL → `x` | `Error: unexpected end of file` | AC12 error |
 | `label-slash` | the claim label `c2pa.claim.v2` → `c2pa/claim.v2` | extracts; `Invalid`, `claim.multiple` — the claim box is no longer found under its label | AC12 error (stricter: an error, not a verdict) |
 | `label-control` | the claim label with U+0001 in place of the first `.` | extracts; `Invalid`, `claim.multiple` | AC12 error (stricter: an error, not a verdict) |
+| `manifest-label-slash` | the active manifest's label `urn:c2pa:488b…` → `urn/c2pa:488b…`, in its description box only (step 517) | `c2patool` 0.28.3 and 0.28.1: `Error: C2PA provenance not found in XMP` | AC19 error |
+| `manifest-label-slash-all` | the same, and the same label in the claim's signature URI, so that box and claim agree (step 517) | `c2patool` 0.28.3 and 0.28.1: `Error: C2PA provenance not found in XMP` | AC19 error |
 | `salt-20` | 4 bytes added to the `c2pa.hash.data` salt (20 bytes), every enclosing LBox +4 | extracts; `Invalid`, `assertion.hashedURI.mismatch` (the salt bytes changed) and `assertion.dataHash.mismatch` (the store grew) — the salt length itself is not checked | AC12 error (stricter than the oracle) |
 | `salt-32` | 16 bytes added to the same salt (32 bytes, valid per §8.4.2.3), every enclosing LBox +4 | extracts; `Invalid`, `assertion.hashedURI.mismatch` and `assertion.dataHash.mismatch` — M4's concern | AC3: parses, salt of 32 bytes |
 | `private-not-c2sh` | the salt box's TBox `c2sh` → `c2sx` | `Error: unexpected end of file` | AC12 error |
@@ -55,6 +57,8 @@ ae6ba8b62af921024430fa652e6285093a2fac1fac381695886c04e01ee91ecb  toggles-no-lab
 3314f1abcd936ea2b271af324c8574ec6ce7e8bb35bcfb06276cc843c4076ff9  label-no-nul.bin
 691fc06f4ed0dc2d1aff09eccd242ff38de0fcd0339058a6a1f535acb5bd5712  label-slash.bin
 6a4ae4f16a62353553bf4941d305f32fb0c2de08de18c852c723b6bc380ceb23  label-control.bin
+e7c5b2cc40d0416c5041fdcea349cd1c4913f169d23e8bb66cce9dd2720d3e13  manifest-label-slash.bin
+0f3194686080eac2ccc3215c270f4fd910abb2151e36ebad01cac5f947323317  manifest-label-slash-all.bin
 737557b9ef2cdf9c429d69741321201216b5484a2fbd7fc85dad933a4a7b4808  salt-20.bin
 986d05bbdbf58fb93f899640a0489a7f92e0d88020fa594ddfef0eb248119257  salt-32.bin
 58d87b81e6d3cef65a33d5e6eab1ae1c5f2cda0a42a28af0f80d9d5d36aa1bff  private-not-c2sh.bin

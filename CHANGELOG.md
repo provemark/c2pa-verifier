@@ -33,6 +33,11 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   responses as base64 DER, so that an archive can be checked later
   without this verifier. Deterministic; `toJson()` and `toCrJson()` are
   unchanged. Two contract symbols (211).
+- **A test pins that a `/` in a manifest's label refuses the store
+  (SPEC-005 amendment 3).** Two places read the manifest label out of a
+  redaction URI in different ways. They agree only because no JUMBF label
+  may hold a `/`, so this is now tested for manifest labels too. No
+  behaviour changes.
 
 ### Changed
 

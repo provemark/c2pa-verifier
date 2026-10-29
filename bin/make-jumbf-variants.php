@@ -134,6 +134,10 @@ $CLAIM_CBOR = 33073;
 $CLAIM_TOGGLES = $CLAIM_JUMD + 8 + 16;          // 33058
 $CLAIM_LABEL = $CLAIM_TOGGLES + 1;              // 33059, 'c2pa.claim.v2', NUL at 33072
 $HASHDATA_SALT = $HASHDATA_JUMD + 8 + 16 + 1 + 15; // 32879: the c2sh box (LBox 24, 'c2sh', 16 bytes)
+$MANIFEST_LABEL = $MANIFEST_JUMD + 8 + 16 + 1;  // 71: the active manifest's label
+$SIGNATURE_URI_LABEL = 33264;                   // the same label inside the claim's signature URI, self#jumbf=/c2pa/<label>/c2pa.signature
+$ACTIVE_LABEL = 'urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0';
+$ACTIVE_LABEL_SLASH = 'urn/c2pa:488bf983-c973-465d-a0eb-1597392cc5d0';
 $UUID_C2PA = jumbfHex('6332706100110010800000aa00389b71');
 $UUID_C2MA = jumbfHex('63326d6100110010800000aa00389b71');
 $UUID_C2CM = jumbfHex('6332636d00110010800000aa00389b71');
@@ -158,6 +162,10 @@ $variants = [
     'label-no-nul' => jumbfReplace($s, $CLAIM_LABEL + 13, "\0", 'x'),
     'label-slash' => jumbfReplace($s, $CLAIM_LABEL, 'c2pa.claim.v2', 'c2pa/claim.v2'),
     'label-control' => jumbfReplace($s, $CLAIM_LABEL, 'c2pa.claim.v2', "c2pa\x01claim.v2"),
+    // AC19 (amendment 3, step 517): a '/' in the manifest's label, the label redaction URIs name;
+    // in the description box only, and in the claim's signature URI as well so that the two agree
+    'manifest-label-slash' => jumbfReplace($s, $MANIFEST_LABEL, $ACTIVE_LABEL, $ACTIVE_LABEL_SLASH),
+    'manifest-label-slash-all' => jumbfReplace(jumbfReplace($s, $MANIFEST_LABEL, $ACTIVE_LABEL, $ACTIVE_LABEL_SLASH), $SIGNATURE_URI_LABEL, $ACTIVE_LABEL, $ACTIVE_LABEL_SLASH),
     // a 20-byte salt: 4 bytes inserted into the c2sh box, every enclosing LBox +4
     'salt-20' => jumbfGrow($s, $HASHDATA_SALT + 24, "\0\0\0\0", [$ROOT, $MANIFEST, $ASSERTIONS, $HASHDATA, $HASHDATA_JUMD, $HASHDATA_SALT]),
     // a 32-byte salt: valid per §8.4.2.3 (the assertion's hash no longer matches the claim: M4's concern)

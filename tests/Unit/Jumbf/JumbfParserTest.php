@@ -418,3 +418,20 @@ it('AC18: a signed file whose store box is not requestable is not trusted (amend
             ->and($verify(spec005NotRequestable($fixture)))->toBe('Invalid', $fixture);
     }
 })->group('SPEC-005');
+
+it('AC19: a / in a manifest\'s label refuses the store, so no redaction of it is read (amendment 3)', function (): void {
+    // ManifestStore::scopedRedactions() reads a redaction URI's label up to the first '/', Manifest::naming()
+    // matches the whole label as a prefix; the two agree only because no label holds a '/' (security review H4)
+    $hex = '75 72 6E 2F 63 32 70 61 3A 34 38 38 62 66 39 38 33 2D 63 39 37 33 2D 34 36 35 64 2D 61 30 65 62 2D 31 35 39 37 33 39 32 63 63 35 64 30';
+    foreach (['manifest-label-slash', 'manifest-label-slash-all'] as $name) {
+        expect(fn () => spec005Parse(spec005Variant($name)))
+            ->toThrow(JumbfException::class, "offset 46: label {$hex} contains a character that is not permitted");
+
+        $stream = fopen(dirname(__DIR__, 2)."/Fixtures/jumbf/{$name}.png", 'rb');
+        assert($stream !== false);
+        $report = (new Verifier)->verify($stream);
+        expect($report->result->state->value)->toBe('Invalid', $name)
+            ->and($report->store)->toBeNull()
+            ->and(array_map(static fn ($s): string => $s->code->value, $report->result->statuses))->toContain('general.error');
+    }
+})->group('SPEC-005');

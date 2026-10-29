@@ -284,6 +284,20 @@ steps 02/04/06). Every offset below is measured in step 09.
     offset and that Requestable is not set; each file is `Invalid` where
     its unchanged copy is `Trusted`
 
+- **AC19 — a `/` in a manifest's label refuses the store** *(amendment 3; oracle: both `c2patool` versions do not read either file)*
+  - Given `fixture-signed.png` with the first `:` of its active manifest's
+    label (`urn:c2pa:488b…`) turned into `/`, the length unchanged: once
+    in the manifest's description box only
+    (`tests/Fixtures/jumbf/manifest-label-slash.png`), and once in its
+    claim's signature URI as well, the other place the store holds it, so
+    that box and claim agree
+    (`tests/Fixtures/jumbf/manifest-label-slash-all.png`)
+  - When the parser runs, and when each file is verified
+  - Then the parser throws `JumbfException` naming the description box's
+    offset, with the label as hex; each file is `Invalid` with
+    `general.error` and no store, so no manifest, claim or redaction of
+    it is read
+
 ## References
 
 - Specification: C2PA 2.4 §11.1 "Use of JUMBF" — §11.1.2 Processing Rules
@@ -436,6 +450,38 @@ here, since `Jumbf` is a leaf layer and may not depend on `Container`
    **Weight A: a verdict moves from `Trusted` to `Invalid` on files the
    oracle refuses; no real file moves.**
 
+3. **2026-10-29, step 517, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   Two places read a manifest label out of a redaction URI
+   (`self#jumbf=/c2pa/<label>/…`), and they read it differently:
+   - `ManifestStore::scopedRedactions()` takes the label up to the first
+     `/` (SPEC-035 amendments 6 and 7);
+   - `Manifest::naming()` matches the whole label as a prefix.
+
+   The review's point was this. If a label could hold a `/`, a
+   redaction naming `/c2pa/A/b/…` would be judged as one meant for
+   manifest `A`, but applied to manifest `A/b`. That would get around the
+   rule that the active manifest is never redacted. The review rated it
+   low and did not reproduce it.
+
+   Measured, it cannot be reached. The rule above (§11.1.4.1.1) makes a
+   `/` in any label an error, and an error in a description box refuses
+   the whole store. `fixture-signed.png`, with one `:` of its active
+   manifest's label turned into `/`, is `Invalid` with `general.error`
+   and no store. That holds whether the label was changed in the
+   description box only, or also in the claim's signature URI so that
+   the two agree. No
+   manifest is read, and so no redaction. `c2patool` 0.28.3 and 0.28.1
+   do not read either file ("C2PA provenance not found"); the unchanged
+   file is `Valid` in both.
+
+   The two readings therefore always agree, but only because of a rule
+   in this layer. AC12 tests that rule with a `/` in the claim's label,
+   not in a manifest's. New criterion AC19 pins it for the label
+   redactions name, so a change to the label rules fails a test that
+   names this dependency. No code changes.
+
+   **Weight A.** Nothing moves.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -461,3 +507,4 @@ least one test; every source file maps back to this spec.
 | AC16 | tests/Unit/Jumbf/JumbfParserTest.php :: AC16: the depth limit is enforced at the level that exceeds it; AC16: the box limit is enforced at the box that exceeds it / SPEC-005 | src/Jumbf/JumbfParser.php :: superbox() (depth); src/Jumbf/JumbfWalk.php :: header() (count) |
 | AC17 | tests/Unit/Jumbf/JumbfParserTest.php :: AC17: the default limits are 16 and 4096, and sufficient for the four stores / SPEC-005 | src/Jumbf/JumbfParser.php :: DEFAULT_MAX_DEPTH, DEFAULT_MAX_BOXES, __construct() |
 | AC18 | tests/Unit/Jumbf/JumbfParserTest.php :: AC18: a description box without Requestable is an error naming the box (amendment 2); AC18: a signed file whose store box is not requestable is not trusted (amendment 2) / SPEC-005 | src/Jumbf/JumbfParser.php :: description() (`TOGGLE_REQUESTABLE`) |
+| AC19 (amendment 3) | tests/Unit/Jumbf/JumbfParserTest.php :: AC19: a / in a manifest's label refuses the store, so no redaction of it is read (amendment 3) / SPEC-005; tests/Fixtures/jumbf/manifest-label-slash{,-all}.{bin,png} from bin/make-jumbf-variants.php | src/Jumbf/JumbfParser.php :: description() (`LABEL_FORBIDDEN`), on which src/Manifest/ManifestStore.php :: scopedRedactions() and src/Manifest/Manifest.php :: naming() rely |
