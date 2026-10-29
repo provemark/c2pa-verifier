@@ -35,6 +35,7 @@ would notice, neither verifier reads them.
 | `block-size-text.mp4` | re-signed: `fixedBlockSize` the text "1024" (AC6) | error: cannot decode | error: cannot decode | invalid type: string "1024", expected u64 |
 | `block-size-one.mp4` | re-signed: `fixedBlockSize` 1 (AC6) | Invalid | Invalid | fixed block size must be positive integer |
 | `block-size-huge.mp4` | re-signed: `fixedBlockSize` 2^63 − 1 (AC10, step 508) | Invalid | Invalid | number of hash ranges does not match BmffMerkleMap count |
+| `block-size-512.mp4` | re-signed (step 513): `fixedBlockSize` 512, `count` 11, `hashes` the root of the eleven 512-byte blocks, the proof boxes turned into `free` (AC11) | Trusted | Trusted |  |
 | `count-five.mp4` | re-signed: `count` 5 for six blocks (AC6) | Invalid | Invalid | number of hash ranges does not match BmffMerkleMap count |
 | `init-hash.mp4` | re-signed: an `initHash` of 32 zero bytes added (AC6) | Invalid | Invalid | BMFF inithash must not be present for non-fragmented media |
 | `hashes-four.mp4` | re-signed: `hashes` four times the root, a row the six-leaf tree does not have (AC6) | Trusted | Trusted |  |

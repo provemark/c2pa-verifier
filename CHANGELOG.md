@@ -105,6 +105,12 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   `ManifestStore::$manifests` and the keys of
   `VerificationReport::evidence()` are now typed `array<int|string, …>`;
   a caller that reads the keys should read them back with `(string)`.
+- **A merkle block smaller than 1 KiB is refused (SPEC-080 amendment 4).**
+  A merkle tree over the `mdat` of a non-fragmented file with blocks of a
+  few bytes made the check hash each block on its own: 4.6 s for a 4 MB
+  `mdat` with blocks of 2. A `fixedBlockSize` under 1,024 is now
+  `assertion.bmffHash.mismatch` before any block is read. `c2patool`
+  trusts such a file when its root is right; `c2pa-rs` writes whole KiB.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

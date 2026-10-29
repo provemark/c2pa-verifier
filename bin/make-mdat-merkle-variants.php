@@ -26,6 +26,9 @@ declare(strict_types=1);
  * Writes:
  *   tests/Fixtures/mdat-merkle/<variant>.mp4, throw-away-root.pem, throw-away-root.settings.json
  *   tests/Fixtures/c2patool/mdat-merkle/<variant>--<version>.json
+ *
+ * Step 513 adds `block-size-512` (SPEC-080 amendment 4): blocks of 512 bytes with their right root, the proof boxes
+ * turned into free boxes, under the 1 KiB this verifier reads.
  */
 
 require __DIR__.'/../vendor/autoload.php';
@@ -453,6 +456,32 @@ foreach (['row-of-six' => $leaves, 'row-of-three' => $third] as $name => $row) {
     }
     $variants[$name] = $bytes;
 }
+// step 513: blocks of 512 bytes, under the 1 KiB this verifier reads; the root of the eleven leaves stored, folded
+// as c2pa-rs folds (pairs while two of a height meet, then from the top, the largest power of two on the left)
+$stack = [];
+for ($o = $mdat['offset'] + 16; $o < $mdat['offset'] + $mdat['length']; $o += 512) {
+    $stack[] = [0, hash('sha256', substr($good, $o, min(512, $mdat['offset'] + $mdat['length'] - $o)), true)];
+    while (count($stack) > 1 && $stack[count($stack) - 1][0] === $stack[count($stack) - 2][0]) {
+        [$height, $right] = array_pop($stack);
+        [, $left] = array_pop($stack);
+        $stack[] = [$height + 1, hash('sha256', $left.$right, true)];
+    }
+}
+$small = intdiv($mdat['length'] - 16 - 1, 512) + 1;
+$node = null;
+while ($stack !== []) {
+    [, $part] = array_pop($stack);
+    $node = $node === null ? $part : hash('sha256', $part.$node, true);
+}
+$bytes = mmResign($good, mmOnMap(static fn (string $b, int $m): array => [
+    ...mmPair($b, $m, 'fixedBlockSize', mmText('fixedBlockSize')."\x19\x02\x00"),
+    ...mmPair($b, $m, 'count', mmText('count').mmByte($small)),
+    ...mmPair($b, $m, 'hashes', mmText('hashes')."\x81\x58\x20".$node),
+]), $key);
+foreach (mmC2paBoxes($bytes, 'merkle') as $box) {
+    $bytes = bReplace($bytes, $box['offset'] + 4, 'uuid', 'free');
+}
+$variants['block-size-512'] = $bytes;
 // two mdat boxes and one map: the second map removed from the list
 $variants['two-mdat-one-map'] = mmResign($variants['two-mdat'], static function (string $b, int $s, int $e): array {
     $list = bFind($b, "\x66merkle\x82", $s, $e) + 7;

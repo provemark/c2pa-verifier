@@ -153,6 +153,20 @@ means the same as `c2patool`'s (ADR-0005).
     the map's count 6 against the 1 block the `mdat` holds, not `Trusted`;
     and `c2patool` 0.28.3's answer is recorded beside it
 
+- **AC11 — a block smaller than 1 KiB is refused by name** *(amendment 4; required: malformed input)*
+  - Given `block-size-512.mp4`, made by `bin/make-mdat-merkle-variants.php`
+    from `six-blocks.mp4` with `fixedBlockSize` 512, `count` 11, the root
+    of the eleven 512-byte blocks stored, the proof boxes turned into
+    `free` boxes of the same size, and the claim signed again; with
+    `c2patool` 0.28.3's and 0.28.1's answers recorded
+  - When verified under the directory's settings
+  - Then `assertion.bmffHash.mismatch` saying the block size is under the
+    1,024 bytes this verifier reads, not `Trusted`, whatever `c2patool`
+    says; and before any block is hashed: the check of a map with
+    `fixedBlockSize` 2 over an `mdat` of 4 MB returns within the time of
+    a map with 1,024
+  - And `six-blocks.mp4` (blocks of 1,024) stays `Trusted`
+
 ## References
 
 - Specification: C2PA 2.4 §15.12.2, §15.12.2.1, §18.6.2, §18.6.3, §A.5.4,
@@ -351,6 +365,37 @@ final class IsobmffManifestStoreExtractor
    **Weight A.** A file that threw now gets a report. Nothing else moves:
    for every value that did not overflow the two formulas agree.
 
+4. **2026-10-29, step 513, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   A merkle map's `fixedBlockSize` sets how many leaves the `mdat` has,
+   and each leaf is a separate read and hash. Amendment 3 bounded the
+   number from above; nothing bounded it from below but the floor of 2
+   bytes. Measured on `checkMdatMerkle()` alone, an `mdat` of 4 MB with a
+   stored root that does not match (every block is hashed before the
+   compare): `fixedBlockSize` 2 takes 4.6 s (2,000,000 blocks), 16 takes
+   0.58 s, 256 takes 0.04 s, 1,024 takes 0.02 s; SHA-256 over the same
+   4 MB takes 0.01 s. So a small block makes the check some 450 times the
+   cost of the hash, and the file that costs it is a few megabytes anyone
+   can upload. The verdict is right; the time is the problem, on a host
+   that gives a request seconds.
+
+   `c2patool` writes blocks in whole KiB (`merkle_tree_chunk_size_in_kb`,
+   1 or more), and no other writer of this form is known. Now a
+   `fixedBlockSize` under 1,024 is refused before any block is read,
+   `assertion.bmffHash.mismatch`, by name, as SPEC-080 refuses the forms it
+   does not read. At 1,024 bytes the per-block cost is about twice the
+   hash itself, so the time follows the file's size as for every other
+   hash. New criterion AC11.
+
+   This is a deliberate difference from `c2patool`: a file with blocks of
+   512 bytes and a right root is expected to be `Trusted` there (to be
+   measured when the fixture is made, and recorded), and is `Invalid`
+   here. Fail closed: a form this verifier will not read at a bounded cost
+   is refused, not trusted.
+
+   **Weight B.** A file with blocks under 1 KiB moves from `Trusted` or
+   `Valid` to `Invalid`; no such file is in the corpus or known to exist.
+   Every other file keeps its verdict.
+
 ## Traceability
 
 All in `tests/Unit/Hash/MdatMerkleTest.php`, group `SPEC-080`, unless named
@@ -367,4 +412,5 @@ otherwise.
 | AC7 (amendment 1)    | AC7: an /mdat subset from offset 16 on leaves no byte unbound and is read, as c2patool reads it; AC7: an /mdat exclusion is read only beside a merkle tree, and only from offset 16 on; AC7: the whole /mdat excluded leaves eight bytes under neither the hash nor a leaf, and is refused where c2patool trusts it; AC7: without the file hash, a merkle list is a fragmented stream's, and /mdat stays refused there | src/Hash/BmffHashCheck.php :: refusedExclusion(), mdatRefusal() |
 | AC8                  | AC8: the forms SPEC-080 leaves out are refused by name (4 datasets); AC8: what c2patool says of those forms, kept beside the refusal | src/Hash/BmffHashCheck.php :: checkMdatMerkle() |
 | AC9                  | tests/Unit/Verifier/FragmentedVerifierTest.php and tests/Unit/Hash/BmffHashCheckTest.php (SPEC-027, SPEC-028), unchanged and green; the corpus before and after (step 448): only `tests/Fixtures/mdat-merkle/` moves | — |
+| AC11 (amendment 4) | tests/Unit/Hash/MdatMerkleTest.php :: AC11: a block smaller than 1 KiB is refused by name, where c2patool trusts it (amendment 4); AC11: a block smaller than 1 KiB is refused before any block is hashed (amendment 4) / SPEC-080 | src/Hash/BmffHashCheck.php :: MIN_BLOCK_SIZE, checkMdatMerkle(); bin/make-mdat-merkle-variants.php (`block-size-512`) |
 | AC10 (amendment 3) | tests/Unit/Hash/MdatMerkleTest.php :: AC10: a block larger than any file is a report, not a crash (amendment 3) / SPEC-080 | src/Hash/BmffHashCheck.php :: checkMdatMerkle() (the block count); bin/make-mdat-merkle-variants.php (`block-size-huge`) |

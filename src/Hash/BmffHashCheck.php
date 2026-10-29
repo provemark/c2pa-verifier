@@ -81,6 +81,9 @@ final readonly class BmffHashCheck
     /** SPEC-080: where the leaves of a Merkle tree over the mdat begin, from the box's start, whatever its header (as c2pa-rs). */
     private const MDAT_LEAVES_FROM = 16;
 
+    /** The smallest merkle block read: each block is a read and a hash of its own, and c2patool writes whole KiB (SPEC-080 amendment 4). */
+    private const MIN_BLOCK_SIZE = 1024;
+
     /** SPEC-072: a track excluded by index, allowed only when its handler is timed metadata (checked after the walk). */
     private const INDEXED_TRACK = '#^/moov\[1\]/trak\[([1-9][0-9]{0,8})\]$#';
 
@@ -268,6 +271,9 @@ final readonly class BmffHashCheck
         }
         if ($fixed < 2) {
             return $mismatch(sprintf('the merkle map\'s fixedBlockSize is %d; a block is at least 2 bytes', $fixed));
+        }
+        if ($fixed < self::MIN_BLOCK_SIZE) {
+            return $mismatch(sprintf('the merkle map\'s fixedBlockSize is %d; this verifier reads blocks of %s bytes or more (SPEC-080 amendment 4)', $fixed, number_format(self::MIN_BLOCK_SIZE)));
         }
         // merkleMapOf() has held a present alg to the three (SPEC-051); check() has refused an assertion without one
         $alg = is_string($map['alg'] ?? null) ? $map['alg'] : (string) $assertion['alg'];

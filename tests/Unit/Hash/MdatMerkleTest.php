@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Provemark\C2paVerifier\Cbor\CborBytes;
 use Provemark\C2paVerifier\Container\ContainerException;
 use Provemark\C2paVerifier\Container\IsobmffManifestStoreExtractor;
 use Provemark\C2paVerifier\Hash\BmffHashCheck;
@@ -353,4 +354,38 @@ it('AC10: a block larger than any file is a report, not a crash (amendment 3)', 
     expect(spec080Explanations($report, 'assertion.bmffHash.mismatch'))->toContain('c2pa.hash.bmff.v3: the merkle map says count 6, and the mdat holds 1 block(s) of 9223372036854775807 bytes')
         ->and($report->result->state->value)->toBe('Invalid')
         ->and([spec080Oracle('block-size-huge', '0.28.3'), spec080Oracle('block-size-huge', '0.28.1')])->toBe(['Invalid', 'Invalid']);
+})->group('SPEC-080');
+
+it('AC11: a block smaller than 1 KiB is refused by name, where c2patool trusts it (amendment 4)', function (): void {
+    // bin/make-mdat-merkle-variants.php: six-blocks.mp4 with blocks of 512 bytes, the right root of eleven, the proofs freed
+    $report = spec080('block-size-512');
+
+    expect(spec080Explanations($report, 'assertion.bmffHash.mismatch'))->toContain('c2pa.hash.bmff.v3: the merkle map\'s fixedBlockSize is 512; this verifier reads blocks of 1,024 bytes or more (SPEC-080 amendment 4)')
+        ->and($report->result->state->value)->toBe('Invalid')
+        ->and([spec080Oracle('block-size-512', '0.28.3'), spec080Oracle('block-size-512', '0.28.1')])->toBe(['Trusted', 'Trusted'])
+        ->and(spec080('six-blocks')->result->state->value)->toBe('Trusted');
+})->group('SPEC-080');
+
+it('AC11: a block smaller than 1 KiB is refused before any block is hashed (amendment 4)', function (): void {
+    // one mdat of 4 MB and a stored root that does not match, so a check that reads the blocks hashes every one
+    $size = 4_000_000;
+    $stream = fopen('php://temp', 'w+b');
+    assert(is_resource($stream));
+    fwrite($stream, pack('N', $size + 16).'mdat'.str_repeat("\0", 8).str_repeat("\xa5", $size));
+    $check = new BmffHashCheck;
+    $merkle = new ReflectionMethod($check, 'checkMdatMerkle');
+    $time = static function (int $fixed) use ($check, $merkle, $stream, $size): array {
+        $map = ['uniqueId' => 0, 'localId' => 0, 'count' => intdiv($size - 1, $fixed) + 1, 'fixedBlockSize' => $fixed, 'hashes' => [new CborBytes(str_repeat("\x01", 32))]];
+        $started = hrtime(true);
+        $status = $merkle->invoke($check, 'u', $stream, [['type' => 'mdat', 'offset' => 0, 'length' => $size + 16]], ['alg' => 'sha256', 'merkle' => [$map]], 'm');
+        assert($status instanceof ValidationStatus);
+
+        return [(hrtime(true) - $started) / 1e9, $status->code->value];
+    };
+    [$kib, $kibCode] = $time(1024);
+    [$two, $twoCode] = $time(2);
+
+    // measured before amendment 4: 0.02 s for 1,024 and 4.6 s for 2
+    expect([$kibCode, $twoCode])->toBe(['assertion.bmffHash.mismatch', 'assertion.bmffHash.mismatch'])
+        ->and($two)->toBeLessThan(2 * $kib + 0.1);
 })->group('SPEC-080');
