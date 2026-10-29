@@ -238,6 +238,19 @@ assumption: this project fails closed.
     `signingCredential.ocsp.skipped` for every mutation that breaks the
     response, and nothing escapes.
 
+- **AC12 — a `good` without `nextUpdate` is current for 24 hours after `producedAt`** *(amendment 7; required: error path)*
+  - Given `tests/Fixtures/ocsp-window/good-no-next.der`, a `good` for
+    `signer.crt` with no `nextUpdate`, and `revoked.der` about the same
+    certificate, both from `bin/make-ocsp-window-variants.php`
+  - When the `good` is checked as a stored response of a trusted signer
+    at `producedAt` + 23 hours and at `producedAt` + 25 hours, each once
+    without a source and once with a source that answers `revoked.der`
+  - Then at + 23 hours it is `signingCredential.ocsp.notRevoked` and the
+    source is not asked; at + 25 hours without a source it is
+    `signingCredential.ocsp.skipped` with an explanation naming
+    `producedAt` and the 24 hours, and with the source it is
+    `signingCredential.ocsp.revoked`, the source asked once
+
 ## References
 
 - Specification: C2PA 2.4, the revocation steps of the signature
@@ -490,6 +503,33 @@ needs an amendment with this spec — the same shape as when
 
    **Weight C: a code, no verdict.**
 
+7. **2026-10-29, step 504, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   A `good` counted as current while the judged time lay in
+   `[thisUpdate, nextUpdate]`, and a response without `nextUpdate` had no
+   upper bound at all: it stayed `notRevoked` for ever. C2PA 2.4 §15.9.1
+   bounds that window by `producedAt` + 24 hours when `nextUpdate` is
+   absent; `docs/reading-c2pa-2.4.md` P05-7 recorded the difference and
+   called it harmless, "only between `notRevoked` and `skipped`". With a
+   caller's revocation source (SPEC-086) it is not: `skipped` is what
+   makes the source be asked, so a stored `good` without `nextUpdate`
+   from before a revocation kept a revoked signer `Trusted`, the source
+   never asked (measured on the review's probe: `ocsp.notRevoked`, 0
+   calls, where no staple gives `ocsp.revoked`, 1 call).
+
+   Now a `good` without `nextUpdate` is current only while the judged
+   time is at most `producedAt` + 24 hours (and not before `thisUpdate`,
+   as today); after that it is `signingCredential.ocsp.skipped`, naming
+   the bound, and a source is asked as when nothing was stored. The rule
+   is the response's, so it holds for a fetched response as for a stored
+   one. A `revoked` is untouched (a stale `revoked` still counts, open
+   question 1), and so is a response with `nextUpdate`. New criterion
+   AC12.
+
+   **Weight A.** With a revocation source, files that were wrongly
+   `Trusted` become `Invalid`; without one, a `notRevoked` becomes
+   `skipped`, which moves no state. No corpus file is expected to move:
+   its stapled responses carry `nextUpdate`.
+
 ## Open questions
 
 All three were answered on approval (Maurice van Loon, 2026-09-22) by
@@ -561,5 +601,6 @@ least one test; every source file maps back to this spec.
 | AC9 | `tests/Unit/Trust/OcspCheckTest.php :: AC9: nothing that passed stops passing` | the twelve verdicts measured in step 92a; `Report\StatusCode::isInformational()` |
 | AC10 | `tests/Unit/Trust/OcspCheckTest.php :: AC10: bounded, like every other parser here` | `Trust\OcspCheck::DEFAULT_MAX_RESPONSES`, `DEFAULT_MAX_RESPONSE_BYTES`, `responseBytes()` |
 | AC11 | `tests/Unit/Asn1/MissingElementTest.php :: AC11 / SPEC-030` | `Trust\OcspCheck` (ResponseData's first element through `Der::element()`) |
+| AC12 (amendment 7) | tests/Unit/Trust/OcspCheckTest.php :: AC12: a good without nextUpdate is current for 24 hours after producedAt (amendment 7) / SPEC-030 | src/Trust/OcspCheck.php :: statusOf(), WITHOUT_NEXT_UPDATE; bin/make-ocsp-window-variants.php; tests/Fixtures/ocsp-window/ |
 | Amendment 5 | `tests/Unit/Verifier/RevocationStoredIssuerTest.php` (group `SPEC-030`) | `Trust\OcspCheck::checkWithEvidence(), stored()`; `Verifier\Verifier::check()`, `Verifier\IngredientManifestCheck::manifest()`; `bin/make-revocation-stored-issuer-variants.php` |
 | Amendment 6 | `tests/Unit/Verifier/RevocationStoredIssuerTest.php` (group `SPEC-030`), the tests named "amendment 6" | `Trust\OcspCheck::checkWithEvidence(), stored()`; `Verifier\Verifier::check()`, `Verifier\IngredientManifestCheck::manifest()`, `trusted()`, `anchored()` |

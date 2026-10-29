@@ -56,6 +56,9 @@ final readonly class OcspCheck
 
     private const OID_EKU_OCSP_SIGNING = '1.3.6.1.5.5.7.3.9';
 
+    /** How long a response without nextUpdate stays current after its producedAt (C2PA 2.4 §15.9.1). */
+    private const WITHOUT_NEXT_UPDATE = 86400;
+
     /** CertID hash algorithms. sha1 is here because responders still use it for the *name* hash, which is not a signature. */
     private const HASHES = [
         '1.3.14.3.2.26' => 'sha1',
@@ -721,6 +724,13 @@ final readonly class OcspCheck
                 '%s does not know the status of %s (serial %s); %s',
                 $single['responder'], $leaf->subjectCn(), $leaf->serialDecimal, $source,
             ));
+        }
+        // without nextUpdate the window ends at producedAt + 24 hours (C2PA 2.4 §15.9.1, SPEC-030 amendment 7)
+        if ($single['nextUpdate'] === null && $time > $single['producedAt'] + self::WITHOUT_NEXT_UPDATE) {
+            return $skipped(sprintf(
+                '%s has no nextUpdate, so it is current for 24 hours after its producedAt %s (C2PA 2.4 §15.9.1), and the judged time is %s%s',
+                $noun, $when($single['producedAt']), $when($time), $fetched ? '; '.$source : '; this verifier makes no online query to refresh it',
+            ))[0];
         }
         if ($single['thisUpdate'] > $time || ($single['nextUpdate'] !== null && $single['nextUpdate'] < $time)) {
             return $skipped(sprintf(

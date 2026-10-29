@@ -13,6 +13,7 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
 use Provemark\C2paVerifier\Trust\Certificate;
 use Provemark\C2paVerifier\Trust\OcspCheck;
+use Provemark\C2paVerifier\Trust\RevocationSource;
 use Provemark\C2paVerifier\Trust\TrustSettings;
 use Provemark\C2paVerifier\Verifier\VerificationReport;
 use Provemark\C2paVerifier\Verifier\Verifier;
@@ -346,4 +347,46 @@ it('AC10: bounded, like every other parser here', function (): void {
     $status = spec030Check([$tooBig], spec030Chain());
     expect($status->code)->toBe(StatusCode::SigningCredentialOcspSkipped)
         ->and(str_contains($status->explanation, (string) OcspCheck::DEFAULT_MAX_RESPONSE_BYTES))->toBeTrue($status->explanation);
+})->group('SPEC-030');
+
+it('AC12: a good without nextUpdate is current for 24 hours after producedAt (amendment 7)', function (): void {
+    // C2PA 2.4 §15.9.1: without nextUpdate the window ends at producedAt + 24 h. bin/make-ocsp-window-variants.php
+    $dir = Corpus::fixtures().'/ocsp-window';
+    $der = static fn (string $name): string => (string) base64_decode((string) preg_replace('/-----[^-]+-----|\s/', '', (string) file_get_contents("{$dir}/{$name}.crt")), true);
+    $chain = [Certificate::fromDer($der('signer')), Certificate::fromDer($der('ca'))];
+    $stored = ['rVals' => ['ocspVals' => [new CborBytes((string) file_get_contents("{$dir}/good-no-next.der"))]]];
+    $source = new class((string) file_get_contents("{$dir}/revoked.der")) implements RevocationSource
+    {
+        public int $asked = 0;
+
+        public function __construct(private readonly string $response) {}
+
+        public function ocspResponse(string $subject, string $issuer, array $urls): string
+        {
+            $this->asked++;
+
+            return $this->response;
+        }
+    };
+    $check = static function (int $at, ?RevocationSource $with) use ($stored, $chain): ValidationStatus {
+        [$statuses] = (new OcspCheck)->checkWithEvidence($stored, $chain, $at, 'self#jumbf=/c2pa/u/c2pa.signature', [], $with, $chain[1], true, true);
+
+        return $statuses[0];
+    };
+    [, $evidence] = (new OcspCheck)->checkWithEvidence($stored, $chain, time(), 'self#jumbf=/c2pa/u/c2pa.signature', [], null, $chain[1], true, true);
+    $producedAt = $evidence[0]->producedAt ?? throw new RuntimeException('no producedAt');
+    expect($evidence[0]->nextUpdate)->toBeNull();
+
+    // within the window: proven, the source not asked
+    expect($check($producedAt + 23 * 3600, null)->code)->toBe(StatusCode::SigningCredentialOcspNotRevoked)
+        ->and($check($producedAt + 23 * 3600, $source)->code)->toBe(StatusCode::SigningCredentialOcspNotRevoked)
+        ->and($source->asked)->toBe(0);
+
+    // after it: not current, and the source decides
+    $late = $check($producedAt + 25 * 3600, null);
+    expect($late->code)->toBe(StatusCode::SigningCredentialOcspSkipped)
+        ->and($late->explanation)->toContain('producedAt')
+        ->and($late->explanation)->toContain('24 hours')
+        ->and($check($producedAt + 25 * 3600, $source)->code)->toBe(StatusCode::SigningCredentialOcspRevoked)
+        ->and($source->asked)->toBe(1);
 })->group('SPEC-030');

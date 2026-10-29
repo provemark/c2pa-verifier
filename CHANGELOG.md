@@ -62,6 +62,11 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   twice escaped the rule that keeps a time-stamping certificate from
   signing manifests under the legacy `trust_anchors`, and such a file was
   `Trusted`. The purposes are now read as a set.
+- **An OCSP `good` without `nextUpdate` is current for 24 hours after
+  its `producedAt` (SPEC-030 amendment 7).** It counted for ever, as
+  C2PA 2.4 §15.9.1 does not allow. With a caller's revocation source that
+  mattered: such a stored response, from before a revocation, kept the
+  source from being asked, and a revoked signer stayed `Trusted`.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

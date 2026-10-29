@@ -12321,3 +12321,10 @@ README are where the disclosure lives.
 - Produced: SPEC-031 amendment 5, AC9 extended, its Traceability; `src/Trust/ChainCheck.php` (`timeStampingSigner()`: the set of purposes); `bin/make-tsa-signer-twice-variants.php`; `tests/Fixtures/tsa-signer-twice/`, `tests/Fixtures/c2patool/tsa-signer-twice/`; `tests/Unit/Trust/TrustAnchorsTest.php`; `CHANGELOG.md`; `notes/step-503-time-stamping-twice.md`, `NOTES.md`.
 - Measured: the reviewer's probe re-run; the leaf's EKU with `openssl x509 -ext`; `c2patool` 0.28.3 on both probes (`Trusted`); the test red on `7c2723f` (the `twice` case) and green after, repeated on the final files; every whole-list EKU comparison in `src/` (one); the corpus against `7c2723f` (2,154 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0. Reasoned: a repeated purpose is not forbidden by RFC 5280 §4.2.1.12, so it is read, not refused.
 - Decided by Maurice: the amendment.
+
+## 2026-10-29 — Step 504: an OCSP good without nextUpdate is current for 24 hours
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, route A, schrijf het amendement voor 504"; then "akkoord, amendement approved, bouw 504".
+- Produced: SPEC-030 amendment 7 and AC12 with its Traceability; `src/Trust/OcspCheck.php` (`statusOf()`, `WITHOUT_NEXT_UPDATE`); `bin/make-ocsp-window-variants.php`; `tests/Fixtures/ocsp-window/` (two certificates, two responses, README); `tests/Unit/Trust/OcspCheckTest.php`; `docs/reading-c2pa-2.4.md` (P05-7 and the §15.9.1 row corrected); `CHANGELOG.md`; `notes/step-504-ocsp-good-without-next-update.md`, `NOTES.md`.
+- Measured: the reviewer's two T1 probes before and after (the old-good route closed, the expired-responder route open for step 505); the responses with `openssl ocsp -resp_text`; AC12 red on `395004a` (the +25-hour case) and green after; SPEC-030's 45 tests; the corpus against `395004a` (2,162 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0.
+- Decided by Maurice: route A (close P05-7's two gaps, keep ADR-0007's order); the amendment.
