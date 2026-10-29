@@ -296,6 +296,19 @@ it('AC9: under the legacy anchors a time-stamping certificate signs nothing (ame
         ->and($oracle('tsa-only', 'manifest-entry', '0.28.0'))->toBe('Trusted');
 })->group('SPEC-031');
 
+it('AC9: Time Stamping written twice is still the only EKU (amendment 5)', function (string $leaf): void {
+    // step 503: bin/make-tsa-signer-twice-variants.php, a second throw-away root under the legacy field only;
+    // the list [timeStamping, timeStamping] was not equal to [timeStamping], and the leaf came out Trusted
+    $report = spec031Verify("tsa-signer-twice/{$leaf}.png", spec031Settings('tsa-signer-twice/legacy.settings.json'));
+    $untrusted = spec031Status($report, 'signingCredential.untrusted');
+
+    expect($report->result->state->value)->toBe('Valid')
+        ->and($untrusted->explanation ?? '')->toContain('Time Stamping')
+        ->and(spec031Codes($report, 'signingCredential.trusted'))->toBe([])
+        // the recorded difference, as for step 159's leaf: c2pa-rs lets the legacy list anchor it as a signer
+        ->and(spec020Oracle("tsa-signer-twice/{$leaf}--legacy--0.28.3.json")['validation_state'])->toBe('Trusted');
+})->with(['once' => 'tsa-once', 'twice' => 'tsa-twice'])->group('SPEC-031');
+
 it('AC9: a time-stamping certificate no anchor reaches keeps the walk\'s own reason (amendment 3, step 497)', function (): void {
     // the Time Stamping refusal speaks only when the legacy anchors trusted the leaf; here none reaches it
     $report = spec031Verify('tsa-signer/tsa-only.png', spec031Settings('trust/full.settings.json'));

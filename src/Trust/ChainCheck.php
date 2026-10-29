@@ -86,7 +86,8 @@ final readonly class ChainCheck
      */
     private function timeStampingSigner(array $chain, TrustSettings $settings, string $url, ?int $at, array $statuses, ?AnchorEvidence $anchor, ?Certificate $issuer, array $unprotected, ?RevocationSource $source): array
     {
-        if ($anchor === null || $settings->trustAnchors === [] || $chain[0]->extendedKeyUsage !== [self::EKU_TIME_STAMPING]) {
+        // the set of purposes, each counted once: a certificate may write one twice (SPEC-031 amendment 5)
+        if ($anchor === null || $settings->trustAnchors === [] || array_values(array_unique($chain[0]->extendedKeyUsage ?? [])) !== [self::EKU_TIME_STAMPING]) {
             return [$statuses, $anchor, $issuer];
         }
         $signersOnly = new TrustSettings([], $settings->allowedList, $settings->trustConfig, $settings->verifyTrust, $settings->anchorSets);

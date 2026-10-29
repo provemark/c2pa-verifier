@@ -57,6 +57,11 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   manifest, with a credential this verifier never examined, left a file
   `Trusted` that `c2patool` calls `Invalid`. It now reads the base label
   and covers every manifest the ingredient graph reaches.
+- **Time Stamping written twice is still the only EKU (SPEC-031
+  amendment 5).** A certificate whose EKU extension names Time Stamping
+  twice escaped the rule that keeps a time-stamping certificate from
+  signing manifests under the legacy `trust_anchors`, and such a file was
+  `Trusted`. The purposes are now read as a set.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

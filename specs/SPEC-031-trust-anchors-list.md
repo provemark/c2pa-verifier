@@ -225,6 +225,13 @@ the 2.4 text on 2026-09-24, step 110):
     `Trusted`; the Time Stamping leaf under the `"manifest"` entry stays
     `Trusted`. Both `c2patool` versions call the first `Trusted`, which is
     the difference named in `docs/comparison.md`.
+  - *(amendment 5)* Given a second throw-away root
+    (`tests/Fixtures/tsa-signer-twice/`) and two leaves under it re-signing
+    the PNG fixture, one whose EKU extension names Time Stamping once and
+    one that names it twice, the root in the legacy `trust.trust_anchors`
+    only: both are `signingCredential.untrusted` and `Valid`, each with an
+    explanation that names the EKU. `c2patool` 0.28.3's answer on both is
+    recorded next to them.
 
 - **AC7 — the drift alarm learns the new shape**
   - Given the corpus runs that already use `full.settings.json` and
@@ -439,6 +446,29 @@ final readonly class TrustSettings
 
    Confirmed by Maurice van Loon, 2026-10-08 (step 275).
 
+5. **2026-10-29, step 503, found by the security review before 0.10.0.**
+   Amendment 3 holds a signer "whose only EKU is Time Stamping" to the
+   entries that vouch for signers alone. `ChainCheck::timeStampingSigner()`
+   tested that as the EKU list being exactly `[timeStamping]`, and
+   `Certificate` keeps the list as the certificate writes it, duplicates
+   included. A leaf whose EKU extension names Time Stamping twice was not
+   equal to it, so the second walk was skipped and the legacy anchors made
+   it `Trusted`; `CertificateProfileCheck::ekuFaults()` found nothing
+   either, because it looks for EKUs other than Time Stamping and there
+   are none. RFC 5280 §4.2.1.12 does not forbid a repeated purpose, and
+   OpenSSL issues such a certificate without complaint, so the reading,
+   not the certificate, is what changes: "only EKU" now means the *set* of
+   purposes, each counted once, in `timeStampingSigner()` and wherever the
+   profile asks the same question. A repeated purpose is not itself made a
+   fault. Extended criterion AC9.
+
+   **Weight A.** Files that were wrongly `Trusted` become `Valid`
+   (`signingCredential.untrusted`). It needs a CA to have issued such a
+   certificate under a legacy anchor; whoever holds a TSA key cannot make
+   one. No corpus file is expected to move.
+
+   Approved by Maurice van Loon, 2026-10-29 (step 503).
+
 ## Traceability
 
 Filled when status becomes `implemented`.
@@ -453,4 +483,4 @@ Filled when status becomes `implemented`.
 | AC6 | tests/Unit/Trust/TrustAnchorsTest.php :: AC6: every anchor counts only for its own kind / SPEC-031 | src/Trust/ChainCheck.php :: anchorsOf(), tsaAnchorsOf(), kindNote(), check(); src/Timestamp/TimestampCheck.php :: tsaSettings(), check() (the note); src/Trust/TrustAnchorSet.php :: __construct() (§14.4.3) |
 | AC7 | tests/Unit/Trust/TrustAnchorsTest.php :: AC7: the drift alarm learns the new shape / SPEC-031 | src/Trust/ChainCheck.php :: kindNote() (only an entry the chain would reach is named) |
 | AC8 | tests/Unit/Trust/TrustAnchorsTest.php :: AC8: a trust_config counts for its own entry / SPEC-031 | src/Trust/CertificateProfileCheck.php :: check(), acceptedEkus() |
-| AC9 | tests/Unit/Trust/TrustAnchorsTest.php :: AC9: under the legacy anchors a time-stamping certificate signs nothing (amendment 3); AC9: a time-stamping certificate no anchor reaches keeps the walk's own reason (amendment 3, step 497) / SPEC-031 | src/Trust/ChainCheck.php :: check(), timeStampingSigner() |
+| AC9 | tests/Unit/Trust/TrustAnchorsTest.php :: AC9: under the legacy anchors a time-stamping certificate signs nothing (amendment 3); AC9: a time-stamping certificate no anchor reaches keeps the walk's own reason (amendment 3, step 497) / SPEC-031 | src/Trust/ChainCheck.php :: check(), timeStampingSigner(); AC9: Time Stamping written twice is still the only EKU (amendment 5) — bin/make-tsa-signer-twice-variants.php, tests/Fixtures/tsa-signer-twice/; src/Trust/ChainCheck.php :: timeStampingSigner() (the set of purposes) |
