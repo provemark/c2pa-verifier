@@ -12342,3 +12342,10 @@ README are where the disclosure lives.
 - Produced: SPEC-072 amendment 1 (the spec's first Amendments section) and AC7 with its Traceability; `src/Hash/BmffHashCheck.php` (`trackRefusal()`); `tests/Unit/Hash/PixelVideoTest.php`; `CHANGELOG.md`; `notes/step-506-hdlr-behind-64-bit-header.md`, `NOTES.md`.
 - Measured: the reviewer's probe before and after; both AC7 cases red on `447eb17` (the forged handler `Trusted`, the genuine 64-bit form refused) and green after, repeated on the final test; SPEC-072's tests; the corpus against `447eb17` (2,166 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0.
 - Decided by Maurice: the amendment.
+
+## 2026-10-29 — Step 507: the BMFF box walk resumes where a container ends
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf het amendement voor 507"; then "akkoord, amendement approved, bouw 507".
+- Produced: SPEC-029 amendment 4 and AC8 with its Traceability; `src/Container/IsobmffManifestStoreExtractor.php` (`descend()`); `tests/Unit/Hash/BmffV2ExclusionsTest.php`; `CHANGELOG.md`; `notes/step-507-box-walk-resumes-after-container.md`, `NOTES.md`.
+- Measured: the review's probe before and after; AC8 on `2a0c2fb` (14 failed, the 2 controls passed) and after (16 passed), repeated on the final test; the extractor's other walks read; SPEC-026 to -029 and -072; the corpus against `2a0c2fb` (2,166 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0. Reasoned: what an out-of-step tree could do, not built end to end.
+- Decided by Maurice: the amendment.

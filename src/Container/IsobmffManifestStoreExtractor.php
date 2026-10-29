@@ -160,6 +160,8 @@ final readonly class IsobmffManifestStoreExtractor
             if ($skip !== null && $size > $header + $skip) {
                 $reader->skip($skip, $offset);
                 $this->descend($reader, $offset + $header + $skip, $offset + $size, $path, $ipath, $depth + 1, $boxes);
+                // past up to seven bytes after its last child, or every later header is read out of step (SPEC-029 amendment 4)
+                $reader->seek($offset + $size);
             } else {
                 $reader->skip($size - $header, $offset);
             }

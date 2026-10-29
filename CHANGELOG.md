@@ -76,6 +76,10 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   header with `size` 1 puts the version and flags, so a timed-metadata
   track could be turned into an unsigned video track that stayed
   `Trusted`, and a genuine one with that header was refused.
+- **The BMFF box walk resumes where a container ends (SPEC-029
+  amendment 4).** One to seven bytes after a container's last child were
+  not passed over, so every later box header was read out of step and
+  the tree could list boxes the file does not hold there.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

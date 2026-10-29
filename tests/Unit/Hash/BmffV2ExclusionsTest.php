@@ -245,3 +245,25 @@ it('AC7: every v3 fixture answers exactly as it did', function (): void {
             ->and(in_array(StatusCode::AssertionBmffHashMatch->value, spec029Codes($report), true))->toBeTrue($file);
     }
 })->group('SPEC-029');
+
+it('AC8: the walk resumes where a container ends (amendment 4)', function (int $trailing, bool $inMeta): void {
+    $box = static fn (string $type, string $body): string => pack('N', 8 + strlen($body)).$type.$body;
+    $rest = str_repeat("\x00", $trailing);
+    $inner = $box('free', '').$rest;
+    $moov = $box('moov', $inMeta ? $box('meta', $box('hdlr', str_repeat("\x00", 25)).$inner) : $inner);
+    $mdat = $box('mdat', str_repeat('A', 16));
+    $file = $box('ftyp', 'isom0000').$moov.$mdat;
+
+    $boxes = (new IsobmffManifestStoreExtractor)->boxTree(spec029Stream($file));
+    foreach ($boxes as $b) {
+        expect(substr($file, $b['offset'] + 4, 4))->toBe($b['type'], "{$b['path']} at {$b['offset']}");
+    }
+    expect(array_values(array_filter($boxes, static fn (array $b): bool => $b['path'] === '/mdat')))
+        ->toBe([['offset' => strlen($file) - strlen($mdat), 'length' => strlen($mdat), 'type' => 'mdat', 'path' => '/mdat', 'ipath' => '/mdat[1]']]);
+})->with(static function (): Generator {
+    foreach ([false, true] as $inMeta) {
+        foreach (range(0, 7) as $trailing) {
+            yield sprintf('%d trailing byte(s)%s', $trailing, $inMeta ? ' inside a QuickTime meta' : '') => [$trailing, $inMeta];
+        }
+    }
+})->group('SPEC-029');

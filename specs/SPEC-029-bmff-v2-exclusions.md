@@ -150,6 +150,16 @@ SPEC-027 implements it.
   - When each is verified
   - Then every state and failure code is what it was.
 
+- **AC8 — the walk resumes where a container ends** *(amendment 4; required: malformed input)*
+  - Given files built in memory: `ftyp`, a `moov` holding one `free`
+    child followed by 1 to 7 trailing bytes, then an `mdat`; and the same
+    with the trailing bytes inside a QuickTime-style `meta` (`hdlr` first)
+    under `moov`
+  - When `boxTree()` walks each
+  - Then every recorded box's type is the four bytes at its offset + 4 in
+    the file, and the `mdat` is listed at its real offset with its real
+    length, at the top level
+
 ## References
 
 - Measured, step 86 (`notes/step-86-bmff-v2.md`): v2's exclusion list; the
@@ -266,6 +276,31 @@ rather than a second parse.
 
    Confirmed by Maurice van Loon, 2026-10-08 (step 275).
 
+4. **2026-10-29, step 507, found by the security review before 0.10.0; partly measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   `descend()` reads the stream in order. After a container's children it
+   stopped once fewer than 8 bytes were left, but did not move past those
+   1 to 7 trailing bytes: the next offset was still computed from the
+   container's size, while the reader stayed behind by that many bytes,
+   so every later box header was read from the wrong place. Measured on
+   the review's probe (a `moov` with 4 trailing bytes, then an `mdat`):
+   the walk reads a box `AAAA` of 1,094,795,585 bytes out of the
+   `mdat`'s payload and refuses the file. Reasoned, not built end to end:
+   with a chosen layout the tree can list types and lengths that are not
+   at those offsets in the file, so exclusions and hashed ranges apply to
+   other bytes than the file holds there — a file that reads one way to
+   this verifier and another to a player.
+
+   Now, after a container's children, the reader is moved to the
+   container's declared end before the next box is read, so the tree
+   follows the file by construction. The trailing bytes stay part of the
+   container and are hashed or excluded with it. They are not refused:
+   ISO/IEC 14496-12 §4.2 does not forbid them, and a refusal could make a
+   genuine file `Invalid`. New criterion AC8.
+
+   **Weight A.** A file that walked out of step now walks in step; a
+   file that was refused for a box read out of step may now be read. No
+   corpus file is expected to move.
+
 ## Open questions
 
 1. **Whether `LABELS` changes the dispatch in `Verifier`.** Today it reads
@@ -308,3 +343,4 @@ least one test; every source file maps back to this spec.
 | AC5 | `tests/Unit/Hash/BmffV2ExclusionsTest.php :: AC5: the data filter tells two uuid boxes apart` | `Hash\BmffHashCheck::matches()` (the `data` filter, after the path resolves) |
 | AC6 | `tests/Unit/Hash/BmffV2ExclusionsTest.php :: AC6: flags is refused when the path exists, and ignored when it cannot match` | `Hash\BmffHashCheck::matches()`, `UNSUPPORTED_FILTERS`; `Container\IsobmffManifestStoreExtractor::DEFAULT_MAX_BOX_DEPTH` |
 | AC7 | `tests/Unit/Hash/BmffV2ExclusionsTest.php :: AC7: every v3 fixture answers exactly as it did` | `Hash\BmffHashCheck::LABELS`; `Hash\DataHashCheck::check()` (it no longer claims the two labels) |
+| AC8 (amendment 4) | `tests/Unit/Hash/BmffV2ExclusionsTest.php :: AC8: the walk resumes where a container ends (amendment 4)` (16 cases, two of them the control) | `Container\IsobmffManifestStoreExtractor::descend()` |
