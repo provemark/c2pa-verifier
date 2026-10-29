@@ -271,6 +271,17 @@ step 09's and step 12's.
   - When parsed
   - Then it throws `ManifestException` naming `name`
 
+- **AC15 — an assertion label of digits only is a label like any other** *(amendment 10; required: malformed input)*
+  - Given `tests/Fixtures/numeric-label/` (made by a script under `bin/`):
+    PNGs signed by `c2patool` 0.28.3 under a throw-away root, one with an
+    assertion labelled `5` beside `c2pa.actions.v2`, one with `0`, and a
+    control without either, with `c2patool`'s answers recorded
+  - When each is verified, and its report written as JSON, as cr-JSON and
+    as evidence
+  - Then no exception leaves the verifier; the state and failure codes
+    are `c2patool`'s; and each document names the assertion by the string
+    label `"5"` or `"0"`, never by a number
+
 ## References
 
 - Specification: C2PA 2.4 §10.2.1 Schema (the two CDDL rules, quoted
@@ -490,6 +501,31 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
 9. **2026-10-23, step 403, noted by the review of 2026-10-23 (outside its scope; the low items, "doe 1 nog", Maurice van Loon).** Two assertion boxes with one label: `resolve()` returns the first, which the claim's hash covers, while `$manifest->assertions` kept the last, which the data hash, actions, ingredient and other checks read. Not a wrong `Valid`: the second box is undeclared (`assertion.undeclared`, a failure), so the file is `Invalid`; but the checks read bytes no hash covered. The first box with a label is now the one kept; a later one is neither decoded nor used, and is still reported as undeclared.
    - **AC21 — one label, the box the reference resolves to**: `fixture-signed.png` with a second `c2pa.actions.v2` after the store's last box (`c2pa.created` changed to `c2pa.opened_`, lengths fixed): the kept assertion is the box `resolve()` returns, holds `c2pa.created`, and `HashedUriCheck` still reports `assertion.undeclared`.
 
+10. **2026-10-29, step 511, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   `Manifest::$assertions` is keyed by the assertion's label. PHP turns
+   an array key made only of decimal digits (`"5"`, `"0"`) into an
+   integer, so every check that passed the key on as a string threw a
+   `TypeError`: first `ManifestGraph` through
+   `IngredientAssertion::isIngredientLabel()`, then `IconReferenceCheck`,
+   `UpdateManifestCheck`, the `Verifier` and `ManifestStore` (the review's
+   list). Measured: `c2patool` 0.28.3 signs a PNG with an assertion
+   labelled `5` beside `c2pa.actions.v2` without complaint and reads it
+   as `Valid`; this verifier's `verify()` throws on it. Nothing in C2PA
+   2.4 §6.2 forbids such a label to the verifier, and refusing it would
+   call `Invalid` a file `c2patool` itself writes and calls `Valid`.
+
+   Now the label is a label wherever it is read: the type of
+   `$assertions` says what PHP makes of it (`array<int|string,
+   Assertion>`), so PHPStan at level max names every place that takes the
+   key as a string, and each turns it back with `(string)`; a place that
+   forgets fails `composer check`. The JSON, cr-JSON and evidence
+   documents name the assertion by the string. A manifest label of digits
+   only (finding V4) has the same cause one level up and is the next step.
+   New criterion AC15.
+
+   **Weight A.** A file that threw now gets `c2patool`'s verdict. Nothing
+   else moves: a label with any other character was a string key already.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -511,6 +547,7 @@ least one test; every source file maps back to this spec.
 | AC12 | tests/Unit/Manifest/ManifestStoreTest.php :: AC12: structural faults in the manifest are errors / SPEC-007 | src/Manifest/Manifest.php :: fromBox(), theOne(), singleCbor(); src/Manifest/ManifestStore.php :: fromTree() |
 | AC13 | tests/Unit/Manifest/ManifestStoreTest.php :: AC13: invalid JSON in a json box is an error naming the assertion, never the bytes / SPEC-007 | src/Manifest/Manifest.php :: assertionData() (json) |
 | AC14 | tests/Unit/Manifest/ManifestStoreTest.php :: AC14: a claim_generator_info without a name is an error / SPEC-007 | src/Manifest/Claim.php :: generatorInfo() |
+| AC15 (amendment 10) | tests/Unit/Manifest/ManifestStoreTest.php :: AC15: an assertion label of digits only is a label like any other (amendment 10) (3 files) / SPEC-007 | src/Manifest/Manifest.php :: \$assertions (its type); src/Manifest/ManifestGraph.php :: assertionLabels(); src/Manifest/ManifestStore.php; src/Manifest/IconReferenceCheck.php; src/Manifest/UpdateManifestCheck.php; bin/make-numeric-label-variants.php |
 | AC15 | tests/Unit/Manifest/ManifestStoreTest.php :: AC15: a float JSON cannot hold is rendered as its name, and the report encodes (amendment 6, step 247) / SPEC-007 | src/Manifest/ManifestStore.php :: plain() |
 | AC16 | tests/Unit/Manifest/ManifestProbesTest.php :: AC16: a manifest box of type c2md is read as a standard manifest (SPEC-007 amendment 7) / SPEC-007 | src/Jumbf/JumbfParser.php :: UUID_MANIFEST_C2MD; src/Manifest/ManifestStore.php :: fromTree() |
 | AC17 | tests/Unit/Manifest/ManifestProbesTest.php :: AC17: two manifests with one label make the store malformed / SPEC-007 | src/Manifest/ManifestStore.php :: fromTree() (the label) |

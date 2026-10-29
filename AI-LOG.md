@@ -12370,3 +12370,10 @@ README are where the disclosure lives.
 - Produced: SPEC-009 amendment 6 and AC12 with its Traceability; `src/Cose/SignatureVerifier.php` (`ed25519()`); `tests/Support/sodium-throws-probe.php`; `tests/Unit/Cose/SignatureVerifierTest.php`; `CHANGELOG.md`; `notes/step-510-sodium-compat-throws.md`, `NOTES.md`.
 - Measured: the reviewer's probe with sodium_compat 1.21.1 before (`SodiumException`) and after (`claimSignature.mismatch`); the new probe on `5219a5c` (thrown) and after (`false`), the test repeated on the old code; SPEC-009's 18 tests; the corpus against `5219a5c` (2,168 runs, none differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0, `bin/package-check.php`.
 - Decided by Maurice: the amendment.
+
+## 2026-10-29 — Step 511: an assertion label of digits only is a label like any other
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf het amendement voor 511"; then "akkoord, amendement approved, bouw 511".
+- Produced: SPEC-007 amendment 10 and AC15 with its Traceability; `src/Manifest/Manifest.php` (the type of `$assertions`), `ManifestGraph.php`, `ManifestStore.php`, `IconReferenceCheck.php`, `UpdateManifestCheck.php`; `bin/make-numeric-label-variants.php`; `bin/make-spec035-variants.php`; `tests/Fixtures/numeric-label/` (three PNGs, root, settings, README) and `tests/Fixtures/c2patool/numeric-label/`; `tests/Unit/Manifest/ManifestStoreTest.php`; `CHANGELOG.md`; `notes/step-511-numeric-assertion-label.md`, `NOTES.md`.
+- Measured: `c2patool` 0.28.3 signing and reading an assertion labelled `5` (`Valid` with its test key; `Trusted` for all three probes under the throw-away root); this verifier on `a816258` (`TypeError` on `5` and `0`); AC15 red there (2 of 3) and green after, repeated on the old sources; PHPStan's list of places after clearing its result cache; the reviewer's probe after; the corpus against `a816258` (2,174 runs, only the two probes differ); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0, `bin/package-check.php`.
+- Decided by Maurice: the amendment (read such a label as a label, not refuse it).

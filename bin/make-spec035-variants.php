@@ -211,8 +211,8 @@ $flip = static fn (string $bytes, int $at): string => substr_replace($bytes, chr
 $variant('redacted-with-action', 'claim-signature-changed', static function (string $store, Manifest $m) use ($once, $flip): string {
     $label = null;
     foreach (array_keys($m->assertions) as $candidate) {
-        if (str_starts_with($candidate, 'c2pa.ingredient')) {
-            $label = $candidate;
+        if (str_starts_with((string) $candidate, 'c2pa.ingredient')) {
+            $label = (string) $candidate;
         }
     }
     $data = $label === null ? null : $m->assertions[$label]->data;

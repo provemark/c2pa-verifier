@@ -38,7 +38,7 @@ final readonly class Manifest
     public const int MAX_JSON_BYTES = 262144;
 
     /**
-     * @param  array<string, Assertion>  $assertions  by label, in store order; $assertionStore is the superbox itself, unknown boxes included (SPEC-007 amendment 2, for SPEC-011)
+     * @param  array<int|string, Assertion>  $assertions  by label, in store order (PHP makes a label of digits only an int key: read it back with (string), SPEC-007 amendment 10); $assertionStore is the superbox itself, unknown boxes included (SPEC-007 amendment 2, for SPEC-011)
      */
     private function __construct(
         public string $label,

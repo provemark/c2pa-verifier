@@ -55,6 +55,7 @@ final readonly class UpdateManifestCheck
             $actions = [];
             $labels = [];
             foreach ($manifest->assertions as $assertionLabel => $assertion) {
+                $assertionLabel = (string) $assertionLabel;   // a label of digits only is an int key (SPEC-007 amendment 10)
                 $labels[] = $assertionLabel;
                 if (! ActionsCheck::isActionsLabel($assertionLabel) || ! is_array($assertion->data)) {
                     continue;

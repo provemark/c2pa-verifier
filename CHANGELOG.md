@@ -91,6 +91,12 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   sodium_compat too (SPEC-009 amendment 6).** Where ext-sodium is absent
   and WordPress loads the polyfill, it throws `SodiumException` for some
   bad signatures, and `verify()` threw with it.
+- **An assertion label of digits only is read like any other (SPEC-007
+  amendment 10).** PHP made such a label an integer array key, and
+  `verify()` threw a `TypeError` on a file `c2patool` signs and calls
+  `Valid`. The type of `Manifest::$assertions` is now
+  `array<int|string, Assertion>`, which is what PHP holds; a caller that
+  reads the keys should read them back with `(string)`.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

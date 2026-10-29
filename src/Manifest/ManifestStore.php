@@ -189,6 +189,7 @@ final readonly class ManifestStore
 
         $assertions = [];
         foreach ($manifest->assertions as $label => $assertion) {
+            $label = (string) $label;   // a label of digits only is an int key (SPEC-007 amendment 10)
             // the ingredients and their thumbnails are rendered above, as c2patool does, and left out here
             if (IngredientAssertion::isIngredientLabel($label) || str_starts_with($label, 'c2pa.thumbnail.ingredient')) {
                 continue;

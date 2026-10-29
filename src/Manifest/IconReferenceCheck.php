@@ -177,6 +177,7 @@ final readonly class IconReferenceCheck
             }
         }
         foreach ($manifest->assertions as $label => $assertion) {
+            $label = (string) $label;   // a label of digits only is an int key (SPEC-007 amendment 10)
             if (ActionsCheck::isActionsLabel($label)) {
                 $icons = [...$icons, ...self::actionsIcons($assertion->data, $manifest->claim->version)];
             }

@@ -209,6 +209,7 @@ final readonly class ManifestGraph
             }
         }
         foreach (array_keys($manifest->assertions) as $label) {
+            $label = (string) $label;   // a label of digits only is an int key (SPEC-007 amendment 10)
             if (! in_array($label, $labels, true)) {
                 $labels[] = $label;
             }

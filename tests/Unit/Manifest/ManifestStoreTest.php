@@ -442,3 +442,21 @@ it('AC4: a URI resolves only as self#jumbf, only into its own manifest, and with
         // no leading slash: relative, so its first segment is a child named c2pa, which there is not (c2pa-rs reads it as absolute)
         ->and(fn () => $manifest->resolve("self#jumbf=c2pa/{$manifest->label}/c2pa.assertions/{$label}"))->toThrow(ManifestException::class, 'does not resolve to a box (no c2pa)');
 })->group('SPEC-007');
+
+it('AC15: an assertion label of digits only is a label like any other (amendment 10)', function (string $name, string $label): void {
+    // bin/make-numeric-label-variants.php: signed by c2patool 0.28.3, which reads all three as it reads any file
+    $report = spec020Verify("numeric-label/{$name}.png", 'numeric-label/throw-away-root.settings.json');
+    $oracle = spec020Oracle("numeric-label/{$name}--0.28.3.json");
+    /** @var array{activeManifest: array{failure: list<array{code: string}>}} $results */
+    $results = $oracle['validation_results'];
+
+    expect($report->result->state->value)->toBe($oracle['validation_state'])
+        ->and(array_column(spec020Failures($report->toArray()), 'code'))->toBe(array_column($results['activeManifest']['failure'], 'code'))
+        ->and($report->toJson())->toContain(sprintf('"label": "%s"', $label))
+        ->and($report->toCrJson())->toContain(sprintf('"%s": {', $label))
+        ->and($report->evidenceToJson())->toBeString();
+})->with([
+    'the control' => ['numeric-label-control', 'probe.note'],
+    'an assertion labelled 5' => ['numeric-label-5', '5'],
+    'an assertion labelled 0' => ['numeric-label-0', '0'],
+])->group('SPEC-007');
