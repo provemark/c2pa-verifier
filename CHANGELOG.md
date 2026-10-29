@@ -5,17 +5,31 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## 0.10.0 — 2026-10-28
+## 0.10.0 — 2026-10-29
 
 A minor release. The evidence behind a verdict, which 0.9.0 made
 readable, can now be written down as one versioned document to keep next
 to the file — base64 DER for every certificate, time-stamp token and OCSP
 response, so that an archive can be checked later without this verifier.
 A caller's revocation source is asked each question once per
-verification. It also carries the fixes of a security review of the whole
-code made before the release (below, under Fixed): files that were wrongly
-`Trusted` become `Invalid`. No corpus file outside the new probes changes
-verdict.
+verification.
+
+It also carries the fixes of a security review of the whole code made
+before the release (below, under Fixed):
+
+- **Wrongly `Trusted`:** six kinds of file that were `Trusted` are now
+  `Invalid` (a CAWG identity outside the active manifest or under an
+  instance label, a twice-named Time Stamping EKU, two OCSP timing gaps,
+  a 64-bit `hdlr` header, a BMFF walk out of step).
+- **Crashes:** five inputs that made `verify()` throw now give a report.
+  Anyone could make them, some without breaking a signature.
+- **Time and memory:** four inputs that cost seconds or tens of megabytes
+  are now cheap or refused by name.
+- **Two deliberate new differences from `c2patool`:** merkle blocks under
+  1 KiB, and more than 4,096 JPEG segments before SOS or 65,536 PNG
+  chunks.
+
+No corpus file outside the new probes changes verdict.
 
 **A `0.10`, not a `0.9.1`:** the public contract grows from 209 to 211
 symbols (below). Nothing was removed or renamed; a caller on `^0.9` keeps

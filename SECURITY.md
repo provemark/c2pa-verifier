@@ -82,7 +82,7 @@ once before and was wrong: see `PRED-IMG-004` below.
 
 ## Findings so far
 
-The project keeps its own record. Twenty-seven cases of a wrong `Valid` or
+The project keeps its own record. Thirty-three cases of a wrong `Valid` or
 `Trusted` have been found in it, all by the maintainers, one by the
 security review of a downstream module: two before any
 release, one after `0.1.0`, five, with eight ways to crash the verifier,
@@ -94,8 +94,10 @@ engine's own fixes, fixed in `0.2.6`, one found by a review of `src/`,
 fixed in `0.2.8`, one found by a review of the whole of `src/` before
 `0.3.0`, fixed in it, one reported privately, fixed in `0.5.1`, one
 found by the trust matrix, fixed in `0.5.2`, five found by a review of
-the whole code base before `0.8.0`, fixed in it, and two found by a fuzzer
-for the manifest graph, fixed in `0.8.1`:
+the whole code base before `0.8.0`, fixed in it, two found by a fuzzer
+for the manifest graph, fixed in `0.8.1`, and six, with five ways to
+crash the verifier and four to exhaust it, found by a security review of
+the whole code before `0.10.0`, fixed in it:
 
 - **2026-09-22, no hard binding** (`notes/step-47-no-hard-binding.md`).
   A correctly signed manifest with no `c2pa.hash.data` assertion — a
@@ -341,6 +343,47 @@ for the manifest graph, fixed in `0.8.1`:
   matched the media, and the parent still resolved and matched. Not
   counted, for the reason given for `0.8.2`. SPEC-027 amendment 9,
   SPEC-033 amendment 3.
+
+- **2026-10-29, a security review of the whole code before `0.10.0` —
+  six present in released versions, fixed in `0.10.0`**
+  (`notes/step-502-cawg-refused-everywhere.md` to
+  `notes/step-518-segment-chunk-limits.md`). Five review passes, one per
+  area, run as Claude Code subagents (`AI-LOG.md`). Every finding was
+  re-run before it was fixed, one per step, each with its amendment
+  approved first.
+  - *A CAWG identity assertion outside the refusal*, `0.1.0` to `0.9.0`:
+    the refusal knew `cawg.identity` only by its exact label and only in
+    the active manifest, so an instance (`cawg.identity__1`) or one in an
+    ingredient manifest left a file `Trusted` that `c2patool` calls
+    `Invalid` (confirmed with signed probes). SPEC-013 amendment 24,
+    SPEC-021 amendment 8.
+  - *Time Stamping written twice*, `0.2.4` to `0.9.0`: a leaf naming the
+    Time Stamping EKU twice escaped the rule that keeps a time-stamping
+    certificate from signing manifests under the legacy `trust_anchors`
+    (confirmed). SPEC-031 amendment 5.
+  - *An OCSP `good` without `nextUpdate`*, `0.9.0`: it counted for ever,
+    so a stored response from before a revocation kept a caller's
+    revocation source from being asked, and a revoked signer stayed
+    `Trusted` (confirmed). SPEC-030 amendment 7.
+  - *A delegated OCSP responder outside its validity*, `0.9.0`: a retired
+    responder key could answer `good` and, the same way, keep a revoked
+    signer `Trusted` (confirmed). SPEC-030 amendment 8.
+  - *The handler of an excluded track behind a 64-bit header*, `0.7.0`
+    to `0.9.0`: it was read at the wrong offset, so a timed-metadata
+    track could be turned into an unsigned video track that stayed
+    `Trusted` (confirmed). SPEC-072 amendment 1.
+  - *The BMFF box walk out of step*, `0.1.0` to `0.9.0`: one to seven
+    bytes after a container's last child were not passed over, so the
+    tree could list boxes the file does not hold there. Measured as a
+    refusal; a wrong `Trusted` is reasoned, not built. SPEC-029
+    amendment 4.
+  - Not counted above, because no verdict was wrong: five inputs that
+    made `verify()` throw (SPEC-080 amendment 3, SPEC-016 amendment 7,
+    SPEC-009 amendment 6, SPEC-007 amendments 10 and 11), four that cost
+    seconds or tens of megabytes (SPEC-080 amendment 4, SPEC-021
+    amendment 9, SPEC-016 amendment 8, SPEC-001 amendment 6 with SPEC-002
+    amendment 4), and two low findings (SPEC-009 amendment 7, SPEC-005
+    amendment 3).
 
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now
