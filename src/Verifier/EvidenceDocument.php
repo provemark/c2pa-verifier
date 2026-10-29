@@ -38,7 +38,7 @@ final class EvidenceDocument
     {
         $manifests = [];
         foreach ($report->evidence() as $label => $evidence) {
-            $manifests[self::text($label)] = self::manifest($evidence);
+            $manifests[self::text((string) $label)] = self::manifest($evidence);
         }
         $state = $report->result->toArray()['validation_state'] ?? null;
 
@@ -53,12 +53,12 @@ final class EvidenceDocument
         ];
     }
 
-    /** of() as JSON: an empty `manifests` is an object, as every other value of it is (AC3). */
+    /** of() as JSON: `manifests` is an object, empty (AC3) or keyed by labels of digits only (SPEC-007 amendment 11). */
     public static function json(VerificationReport $report): string
     {
         $document = self::of($report);
-        if ($document['manifests'] === []) {
-            $document['manifests'] = new \stdClass;
+        if (is_array($document['manifests'])) {
+            $document['manifests'] = (object) $document['manifests'];
         }
 
         return json_encode($document, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);

@@ -274,7 +274,7 @@ it('AC9: a manifest named by more than one assertion is validated once', functio
     expect($validation)->not->toBe([]);
     foreach ($graph->referenced as $label => $by) {
         foreach ($validation as $status) {
-            if (str_contains($status->url, $label)) {
+            if (str_contains($status->url, (string) $label)) {
                 expect($status->ingredientUri)->toBe($by[0], "{$label}: scoped to a later assertion");
             }
         }

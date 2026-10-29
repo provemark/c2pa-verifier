@@ -24,7 +24,7 @@ final readonly class VerificationReport
      * @param  string|null  $remoteManifestUrl  a manifest declared by URL in the file's XMP, never fetched (SPEC-013 amendment 9)
      * @param  \DateTimeImmutable|null  $validationTime  the time judged at where no trusted timestamp gave one: SPEC-073's, or the clock when verify() started (SPEC-075)
      * @param  list<TrustListIdentity>  $trustLists  the lists given to verify() (SPEC-081), read through trustLists()
-     * @param  array<string, ManifestEvidence>  $evidence  by manifest label (SPEC-082), read through evidence()
+     * @param  array<int|string, ManifestEvidence>  $evidence  by manifest label (SPEC-082), read through evidence()
      */
     public function __construct(
         public string $format,
@@ -53,7 +53,7 @@ final readonly class VerificationReport
      * label: the active manifest first, then each ingredient manifest in the order checked. Empty when no
      * manifest was judged. Not in toArray() or toCrJson(), whose shapes stay as they are.
      *
-     * @return array<string, ManifestEvidence>
+     * @return array<int|string, ManifestEvidence>
      */
     public function evidence(): array
     {
@@ -113,7 +113,13 @@ final readonly class VerificationReport
 
     public function toJson(): string
     {
-        return json_encode($this->toArray(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+        $array = $this->toArray();
+        if (is_array($array['manifests']) && $array['manifests'] !== []) {
+            // keyed by label, an object even when PHP holds a label of digits only as an integer (SPEC-007 amendment 11)
+            $array['manifests'] = (object) $array['manifests'];
+        }
+
+        return json_encode($array, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
     }
 
     /** The report as crJSON (C2PA 2.4 crJSON; SPEC-075): the same verdict, written for the conformance programme's harness. */

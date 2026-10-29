@@ -282,6 +282,27 @@ step 09's and step 12's.
     are `c2patool`'s; and each document names the assertion by the string
     label `"5"` or `"0"`, never by a number
 
+- **AC16 — a manifest label of digits only keeps every document's shape** *(amendment 11, corrected before it was built; required: malformed input)*
+  - Given `databox/c2pasign-logo.png` (claim v1, signed by `c2patool`
+    0.9.12) with its active manifest's label changed after signing to `5`,
+    and to `0`: once in its description box only, and once in the claim's
+    URIs too, every enclosing box length, CBOR text length and the caBX
+    CRC recomputed; and, as controls, `numeric-label-control.png` (AC15,
+    claim v2) relabelled the same way; all made by
+    `bin/make-numeric-label-variants.php`, with `c2patool` 0.28.3's
+    answers recorded
+  - When each is verified and its report written as JSON, as cr-JSON and
+    as evidence
+  - Then no exception leaves the verifier or any of the three writers;
+    every file is `Invalid` and carries the failure code `c2patool` gives
+    (`claimSignature.missing` when the claim names the old label,
+    `claimSignature.mismatch` when it names the new one, `claim.malformed`
+    for claim v2); the evidence's manifests are a JSON object; and where
+    the store is read (the claim naming the new label), the JSON and the
+    evidence write the manifests as an object with the string key `"5"`
+    or `"0"`, `active_manifest` is that string, and cr-JSON names it as
+    the label
+
 ## References
 
 - Specification: C2PA 2.4 §10.2.1 Schema (the two CDDL rules, quoted
@@ -526,6 +547,42 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
    **Weight A.** A file that threw now gets `c2patool`'s verdict. Nothing
    else moves: a label with any other character was a string key already.
 
+11. **2026-10-29, step 512, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   The same cause as amendment 10, one level up. `ManifestStore::$manifests`
+   is keyed by the manifest's label, the label of its JUMBF description
+   box, which no signature covers. A label of digits only (`5`, `0`)
+   became an integer key. Such a label is not a manifest label (C2PA 2.4
+   §8.1), and a claim v2 manifest carrying one was already refused
+   (`claim.malformed`, as `c2patool` 0.28.3 does). A claim v1 manifest is
+   not held to the URN form (c2pa-rs does not hold it either), and there
+   it reached the code: measured, `verify()` itself threw a `TypeError`
+   (`IngredientAssertion::fromAssertion()` given an integer label, from
+   `ManifestGraph::fromStore()`), on `databox/c2pasign-logo.png` with its
+   active manifest relabelled. The review's probes also showed
+   `evidenceToJson()` throwing (`EvidenceDocument::text()`), and
+   `toJson()` and the evidence writing `manifests` as a JSON list when
+   the only key was `0`.
+
+   *Correction before it was built (approved by Maurice van Loon,
+   2026-10-29):* AC16 first named the claim v2 control as its fixture;
+   measured, that path never crashed, so AC16 now names the claim v1
+   file that does, and keeps claim v2 as a control.
+
+   Now the type of `$manifests`, and of the keys of
+   `VerificationReport::evidence()`, says what PHP holds (`array<int|string,
+   Manifest>`); PHPStan, run without its result cache, names every place
+   that takes the key as a string, and each turns it back with `(string)`.
+   The graph casts the label back where it walks the store; the JSON and
+   evidence writers write the manifests as a JSON object whatever keys
+   PHP holds (cr-JSON already writes a list of manifests, each with its
+   label as a string). `toJson()` without a store keeps its empty `[]`.
+   New criterion AC16.
+
+   **Weight A.** A `verify()` that threw now returns `Invalid` with
+   `c2patool`'s failure code, and a caller's document that threw or
+   changed shape is written in its shape. No verdict of a file that was
+   read before moves.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -547,6 +604,7 @@ least one test; every source file maps back to this spec.
 | AC12 | tests/Unit/Manifest/ManifestStoreTest.php :: AC12: structural faults in the manifest are errors / SPEC-007 | src/Manifest/Manifest.php :: fromBox(), theOne(), singleCbor(); src/Manifest/ManifestStore.php :: fromTree() |
 | AC13 | tests/Unit/Manifest/ManifestStoreTest.php :: AC13: invalid JSON in a json box is an error naming the assertion, never the bytes / SPEC-007 | src/Manifest/Manifest.php :: assertionData() (json) |
 | AC14 | tests/Unit/Manifest/ManifestStoreTest.php :: AC14: a claim_generator_info without a name is an error / SPEC-007 | src/Manifest/Claim.php :: generatorInfo() |
+| AC16 (amendment 11) | tests/Unit/Manifest/ManifestStoreTest.php :: AC16: a claim v1 manifest labelled with digits only is read, and every document keeps its shape (amendment 11) (4 files); AC16: a claim v2 manifest labelled with digits only is refused, as c2patool refuses it (amendment 11) (2 files) / SPEC-007 | src/Manifest/ManifestStore.php :: \$manifests (its type); src/Manifest/ManifestGraph.php :: fromStore(); src/Manifest/UpdateManifestCheck.php; src/Verifier/VerificationReport.php :: toJson(); src/Verifier/EvidenceDocument.php :: of(), json(); bin/make-numeric-label-variants.php |
 | AC15 (amendment 10) | tests/Unit/Manifest/ManifestStoreTest.php :: AC15: an assertion label of digits only is a label like any other (amendment 10) (3 files) / SPEC-007 | src/Manifest/Manifest.php :: \$assertions (its type); src/Manifest/ManifestGraph.php :: assertionLabels(); src/Manifest/ManifestStore.php; src/Manifest/IconReferenceCheck.php; src/Manifest/UpdateManifestCheck.php; bin/make-numeric-label-variants.php |
 | AC15 | tests/Unit/Manifest/ManifestStoreTest.php :: AC15: a float JSON cannot hold is rendered as its name, and the report encodes (amendment 6, step 247) / SPEC-007 | src/Manifest/ManifestStore.php :: plain() |
 | AC16 | tests/Unit/Manifest/ManifestProbesTest.php :: AC16: a manifest box of type c2md is read as a standard manifest (SPEC-007 amendment 7) / SPEC-007 | src/Jumbf/JumbfParser.php :: UUID_MANIFEST_C2MD; src/Manifest/ManifestStore.php :: fromTree() |

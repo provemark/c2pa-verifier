@@ -97,6 +97,14 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   `Valid`. The type of `Manifest::$assertions` is now
   `array<int|string, Assertion>`, which is what PHP holds; a caller that
   reads the keys should read them back with `(string)`.
+- **A manifest label of digits only no longer makes `verify()` throw
+  (SPEC-007 amendment 11).** A claim v1 manifest relabelled `5` after
+  signing made `verify()` throw a `TypeError`; it is now `Invalid`, with
+  the failure code `c2patool` gives. `toJson()` and `evidenceToJson()`
+  write `manifests` as a JSON object even when the only label is `0`.
+  `ManifestStore::$manifests` and the keys of
+  `VerificationReport::evidence()` are now typed `array<int|string, …>`;
+  a caller that reads the keys should read them back with `(string)`.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

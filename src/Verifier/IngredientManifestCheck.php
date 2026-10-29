@@ -75,7 +75,7 @@ final readonly class IngredientManifestCheck
      * Every manifest the graph reached, in walk order, each scoped to the assertion that named it first;
      * the hash of every assertion that names it, each under that assertion (SPEC-021 amendment 7).
      *
-     * @param  array<string, ManifestEvidence>  $evidence  each validated manifest's, added by label in walk order (SPEC-082)
+     * @param  array<int|string, ManifestEvidence>  $evidence  each validated manifest's, added by label in walk order (SPEC-082)
      * @return list<ValidationStatus>
      */
     public function check(ManifestStore $store, ManifestGraph $graph, ?TrustSettings $settings, ?int $now = null, ?int $clock = null, array &$evidence = [], ?RevocationSource $source = null): array
@@ -200,9 +200,9 @@ final readonly class IngredientManifestCheck
     /**
      * The ingredient manifest itself: everything the active manifest gets except the data hash.
      *
-     * @param  array<string, list<string>>  $storeLabels  the store's claims, for SPEC-037's c2pa.redacted rule
+     * @param  array<int|string, list<string>>  $storeLabels  the store's claims, for SPEC-037's c2pa.redacted rule
      * @param  list<array{0: string, 1: string}>  $responses  the store's certificate-status responses (SPEC-066)
-     * @param  array<string, ManifestEvidence>  $evidence
+     * @param  array<int|string, ManifestEvidence>  $evidence
      * @return list<ValidationStatus>
      */
     private function manifest(Manifest $manifest, string $scope, ?TrustSettings $settings, array $storeLabels, ?TimestampAssertions $assertions = null, array $responses = [], ?int $now = null, ?int $clock = null, array &$evidence = [], ?RevocationSource $source = null): array

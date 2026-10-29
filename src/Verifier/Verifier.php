@@ -288,7 +288,7 @@ final readonly class Verifier
      *
      * @param  resource  $stream
      * @param  list<ValidationStatus>  $graphStatuses  the ingredient graph's, each scoped (SPEC-020)
-     * @param  array<string, ManifestEvidence>  $evidence  filled: the active manifest's, then each ingredient manifest's (SPEC-082)
+     * @param  array<int|string, ManifestEvidence>  $evidence  filled: the active manifest's, then each ingredient manifest's (SPEC-082)
      * @param  ManifestGraph|null  $graph  null when the graph could not be built (a bound was exceeded)
      * @param  string  $format  the detected format, which says where an exclusion beyond the store may lie (SPEC-069)
      * @param  int|null  $now  the given validation time, or null for the clock (SPEC-073)

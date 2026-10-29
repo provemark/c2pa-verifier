@@ -92,7 +92,7 @@ it('AC1: a v2 (Lightroom), the v3 without a reference (c2pa-rs) and two v1 in cl
     // SPEC-020 amendment 1: the Photoshop file the approved AC1 named declares its manifest by URL and
     // carries no store; a v3 assertion without a reference comes from c2pa-rs's ingredient manifest instead
     $caca = spec020Store('c2pa-rs/CACA.jpg');
-    $ingredientManifest = array_key_first($caca->manifests);
+    $ingredientManifest = (string) array_key_first($caca->manifests);
     [$v3] = spec020Ingredients($caca, $ingredientManifest);
     expect($v3->label)->toBe('c2pa.ingredient.v3')
         ->and($v3->version)->toBe(3)

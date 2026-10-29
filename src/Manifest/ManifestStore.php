@@ -24,7 +24,7 @@ use Provemark\C2paVerifier\Report\StatusCode;
 final readonly class ManifestStore
 {
     /**
-     * @param  array<string, Manifest>  $manifests  by label, in store order
+     * @param  array<int|string, Manifest>  $manifests  by label, in store order
      */
     private function __construct(
         public array $manifests,
@@ -157,7 +157,7 @@ final readonly class ManifestStore
     }
 
     /**
-     * @param  array<string, Manifest>  $all  every manifest in the store, for the ingredients' references
+     * @param  array<int|string, Manifest>  $all  every manifest in the store, for the ingredients' references
      * @return array<string, mixed>
      */
     private static function manifestArray(Manifest $manifest, array $all = []): array
@@ -219,7 +219,7 @@ final readonly class ManifestStore
      * fields it carries and, where it names one, the manifest it brought along. An assertion this
      * verifier cannot read is left out of the rendering — the report says so as a failure instead.
      *
-     * @param  array<string, Manifest>  $all  every manifest in the store
+     * @param  array<int|string, Manifest>  $all  every manifest in the store
      * @return list<array<string, mixed>>
      */
     private static function ingredientsArray(Manifest $manifest, array $all = []): array

@@ -39,7 +39,7 @@ final readonly class ActionsCheck
      * URIs that did not match) are left unread.
      *
      * @param  list<string>  $unreadable  assertion urls whose hashed URI failed
-     * @param  array<string, list<string>>  $storeLabels  every manifest in the store => the assertion labels its claim lists (SPEC-037, claimLabels())
+     * @param  array<int|string, list<string>>  $storeLabels  every manifest in the store => the assertion labels its claim lists (SPEC-037, claimLabels())
      * @return list<ValidationStatus>
      */
     public function check(Manifest $manifest, array $unreadable = [], array $storeLabels = []): array
@@ -83,7 +83,7 @@ final readonly class ActionsCheck
      * @param  list<array{url: string, data: mixed}>  $actions
      * @param  list<string>  $labels  the labels of every assertion the claim lists (SPEC-033: relatedAssertions)
      * @param  array<string, string>  $ingredients  ingredient assertion label => its relationship (SPEC-033: references)
-     * @param  array<string, list<string>>  $storeLabels  every manifest in the store => the assertion labels its claim lists (SPEC-037)
+     * @param  array<int|string, list<string>>  $storeLabels  every manifest in the store => the assertion labels its claim lists (SPEC-037)
      * @return list<ValidationStatus>
      */
     public function checkAssertions(string $manifestLabel, int $version, array $actions, bool $isUpdateManifest = false, array $labels = [], array $ingredients = [], array $storeLabels = []): array
@@ -155,7 +155,7 @@ final readonly class ActionsCheck
      * @param  list<array{url: string, data: mixed}>  $actions
      * @param  list<string>  $labels
      * @param  array<string, string>  $ingredients
-     * @param  array<string, list<string>>  $storeLabels
+     * @param  array<int|string, list<string>>  $storeLabels
      * @return list<ValidationStatus>
      */
     private function contentRules(string $manifestLabel, array $actions, array $labels, array $ingredients, array $storeLabels): array
@@ -284,7 +284,7 @@ final readonly class ActionsCheck
      * included, open question 3): `assertion.notRedacted`. The label is matched by substring against
      * the listed urls, as c2pa-rs matches it.
      *
-     * @param  array<string, list<string>>  $storeLabels
+     * @param  array<int|string, list<string>>  $storeLabels
      */
     private static function redactionFault(mixed $redacted, array $storeLabels): ?StatusCode
     {
@@ -306,8 +306,8 @@ final readonly class ActionsCheck
      * Every manifest of the store with the assertion labels its claim lists, created and gathered: what
      * rule 2.d resolves a c2pa.redacted reference against (SPEC-037).
      *
-     * @param  array<string, Manifest>  $manifests
-     * @return array<string, list<string>>
+     * @param  array<int|string, Manifest>  $manifests
+     * @return array<int|string, list<string>>
      */
     public static function claimLabels(array $manifests): array
     {

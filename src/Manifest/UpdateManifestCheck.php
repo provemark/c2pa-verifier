@@ -35,8 +35,8 @@ final readonly class UpdateManifestCheck
      * manifest the walk never reaches is left out, as every other check leaves it out (§15.11.3.3;
      * SPEC-022 amendment 8).
      *
-     * @param  array<string, list<IngredientAssertion>>  $ingredients  per manifest label, from the graph
-     * @param  array<string, string>  $scopes  manifest label => the assertion url that named it
+     * @param  array<int|string, list<IngredientAssertion>>  $ingredients  per manifest label, from the graph
+     * @param  array<int|string, string>  $scopes  manifest label => the assertion url that named it
      * @param  list<string>  $unreferenced  the manifests the walk never reaches
      * @return list<ValidationStatus>
      */
@@ -44,7 +44,7 @@ final readonly class UpdateManifestCheck
     {
         $statuses = [];
         foreach ($store->manifests as $label => $manifest) {
-            if (in_array($label, $unreferenced, true)) {
+            if (in_array((string) $label, $unreferenced, true)) {
                 continue;
             }
             $list = $ingredients[$label] ?? [];
@@ -128,7 +128,7 @@ final readonly class UpdateManifestCheck
      * of `parentOf` references. Null when the chain reaches none — the caller then says
      * `claim.hardBindings.missing`.
      *
-     * @param  array<string, list<IngredientAssertion>>  $ingredients  per manifest label, from the graph
+     * @param  array<int|string, list<IngredientAssertion>>  $ingredients  per manifest label, from the graph
      */
     public static function bindingManifest(ManifestStore $store, array $ingredients): ?Manifest
     {

@@ -247,7 +247,7 @@ it('AC8: over the corpus, the time-stamps agree with the verdict and the statuse
         $report = (new Verifier)->verify($stream, $trust);
         fclose($stream);
         foreach ($report->evidence() as $label => $evidence) {
-            foreach (spec084Disagreements($report, $label, $evidence) as $d) {
+            foreach (spec084Disagreements($report, (string) $label, $evidence) as $d) {
                 $disagreements[] = substr($file->getPathname(), strlen($root) + 1).": {$d}";
             }
             foreach ($evidence->timestamps as $e) {

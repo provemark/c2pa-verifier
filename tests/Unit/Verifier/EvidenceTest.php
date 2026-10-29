@@ -197,7 +197,7 @@ function spec082Disagreements(VerificationReport $report): array
     }
     foreach ($report->evidence() as $label => $evidence) {
         if (! array_key_exists($label, $judged)) {
-            $dropped[] = $label;
+            $dropped[] = (string) $label;
 
             continue;
         }

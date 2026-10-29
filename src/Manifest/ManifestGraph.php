@@ -37,8 +37,8 @@ final readonly class ManifestGraph
     public const int MAX_ASSERTIONS = 256;
 
     /**
-     * @param  array<string, list<IngredientAssertion>>  $ingredients  per manifest label, claim order
-     * @param  array<string, list<string>>  $referenced  referenced manifest label => the assertion urls naming it
+     * @param  array<int|string, list<IngredientAssertion>>  $ingredients  per manifest label, claim order
+     * @param  array<int|string, list<string>>  $referenced  referenced manifest label => the assertion urls naming it
      * @param  list<array{label: string, by: string}>  $missing  references to labels not in the store
      * @param  list<string>  $unreferenced  manifests the walk never reaches ("should be ignored", §15.11.3.3)
      * @param  list<string>  $redactedAssertions  every claim's redacted_assertions, collected (SPEC-021)
@@ -72,6 +72,8 @@ final readonly class ManifestGraph
         $ingredients = [];
         $malformed = [];
         foreach ($store->manifests as $label => $manifest) {
+            // a label of digits only is an integer key in PHP (SPEC-007 amendment 11)
+            $label = (string) $label;
             $ingredients[$label] = [];
             foreach (self::assertionLabels($manifest) as $assertionLabel) {
                 if (! IngredientAssertion::isIngredientLabel($assertionLabel)) {
@@ -93,9 +95,9 @@ final readonly class ManifestGraph
      * The walk itself, over ingredient assertions already decoded — the seam the bounds and cycle
      * criteria are tested through (SPEC-020 AC7).
      *
-     * @param  array<string, list<IngredientAssertion>>  $ingredients  per manifest label
+     * @param  array<int|string, list<IngredientAssertion>>  $ingredients  per manifest label
      * @param  list<string>  $redactedAssertions
-     * @param  array<string, list<ValidationStatus>>  $malformed  per manifest label, in assertion order
+     * @param  array<int|string, list<ValidationStatus>>  $malformed  per manifest label, in assertion order
      *
      * @throws ManifestException general.error when a bound is exceeded
      */
@@ -118,7 +120,7 @@ final readonly class ManifestGraph
         $unreferenced = [];
         foreach (array_keys($ingredients) as $label) {
             if (! array_key_exists($label, $visited)) {
-                $unreferenced[] = $label;
+                $unreferenced[] = (string) $label;
             }
         }
 
@@ -130,13 +132,13 @@ final readonly class ManifestGraph
      * followed at once into the manifest it names — the order c2pa-rs logs and c2patool prints.
      *
      * @param  list<string>  $path  the manifest labels on the way here, for the cycle rule
-     * @param  array<string, list<IngredientAssertion>>  $ingredients
-     * @param  array<string, list<ValidationStatus>>  $malformed
-     * @param  array<string, list<string>>  $referenced
+     * @param  array<int|string, list<IngredientAssertion>>  $ingredients
+     * @param  array<int|string, list<ValidationStatus>>  $malformed
+     * @param  array<int|string, list<string>>  $referenced
      * @param  list<array{label: string, by: string}>  $missing
      * @param  list<ValidationStatus>  $statuses
      * @param  list<string>  $walk
-     * @param  array<string, true>  $visited
+     * @param  array<int|string, true>  $visited
      * @param  list<string>  $cyclic
      *
      * @throws ManifestException general.error when the depth bound is exceeded

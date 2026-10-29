@@ -69,6 +69,7 @@ function spec083Chains(string $relative): array
     $report = spec075Report($relative, 'trust/full.settings.json');
     $chains = [];
     foreach ($report->evidence() as $label => $e) {
+        $label = (string) $label;
         $chain = array_map(static fn ($c): string => $c->bytes, CoseSign1::ofManifest(spec083Manifest($report, $label))->chain);
         expect($e->certificates)->toBe($chain);
         $chains[$label] = $e->certificates;
@@ -113,7 +114,7 @@ it('AC5: over the corpus, the evidence agrees with the COSE reader', function ()
         foreach ($report->evidence() as $label => $e) {
             $manifests++;
             try {
-                $expected = array_map(static fn ($c): string => $c->bytes, CoseSign1::ofManifest(spec083Manifest($report, $label))->chain);
+                $expected = array_map(static fn ($c): string => $c->bytes, CoseSign1::ofManifest(spec083Manifest($report, (string) $label))->chain);
             } catch (CoseException|ManifestException) {
                 $expected = [];
             }

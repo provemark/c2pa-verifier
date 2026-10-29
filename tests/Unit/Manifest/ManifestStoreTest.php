@@ -460,3 +460,47 @@ it('AC15: an assertion label of digits only is a label like any other (amendment
     'an assertion labelled 5' => ['numeric-label-5', '5'],
     'an assertion labelled 0' => ['numeric-label-0', '0'],
 ])->group('SPEC-007');
+
+it('AC16: a claim v1 manifest labelled with digits only is read, and every document keeps its shape (amendment 11)', function (string $name, string $label, string $code): void {
+    // bin/make-numeric-label-variants.php: databox/c2pasign-logo.png (claim v1) with its active manifest relabelled after signing
+    $report = spec020Verify("numeric-label/{$name}.png", 'numeric-label/throw-away-root.settings.json');
+    $oracle = spec020Oracle("numeric-label/{$name}--0.28.3.json");
+    /** @var array{activeManifest: array{failure: list<array{code: string}>}} $results */
+    $results = $oracle['validation_results'];
+    expect($oracle['validation_state'])->toBe('Invalid')
+        ->and(array_column($results['activeManifest']['failure'], 'code'))->toContain($code)
+        ->and(array_column(spec020Failures($report->toArray()), 'code'))->toContain($code)
+        ->and($report->result->state->value)->toBe('Invalid');
+
+    $json = json_decode($report->toJson(), false, 512, JSON_THROW_ON_ERROR);
+    $evidence = json_decode($report->evidenceToJson(), false, 512, JSON_THROW_ON_ERROR);
+    assert($json instanceof stdClass && $evidence instanceof stdClass);
+    expect($evidence->manifests)->toBeInstanceOf(stdClass::class)
+        ->and($report->toCrJson())->toBeString();
+    if ($code === 'claimSignature.mismatch') {
+        // the claim names the new label too, so the store is read: the label is the key and the active manifest, as a string
+        expect($json->manifests)->toBeInstanceOf(stdClass::class)
+            ->and($json->active_manifest)->toBe($label)
+            ->and($evidence->active_manifest)->toBe($label)
+            ->and(array_map('strval', array_keys((array) $json->manifests)))->toContain($label)
+            ->and(array_map('strval', array_keys((array) $evidence->manifests)))->toContain($label)
+            ->and($report->toCrJson())->toContain(sprintf('"label": "%s"', $label));
+    }
+})->with([
+    'labelled 5, the claim naming the old label' => ['numeric-manifest-v1-5', '5', 'claimSignature.missing'],
+    'labelled 0, the claim naming the old label' => ['numeric-manifest-v1-0', '0', 'claimSignature.missing'],
+    'labelled 5, in the claim too' => ['numeric-manifest-v1-claim-5', '5', 'claimSignature.mismatch'],
+    'labelled 0, in the claim too' => ['numeric-manifest-v1-claim-0', '0', 'claimSignature.mismatch'],
+])->group('SPEC-007');
+
+it('AC16: a claim v2 manifest labelled with digits only is refused, as c2patool refuses it (amendment 11)', function (string $name): void {
+    // the same relabelling of numeric-label-control.png (claim v2): not a manifest label, so the store is malformed
+    $report = spec020Verify("numeric-label/{$name}.png", 'numeric-label/throw-away-root.settings.json');
+    /** @var array{activeManifest: array{failure: list<array{code: string}>}} $results */
+    $results = spec020Oracle("numeric-label/{$name}--0.28.3.json")['validation_results'];
+
+    expect(array_column($results['activeManifest']['failure'], 'code'))->toContain('claim.malformed')
+        ->and(array_column(spec020Failures($report->toArray()), 'code'))->toContain('claim.malformed')
+        ->and($report->result->state->value)->toBe('Invalid')
+        ->and($report->evidenceToJson())->toBeString();
+})->with(['numeric-manifest-v2-5', 'numeric-manifest-v2-0'])->group('SPEC-007');

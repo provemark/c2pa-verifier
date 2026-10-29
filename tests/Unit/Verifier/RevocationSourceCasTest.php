@@ -249,8 +249,8 @@ it('AC8: an ingredient\'s CA', function (): void {
 
     expect(count($report->evidence()))->toBe(2);
     foreach (array_keys($report->evidence()) as $label) {
-        expect(spec087Codes($report, $label))->toContain('signingCredential.untrusted')
-            ->and(spec087Codes($report, $label))->not->toContain('signingCredential.trusted');
+        expect(spec087Codes($report, (string) $label))->toContain('signingCredential.untrusted')
+            ->and(spec087Codes($report, (string) $label))->not->toContain('signingCredential.trusted');
     }
     expect(spec087State($report))->not->toBe('Trusted');
 })->group('SPEC-087');

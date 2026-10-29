@@ -391,7 +391,7 @@ if ($app11($jpeg, $s) !== $jpeg) {
     throw new RuntimeException('the APP11 rebuild is not byte-exact on the unchanged store');
 }
 file_put_contents("{$dir}/ingredient-signature-broken.jpg", $app11($jpeg, $edited));
-printf("%s  %d bytes  ingredient-signature-broken (ingredient %s)\n", hash('sha256', $edited), strlen($edited), substr($ingredientLabel, -12));
+printf("%s  %d bytes  ingredient-signature-broken (ingredient %s)\n", hash('sha256', $edited), strlen($edited), substr((string) $ingredientLabel, -12));
 
 // ============================================================================
 // 2 and 3, from the PNG fixture
