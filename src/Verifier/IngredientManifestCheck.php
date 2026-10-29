@@ -89,19 +89,22 @@ final readonly class IngredientManifestCheck
         $statuses = [];
         $assertions = TimestampAssertions::collect($store);   // SPEC-064: a later manifest's token for this one
         $responses = OcspCheck::assertionResponses($store);   // SPEC-066: certificate-status assertions of the store
+        $storeLabels = ActionsCheck::claimLabels($store->manifests);
+        // each manifest's digests, for this call only: kept longer, one file's could meet another's manifest (amendment 9)
+        $digests = [];
         foreach ($graph->referenced as $label => $urls) {
             $ingredient = $byUrl[$urls[0]] ?? null;
             if ($ingredient === null || ! array_key_exists($label, $store->manifests)) {
                 continue;
             }
             $manifest = $store->manifests[$label];
-            $mine = $this->hash($manifest, $ingredient);
-            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, ActionsCheck::claimLabels($store->manifests), $assertions, $responses, $now, $clock, $evidence, $source)];
+            $mine = $this->hashOnce($manifest, $ingredient, $digests);
+            $mine = [...$mine, ...$this->manifest($manifest, $ingredient->url, $settings, $storeLabels, $assertions, $responses, $now, $clock, $evidence, $source)];
             // every later reference states a hash of its own, and each is checked under the assertion that
             // states it (amendment 7; C2PA 2.4 §15.11.3.3.2); the manifest itself is validated once (AC9)
             foreach (array_slice($urls, 1) as $url) {
                 if (isset($byUrl[$url])) {
-                    $mine = [...$mine, ...$this->hash($manifest, $byUrl[$url])];
+                    $mine = [...$mine, ...$this->hashOnce($manifest, $byUrl[$url], $digests)];
                 }
             }
             $statuses = [...$statuses, ...$mine];
@@ -121,20 +124,34 @@ final readonly class IngredientManifestCheck
      */
     public function hash(Manifest $manifest, IngredientAssertion $ingredient): array
     {
+        $digests = [];
+
+        return $this->hashOnce($manifest, $ingredient, $digests);
+    }
+
+    /**
+     * hash(), each digest computed once per manifest, route and algorithm in $digests (amendment 9):
+     * many references to one manifest compare against one digest, each still under its own assertion.
+     *
+     * @param  array<string, string>  $digests
+     * @return list<ValidationStatus>
+     */
+    private function hashOnce(Manifest $manifest, IngredientAssertion $ingredient, array &$digests): array
+    {
         $reference = $ingredient->manifest;
         if ($reference === null) {
             return [];
         }
         if ($manifest->redacted !== [] && $manifest->claim->version >= 2) {
-            return $this->claimSignature($manifest, $ingredient, $reference->url);
+            return $this->claimSignature($manifest, $ingredient, $reference->url, $digests);
         }
         $boxAlg = $manifest->claim->alg ?? 'sha256';
         $legacyAlg = $reference->alg ?? $boxAlg;
         $expected = $reference->hash->bytes;
-        if (self::implemented($boxAlg) && hash_equals(hash($boxAlg, $manifest->box->payload(), true), $expected)) {
+        if (self::implemented($boxAlg) && hash_equals(self::digest($digests, $manifest, 'box', $boxAlg, static fn (): string => $manifest->box->payload()), $expected)) {
             return [new ValidationStatus(StatusCode::IngredientManifestValidated, $reference->url, 'ingredient hash matched', $ingredient->url)];
         }
-        if (self::implemented($legacyAlg) && hash_equals(hash($legacyAlg, $manifest->claimBytes(), true), $expected)) {
+        if (self::implemented($legacyAlg) && hash_equals(self::digest($digests, $manifest, 'claim', $legacyAlg, static fn (): string => $manifest->claimBytes()), $expected)) {
             // the pre-1.3 hash: the ingredient is not refused, but nothing is claimed for it either —
             // the manifest below decides, as it does at c2patool (eleven corpus files, step 55)
             return [];
@@ -150,6 +167,17 @@ final readonly class IngredientManifestCheck
             ),
             $ingredient->url,
         )];
+    }
+
+    /**
+     * One digest of $manifest, by route (box, claim, signature) and algorithm, computed the first time it is asked.
+     *
+     * @param  array<string, string>  $digests
+     * @param  callable(): string  $bytes
+     */
+    private static function digest(array &$digests, Manifest $manifest, string $route, string $alg, callable $bytes): string
+    {
+        return $digests[spl_object_id($manifest).'/'.$route.'/'.$alg] ??= hash($alg, $bytes(), true);
     }
 
     /** C2PA 2.4 §13.1, as HashedUriCheck and DataHashCheck hold them (SPEC-052). */
@@ -177,9 +205,10 @@ final readonly class IngredientManifestCheck
      * signature binds to the claim and the claim to every assertion that is left. A v1 claim has no
      * such route and stays with the box hash, which then fails (SPEC-035 amendment 3).
      *
+     * @param  array<string, string>  $digests  hashOnce()'s
      * @return list<ValidationStatus>
      */
-    private function claimSignature(Manifest $manifest, IngredientAssertion $ingredient, string $url): array
+    private function claimSignature(Manifest $manifest, IngredientAssertion $ingredient, string $url, array &$digests): array
     {
         $recorded = $ingredient->claimSignature;
         if ($recorded === null) {
@@ -190,7 +219,7 @@ final readonly class IngredientManifestCheck
             // nothing is computed, as at c2pa-rs, whose comparison then fails (SPEC-052 amendment 1)
             return [new ValidationStatus(StatusCode::IngredientClaimSignatureMismatch, $url, sprintf('ingredient claimSignature mismatch: the signature box of %s cannot be hashed; the hash algorithm %s is not one of sha256, sha384, sha512 (C2PA 2.4 §13.1)', $manifest->label, $alg), $ingredient->url)];
         }
-        $actual = hash($alg, $manifest->resolve($manifest->claim->signatureUri)->payload(), true);
+        $actual = self::digest($digests, $manifest, 'signature', $alg, static fn (): string => $manifest->resolve($manifest->claim->signatureUri)->payload());
 
         return hash_equals($recorded->hash->bytes, $actual)
             ? [new ValidationStatus(StatusCode::IngredientClaimSignatureValidated, $url, 'ingredient claimSignature validated', $ingredient->url)]

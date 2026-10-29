@@ -12391,3 +12391,10 @@ README are where the disclosure lives.
 - Produced: SPEC-080 amendment 4 and AC11 with its Traceability; `src/Hash/BmffHashCheck.php` (`MIN_BLOCK_SIZE`, `checkMdatMerkle()`); `bin/make-mdat-merkle-variants.php` (`block-size-512`; the run signed every re-signed file again); `tests/Fixtures/mdat-merkle/` and `tests/Fixtures/c2patool/mdat-merkle/` (one new file, its two oracles, README row); `tests/Unit/Hash/MdatMerkleTest.php`; `docs/comparison.md`, `docs/reading-c2pa-2.4.md`; `CHANGELOG.md`; `notes/step-513-merkle-block-floor.md`, `NOTES.md`.
 - Measured: `checkMdatMerkle()` on a 4 MB `mdat` at block sizes 2, 16, 256, 1,024 and 65,536 against SHA-256 over it; the generator with `c2patool` 0.28.3 and 0.28.1 (`block-size-512` `Trusted` in both, every other recorded state unchanged); this verifier on it before (`Trusted`) and after (`Invalid`); AC11 red on `aec67b4` and green after, repeated on the old source; the corpus against `aec67b4` (2,188 runs, only the new file differs); `composer check` exit 0, `vendor/bin/pest --parallel` exit 0, `bin/package-check.php`.
 - Decided by Maurice: the amendment, including the deliberate difference from `c2patool` (weight B).
+
+## 2026-10-29 — Step 514: many references to one manifest cost one hash
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, schrijf het amendement voor 514"; then "akkoord, amendement approved, bouw 514".
+- Produced: SPEC-021 amendment 9 and AC14 with its Traceability; `src/Verifier/IngredientManifestCheck.php` (`check()`, `hashOnce()`, `digest()`, `claimSignature()`); `tests/Unit/Verifier/IngredientManifestCheckTest.php` (AC14, with a store built in memory); `CHANGELOG.md`; `notes/step-514-ingredient-digest-once.md`, `NOTES.md`.
+- Measured: the reviewer's probe (255 references to a 15 MB manifest) on `61cdf7b` (9.4 s) and after (0.14 s, the same 521 statuses); AC14 red on `61cdf7b` (1.22 s against about 0.03 s) and green after, repeated on the old source; SPEC-021's 24 tests; the corpus against `61cdf7b` (2,188 runs, none differs); `composer check`, `vendor/bin/pest --parallel`, `bin/package-check.php`.
+- Decided by Maurice: the amendment.

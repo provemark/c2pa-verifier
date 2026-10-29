@@ -13,6 +13,7 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Tests\Support\Corpus;
 use Provemark\C2paVerifier\Verifier\IngredientManifestCheck;
 use Provemark\C2paVerifier\Verifier\VerificationReport;
+use Provemark\C2paVerifier\Verifier\Verifier;
 
 /*
  * SPEC-021: the manifests the graph found, validated. Oracles: c2patool
@@ -435,4 +436,108 @@ it('AC13: the control, an ingredient manifest without a CAWG label, stays Truste
 
     expect($report->result->state)->toBe(ValidationState::Trusted)
         ->and(spec020Oracle('cawg/cawg-ingredient-control--0.28.3.json')['validation_state'])->toBe('Trusted');
+})->group('SPEC-021');
+
+/** A CBOR head: major type and argument. */
+function spec021FanHead(int $major, int $n): string
+{
+    return match (true) {
+        $n < 24 => pack('C', $major << 5 | $n),
+        $n < 256 => pack('CC', $major << 5 | 24, $n),
+        $n < 65536 => pack('Cn', $major << 5 | 25, $n),
+        default => pack('CN', $major << 5 | 26, $n),
+    };
+}
+
+/** The CBOR of the few shapes this test writes: maps with text keys, lists, text, bytes, integers. */
+function spec021FanCbor(mixed $value): string
+{
+    if (is_array($value) && ! array_is_list($value)) {
+        $pairs = '';
+        foreach ($value as $key => $item) {
+            $pairs .= spec021FanCbor((string) $key).spec021FanCbor($item);
+        }
+
+        return spec021FanHead(5, count($value)).$pairs;
+    }
+
+    return match (true) {
+        $value instanceof CborBytes => spec021FanHead(2, strlen($value->bytes)).$value->bytes,
+        is_string($value) => spec021FanHead(3, strlen($value)).$value,
+        is_int($value) => spec021FanHead(0, $value),
+        is_array($value) => spec021FanHead(4, count($value)).implode('', array_map(spec021FanCbor(...), $value)),
+        default => throw new LogicException('not written by this test'),
+    };
+}
+
+function spec021FanBox(string $type, string $data): string
+{
+    return pack('N', 8 + strlen($data)).$type.$data;
+}
+
+/** A JUMBF superbox: its type's four-character prefix, toggles 0x03 (requestable, labelled), its label, its children. */
+function spec021FanSuper(string $prefix, string $label, string ...$children): string
+{
+    return spec021FanBox('jumb', spec021FanBox('jumd', $prefix."\x00\x11\x00\x10\x80\x00\x00\xaa\x00\x38\x9b\x71\x03".$label."\x00").implode('', $children));
+}
+
+/**
+ * A claim v1 manifest with its assertions, a claim naming them, and a COSE_Sign1 that carries no signature.
+ *
+ * @param  array<string, string>  $assertions  label => assertion superbox
+ */
+function spec021FanManifest(string $label, array $assertions): string
+{
+    $refs = [];
+    foreach ($assertions as $name => $box) {
+        $refs[] = ['url' => "self#jumbf=c2pa.assertions/{$name}", 'hash' => new CborBytes(hash('sha256', substr($box, 8), true))];
+    }
+    $claim = spec021FanCbor(['claim_generator' => 'SPEC-021 AC14', 'signature' => 'self#jumbf=c2pa.signature', 'assertions' => $refs, 'dc:format' => 'image/png', 'instanceID' => 'x', 'alg' => 'sha256']);
+
+    return spec021FanSuper('c2ma', $label,
+        spec021FanSuper('c2as', 'c2pa.assertions', ...array_values($assertions)),
+        spec021FanSuper('c2cl', 'c2pa.claim', spec021FanBox('cbor', $claim)),
+        spec021FanSuper('c2cs', 'c2pa.signature', spec021FanBox('cbor', "\xd2\x84\x40\xa0\xf6\x40")),
+    );
+}
+
+/** A 1×1 PNG whose store holds an ingredient manifest with one assertion of $size bytes, named by $references ingredient assertions. */
+function spec021FanOut(int $size, int $references): string
+{
+    $cbor = static fn (string $label, array $data): string => spec021FanSuper('cbor', $label, spec021FanBox('cbor', spec021FanCbor($data)));
+    $actions = $cbor('c2pa.actions', ['actions' => [['action' => 'c2pa.created']]]);
+    $ingredient = spec021FanManifest('urn:uuid:aaaaaaaa-1234-4234-8234-123456789abc', ['c2pa.actions' => $actions, 'big' => $cbor('big', ['b' => new CborBytes(str_repeat('A', $size))])]);
+    $hash = new CborBytes(hash('sha256', substr($ingredient, 8), true));
+    $assertions = ['c2pa.actions' => $actions];
+    for ($i = 0; $i < $references; $i++) {
+        $label = $i === 0 ? 'c2pa.ingredient' : "c2pa.ingredient__{$i}";
+        $assertions[$label] = $cbor($label, ['dc:title' => 'i', 'dc:format' => 'image/png', 'instanceID' => 'i', 'relationship' => 'componentOf', 'c2pa_manifest' => ['url' => 'self#jumbf=/c2pa/urn:uuid:aaaaaaaa-1234-4234-8234-123456789abc', 'hash' => $hash]]);
+    }
+    $store = spec021FanSuper('c2pa', 'c2pa', $ingredient, spec021FanManifest('urn:uuid:bbbbbbbb-1234-4234-8234-123456789abc', $assertions));
+    $chunk = static fn (string $type, string $data): string => pack('N', strlen($data)).$type.$data.pack('N', crc32($type.$data));
+
+    return "\x89PNG\r\n\x1a\n".$chunk('IHDR', pack('NNCCCCC', 1, 1, 8, 0, 0, 0, 0)).$chunk('caBX', $store).$chunk('IDAT', (string) gzcompress("\x00\x00")).$chunk('IEND', '');
+}
+
+it('AC14: many references to one manifest cost one hash, each still reported under its own assertion (amendment 9)', function (): void {
+    $run = static function (int $references): array {
+        $stream = fopen('php://temp', 'w+b');
+        assert(is_resource($stream));
+        fwrite($stream, spec021FanOut(2_000_000, $references));
+        rewind($stream);
+        $started = hrtime(true);
+        $report = (new Verifier)->verify($stream);
+
+        return [(hrtime(true) - $started) / 1e9, array_values(array_map(static fn (ValidationStatus $s): ?string => $s->ingredientUri, array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::IngredientManifestValidated)))];
+    };
+    [$one, $oneScopes] = $run(1);
+    [$many, $manyScopes] = $run(255);
+
+    $expected = ['self#jumbf=/c2pa/urn:uuid:bbbbbbbb-1234-4234-8234-123456789abc/c2pa.assertions/c2pa.ingredient'];
+    for ($i = 1; $i < 255; $i++) {
+        $expected[] = "self#jumbf=/c2pa/urn:uuid:bbbbbbbb-1234-4234-8234-123456789abc/c2pa.assertions/c2pa.ingredient__{$i}";
+    }
+    expect($oneScopes)->toBe([$expected[0]])
+        ->and($manyScopes)->toBe($expected)
+        ->and($many)->toBeLessThan(3 * $one + 0.1);
 })->group('SPEC-021');

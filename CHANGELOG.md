@@ -111,6 +111,11 @@ they wait until `c2patool` applies them (`docs/milestones.md`).
   `mdat` with blocks of 2. A `fixedBlockSize` under 1,024 is now
   `assertion.bmffHash.mismatch` before any block is read. `c2patool`
   trusts such a file when its root is right; `c2pa-rs` writes whole KiB.
+- **Many references to one ingredient manifest cost one hash (SPEC-021
+  amendment 9).** Each ingredient assertion naming a manifest hashed its
+  box again: 255 references to a 15 MB manifest took 9.4 s. The digests
+  are now computed once per `check()`, and each reference is still
+  compared and reported under its own assertion. No status changes.
 - **The command line shows bytes that are not UTF-8 as U+FFFD (SPEC-019
   amendment 4).** Its error lines on stderr wrote them as `?`, which can
   also be a real character of what is echoed; amendment 4 had promised

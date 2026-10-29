@@ -316,6 +316,20 @@ multi-manifest files.
     assertion; the control is `Trusted`. Recorded next to it: `c2patool`
     0.28.3 on the first says `Invalid`
 
+- **AC14 — many references to one manifest cost one hash** *(amendment 9; required: malformed input)*
+  - Given a PNG built in the test, unsigned (no key is needed: the
+    ingredient check runs whatever the signatures say): an ingredient
+    manifest (claim v1) carrying one assertion of 2 MB, and an active
+    manifest naming it in 255 ingredient assertions with the right box
+    hash; and the same with one ingredient assertion
+  - When each is verified
+  - Then each of the 255 assertions carries its own
+    `ingredient.manifest.validated`, under its own URL, as before; and
+    the file with 255 references returns within three times the time of
+    the file with one, plus 0.1 s
+  - And AC12 stays as it is: a second reference with a wrong hash is
+    still `ingredient.manifest.mismatch` under that reference
+
 ## References
 
 - Specification: C2PA 2.4 §15.11.2 (validate each ingredient, whatever its
@@ -523,6 +537,29 @@ instead, beside the orchestration that already holds those collaborators.
 
    Approved by Maurice van Loon, 2026-10-29 (step 502).
 
+9. **2026-10-29, step 514, found by the security review before 0.10.0; measured** *(approved by Maurice van Loon, 2026-10-29)* —
+   Amendment 7 made `check()` compare the hash of every assertion that
+   names a manifest, each under that assertion (C2PA 2.4 §15.11.3.3.2).
+   Each comparison hashed the manifest's box again. Measured on the
+   review's probe (an ingredient manifest with an assertion of 15 MB,
+   named by 255 ingredient assertions, MAX_ASSERTIONS being 256): 9.4 s,
+   some 3.8 GB hashed; with one reference, 0.11 s. The verdict is right;
+   the time grows with the number of references times the size of the
+   manifest, from a file of 15 MB.
+
+   Now `check()` computes each digest once per manifest, route (the box
+   or, pre-1.3, the claim bytes) and algorithm, and compares every
+   reference against it. Each reference is still compared, and reported,
+   under its own assertion; nothing is compared that was not compared
+   before. The digests live for one `check()` call only: kept across
+   calls, one file's digest could meet another file's manifest, which is
+   the way to a wrong `Valid`. `ActionsCheck::claimLabels()` of the
+   store, the same for every reached manifest, is computed once before
+   the loop instead of once per manifest. New criterion AC14.
+
+   **Weight A.** No status and no verdict moves; a file that took
+   seconds per reference takes one hash per manifest.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -543,5 +580,6 @@ least one test; every source file maps back to this spec.
 | AC11 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC11 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`recordedInStore()`, `drop()`); src/Verifier/Verifier.php (the binding manifest passed to `drop()`) |
 | AC12 | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC12 / SPEC-021 | src/Verifier/IngredientManifestCheck.php (`check()`: the hash of every reference) |
 | AC13 (amendment 8) | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC13 / SPEC-021 | src/Verifier/Verifier.php :: verify() (the CAWG refusal over the manifests the graph reaches, unscoped); bin/make-cawg-variants.php; tests/Fixtures/cawg/ |
+| AC14 (amendment 9) | tests/Unit/Verifier/IngredientManifestCheckTest.php :: AC14: many references to one manifest cost one hash, each still reported under its own assertion (amendment 9) / SPEC-021 | src/Verifier/IngredientManifestCheck.php :: check(), hashOnce(), digest(), claimSignature() |
 
 `src/Verifier/IngredientManifestCheck.php` maps to this spec; `StatusCode`'s two new cases are its. Measured 2026-09-22: 7 red (2 already true) → 9 green, `composer check` exit 0, 336 tests, 312 fuzz runs with no fault.
