@@ -87,6 +87,17 @@ credential is refused (55 files; reported here on 52),
 `claimSignature.insideValidity` no longer when it is not inside (12; here
 on 12), and `signingCredential.ocsp.skipped` is added for a staple that
 cannot be used (27; here on 15).
+Two upstream changes the corpus has no file for were probed or read
+afterwards (step 523). A trusted signer's stapled `good`, signed by the
+issuing CA without certificates, with `nextUpdate` one minute after
+`thisUpdate` and no time-stamp, is `ocsp.notRevoked` here inside that
+minute and `ocsp.skipped` after it (CAI-13263's rule, SPEC-030);
+`c2patool` 0.28.6 reports `ocsp.skipped` and 0.28.3 no OCSP code, both
+before and after, so neither uses that staple. A redacted ingredient
+manifest takes the claim-signature route here only when its claim is v2,
+where `c2pa` 0.91.11 decides by the ingredient assertion's version
+(upstream #3006, #3021); read in the code, every combination is as
+strict here or stricter, never more lenient.
 
 **Since 0.2.0** (SPEC-033 to SPEC-040), every new rule was measured on
 signed probes under **both** versions before it was built. Their answers
