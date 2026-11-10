@@ -125,6 +125,7 @@ these rows moves an alarm.
 
 | what | `c2patool` | this verifier | until |
 |---|---|---|---|
+| A box hash (`c2pa.hash.boxes`, C2PA 2.4 §18.6) as a manifest's hard binding | verified; `c2pa` 0.91.11 also requires it to cover any data after the last box (upstream #2949) | refused by name, `general.error` ("not supported yet"): such a file is never `Valid` here, with or without trailing data. No real file in the corpus reaches this refusal: its two box-hash files fail earlier, for another reason (step 524). `c2patool` 0.28.6 with `builder.prefer_box_hash` still writes a `c2pa.hash.data` | a spec of its own, when a writer is seen using it |
 | Time-stamp manifests (`c2tm`), compressed manifests (`c2cm`) | `c2tm` ignored, `c2cm` decompressed | refused with a message of their own — deprecated (§11.2.5) and Brotli, which PHP does not carry | — |
 | TIFF, SVG, PDF | yes | JPEG, PNG, GIF, WebP, WAV, AVI, MP3, FLAC and ISOBMFF only (`unsupported file type`); RF64 (WAV over 4 GB) is refused by both | later, one spec per format (`notes/step-203-format-survey.md`) |
 | A JPEG whose first APP11 piece carries a packet sequence number Z other than 1, or whose later pieces skip a number | read: `c2pa-rs` does not check the first piece's Z, and a later Z only has to exceed the pieces already taken | **Z = 0 on the first piece is read** (SPEC-041: Microsoft Bing Image Creator writes every store this way); any other first Z and any gap stay refused (`general.error`), measured on synthetic variants only | — |

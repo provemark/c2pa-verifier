@@ -12461,3 +12461,10 @@ README are where the disclosure lives.
 - Produced: `notes/step-523-ocsp-window-and-v1-ingredients.md`, `NOTES.md`; `docs/comparison.md` (a paragraph). No code, no tests, no fixtures.
 - Measured: `composer update` within the constraints (30 packages; symfony 8.1.11, phpstan 2.3.5, opis 2.6.1), then `composer audit` (no advisories), `composer check` and `vendor/bin/pest --parallel` (1,718 passed, 1 skipped); a scratch probe (throw-away hierarchy, keys deleted; `c2patool` 0.28.6 signing; `openssl ocsp -nmin 1 -resp_no_certs`; the `pad` swapped for `rVals`) judged by `c2patool` 0.28.6, 0.28.3 and `bin/c2pa-verify` inside its one-minute window and after it. Read: the upstream PRs #3006, #3021 and #2921 (descriptions), `IngredientManifestCheck` (the route's gate). Reasoned: the four cases of a redacted ingredient; why `c2patool` ignores the staple (a guess, stated as one).
 - Decided by Maurice: probes first; record it as step 523; the WP plugin is handled in its own session.
+
+## 2026-11-10 — Step 524: the box hash, refused and never reached
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, begin met box-hash"; then "akkoord, documenteer 524 en schrijf het amendement voor de test".
+- Produced: `notes/step-524-box-hash.md`, `NOTES.md`; `docs/comparison.md` (a row). No code, no tests, no fixtures.
+- Measured: the corpus's two `c2pa.hash.boxes` files through `c2patool` 0.28.3 and 0.28.6 (from step 521's runs) and `bin/c2pa-verify`; a scratch signing with `c2patool` 0.28.6 and `builder.prefer_box_hash` (throw-away keys, deleted), which wrote a data hash, judged untouched and with 23 bytes after EOI by all three. Read: `DataHashCheck::check()`, `Verifier` (the routing), SPEC-012 AC8 and its test. Reasoned: not more lenient (refused, not judged); the refusal has no test.
+- Decided by Maurice: document as step 524; propose a test (amendment, next step).
