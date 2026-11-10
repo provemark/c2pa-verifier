@@ -52,3 +52,8 @@ would notice, neither verifier reads them.
 The answers are under `../c2patool/mdat-merkle/<file>--<version>.json`
 (for `two-mdat`, the answer of one run). Certificates are valid for ten
 years from the build.
+
+`c2patool` 0.28.6 (`c2pa` 0.91.11, which pairs each `mdat` with its
+merkle map in a fixed order) says `Trusted` for `two-mdat` with
+`throw-away-root.settings.json` on 20 of 20 runs (step 521). This
+verifier still refuses it (AC8).

@@ -67,6 +67,26 @@ said to accept them; 2.5 §12.3.1 lets a validator refuse them. They are
 `Invalid` here now, with `signingCredential.invalid` only, where
 `c2patool` adds `claimSignature.mismatch`.
 
+**And against `c2patool` 0.28.6** (`c2pa` 0.91.11, released 2026-11-06),
+compared with 0.28.3 on 2026-11-10 over all 897 media files under
+`tests/Fixtures/`, without settings and with `trust/full.settings.json`
+(step 521). The state moved on three files. `icons/agents-icon.png`, an
+icon in `softwareAgents` left as a resource reference, went from `Valid`
+to `Invalid` (`hashedURI.missing`); it is `Valid` here, the one file on
+which this verifier is now more lenient (SPEC-034 amendment 2 follows
+`c2pa` 0.91.0, which did not check such an icon). `profile/no-digital-signature.png`
+went from `Valid` to `Invalid`, as here since SPEC-015 amendment 10, so
+that named difference is gone. `mdat-merkle/two-mdat.mp4` is
+now `Valid` (`Trusted` with its own root) on every run, where 0.28.3
+varied; this verifier refuses its two merkle maps (SPEC-080 AC8). The
+time-stamp of `writers/trustnxt-20260113-icon-signed-timestamp.jpg` is
+now `timeStamp.untrusted` in `c2patool` too, as here. Three code changes move no
+state: `claimSignature.validated` is no longer reported when the
+credential is refused (55 files; reported here on 52),
+`claimSignature.insideValidity` no longer when it is not inside (12; here
+on 12), and `signingCredential.ocsp.skipped` is added for a staple that
+cannot be used (27; here on 15).
+
 **Since 0.2.0** (SPEC-033 to SPEC-040), every new rule was measured on
 signed probes under **both** versions before it was built. Their answers
 are recorded beside the probes, under `tests/Fixtures/c2patool/`:
@@ -214,7 +234,7 @@ files with the same trust anchors.
 | A failure an ingredient assertion recorded about its ingredient (C2PA 2.4 §18.16.12.4: the writer "acknowledged" it) is reported under that ingredient's `validationDeltas.informational`, with its own code, marked `acknowledged` and explained as *"acknowledged by the signer of … not counted in the verdict"*. `c2patool` drops it from the report. The state is the same in both, and `validation_status` (failures only) is unchanged | a signer can hide a tampered ingredient by recording its failure (N. Krawetz, "Malicious nested manifest alteration"). The rule stays the specification's; the fact is no longer silent (step 355). Over the corpus: 31 files gain such lines, mostly `signingCredential.untrusted` | SPEC-070 (amending SPEC-021 AC4) |
 | In a v3 ingredient assertion, a failure counts as acknowledged only when it was recorded under `failure`. Recorded under `success` or `informational`, it is not: it stays a failure and the file is `Invalid`. `c2patool` 0.27.22 and 0.28.2 drop it wherever it was filed: `acknowledged-kind/recorded-success.jpg` and `recorded-informational.jpg` (an ingredient whose claim signature is broken) are `Trusted` there. A v1/v2 `validationStatus` has no lists, and is compared on code and url as before | C2PA 2.4 §18.16.12.4.3: the comparison "shall consider the status type (success, informational, or failure), code, and url"; `c2pa-rs` replaces the recorded type with one derived from the code (`validation_results.rs`, `from_store`). No file in the corpus files a failure in another list (step 363) | SPEC-070 amendment 2 |
 | An icon that names a data box (earlier versions' mechanism, C2PA 2.4 §10.2.3.2 and §18.12.1) is read and its hash checked: a box that is not there is `assertion.missing`, changed bytes are `assertion.hashedURI.mismatch`. `c2pa-rs` accepts such an icon without a hash check: `c2patool` 0.28.1 reads a changed byte, a renamed box and a child that is not a superbox all as `Trusted` | trust in an unchecked reference (ADR-0005). Data boxes were refused outright until a real file had one (C2PA Sign 1.4.11 with `c2patool` 0.9.12, a site logo) | SPEC-067 (replacing SPEC-034 amendment 1). Since then a redaction that names a data box is checked too: a box that still holds bytes is `assertion.notRedacted`, where the redaction used to be skipped (SPEC-067 amendment 1) |
-| An icon map without a `url` (a resource reference, which `c2patool` 0.28.0's builder writes for `softwareAgents`) is not checked, as in `c2pa-rs` | only hashed URIs are references | SPEC-034 amendment 2 |
+| An icon map without a `url` (a resource reference, which `c2patool` 0.28.0's builder writes for `softwareAgents`) is not checked, as in `c2pa-rs` up to 0.91.6; `c2patool` 0.28.6 (`c2pa` 0.91.11) reports it as `hashedURI.missing`, so this verifier is more lenient here since then (step 521) | only hashed URIs are references | SPEC-034 amendment 2 |
 | `relatedAssertions` and the watermark's soft binding are checked; `c2patool` 0.27.22 did not check them (0.28.0 does) | C2PA 2.4 §15.10.3.2.3 | SPEC-033 AC6–AC7 |
 | An ingredient manifest whose claim `alg` is outside `sha256`/`sha384`/`sha512` (`crc32b`): its own hashed URIs are `algorithm.unsupported`; `c2patool` 0.27.22 reports `assertion.hashedURI.mismatch` for them. Same state (`Invalid`), and the ingredient check's own code is `c2patool`'s | `HashedUriCheck` names the reason (C2PA 2.4 §13.1) where `c2pa-rs` computes no hash and compares | SPEC-052 amendment 1, AC5 |
 | The same for the active manifest: a claim `alg` outside `sha256`/`sha384`/`sha512` (`binding/claim-alg-sha1.png`) makes every hashed URI `algorithm.unsupported`, where `c2patool` 0.27.22 and 0.28.1 and `c2pa-web` 0.15.3 report `assertion.hashedURI.mismatch` (*"hash does not match assertion data"*). Same state (`Invalid`); the drift alarm maps the code to `c2patool`'s | as above: the reason is named, not a digest that cannot match (C2PA 2.4 §13.1, §15.4.2) | SPEC-011 AC7 and its kept divergences (step 347) |
@@ -260,7 +280,7 @@ files with the same trust anchors.
 | A v3 ingredient assertion **without `claimSignature`** is read, though §18.16.12.3 says both hashed URIs shall be stored (`c2patool` reads it too) | the second URI is needed only for the claim-signature method, which redactions force; when they do and it is absent, the ingredient is `ingredient.claimSignature.missing` (SPEC-035) | step 60, `no-claim-signature.png` |
 | A signer's chain under label 33 in both COSE headers is refused (`signingCredential.invalid`); both `c2patool` versions call it `Trusted` | C2PA 2.4 §14.5: the same label in both buckets is two credentials, and *"a validator shall reject the claim signature as malformed"* | SPEC-047 amendment 2 (0.6.0) |
 | Every certificate above the signer, the trust anchor included, is held to the certificate profile (algorithm, RSASSA-PSS parameters, curve, RSA of 2048 bits or more, version 3, an Authority Key Identifier unless self-signed); `c2pa-rs` holds only the signer's to it, so an RSA-1024 or secp256k1 intermediate, or an RSA-1024 or SHA-1-signed anchor, is `Trusted` there and `Valid` (untrusted) here | C2PA 2.4 §14.5.1.1: *"All certificates shall fulfill"* the profile; no real file in the corpus moves | SPEC-014 amendment 8 (0.6.0) |
-| A manifest signer's KeyUsage must assert Digital Signature; Non Repudiation alone is `Trusted` in `c2patool`, `signingCredential.invalid` here (a timestamp authority keeps the old rule) | C2PA 2.4 §14.5.1.1: certificates that sign C2PA manifests *"shall assert the digitalSignature bit"* | SPEC-015 amendment 10 (0.6.0) |
+| A manifest signer's KeyUsage must assert Digital Signature; Non Repudiation alone is `Trusted` in `c2patool` up to 0.28.3, `signingCredential.invalid` here (a timestamp authority keeps the old rule); 0.28.6 agrees, the same exception included (step 521) | C2PA 2.4 §14.5.1.1: certificates that sign C2PA manifests *"shall assert the digitalSignature bit"* | SPEC-015 amendment 10 (0.6.0) |
 | A store with two manifests of one label is `claim.malformed`; `c2patool` takes the last box as active, so `[X, X', Y]` is `Trusted` there | C2PA 2.4 §8.1: a label identifies one manifest; which one an ingredient means is a guess | SPEC-007 amendment 7 (0.6.0) |
 | The original preservation image of a `c2pa.alternative-content-representation` is checked (count, shape, part index, embedded hash); `c2pa-rs` has no code for it, so `c2patool` is `Trusted` on every probe | C2PA 2.4 §15.10.3.2.7 | SPEC-065 (0.6.0) |
 | An ingredient manifest whose signer stapled a verified `revoked` response makes the file `Invalid` (`signingCredential.ocsp.revoked` under that ingredient), also when the store carries no certificate-status assertion; a `good` or no response adds nothing under the ingredient. `c2patool` 0.28.1 and 0.28.3 report no OCSP code for these responses, on an ingredient or on the active manifest: `ingredient-staple/child-staple-revoked.png` is `Trusted` there | C2PA 2.4 §15.11.3.3.1 validates an ingredient's revocation as §15.9 does; a revoked signer counts the same in the history as on the active manifest (SPEC-030; Maurice's choice, step 430) | SPEC-066 amendment 2 |
