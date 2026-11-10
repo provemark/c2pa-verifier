@@ -546,6 +546,48 @@ Deptrac: `Hash` → `Manifest`, `Cbor`, `Report`, `Jumbf` (already), plus
     **Weight A: a deliberate difference with `c2patool`, which honours an
     extra exclusion wherever it lies (step 349: a wrong `Trusted`).**
 
+12. **2026-11-10, step 525, proposed after step 524** *(approved by Maurice van Loon, 2026-11-10)* —
+    a box hash is refused, and a test holds it. Scope item 1 already says
+    that `c2pa.hash.boxes*` gives `general.error` and does not count as the
+    one hard binding, and `DataHashCheck` does so. But no test holds it:
+    AC8's relabelled binding is `c2pa.hash.bmff.v2`, which since M8 gets
+    the other message (amendment 6), and the corpus's two box-hash files
+    fail before their binding is looked at (step 524). If a change let a
+    box hash fall through, no test would turn red. `c2pa` 0.91.11 now
+    verifies box hashes more strictly (upstream #2949); this verifier does
+    not verify them at all, and that is what must stay pinned until a spec
+    of its own reads them.
+
+    **AC13 (new) — a box hash is refused by name**
+    - Given the new `binding/hard-binding-boxes.png`: the `c2pa.hash.data`
+      box and the claim's url for it relabelled `c2pa.hash.boxes` (one byte
+      longer), the data hash and the claim's hashed URI recomputed as for
+      `hard-binding-bmff`, made by `bin/make-data-hash-variants.php` and
+      measured with `c2patool` 0.28.6 before the test is written, the
+      answer recorded in `tests/Fixtures/binding/README.md`
+    - When `DataHashCheck` checks it
+    - Then exactly one status, `general.error`, with url
+      `self#jumbf=/c2pa/<label>/c2pa.assertions/c2pa.hash.boxes`, its
+      explanation naming `c2pa.hash.boxes`; no data-hash code
+    - And when `Verifier` verifies it: `Invalid`, that `general.error`
+      among the failures, and neither `assertion.dataHash.match` nor
+      `claim.hardBindings.missing`
+    - Seen red by mutation, since the refusal exists already: with
+      `c2pa.hash.boxes` taken out of `HardBindings::FAMILIES`, the manifest
+      has no hard binding and both halves turn red
+      (`claim.hardBindings.missing` instead of `general.error`).
+
+    No verdict changes; no code changes. The amendment adds a fixture and a
+    test.
+
+    Built in step 525: `c2patool` 0.28.6 and 0.28.3 give no report for the
+    variant (`could not decode assertion c2pa.hash.boxes … missing field
+    boxes`), as 0.27.22 did for `hard-binding-bmff`. This verifier:
+    `Invalid` with `claimSignature.mismatch`, `signingCredential.untrusted`
+    and the `general.error`. The test was first red because the fixture
+    did not exist, then green, then red under the mutation in both halves
+    (`claim.hardBindings.missing` in place of `general.error`).
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -565,3 +607,4 @@ least one test; every source file maps back to this spec.
 | AC10 | tests/Unit/Hash/DataHashCheckTest.php :: AC10: the codes are verbatim, and informational is a third kind / SPEC-012 | src/Report/StatusCode.php :: the six cases, isSuccess(), isInformational(), isFailure(); src/Report/ValidationResult.php :: fromStatuses() |
 | AC11 | tests/Unit/Hash/DataHashCheckTest.php :: AC11: a hard binding is known by its base label: c2pa.hash.data__1 alone is verified, as c2patool verifies it (amendment 9, step 247); AC11: c2pa.hash.data beside c2pa.hash.data__1 is two hard bindings, as c2patool says (amendment 9, step 247) / SPEC-012 | src/Hash/HardBindings.php; src/Hash/DataHashCheck.php :: check(); src/Hash/BmffHashCheck.php :: labelOf(); src/Verifier/Verifier.php :: verify() (the count) |
 | AC12 | tests/Unit/Manifest/ManifestProbesTest.php :: AC12: the pad of a data hash is ignored, missing or of another type / SPEC-012 | src/Hash/DataHashCheck.php :: check() (pad not read) |
+| AC13 | tests/Unit/Hash/DataHashCheckTest.php :: AC13: a box hash is refused by name, by the check and through the verifier (amendment 12) / SPEC-012 | src/Hash/HardBindings.php :: FAMILIES; src/Hash/DataHashCheck.php :: check() (the other hard bindings); src/Verifier/Verifier.php :: verify() (the routing) |

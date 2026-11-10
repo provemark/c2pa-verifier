@@ -178,3 +178,18 @@ signature is broken), and answered by `c2patool` 0.27.22 and 0.28.1 under
 | `hard-binding-instance` | the one `c2pa.hash.data` relabelled `c2pa.hash.data__1`; label, hashed URI and exclusion grown, hashes recomputed | `Invalid`: `claimSignature.mismatch`, `signingCredential.untrusted`; `assertion.dataHash.match` | `852ccc58cb179ac9fe4390fb6bd4b19c30a0bf684754af50cfb05f154af28f04` |
 | `hard-bindings-instance-two` | `hard-bindings-two` with its second box and claim entry under `c2pa.hash.data__1`, that box's hash zeroed (wrong) | `Invalid`: `assertion.multipleHardBindings`, `assertion.dataHash.mismatch` (the second), `claimSignature.mismatch`, `signingCredential.untrusted`; one `assertion.dataHash.match` | `b4e553b50f7640f3a98ebf8299b9f96d03044c683e67341b1aa69dcb24699478` |
 
+## Step 525 (SPEC-012 amendment 12): a box hash
+
+Built by `bin/make-data-hash-variants.php` as `hard-binding-bmff` was: the
+one `c2pa.hash.data` box and the claim's url for it relabelled
+`c2pa.hash.boxes` (C2PA 2.4 §18.6), one byte longer each; the data hash and
+the claim's hashed URI recomputed, the store's exclusion left as it was.
+Regenerating the script left every earlier variant byte-identical.
+
+| variant | `c2patool` 0.28.6 and 0.28.3 | this verifier | spec |
+|---|---|---|---|
+| `hard-binding-boxes` | `Error: could not decode assertion c2pa.hash.boxes … missing field boxes`, no report | `Invalid`: `general.error` (the box hash is not supported), `claimSignature.mismatch`, `signingCredential.untrusted` | SPEC-012 AC13 |
+
+```
+cce5bc44fb003b6a9e775bbaf9e1745e3cd674c5f73e7cbaa1d6e02d5886a410  hard-binding-boxes.bin
+```

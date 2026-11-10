@@ -12468,3 +12468,10 @@ README are where the disclosure lives.
 - Produced: `notes/step-524-box-hash.md`, `NOTES.md`; `docs/comparison.md` (a row). No code, no tests, no fixtures.
 - Measured: the corpus's two `c2pa.hash.boxes` files through `c2patool` 0.28.3 and 0.28.6 (from step 521's runs) and `bin/c2pa-verify`; a scratch signing with `c2patool` 0.28.6 and `builder.prefer_box_hash` (throw-away keys, deleted), which wrote a data hash, judged untouched and with 23 bytes after EOI by all three. Read: `DataHashCheck::check()`, `Verifier` (the routing), SPEC-012 AC8 and its test. Reasoned: not more lenient (refused, not judged); the refusal has no test.
 - Decided by Maurice: document as step 524; propose a test (amendment, next step).
+
+## 2026-11-10 — Step 525: a test that holds the box-hash refusal
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord, amendement 12 approved, bouw 525".
+- Produced: SPEC-012 amendment 12 (AC13) and a Traceability row; `bin/make-data-hash-variants.php` (one variant); `tests/Fixtures/binding/hard-binding-boxes.{bin,png}` and the README section; AC13 in `tests/Unit/Hash/DataHashCheckTest.php`; `docs/comparison.md`; `notes/step-525-box-hash-test.md`, `NOTES.md`.
+- Measured: `php bin/make-data-hash-variants.php` (earlier variants byte-identical); `c2patool` 0.28.6 and 0.28.3 on the variant (no report); `bin/c2pa-verify` on it; the test red (fixture missing), green, red under a mutation of `HardBindings::FAMILIES` in both halves, restored and green; `composer check`, `vendor/bin/pest --parallel`.
+- Decided by Maurice: amendment 12 approved.

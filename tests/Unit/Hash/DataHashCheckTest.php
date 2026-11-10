@@ -21,6 +21,7 @@ use Provemark\C2paVerifier\Report\ValidationResult;
 use Provemark\C2paVerifier\Report\ValidationState;
 use Provemark\C2paVerifier\Report\ValidationStatus;
 use Provemark\C2paVerifier\Verifier\VerificationReport;
+use Provemark\C2paVerifier\Verifier\Verifier;
 
 /*
  * SPEC-012: the data-hash check — c2pa.hash.data against the asset,
@@ -380,6 +381,34 @@ it('AC8: exactly one hard binding', function (): void {
         expect($statuses[0]->explanation)->not->toMatch(SPEC012_HEX64)
             ->and(ValidationResult::fromStatuses($statuses, ['dataHash'])->state)->toBe(ValidationState::Invalid);
     }
+})->group('SPEC-012');
+
+it('AC13: a box hash is refused by name, by the check and through the verifier (amendment 12)', function (): void {
+    // C2PA 2.4 §18.6's c2pa.hash.boxes is not verified here: refused, never judged, until a spec of its own reads it
+    $url = SPEC012_PNG.'/c2pa.assertions/c2pa.hash.boxes';
+    $statuses = spec012Check('binding/hard-binding-boxes.png');
+    expect(spec012Codes($statuses))->toBe(['general.error'])
+        ->and($statuses[0]->url)->toBe($url)
+        ->and($statuses[0]->explanation)->toContain('c2pa.hash.boxes');
+
+    $stream = fopen(dirname(__DIR__, 2).'/Fixtures/binding/hard-binding-boxes.png', 'rb');
+    assert($stream !== false);
+    $report = (new Verifier)->verify($stream)->toArray();
+    $results = $report['validation_results'];
+    assert(is_array($results) && is_array($results['activeManifest']));
+    $all = [];
+    foreach (['success', 'informational', 'failure'] as $kind) {
+        $entries = $results['activeManifest'][$kind] ?? [];
+        assert(is_array($entries));
+        foreach ($entries as $entry) {
+            assert(is_array($entry));
+            $all[] = [$kind, $entry['code'], $entry['url'] ?? null];
+        }
+    }
+    expect($report['validation_state'])->toBe('Invalid')
+        ->and($all)->toContain(['failure', 'general.error', $url])
+        ->and(array_column($all, 1))->not->toContain('assertion.dataHash.match')
+        ->and(array_column($all, 1))->not->toContain('claim.hardBindings.missing');
 })->group('SPEC-012');
 
 it('AC9: streamed, not slurped', function (): void {

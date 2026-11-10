@@ -206,6 +206,8 @@ $variants = [
     'hard-binding-missing' => static fn (string $s): string => rehashed($relabel($s, 'c2pa.othr.data'), $png, 'sha256', $hashStart + 2, 32, [], $claimHashValue, $HASH_DATA_BOX),
     // the label is 3 bytes longer, so the assertion's cbor moves by 3 and the claim's hash value by 3 + 3 (the url grew too)
     'hard-binding-bmff' => static fn (string $s): string => rehashed($relabel($s, 'c2pa.hash.bmff.v2'), $png, 'sha256', $hashStart + 2 + 3, 32, [], $claimHashValue + 6, $HASH_DATA_BOX),
+    // step 525 (SPEC-012 amendment 12): a box hash, refused by name; the label is 1 byte longer, the claim's hash value moves by 1 + 1
+    'hard-binding-boxes' => static fn (string $s): string => rehashed($relabel($s, 'c2pa.hash.boxes'), $png, 'sha256', $hashStart + 2 + 1, 32, [], $claimHashValue + 2, $HASH_DATA_BOX),
     // step 247: the one binding under its second instance's label (C2PA 2.4 §6.4), as long as c2pa.hash.bmff.v2
     // the label and its hashed URI are 3 bytes longer each, so the store, and the exclusion that covers it, grow by 6
     'hard-binding-instance' => static fn (string $s): string => rehashed(bReplace($relabel($s, 'c2pa.hash.data__1'), $exStart + 3 + 17, "\x19\xb3\xd5", cborUint(12 + 46025 + 6)), $png, 'sha256', $hashStart + 2 + 3, 32, [], $claimHashValue + 6, $HASH_DATA_BOX),
