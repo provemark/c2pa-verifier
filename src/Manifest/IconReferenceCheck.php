@@ -18,8 +18,11 @@ use Provemark\C2paVerifier\Report\ValidationStatus;
  * softwareAgent — must name an assertion the claim lists, with the hash the
  * claim records for it. A url that names nothing the claim lists (an
  * external url, a data box of earlier versions) is assertion.missing. An
- * icon map without a url is a resource reference, not a hashed URI, and is
- * not checked (amendment 2). Nothing is ever fetched.
+ * icon that is not a map with a url (a resource reference, a text) is
+ * hashedURI.missing on the url of what holds it: the claim, or the actions
+ * assertion — as c2pa 0.91.11 reports a resource reference (amendments 3
+ * and 4). A map with a url is a hashed URI whatever else it holds. Nothing
+ * is ever fetched.
  *
  * @internal SPEC-025: not part of the public API.
  */
@@ -37,9 +40,12 @@ final readonly class IconReferenceCheck
         }
         $statuses = [];
         $digests = [];   // SPEC-067 amendment 1: each data box hashed once per algorithm
-        foreach (self::icons($manifest) as $icon) {
+        foreach (self::icons($manifest) as [$icon, $holder]) {
             if (! is_array($icon) || ! is_string($icon['url'] ?? null)) {
-                continue;   // a resource reference, or not an icon map: not a hashed URI (amendment 2)
+                // amendments 3 and 4: not a hashed URI, on the url of what holds the icon
+                $statuses[] = new ValidationStatus(StatusCode::HashedUriMissing, $holder, sprintf('icon must contain a hashed URI, found %s; the value of an icon shall be a hashed URI (C2PA 2.4 §10.2.3.2)', self::form($icon)));
+
+                continue;
             }
             $url = $icon['url'];
             // SPEC-067: an icon in a data box of earlier versions is read, and its hash checked.
@@ -167,22 +173,42 @@ final readonly class IconReferenceCheck
         return $icons;
     }
 
-    /** @return list<mixed> */
+    /**
+     * Each icon with the url of what holds it: the claim for claim_generator_info, else the actions assertion.
+     *
+     * @return list<array{0: mixed, 1: string}>
+     */
     private static function icons(Manifest $manifest): array
     {
         $icons = [];
+        $claimUrl = sprintf('self#jumbf=/c2pa/%s/%s', $manifest->label, $manifest->claim->version === 2 ? 'c2pa.claim.v2' : 'c2pa.claim');
         foreach ($manifest->claim->claimGeneratorInfo ?? [] as $info) {
             if (array_key_exists('icon', $info)) {
-                $icons[] = $info['icon'];
+                $icons[] = [$info['icon'], $claimUrl];
             }
         }
         foreach ($manifest->assertions as $label => $assertion) {
             $label = (string) $label;   // a label of digits only is an int key (SPEC-007 amendment 10)
             if (ActionsCheck::isActionsLabel($label)) {
-                $icons = [...$icons, ...self::actionsIcons($assertion->data, $manifest->claim->version)];
+                $assertionUrl = sprintf('self#jumbf=/c2pa/%s/c2pa.assertions/%s', $manifest->label, $label);
+                foreach (self::actionsIcons($assertion->data, $manifest->claim->version) as $icon) {
+                    $icons[] = [$icon, $assertionUrl];
+                }
             }
         }
 
         return $icons;
+    }
+
+    /** What an icon that is not a hashed URI is, for the explanation; never its contents (terminal output is untrusted). */
+    private static function form(mixed $icon): string
+    {
+        return match (true) {
+            is_array($icon) && is_string($icon['format'] ?? null) && is_string($icon['identifier'] ?? null) => 'a resource reference (format, identifier)',
+            is_array($icon) => 'a map without a url',
+            is_string($icon) => 'a text',
+            $icon instanceof CborBytes => 'a byte string',
+            default => 'a '.get_debug_type($icon),
+        };
     }
 }

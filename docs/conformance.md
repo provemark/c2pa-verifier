@@ -104,7 +104,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-STRU-015` | shall | OCSP skipped and OCSP inaccessible informational codes | **yes** — every file now carries one `signingCredential.ocsp.*` line, and a skipped check says so — SPEC-030 AC5; a source that gives nothing usable is `signingCredential.ocsp.inaccessible` — SPEC-086 AC3, AC4 |
 | `PRED-STRU-016` | shall | Online OCSP certStatus unknown/revoked outcome handling | **yes**, opt-in — a fetched response is judged exactly as a stapled one (`revoked`, `unknown`, a revocation after the stamped time) — SPEC-086 AC2 |
 | `PRED-STRU-017` | should | Forward-compatible c2pa.metadata assertion field tolerance | **yes** — `c2pa.metadata` is not validated at all, so unknown fields cannot be rejected |
-| `PRED-STRU-018` | shall | Hashed URI field presence and destination reachability | partial — an absent or unresolvable hashed URI is caught, and reported as `assertion.missing`: this verifier has no `hashedURI.missing` code |
+| `PRED-STRU-018` | shall | Hashed URI field presence and destination reachability | partial — an icon that is not a hashed URI is `hashedURI.missing` (SPEC-034 amendment 3); an absent or unresolvable hashed URI elsewhere is caught, and reported as `assertion.missing`, as `c2pa-rs` does |
 | `PRED-STRU-019` | shall | JPEG APP11 exclusion range total length matches manifest store length | partial — the store is extracted from the APP11 segments themselves, so a tampered segment length changes it and the hash fails; the declared exclusion length is checked to *cover* the store (SPEC-012 amendment 5), not to equal the summed segment length |
 
 ## Signatures, certificates, algorithms (25)
@@ -307,7 +307,9 @@ c2patool is never a surprise.
 - `PRED-ASSE-021`, `PRED-ABMF-001` — no `c2pa.hash.multi-asset` fallback: a
   failed hard binding stays failed, where the rule says to try another
 - `PRED-STRU-018`, `PRED-CRYP-016` — the check happens, the status code
-  differs (`assertion.missing` for `hashedURI.missing`,
+  differs (`assertion.missing` for `hashedURI.missing` where a hashed
+  URI resolves to nothing; an icon that is not a hashed URI has had
+  `hashedURI.missing` since SPEC-034 amendment 3,
   `signingCredential.expired` for `claimSignature.outsideValidity`; both
   as `c2pa-rs`). `PRED-ASSE-007` stood here until SPEC-088 gave
   `assertion.cbor.invalid` its own code.

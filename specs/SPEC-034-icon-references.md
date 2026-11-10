@@ -274,6 +274,172 @@ proposal: an icon naming a data box is `assertion.missing`). Questions 1,
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 126).
 
+3. **2026-11-10, step 522, measured in step 521 and read** *(approved by Maurice van Loon, 2026-11-10, with `hashedURI.missing` for open question 1)* —
+   An icon that is not a hashed URI is `hashedURI.missing`.
+
+   **Why.** Amendment 2 left an icon map without a `url` unchecked,
+   because `c2pa` 0.91.0 did. `c2pa` 0.91.11 no longer does
+   (CAI-13410, ported to the stable line in upstream #3003, from #2919).
+   `verify_icons()` now takes every icon, and one that decodes as a
+   resource reference fails:
+   *"icon must contain a hashed URI, found resource reference: …"*,
+   `hashedURI.missing`. Read in `sdk/src/claim/claim_verify.rs` at tag
+   `c2pa-v0.91.11`. Measured in step 521: `icons/agents-icon.png` (a
+   `softwareAgents` icon `{format, identifier}`) is `Invalid` in
+   `c2patool` 0.28.6, with `hashedURI.missing` on
+   `self#jumbf=/c2pa/<label>/c2pa.assertions/c2pa.actions.v2`. It is
+   `Valid` here (`Trusted` with its root). This is the one file of the
+   corpus on which this verifier is now more lenient than its oracle.
+
+   The specification has said this all along. C2PA 2.4 §10.2.3.2: *"The
+   value of the icon field, if present, shall be a hashed URI."* A
+   resource reference binds nothing. A reader that shows the icon shows
+   something the signature does not cover. Under the project's
+   fail-closed rule that is refused, not skipped.
+
+   **The rule (changes amendment 2's first point).**
+   - An `icon` in any of the four places (Scope) that is **not a hashed
+     URI** is `hashedURI.missing` (failure), one per icon, with an
+     explanation that names the form found and §10.2.3.2.
+   - The url is that of what holds the icon, as in `c2pa-rs`:
+     - the actions assertion's URI for `softwareAgents`, an action's
+       `softwareAgent` and `templates` (v2 claims only, as before);
+     - the claim's URI for `claim_generator_info`
+       (`self#jumbf=/c2pa/<label>/c2pa.claim.v2`, or `…/c2pa.claim` in a
+       v1 claim), in every claim version. `to_claim_uri()` builds it that
+       way (read).
+   - **Not a hashed URI** means either of these:
+     1. a map with a text `format` and a text `identifier`, a resource
+        reference, even when it also has a `url`. `c2pa-rs` decodes
+        `UriOrResource` untagged with `ResourceRef` first and does not
+        deny unknown fields, so such a map is a resource reference there
+        (read; open question 2);
+     2. any other value that is not a map with a text `url`: a text, a
+        number, an empty map.
+   - A map with a text `url` and no resource-reference fields is checked
+     as before (AC1 to AC5, SPEC-067).
+   - Ingredient manifests are checked under the same rule, since
+     `IngredientManifestCheck` calls the same check.
+   - The new code is `hashedURI.missing`, as §15.10.3.3 and the §15.2.2
+     table spell it and as `c2patool` 0.28.6 reports it. It is one new
+     contract symbol, `StatusCode::HashedUriMissing` (open question 1).
+     This resolves SPEC-088's F7 for icons only. Other hashed URIs
+     without a destination stay `assertion.missing`, as before and as
+     in `c2pa-rs`.
+
+   **Criteria.**
+   - **AC4 (changed):** the `softwareAgents` icon in resource-reference
+     form (`agents-icon.png`) is no longer the passing case. It is
+     `Invalid` with `hashedURI.missing` on the actions assertion's URI,
+     equal to `c2patool` 0.28.6 in code and url.
+   - **AC7 (new) — an icon that is not a hashed URI** *(error path)*
+     - Given `agents-icon.png`, and new probes in which one icon is
+       rewritten and the claim re-signed with throw-away keys:
+       - a `claim_generator_info` icon as `{format, identifier}`;
+       - a `templates` icon as `{format, identifier}`;
+       - an action's `softwareAgent` icon as `{format, identifier}`;
+       - a `claim_generator_info` icon with `url`, `alg`, `hash` *and*
+         `format`, `identifier` (open question 2);
+       - a `claim_generator_info` icon that is a text.
+     - When verified, with the probes' root as anchor
+     - Then each gives exactly one `hashedURI.missing` at the url above,
+       and `Invalid`. Each probe is compared with `c2patool` 0.28.6 and
+       0.28.3. Where 0.28.6 answers otherwise, the difference is named in
+       an amendment before the tests. The text probe is the likely one:
+       there `c2pa-rs` cannot decode the generator-info map at all.
+   - **AC6 (changed):** over the corpus only `icons/agents-icon.png`
+     changes its verdict (`Valid` → `Invalid`, `Trusted` → `Invalid`
+     with its root). Measured in step 521: 0.28.6 reports
+     `hashedURI.missing` on no other corpus file. Since it applies the
+     same rule, no other corpus file holds an icon in resource-reference
+     form.
+
+   **Probes.** A new `bin/make-icon-form-variants.php` builds them. It
+   reuses the rewrite-and-re-sign helpers, as amendment 2 did, and stores
+   the answers of 0.28.6 and 0.28.3 under
+   `tests/Fixtures/c2patool/icon-forms/`; the probes go under
+   `tests/Fixtures/icon-forms/`. `bin/make-spec034-variants.php` and its
+   pinned pair (0.28.0, 0.27.22) stay as they are.
+
+   **Open questions.**
+   1. **Which code: `hashedURI.missing` or `assertion.missing`?**
+      `hashedURI.missing` is the letter of §15.10.3.3 and what
+      `c2patool` 0.28.6 says, but it adds a symbol to the contract, so
+      the release that carries it is a minor (0.11.0).
+      `assertion.missing` is already in the enum and allows a patch
+      (0.10.1), but this verifier would then report a different code
+      from `c2patool` for the same fault: a named difference, and a
+      second truth. The verdict is `Invalid` either way. Proposal:
+      `hashedURI.missing`, kept on `main` until the next minor gathers
+      it with other contract changes, unless you want it out sooner.
+      *(blocker: your call)*
+   2. **A map that is both.** A map with a valid `url` and `hash` and
+      also `format` and `identifier` is a resource reference in
+      `c2pa-rs` and `hashedURI.missing`. Reading only the `url`, it
+      would pass here. §10.2.3.2 asks for a hashed URI, and the
+      `hashed-uri-map` of the CDDL has no such keys. Proposal: follow
+      `c2pa-rs`, measured on the probe first. *(not a blocker)*
+
+   **Weight A:** a verdict moves (one corpus file, `Valid` →
+   `Invalid`), and the contract gains a symbol.
+
+4. **2026-11-10, step 522, measured on the probes before the tests** *(approved by Maurice van Loon, 2026-11-10, with `hashedURI.missing` for an icon that is a text)* —
+   `bin/make-icon-form-variants.php` built three controls with
+   `c2patool` 0.28.6's builder and five probes from them. Each probe
+   replaces one icon with CBOR of the same length and is signed again
+   with the throw-away leaf. Both versions judged each one with the
+   probes' root as anchor. This verifier said `Trusted` for all eight
+   before any change.
+
+   | probe | 0.28.6 | 0.28.3 |
+   |---|---|---|
+   | the three controls | `Trusted` | `Trusted` |
+   | `generator-icon-resource` | `Invalid`, `hashedURI.missing` on `…/c2pa.claim.v2` | `Trusted` |
+   | `templates-icon-resource` | `Invalid`, `hashedURI.missing` on `…/c2pa.assertions/c2pa.actions.v2` | `Trusted` |
+   | `action-agent-icon-resource` | `Invalid`, `hashedURI.missing` on `…/c2pa.assertions/c2pa.actions.v2` | `Trusted` |
+   | `generator-icon-both` | `Trusted` | `Trusted` |
+   | `generator-icon-text` | no report: *"claim could not be converted from CBOR: claim_generator_info is missing or invalid"* | the same |
+
+   The resource references give exactly what amendment 3 said, in code
+   and url. Two probes differ from it:
+
+   - **A map with both forms is a hashed URI (open question 2
+     answered by measurement).** Amendment 3 read it as a resource
+     reference. That reading missed a type. `ResourceRef`'s `hash` is a
+     text, so a map with a byte-string `hash` cannot decode as
+     `ResourceRef`, and `c2pa-rs` takes the `HashedUri`. Rule point 1
+     of "not a hashed URI" is therefore narrowed. **A map with a text
+     `url` is checked as a hashed URI, whatever other keys it holds**:
+     as before, and as both oracles do. Only a map without a text `url`
+     is `hashedURI.missing`. AC7's probe `generator-icon-both` passes,
+     with no status from this rule.
+     A reasoned difference that stays: a map with a text `url`, a text
+     `format` and `identifier`, and no `hash` is a resource reference in
+     `c2pa-rs` (`hashedURI.missing`). Here it is a hashed URI without a
+     hash, `assertion.hashedURI.mismatch` (AC6 of the original text).
+     Both are `Invalid`; it was not probed.
+   - **An icon that is a text.** `c2patool` cannot decode the claim and
+     gives no report (exit 1). In this verifier such an icon is
+     `hashedURI.missing` and `Invalid`, as amendment 3 says. The claim
+     is read, the fault is named at the claim's URI, and the rest of the
+     report is kept. Neither says `Valid`. Following `c2patool` would
+     mean refusing the claim as malformed (`claim.malformed`). For a
+     field whose only rule is §10.2.3.2's *"shall be a hashed URI"*,
+     that would be a second rule for the same fault. Proposal: keep
+     `hashedURI.missing`, a named code difference.
+
+   - **AC7 (changed):** `generator-icon-resource`,
+     `templates-icon-resource`, `action-agent-icon-resource`,
+     `generator-icon-text` and `icons/agents-icon.png` each give exactly
+     one `hashedURI.missing` at the url above, and `Invalid`. The first
+     three are equal to 0.28.6 in code and url; `generator-icon-text` is
+     the named difference. `generator-icon-both` and the three controls
+     are `Trusted` with no status from this rule, as in both versions.
+
+   **Weight B:** no verdict moves beyond amendment 3, except that one
+   probe passes where amendment 3 expected a failure, as both oracles
+   decide. One named code difference.
+
 ## Traceability
 
 Filled when status becomes `implemented`.
@@ -283,6 +449,7 @@ Filled when status becomes `implemented`.
 | AC1 | tests/Unit/Manifest/IconReferenceTest.php :: AC1: an icon that matches passes / SPEC-034 | src/Manifest/IconReferenceCheck.php :: check(), present(); src/Verifier/Verifier.php :: check() (icons) |
 | AC2 | tests/Unit/Manifest/IconReferenceTest.php :: AC2: a claim_generator_info icon whose hash differs / SPEC-034 | src/Manifest/IconReferenceCheck.php :: check() (the recorded hash) |
 | AC3 | tests/Unit/Manifest/IconReferenceTest.php :: AC3: an icon that resolves to nothing / SPEC-034 | src/Manifest/IconReferenceCheck.php :: check() (assertion.missing) |
-| AC4 | tests/Unit/Manifest/IconReferenceTest.php :: AC4: icons in the actions assertion / SPEC-034 | src/Manifest/IconReferenceCheck.php :: actionsIcons(), icons() |
+| AC4 (amendment 3) | tests/Unit/Manifest/IconReferenceTest.php :: AC4: icons in the actions assertion / SPEC-034 | src/Manifest/IconReferenceCheck.php :: actionsIcons(), icons(), check() (hashedURI.missing) |
 | AC5 | tests/Unit/Manifest/IconReferenceTest.php :: AC5: an external icon resolves to nothing, and is not fetched / SPEC-034 | src/Manifest/IconReferenceCheck.php :: check() (a url outside the manifest) |
 | AC6 | tests/Unit/Manifest/IconReferenceTest.php :: AC6: nothing else moves / SPEC-034 | src/Manifest/IconReferenceCheck.php; src/Verifier/IngredientManifestCheck.php |
+| AC7 (amendments 3, 4) | tests/Unit/Manifest/IconReferenceTest.php :: AC7: an icon in resource-reference form is hashedURI.missing where it is held, as c2patool 0.28.6; AC7: an icon that is a text is hashedURI.missing on the claim; c2patool does not read the claim (amendment 4); AC7: a map with a url and a hash is a hashed URI whatever else it holds, and the controls pass (amendment 4); AC7: hashedURI.missing is a failure code / SPEC-034 | src/Manifest/IconReferenceCheck.php :: check(), icons() (the holder's url), form(); src/Report/StatusCode.php :: HashedUriMissing; bin/make-icon-form-variants.php; tests/Fixtures/icon-forms/ |

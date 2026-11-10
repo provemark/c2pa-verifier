@@ -5,6 +5,26 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Added
+
+- `StatusCode::HashedUriMissing` (`hashedURI.missing`), one new contract
+  symbol (SPEC-034 amendment 3).
+
+### Changed
+
+- **An icon that is not a hashed URI is `hashedURI.missing`, and the file
+  `Invalid`** (SPEC-034 amendments 3 and 4, step 522). An icon in
+  `claim_generator_info`, an actions assertion's `softwareAgents` or
+  `templates`, or an action's `softwareAgent` that is a resource reference
+  (`{format, identifier}`) or a text was not checked; it binds nothing the
+  signature covers. The fault is reported on the claim or the actions
+  assertion that holds the icon, as `c2patool` 0.28.6 (`c2pa` 0.91.11)
+  reports it. Over the corpus one file moves: `icons/agents-icon.png`,
+  from `Valid` to `Invalid`. A map with a `url` stays a hashed URI
+  whatever else it holds, as in both `c2patool` versions measured.
+
 ## 0.10.0 — 2026-10-29
 
 A minor release. The evidence behind a verdict, which 0.9.0 made

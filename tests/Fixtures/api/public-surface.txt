@@ -45,6 +45,7 @@ Report\StatusCode :: const ClaimSignatureMismatch
 Report\StatusCode :: const ClaimSignatureMissing
 Report\StatusCode :: const ClaimSignatureValidated
 Report\StatusCode :: const GeneralError
+Report\StatusCode :: const HashedUriMissing
 Report\StatusCode :: const IngredientClaimSignatureMismatch
 Report\StatusCode :: const IngredientClaimSignatureMissing
 Report\StatusCode :: const IngredientClaimSignatureValidated

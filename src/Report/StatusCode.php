@@ -39,6 +39,8 @@ enum StatusCode: string
     case AssertionOutsideManifest = 'assertion.outsideManifest';
     case AssertionHashedUriMatch = 'assertion.hashedURI.match';
     case AssertionHashedUriMismatch = 'assertion.hashedURI.mismatch';
+    // SPEC-034 amendment 3: an icon that is not a hashed URI (§10.2.3.2, §15.10.3.3), as c2pa 0.91.11 reports it
+    case HashedUriMissing = 'hashedURI.missing';
     case AssertionUndeclared = 'assertion.undeclared';
     case AssertionActionMalformed = 'assertion.action.malformed';
     case AssertionActionIngredientMismatch = 'assertion.action.ingredientMismatch';   // SPEC-033

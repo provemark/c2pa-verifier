@@ -1,0 +1,107 @@
+{
+  "active_manifest": "urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78",
+  "manifests": {
+    "urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78": {
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier icon-form probe, with a name long enough to give way",
+          "version": "1",
+          "org.contentauth.c2pa_rs": "0.91.11"
+        }
+      ],
+      "title": "templates-icon.png",
+      "instance_id": "xmp.iid:79168a1d-11bc-428b-91ed-251e0e09e805",
+      "thumbnail": {
+        "format": "image/jpeg",
+        "identifier": "self#jumbf=/c2pa/urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78/c2pa.assertions/c2pa.thumbnail.claim"
+      },
+      "assertions": [
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              }
+            ],
+            "templates": [
+              {
+                "action": "c2pa.edited",
+                "icon": {
+                  "format": "image/png",
+                  "identifier": "icon-form-probe-resource-reference.pngxxxxxxxxxxxxx"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "c2pa-verifier test",
+        "common_name": "Icon Form Probe Signer",
+        "cert_serial_number": "82092182072253950288411758590088044474061262998"
+      },
+      "label": "urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78",
+      "claim_version": 2
+    }
+  },
+  "validation_results": {
+    "activeManifest": {
+      "success": [
+        {
+          "code": "signingCredential.trusted",
+          "url": "self#jumbf=/c2pa/urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78/c2pa.signature",
+          "explanation": "signing certificate trusted, found in [system_anchors] trust anchors"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "url": "self#jumbf=/c2pa/urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "claimSignature.validated",
+          "url": "self#jumbf=/c2pa/urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78/c2pa.signature",
+          "explanation": "claim signature valid"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78/c2pa.assertions/c2pa.hash.data",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78/c2pa.assertions/c2pa.thumbnail.claim",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78/c2pa.assertions/c2pa.icon",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.icon"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78/c2pa.assertions/c2pa.actions.v2",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "url": "self#jumbf=/c2pa/urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78/c2pa.assertions/c2pa.hash.data",
+          "explanation": "data hash valid"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:1a8b29a6-3231-4ea4-b2d2-0fa53c7cae78/c2pa.signature",
+          "explanation": "OCSP fetching skipped"
+        }
+      ],
+      "failure": []
+    },
+    "specVersion": "2.4.0",
+    "trustListUri": "system_anchors"
+  },
+  "validation_state": "Trusted"
+}

@@ -742,7 +742,8 @@ and `assertion.cbor.invalid` by SPEC-088, so the enum holds 71):
 - *Reported under another code* (4): `claimSignature.outsideValidity`
   (`signingCredential.expired`, as `c2pa-rs`; a code of the C2PA 1.0–2.1
   tables, gone from 2.2 on), `hashedURI.missing`
-  (`assertion.missing`), `hashedURI.mismatch` (`assertion.hashedURI.mismatch`
+  (`assertion.missing` for an unresolvable icon; held since step 522 for an
+  icon that is not a hashed URI), `hashedURI.mismatch` (`assertion.hashedURI.mismatch`
   for icons, SPEC-034), all in `docs/conformance.md` §3 or SPEC-039; and
   `assertion.alternativeContentRepresentation.missing`, an embedded reference
   that does not resolve, which `AlternativeContentCheck` reports as
@@ -1056,7 +1057,7 @@ decision*, which follows `c2pa-rs` without `verify.strict_v1_validation`.
 | 15.10.3.2.7 | Exactly one of `multiAssetPartIndex` / `embeddedOriginalPreservationImage`; the index needs a multi-asset hash and must be in bounds. | `Hash\AlternativeContentCheck` (SPEC-065, step 336); the index is checked in the active manifest only (§18.14.2.1) | covered (SPEC-065) | read (`PRED-ASSE-026`) → P06-8 |
 | 15.10.3.2.7 | The embedded image's hashed URI has a hash that matches, else `.hashMismatch`; otherwise record `.match`. | `Hash\AlternativeContentCheck` (SPEC-065, step 336); the index is checked in the active manifest only (§18.14.2.1) | covered (SPEC-065) | read (`PRED-ASSE-014`) → P06-8 |
 | 15.10.3.3 | A `hashed_ext_uri` the validator retrieves goes through §15.10.4.2. | nothing is retrieved | n/a | read |
-| 15.10.3.3 | A `hashed_uri` with no `url` or no destination: `hashedURI.missing`. | icons: `assertion.missing` (`IconReferenceCheck`); an ingredient's manifest: `ingredient.manifest.missing` (`ManifestGraph::descend()`); ingredient thumbnails and `data`, action references: resolved by label or not at all | partial | measured: `IconReferenceTest` "AC3", `IngredientDeltasTest` "AC6"; the rest read → P06-5 |
+| 15.10.3.3 | A `hashed_uri` with no `url` or no destination: `hashedURI.missing`. | icons: no `url` (not a hashed URI) is `hashedURI.missing` since SPEC-034 amendment 3 (step 522), no destination is `assertion.missing` (`IconReferenceCheck`); an ingredient's manifest: `ingredient.manifest.missing` (`ManifestGraph::descend()`); ingredient thumbnails and `data`, action references: resolved by label or not at all | partial | measured: `IconReferenceTest` "AC3", `IngredientDeltasTest` "AC6"; the rest read → P06-5 |
 | 15.10.3.3 | No `hash` field, or a hash that differs: `hashedURI.mismatch`. | icons: compared with the hash the claim records (`IconReferenceCheck::check()`); ingredient `activeManifest`/`claimSignature`: `IngredientManifestCheck`; ingredient thumbnail and `data`, action ingredient references, `relatedAssertions`: not compared, as `c2pa-rs` | partial | measured: `IconReferenceTest` "AC2"; the rest read → P06-5 |
 | 15.10.4.1 | Validate the claim before retrieving external data; never retrieve for a rejected claim. | nothing is retrieved (no network, SPEC-013, SPEC-014) | covered by construction | read |
 | 15.10.4.1 | Failing to retrieve external data never rejects a claim. | nothing is retrieved | covered by construction | read |
@@ -1221,7 +1222,9 @@ decision*, which follows `c2pa-rs` without `verify.strict_v1_validation`.
   **Documentation only.**
 - **P06-10 — status codes that differ (all still `Invalid`).**
   - `general.error` for `assertion.cbor.invalid`.
-  - `assertion.missing` for `hashedURI.missing` (icons).
+  - `assertion.missing` for `hashedURI.missing` (an icon whose url resolves
+    to nothing; an icon that is not a hashed URI is `hashedURI.missing`
+    since SPEC-034 amendment 3, step 522).
   - `manifest.update.invalid` for an update manifest with more than one
     ingredient (`c2pa-rs`'s code; the specification says `wrongParents`).
   - Container errors or `assertion.dataHash.mismatch` for the
