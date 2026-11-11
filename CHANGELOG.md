@@ -5,7 +5,24 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.10.1 — 2026-11-11
+
+A patch release. `c2pa` 0.91.11 (`c2patool` 0.28.6) checks that an icon
+is a hashed URI, as C2PA 2.4 §10.2.3.2 requires; this verifier now does
+too, so a file whose icon is a resource reference or a text is `Invalid`
+here as it is there. Against `0.10.0`, over 953 corpus files under three
+trust configurations, each without and with a revocation source (5,718
+runs), one file changes verdict, `icons/agents-icon.png`, `Valid` to
+`Invalid`; none throws. Nothing was forged: the icon binds nothing the
+signature covers. Checks of the other `c2pa` 0.91.11 changes (a stale
+OCSP `good`, redacted Claim-v1 ingredients, the box hash) found this
+verifier as strict or stricter, and change no code.
+
+One contract symbol is added, `StatusCode::HashedUriMissing` (212
+symbols). Elsewhere in this project a contract change waits for a minor;
+this one ships in a patch, Maurice's choice, so that a caller on `^0.10`
+receives the stricter check without changing its constraint. A caller
+that matches every `StatusCode` case exhaustively needs one more arm.
 
 ### Added
 

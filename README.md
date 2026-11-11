@@ -91,7 +91,8 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.10.0`**, still a `0.x` on purpose. `0.10.0` writes
+The current tag is **`v0.10.1`**, still a `0.x` on purpose. `0.10.1` refuses
+an icon that is not a hashed URI, as `c2patool` 0.28.6 does. `0.10.0` writes
 the evidence behind a verdict down as a document to keep (`VerificationReport::evidenceToJson()`,
 [`docs/evidence-format.md`](docs/evidence-format.md)), asks a revocation
 source each question once per verification, and carries the fixes of a

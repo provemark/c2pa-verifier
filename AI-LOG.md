@@ -12475,3 +12475,11 @@ README are where the disclosure lives.
 - Produced: SPEC-012 amendment 12 (AC13) and a Traceability row; `bin/make-data-hash-variants.php` (one variant); `tests/Fixtures/binding/hard-binding-boxes.{bin,png}` and the README section; AC13 in `tests/Unit/Hash/DataHashCheckTest.php`; `docs/comparison.md`; `notes/step-525-box-hash-test.md`, `NOTES.md`.
 - Measured: `php bin/make-data-hash-variants.php` (earlier variants byte-identical); `c2patool` 0.28.6 and 0.28.3 on the variant (no report); `bin/c2pa-verify` on it; the test red (fixture missing), green, red under a mutation of `HardBindings::FAMILIES` in both halves, restored and green; `composer check`, `vendor/bin/pest --parallel`.
 - Decided by Maurice: amendment 12 approved.
+
+## 2026-11-11 — Step 526: prepare 0.10.1
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "bereid verifier 0.10.1 voor"; asked whether a contract symbol makes it 0.11.0 by the project's rule: "0.10.1".
+- Produced: `CHANGELOG.md` (0.10.1 heading and introduction), `Verifier::VERSION`, `README.md`, a "not counted" entry in `SECURITY.md`; `notes/step-526-release-0.10.1.md`, `NOTES.md`.
+- Measured: the corpus against a `v0.10.0` worktree (953 files, 5,718 runs, 0 exceptions; one verdict moves, `icons/agents-icon.png` `Valid` → `Invalid`; 30 outputs differ, all in that file and the four `icon-forms/` probes); the first tag containing SPEC-034 (`v0.1.0` predates it); `composer check` (1,719 passed), `bin/api-check.php`, `bin/spec-check.php`, `bin/package-check.php`.
+- Reasoned: not counted in SECURITY.md, as for 0.8.2 and 0.8.3.
+- Decided by Maurice: a patch, 0.10.1, despite the added contract symbol.

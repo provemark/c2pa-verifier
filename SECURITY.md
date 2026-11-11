@@ -385,6 +385,17 @@ the whole code before `0.10.0`, fixed in it:
     amendment 4), and two low findings (SPEC-009 amendment 7, SPEC-005
     amendment 3).
 
+- **2026-11-10, measured against `c2patool` 0.28.6 — not counted above,
+  changed in `0.10.1`** (`notes/step-522-icon-not-hashed-uri.md`). An
+  icon in `claim_generator_info`, `softwareAgents`, `templates` or an
+  action's `softwareAgent` that was a resource reference or a text was
+  not checked, so such a file could be `Valid` or `Trusted` here where
+  `c2pa` 0.91.11 reports `hashedURI.missing` (`0.1.0` to `0.10.0`). The
+  icon binds nothing the signature covers; no other byte was left
+  unhashed. Not counted, for the reason given for `0.8.2`: the rule
+  follows `c2pa` 0.91.11 and C2PA 2.4 §10.2.3.2. SPEC-034 amendments 3
+  and 4.
+
 The method — for every rule of the form "check X when Y is present",
 build a *signed* manifest in which Y is absent and measure — is now
 tooling (`bin/make-absence-variants.php`) and part of every new spec.
