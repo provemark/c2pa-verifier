@@ -43,6 +43,9 @@ hashed URI); the others were checked and found nothing more lenient
   configurations: `icons/agents-icon.png`, `Valid` → `Invalid`.
   **Output:** 30 runs differ, all in five files — that one and the four
   `icon-forms/` probes of step 522 (codes change, verdicts do not).
+  *Corrected in step 528:* at that validation time the probes'
+  certificates were not yet valid; at 2026-11-11 the four bad-icon probes
+  move `Valid` → `Invalid` too, five files in all.
 - `composer check`: 1,719 passed, 1 skipped. `bin/api-check.php`: the
   recorded surface matches. `bin/spec-check.php`: 89 specs.
   `bin/package-check.php`: 665 files, 6.3 MB, 2.2 MB as a zip.

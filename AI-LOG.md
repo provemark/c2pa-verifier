@@ -12490,3 +12490,11 @@ README are where the disclosure lives.
 - Produced: the push of `51c661d`; annotated tag `v0.10.1`; `notes/step-527-release-0.10.1-released.md`, `NOTES.md`.
 - Measured: CI on `51c661d` and on the tag (8 of 8 each); Packagist (`v0.10.1`, `51c661d`); a fresh `composer require provemark/c2pa-verifier:^0.10` (666 files, equal to `bin/package-check.php`; `VERSION` 0.10.1; `icons/agents-icon.png` `Invalid` with `hashedURI.missing`, `fixture-signed.jpg` `Valid`).
 - Decided by Maurice: push, tag; no GitHub release, as before.
+
+## 2026-11-11 — Step 528: the 0.10.1 entry corrected
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "zet de verifier-changelog recht".
+- Produced: the 0.10.1 introduction in `CHANGELOG.md` (five files, the validation time, the correction named); a pointer in `notes/step-526-release-0.10.1.md`; `notes/step-528-changelog-0.10.1-corrected.md`, `NOTES.md`.
+- Measured: step 526's comparison again at validation time 2026-11-11 (5,718 runs, 0 exceptions, 30 move `Valid` → `Invalid` in five files); at 2026-10-27 all eight `icon-forms/` probes are `Invalid` under both versions.
+- Reasoned: the earlier count was right for its validation time and wrong as a description of the release.
+- Decided by Maurice: correct the entry.

@@ -12,8 +12,12 @@ is a hashed URI, as C2PA 2.4 §10.2.3.2 requires; this verifier now does
 too, so a file whose icon is a resource reference or a text is `Invalid`
 here as it is there. Against `0.10.0`, over 953 corpus files under three
 trust configurations, each without and with a revocation source (5,718
-runs), one file changes verdict, `icons/agents-icon.png`, `Valid` to
-`Invalid`; none throws. Nothing was forged: the icon binds nothing the
+runs, validation time 2026-11-11), five files change verdict, all `Valid`
+to `Invalid`: `icons/agents-icon.png` and the four `icon-forms/` probes
+whose icon is a resource reference or a text; none throws. (This entry
+first said one file: that comparison used a validation time of
+2026-10-27, before the probes' certificates were issued, when every probe
+was `Invalid` under both versions. Corrected the same day, step 528.) Nothing was forged: the icon binds nothing the
 signature covers. Checks of the other `c2pa` 0.91.11 changes (a stale
 OCSP `good`, redacted Claim-v1 ingredients, the box hash) found this
 verifier as strict or stricter, and change no code.
