@@ -12483,3 +12483,10 @@ README are where the disclosure lives.
 - Measured: the corpus against a `v0.10.0` worktree (953 files, 5,718 runs, 0 exceptions; one verdict moves, `icons/agents-icon.png` `Valid` → `Invalid`; 30 outputs differ, all in that file and the four `icon-forms/` probes); the first tag containing SPEC-034 (`v0.1.0` predates it); `composer check` (1,719 passed), `bin/api-check.php`, `bin/spec-check.php`, `bin/package-check.php`.
 - Reasoned: not counted in SECURITY.md, as for 0.8.2 and 0.8.3.
 - Decided by Maurice: a patch, 0.10.1, despite the added contract symbol.
+
+## 2026-11-11 — Step 527: 0.10.1 released
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push maar"; "tag en release v0.10.1 maar".
+- Produced: the push of `51c661d`; annotated tag `v0.10.1`; `notes/step-527-release-0.10.1-released.md`, `NOTES.md`.
+- Measured: CI on `51c661d` and on the tag (8 of 8 each); Packagist (`v0.10.1`, `51c661d`); a fresh `composer require provemark/c2pa-verifier:^0.10` (666 files, equal to `bin/package-check.php`; `VERSION` 0.10.1; `icons/agents-icon.png` `Invalid` with `hashedURI.missing`, `fixture-signed.jpg` `Valid`).
+- Decided by Maurice: push, tag; no GitHub release, as before.
