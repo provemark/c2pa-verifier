@@ -12506,3 +12506,10 @@ README are where the disclosure lives.
 - Measured: a byte search over the 3,087 files under `tests/Fixtures/` for `c2pa.hash.boxes` (one real file, Bing Image Creator; two own variants), `brob` (one own variant) and `self#jumbf=c2pa/` (Bing, `c2pa-rs/prerelease.jpg`); `bin/c2pa-verify` on both files, now and at 2026-07-01, from a scratch copy whose `resolve()` puts a `/` before a path starting with `c2pa/` (Bing: signature found, stops at the box-hash `general.error`; `prerelease.jpg` stays `Invalid`; no verdict moves); `bin/spec-check.php` exit 0.
 - Reasoned: from the code, `absoluteUri()`, SPEC-040's outside-manifest check and `redactionsOf()` read the slash-less form differently from `resolve()`; not probed.
 - Decided by Maurice: none (the draft's open questions wait for him).
+
+## 2026-11-12 — Step 530: SPEC-042 approved
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "keur SPEC-042 goed met de voorstellen".
+- Produced: `specs/SPEC-042-jumbf-uri-without-leading-slash.md` (status approved, the three open questions marked decided, an empty *Amendments* section); `NOTES.md`.
+- Measured: `bin/spec-check.php` (exit 0).
+- Decided by Maurice: SPEC-042 approved with every proposal: status urls stay absolute; the box-hash spec is to be written and SPEC-042 is built first; slash-less `redacted_assertions` entries stay out of scope until `c2pa-rs` is read.

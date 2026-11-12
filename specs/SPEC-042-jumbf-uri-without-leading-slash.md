@@ -2,9 +2,9 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | draft                                             |
+| Status     | approved                                          |
 | Author     | Maurice van Loon                                  |
-| Approved   | —                                                 |
+| Approved   | Maurice van Loon, 2026-11-12                      |
 | Supersedes | —                                                 |
 
 > Lifecycle: `draft` → maintainer approves → `approved` → tests-first →
@@ -214,17 +214,25 @@ Error messages keep quoting the URI as written.
    absolute form. It is what this verifier already does for every relative
    URI, it moves no verdict, and it gets a row in `docs/comparison.md`.
    *(not a blocker)*
+   *Status 2026-11-12 (step 530):* decided by Maurice: the proposal.
 2. **Alone, or with box hashes?** On its own this spec moves no verdict in
    the corpus (measured above). Only AC2's synthetic variant shows a
    difference. ADR-0005 calls it *"the first step if box hashes are ever
    built"*. Proposal: approve it together with the decision to write the
    box-hash spec, and build it first. *(blocker: decides whether this is
    built now)*
+   *Status 2026-11-12 (step 530):* decided by Maurice: the proposal. The
+   box-hash spec is to be written; this one is built first.
 3. **Slash-less `redacted_assertions` entries.** Out of scope as proposed:
    accepting them would let an entry excuse a missing assertion, which is
    leniency. `c2pa-rs`'s handling was not read and no file carries one.
    Proposal: read `c2pa-rs` before the box-hash spec, and amend this one
    only if it normalises there too and a file shows it. *(not a blocker)*
+   *Status 2026-11-12 (step 530):* decided by Maurice: the proposal.
+
+## Amendments
+
+None yet.
 
 ## Traceability
 
