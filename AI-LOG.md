@@ -12498,3 +12498,11 @@ README are where the disclosure lives.
 - Measured: step 526's comparison again at validation time 2026-11-11 (5,718 runs, 0 exceptions, 30 move `Valid` → `Invalid` in five files); at 2026-10-27 all eight `icon-forms/` probes are `Invalid` under both versions.
 - Reasoned: the earlier count was right for its validation time and wrong as a description of the release.
 - Decided by Maurice: correct the entry.
+
+## 2026-11-12 — Step 529: box hash and `brob` in the corpus, and the slash-less URI probe
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "meet hoe vaak box hash en brob in het corpus voorkomen"; "schrijf een draft spec voor SPEC-042"; "documenteer de meting als NOTES-stap".
+- Produced: `specs/SPEC-042-jumbf-uri-without-leading-slash.md` (draft); `notes/step-529-slash-less-uri-probe.md`, `NOTES.md`.
+- Measured: a byte search over the 3,087 files under `tests/Fixtures/` for `c2pa.hash.boxes` (one real file, Bing Image Creator; two own variants), `brob` (one own variant) and `self#jumbf=c2pa/` (Bing, `c2pa-rs/prerelease.jpg`); `bin/c2pa-verify` on both files, now and at 2026-07-01, from a scratch copy whose `resolve()` puts a `/` before a path starting with `c2pa/` (Bing: signature found, stops at the box-hash `general.error`; `prerelease.jpg` stays `Invalid`; no verdict moves); `bin/spec-check.php` exit 0.
+- Reasoned: from the code, `absoluteUri()`, SPEC-040's outside-manifest check and `redactionsOf()` read the slash-less form differently from `resolve()`; not probed.
+- Decided by Maurice: none (the draft's open questions wait for him).
