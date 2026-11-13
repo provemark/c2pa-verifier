@@ -66,14 +66,14 @@ function spec086Settings(string $which): ?TrustSettings
     };
 }
 
-function spec086Verify(string $path, ?TrustSettings $settings, ?RevocationSource $source = null): VerificationReport
+function spec086Verify(string $path, ?TrustSettings $settings, ?RevocationSource $source = null, ?DateTimeImmutable $at = null): VerificationReport
 {
     $stream = fopen($path, 'rb');
     if ($stream === false) {
         throw new RuntimeException("cannot open {$path}");
     }
     try {
-        return ($source === null ? new Verifier : new Verifier(revocationSource: $source))->verify($stream, $settings);
+        return ($source === null ? new Verifier : new Verifier(revocationSource: $source))->verify($stream, $settings, $at);
     } finally {
         fclose($stream);
     }
@@ -219,8 +219,11 @@ it('AC5: not asked where a stored response proves something', function (string $
 
 it('AC6: not asked for an untrusted signer', function (string $file, string $settings): void {
     $calls = new Spec086Calls;
-    $with = spec086Verify(Corpus::fixtures()."/{$file}", spec086Settings($settings), spec086Source($calls, spec086Response('revocation/cs-good.png', SPEC086_P_GOOD)));
-    $without = spec086Verify(Corpus::fixtures()."/{$file}", spec086Settings($settings));
+    // one time for both runs: the Bing signer expired on 2026-10-01, and its report names the time it was
+    // checked at, so two runs on the clock differ when they straddle a second (step 540)
+    $at = new DateTimeImmutable;
+    $with = spec086Verify(Corpus::fixtures()."/{$file}", spec086Settings($settings), spec086Source($calls, spec086Response('revocation/cs-good.png', SPEC086_P_GOOD)), $at);
+    $without = spec086Verify(Corpus::fixtures()."/{$file}", spec086Settings($settings), null, $at);
 
     expect($calls->calls)->toBe([])
         ->and($with->toJson())->toBe($without->toJson());
