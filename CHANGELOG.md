@@ -5,7 +5,17 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.11.2 — 2026-11-13
+
+A patch release that closes one gap in the API and changes nothing else.
+`verify()` accepted a validation time whose UTC year lies outside
+0001–9999 and wrote it into crJSON as no RFC 3339 time, which breaks
+crJSON's schema; the command line already refused it. Now the API
+refuses it too, with an `\InvalidArgumentException`. Against `0.11.1`,
+over 1,227 fixture files without and with the conformance tool's trust
+settings at 2026-11-14T00:00:00Z: the ordinary report and exit status are
+identical in every run, and every crJSON document differs only in
+`jsonGenerator.version`. No contract symbol changes (217).
 
 ### Changed
 

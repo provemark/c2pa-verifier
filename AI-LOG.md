@@ -12561,3 +12561,11 @@ README are where the disclosure lives.
 - Measured: crJSON's schema requires `validationTime` as a `date-time` (read); the tests red first (7 of 9), then green; four mutations red; `composer check` exit 0 (1,757 passed, 1 skipped, 217 symbols); spec-check OK.
 - Reasoned: one check in `Verifier::verify()` covers `FragmentedVerifier::verify()`, which reads nothing before it delegates.
 - Decided by Maurice: the amendment and its three open questions as proposed (refuse; `\InvalidArgumentException`; 0.11.2); commit and release wait for his word.
+
+## 2026-11-13 — Step 544: prepare 0.11.2
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "bereid verifier 0.11.2 voor".
+- Produced: `CHANGELOG.md` (0.11.2 entry), `src/Verifier/Verifier.php` (`VERSION`), `README.md`; `notes/step-544-prepare-0.11.2.md`, `NOTES.md`.
+- Measured: CI on `84c52a7` (success, 8/8); against `v0.11.1` over 1,227 files in two trust configurations (reports and exit status identical, crJSON differs only in `jsonGenerator.version`), after a first run that lost the settings file to a relative path; `composer check` exit 0; `bin/package-check.php`.
+- Reasoned: a patch, since no verdict, report field or contract symbol moves; `SECURITY.md` unchanged.
+- Decided by Maurice: 0.11.2 (SPEC-073 amendment 3, open question 3); commit, push, tag and Packagist wait for his word.
