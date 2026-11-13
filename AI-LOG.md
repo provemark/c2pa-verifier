@@ -12545,3 +12545,11 @@ README are where the disclosure lives.
 - Measured: CI on `b895950` (success); the corpus against `v0.10.1` (6,582 runs a side at 2026-11-14T00:00:00Z, 0 exceptions, five probes `Invalid` → `Valid`, 150 runs differ in 25 files); `composer check` exit 0; `bin/package-check.php`.
 - Reasoned: `SECURITY.md` unchanged, since neither spec fixes a wrong verdict.
 - Decided by Maurice: a minor (SPEC-090 open question 3); commit, push, tag and Packagist wait for his word.
+
+## 2026-11-13 — Steps 536–538: SPEC-075 amendment 4, prepare 0.11.1
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "schrijf een amendement op SPEC-075 voor de geweigerde stores"; "goedgekeurd, open vragen zoals voorgesteld"; "bereid verifier 0.11.1 voor".
+- Produced: SPEC-075 amendment 4 (AC12, AC1/AC8 narrowed, Traceability); `src/Verifier/CrJsonDocument.php` (`of()`); `tests/Unit/Verifier/CrJsonDocumentTest.php` (AC12, AC8 datasets); `docs/conformance-harness.md`; `CHANGELOG.md` (0.11.1), `src/Verifier/Verifier.php` (`VERSION`), `README.md`; `notes/step-538-prepare-0.11.1.md`, `NOTES.md`.
+- Measured: the conformance tool's reader and crJSON's schema root (read); AC12 red then green; two mutations red; crJSON over 930 media fixtures before and after (163 gain the field, 767 identical); against `v0.11.0` over 1,227 files in two trust configurations (reports identical, 460 crJSON documents gain only the field); `composer check` exit 0; `bin/package-check.php`; CI on `7aeada1` green.
+- Reasoned: a patch, since no verdict, report field or contract symbol moves; `SECURITY.md` unchanged.
+- Decided by Maurice: the amendment and its three open questions as proposed; commit, push, tag and Packagist wait for his word.

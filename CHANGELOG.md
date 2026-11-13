@@ -5,7 +5,19 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.11.1 — 2026-11-13
+
+A patch release with one change to crJSON and none to the verdict. A file
+whose store this verifier refuses, or that it cannot read, was written in
+crJSON as one without credentials (`manifests: []`, the failure on
+standard error only). It now also carries a root `validationResults`, so
+a harness that reads crJSON alone sees that it does not verify. This was
+found by measuring the corpus against the setup of the C2PA Conformance
+Program's own tool (step 535). Against `0.11.0`, over 1,227 fixture files
+without and with that tool's trust settings at 2026-11-14T00:00:00Z: the
+ordinary report and exit status are identical in every run; in crJSON,
+460 documents a configuration gain the root field and nothing else, the
+other 767 are byte-identical. No contract symbol changes (217).
 
 ### Changed
 
