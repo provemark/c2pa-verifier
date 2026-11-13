@@ -57,8 +57,8 @@ Milestones M0–M8 are done: the verifier reads JPEG, PNG and WebP and, since
 M8, ISOBMFF — MP4, MOV, AVIF, HEIC and fragmented DASH streams — and, since
 SPEC-055 to SPEC-059, WAV, MP3, FLAC, AVI and GIF; then JUMBF
 and CBOR, claim v1 and v2, and verifies COSE signatures (ES256/384/512,
-PS256/384/512, Ed25519), the hashed URIs, the data hash and the BMFF hash
-(`v2` and `v3`), the certificate profile and chain, and the timestamp —
+PS256/384/512, Ed25519), the hashed URIs, the data hash, the BMFF hash
+(`v2` and `v3`) and, in a JPEG, the box hash, the certificate profile and chain, and the timestamp —
 closing with `Trusted`, `Valid` or `Invalid`. It also follows a file's
 provenance backwards: the manifests an ingredient assertion names are
 validated in their own right, update manifests included, and a fault in one
@@ -91,7 +91,10 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.10.1`**, still a `0.x` on purpose. `0.10.1` refuses
+The current tag is **`v0.11.0`**, still a `0.x` on purpose. `0.11.0` verifies
+the general box hash in a JPEG (`c2pa.hash.boxes`, as Microsoft Bing Image
+Creator writes it) and reads JUMBF URIs written without the leading slash;
+a caller on `^0.10` keeps 0.10.x until it asks for `^0.11`. `0.10.1` refuses
 an icon that is not a hashed URI, as `c2patool` 0.28.6 does. `0.10.0` writes
 the evidence behind a verdict down as a document to keep (`VerificationReport::evidenceToJson()`,
 [`docs/evidence-format.md`](docs/evidence-format.md)), asks a revocation

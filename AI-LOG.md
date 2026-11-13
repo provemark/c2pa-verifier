@@ -12537,3 +12537,11 @@ README are where the disclosure lives.
 - Measured: both `c2patool` versions on 19 variants; the SPEC-090 tests red before `src/` changed (18 red, two guards green), then 20/20; ten mutations, each red; the corpus before (`e4c2f3f`, copied `vendor/`) and after: 6,582 runs a side at 2026-11-14T00:00:00Z, 126 differ in 21 files, four own variants `Invalid` → `Valid`; the 2.4 CDDL status codes against the enum (39 not held); `composer check` exit 0; `pest --parallel` 1,746 passed, 1 skipped.
 - Reasoned: restart markers as boxes of their own follows §18.7.3.1's example, not `c2pa-rs`'s `in_entropy`; not measured, no file carries one.
 - Decided by Maurice: SPEC-090 amendment 1 (a non-`JP` APP11 for AC12; the extractor stays strict); SPEC-041 amendment 5; SPEC-042 amendment 1.
+
+## 2026-11-13 — Step 534: prepare 0.11.0
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "bereid release 0.11.0 van de verifier voor".
+- Produced: `CHANGELOG.md` (0.11.0 entry), `src/Verifier/Verifier.php` (`VERSION`), `README.md`; `notes/step-534-prepare-0.11.0.md`, `NOTES.md`.
+- Measured: CI on `b895950` (success); the corpus against `v0.10.1` (6,582 runs a side at 2026-11-14T00:00:00Z, 0 exceptions, five probes `Invalid` → `Valid`, 150 runs differ in 25 files); `composer check` exit 0; `bin/package-check.php`.
+- Reasoned: `SECURITY.md` unchanged, since neither spec fixes a wrong verdict.
+- Decided by Maurice: a minor (SPEC-090 open question 3); commit, push, tag and Packagist wait for his word.

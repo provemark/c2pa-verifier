@@ -5,6 +5,88 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## 0.11.0 — 2026-11-13
+
+A minor release. A JPEG whose hard binding is the general box hash,
+`c2pa.hash.boxes`, is now verified rather than refused by name. Microsoft
+Bing Image Creator writes every file this way; such a file was `Invalid`
+here whatever it held, and is now judged as `c2patool` judges it. Two
+steps were needed:
+
+- the Bing files write their JUMBF URIs without the leading slash, which
+  is now read from the store's root, as `c2pa-rs` does (SPEC-042);
+- the box hash itself (SPEC-090).
+
+Against `0.10.1`, the current corpus was run under three trust
+configurations, each without and with a revocation source: 1,097 files,
+6,582 runs, validation time 2026-11-14, 0 exceptions. Five files change
+verdict, all `Invalid` → `Valid` and all new probes:
+- `slashless/all-slashless.png`;
+- `box-hash/written.jpg`, `-exif-exclusion.jpg`, `-excluded.jpg`,
+  `-no-pad.jpg`.
+
+They are `Trusted` with their throw-away root as anchor. The Bing file
+changes output but stays `Invalid` at that time, because its leaf
+expired on 2026-10-01. Judged at 2026-07-01 it is now `Valid`, as in
+`c2patool` 0.27.22. Other output changes are the new probes,
+`c2pa-rs/prerelease.jpg` (its status urls) and the refusal text for a
+box hash outside JPEG.
+
+**A `0.11`, not a `0.10.2`:** the public contract grows from 212 to 217
+symbols, five `StatusCode` cases (below). Nothing was removed or renamed.
+A caller that matches every `StatusCode` case exhaustively needs five
+more arms. A caller on `^0.10` keeps 0.10.x until it asks for `^0.11`,
+and that is deliberate: a box-hash JPEG that was always `Invalid` can now
+be `Valid` or `Trusted`, which a caller should opt into.
+
+### Added
+
+- **The general box hash for JPEG (SPEC-090; C2PA 2.4 §15.12.3, §18.7).**
+  The JPEG is cut into boxes:
+  - one per marker segment, named by its ITU-T T.81 symbol;
+  - `SOS` and each `RSTn` with their entropy-coded data;
+  - one `C2PA` box for the manifest store's APP11 pieces;
+  - `c2pa.after` for bytes after `EOI`.
+
+  Each box-hash-map's hash is checked over its range, with the `alg` of
+  the map, then of the box-map, then of the claim. Exclusions may lie
+  only inside an APP1 Exif or XMP payload, as for the data hash
+  (SPEC-069). Five status codes, verbatim from §15.2.2:
+  - `assertion.boxesHash.match`;
+  - `.mismatch`, `.malformed`, `.unknownBox` (failures);
+  - `.additionalExclusionsPresent` (informational).
+
+  `checks_performed` says `boxHash`. A box hash in any other container is
+  still refused by name (`general.error`), now saying that only JPEG is
+  verified.
+
+### Changed
+
+- **A JUMBF URI written `self#jumbf=c2pa/…`, without the leading slash,
+  is read from the store's root (SPEC-042),** as `c2pa-rs`'s
+  `to_normalized_uri` reads it, and no longer as relative to the
+  manifest. This is the form of the C2PA 1.0–2.1 examples and of the Bing
+  files. Status urls keep the absolute form. A path that does not start
+  with `c2pa/` stays relative.
+
+### Differences from `c2patool` this release adds
+
+All in `docs/comparison.md`:
+- boxes out of order are `assertion.boxesHash.mismatch`, as §15.12.3
+  says, where `c2pa-rs` says `unknownBox`;
+- data after `EOI` is `unknownBox` even when the list names and hashes it
+  as `c2pa.after`, which `c2pa` 0.91.11 accepts: §18.7.2 allows it only
+  for multi-part assets;
+- `C2PA` sharing a box-hash-map is `malformed` here, `mismatch` there;
+- a box-hash-map without `pad`, which the CDDL makes optional, is read
+  here; `c2patool` cannot load the manifest;
+- a JPEG 360-style APP11 piece of another JUMBF box is a container error
+  here (SPEC-001), so such a file never reaches its box hash. No file
+  carrying one has been seen;
+- each `RSTn` is a box of its own, as §18.7.3.1's example lists them;
+  `c2pa-rs` counts them inside `SOS`. No box-hash file with restart
+  markers has been seen.
+
 ## 0.10.1 — 2026-11-11
 
 A patch release. `c2pa` 0.91.11 (`c2patool` 0.28.6) checks that an icon
