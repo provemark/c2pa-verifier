@@ -23,6 +23,7 @@ use Provemark\C2paVerifier\Cose\CoseException;
 use Provemark\C2paVerifier\Cose\CoseSign1;
 use Provemark\C2paVerifier\Hash\AlternativeContentCheck;
 use Provemark\C2paVerifier\Hash\BmffHashCheck;
+use Provemark\C2paVerifier\Hash\BoxHashCheck;
 use Provemark\C2paVerifier\Hash\DataHashCheck;
 use Provemark\C2paVerifier\Hash\ExclusionAllowance;
 use Provemark\C2paVerifier\Hash\HardBindings;
@@ -112,6 +113,8 @@ final readonly class Verifier
         // SPEC-086: last, for the same reason; the default asks nothing (ADR-0007), and is the only spelling of "no
         // source" (amendment 5)
         private RevocationSource $revocationSource = new NoRevocationSource,
+        // SPEC-090: last, for the same reason as SPEC-055's
+        private BoxHashCheck $boxHash = new BoxHashCheck,
     ) {}
 
     /**
@@ -445,18 +448,24 @@ final readonly class Verifier
             } else {
                 // SPEC-027: ISOBMFF binds through c2pa.hash.bmff.v3, whose exclusions are
                 // box paths rather than byte ranges. Which check runs follows the assertion
-                // the manifest actually carries, not the container it arrived in.
-                $statuses = [...$statuses, ...(BmffHashCheck::labelOf($binding) !== null
-                    ? $this->bmffHash->check($binding, $stream)
-                    : $this->dataHash->check($binding, $stream, $store, $manifest->isUpdateManifest, self::exclusionAllowance($format)))];
+                // the manifest actually carries, not the container it arrived in — except the
+                // box hash, verified for JPEG only (SPEC-090): in any other container it reaches
+                // DataHashCheck, which refuses it by name
+                $statuses = [...$statuses, ...match (true) {
+                    BmffHashCheck::labelOf($binding) !== null => $this->bmffHash->check($binding, $stream),
+                    $format === 'jpeg' && BoxHashCheck::labelOf($binding) !== null => $this->boxHash->check($binding, $stream, $store),
+                    default => $this->dataHash->check($binding, $stream, $store, $manifest->isUpdateManifest, self::exclusionAllowance($format)),
+                }];
             }
             // SPEC-027 amendment 1: `checks_performed` says which hard binding ran, so
             // that a caller reading it cannot mistake a BMFF file for one whose data hash
             // was verified. Naming both `dataHash` would be shorter and untrue. With no
             // binding manifest at all, nothing ran and the name stays the older one.
-            $checks[] = $binding !== null && BmffHashCheck::labelOf($binding) !== null
-                ? 'bmffHash'
-                : 'dataHash';
+            $checks[] = match (true) {
+                $binding !== null && BmffHashCheck::labelOf($binding) !== null => 'bmffHash',
+                $binding !== null && $format === 'jpeg' && BoxHashCheck::labelOf($binding) !== null => 'boxHash',
+                default => 'dataHash',
+            };
         }
 
         // the graph's statuses last: they are scoped to their ingredient assertions and render

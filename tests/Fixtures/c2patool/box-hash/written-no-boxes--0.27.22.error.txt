@@ -1,0 +1,4 @@
+Error: could not decode assertion c2pa.hash.boxes (version (no version), content type application/cbor): missing field `boxes`
+
+Caused by:
+    missing field `boxes`

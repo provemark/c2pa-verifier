@@ -265,7 +265,7 @@ These five chapters are mostly about how a claim generator writes things: labels
 |---|---|---|---|---|
 | 5.1 | Claim generator rules: do not write deprecated constructs; declare `specVersion` in `claim_generator_info`; add `specVersion` to the validation results when validating ingredients. | — | n/a (generator) | read |
 | 5.1 | A validator should still read a deprecated construct. | Read: claim v1 (`Manifest::read()`), `c2pa.actions` v1 (`ActionsCheck`), ingredient v1 and v2 (`IngredientAssertion`). Data boxes are read where an icon names one (SPEC-067). Not read: time-stamp manifests (`c2tm`), refused rather than skipped | **partial**; by design for `c2tm`: `docs/comparison.md` ("Time-stamp manifests (`c2tm`)…" row) | measured: `ManifestStoreTest` "AC5: the Adobe store gives a v1 claim without claim_generator_info"; `JumbfParserTest` AC13 |
-| 5.1 | A validator is compatible with at least one version, and then supports every non-deprecated construct of that version. | The verifier targets 2.4. Non-deprecated constructs it does not support: compressed manifests (`brob`/`c2cm`), `c2pa.hash.boxes`, `c2pa.hash.collection.data`, and the formats outside its list. Each is refused by name (`JumbfParser`, `DataHashCheck::check()` → `general.error`), never skipped | **partial**; by design: `docs/comparison.md` (compressed manifests: Brotli is not in PHP; box hashes deferred to SPEC-042), `docs/conformance.md` `PRED-CONT-006` | measured: `JumbfParserTest` "AC13: compressed manifests and compressed boxes are errors, not skips…"; box hash read |
+| 5.1 | A validator is compatible with at least one version, and then supports every non-deprecated construct of that version. | The verifier targets 2.4. Non-deprecated constructs it does not support: compressed manifests (`brob`/`c2cm`), `c2pa.hash.boxes` outside JPEG (SPEC-090), `c2pa.hash.collection.data`, and the formats outside its list. Each is refused by name (`JumbfParser`, `DataHashCheck::check()` → `general.error`), never skipped | **partial**; by design: `docs/comparison.md` (compressed manifests: Brotli is not in PHP; box hashes in other containers wait for a writer), `docs/conformance.md` `PRED-CONT-006` | measured: `JumbfParserTest` "AC13: compressed manifests and compressed boxes are errors, not skips…"; box hash read |
 | 5.1 | A validator may ignore an unsupported or unknown construct and process the rest of the manifest. | An unknown assertion is hash-checked through the claim and otherwise ignored. An unknown claim version (`c2pa.claim.v3`) and an unknown box in the assertion store are refused. `c2pa-rs` also refuses a newer claim version (`Store::check_label_version`, `ClaimVersionTooNew`) | by design: fail closed (README, "Fail closed") | measured: `ManifestStoreTest` "AC8: a claim label that is neither v1 nor v2 is an error"; `HashedUriCheckTest` "AC6: an unknown box in the store is undeclared too" |
 | 5.2 | Implementations should tolerate unknown data, keep the manifest intact, and report partial interpretation instead of rejecting the manifest. | as above: what affects the verdict and is not understood makes the file `Invalid` with a status code | by design: fail closed (README, "Fail closed") | read |
 | 6.2 | Namespace and label syntax, the `c2pa` prefix, entity namespaces. | rules for whoever defines a label. The parser only refuses control characters, `/`, `;`, `?`, `#` in a box label (`JumbfParser::LABEL_FORBIDDEN`) | n/a (generator) | read |
@@ -295,7 +295,7 @@ These five chapters are mostly about how a claim generator writes things: labels
 | 8.4.2.3 | The hash of a hashed URI covers the superbox's description box and content boxes, not the superbox header. | `Superbox::payload()` | covered | measured: `JumbfParserTest` "AC5: payload() is exactly what the claim hashes"; `HashedUriCheckTest` AC1 |
 | 8.4.2.3 | The salt is a private `c2sh` box of 16 or 32 random bytes. | `JumbfParser::description()` refuses another private box type and any other salt length. `c2pa-rs` refuses another type but reads a salt of any length | covered (stricter than `c2pa-rs`; SPEC-005, not in `docs/comparison.md`) → P01-2 | measured: `JumbfParserTest` "AC3: a 32-byte salt parses"; AC12 (`salt-20`, `private-not-c2sh`) |
 | 9.1 | A manifest has at most one hard binding. | `DataHashCheck::check()` and `Verifier` (via `HardBindings::in()`): two boxes, also `c2pa.hash.data` beside `c2pa.hash.data__1`, → `assertion.multipleHardBindings` | covered | measured: `DataHashCheckTest` "AC8: exactly one hard binding", "AC11: c2pa.hash.data beside c2pa.hash.data__1 is two hard bindings…" |
-| 9.2.1, 9.2.2 | Prefer a general box hash where the format supports one; byte ranges otherwise. | generator's choice. A `c2pa.hash.boxes` binding is refused by name (`DataHashCheck::check()` → `general.error`) | by design: `docs/conformance.md` `PRED-CONT-006`; `docs/comparison.md` (box hashes are SPEC-042's first step) | read |
+| 9.2.1, 9.2.2 | Prefer a general box hash where the format supports one; byte ranges otherwise. | generator's choice. A `c2pa.hash.boxes` binding is verified in a JPEG (`BoxHashCheck`, SPEC-090) and refused by name elsewhere (`DataHashCheck::check()` → `general.error`) | **partial**; `docs/conformance.md` `PRED-CONT-006`; `docs/comparison.md` | measured: `BoxHashCheckTest` |
 | 9.2.3 | A monolithic BMFF asset is bound with a box-exclusion hash. | `BmffHashCheck` (SPEC-027, SPEC-029) | covered | measured: `BmffHashCheckTest` AC1–AC3 |
 | 9.2.3 | A fragmented MP4 combines the assertion with per-fragment hashing information. | `FragmentedVerifier` (SPEC-028) | covered | measured: `FragmentedVerifierTest` AC1–AC5 |
 | 9.2.3 | Live video segments. | not supported | n/a | read |
@@ -496,7 +496,7 @@ construct.
 | 17 | Threat modelling and harms assessment. | the C2PA's own process; no rule for a validator | n/a | — |
 | C.1 | A deprecated construct: generators shall not write it, validators are encouraged to accept it. | accepted: `sigTst`, claim v1, `c2pa.actions`, `c2pa.ingredient` v1/v2, `c2pa.hash.bmff.v2` (`BmffHashCheck::LABELS`). a data box as an icon, with its hash checked (SPEC-067). Refused: `c2pa.hash.bmff` without a version (`general.error`) | **partial** | read → P03-4 |
 | C.1 | A construct not defined in a version is ignored by validators. | read row by row in step 330: deprecated constructs accepted; undefined ones ignored or refused with the same verdict; the `urn:uuid` label accepted again (SPEC-007 amendment 8); undefined-for-version-1 constructs read, as in `c2pa-rs` | covered (the version 1 case by design) | read → P03-4 |
-| C.1 | A fully supported construct shall be accepted. | `c2pa.hash.boxes`, `c2pa.hash.collection.data` and `c2pa.hash.multi-asset` are refused (`general.error`): those formats are not supported (`docs/comparison.md`, `PRED-CONT-006`) | by design (formats not yet supported; fail closed) | read |
+| C.1 | A fully supported construct shall be accepted. | `c2pa.hash.boxes` outside JPEG, `c2pa.hash.collection.data` and `c2pa.hash.multi-asset` are refused (`general.error`): those formats are not supported (`docs/comparison.md`, `PRED-CONT-006`) | by design (formats not yet supported; fail closed) | read |
 
 ### Candidates
 
@@ -718,19 +718,23 @@ Link header) get one row each. `c2pa-rs` means 0.91.1, read in its source.
 | 15.6.2 | A `claim_generator_info` without `name` is `claim.malformed`. | `Claim::generatorInfo()` refuses a map without `name`. A version 2 claim whose `claim_generator_info` is an empty map is `claim.malformed` too (SPEC-007 amendment 7, step 318); only a version 1 claim may carry an empty list (amendment 4) | covered (SPEC-007 amendment 7) | measured: `ManifestStoreTest` AC14; `ManifestProbesTest` "AC19: a version 2 claim whose claim_generator_info is an empty map is claim.malformed…" |
 | 15.6.2 | An `icon` in the generator info is validated as §15.10.3.3 says. | `IconReferenceCheck` (SPEC-034) | covered | measured: `IconReferenceTest` AC2, AC3 |
 
-**The 45 codes of the §15.2.2 table that `StatusCode` does not hold**, by reason
+**The 39 codes of the §15.2.2 table that `StatusCode` does not hold**, by reason
 (measured again on 2026-10-25, step 425: the table's 115 codes extracted
 from the HTML and compared with the enum's 69 with `comm`; nine codes joined
 the enum since 2026-10-09, by SPEC-060 amendment 3, SPEC-063, SPEC-064 and
 SPEC-065; two more since, `signingCredential.ocsp.inaccessible` by SPEC-086
-and `assertion.cbor.invalid` by SPEC-088, so the enum holds 71):
+and `assertion.cbor.invalid` by SPEC-088, so the enum holds 71; since then
+`hashedURI.missing` by SPEC-034 amendment 3 and the five
+`assertion.boxesHash.*` codes by SPEC-090, so it holds 77 and the table's
+uncovered codes fall from 45 to 39 — measured on 2026-11-13, step 533,
+against the 113 codes of the 2.4 CDDL `$status-code` list with `comm`):
 
 - *No network* (3): `assertion.accessible`, `assertion.inaccessible`,
   `manifest.inaccessible`.
-- *Hard bindings refused by name* (`general.error`) (10):
-  `assertion.boxesHash.{match, mismatch, malformed, unknownBox,
-  additionalExclusionsPresent}`, `assertion.collectionHash.{match, mismatch,
-  malformed, incorrectFileCount, invalidURI}`.
+- *Hard bindings refused by name* (`general.error`) (5):
+  `assertion.collectionHash.{match, mismatch, malformed,
+  incorrectFileCount, invalidURI}`. (The five `assertion.boxesHash.*`
+  codes left this list with SPEC-090, step 533.)
 - *Features not read or refused* (21): `assertion.multiAssetHash.*` (4),
   `assertion.cloud-data.labelMismatch` (nothing is fetched),
   `assertion.external-reference.{created, hashMismatch, labelMismatch}` (3;
@@ -739,11 +743,9 @@ and `assertion.cbor.invalid` by SPEC-088, so the enum holds 71):
   `manifest.structuredText.*` (5), `manifest.compressed.invalid`.
 - *Time-stamp manifests* (2): `manifest.timestamp.{invalid, wrongParents}`
   (`c2tm` is refused).
-- *Reported under another code* (4): `claimSignature.outsideValidity`
+- *Reported under another code* (3): `claimSignature.outsideValidity`
   (`signingCredential.expired`, as `c2pa-rs`; a code of the C2PA 1.0–2.1
-  tables, gone from 2.2 on), `hashedURI.missing`
-  (`assertion.missing` for an unresolvable icon; held since step 522 for an
-  icon that is not a hashed URI), `hashedURI.mismatch` (`assertion.hashedURI.mismatch`
+  tables, gone from 2.2 on), `hashedURI.mismatch` (`assertion.hashedURI.mismatch`
   for icons, SPEC-034), all in `docs/conformance.md` §3 or SPEC-039; and
   `assertion.alternativeContentRepresentation.missing`, an embedded reference
   that does not resolve, which `AlternativeContentCheck` reports as
@@ -1119,7 +1121,7 @@ decision*, which follows `c2pa-rs` without `verify.strict_v1_validation`.
 | 15.12.2.1 | Non-fragmented Merkle tree: leaves from `mdat` by fixed or variable block sizes; both present, or wrong sums: malformed. | `checkMdatMerkle()` (SPEC-080): `fixedBlockSize` splits the one `mdat` from offset 16 into leaves; both fields, neither, or `variableBlockSizes` alone are refused by name. Both present is `assertion.bmffHash.mismatch` where the letter says malformed, as `c2patool` 0.28.3 says (`fixed-and-variable`); a block size that is not an integer is malformed | covered for `fixedBlockSize`; `variableBlockSizes` by design (SPEC-080 AC8: `c2pa-rs` writes none by a setting) | measured: `MdatMerkleTest` AC1, AC6, AC8 (step 448) |
 | 15.12.2.1 | `count` against `hashes` and auxiliary boxes; fewer than the leaves: malformed; a leaf that differs: mismatch. | Fragmented: `checkMerkle()` needs an integer `count` of at least 1 (SPEC-028 amendment 2, step 317), complete over the fragments, each `location` inside it (amendment 1). Non-fragmented: `checkMdatMerkle()` needs `count` equal to the blocks of the `mdat`, `hashes` a row of the tree (the root or the leaves; a middle row refused, as `c2patool` refuses it), one proof box per block when the row is not the leaves, each `location` inside the count and none twice; a block that differs is a mismatch naming it. A wrong count is mismatch where the letter says malformed, as `c2patool` says (`count-five`) | covered | measured: `BmffProbesTest` AC9; `MdatMerkleTest` AC3, AC4, AC6 (step 448) |
 | 15.12.2.2 | Fragmented: no auxiliary box: malformed; a leaf that differs: mismatch. | `FragmentedVerifier`, `checkFragment()`: both are `mismatch` | covered (code differs) | measured: `FragmentedVerifierTest` "AC1"–"AC5"; no merkle box: "AC3: a fragment with no merkle box…" (`broken/seg_3-no-merkle.m4s`, step 432; `c2patool` 0.28.1 and 0.28.3 the same code) |
-| 15.12.3, 15.12.3.1 | General box hash, JPEG APP11 handling. | `c2pa.hash.boxes` is refused by name, `general.error` (`DataHashCheck::check()`, SPEC-012 AC8) | by design: closed, stricter than `c2patool` (`PRED-CONT-006`) | read |
+| 15.12.3, 15.12.3.1 | General box hash, JPEG APP11 handling. | for JPEG, `BoxHashCheck` with `JpegBoxMap` (SPEC-090): `boxes`/`names`/`exclusions`/`boxIndex` structure → `malformed`; the `alg` chain → `algorithm.unsupported`; a box the list does not name, an unlisted APP11 and data after EOI → `unknownBox`; out of order, a differing hash, an exclusion past its box or outside an allowed payload → `mismatch`; `additionalExclusionsPresent` informational; other containers refused by name | covered for JPEG; the out-of-order code and a listed `c2pa.after` differ from `c2pa-rs` by design (`docs/comparison.md`) | measured: `BoxHashCheckTest` AC1–AC12 |
 | 15.12.3.2 | JPEG-XL box hash. | JPEG-XL is not read | n/a | read |
 | 15.12.3.3 | Font box hash. | fonts are not read | n/a | read |
 | 15.12.4 | Multi-asset hash: parts, locators, coverage, part hashes. | not implemented; a failed binding stays failed | by design: closed (`docs/conformance.md` §3) | read |
@@ -1254,7 +1256,8 @@ decision*, which follows `c2pa-rs` without `verify.strict_v1_validation`.
 little from them beyond the encoding rules. §18.5 (`c2pa.hash.data`) and
 §18.6 (`c2pa.hash.bmff.v2`/`.v3`) hold the rules this verifier enforces
 most closely (SPEC-012, SPEC-027, SPEC-028, SPEC-029, SPEC-038, SPEC-051,
-SPEC-053). §18.7 (box hash) and §18.8 (collection hash) are hard bindings
+SPEC-053). §18.7 (box hash) is verified for JPEG (SPEC-090) and refused by
+name in every other container; §18.8 (collection hash) is a hard binding
 this verifier refuses by name. §18.9 (multi-asset hash) is not a hard
 binding and is not read. `c2pa-rs` 0.91.1 was read beside it
 (`assertions/data_hash.rs`, `assertions/bmff_hash.rs`, `assertions/labels.rs`,
@@ -1310,7 +1313,7 @@ binding and is not read. `c2pa-rs` 0.91.1 was read beside it
 | 18.6.6 | `uniqueId` and `localId` select the merkle map. | more than one map is refused by name | by design: SPEC-028 *Out of scope* (what the ids select is unmeasured) | measured: `FragmentedVerifierTest` AC6 |
 | 18.6.3 | `fixedBlockSize` and `variableBlockSizes` split one `mdat` into leaves. | `fixedBlockSize` read over exactly one `mdat` (`checkMdatMerkle()`, SPEC-080); a size below 2 is a mismatch, and below 1,024 is refused by name before any block is read (SPEC-080 amendment 4: each block is a read and a hash, and 2-byte blocks over 4 MB took 4.6 s); `variableBlockSizes` and several `mdat` boxes refused by name | covered for `fixedBlockSize`; the rest by design (SPEC-080 AC8) | measured: `MdatMerkleTest` AC1, AC6, AC8 (step 448) |
 | 18.6.4 | The basic exclusion profile. | — | n/a (writer guidance) | — |
-| 18.7 | General box hash (`c2pa.hash.boxes`): order of boxes, `excluded`, `exclusions`, `alg` chain, the `C2PA` box, `c2pa.after`, and the JPEG, PNG, GIF, RIFF, font and Ogg rules. | not verified: `DataHashCheck::check()` refuses it by name (`general.error`, `Invalid`) | n/a (refused by name; SPEC-012 *Out of scope*, `docs/comparison.md` names the Bing files it costs) | read |
+| 18.7 | General box hash (`c2pa.hash.boxes`): order of boxes, `excluded`, `exclusions`, `alg` chain, the `C2PA` box, `c2pa.after`, and the JPEG, PNG, GIF, RIFF, font and Ogg rules. | JPEG: `BoxHashCheck` (SPEC-090) — the order, `excluded`, `exclusions` with `boxIndex`, the `alg` chain, the `C2PA` box never hashed, `pad`/`pad2` ignored, `c2pa.after` refused. Other containers: refused by name (`general.error`, `Invalid`) | **partial**: JPEG only; the PNG, GIF, RIFF, font and Ogg rules wait for a writer | measured: `BoxHashCheckTest` |
 | 18.8 | Collection data hash (`c2pa.hash.collection.data`): relative URIs without `.` or `..`, each member hashed whole. | refused by name the same way | n/a (refused by name) | read |
 | 18.9 | Multi-asset hash (`c2pa.hash.multi-asset`): not a hard binding; parts in file order, contiguous, covering every byte; part hashes labelled `.part`. | not read, not counted as a hard binding; `c2pa.hash.data.part` is not counted either, so the file's own data hash is verified. `c2patool` does the same | n/a | measured: `php bin/c2pa-verify` on `tests/Fixtures/writers/google-20250919-pixel10-npld-picnic-table.jpg` (`dataHash` performed; the only failures are `signingCredential.expired` and `.untrusted`, as in its `c2patool` report); `.part` of other bindings → P07-7 |
 

@@ -12521,3 +12521,19 @@ README are where the disclosure lives.
 - Measured: both `c2patool` versions (0.28.6, 0.27.22) on the four variants; the SPEC-042 tests red before `src/` changed (6 red, the AC7 guard green), then green; four mutations, each red; the corpus before (`ba95785`, copied `vendor/`) and after: 6,468 runs a side at 2026-11-13T00:00:00Z, 30 differ in five files, only `slashless/all-slashless.png` changes verdict (`Invalid` → `Valid`, as its control); `pest --parallel` 1,726 passed, 1 skipped; phpstan, pint, spec-check, api-check, deptrac clean.
 - Reasoned: OpenSSL 4.0.3 no longer adds key identifiers to a leaf, which `c2pa-rs` refuses ("certificate params incorrect"); the other variant scripts would meet it when rerun. URI sites outside SPEC-042's three are unchanged (step note).
 - Decided by Maurice: SPEC-041 amendment 4; SPEC-007 amendment 12; implement SPEC-042.
+
+## 2026-11-13 — Step 532: SPEC-090 drafted and approved
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "schrijf een draft spec voor de box hash"; "ga verder met de box-hash-spec"; "ga verder met de code".
+- Produced: `specs/SPEC-090-jpeg-box-hash.md` (approved, five open questions marked decided); `notes/step-532-spec-090-box-hash.md`, `NOTES.md`.
+- Measured: the Bing file's `c2pa.hash.boxes` (twelve one-name maps, sha256, no exclusions) and its JPEG segments; all eleven hashed boxes recomputed from a scratch script and matching; `bin/spec-check.php` exit 0.
+- Reasoned: from C2PA 2.4 and 2.5 text, `c2pa-rs` `box_hash.rs`, `jpeg_io.rs`, `store.rs`, `labels.rs` at `58b9a092`, and upstream #2949's description (its code not read).
+- Decided by Maurice: SPEC-090 approved with every proposal.
+
+## 2026-11-13 — Step 533: SPEC-090 built
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ga verder met de code"; SPEC-090 amendment 1, SPEC-041 amendment 5 and SPEC-042 amendment 1 agreed when the conflicts came up.
+- Produced: `src/Hash/JpegBoxMap.php`, `src/Hash/AssetBox.php`, `src/Hash/BoxHashCheck.php`; `src/Report/StatusCode.php` (five cases), `src/Verifier/Verifier.php` (routing, `boxHash`), `src/Hash/DataHashCheck.php` (refusal text); `bin/make-spec090-variants.php`; `tests/Fixtures/box-hash/`, `tests/Fixtures/c2patool/box-hash/`; `tests/Unit/Hash/BoxHashCheckTest.php`; drift alarms in `ApiSurfaceTest`, `CertificateProfileCheckTest`, `DataHashCheckTest`, `HashedUriCheckTest`; `FirstPieceSequenceTest`, `SlashlessUriTest`; `tests/Fixtures/api/public-surface.txt`; specs SPEC-090 (implemented, amendment 1, Traceability), SPEC-041, SPEC-042; `docs/conformance.md`, `docs/comparison.md`, `docs/reading-c2pa-2.4.md`, ADR-0005; `notes/step-533-spec-090-built.md`, `NOTES.md`.
+- Measured: both `c2patool` versions on 19 variants; the SPEC-090 tests red before `src/` changed (18 red, two guards green), then 20/20; ten mutations, each red; the corpus before (`e4c2f3f`, copied `vendor/`) and after: 6,582 runs a side at 2026-11-14T00:00:00Z, 126 differ in 21 files, four own variants `Invalid` → `Valid`; the 2.4 CDDL status codes against the enum (39 not held); `composer check` exit 0; `pest --parallel` 1,746 passed, 1 skipped.
+- Reasoned: restart markers as boxes of their own follows §18.7.3.1's example, not `c2pa-rs`'s `in_entropy`; not measured, no file carries one.
+- Decided by Maurice: SPEC-090 amendment 1 (a non-`JP` APP11 for AC12; the extractor stays strict); SPEC-041 amendment 5; SPEC-042 amendment 1.

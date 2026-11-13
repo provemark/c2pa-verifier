@@ -74,6 +74,8 @@ verdict depends on goes unchecked.
   URI reading, is the first step if box hashes are ever built.
   *Done 2026-11-12 (step 531):* SPEC-042 reads the form as `c2pa-rs`
   does; the Bing file now stops at its box hash, the next step.
+  *Done 2026-11-13 (step 533):* SPEC-090 verifies the box hash for JPEG;
+  the Bing file's matches, as in `c2patool` 0.27.22.
 - SPEC-041 (a first APP11 piece with Z = 0) was already a case of
   following `c2pa-rs` where the norm is probably stricter. It passes this
   ADR as written.

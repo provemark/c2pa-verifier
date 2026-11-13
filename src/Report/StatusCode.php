@@ -105,11 +105,17 @@ enum StatusCode: string
     case AssertionBmffHashMalformed = 'assertion.bmffHash.malformed';
     // SPEC-038: informational — exclusions beyond the C2PA box, ftyp and mfra (as c2patool 0.28.0 reports it)
     case AssertionBmffHashAdditionalExclusionsPresent = 'assertion.bmffHash.additionalExclusionsPresent';
+    // SPEC-090: the general box hash, for JPEG (C2PA 2.4 §15.12.3)
+    case AssertionBoxesHashMatch = 'assertion.boxesHash.match';
+    case AssertionBoxesHashMismatch = 'assertion.boxesHash.mismatch';
+    case AssertionBoxesHashMalformed = 'assertion.boxesHash.malformed';
+    case AssertionBoxesHashUnknownBox = 'assertion.boxesHash.unknownBox';
+    case AssertionBoxesHashAdditionalExclusionsPresent = 'assertion.boxesHash.additionalExclusionsPresent';
     case GeneralError = 'general.error';
 
     public function isSuccess(): bool
     {
-        return $this === self::ClaimSignatureValidated || $this === self::ClaimSignatureInsideValidity || $this === self::AssertionHashedUriMatch || $this === self::AssertionDataHashMatch || $this === self::AssertionBmffHashMatch || $this === self::SigningCredentialTrusted
+        return $this === self::ClaimSignatureValidated || $this === self::ClaimSignatureInsideValidity || $this === self::AssertionHashedUriMatch || $this === self::AssertionDataHashMatch || $this === self::AssertionBmffHashMatch || $this === self::AssertionBoxesHashMatch || $this === self::SigningCredentialTrusted
             || $this === self::TimeStampValidated || $this === self::TimeStampTrusted
             || $this === self::IngredientManifestValidated   // SPEC-021: the ingredient's manifest box hashed as recorded
             || $this === self::AssertionAlternativeContentRepresentationMatch   // SPEC-065
@@ -123,6 +129,7 @@ enum StatusCode: string
             || $this === self::IngredientUnknownProvenance                 // SPEC-020: an ingredient without a manifest (§15.11.3.3)
             || $this === self::IngredientClaimSignatureValidated           // SPEC-035: as c2patool 0.28.0 records it
             || $this === self::AssertionBmffHashAdditionalExclusionsPresent   // SPEC-038, as its data-hash twin
+            || $this === self::AssertionBoxesHashAdditionalExclusionsPresent   // SPEC-090, as its twins
             || $this === self::TimeStampMalformed || $this === self::TimeStampMismatch || $this === self::TimeStampOutsideValidity || $this === self::TimeStampUntrusted
             // SPEC-030: a response this verifier could not use costs nothing. The header is
             // unsigned, so failing a file over one would let an attacker deny any valid asset

@@ -270,8 +270,8 @@ it('AC4: additional exclusions are honoured and reported where the format allows
         ->and($statuses[1]->url)->toBe(SPEC012_PNG.'/c2pa.assertions/c2pa.hash.data')
         ->and($statuses[1]->explanation)->toContain('46500');
     foreach (StatusCode::cases() as $code) {
-        if (str_starts_with($code->value, 'timeStamp.') || $code === StatusCode::IngredientUnknownProvenance || str_starts_with($code->value, 'signingCredential.ocsp.') || $code === StatusCode::IngredientClaimSignatureValidated || $code === StatusCode::AssertionBmffHashAdditionalExclusionsPresent) {
-            continue;   // SPEC-017's four informational of its own, SPEC-020's one, SPEC-030's two, SPEC-035's one and SPEC-038's one
+        if (str_starts_with($code->value, 'timeStamp.') || $code === StatusCode::IngredientUnknownProvenance || str_starts_with($code->value, 'signingCredential.ocsp.') || $code === StatusCode::IngredientClaimSignatureValidated || $code === StatusCode::AssertionBmffHashAdditionalExclusionsPresent || $code === StatusCode::AssertionBoxesHashAdditionalExclusionsPresent) {
+            continue;   // SPEC-017's four informational of its own, SPEC-020's one, SPEC-030's two, SPEC-035's one, SPEC-038's one and SPEC-090's one
         }
         expect($code->isInformational())->toBe($code === StatusCode::AssertionDataHashAdditionalExclusionsPresent, $code->value);
     }
@@ -452,15 +452,15 @@ it('AC10: the codes are verbatim, and informational is a third kind', function (
     ] as $value) {
         expect($values)->toContain($value);
     }
-    $successes = [StatusCode::ClaimSignatureValidated, StatusCode::AssertionHashedUriMatch, StatusCode::AssertionDataHashMatch, StatusCode::AssertionBmffHashMatch, StatusCode::ClaimSignatureInsideValidity, StatusCode::AssertionAlternativeContentRepresentationMatch];   // SPEC-065 added the last; the fourth added by SPEC-027, the fifth by SPEC-039
+    $successes = [StatusCode::ClaimSignatureValidated, StatusCode::AssertionHashedUriMatch, StatusCode::AssertionDataHashMatch, StatusCode::AssertionBmffHashMatch, StatusCode::ClaimSignatureInsideValidity, StatusCode::AssertionAlternativeContentRepresentationMatch, StatusCode::AssertionBoxesHashMatch];   // SPEC-065 added the sixth, SPEC-090 the last; the fourth added by SPEC-027, the fifth by SPEC-039
     foreach (StatusCode::cases() as $code) {
         if (in_array($code, [StatusCode::SigningCredentialTrusted, StatusCode::SigningCredentialUntrusted], true)
             || str_starts_with($code->value, 'timeStamp.') || str_starts_with($code->value, 'ingredient.')
             || str_starts_with($code->value, 'signingCredential.ocsp.')) {
             continue;   // SPEC-014's, SPEC-017's, SPEC-020's and SPEC-030's
         }
-        // SPEC-038 added the BMFF twin of this spec's informational code
-        $informational = in_array($code, [StatusCode::AssertionDataHashAdditionalExclusionsPresent, StatusCode::AssertionBmffHashAdditionalExclusionsPresent], true);
+        // SPEC-038 added the BMFF twin of this spec's informational code, SPEC-090 the box-hash one
+        $informational = in_array($code, [StatusCode::AssertionDataHashAdditionalExclusionsPresent, StatusCode::AssertionBmffHashAdditionalExclusionsPresent, StatusCode::AssertionBoxesHashAdditionalExclusionsPresent], true);
         expect($code->isInformational())->toBe($informational, $code->value)
             ->and($code->isSuccess())->toBe(in_array($code, $successes, true), $code->value)
             ->and($code->isFailure())->toBe(! $informational && ! in_array($code, $successes, true), $code->value);

@@ -45,11 +45,11 @@ it('AC1: a single piece with Z = 0 is read', function (): void {
 
     // The piece's data after CI, En and Z: LBox 0x3319 = 13 081, then TBox "jumb". Amendments 1 to 3:
     // the file's signature URI is not this spec's concern; SPEC-042 reads it. Amendment 4: since SPEC-042
-    // the file reaches its box hash, refused by name; no general.error comes from the container.
+    // the file reaches its box hash. Amendment 5: since SPEC-090 that is verified, so no general.error at all.
     expect(strlen($bytes))->toBe(13081)
         ->and(bin2hex(substr($bytes, 0, 8)))->toBe('000033196a756d62')
         ->and(hash('sha256', $bytes))->toBe('66109c664aafa35562da2669e60d49eaa9eee8b132f03bcfeef1f0758222d901')
-        ->and($errors)->toBe(['general.error self#jumbf=/c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.assertions/c2pa.hash.boxes']);
+        ->and($errors)->toBe([]);
 })->group('SPEC-041');
 
 it('AC2: two pieces numbered 0, 2 are read', function (): void {

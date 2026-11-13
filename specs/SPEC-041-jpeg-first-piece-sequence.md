@@ -70,7 +70,8 @@ reader accepts.
     after CI, En and Z. When the file is verified, the report carries no
     `general.error` *(amendment 1: `claimSignature.validated` left this
     spec; amendment 3: SPEC-042 takes it up, deferred; amendment 4: none
-    from the container, the box-hash refusal aside)*.
+    from the container, the box-hash refusal aside; amendment 5: none at all,
+    SPEC-090 verifies the box hash)*.
 
 - **AC2 — two pieces numbered 0, 2 are read**
   - Given `fixture-signed.jpg` with its first piece's Z rewritten from 1
@@ -241,6 +242,17 @@ questions 2 and 3 as proposed.
    this spec changed.
 
    Confirmed by Maurice van Loon, 2026-11-12 (step 531).
+
+5. **2026-11-13, step 533, measured.** SPEC-090 verifies the general box
+   hash for JPEG, so the Bing file's `c2pa.hash.boxes` is no longer
+   refused by name: it reports `assertion.boxesHash.match`. Amendment 4's
+   exception has nothing left to name. AC1 reads again: *the report
+   carries no `general.error`.*
+
+   Weight C: a criterion follows another spec, no behaviour of this spec
+   changed.
+
+   Confirmed by Maurice van Loon, 2026-11-13 (step 533).
 
 ## Traceability
 

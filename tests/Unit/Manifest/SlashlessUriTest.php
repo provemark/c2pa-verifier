@@ -88,9 +88,10 @@ it('AC1: Bing\'s signature is found', function (): void {
         ->and($statuses)->toContain("assertion.hashedURI.match {$manifest}/c2pa.assertions/c2pa.hash.boxes")
         ->and($statuses)->toContain("assertion.hashedURI.match {$manifest}/c2pa.assertions/c2pa.actions")
         ->and(array_filter($statuses, static fn (string $s): bool => str_starts_with($s, 'claimSignature.missing')))->toBe([])
-        // still Invalid, now for the binding: the box hash is refused by name (PRED-CONT-006)
-        ->and($statuses)->toContain("general.error {$manifest}/c2pa.assertions/c2pa.hash.boxes")
-        ->and($report->result->state->value)->toBe('Invalid');
+        // amendment 1: since SPEC-090 the box hash is verified, and matches
+        ->and($statuses)->toContain("assertion.boxesHash.match {$manifest}/c2pa.assertions/c2pa.hash.boxes")
+        ->and($statuses)->not->toContain("general.error {$manifest}/c2pa.assertions/c2pa.hash.boxes")
+        ->and($report->result->state->value)->toBe('Valid');
 })->group('SPEC-042');
 
 it('AC2: a slash-less file with a data hash is judged like its slashed original', function (): void {
@@ -174,7 +175,13 @@ it('AC7: nothing else in the corpus moves', function (): void {
     }
     sort($found);
 
+    // amendment 1: SPEC-090's Bing variants carry the Bing store unchanged
     expect($found)->toBe([
+        'box-hash/bing-after-eoi.jpg',
+        'box-hash/bing-foreign-app11.jpg',
+        'box-hash/bing-out-of-order.jpg',
+        'box-hash/bing-pixel-changed.jpg',
+        'box-hash/bing-unlisted-com.jpg',
         'c2pa-rs/prerelease.jpg',
         'slashless/all-slashless.png',
         'slashless/outside-manifest.png',

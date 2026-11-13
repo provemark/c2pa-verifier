@@ -14,6 +14,11 @@ Report\StatusCode :: const AssertionBmffHashAdditionalExclusionsPresent
 Report\StatusCode :: const AssertionBmffHashMalformed
 Report\StatusCode :: const AssertionBmffHashMatch
 Report\StatusCode :: const AssertionBmffHashMismatch
+Report\StatusCode :: const AssertionBoxesHashAdditionalExclusionsPresent
+Report\StatusCode :: const AssertionBoxesHashMalformed
+Report\StatusCode :: const AssertionBoxesHashMatch
+Report\StatusCode :: const AssertionBoxesHashMismatch
+Report\StatusCode :: const AssertionBoxesHashUnknownBox
 Report\StatusCode :: const AssertionCborInvalid
 Report\StatusCode :: const AssertionCloudDataActions
 Report\StatusCode :: const AssertionCloudDataHardBinding

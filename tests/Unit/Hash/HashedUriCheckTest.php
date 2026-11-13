@@ -294,10 +294,10 @@ it('AC9: the codes are verbatim, and success is told apart', function (): void {
     ] as $value) {
         expect($values)->toContain($value);
     }
-    $successes = [StatusCode::ClaimSignatureValidated, StatusCode::AssertionHashedUriMatch, StatusCode::AssertionBmffHashMatch, StatusCode::ClaimSignatureInsideValidity, StatusCode::AssertionAlternativeContentRepresentationMatch];   // the third added by SPEC-027, the fourth by SPEC-039, the last by SPEC-065
+    $successes = [StatusCode::ClaimSignatureValidated, StatusCode::AssertionHashedUriMatch, StatusCode::AssertionBmffHashMatch, StatusCode::ClaimSignatureInsideValidity, StatusCode::AssertionAlternativeContentRepresentationMatch, StatusCode::AssertionBoxesHashMatch];   // the third added by SPEC-027, the fourth by SPEC-039, the fifth by SPEC-065, the last by SPEC-090
     foreach (StatusCode::cases() as $code) {
-        if (str_starts_with($code->value, 'assertion.dataHash') || str_contains($code->value, 'HardBindings') || in_array($code->value, ['signingCredential.trusted', 'signingCredential.untrusted'], true) || str_starts_with($code->value, 'timeStamp.') || str_starts_with($code->value, 'ingredient.') || str_starts_with($code->value, 'signingCredential.ocsp.') || $code === StatusCode::AssertionBmffHashAdditionalExclusionsPresent) {
-            continue;   // SPEC-012's, SPEC-014's, SPEC-017's, SPEC-020's, SPEC-030's and SPEC-038's informational
+        if (str_starts_with($code->value, 'assertion.dataHash') || str_contains($code->value, 'HardBindings') || in_array($code->value, ['signingCredential.trusted', 'signingCredential.untrusted'], true) || str_starts_with($code->value, 'timeStamp.') || str_starts_with($code->value, 'ingredient.') || str_starts_with($code->value, 'signingCredential.ocsp.') || $code === StatusCode::AssertionBmffHashAdditionalExclusionsPresent || $code === StatusCode::AssertionBoxesHashAdditionalExclusionsPresent) {
+            continue;   // SPEC-012's, SPEC-014's, SPEC-017's, SPEC-020's, SPEC-030's, SPEC-038's and SPEC-090's informational
         }
         expect($code->isSuccess())->toBe(in_array($code, $successes, true), $code->value)
             ->and($code->isFailure())->toBe(! in_array($code, $successes, true), $code->value);

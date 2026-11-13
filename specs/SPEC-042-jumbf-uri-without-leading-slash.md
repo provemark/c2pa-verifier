@@ -110,7 +110,8 @@ as `docs/comparison.md` and ADR-0005 name it.
 
     It stays `Invalid` with `general.error` on
     `…/c2pa.assertions/c2pa.hash.boxes`, the refusal `PRED-CONT-006` names.
-    (The time is fixed because the leaf expired on 2026-10-01, SPEC-041
+    *(Amendment 1: since SPEC-090, `Valid` with `assertion.boxesHash.match`
+    there instead.)* (The time is fixed because the leaf expired on 2026-10-01, SPEC-041
     open question 3.)
 
 - **AC2 — a slash-less file with a data hash is judged like its slashed original**
@@ -232,7 +233,19 @@ Error messages keep quoting the URI as written.
 
 ## Amendments
 
-None yet.
+1. **2026-11-13, step 533, measured.** SPEC-090 verifies the general box
+   hash for JPEG. AC1's closing sentence, *"It stays `Invalid` with
+   `general.error` on `…/c2pa.assertions/c2pa.hash.boxes`"*, described the
+   refusal this spec left in place; the file is now `Valid` (untrusted)
+   with `assertion.boxesHash.match` on that url. AC7's guard lists the
+   corpus files that write the slash-less form; SPEC-090's five
+   `box-hash/bing-*.jpg` variants carry the Bing store unchanged, so they
+   join the list.
+
+   Weight C: a criterion follows another spec, no behaviour of this spec
+   changed.
+
+   Confirmed by Maurice van Loon, 2026-11-13 (step 533).
 
 ## Traceability
 

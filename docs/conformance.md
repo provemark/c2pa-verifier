@@ -178,7 +178,7 @@ accept; its predicate list does not depend on its cryptography being right.
 | `PRED-CONT-003` | shall | BMFF block fetch and track selection | by design — an obligation on a progressive player |
 | `PRED-CONT-004` | may | Non-standard playback validation limitation signalling | by design — an obligation on a player rendering in a non-standard mode |
 | `PRED-CONT-005` | shall | Pad and pad2 fields ignored in hash computation | **yes** — `pad`/`pad2` are never read in either hash path |
-| `PRED-CONT-006` | shall | Box hash algorithm resolution and support check | closed — `c2pa.hash.boxes` is refused by name as a hard binding this verifier does not implement |
+| `PRED-CONT-006` | shall | Box hash algorithm resolution and support check | yes for JPEG (SPEC-090, step 533: the `alg` of the box-hash-map, then the box-map, then the claim; none or one outside §13.1 is `algorithm.unsupported`); closed elsewhere — in any other container `c2pa.hash.boxes` is refused by name |
 | `PRED-CONT-007` | shall | Hash processing follows specified procedure | **yes** — the standard procedure, measured against c2patool on every fixture |
 
 ## Image data hash (4)
