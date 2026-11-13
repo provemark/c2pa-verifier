@@ -65,5 +65,10 @@ $stream = fopen('asset.jpg', 'rb');
 echo (new Verifier)->verify($stream, $settings, new DateTimeImmutable('2026-10-09T05:31:00Z'))->toCrJson();
 ```
 
+The API refuses a time whose UTC year lies outside 0001–9999 with an
+`\InvalidArgumentException`, as `--at` refuses it: crJSON writes the
+time as RFC 3339, which has four digits for the year (SPEC-073
+amendment 3).
+
 Where this verifier's crJSON differs from `c2pa-rs`'s, and why, is in
 `docs/comparison.md`, "crJSON values", and in SPEC-075 and SPEC-076.

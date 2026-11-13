@@ -121,9 +121,21 @@ final readonly class Verifier
      * @param  resource  $stream  the asset, readable and seekable
      * @param  TrustSettings|null  $settings  with settings the trust check runs (SPEC-014); without, the report says so in checks_performed
      * @param  \DateTimeInterface|null  $validationTime  the time to judge at where no trusted timestamp gives one; null is now (SPEC-073)
+     *
+     * @throws \InvalidArgumentException when the time's UTC year lies outside 0001–9999 (SPEC-073 amendment 3)
      */
     public function verify($stream, ?TrustSettings $settings = null, ?\DateTimeInterface $validationTime = null): VerificationReport
     {
+        // SPEC-073 amendment 3: crJSON writes the time as RFC 3339, which has four digits for the year; refused
+        // before the clock or the stream is touched, as the command line refuses it (amendment 2)
+        if ($validationTime !== null) {
+            $seconds = $validationTime->getTimestamp();
+            $year = (int) gmdate('Y', $seconds);
+            if ($year < 1 || $year > 9999) {
+                throw new \InvalidArgumentException('The validation time '.gmdate('Y-m-d\TH:i:s\Z', $seconds).' cannot be written as RFC 3339: its UTC year must lie within 0001–9999.');
+            }
+        }
+
         // SPEC-075: the report keeps the time it judged at, the given one or the clock; the clock is read
         // once, so that every check and the record agree (SPEC-073 amendment 1)
         $clock = time();

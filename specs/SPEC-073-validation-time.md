@@ -194,8 +194,28 @@ parameters). An optional parameter is an addition: 0.8.0.
 1. **2026-10-23, step 396, found by the review of 2026-10-23 (the low items, "doe 1 nog", Maurice van Loon).** Without a given time, `verify()` recorded `time()` once, and each check read `time()` again for itself (`CertificateProfileCheck`, `ChainCheck`, `OcspCheck`), as the API sketch above did not intend ("computed once"). Over a second boundary the checks could disagree with each other and with the recorded `validationTime`. Now `verify()` reads the clock once and passes it down: `$at = $trusted ?? $now ?? $clock`, for the active manifest and every ingredient manifest. The certificate explanation still says "checked at now" where no time was given: it is named, no longer inferred from a null time.
    - **AC6 — one clock reading**: with `inspect()` given a fixed clock and no validation time, the active signer of `c2pa-rs/ocsp.jpg` (valid 2024-10-15 to 2025-10-15) and the ingredient signer of `c2pa-rs/video1.mp4` (valid 2022-04-04 to 2023-04-04) are not expired at a clock inside their validity and are expired at one after it, "expired at" that clock and "checked at now"; the report's `validationTime` is the reading the checks used.
 
-2. **2026-10-23, step 397, found by the review of 2026-10-23 (the low items, "doe 1 nog", Maurice van Loon).** `--at 9999-12-31T23:59:59-23:59` was accepted and recorded as `10000-01-01T23:58:59Z`, and `--at 0001-01-01T00:00:00+01:00` as `0000-12-31T23:00:00Z`: neither is RFC 3339, so crJSON's `validationTime` broke its schema. A time whose UTC year falls outside 0001–9999 is now refused, as any time that is not RFC 3339 (exit 2). The library's `verify()` takes any `DateTimeInterface`; a caller passing such a time there gets what `gmdate()` writes.
+2. **2026-10-23, step 397, found by the review of 2026-10-23 (the low items, "doe 1 nog", Maurice van Loon).** `--at 9999-12-31T23:59:59-23:59` was accepted and recorded as `10000-01-01T23:58:59Z`, and `--at 0001-01-01T00:00:00+01:00` as `0000-12-31T23:00:00Z`: neither is RFC 3339, so crJSON's `validationTime` broke its schema. A time whose UTC year falls outside 0001–9999 is now refused, as any time that is not RFC 3339 (exit 2). The library's `verify()` takes any `DateTimeInterface`; a caller passing such a time there gets what `gmdate()` writes. *(Superseded by amendment 3: the API refuses it too.)*
    - **AC5 (extended)**: both are refused, and `--at ''` as its own argument too; `0001-01-01T00:00:00Z`, `9999-12-31T23:59:59Z` and `9999-12-31T23:59:59+23:59` are accepted.
+
+3. **2026-11-13, step 542, approved by Maurice van Loon ("goedgekeurd, open vragen zoals voorgesteld")** (asked: "ik zou de verifier dan eerst afmaken", after step 541 named the gap as a candidate).
+   - **The finding** (step 541, measured on 0.11.1). Amendment 2 closed the command line and left the API open: "a caller passing such a time there gets what `gmdate()` writes". With `@253402300800` (the first second of year 10000), `toCrJson()` writes `validationTime: "10000-01-01T00:00:00Z"`. With `@-62135596801` it writes `0000-12-31T23:59:59Z`. Neither is RFC 3339 (§5.6: `date-fullyear = 4DIGIT`, and year 0000 is outside the range amendment 2 accepts). crJSON's schema requires `validationTime` in `manifestValidationResults` as a `date-time`, "RFC 3339 format", so the document breaks the schema SPEC-075 AC7 says it keeps. Both calls verify without complaint, and both are `Invalid` for `fixture-signed.png`.
+   - **Who is affected.** The library's `C2paVerifierReader::readVerified()` refuses such a time before it calls this verifier (its SPEC-047 AC5, PR #213), so the Drupal module's harness is covered through it. A caller of `Verifier::verify()` or `FragmentedVerifier::verify()` directly is not covered. That includes a conformance harness built on this package alone, as `docs/conformance-harness.md` describes.
+   - **AC5 is extended to the API** *(required: error path)*:
+     - **Given:** a time whose UTC year is 10000 (`@253402300800`, and `9999-12-31T23:59:59-23:59`), and one whose UTC year is 0 (`@-62135596801`, and `0001-01-01T00:00:00+01:00`).
+     - **When:** `Verifier::verify()` is called with `fixture-signed.png` and that time, and `FragmentedVerifier::verify()` with `bmff-fragmented/init.mp4` and its fragments.
+     - **Then:** each throws `\InvalidArgumentException`. The message names the time in UTC, as `gmdate()` writes it, and the range `0001`–`9999`. No report is returned.
+     - **And nothing is read first:** given a stream that is not seekable, the time's exception is the one thrown, not `FormatDetector`'s "needs a seekable stream resource".
+     - **And the edges are accepted:** `0001-01-01T00:00:00Z` and `9999-12-31T23:59:59Z` each give a report, and crJSON writes them as given.
+   - **Where:** at the top of both `verify()` methods, before the clock is read and before the stream is touched. The command line keeps its own check (exit 2, AC5), so it never reaches the exception.
+   - **Not changed:**
+     - with a time inside the range, or no time, every report, crJSON document and exit status stays the same;
+     - no contract symbol changes. `public-surface.txt` lists names, and `\InvalidArgumentException` is PHP's own. `FormatDetector` and `StreamReader` already throw it for a stream `verify()` cannot use, so a caller already meets it there.
+
+     It is still a visible change: a call that returned a report now throws. It goes into the CHANGELOG under *Changed*.
+   - **Open questions:**
+     1. **Refuse, or write around it** (blocking). *Proposal:* refuse with an exception, as the command line refuses. *Alternative:* verify anyway and leave `validationTime` out of crJSON, or clamp it to the range. Leaving it out breaks the schema too, because the field is required. Clamping writes a time the caller did not give. *Status 2026-11-13:* settled as proposed.
+     2. **The exception's class** (not blocking). *Proposal:* PHP's `\InvalidArgumentException`, which `FormatDetector` and `StreamReader` already throw for a wrong argument. *Alternative:* a class of this package. That adds a contract symbol and makes the release a minor. *Status 2026-11-13:* settled as proposed.
+     3. **The release** (not blocking). *Proposal:* 0.11.2. No symbol changes, and a time outside the range never gave a valid document. The library's `^0.11` takes it without a change, and its SPEC-047 refusal stays in front of it. *Alternative:* 0.12.0, because a call that worked now throws. That would need a library release only to widen its `conflict` (`>=0.12`), with nothing gained for its callers. *Status 2026-11-13:* settled as proposed.
 
 ## Traceability
 
@@ -212,6 +232,7 @@ least one test; every source file maps back to this spec.
 | AC6 | the corpus before and after (notes/step-369-validation-time.md); every existing test unchanged | — |
 | AC6 (amendment 1) | tests/Unit/Verifier/ValidationTimeTest.php :: AC6: without a given time, every check judges at the one clock reading verify() took, and says "now" (2 datasets); AC6: the report records the clock reading the checks used / SPEC-073 | src/Verifier/Verifier.php :: verify(), inspect(), check(); src/Verifier/IngredientManifestCheck.php :: check(), manifest() |
 | AC5 (amendment 2) | tests/Unit/Verifier/ValidationTimeTest.php :: AC5: a time that is not RFC 3339 is refused on the command line (the year and empty-argument datasets); AC5: the first and last instants RFC 3339 can write back are accepted (3) / SPEC-073 | src/Cli/Command.php :: rfc3339() |
+| AC5 (amendment 3) | tests/Unit/Verifier/ValidationTimeTest.php :: AC5: the API refuses a time whose UTC year RFC 3339 cannot write (4 datasets); AC5: the API refuses the time before it touches the stream; AC5: the fragmented API refuses it too, before a fragment is opened (2); AC5: the API accepts the edges, and crJSON writes them as given (2) / SPEC-073 | src/Verifier/Verifier.php :: verify() |
 
 `src/Verifier/FragmentedVerifier.php :: verify()` passes the time on; no
 criterion names it.
@@ -249,3 +270,14 @@ Step 401 (a test gap the review of 2026-10-23 named, no change in
 behaviour): `FragmentedVerifier::verify()` passing the time on had no
 test. The new case judges `bmff-fragmented/` now, in 2099 and in 2000;
 dropping the time in the hand-off fails two of the three.
+
+Amendment 3 (step 543): the tests red first, 7 of 9; the two edge cases
+were green, as they held before. The check sits once, at the top of
+`Verifier::verify()`. `FragmentedVerifier::verify()` reaches it through its
+one statement, which builds a `Verifier` and a `BmffHashCheck` without
+reading anything; the fragmented test shows no fragment is opened. A
+second copy of the check there would add nothing a test can see.
+Mutations, each failing: the upper bound at 10000 (4 red), the lower bound
+at 0 (3 red), no check (7 red), the check after `inspect()` (3 red: the
+pipe and the fragmented cases). `composer check`: exit 0, 1,757 passed,
+1 skipped; 217 symbols.

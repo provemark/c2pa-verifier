@@ -12553,3 +12553,11 @@ README are where the disclosure lives.
 - Measured: the conformance tool's reader and crJSON's schema root (read); AC12 red then green; two mutations red; crJSON over 930 media fixtures before and after (163 gain the field, 767 identical); against `v0.11.0` over 1,227 files in two trust configurations (reports identical, 460 crJSON documents gain only the field); `composer check` exit 0; `bin/package-check.php`; CI on `7aeada1` green.
 - Reasoned: a patch, since no verdict, report field or contract symbol moves; `SECURITY.md` unchanged.
 - Decided by Maurice: the amendment and its three open questions as proposed; commit, push, tag and Packagist wait for his word.
+
+## 2026-11-13 — Steps 542–543: SPEC-073 amendment 3
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "ik zou de verifier dan eerst afmaken"; "goedgekeurd, open vragen zoals voorgesteld".
+- Produced: SPEC-073 amendment 3 (AC5 extended to the API, Traceability); `src/Verifier/Verifier.php` (`verify()`); `tests/Unit/Verifier/ValidationTimeTest.php` (four tests, nine cases); `docs/conformance-harness.md`; `CHANGELOG.md` (*Unreleased*); `NOTES.md`.
+- Measured: crJSON's schema requires `validationTime` as a `date-time` (read); the tests red first (7 of 9), then green; four mutations red; `composer check` exit 0 (1,757 passed, 1 skipped, 217 symbols); spec-check OK.
+- Reasoned: one check in `Verifier::verify()` covers `FragmentedVerifier::verify()`, which reads nothing before it delegates.
+- Decided by Maurice: the amendment and its three open questions as proposed (refuse; `\InvalidArgumentException`; 0.11.2); commit and release wait for his word.

@@ -5,6 +5,19 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Changed
+
+- **The API refuses a validation time RFC 3339 cannot write (SPEC-073
+  amendment 3).** `Verifier::verify()` and `FragmentedVerifier::verify()`
+  throw `\InvalidArgumentException` for a time whose UTC year lies outside
+  0001–9999, before the stream is read. Before, the call returned a report
+  whose crJSON wrote, for instance, `validationTime: "10000-01-01T00:00:00Z"`,
+  which breaks crJSON's schema. The command line already refused such a
+  time (exit 2, amendment 2). A time inside the range, or none, gives the
+  same report as before. No contract symbol changes (217).
+
 ## 0.11.1 — 2026-11-13
 
 A patch release with one change to crJSON and none to the verdict. A file

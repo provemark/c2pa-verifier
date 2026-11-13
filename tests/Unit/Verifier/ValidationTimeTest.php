@@ -262,3 +262,75 @@ it('AC4: a fragmented stream is judged at the given time, and records it', funct
     'after it' => ['2099-01-01T00:00:00Z', true],
     'before it' => ['2000-01-01T00:00:00Z', true],
 ])->group('SPEC-073');
+
+// AC5 (amendment 3): the API refuses what the command line refuses
+it('AC5: the API refuses a time whose UTC year RFC 3339 cannot write', function (string $time, string $shown): void {
+    $stream = fopen(Corpus::fixtures().'/fixture-signed.png', 'rb');
+    assert($stream !== false);
+
+    try {
+        (new Verifier)->verify($stream, null, new DateTimeImmutable($time));
+        throw new RuntimeException('no exception for '.$time);
+    } catch (InvalidArgumentException $e) {
+        expect($e->getMessage())->toContain($shown)
+            ->and($e->getMessage())->toContain('0001')
+            ->and($e->getMessage())->toContain('9999');
+    }
+})->with([
+    'year 10000, as a timestamp' => ['@253402300800', '10000-01-01T00:00:00Z'],
+    'year 10000, through an offset' => ['9999-12-31T23:59:59-23:59', '10000-01-01T23:58:59Z'],
+    'year 0, as a timestamp' => ['@-62135596801', '0000-12-31T23:59:59Z'],
+    'year 0, through an offset' => ['0001-01-01T00:00:00+01:00', '0000-12-31T23:00:00Z'],
+])->group('SPEC-073');
+
+it('AC5: the API refuses the time before it touches the stream', function (): void {
+    // a pipe is not seekable: read first, FormatDetector would refuse it with its own message
+    $pipe = popen('cat /dev/null', 'r');
+    assert($pipe !== false);
+
+    try {
+        (new Verifier)->verify($pipe, null, new DateTimeImmutable('@253402300800'));
+        throw new RuntimeException('no exception');
+    } catch (InvalidArgumentException $e) {
+        expect($e->getMessage())->toContain('10000-01-01T00:00:00Z')
+            ->and($e->getMessage())->not->toContain('seekable');
+    } finally {
+        pclose($pipe);
+    }
+})->group('SPEC-073');
+
+it('AC5: the fragmented API refuses it too, before a fragment is opened', function (string $time): void {
+    $dir = Corpus::fixtures().'/bmff-fragmented';
+    $opened = 0;
+    $fragments = (static function () use ($dir, &$opened): Generator {
+        foreach ([1, 2, 3, 4, 5] as $i) {
+            $opened++;
+            $stream = fopen("{$dir}/seg_{$i}.m4s", 'rb');
+            assert($stream !== false);
+            yield "seg_{$i}.m4s" => $stream;
+            fclose($stream);
+        }
+    })();
+    $init = fopen("{$dir}/init.mp4", 'rb');
+    assert($init !== false);
+
+    try {
+        (new FragmentedVerifier)->verify($init, $fragments, null, new DateTimeImmutable($time));
+        throw new RuntimeException('no exception for '.$time);
+    } catch (InvalidArgumentException $e) {
+        expect($e->getMessage())->toContain('0001')
+            ->and($e->getMessage())->toContain('9999')
+            ->and($opened)->toBe(0);
+    }
+})->with(['@253402300800', '@-62135596801'])->group('SPEC-073');
+
+it('AC5: the API accepts the edges, and crJSON writes them as given', function (string $time): void {
+    $stream = fopen(Corpus::fixtures().'/fixture-signed.png', 'rb');
+    assert($stream !== false);
+    $doc = json_decode((new Verifier)->verify($stream, null, new DateTimeImmutable($time))->toCrJson(), true, 512, JSON_THROW_ON_ERROR);
+    $manifests = is_array($doc) ? ($doc['manifests'] ?? null) : null;
+    $first = is_array($manifests) ? ($manifests[0] ?? null) : null;
+    $results = is_array($first) ? ($first['validationResults'] ?? null) : null;
+
+    expect(is_array($results) ? ($results['validationTime'] ?? null) : null)->toBe($time);
+})->with(['0001-01-01T00:00:00Z', '9999-12-31T23:59:59Z'])->group('SPEC-073');
