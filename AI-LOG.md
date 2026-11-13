@@ -12513,3 +12513,11 @@ README are where the disclosure lives.
 - Produced: `specs/SPEC-042-jumbf-uri-without-leading-slash.md` (status approved, the three open questions marked decided, an empty *Amendments* section); `NOTES.md`.
 - Measured: `bin/spec-check.php` (exit 0).
 - Decided by Maurice: SPEC-042 approved with every proposal: status urls stay absolute; the box-hash spec is to be written and SPEC-042 is built first; slash-less `redacted_assertions` entries stay out of scope until `c2pa-rs` is read.
+
+## 2026-11-12 — Step 531: SPEC-042 built
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "schrijf de failing tests voor SPEC-042"; "akkoord met amendement 4, implementeer SPEC-042"; SPEC-007 amendment 12 agreed when the conflict came up.
+- Produced: `src/Manifest/Manifest.php` (`normalized()`, used by `resolve()`, `absoluteUri()` and SPEC-040's check); `bin/make-spec042-variants.php`; `tests/Fixtures/slashless/`, `tests/Fixtures/c2patool/slashless/`; `tests/Unit/Manifest/SlashlessUriTest.php`; `tests/Unit/Container/FirstPieceSequenceTest.php` (SPEC-041 amendment 4); `tests/Unit/Manifest/ManifestStoreTest.php` (SPEC-007 amendment 12); specs SPEC-042 (implemented, Traceability), SPEC-041, SPEC-007; `docs/comparison.md`, `docs/reading-c2pa-2.4.md`, ADR-0005; `notes/step-531-spec-042-built.md`, `NOTES.md`.
+- Measured: both `c2patool` versions (0.28.6, 0.27.22) on the four variants; the SPEC-042 tests red before `src/` changed (6 red, the AC7 guard green), then green; four mutations, each red; the corpus before (`ba95785`, copied `vendor/`) and after: 6,468 runs a side at 2026-11-13T00:00:00Z, 30 differ in five files, only `slashless/all-slashless.png` changes verdict (`Invalid` → `Valid`, as its control); `pest --parallel` 1,726 passed, 1 skipped; phpstan, pint, spec-check, api-check, deptrac clean.
+- Reasoned: OpenSSL 4.0.3 no longer adds key identifiers to a leaf, which `c2pa-rs` refuses ("certificate params incorrect"); the other variant scripts would meet it when rerun. URI sites outside SPEC-042's three are unchanged (step note).
+- Decided by Maurice: SPEC-041 amendment 4; SPEC-007 amendment 12; implement SPEC-042.

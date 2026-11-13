@@ -125,11 +125,10 @@ these rows moves an alarm.
 
 | what | `c2patool` | this verifier | until |
 |---|---|---|---|
-| A box hash (`c2pa.hash.boxes`, C2PA 2.4 §18.6) as a manifest's hard binding | verified; `c2pa` 0.91.11 also requires it to cover any data after the last box (upstream #2949) | refused by name, `general.error` ("not supported yet"): such a file is never `Valid` here, with or without trailing data. No real file in the corpus reaches this refusal: its two box-hash files fail earlier, for another reason (step 524); a relabelled variant holds it (`binding/hard-binding-boxes.png`, SPEC-012 AC13, step 525). `c2patool` 0.28.6 with `builder.prefer_box_hash` still writes a `c2pa.hash.data` | a spec of its own, when a writer is seen using it |
+| A box hash (`c2pa.hash.boxes`, C2PA 2.4 §18.6) as a manifest's hard binding | verified; `c2pa` 0.91.11 also requires it to cover any data after the last box (upstream #2949) | refused by name, `general.error` ("not supported yet"): such a file is never `Valid` here, with or without trailing data. One real file reaches it since SPEC-042 (step 531): Microsoft Bing Image Creator's, which `c2patool` 0.27.22 calls `Valid` with `assertion.boxesHash.match`; the corpus's other box-hash file fails earlier, for another reason (step 524); a relabelled variant holds it (`binding/hard-binding-boxes.png`, SPEC-012 AC13, step 525). `c2patool` 0.28.6 with `builder.prefer_box_hash` still writes a `c2pa.hash.data` | a spec of its own, when a writer is seen using it |
 | Time-stamp manifests (`c2tm`), compressed manifests (`c2cm`) | `c2tm` ignored, `c2cm` decompressed | refused with a message of their own — deprecated (§11.2.5) and Brotli, which PHP does not carry | — |
 | TIFF, SVG, PDF | yes | JPEG, PNG, GIF, WebP, WAV, AVI, MP3, FLAC and ISOBMFF only (`unsupported file type`); RF64 (WAV over 4 GB) is refused by both | later, one spec per format (`notes/step-203-format-survey.md`) |
 | A JPEG whose first APP11 piece carries a packet sequence number Z other than 1, or whose later pieces skip a number | read: `c2pa-rs` does not check the first piece's Z, and a later Z only has to exceed the pieces already taken | **Z = 0 on the first piece is read** (SPEC-041: Microsoft Bing Image Creator writes every store this way); any other first Z and any gap stay refused (`general.error`), measured on synthetic variants only | — |
-| A claim whose URIs are written `self#jumbf=c2pa/<manifest>/…`, without the leading slash (the spec's own examples from 1.0 to 2.1; Microsoft Bing Image Creator, nine files from Commons, step 141) | read as absolute (`c2pa-rs` `to_normalized_uri`) | read as relative to the manifest, as C2PA 2.4 §8.4.2.1 says, so the signature is `claimSignature.missing` (§15.7). Deferred, not by design (ADR-0005): the strictness protects nothing, but reading the URI moves no verdict while these files' `c2pa.hash.boxes` is refused by name (`PRED-CONT-006`) | SPEC-042, as the first step of box hashes |
 | An external reference whose `location` carries `alg` without `hash`, or `hash` without `alg` | read as unhashed and accepted (both versions) | `assertion.external-reference.malformed` (SPEC-032 AC5, C2PA 2.4 §15.10.3.2.2). The strictness protects nothing: an unhashed external reference is allowed anyway (ADR-0005, step 145) | a file that carries it; none has so far |
 | A timestamp token whose `signingTime` attribute differs from `genTime` | `signingTime` used | `malformed` (ADR-0004 decision 5). The strictness protects nothing: both times are inside the TSA's signature (ADR-0005, step 145) | a file that carries it; none has so far |
 | A `c2pa.redacted` reference to a data box that the claim's own `redactions` lists | passes | `assertion.notRedacted` (SPEC-037 open question 3). The reason was a missing fixture, not a protection (ADR-0005, step 145) | a file that carries it; none has so far |
@@ -311,6 +310,15 @@ files with the same trust anchors.
 | The command's exit status carries the verdict (0 `Trusted`/`Valid`, 1 `Invalid`, 2 no report); `c2patool` exits 0 on an `Invalid` report and 1 only when it prints no JSON. A `--settings` file that cannot be read is a refusal (exit 2); `c2patool` ignores it and reports without trust | fail closed: `c2pa-verify "$f" && publish "$f"` must not publish a tampered file, and a mistyped settings path must not turn `Trusted` into an unexamined `Valid` | SPEC-019 (exit status measured 2026-09-22) |
 
 ## Same verdict, different informational code
+
+A claim whose URIs are written `self#jumbf=c2pa/<manifest>/…`, without the
+leading slash (the spec's own examples from 1.0 to 2.1; Microsoft Bing
+Image Creator): both read them from the store's root, as `c2pa-rs`'s
+`to_normalized_uri` does (SPEC-042, step 531; until then this verifier
+read them as relative, ADR-0005). `c2patool` reports an
+`assertion.hashedURI.*` status on the url as the claim writes it; this
+verifier writes the absolute form, as it does for every relative URI
+(SPEC-042 open question 1). Codes and verdicts are equal.
 
 `timeStamp.untrusted` here where `c2patool` says `timeStamp.trusted`
 without an anchor — 34 corpus files, informational, no verdict changes.

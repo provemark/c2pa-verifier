@@ -72,6 +72,8 @@ verdict depends on goes unchecked.
   Reading the URI changes no verdict while the files' hard binding,
   `c2pa.hash.boxes`, is refused by name (`PRED-CONT-006`). SPEC-042, the
   URI reading, is the first step if box hashes are ever built.
+  *Done 2026-11-12 (step 531):* SPEC-042 reads the form as `c2pa-rs`
+  does; the Bing file now stops at its box hash, the next step.
 - SPEC-041 (a first APP11 piece with Z = 0) was already a case of
   following `c2pa-rs` where the norm is probably stricter. It passes this
   ADR as written.

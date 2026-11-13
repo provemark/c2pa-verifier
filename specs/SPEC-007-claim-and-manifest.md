@@ -71,6 +71,7 @@ here touches cryptography.
   or mistyped `url` or `hash` is an error.
 - JUMBF URI resolution: `self#jumbf=` prefix required; a path starting
   `/c2pa/` is absolute from the store root (`/c2pa/<manifest label>/…`),
+  a path starting `c2pa/` is read as `/c2pa/` (SPEC-042, amendment 12),
   any other path is relative to the manifest; each segment is a superbox
   label. The `signature` URI must resolve to this manifest's signature
   box. Every assertion URI must resolve to a superbox inside this
@@ -582,6 +583,21 @@ dependency, for AC6; `src/` stays free of it (ADR-0001).
    `c2patool`'s failure code, and a caller's document that threw or
    changed shape is written in its shape. No verdict of a file that was
    read before moves.
+
+12. **2026-11-12, step 531, from SPEC-042** *(approved by Maurice van Loon, 2026-11-12)* —
+   The scope read every path that does not start with `/c2pa/` as
+   relative to the manifest, and step 441 pinned it: a URI written
+   `self#jumbf=c2pa/<label>/…` failed with *"does not resolve to a box
+   (no c2pa)"*. SPEC-042 (ADR-0005) reads that form as `c2pa-rs`'s
+   `to_normalized_uri` does, from the store's root. The scope now says
+   so, and step 441's assertion now asks that such a URI resolves to the
+   same box as its absolute form. Every check after resolution is
+   unchanged: a slash-less URI naming another manifest is refused as the
+   slashed one is.
+
+   **Weight B.** The behaviour this spec pinned changes, by another
+   approved spec. Measured over the corpus in step 531: two files carry
+   the form; neither changes its verdict.
 
 ## Traceability
 

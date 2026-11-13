@@ -69,7 +69,8 @@ reader accepts.
   - Then it returns the store: 13 081 bytes, equal to the piece's data
     after CI, En and Z. When the file is verified, the report carries no
     `general.error` *(amendment 1: `claimSignature.validated` left this
-    spec; amendment 3: SPEC-042 takes it up, deferred)*.
+    spec; amendment 3: SPEC-042 takes it up, deferred; amendment 4: none
+    from the container, the box-hash refusal aside)*.
 
 - **AC2 — two pieces numbered 0, 2 are read**
   - Given `fixture-signed.jpg` with its first piece's Z rewritten from 1
@@ -225,6 +226,21 @@ questions 2 and 3 as proposed.
    Weight C: the status of a pointer changed, no behaviour changed.
 
    Confirmed by Maurice van Loon, 2026-09-25 (step 144).
+
+4. **2026-11-12, step 531, measured.** SPEC-042 reads the Bing file's
+   slash-less URIs, so the file now reaches its hard binding,
+   `c2pa.hash.boxes`, which is refused by name (`PRED-CONT-006`):
+   `general.error` on
+   `self#jumbf=/c2pa/urn:uuid:2b35d21e-b8eb-4e52-ba67-29bc413dfea6/c2pa.assertions/c2pa.hash.boxes`.
+   AC1's *"the report carries no `general.error`"* was written to show
+   that the container read the store. It now reads: *the only
+   `general.error` in the report is the one on that box-hash assertion;
+   none comes from the container.*
+
+   Weight C: a criterion narrowed to its own concept, no behaviour of
+   this spec changed.
+
+   Confirmed by Maurice van Loon, 2026-11-12 (step 531).
 
 ## Traceability
 

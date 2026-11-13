@@ -133,9 +133,19 @@ final readonly class Manifest
         return $mine;
     }
 
+    /**
+     * c2pa-rs's to_normalized_uri: a path written `c2pa/…`, without the leading slash, is read from the
+     * store's root (the form of C2PA 1.0–2.1's examples and of Bing Image Creator; SPEC-042, ADR-0005).
+     */
+    private static function normalized(string $uri): string
+    {
+        return str_starts_with($uri, self::URI_PREFIX.'c2pa/') ? self::URI_PREFIX.'/'.substr($uri, strlen(self::URI_PREFIX)) : $uri;
+    }
+
     /** A URI of this manifest in its absolute form: a relative one is read against this manifest (§14.2). */
     public function absoluteUri(string $uri): string
     {
+        $uri = self::normalized($uri);
         if (! str_starts_with($uri, self::URI_PREFIX) || str_starts_with($uri, self::URI_PREFIX.'/')) {
             return $uri;
         }
@@ -232,7 +242,7 @@ final readonly class Manifest
         if (! str_starts_with($uri, self::URI_PREFIX)) {
             throw new ManifestException(sprintf('URI %s does not start with %s', $uri, self::URI_PREFIX), StatusCode::AssertionMissing);
         }
-        $path = substr($uri, strlen(self::URI_PREFIX));
+        $path = substr(self::normalized($uri), strlen(self::URI_PREFIX));   // messages keep the URI as written
         if (str_starts_with($path, '/c2pa/')) {
             $segments = explode('/', substr($path, strlen('/c2pa/')));
             $first = array_shift($segments);
@@ -273,8 +283,9 @@ final readonly class Manifest
         }
         foreach ([...$this->claim->createdAssertions, ...$this->claim->gatheredAssertions] as $reference) {
             // SPEC-040: an entry naming another manifest's assertion store (C2PA 2.4 §15.10.3.1), whether
-            // or not that manifest is in the store, on the entry as written — as c2pa-rs's assertion loop
-            if (preg_match('#\A'.preg_quote(self::URI_PREFIX, '#').'/c2pa/([^/]+)/#', $reference->url, $m) === 1 && $m[1] !== $this->label) {
+            // or not that manifest is in the store, on the entry as written — as c2pa-rs's assertion loop;
+            // a slash-less entry read as c2pa-rs normalises it first (SPEC-042)
+            if (preg_match('#\A'.preg_quote(self::URI_PREFIX, '#').'/c2pa/([^/]+)/#', self::normalized($reference->url), $m) === 1 && $m[1] !== $this->label) {
                 throw new ManifestException(sprintf('assertion reference to external assertion store: %s', $reference->url), StatusCode::AssertionOutsideManifest, null, $reference->url);
             }
             try {

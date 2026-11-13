@@ -2,7 +2,7 @@
 
 | Field      | Value                                             |
 |------------|---------------------------------------------------|
-| Status     | approved                                          |
+| Status     | implemented                                       |
 | Author     | Maurice van Loon                                  |
 | Approved   | Maurice van Loon, 2026-11-12                      |
 | Supersedes | —                                                 |
@@ -236,14 +236,14 @@ None yet.
 
 ## Traceability
 
-Filled when status becomes `implemented`.
+Filled 2026-11-12 (step 531).
 
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
-| AC1 | — | — |
-| AC2 | — | — |
-| AC3 | — | — |
-| AC4 | — | — |
-| AC5 | — | — |
-| AC6 | — | — |
-| AC7 | — | — |
+| AC1 | tests/Unit/Manifest/SlashlessUriTest.php :: AC1: Bing's signature is found / SPEC-042 | src/Manifest/Manifest.php :: normalized(), resolve() |
+| AC2 | tests/Unit/Manifest/SlashlessUriTest.php :: AC2: a slash-less file with a data hash is judged like its slashed original / SPEC-042 | src/Manifest/Manifest.php :: normalized(), resolve(); bin/make-spec042-variants.php |
+| AC3 | tests/Unit/Manifest/SlashlessUriTest.php :: AC3: a slash-less entry naming another manifest is outside / SPEC-042 | src/Manifest/Manifest.php :: checkReferences() (SPEC-040's check on the normalised url) |
+| AC4 | tests/Unit/Manifest/SlashlessUriTest.php :: AC4: a slash-less signature URI naming another manifest is missing / SPEC-042 | src/Manifest/Manifest.php :: resolve(), checkReferences() |
+| AC5 | tests/Unit/Manifest/SlashlessUriTest.php :: AC5: prerelease.jpg stays refused / SPEC-042 | src/Manifest/Manifest.php :: resolve() |
+| AC6 | tests/Unit/Manifest/SlashlessUriTest.php :: AC6: a relative URI keeps its meaning / SPEC-042 | src/Manifest/Manifest.php :: normalized(), absoluteUri(), resolve() |
+| AC7 | tests/Unit/Manifest/SlashlessUriTest.php :: AC7: nothing else in the corpus moves / SPEC-042 | — (a guard; the before/after corpus run is step 531's) |
