@@ -301,13 +301,37 @@ it('AC7: every crJSON written is schema-valid but for the accepted v1 claims', f
     expect($documents)->toBe(60);
 })->group('SPEC-075');
 
-// AC8
+// AC8 (narrowed by amendment 4 to a report without a failure; the other two datasets moved to AC12)
 it('AC8: without a store, manifests is empty and the root is otherwise as AC1', function (string $relative): void {
     $doc = spec075Doc(spec075Report($relative));
 
     expect(array_keys($doc))->toBe(['@context', 'jsonGenerator', 'manifests'])
         ->and($doc['manifests'])->toBe([]);
-})->with(['fixture-unsigned.png', 'jumbf/child-overruns.png', 'jumbf/README.md'])->group('SPEC-075');
+})->with(['fixture-unsigned.png'])->group('SPEC-075');
+
+// AC12 (amendment 4)
+it('AC12: a failure without a store is a document-level result', function (string $relative, string $code): void {
+    $report = spec075Report($relative);
+    $doc = spec075Doc($report);
+    $results = $report->result->toArray()['validation_results'];
+    $root = $doc['validationResults'] ?? null;
+    $active = is_array($root) ? ($root['activeManifest'] ?? null) : null;
+    $failure = is_array($active) ? ($active['failure'] ?? null) : null;
+    $first = is_array($failure) ? ($failure[0] ?? null) : null;
+
+    expect($report->store)->toBeNull()
+        ->and(array_keys($doc))->toBe(['@context', 'jsonGenerator', 'manifests', 'validationResults'])
+        ->and($doc['manifests'])->toBe([])
+        ->and($root)->toBe(['activeManifest' => is_array($results) ? ($results['activeManifest'] ?? null) : null])
+        ->and(is_array($active) ? array_keys($active) : null)->toBe(['success', 'informational', 'failure'])
+        ->and(is_array($first) ? ($first['code'] ?? null) : null)->toBe($code)
+        ->and(spec075SchemaErrors($report->toCrJson()))->toBe([]);
+})->with([
+    'a container fault' => ['avi/lbox-differs.avi', 'general.error'],
+    'a JUMBF fault' => ['jumbf/child-overruns.png', 'general.error'],
+    'a claim fault' => ['absence/created-empty.png', 'claim.malformed'],
+    'an unsupported file' => ['jumbf/README.md', 'general.error'],
+])->group('SPEC-075');
 
 it('AC8: on the command line, the report\'s failure goes to standard error and the exit is the report\'s', function (): void {
     [$status, $out, $err] = spec075Run('--crjson', Corpus::fixtures().'/jumbf/child-overruns.png');

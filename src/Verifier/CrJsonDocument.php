@@ -55,7 +55,17 @@ final class CrJsonDocument
         ];
         $store = $report->store;
         if ($store === null) {
-            return $document;   // AC8: crJSON describes a store; the report's failure goes elsewhere
+            // AC8: crJSON describes a store; without one there is no manifest to write. Amendment 4,
+            // AC12: a failure without a store (a store refused, a file not read) is still an answer, so
+            // it goes in a root validationResults, C2PA's validation-results-map, as the report holds it;
+            // a file with no store and no failure stays as AC1 (the schema leaves the root open)
+            $results = $report->result->toArray()['validation_results'];
+            $active = is_array($results) && is_array($results['activeManifest'] ?? null) ? $results['activeManifest'] : null;
+            if (is_array($active) && is_array($active['failure'] ?? null) && $active['failure'] !== []) {
+                $document['validationResults'] = ['activeManifest' => $active];
+            }
+
+            return $document;
         }
 
         $time = gmdate('Y-m-d\TH:i:s\Z', ($report->validationTime ?? new \DateTimeImmutable)->getTimestamp());

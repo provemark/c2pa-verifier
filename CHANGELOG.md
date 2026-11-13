@@ -5,6 +5,22 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Changed
+
+- **crJSON: a failure without a store is a document-level result (SPEC-075
+  amendment 4).** Where the report has a failure but no store to write (a
+  store refused for a container, JUMBF or claim fault, or a file not read),
+  `toCrJson()` and `--crjson` add a root `validationResults` holding the
+  report's `activeManifest` statuses, C2PA's validation-results-map.
+  `manifests` stays `[]`. Before, such a file read as one without
+  credentials to anyone reading the crJSON alone. A file with no store and
+  no failure is unchanged, and so are the ordinary report, the verdict, the
+  exit status and the public contract. Measured over the 930 fixture media
+  files at a fixed time: 163 documents gain the field, the other 767 are
+  byte-identical.
+
 ## 0.11.0 — 2026-11-13
 
 A minor release. A JPEG whose hard binding is the general box hash,

@@ -244,6 +244,46 @@ three symbols (`VERSION`, `$validationTime`, `toCrJson()`); 0.8.0.
 3. **2026-10-23, step 399, found by the review of 2026-10-23 (the low items, "doe 1 nog", Maurice van Loon).** An ingredient manifest's own `validationResults` came from the first ingredient assertion, in store order, that named it and had a delta; the checker scopes that manifest's own statuses under its first reference in walk order (`$graph->referenced[$label][0]`). With a manifest named twice and the store listing the later reference first, crJSON could show the other reference's delta as the manifest's own results. `ownResultsOf()` now takes the delta of the first reference in walk order, and none where that reference has none.
    - **AC11 — the manifest's own results are the checker's scope**: A takes P1 then P2, both take M, the store lists P2 before P1: M's results are P1's delta, and with only P2's delta present M has none.
 
+4. **2026-11-13, step 536, approved by Maurice van Loon ("goedgekeurd, open vragen zoals voorgesteld")** (asked: "schrijf een amendement op SPEC-075 voor de geweigerde stores"). Step 535 measured the corpus in crJSON under the conformance tool's trust settings.
+   - **The finding.** In 163 of 930 fixture media files the report is `Invalid` with no store to write (`$report->store === null` and a failure in the report). Mostly this verifier found a store and refused it:
+     - a container fault (`avi/lbox-differs.avi`: "LBox 13464 differs from the chunk length");
+     - a JUMBF fault (`jumbf/root-label.png`);
+     - a claim that cannot be taken apart (`absence/created-empty.png`: `claim.malformed`).
+
+     A few files are refused as an unsupported file type (`bmff-fragmented/broken/seg_1-location-minus-1.m4s`). AC8 writes all of them as it writes a file with no store at all: `manifests: []`, with the failure on standard error only. The other 59 files without a manifest hold no store, and their report has no failure.
+   - **Why it matters.** A harness that reads crJSON alone cannot tell "no Content Credentials" from "Content Credentials that do not verify". The conformance programme's harness is such a reader. On 57 of the 163, `c2patool` 0.29.0 reads the store and reports per manifest, for instance `assertion.dataHash.mismatch` and `signingCredential.untrusted`. On the other 106 it gives no output at all.
+   - **What the format allows** (read and measured, step 536):
+     - crJSON's schema (`tests/Fixtures/crjson/crJSON.schema.json`) has `additionalProperties: true` at the root, so a root property beside the three required ones is schema-valid. `manifest` keeps `additionalProperties: false`, so a manifest cannot be invented to carry the failure.
+     - The conformance tool (`contentauth/c2pa-conformance-tool` `a5f9cd7`, `src/lib/crjson.ts`, `getActiveManifestValidationStatus()`) merges three places: the active manifest's `validationResults`, a root `validationResults.activeManifest`, and a flat root `validationResults`. So it already reads a document-level result.
+     - That shape, `{activeManifest: {success, informational, failure}}`, is C2PA's validation-results-map. This verifier's ordinary report already writes the same refusal there (`validation_results.activeManifest`).
+   - **AC1 is narrowed:** the root holds `@context`, `jsonGenerator` and `manifests`, and nothing else **except as AC12 adds**.
+   - **AC8 is narrowed to a report without a failure.**
+     - `fixture-unsigned.png` keeps exactly AC1's three keys.
+     - Its two other datasets move to AC12: `jumbf/child-overruns.png` (a broken store) and `jumbf/README.md` (an unsupported file, whose report is `Invalid` with `general.error`).
+     - On the command line, standard error and the exit status are unchanged for all three.
+   - **AC12 (new) — a failure without a store is a document-level result** *(required: error path)*
+     - **Given:** files whose report has a failure and no store this verifier can write. These are a container fault (`avi/lbox-differs.avi`), a JUMBF fault (`jumbf/child-overruns.png`), a claim fault (`absence/created-empty.png`) and an unsupported file (`jumbf/README.md`). Beside them, a file with no store and no failure (`fixture-unsigned.png`).
+     - **When:** written as crJSON.
+     - **Then, for the files with a failure:**
+       - `manifests` is `[]`;
+       - the root also holds `validationResults: {"activeManifest": {"success": [...], "informational": [...], "failure": [...]}}`, each entry `code`, `url`, `explanation`, exactly as the report's `validation_results.activeManifest`;
+       - the document is schema-valid (AC7).
+     - **Then, for `fixture-unsigned.png`:** there is no `validationResults`, as AC8.
+     - **On the command line**, `--crjson` prints that document; standard error and the exit status are as AC8.
+   - **Measured after building** (the acceptance of this amendment, not a criterion): the corpus in crJSON before and after, at a fixed `--at`.
+     - Exactly the files whose report has a failure and no store gain a root `validationResults`. Every other document is byte-identical.
+     - Step 535's comparison rerun: the 57 read as `Invalid` from crJSON alone.
+   - **Not changed:**
+     - no manifest is written for a store that was refused;
+     - nothing in the ordinary report (`toJson()`), the verdict or the exit status changes;
+     - no contract symbol changes.
+
+     It is still a visible change to `toCrJson()`'s output, so it goes into the CHANGELOG under *Changed*.
+   - **Open questions:**
+     1. **The shape.** *Proposal:* `validationResults.activeManifest`, C2PA's validation-results-map and the report's own shape. *Alternative:* the flat `{success, informational, failure}`, which the tool also reads but which no C2PA structure names. Blocking for AC12. *Status 2026-11-13:* settled as proposed.
+     2. **Also `specVersion` and `validationTime`**, as each manifest's results carry them (§3.8)? *Proposal:* no. They belong to `manifestValidationResults`, not to the validation-results-map. *Alternative:* add both inside `validationResults`. Not blocking. *Status 2026-11-13:* settled as proposed: no.
+     3. **Read what can be read instead?** `c2patool` writes the manifests of a store this verifier refuses as a whole. Writing them would mean reading past a refusal, which the verdict deliberately does not do. *Proposal:* no, not in this amendment. Not blocking. *Status 2026-11-13:* settled as proposed: no.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -258,10 +298,11 @@ least one test; every source file maps back to this spec.
 | AC5 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC5: the results, per manifest; deltas on the manifest that holds the ingredient; AC5: an ingredient manifest holds the delta that names it, and empty lists where none does / SPEC-075 | src/Verifier/CrJsonDocument.php :: of(), ownResults() |
 | AC6 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC6: every manifest carries the validation time the report judged at / SPEC-075 | src/Verifier/Verifier.php :: verify(), inspect(); src/Verifier/VerificationReport.php :: $validationTime |
 | AC7 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC7: the validator first reproduces step 370 on c2patool's own answers; AC7: every crJSON written is schema-valid but for the accepted v1 claims / SPEC-075 | tests/Fixtures/crjson/crJSON.schema.json and README (ADR-0006); composer.json `require-dev` opis/json-schema |
-| AC8 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC8: without a store, manifests is empty and the root is otherwise as AC1 (3 datasets); AC8: on the command line, the report's failure goes to standard error and the exit is the report's / SPEC-075 | src/Verifier/CrJsonDocument.php :: of(); src/Cli/Command.php :: run() |
+| AC8 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC8: without a store, manifests is empty and the root is otherwise as AC1 (1 dataset since amendment 4); AC8: on the command line, the report's failure goes to standard error and the exit is the report's / SPEC-075 | src/Verifier/CrJsonDocument.php :: of(); src/Cli/Command.php :: run() |
 | AC9 | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC9: --crjson prints toCrJson() of the same call, with --settings and --at / SPEC-075 | src/Cli/Command.php :: run() (`--crjson`); src/Verifier/VerificationReport.php :: toCrJson() |
 | AC10 (amendment 2) | tests/Unit/Verifier/CrJsonSignatureTest.php :: AC10: a JSON assertion is written as it is, where it can be written back the same (7 datasets) / SPEC-075 | src/Cbor/CrJsonValue.php :: fromJson(); src/Verifier/CrJsonDocument.php :: assertion() |
 | AC11 (amendment 3) | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC11: a manifest's own results are the delta of the reference the checker scoped them under / SPEC-075 | src/Verifier/CrJsonDocument.php :: ownResults(), ownResultsOf() |
+| AC12 (amendment 4) | tests/Unit/Verifier/CrJsonDocumentTest.php :: AC12: a failure without a store is a document-level result (4 datasets) / SPEC-075 | src/Verifier/CrJsonDocument.php :: of() |
 
 `Verifier::VERSION` is `0.8.0-dev`, not `0.8.0` as the API sketch had it:
 SemVer allows a pre-release, and the release commit sets the final
@@ -283,3 +324,12 @@ Amendment 3 (step 399): the test red against the first build's logic,
 moved unchanged into `ownResultsOf()` (it gave P2's delta); green after.
 The crJSON of every fixture before and after, at a fixed `--at`: 0 of
 927 documents moved.
+
+Amendment 4 (step 537): the AC12 test red first (4 of 4 datasets: the root
+had three keys), green after; AC8 kept its one dataset. Mutations, each
+failing: the field added whenever the report has results, failure or not
+(AC8 red, 1), the flat shape instead of `activeManifest` (AC12 red, 4). The
+crJSON of the 930 fixture media files before and after, at a fixed `--at`
+(two passes over one tree): 163 documents gain the root `validationResults`
+and nothing else, 767 are byte-identical. Step 535's comparison rerun,
+reading the root as the conformance tool does: the 57 now read `Invalid`.

@@ -44,8 +44,12 @@ one source of trust. A list file without a certificate is refused.
 The exit status is the report's: 0 for `Trusted` or `Valid`, 1 for
 `Invalid`, 2 when there is no report. crJSON has no verdict field; a
 reader works the verdict out from the status codes. Where the file holds
-no manifest store, `manifests` is `[]` and the report's own failure is
-written to standard error.
+no manifest store, `manifests` is `[]`. Where the report nevertheless has
+a failure (a store this verifier refused, or a file it could not read),
+the root also holds `validationResults: {"activeManifest": {"success",
+"informational", "failure"}}` with the report's statuses (SPEC-075
+amendment 4), so that crJSON alone tells "no credentials" from "does not
+verify". The failure is also written to standard error.
 
 From PHP, the same:
 
