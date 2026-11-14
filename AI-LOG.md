@@ -12602,3 +12602,11 @@ README are where the disclosure lives.
 - Reasoned: a patch, since no verdict, report field or contract symbol moves; `SECURITY.md` unchanged.
 - Decided by Maurice: 0.11.3 (SPEC-091 open question 3); commit, push, tag and Packagist wait for his word.
 
+## 2026-11-14 — Step 548: 0.11.3 released
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "commit en push maar" (step 547); "tag en release v0.11.3 maar"; "leg de 0.11.3-release vast".
+- Produced: commit `3ef897d`, tag `v0.11.3`, GitHub release `v0.11.3`; `notes/step-548-release-0.11.3-released.md`, `NOTES.md`.
+- Measured: CI on `3ef897d` and on the tag (8/8 each); Packagist `v0.11.3` from `3ef897d`; a fresh `^0.11` install (688 files, `VERSION` 0.11.3, SPEC-091's entry on `E-clm-CAICAI`).
+- Reasoned: no advisory, since no verdict moves; nothing downstream has to change.
+- Decided by Maurice: the commit, the tag and the release.
+
