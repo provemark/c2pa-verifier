@@ -12585,3 +12585,12 @@ README are where the disclosure lives.
 - Measured: which delta codes `c2patool` repeats under `activeManifest` (60 delta failures); the rubric lists; first-manifest codes against the 59 crJSON answers (46, then 48); the corpus before and after (953 files, 13 documents, exit and stderr identical); 9 of 15 tests red first; 6 mutations red; the integrity rubric by hand on five files; `composer check` exit 0 (1,772 passed, 1 skipped; 217 symbols).
 - Reasoned: that a trusted asset with such a fault passed every rubric trait before; that the two codes are about the holder's own assertion and the others about the ingredient's manifest.
 - Decided by Maurice: SPEC-091 approved, open questions as proposed (both codes; the holder, whichever manifest; release as 0.11.3).
+
+## 2026-11-14 — Step 546 (continued): CI red on a test helper
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "commit en push maar".
+- Produced: commit `56659da` (SPEC-091), pushed; then `tests/Shared.php` and `tests/Unit/Verifier/CrJsonDocumentTest.php` (helper moved), `notes/step-546-crjson-ingredient-reference-failures.md`.
+- Measured: CI run 43597872418 red on PHP 8.3/8.4/8.5 (3 errors, undefined `spec075Groups()` under parallel runs); reproduced by running the file alone; after the move each file alone green, `composer check` and `composer test:parallel` exit 0.
+- Reasoned: a helper shared between test files must live in `tests/Shared.php`.
+- Decided by Maurice: the fix commit and push ("ja, commit en push maar").
+

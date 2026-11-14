@@ -124,3 +124,23 @@ Two PHPStan findings in the new test code were fixed: offset access on
 
 No commit and no version yet. 0.11.3 is a patch (open question 3); its
 preparation is a step of its own.
+
+## CI on `56659da`: red, and why
+
+Run 43597872418: `composer check` failed on PHP 8.3, 8.4 and 8.5, with 3
+errors, all "Call to undefined function spec075Groups()" in AC3 and AC4.
+The helper was defined in `CrJsonDocumentTest.php`, not in
+`tests/Shared.php`. CI runs `composer test:parallel`, which gives each
+test file its own process, so the new file never loaded it. The local
+`composer check` runs one process, where the other file had already
+loaded it, and was green.
+
+Running the new file alone reproduced the error. Fix: `spec075Groups()`
+moves to `tests/Shared.php` beside the other `spec075` helpers. Each file
+alone is now green (15 and 18 tests); `composer check` exits 0;
+`composer test:parallel` exits 0 (1,772 passed, 1 skipped).
+
+Lesson: a helper a second test file uses belongs in `tests/Shared.php`.
+Run a new test file alone, or run `composer test:parallel`, before
+pushing.
+

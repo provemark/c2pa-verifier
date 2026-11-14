@@ -68,18 +68,6 @@ function spec075Absolute(mixed $claim, string $label): mixed
 }
 
 /**
- * The three groups of a results object, nothing else.
- *
- * @return array{success: mixed, informational: mixed, failure: mixed}
- */
-function spec075Groups(mixed $results): array
-{
-    $results = spec075A($results, 'results');
-
-    return ['success' => $results['success'] ?? null, 'informational' => $results['informational'] ?? null, 'failure' => $results['failure'] ?? null];
-}
-
-/**
  * Each manifest's delta URIs, by manifest label, sorted.
  *
  * @param  list<array<string, mixed>>  $manifests

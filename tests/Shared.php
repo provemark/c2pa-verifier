@@ -441,3 +441,15 @@ function spec070Records(array $keys, array $below): array
 {
     return array_map(static fn (string $key): array => ['key' => $key, 'below' => $below], $keys);
 }
+
+/**
+ * The three groups of a results object, nothing else.
+ *
+ * @return array{success: mixed, informational: mixed, failure: mixed}
+ */
+function spec075Groups(mixed $results): array
+{
+    $results = spec075A($results, 'results');
+
+    return ['success' => $results['success'] ?? null, 'informational' => $results['informational'] ?? null, 'failure' => $results['failure'] ?? null];
+}
