@@ -12594,3 +12594,11 @@ README are where the disclosure lives.
 - Reasoned: a helper shared between test files must live in `tests/Shared.php`.
 - Decided by Maurice: the fix commit and push ("ja, commit en push maar").
 
+## 2026-11-14 — Step 547: prepare 0.11.3
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "bereid verifier 0.11.3 maar voor".
+- Produced: `CHANGELOG.md` (0.11.3 entry), `src/Verifier/Verifier.php` (`VERSION`), `README.md`; `notes/step-547-prepare-0.11.3.md`, `NOTES.md`.
+- Measured: against `v0.11.2` over 1,221 files in three trust configurations (reports and exit status identical; 1,208 crJSON documents per configuration differ only in `jsonGenerator.version`, 13 also gain only SPEC-091's entries, each re-checked per configuration); `composer check` and `composer test:parallel` exit 0; package 687 files; CI on `c2fde5e` green.
+- Reasoned: a patch, since no verdict, report field or contract symbol moves; `SECURITY.md` unchanged.
+- Decided by Maurice: 0.11.3 (SPEC-091 open question 3); commit, push, tag and Packagist wait for his word.
+

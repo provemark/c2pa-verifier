@@ -5,7 +5,26 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.11.3 — 2026-11-14
+
+A patch release that changes only crJSON, for the C2PA Conformance
+Program's integrity rubric. The rubric reads a manifest's
+`validationResults` and never its `ingredientDeltas`. Here, a failed
+ingredient assertion stood only in the delta, so an asset this verifier
+calls `Invalid` could pass the rubric's structural trait.
+
+Against `0.11.2`, over 1,221 fixture files at 2026-11-14T00:00:00Z, in
+three configurations: no trust settings; the programme's official trust
+lists (`--trust-list`, `--tsa-trust-list`); the conformance test root.
+
+- The ordinary report and the exit status are identical in all 3,663 runs.
+- No run exits 2.
+- In each configuration, 1,208 crJSON documents differ only in
+  `jsonGenerator.version`.
+- The other 13 also gain, and only gain, entries with
+  `ingredient.manifest.missing` or `assertion.ingredient.malformed` in a
+  manifest's `validationResults.failure`.
+- No contract symbol changes (217).
 
 ### Changed
 

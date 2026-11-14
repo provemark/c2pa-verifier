@@ -91,7 +91,9 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.11.2`**, still a `0.x` on purpose. `0.11.2` refuses,
+The current tag is **`v0.11.3`**, still a `0.x` on purpose. `0.11.3` writes
+a failed ingredient assertion in crJSON on the manifest that holds it as
+well as in its delta (SPEC-091). `0.11.2` refuses,
 in the API as on the command line, a validation time RFC 3339 cannot write
 (SPEC-073 amendment 3). `0.11.1` writes a
 refused store in crJSON as a document-level failure rather than as no
