@@ -12569,3 +12569,11 @@ README are where the disclosure lives.
 - Measured: CI on `84c52a7` (success, 8/8); against `v0.11.1` over 1,227 files in two trust configurations (reports and exit status identical, crJSON differs only in `jsonGenerator.version`), after a first run that lost the settings file to a relative path; `composer check` exit 0; `bin/package-check.php`.
 - Reasoned: a patch, since no verdict, report field or contract symbol moves; `SECURITY.md` unchanged.
 - Decided by Maurice: 0.11.2 (SPEC-073 amendment 3, open question 3); commit, push, tag and Packagist wait for his word.
+
+## 2026-11-13 — Step 545: 0.11.2 released
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "tag en release v0.11.2 maar"; "leg de 0.11.2-release vast".
+- Produced: tag `v0.11.2`, GitHub release `v0.11.2`; `notes/step-545-release-0.11.2-released.md`, `NOTES.md`.
+- Measured: CI on the tag (8/8); Packagist `v0.11.2` from `c074b44`; a fresh `^0.11` install (684 files, `VERSION` 0.11.2, the refusal and the 9999 edge).
+- Reasoned: no advisory, since no verdict moves; nothing downstream has to change.
+- Decided by Maurice: the tag and the release.
