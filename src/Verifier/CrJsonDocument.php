@@ -45,6 +45,9 @@ final class CrJsonDocument
     /** The form of the crJSON page's minimal example, and of c2pa-rs (SPEC-075 AC1). */
     private const array CONTEXT = ['@vocab' => 'https://c2pa.org/crjson', 'extras' => 'https://c2pa.org/crjson/extras'];
 
+    /** Delta codes about the holder's own ingredient assertion, written on the holder too (SPEC-091). */
+    private const array HOLDER_CODES = ['ingredient.manifest.missing', 'assertion.ingredient.malformed'];
+
     /** @return array<string, mixed> the document, ready for json_encode with JSON_PRESERVE_ZERO_FRACTION */
     public static function of(VerificationReport $report): array
     {
@@ -90,6 +93,7 @@ final class CrJsonDocument
 
         foreach (array_reverse($store->manifests, true) as $label => $manifest) {
             $codes = $manifest === $store->active ? $active : ($own[$label] ?? $empty);
+            $codes = self::withHeldReferenceFailures($codes, $held[$label] ?? []);
             $document['manifests'][] = [
                 'label' => (string) $label,
                 ($manifest->claim->version === 2 ? 'claim.v2' : 'claim') => self::claim($manifest),
@@ -100,6 +104,52 @@ final class CrJsonDocument
         }
 
         return $document;
+    }
+
+    /**
+     * SPEC-091: a failure that says the holder's own ingredient assertion failed — its reference
+     * resolves to no manifest, or it is malformed — is written in the holder's own results too, as
+     * c2pa-rs writes ingredient.manifest.missing. The integrity rubric reads only a manifest's
+     * validationResults, never its ingredientDeltas. Other delta codes are about the ingredient's
+     * manifest and stay in the delta (and on that manifest, SPEC-075 AC5). Once per code and url.
+     *
+     * @param  array<string, list<mixed>>  $codes  the manifest's own results
+     * @param  list<array{ingredientAssertionURI: string, validationDeltas: array<string, list<mixed>>}>  $held
+     * @return array<string, list<mixed>>
+     */
+    private static function withHeldReferenceFailures(array $codes, array $held): array
+    {
+        $failure = $codes['failure'] ?? [];
+        $seen = [];
+        foreach ($failure as $entry) {
+            if (is_array($entry)) {
+                $seen[self::codeAndUrl($entry)] = true;
+            }
+        }
+        foreach ($held as $delta) {
+            foreach ($delta['validationDeltas']['failure'] ?? [] as $entry) {
+                if (! is_array($entry) || ! in_array($entry['code'] ?? null, self::HOLDER_CODES, true)) {
+                    continue;
+                }
+                $key = self::codeAndUrl($entry);
+                if (! isset($seen[$key])) {
+                    $seen[$key] = true;
+                    $failure[] = $entry;
+                }
+            }
+        }
+        $codes['failure'] = $failure;
+
+        return $codes;
+    }
+
+    /** @param  array<mixed>  $entry  a status as toArray() writes it */
+    private static function codeAndUrl(array $entry): string
+    {
+        $code = $entry['code'] ?? '';
+        $url = $entry['url'] ?? '';
+
+        return (is_string($code) ? $code : '')."\0".(is_string($url) ? $url : '');
     }
 
     /**

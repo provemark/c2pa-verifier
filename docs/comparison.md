@@ -408,6 +408,26 @@ CBOR assertions of 59 files (`tests/Fixtures/c2patool/crjson/`).
 - A tag other than 0, NaN and the infinities are refused, not written.
   None occurs in the corpus.
 
+## Ingredient failures in the report and in crJSON (SPEC-020, SPEC-091)
+
+The report holds `ingredient.manifest.missing` once, in the ingredient's
+delta (SPEC-020 AC6). `c2patool` lists it twice, in the delta and under
+`activeManifest`, and twice more in `validation_status`. It repeats no
+other delta code there: over the 60 delta failures of the `c2patool`
+reports under `tests/Fixtures/c2patool/`, only this code, 5 of 5. The
+drift alarms compare unique codes, and the verdict is the same.
+
+crJSON follows `c2patool` since SPEC-091. A delta failure with
+`ingredient.manifest.missing` or `assertion.ingredient.malformed` is also
+written in the `validationResults` of the manifest that holds the delta,
+once per code and url. The second code is this verifier's stricter answer
+where `c2patool` says `ingredient.manifest.missing` (step 54). The reason
+is the C2PA Conformance Program's integrity rubric, which reads only
+`manifests[0].validationResults`. Every other delta code stays in the
+delta, as in `c2patool`. In 953 fixture files this changes 13 documents.
+Against `c2patool`'s 59 crJSON answers, the first manifest's failure codes
+are equal in 48 files, up from 46.
+
 ## What "works" rests on
 
 - One pinned oracle (`c2patool` 0.27.22), and its successor 0.28.0

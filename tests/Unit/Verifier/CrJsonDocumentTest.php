@@ -216,7 +216,20 @@ it('AC5: the results, per manifest; deltas on the manifest that holds the ingred
         $results = spec075A($report->result->toArray()['validation_results'] ?? null);
         $manifests = spec075Manifests(spec075Doc($report));
         $first = spec075A($manifests[0]['validationResults'] ?? null);
-        expect(spec075Groups($first))->toBe($results['activeManifest'] ?? null, $relative)
+        // SPEC-091 supersedes this in part: a held ingredient.manifest.missing or
+        // assertion.ingredient.malformed is also in the holder's failure list, after the report's own
+        $active = spec075A($results['activeManifest'] ?? null);
+        foreach (spec075A($results['ingredientDeltas'] ?? []) as $delta) {
+            foreach (spec075A(spec075A(spec075A($delta)['validationDeltas'] ?? null)['failure'] ?? []) as $entry) {
+                if (in_array(spec075A($entry)['code'] ?? null, ['ingredient.manifest.missing', 'assertion.ingredient.malformed'], true)
+                    && str_starts_with(spec075S(spec075A($delta)['ingredientAssertionURI'] ?? null), 'self#jumbf=/c2pa/'.spec075S($manifests[0]['label']).'/')) {
+                    $failure = spec075A($active['failure'] ?? null);
+                    $failure[] = $entry;
+                    $active['failure'] = $failure;
+                }
+            }
+        }
+        expect(spec075Groups($first))->toBe($active, $relative)
             ->and($first['specVersion'] ?? null)->toBe('2.4.0');
         foreach ($manifests as $manifest) {
             foreach (spec075A($manifest['ingredientDeltas'] ?? []) as $delta) {

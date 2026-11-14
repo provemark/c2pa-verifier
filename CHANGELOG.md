@@ -5,6 +5,24 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Changed
+
+- **crJSON: a failed ingredient assertion also stands on the manifest that
+  holds it (SPEC-091).** A delta failure with `ingredient.manifest.missing`
+  or `assertion.ingredient.malformed` is now also written in that
+  manifest's `validationResults.failure`, once per code and url, as
+  `c2patool` writes `ingredient.manifest.missing`.
+  - Why: the C2PA Conformance Program's integrity rubric reads only
+    `manifests[0].validationResults`. Before, an asset whose only fault was
+    such an assertion was `Invalid` here, yet passed the rubric's
+    structural and integrity traits.
+  - Measured over 953 fixture files at 2026-11-14T00:00:00Z: 13 documents
+    gain an entry and nothing else changes; report, exit status and
+    standard error are identical.
+  - The report itself is unchanged, and no contract symbol moves.
+
 ## 0.11.2 — 2026-11-13
 
 A patch release that closes one gap in the API and changes nothing else.

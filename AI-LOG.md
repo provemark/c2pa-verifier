@@ -12577,3 +12577,11 @@ README are where the disclosure lives.
 - Measured: CI on the tag (8/8); Packagist `v0.11.2` from `c074b44`; a fresh `^0.11` install (684 files, `VERSION` 0.11.2, the refusal and the 9999 edge).
 - Reasoned: no advisory, since no verdict moves; nothing downstream has to change.
 - Decided by Maurice: the tag and the release.
+
+## 2026-11-14 — Step 546: SPEC-091, ingredient-assertion failures on the holder in crJSON
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "schrijf de verifier-spec voor de crJSON-schrijver"; "goedgekeurd, open vragen zoals voorgesteld".
+- Produced: `specs/SPEC-091-crjson-ingredient-reference-failures.md`; `src/Verifier/CrJsonDocument.php`; `tests/Unit/Verifier/CrJsonIngredientReferenceTest.php`; `tests/Unit/Verifier/CrJsonDocumentTest.php` (SPEC-075 AC5, superseded in part); `docs/comparison.md`, `docs/conformance-harness.md`, `CHANGELOG.md`; `notes/step-546-crjson-ingredient-reference-failures.md`, `NOTES.md`.
+- Measured: which delta codes `c2patool` repeats under `activeManifest` (60 delta failures); the rubric lists; first-manifest codes against the 59 crJSON answers (46, then 48); the corpus before and after (953 files, 13 documents, exit and stderr identical); 9 of 15 tests red first; 6 mutations red; the integrity rubric by hand on five files; `composer check` exit 0 (1,772 passed, 1 skipped; 217 symbols).
+- Reasoned: that a trusted asset with such a fault passed every rubric trait before; that the two codes are about the holder's own assertion and the others about the ingredient's manifest.
+- Decided by Maurice: SPEC-091 approved, open questions as proposed (both codes; the holder, whichever manifest; release as 0.11.3).

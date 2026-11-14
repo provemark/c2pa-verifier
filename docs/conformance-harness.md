@@ -51,6 +51,12 @@ the root also holds `validationResults: {"activeManifest": {"success",
 amendment 4), so that crJSON alone tells "no credentials" from "does not
 verify". The failure is also written to standard error.
 
+A failure of an ingredient assertion itself — `ingredient.manifest.missing`
+or `assertion.ingredient.malformed` — stands in the `validationResults` of
+the manifest that holds the assertion, as well as in its
+`ingredientDeltas` (SPEC-091). The programme's integrity rubric reads only
+`validationResults`.
+
 From PHP, the same:
 
 ```php
