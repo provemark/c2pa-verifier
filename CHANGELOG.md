@@ -5,7 +5,13 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.11.4 — 2026-11-22
+
+A patch release that follows `c2patool` 0.29.0 and C2PA 2.4 §15.8.2 on a
+timestamp authority whose certificate fails the certificate profile: the
+time-stamp is untrusted and ignored, and the file is no longer `Invalid`
+for it. No contract symbol changes (217). A caller on `^0.11` receives it
+without a change of constraint.
 
 ### Changed
 

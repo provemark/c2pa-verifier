@@ -12626,3 +12626,11 @@ README are where the disclosure lives.
 - Measured: the probes under 0.28.6, 0.29.0 and this verifier; 6 tests red, then green; a mutation trusting the TSA (AC14, AC15 red); corpus before/after at 2026-11-22T12:00:00Z in three configurations (1,991 runs a side, 39 differ: the eleven probes and the two new ones); `composer check` and `composer test:parallel` exit 0 (1,775 passed, 1 skipped, 217 symbols).
 - Reasoned: C2PA 2.4 §15.8.2 makes an invalid TSA certificate an untrusted time-stamp; the lenient direction is guarded by AC15.
 - Decided by Maurice: follow `c2patool` 0.29.0 and the specification; no `timeStamp.credentialInvalid`; release as patch 0.11.4; SPEC-062 amendment 5.
+
+## 2026-11-22 — Step 551: prepare 0.11.4
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "akkoord amendement 5, push maar en bereid 0.11.4 voor".
+- Produced: SPEC-062 amendment 5 marked approved in step 550's commit before the push (`0d236dc`); `CHANGELOG.md` (0.11.4 entry), `src/Verifier/Verifier.php` (`VERSION`), `README.md`; `notes/step-551-prepare-0.11.4.md`, `NOTES.md`.
+- Measured: CI on `0d236dc` (8/8); against `v0.11.3` over 1,229 files in four trust configurations, report and crJSON (13 probes differ, the same as step 550; the rest only in `jsonGenerator.version` or not at all; no exit 2); `composer check` and `composer test:parallel` exit 0 (1,775 passed, 217 symbols); package 691 files.
+- Reasoned: a patch, since no report field or contract symbol moves; `SECURITY.md` unchanged, the lenient direction being guarded by SPEC-017 AC15.
+- Decided by Maurice: SPEC-062 amendment 5; the push of step 550; preparing 0.11.4. Commit, tag and Packagist wait for his word.
