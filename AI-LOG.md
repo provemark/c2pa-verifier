@@ -12618,3 +12618,11 @@ README are where the disclosure lives.
 - Measured: `c2patool` 0.28.6 and 0.29.0 on the 930 media fixtures, without and with `tests/Fixtures/trust/full.settings.json` (3,720 runs); `bin/c2pa-verify` on the 20 files that moved; the `chain-constraints/` and `revocation/` probes under their own roots in all three; a missing `--settings` path (exit 0, silent); `c2pa-rs` source at `c2pa-v0.91.11` and `c2pa-v0.92.0` searched and diffed; C2PA 2.5 §13.2, §13.5, H.2 and the time-stamp validation steps read.
 - Reasoned: no wrong `Valid` or `Trusted`; the TSA-profile difference (SPEC-017 AC14) is now stricter than both `c2patool` and the 2.5 text, a candidate amendment; the SPEC-047 shapes stay a deliberate difference.
 - Decided by Maurice: the step, with the corpus and the 2.5 table together.
+
+## 2026-11-22 — Step 550: SPEC-017 amendment 12, a TSA off the profile is an untrusted time-stamp
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push maar, en werk het TSA-amendement uit"; "akkoord, volgen; geen credentialInvalid; patch 0.11.4"; "akkoord amendement 5".
+- Produced: `src/Timestamp/TimestampCheck.php`; SPEC-017 amendment 12 (AC14 rewritten, AC15); SPEC-062 amendment 5; `tests/Unit/Timestamp/TsaProfileTest.php`, `TsaMatrixTest.php`; two variants in `bin/make-tsa-matrix.php` and their probes; 0.28.6/0.29.0 answer files; `tests/Fixtures/timestamp/tsa-profile/README.md`; `docs/comparison.md`, `docs/reading-c2pa-2.4.md`, `CHANGELOG.md` (Unreleased); `notes/step-550-tsa-profile-untrusted.md`, `NOTES.md`. Step 549 pushed first (`44ce16e`).
+- Measured: the probes under 0.28.6, 0.29.0 and this verifier; 6 tests red, then green; a mutation trusting the TSA (AC14, AC15 red); corpus before/after at 2026-11-22T12:00:00Z in three configurations (1,991 runs a side, 39 differ: the eleven probes and the two new ones); `composer check` and `composer test:parallel` exit 0 (1,775 passed, 1 skipped, 217 symbols).
+- Reasoned: C2PA 2.4 §15.8.2 makes an invalid TSA certificate an untrusted time-stamp; the lenient direction is guarded by AC15.
+- Decided by Maurice: follow `c2patool` 0.29.0 and the specification; no `timeStamp.credentialInvalid`; release as patch 0.11.4; SPEC-062 amendment 5.

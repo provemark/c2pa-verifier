@@ -1,0 +1,18 @@
+{
+    "verify": {
+        "verify_trust": true
+    },
+    "trust": {
+        "anchors": [
+            {
+                "trust_anchors": "-----BEGIN CERTIFICATE-----\nMIICNTCCAdygAwIBAgIURwMqs6Tj6Z4dz8ZS+JFy8TL8jBAwCgYIKoZIzj0EAwIw\neTFBMD8GA1UEAww4VFNBIE1hdHJpeCByb290IChleHBpcmVkLXNpZ25lci10c2Et\nbGVhZi1la3UtZW1haWwtb25seSkxJzAlBgNVBAoMHmMycGEtdmVyaWZpZXIgdGlt\nZXN0YW1wIG1hdHJpeDELMAkGA1UEBhMCTkwwHhcNMjYxMTIyMDc1MzA1WhcNMzYx\nMTE5MDc1MzA1WjB5MUEwPwYDVQQDDDhUU0EgTWF0cml4IHJvb3QgKGV4cGlyZWQt\nc2lnbmVyLXRzYS1sZWFmLWVrdS1lbWFpbC1vbmx5KTEnMCUGA1UECgweYzJwYS12\nZXJpZmllciB0aW1lc3RhbXAgbWF0cml4MQswCQYDVQQGEwJOTDBZMBMGByqGSM49\nAgEGCCqGSM49AwEHA0IABK2bVPNxkxBMPvfGv5eWtudwl3vZBW0+6ifgETOG8D0a\nSuLrLyjlvrcgVJf7lhj7AQ2Ay/oa+sULS9UnZ3Du+TyjQjBAMA8GA1UdEwEB/wQF\nMAMBAf8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBSDaTC4f+e47A4BCZRcT0hs\nmhAjiDAKBggqhkjOPQQDAgNHADBEAiAelUXq+xvoKOJeryr4P3WOuMJUegIjxs/j\nMnRffNeLNQIgLkX2Q2zQvr+djPuywRiL5nf2n5nqmNqmUfn9JWDL6Gk=\n-----END CERTIFICATE-----\n",
+                "trust_kind": "manifest"
+            },
+            {
+                "trust_anchors": "-----BEGIN CERTIFICATE-----\nMIICPjCCAeSgAwIBAgIUCG14RV2fxQ+7NEZP0u7BxtLXTEkwCgYIKoZIzj0EAwIw\nfTFFMEMGA1UEAww8VFNBIE1hdHJpeCB0c2Etcm9vdCAoZXhwaXJlZC1zaWduZXIt\ndHNhLWxlYWYtZWt1LWVtYWlsLW9ubHkpMScwJQYDVQQKDB5jMnBhLXZlcmlmaWVy\nIHRpbWVzdGFtcCBtYXRyaXgxCzAJBgNVBAYTAk5MMB4XDTI2MTEyMjA3NTMwNVoX\nDTM2MTExOTA3NTMwNVowfTFFMEMGA1UEAww8VFNBIE1hdHJpeCB0c2Etcm9vdCAo\nZXhwaXJlZC1zaWduZXItdHNhLWxlYWYtZWt1LWVtYWlsLW9ubHkpMScwJQYDVQQK\nDB5jMnBhLXZlcmlmaWVyIHRpbWVzdGFtcCBtYXRyaXgxCzAJBgNVBAYTAk5MMFkw\nEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElcGCYvWcCpGSL28mwC4sEUFVdHhrdo8T\n6azRw9tld2KOcUYXWClU/IpNva2oDfsyDNFHdi6BAEcK1/4zvgBIVaNCMEAwDwYD\nVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYEFBGC/wOM/lxB\nhdAlu4whhmbfQHiKMAoGCCqGSM49BAMCA0gAMEUCICyZmoqbcLMjoQ82DvosP9q2\nr4a+z1Jfzc4vVY3Aaf/xAiEAjcIVtiSTIhKE/Fia7GywmuvhdFWiafKyBVVcsNwg\nIqM=\n-----END CERTIFICATE-----\n",
+                "trust_kind": "tsa"
+            }
+        ],
+        "trust_config": "\n//id-kp-emailProtection \n1.3.6.1.5.5.7.3.4\n//id-kp-documentSigning \n1.3.6.1.5.5.7.3.36\n//id-kp-timeStamping \n1.3.6.1.5.5.7.3.8\n//id-kp-OCSPSigning \n1.3.6.1.5.5.7.3.9"
+    }
+}

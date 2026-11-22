@@ -5,6 +5,31 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Changed
+
+- **A timestamp authority's certificate that fails the certificate profile
+  no longer makes the file `Invalid` (SPEC-017 amendment 12).** Such a
+  certificate gives `timeStamp.untrusted`, and the time-stamp is ignored:
+  the signer is judged at the validation time, as for every other
+  untrusted time-stamp. No `signingCredential.invalid` is added any more.
+  - Why: C2PA 2.4 §15.8.2 (2.5 §14.8.2) treats an invalid TSA certificate
+    as an untrusted time-stamp, not as a fault in the signer. `c2patool`
+    0.29.0 (`c2pa` 0.92.0) now does the same; amendment 8 had followed
+    0.28.1, which made the file `Invalid`.
+  - The danger in this direction is pinned: a TSA off the profile keeps no
+    expired signer valid (AC15, two new probes, `Invalid` with
+    `signingCredential.expired`, as in 0.29.0).
+  - Measured over 932 fixture files at 2026-11-22T12:00:00Z, without trust
+    settings, with `full.settings.json` and with each probe's own
+    settings (1,991 runs): the eleven probes with such a TSA move from
+    `Invalid` to `Trusted` under their own settings and to `Valid`
+    otherwise. The two new probes stay `Invalid`, with different codes.
+    Nothing else moves, and no run throws.
+  - `timeStamp.credentialInvalid`, which the specification allows in
+    addition, is not reported. No contract symbol changes (217).
+
 ## 0.11.3 — 2026-11-14
 
 A patch release that changes only crJSON, for the C2PA Conformance

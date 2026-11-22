@@ -23,3 +23,33 @@ Every `Invalid` carries `timeStamp.untrusted` and `signingCredential.invalid`:
 read `trust.anchors`, so its answer with the settings is its answer without
 them. The answers are under
 `../../c2patool/tsa-profile/<probe>--<version>[--no-settings].json`.
+
+## `c2patool` 0.29.0 and SPEC-017 amendment 12 (step 550)
+
+`c2pa` 0.92.0 (upstream #3031) reports a TSA leaf's profile faults as
+`timeStamp.untrusted` and ignores the time-stamp, as C2PA 2.4 §15.8.2 has
+it. 0.29.0's answers for the four probes above were recorded in step 550
+(`<probe>--0.29.0[--no-settings].json`):
+
+| file | 0.29.0 with settings | 0.29.0 without | here, from amendment 12 |
+|---|---|---|---|
+| `control.png` | `Trusted` | `Valid` | `Trusted` / `Valid` |
+| `tsa-leaf-no-key-usage.png` | `Trusted` | `Valid` | `Trusted` / `Valid` |
+| `tsa-leaf-ca-true.png` | `Trusted` | `Valid` | `Trusted` / `Valid` |
+| `tsa-leaf-sha1.png` | `Trusted` | `Valid` | `Trusted` / `Valid` |
+
+Two probes added in step 550 (SPEC-017 AC15). They were built by
+`bin/make-tsa-matrix.php <scratch> <c2patool-0.29.0> <c2patool-0.28.6>
+tsa-profile expired-signer-tsa-leaf-ca-true
+expired-signer-tsa-leaf-eku-email-only`. In each, the signer expired
+during the run, after the token was made. The TSA leaf is off the profile.
+The keys were deleted.
+
+| file | the TSA's leaf | 0.28.6 with settings | 0.29.0 with settings | here |
+|---|---|---|---|---|
+| `expired-signer-tsa-leaf-ca-true.png` | `CA:TRUE` (`openssl ts`) | `Invalid` (`signingCredential.invalid`, `expired`) | `Invalid` (`signingCredential.expired`) | `Invalid` (`signingCredential.expired`) |
+| `expired-signer-tsa-leaf-eku-email-only.png` | E-mail Protection only (CMS) | `Invalid` (`signingCredential.invalid` only: it reports `timeStamp.trusted`) | `Invalid` (`signingCredential.expired`) | `Invalid` (`signingCredential.expired`) |
+
+Without settings, all three implementations say `Invalid` on both. The
+answers are under
+`../../c2patool/tsa-profile/<probe>--{0.28.6,0.29.0}[--no-settings].json`.

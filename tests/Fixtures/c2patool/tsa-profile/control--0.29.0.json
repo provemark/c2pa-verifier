@@ -1,0 +1,104 @@
+{
+  "active_manifest": "urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0",
+  "manifests": {
+    "urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0": {
+      "assertions": [
+        {
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/algorithmicMedia"
+              }
+            ]
+          },
+          "label": "c2pa.actions.v2"
+        }
+      ],
+      "claim_generator_info": [
+        {
+          "name": "c2pa-verifier fixtures",
+          "org.contentauth.c2pa_rs": "0.90.22",
+          "version": "0.0.0"
+        }
+      ],
+      "claim_version": 2,
+      "instance_id": "xmp:iid:abc42c63-7d76-437d-b2bb-b8e473a93dba",
+      "label": "urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0",
+      "signature_info": {
+        "alg": "Es256",
+        "cert_serial_number": "24261179",
+        "common_name": "TSA Matrix leaf (control)",
+        "issuer": "c2pa-verifier timestamp matrix",
+        "time": "2026-10-09T05:03:08+00:00"
+      },
+      "thumbnail": {
+        "format": "image/jpeg",
+        "identifier": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.assertions/c2pa.thumbnail.claim"
+      },
+      "title": "fixture-signed.png"
+    }
+  },
+  "validation_results": {
+    "activeManifest": {
+      "failure": [],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "explanation": "OCSP fetching skipped",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature"
+        }
+      ],
+      "success": [
+        {
+          "code": "timeStamp.validated",
+          "explanation": "timestamp message digest matched: TSA Matrix tsa-leaf (control)",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature"
+        },
+        {
+          "code": "timeStamp.trusted",
+          "explanation": "timestamp cert trusted: TSA Matrix tsa-leaf (control), trust list: https://c2pa-rs/unknown_trust_list_bda0d5498988c180d2d5132e6fa02c52829a950886a1ed1fc41345090cd55267",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature"
+        },
+        {
+          "code": "signingCredential.trusted",
+          "explanation": "signing certificate trusted, found in [https://c2pa-rs/unknown_trust_list_6b7f43f1fe5cd18178ba04a3520f32bc4a0bc2bd461f0dd4ea935ca54f75c999] trust anchors",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "explanation": "claim signature valid",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature"
+        },
+        {
+          "code": "claimSignature.validated",
+          "explanation": "claim signature valid",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.signature"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.assertions/c2pa.thumbnail.claim"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.assertions/c2pa.actions.v2"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "explanation": "data hash valid",
+          "url": "self#jumbf=/c2pa/urn:c2pa:488bf983-c973-465d-a0eb-1597392cc5d0/c2pa.assertions/c2pa.hash.data"
+        }
+      ]
+    },
+    "specVersion": "2.4.0",
+    "trustListUri": "https://c2pa-rs/unknown_trust_list_6b7f43f1fe5cd18178ba04a3520f32bc4a0bc2bd461f0dd4ea935ca54f75c999"
+  },
+  "validation_state": "Trusted"
+}

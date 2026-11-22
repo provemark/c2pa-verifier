@@ -249,6 +249,29 @@ const SPEC062_CODES_DIFFER = [
      `timeStamp.untrusted`). `tsa-cert-absent` agrees with 0.28.1. No state
      moves.
 
+5. **2026-11-22, step 550, with SPEC-017 amendment 12** *(approved by Maurice van Loon, 2026-11-22, with SPEC-017 amendment 12)* —
+   - **Eight probes judged against `c2patool` 0.29.0.** The probes whose
+     TSA leaf fails the certificate profile are `tsa-leaf-ca-true`,
+     `tsa-leaf-eku-any`, `tsa-leaf-eku-email-only`, `tsa-leaf-eku-plus-email`,
+     `tsa-leaf-eku-plus-ocsp`, `tsa-leaf-no-eku`, `tsa-leaf-no-key-usage` and
+     `tsa-leaf-sha1`.
+     - SPEC-017 amendment 12 makes them `Trusted` under their settings,
+       as 0.29.0 records. 0.28.1 says `Invalid`.
+     - AC1, AC2 and AC4 compare these eight with 0.29.0's answers, which
+       are added under `tests/Fixtures/c2patool/tsa-matrix/`
+       (`<probe>--0.29.0[--no-settings].json`, recorded in step 550).
+     - The other probes stay on 0.28.1. Moving the whole alarm to 0.29.0
+       is its own step.
+   - **`tsa-leaf-eku-email-only` leaves the list of differing codes.**
+     0.29.0 reports `timeStamp.untrusted` for that TSA, as this verifier
+     does (`c2pa` #2854). `signingCredential.invalid` is gone on both sides.
+   - **AC7.** The generator defines 37 probes. Two of them,
+     `expired-signer-tsa-leaf-ca-true` and
+     `expired-signer-tsa-leaf-eku-email-only` (SPEC-017 AC15), are fixtures
+     of the `tsa-profile` set, not of this matrix. The matrix holds the
+     other 35, as before.
+   - No state moves except the eight, each to 0.29.0's.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

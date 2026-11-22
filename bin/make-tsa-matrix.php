@@ -328,6 +328,9 @@ $variants = [
     'tsa-leaf-no-eku' => [['tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', null)]], ['sign' => 'cms']],
     'tsa-leaf-eku-any' => [['tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', 'critical,anyExtendedKeyUsage')]], ['sign' => 'cms']],
     'tsa-leaf-eku-plus-ocsp' => [['tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', 'critical,timeStamping,OCSPSigning')]], ['sign' => 'cms']],
+    // a TSA leaf off the profile cannot keep an expired signer valid (SPEC-017 amendment 12, step 550)
+    'expired-signer-tsa-leaf-ca-true' => [['leaf' => ['validity', $SHORT], 'tsa-leaf' => ['ext', tsaReplace($TSA, 'basicConstraints', 'critical,CA:TRUE')]], []],
+    'expired-signer-tsa-leaf-eku-email-only' => [['leaf' => ['validity', $SHORT], 'tsa-leaf' => ['ext', tsaReplace($TSA, 'extendedKeyUsage', 'critical,emailProtection')]], ['sign' => 'cms']],
 ];
 
 $genKey = static function (string $path, string $kind): void {

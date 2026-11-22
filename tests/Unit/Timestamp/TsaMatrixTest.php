@@ -33,11 +33,6 @@ const SPEC062_CODES_DIFFER = [
         [['timeStamp.trusted', 'timeStamp.validated'], []],
         [['timeStamp.malformed'], []],
     ],
-    'tsa-leaf-eku-email-only' => [
-        'SPEC-017 AC7: a leaf without timeStamping is no time stamping authority',
-        [['timeStamp.trusted', 'timeStamp.validated'], ['signingCredential.invalid']],
-        [['timeStamp.untrusted', 'timeStamp.validated'], ['signingCredential.invalid']],
-    ],
     'expired-signer-untrusted-tsa' => [
         '0.28.1 adds signingCredential.untrusted to signingCredential.expired',
         [['timeStamp.untrusted', 'timeStamp.validated'], ['signingCredential.expired', 'signingCredential.untrusted']],
@@ -66,6 +61,21 @@ const SPEC062_CODES_DIFFER = [
 ];
 
 const SPEC062_RANK = ['Invalid' => 0, 'Valid' => 1, 'Trusted' => 2];
+
+/** The probes judged against c2patool 0.29.0: a TSA leaf off the profile is an untrusted time-stamp, not an Invalid file (amendment 5, SPEC-017 amendment 12). */
+const SPEC062_ON_0290 = [
+    'tsa-leaf-ca-true', 'tsa-leaf-eku-any', 'tsa-leaf-eku-email-only', 'tsa-leaf-eku-plus-email',
+    'tsa-leaf-eku-plus-ocsp', 'tsa-leaf-no-eku', 'tsa-leaf-no-key-usage', 'tsa-leaf-sha1',
+];
+
+/** Probes the generator defines for the tsa-profile set, not for this matrix (amendment 5, SPEC-017 AC15). */
+const SPEC062_IN_TSA_PROFILE = ['expired-signer-tsa-leaf-ca-true', 'expired-signer-tsa-leaf-eku-email-only'];
+
+/** the c2patool version a probe is judged against */
+function spec062OracleVersion(string $probe): string
+{
+    return in_array($probe, SPEC062_ON_0290, true) ? '0.29.0' : '0.28.1';
+}
 
 /** @return list<string> the probes the generator defines, read from its $variants list by name */
 function spec062GeneratorProbes(): array
@@ -134,10 +144,21 @@ function spec062Codes(VerificationReport $report): array
 }
 
 it('AC7: every probe the generator defines has a fixture and four answers, and no fixture is left over', function (): void {
-    $defined = spec062GeneratorProbes();
+    $all = spec062GeneratorProbes();
+    $defined = array_values(array_diff($all, SPEC062_IN_TSA_PROFILE));
 
-    expect($defined)->toHaveCount(35)   // amendment 4: two probes without the TSA certificate (SPEC-088)
+    expect($all)->toHaveCount(37)   // amendment 5: two probes for the tsa-profile set (SPEC-017 AC15)
+        ->and(array_values(array_intersect($all, SPEC062_IN_TSA_PROFILE)))->toBe(SPEC062_IN_TSA_PROFILE)
+        ->and($defined)->toHaveCount(35)   // amendment 4: two probes without the TSA certificate (SPEC-088)
         ->and(spec062FixtureProbes())->toBe($defined);
+    foreach (SPEC062_IN_TSA_PROFILE as $probe) {
+        expect(is_file(Corpus::fixtures()."/timestamp/tsa-profile/{$probe}.png"))->toBeTrue($probe);
+    }
+    foreach (SPEC062_ON_0290 as $probe) {
+        foreach (['', '--no-settings'] as $suffix) {
+            expect(is_file(Corpus::fixtures()."/c2patool/tsa-matrix/{$probe}--0.29.0{$suffix}.json"))->toBeTrue("{$probe} 0.29.0{$suffix}");
+        }
+    }
     foreach ($defined as $probe) {
         foreach (['0.27.22', '0.28.1'] as $version) {
             foreach (['', '--no-settings'] as $suffix) {
@@ -155,10 +176,11 @@ it('AC1, AC2, AC3: every probe as c2patool 0.28.1 judges it, stricter only by na
     foreach ($probes as $probe) {
         $report = spec062Verify($probe);
         $mine = $report->result->state->value;
-        $oracle = spec062Oracle($probe, '0.28.1');
+        $version = spec062OracleVersion($probe);
+        $oracle = spec062Oracle($probe, $version);
 
-        // AC2: never above 0.28.1, and timeStamp.trusted only where 0.28.1 reports it
-        expect(SPEC062_RANK[$mine])->toBeLessThanOrEqual(SPEC062_RANK[$oracle['state']], "{$probe}: {$mine} here, {$oracle['state']} in 0.28.1");
+        // AC2: never above the oracle, and timeStamp.trusted only where it reports it
+        expect(SPEC062_RANK[$mine])->toBeLessThanOrEqual(SPEC062_RANK[$oracle['state']], "{$probe}: {$mine} here, {$oracle['state']} in {$version}");
         if (in_array('timeStamp.trusted', spec062Codes($report)[0], true)) {
             expect($oracle['codes'][0])->toContain('timeStamp.trusted');
         }
@@ -177,7 +199,7 @@ it('AC4, AC3: where the state agrees, the timeStamp and failure codes agree, exc
     $differ = [];
     foreach (spec062FixtureProbes() as $probe) {
         $report = spec062Verify($probe);
-        $oracle = spec062Oracle($probe, '0.28.1');
+        $oracle = spec062Oracle($probe, spec062OracleVersion($probe));
         if ($report->result->state->value !== $oracle['state']) {
             continue;
         }
