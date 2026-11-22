@@ -12634,3 +12634,11 @@ README are where the disclosure lives.
 - Measured: CI on `0d236dc` (8/8); against `v0.11.3` over 1,229 files in four trust configurations, report and crJSON (13 probes differ, the same as step 550; the rest only in `jsonGenerator.version` or not at all; no exit 2); `composer check` and `composer test:parallel` exit 0 (1,775 passed, 217 symbols); package 691 files.
 - Reasoned: a patch, since no report field or contract symbol moves; `SECURITY.md` unchanged, the lenient direction being guarded by SPEC-017 AC15.
 - Decided by Maurice: SPEC-062 amendment 5; the push of step 550; preparing 0.11.4. Commit, tag and Packagist wait for his word.
+
+## 2026-11-22 — Step 552: 0.11.4 released
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "commit en push maar" (step 551); "moet er niet nog meer in deze release?"; "tag en release v0.11.4 maar".
+- Produced: commit `70d683e`, tag `v0.11.4`, GitHub release `v0.11.4`; `notes/step-552-release-0.11.4-released.md`, `NOTES.md`.
+- Measured: CI on `70d683e` and on the tag (8/8 each); Packagist `v0.11.4` from `70d683e`; a fresh `^0.11` install (692 files, `VERSION` 0.11.4, two probes spot-checked).
+- Reasoned: nothing else from the 0.29 round had to go in, since none of it corrects a wrong `Valid` or `Trusted`; no advisory.
+- Decided by Maurice: release now, without the status-code moves; the commit, the tag and the release.
