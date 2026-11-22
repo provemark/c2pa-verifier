@@ -396,7 +396,7 @@ it('AC10: the codes are verbatim, and the drift alarm grows', function (): void 
     // SPEC-013 AC10's corpus, verified with the full settings: the four fixtures become Trusted, nothing else changes state
     $full = spec014Settings('full');
     foreach (SPEC013_CORPUS as $name => $carrier) {
-        $oracle = json_decode((string) file_get_contents(spec014Fixtures()."/c2patool/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
+        $oracle = json_decode((string) file_get_contents(spec014Fixtures().'/c2patool/'.DRIFT_ORACLE."/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
         assert(is_array($oracle) && is_string($oracle['validation_state']));
         $expected = $oracle['validation_state'] === 'Valid' ? 'Trusted' : $oracle['validation_state'];
         expect(spec014Verify($carrier, $full)->result->state->value)->toBe($expected, $name);

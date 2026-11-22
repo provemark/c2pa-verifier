@@ -15,6 +15,13 @@ declare(strict_types=1);
 require_once __DIR__.'/Shared.php';
 
 /*
+ * The c2patool version the drift alarms compare with (SPEC-013 amendment 25, SPEC-014 amendment 10): its
+ * answers are under tests/Fixtures/c2patool/<version>/, with the same paths as the 0.27.22 answers beside
+ * them, which other criteria still read. Moved from 0.27.22 to 0.29.0 in step 554.
+ */
+const DRIFT_ORACLE = '0.29.0';
+
+/*
  * Every c2patool JSON recorded without trust settings (steps 14, 21, 23, 24,
  * 26) and the file it was recorded on — SPEC-013 AC10's drift alarm, re-run
  * by SPEC-014 AC10 with the full trust settings. Grows with every step that
@@ -69,7 +76,7 @@ const SPEC013_PUBLIC_MULTI = [
     'adobe-20220124-CACA', 'adobe-20220124-CACAICAICICA', 'adobe-20220124-CAIAIIICAICIICAIICICA', 'adobe-20220124-CAICA', 'adobe-20220124-CAICAI',
     'adobe-20220124-CICA', 'adobe-20220124-CICACACA', 'adobe-20220124-CIE-sig-CA', 'adobe-20220124-E-clm-CAICAI', 'adobe-20220124-E-uri-CIE-sig-CA',
 ];
-const SPEC013_PUBLIC_TSA_NOT_CONFIGURED = ['truepic-20230212-camera', 'truepic-20230212-landscape', 'truepic-20230212-library'];
+const SPEC013_PUBLIC_TSA_NOT_CONFIGURED = ['truepic-20230212-camera', 'truepic-20230212-landscape', 'truepic-20230212-library'];   // Invalid in c2patool 0.29.0 too, for their exclusion (SPEC-012 am. 7); expired here as well
 
 /*
  * The c2pa-rs fixtures (sdk/tests/fixtures at 58eac79, step 39) with a c2patool

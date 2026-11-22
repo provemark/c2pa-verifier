@@ -4,7 +4,10 @@ Measured against `c2patool` 0.27.22 (`c2pa/0.90.22`), last reviewed
 2026-09-24, over the five fixture corpora — 22 own variants, 24 files of
 `c2pa-org/public-testfiles`, 17 of `c2pa-rs`'s own fixtures, 7 from other
 writers and 23 of the algorithm matrix, 93 in all — plus the signed
-absence variants. The drift alarms run all of it on every `composer
+absence variants. Since step 554 (2026-11-22) the drift alarms compare
+with `c2patool` 0.29.0's answers on the same 116 recordings
+(`tests/Fixtures/c2patool/0.29.0/`); no file is more lenient there and no
+named exception changed. The drift alarms run all of it on every `composer
 check`: four of them from the lists in `tests/Pest.php`, the fifth in
 `tests/Unit/Verifier/MatrixTest.php`. The exceptions below are those
 lists, by name. "Stricter" means this verifier refuses
@@ -14,7 +17,8 @@ strictness must prevent a wrong `Valid` or trust in something unchecked.
 
 **And against `c2patool` 0.28.0** (`c2pa` 0.91.0, released 2026-09-22),
 measured on 2026-09-24 over the whole corpus (steps 107–118). The pinned
-oracle, whose JSON the drift alarms compare with, is still 0.27.22.
+oracle, whose JSON the drift alarms compared with, stayed 0.27.22 until
+step 554 moved it to 0.29.0.
 0.28.0's answers are recorded where a criterion rests on them, under
 `tests/Fixtures/c2patool/anchors/`, `x5chain/` and `absence/`. Of the 14
 files whose result 0.28.0 changed, every one has been examined:
@@ -122,8 +126,10 @@ says `Invalid` or gives no report.
 
 Several codes move without a verdict: `claimSignature.validated` is
 reported again where a refusal fell away, and `signingCredential.invalid`
-is gone from eight files that stay `Invalid` for another reason. The
-drift alarms still compare with 0.27.22.
+is gone from eight files that stay `Invalid` for another reason. Since
+step 554 the drift alarms compare with 0.29.0. Over their 116
+recordings, only the three Truepic files and the remote Photoshop file
+move, to `Invalid`, as here.
 
 **Since 0.2.0** (SPEC-033 to SPEC-040), every new rule was measured on
 signed probes under **both** versions before it was built. Their answers
@@ -144,8 +150,8 @@ Where the two versions differ, this verifier follows 0.28.0:
   self-redacted actions assertion (SPEC-035), where 0.27.22 reports only
   those two.
 
-The drift alarms still compare with 0.27.22's recorded JSON, so none of
-these rows moves an alarm.
+The drift alarms compared with 0.27.22's recorded JSON until step 554,
+and since then with 0.29.0's. None of these rows moves an alarm in either.
 
 ## Where `c2patool` can do more
 

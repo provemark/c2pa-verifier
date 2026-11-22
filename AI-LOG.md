@@ -12650,3 +12650,11 @@ README are where the disclosure lives.
 - Measured: `c2patool` 0.29.0 on the ten revocation probes, the five `chain-constraints/x5chain-*` probes and `manifest-probes/x5chain-unprotected-too`, each under its own root; `conformance-test/signed.*` under the test root in 0.29.0 and here; `composer check` exit 0.
 - Reasoned: C2PA 2.5 §13.2/§13.5 (read in step 549) support the protected-header rule without requiring a refusal; why 0.29.0 keeps `cs-revoked` and `cs-two` `Trusted` was not traced.
 - Decided by Maurice: the step and its scope.
+
+## 2026-11-22 — Step 554: the drift alarms compare with `c2patool` 0.29.0
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "werk de drift-alarmen uit"; "ja akkoord".
+- Produced: 116 `c2patool` 0.29.0 answers under `tests/Fixtures/c2patool/0.29.0/`; `DRIFT_ORACLE` in `tests/Pest.php`; `tests/Unit/Verifier/VerifierTest.php` (`spec013DriftOracle()`, AC10–AC13, two assertions), `MatrixTest.php`, `tests/Unit/Trust/ChainCheckTest.php`; SPEC-013 amendment 25, SPEC-014 amendment 10; `docs/comparison.md`; four fixture READMEs; `notes/step-554-drift-alarms-0.29.0.md`, `NOTES.md`.
+- Measured: `c2patool` 0.29.0 on the 116 files against the 0.27.22 answers (111 equal, 4 state moves to `Invalid`, 1 code move); the new assertions red before and green after the switch; each of the six alarms red on a hand-changed answer; `composer check` and `composer test:parallel` exit 0.
+- Reasoned: no file is more lenient in 0.29.0, so no exception changes; the remote-manifest answer depends on a server `c2patool` fetches from.
+- Decided by Maurice: move the alarms (2026-11-10) and this step's scope.

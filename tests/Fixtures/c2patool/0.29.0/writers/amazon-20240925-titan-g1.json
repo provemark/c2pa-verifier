@@ -1,0 +1,108 @@
+{
+  "active_manifest": "urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537",
+  "manifests": {
+    "urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537": {
+      "assertions": [
+        {
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
+                "softwareAgent": "Titan Image Generator G1",
+                "when": "2024-09-25T08:29:07.629074Z"
+              }
+            ]
+          },
+          "label": "c2pa.actions.v2"
+        }
+      ],
+      "claim_generator": "Amazon_Bedrock c2pa-rs/0.32.7",
+      "claim_generator_info": [
+        {
+          "name": "Amazon Bedrock"
+        },
+        {
+          "name": "c2pa-rs",
+          "version": "0.32.7"
+        }
+      ],
+      "claim_version": 1,
+      "format": "image/png",
+      "instance_id": "xmp:iid:8a811ec8-e375-4cce-9ebf-f5bb24a3ff0c",
+      "label": "urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537",
+      "signature_info": {
+        "alg": "Es384",
+        "cert_serial_number": "19299476128165458474368448501226761570",
+        "common_name": "Amazon Web Services, Inc.",
+        "issuer": "Amazon Web Services, Inc.",
+        "time": "2024-09-25T08:29:07+00:00"
+      },
+      "title": "image.png"
+    }
+  },
+  "validation_results": {
+    "activeManifest": {
+      "failure": [
+        {
+          "code": "signingCredential.untrusted",
+          "explanation": "signing certificate untrusted",
+          "url": "self#jumbf=/c2pa/urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537/c2pa.signature"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "explanation": "OCSP fetching skipped",
+          "url": "self#jumbf=/c2pa/urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537/c2pa.signature"
+        }
+      ],
+      "success": [
+        {
+          "code": "timeStamp.validated",
+          "explanation": "timestamp message digest matched: DigiCert Timestamp 2023",
+          "url": "self#jumbf=/c2pa/urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537/c2pa.signature"
+        },
+        {
+          "code": "timeStamp.trusted",
+          "explanation": "legacy timestamp cert trusted: DigiCert Timestamp 2023",
+          "url": "self#jumbf=/c2pa/urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537/c2pa.signature"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "explanation": "claim signature valid",
+          "url": "self#jumbf=/c2pa/urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537/c2pa.signature"
+        },
+        {
+          "code": "claimSignature.validated",
+          "explanation": "claim signature valid",
+          "url": "self#jumbf=/c2pa/urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537/c2pa.signature"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions",
+          "url": "self#jumbf=/c2pa/urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537/c2pa.assertions/c2pa.actions"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data",
+          "url": "self#jumbf=/c2pa/urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537/c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "explanation": "data hash valid",
+          "url": "self#jumbf=/c2pa/urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537/c2pa.assertions/c2pa.hash.data"
+        }
+      ]
+    },
+    "specVersion": "2.4.0"
+  },
+  "validation_state": "Valid",
+  "validation_status": [
+    {
+      "code": "signingCredential.untrusted",
+      "explanation": "signing certificate untrusted",
+      "url": "self#jumbf=/c2pa/urn:uuid:31c13ba2-fa0e-4676-9939-f5a79c5c7537/c2pa.signature"
+    }
+  ]
+}

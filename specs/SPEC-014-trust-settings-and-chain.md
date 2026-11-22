@@ -641,6 +641,13 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
    `trust_anchors` contents.* No acceptance criterion of this spec
    changes.
 
+10. **2026-11-22, step 554, with SPEC-013 amendment 25** *(approved by
+    Maurice van Loon, 2026-11-22)* — AC10 runs SPEC-013 AC10's corpus
+    again with the full settings. It reads the `c2patool` 0.29.0 answers
+    under `tests/Fixtures/c2patool/0.29.0/` instead of 0.27.22's. The 22
+    states are the same in both versions. A state changed by hand in a
+    0.29.0 answer turned it red.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

@@ -17,6 +17,8 @@ update manifest, a box-hash-named file that carries a data hash, cloud
 (remote) manifests, a prerelease claim, and twelve files with no
 manifest at all. c2patool 0.27.22's JSON for the 17 that yield one,
 with the full test trust settings, is under `../c2patool/c2pa-rs/`.
+Since step 554 the drift alarm reads `c2patool` 0.29.0's answers, recorded
+the same way, under `../c2patool/0.29.0/c2pa-rs/`.
 
 | file | c2patool (full settings) | note |
 |---|---|---|

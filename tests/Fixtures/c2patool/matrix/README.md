@@ -6,3 +6,7 @@ Two per file: `<name>.json` (no settings — every file is `Valid` with
 `Trusted`). c2patool 0.27.22, recorded 2026-09-22 with the files
 themselves; regenerating the matrix regenerates these. See
 `../../matrix/README.md`.
+
+Since step 554 the drift alarm (SPEC-013 AC17) reads `c2patool` 0.29.0's
+answers, recorded the same two ways on 2026-11-22, under
+`../0.29.0/matrix/`. They equal these in state and failure codes.

@@ -13,6 +13,7 @@ use Provemark\ContentCredentials\Core\Reading\ManifestStoreParser;
 /*
  * SPEC-013: the Verifier — one call from file to verdict. The oracle is
  * every c2patool 0.27.22 JSON under tests/Fixtures/c2patool/ (steps 14–26),
+ * and for the drift alarms c2patool 0.29.0's (DRIFT_ORACLE, amendment 25),
  * its exit messages on unsigned and unknown files (step 28), and the sister
  * library's ManifestStoreParser reading our report.
  */
@@ -56,6 +57,17 @@ function spec013C2patool(string $name): array
 {
     /** @var array<string, mixed> */
     return json_decode((string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/c2patool/'.$name.'.json'), true, 512, JSON_THROW_ON_ERROR);
+}
+
+/**
+ * A drift alarm's oracle: c2patool DRIFT_ORACLE's answer for a recorded name (tests/Pest.php).
+ *
+ * @return array<string, mixed>
+ */
+function spec013DriftOracle(string $relative): array
+{
+    /** @var array<string, mixed> */
+    return json_decode((string) file_get_contents(dirname(__DIR__, 2).'/Fixtures/c2patool/'.DRIFT_ORACLE.'/'.$relative.'.json'), true, 512, JSON_THROW_ON_ERROR);
 }
 
 /**
@@ -381,7 +393,7 @@ it('AC10: the drift alarm: every recorded c2patool JSON, state and failures', fu
     foreach (SPEC013_CORPUS as $name => $carrier) {
         $seen++;
         $report = spec013Verify($carrier);
-        $oracle = spec013C2patool($name);
+        $oracle = spec013DriftOracle($name);
 
         expect($report->result->state->value)->toBe($oracle['validation_state'], "{$name}: validation_state");
 
@@ -435,10 +447,7 @@ it('AC11: a store with more than one manifest is measured like any other, its in
 
         return (new Verifier)->verify(spec013Stream('public-testfiles/'.basename($path)), $full);
     };
-    $c2patool = static function (string $name): array {
-        /** @var array<string, mixed> */
-        return json_decode((string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/c2patool/public-testfiles/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
-    };
+    $c2patool = static fn (string $name): array => spec013DriftOracle("public-testfiles/{$name}");
 
     // SPEC-021 validates the manifests an ingredient assertion names, so these files are measured like
     // any other: c2patool's state, and no refusal of our own (the criterion this replaced refused every
@@ -469,7 +478,11 @@ it('AC11: a store with more than one manifest is measured like any other, its in
         $oracle = $c2patool($name);
         $expected = $oracle['validation_state'];
         if (in_array($name, SPEC013_PUBLIC_TSA_NOT_CONFIGURED, true)) {
-            $expected = 'Invalid';   // the Truepic files: their TSA is not configured, so the signer is judged at now
+            // the Truepic files: Invalid in c2patool 0.29.0 too, for the exclusion that holds the store and other
+            // bytes (SPEC-012 amendment 7); here also expired, their TSA reaching no configured anchor
+            expect($oracle['validation_state'])->toBe('Invalid', $name)
+                ->and(spec013OracleFailures($oracle))->toContain('assertion.dataHash.mismatch');
+            $expected = 'Invalid';
         }
         expect($report->result->state->value)->toBe($expected, $name);
         if (in_array($name, SPEC013_PUBLIC_TSA_NOT_CONFIGURED, true)) {
@@ -490,7 +503,7 @@ it('AC12: the oracle\'s own fixtures are a third drift alarm, and a CAWG identit
     };
     foreach (SPEC013_RS_CORPUS as $name) {
         /** @var array<string, mixed> $oracle */
-        $oracle = json_decode((string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/c2patool/c2pa-rs/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
+        $oracle = spec013DriftOracle("c2pa-rs/{$name}");
         $report = $verify($name);
         $expected = $oracle['validation_state'];
         // SPEC-021 validates ingredient manifests and SPEC-022 reads update manifests; what stays
@@ -521,8 +534,12 @@ it('AC13: the writers corpus is a fourth drift alarm — c2patool\'s state unles
         $path = glob(dirname(__DIR__, 2)."/Fixtures/writers/{$name}.*")[0] ?? throw new RuntimeException("no file for {$name}");
         $report = (new Verifier)->verify(spec013Stream('writers/'.basename($path)));
         /** @var array<string, mixed> $oracle */
-        $oracle = json_decode((string) file_get_contents(dirname(__DIR__, 2)."/Fixtures/c2patool/writers/{$name}.json"), true, 512, JSON_THROW_ON_ERROR);
+        $oracle = spec013DriftOracle("writers/{$name}");
         $expected = $oracle['validation_state'];
+        if (in_array($name, SPEC013_WRITERS_REMOTE, true)) {
+            // c2patool 0.29.0 fetches the remote manifest and finds the data hash broken; nothing is fetched here
+            expect($oracle['validation_state'])->toBe('Invalid', $name);
+        }
         if (in_array($name, array_merge(SPEC013_WRITERS_MULTI, SPEC013_WRITERS_REMOTE, SPEC013_WRITERS_TSA_NOT_CONFIGURED), true)) {
             $expected = 'Invalid';
         }

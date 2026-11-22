@@ -348,7 +348,9 @@ a short one) are made in the tests.
   set, one `validation_state`), §15.10.3 / §15.12.1 (the assertion and
   data-hash checks as SPEC-011/012 implemented them). Read 2026-09-21.
 - Oracle: `c2patool 0.27.22` — every JSON under
-  `tests/Fixtures/c2patool/` (steps 14, 21, 23, 24, 26); its exit
+  `tests/Fixtures/c2patool/` (steps 14, 21, 23, 24, 26); the drift alarms
+  (AC10–AC13, AC17) compare with `c2patool` 0.29.0 since amendment 25,
+  under `tests/Fixtures/c2patool/0.29.0/`; its exit
   messages on `fixture-unsigned.*` (`Error: No claim found`) and
   `jpeg/not-a-jpeg.bin` (`Error: Unsupported file type`), measured
   2026-09-21 in step 28's preparation; its behaviour after a signature
@@ -664,6 +666,40 @@ final class ManifestException extends \RuntimeException
     `c2pa-rs-cawg_ica`) are `Invalid` already and must not move.
 
     Approved by Maurice van Loon, 2026-10-29 (step 502).
+
+25. **2026-11-22, step 554, the drift alarms move to `c2patool` 0.29.0**
+    *(approved by Maurice van Loon, 2026-11-22)* — AC10 to AC13 and AC17
+    compared with `c2patool` 0.27.22's answers, recorded in September. A
+    change in later versions went unseen by them. Decided on 2026-11-10:
+    move them in one step to the next stable version.
+    - **The answers.** `c2patool` 0.29.0 (`c2pa` 0.92.0) was run on the
+      116 recorded files, each with the settings its criterion verifies
+      with: none for AC10 and AC13, `trust/full.settings.json` for AC11
+      and AC12, none and `matrix/test-roots.settings.json` for AC17. The
+      answers are under `tests/Fixtures/c2patool/0.29.0/`, with the same
+      paths as the 0.27.22 answers. Those stay, because other criteria
+      read them for what they recorded (a manifest's shape, a hash, a
+      url). `DRIFT_ORACLE` in `tests/Pest.php` names the version.
+    - **What moved.** 111 of 116 are the same in state and failure codes.
+      - The three Truepic files (AC11) go from `Valid` to `Invalid` with
+        `assertion.dataHash.mismatch`, the exclusion that holds the store
+        and other bytes (SPEC-012 amendment 7). They were `Invalid` here
+        already, with `signingCredential.expired` too.
+      - `adobe-20260304-photoshop-remote-manifest` (AC13) goes from
+        `Valid` to `Invalid`: `c2patool` fetches the remote manifest and
+        finds the data hash broken. Nothing is fetched here.
+      - `C_with_CAWG_data` (AC12) reports
+        `cawg.x509.credential.untrusted` where it reported
+        `signingCredential.untrusted`. Its state is unchanged.
+
+      No file is more lenient in 0.29.0. No named exception is lifted,
+      and none is added.
+    - **AC11 and AC13 now say why.** For the Truepic files AC11 asserts
+      the oracle's `Invalid` and its `assertion.dataHash.mismatch`. For the
+      remote manifest AC13 asserts the oracle's `Invalid`. Both were red
+      against the 0.27.22 answers and are green against 0.29.0's.
+    - **Seen red.** In each alarm, one oracle state changed by hand
+      turned it red; restored, it is green.
 
 ## Traceability
 

@@ -15,7 +15,8 @@ use Provemark\C2paVerifier\Verifier\Verifier;
  * verifier implements, plus two files whose data hash is sha384 and sha512 — the cells the four
  * corpora left empty. Built by bin/make-matrix-fixtures.php with c2patool 0.27.22 and c2pa-rs's
  * public test certificates; the oracle is c2patool's JSON beside each file, recorded twice (with
- * the test roots and without settings). This is the fifth drift alarm (SPEC-013 amendment 12).
+ * the test roots and without settings); the alarm reads c2patool 0.29.0's, under
+ * c2patool/0.29.0/matrix/ (SPEC-013 amendment 25). This is the fifth drift alarm (SPEC-013 amendment 12).
  */
 
 /** @return list<string> every matrix file, as a fixture-relative path */
@@ -41,7 +42,7 @@ function spec013MatrixOracle(string $relative, bool $trusted): array
     $name = basename($relative);
 
     /** @var array<string, mixed> */
-    return json_decode((string) file_get_contents(Corpus::fixtures()."/c2patool/matrix/{$name}".($trusted ? '.trusted' : '').'.json'), true, 512, JSON_THROW_ON_ERROR);
+    return json_decode((string) file_get_contents(Corpus::fixtures().'/c2patool/'.DRIFT_ORACLE."/matrix/{$name}".($trusted ? '.trusted' : '').'.json'), true, 512, JSON_THROW_ON_ERROR);
 }
 
 function spec013MatrixVerify(string $relative, ?TrustSettings $settings): VerificationReport

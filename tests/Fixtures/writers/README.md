@@ -35,4 +35,5 @@ expired at now, judged at its DigiCert 2022 stamp — the Truepic files
 already show).
 
 c2patool 0.27.22's JSON for each, without settings, is in
-`../c2patool/writers/`.
+`../c2patool/writers/`. Since step 554 the drift alarm reads `c2patool`
+0.29.0's answers, recorded the same way, under `../c2patool/0.29.0/writers/`.

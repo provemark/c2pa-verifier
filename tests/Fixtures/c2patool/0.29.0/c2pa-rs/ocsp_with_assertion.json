@@ -1,0 +1,639 @@
+{
+  "active_manifest": "adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80",
+  "manifests": {
+    "adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd": {
+      "assertions": [
+        {
+          "data": {
+            "@context": "https://schema.org",
+            "@type": "CreativeWork",
+            "author": [
+              {
+                "@type": "Person",
+                "credential": [
+                  {
+                    "alg": "sha256",
+                    "hash": [
+                      238,
+                      11,
+                      177,
+                      104,
+                      12,
+                      98,
+                      184,
+                      8,
+                      155,
+                      180,
+                      225,
+                      100,
+                      71,
+                      78,
+                      70,
+                      69,
+                      247,
+                      196,
+                      117,
+                      23,
+                      107,
+                      130,
+                      213,
+                      112,
+                      233,
+                      116,
+                      39,
+                      23,
+                      156,
+                      125,
+                      138,
+                      85
+                    ],
+                    "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.credentials/did:adobe:ff2ee515664208df09319e0ea22a7471a350c0950e5bf0ed024ed68b52af264b9"
+                  }
+                ],
+                "identifier": "did:adobe:ff2ee515664208df09319e0ea22a7471a350c0950e5bf0ed024ed68b52af264b9",
+                "name": "Alex Tran"
+              },
+              {
+                "@id": "https://www.linkedin.com/profile-thirdparty-redirect/AgHguEsABC_4TQAAAZfxDxY_mfoo5DQD7Jonm8khQWXlrininD8Ya7uhWTl-ncZ62V761ov3q1d_y_0mOyWFJ2GQwXNwsgdNxS-ztPrYj_uoLNvGe3Cf9JbVxM6izR4",
+                "@type": "Person",
+                "credential": [
+                  {
+                    "alg": "sha256",
+                    "hash": [
+                      238,
+                      11,
+                      177,
+                      104,
+                      12,
+                      98,
+                      184,
+                      8,
+                      155,
+                      180,
+                      225,
+                      100,
+                      71,
+                      78,
+                      70,
+                      69,
+                      247,
+                      196,
+                      117,
+                      23,
+                      107,
+                      130,
+                      213,
+                      112,
+                      233,
+                      116,
+                      39,
+                      23,
+                      156,
+                      125,
+                      138,
+                      85
+                    ],
+                    "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.credentials/did:adobe:ff2ee515664208df09319e0ea22a7471a350c0950e5bf0ed024ed68b52af264b9"
+                  }
+                ],
+                "identifier": "did:adobe:ff2ee515664208df09319e0ea22a7471a350c0950e5bf0ed024ed68b52af264b9",
+                "name": "Alex Tran"
+              }
+            ]
+          },
+          "kind": "Json",
+          "label": "stds.schema-org.CreativeWork"
+        },
+        {
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.opened",
+                "parameters": {
+                  "com.adobe.icon": "https://cai-assertions.adobe.com/icons/import-dark.svg",
+                  "com.adobe.tool": "open",
+                  "description": "Opened a pre-existing file",
+                  "instanceId": "xmp:iid:44e64b3e-abda-4139-8e20-7f645530b01a"
+                }
+              }
+            ],
+            "metadata": {
+              "dateTime": "2025-07-29T20:08:33.219Z",
+              "localizations": [],
+              "reviewRatings": []
+            }
+          },
+          "label": "c2pa.actions.v2"
+        }
+      ],
+      "claim_generator": "Adobe_Photoshop/26.8.1 adobe_c2pa/0.14.2 c2pa-rs/0.43.0",
+      "claim_generator_info": [
+        {
+          "com.adobe.build": "20250624.r.8 5e0d05d mac",
+          "name": "Adobe Photoshop",
+          "version": "26.8.1"
+        }
+      ],
+      "claim_version": 1,
+      "credentials": [
+        {
+          "@context": [
+            "https://www.w3.org/2018/credentials/v1"
+          ],
+          "credentialSubject": {
+            "id": "did:adobe:ff2ee515664208df09319e0ea22a7471a350c0950e5bf0ed024ed68b52af264b9",
+            "name": "Alex Tran"
+          },
+          "proof": {
+            "created": "2025-07-29T20:11:03.257447896Z",
+            "jws": "f0a947006439e1795aa232d04e3376375c5b07e2d8eb8a4c54823c1f4bdb7ec1bed05d1a1f900e64601a2dfcdde6599899b336baaec652e644af050458e5a1509",
+            "proofPurpose": "assertionMethod",
+            "type": "Ed25519Signature2018",
+            "verificationMethod": "did:adobe:ff2ee515664208df09319e0ea22a7471a350c0950e5bf0ed024ed68b52af264b9"
+          },
+          "type": [
+            "VerifiableCredential"
+          ]
+        }
+      ],
+      "format": "image/jpeg",
+      "ingredients": [
+        {
+          "active_manifest": "urn:uuid:b82c36da-6dc9-418d-bd2c-9587009f797f",
+          "document_id": "xmp:iid:44e64b3e-abda-4139-8e20-7f645530b01a",
+          "format": "image/jpeg",
+          "instance_id": "xmp:iid:44e64b3e-abda-4139-8e20-7f645530b01a",
+          "label": "c2pa.ingredient",
+          "manifest_data": {
+            "format": "application/c2pa",
+            "identifier": "urn:uuid:b82c36da-6dc9-418d-bd2c-9587009f797f"
+          },
+          "metadata": {
+            "dateTime": "2025-07-29T20:10:54.926Z"
+          },
+          "relationship": "componentOf",
+          "thumbnail": {
+            "format": "image/jpeg",
+            "identifier": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.assertions/c2pa.thumbnail.ingredient.jpeg"
+          },
+          "title": "ocsp.jpg"
+        }
+      ],
+      "instance_id": "xmp:iid:41f493c4-a5ba-4f0a-9795-24e331f6ff6c",
+      "label": "adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd",
+      "signature_info": {
+        "alg": "Ps256",
+        "cert_serial_number": "28651076926158642445677524766118780318",
+        "common_name": "Adobe C2PA",
+        "issuer": "Adobe Inc.",
+        "time": "2025-07-29T20:11:27+00:00"
+      },
+      "thumbnail": {
+        "format": "image/jpeg",
+        "identifier": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.assertions/c2pa.thumbnail.claim.jpeg"
+      },
+      "title": "ocsp.jpg"
+    },
+    "adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80": {
+      "assertions": [
+        {
+          "data": {
+            "@context": "https://schema.org",
+            "@type": "CreativeWork",
+            "author": [
+              {
+                "@type": "Person",
+                "credential": [
+                  {
+                    "alg": "sha256",
+                    "hash": [
+                      21,
+                      3,
+                      44,
+                      246,
+                      249,
+                      136,
+                      104,
+                      123,
+                      154,
+                      13,
+                      72,
+                      224,
+                      14,
+                      31,
+                      17,
+                      48,
+                      123,
+                      12,
+                      155,
+                      229,
+                      3,
+                      183,
+                      75,
+                      73,
+                      33,
+                      194,
+                      198,
+                      121,
+                      182,
+                      156,
+                      15,
+                      147
+                    ],
+                    "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.credentials/did:adobe:ff2ee515664208df09319e0ea22a7471a350c0950e5bf0ed024ed68b52af264b9"
+                  }
+                ],
+                "identifier": "did:adobe:ff2ee515664208df09319e0ea22a7471a350c0950e5bf0ed024ed68b52af264b9",
+                "name": "Alex Tran"
+              },
+              {
+                "@id": "https://www.linkedin.com/profile-thirdparty-redirect/AgHguEsABC_4TQAAAZfxDxY_mfoo5DQD7Jonm8khQWXlrininD8Ya7uhWTl-ncZ62V761ov3q1d_y_0mOyWFJ2GQwXNwsgdNxS-ztPrYj_uoLNvGe3Cf9JbVxM6izR4",
+                "@type": "Person",
+                "credential": [
+                  {
+                    "alg": "sha256",
+                    "hash": [
+                      21,
+                      3,
+                      44,
+                      246,
+                      249,
+                      136,
+                      104,
+                      123,
+                      154,
+                      13,
+                      72,
+                      224,
+                      14,
+                      31,
+                      17,
+                      48,
+                      123,
+                      12,
+                      155,
+                      229,
+                      3,
+                      183,
+                      75,
+                      73,
+                      33,
+                      194,
+                      198,
+                      121,
+                      182,
+                      156,
+                      15,
+                      147
+                    ],
+                    "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.credentials/did:adobe:ff2ee515664208df09319e0ea22a7471a350c0950e5bf0ed024ed68b52af264b9"
+                  }
+                ],
+                "identifier": "did:adobe:ff2ee515664208df09319e0ea22a7471a350c0950e5bf0ed024ed68b52af264b9",
+                "name": "Alex Tran"
+              }
+            ]
+          },
+          "kind": "Json",
+          "label": "stds.schema-org.CreativeWork"
+        },
+        {
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.opened",
+                "parameters": {
+                  "com.adobe.icon": "https://cai-assertions.adobe.com/icons/import-dark.svg",
+                  "com.adobe.tool": "open",
+                  "description": "Opened a pre-existing file",
+                  "instanceId": "xmp:iid:93fa2455-14bf-42ba-924b-e885653b6110"
+                }
+              },
+              {
+                "action": "c2pa.resized",
+                "parameters": {
+                  "com.adobe.icon": "https://cai-assertions.adobe.com/icons/resize-dark.svg",
+                  "com.adobe.tool": "canvas_size",
+                  "description": "Changed dimensions or file size"
+                }
+              }
+            ],
+            "metadata": {
+              "dateTime": "2025-07-29T20:26:20.877Z",
+              "localizations": [],
+              "reviewRatings": []
+            }
+          },
+          "label": "c2pa.actions.v2"
+        }
+      ],
+      "claim_generator": "Adobe_Photoshop/26.8.1 adobe_c2pa/0.14.2 c2pa-rs/0.43.0",
+      "claim_generator_info": [
+        {
+          "com.adobe.build": "20250624.r.8 5e0d05d mac",
+          "name": "Adobe Photoshop",
+          "version": "26.8.1"
+        }
+      ],
+      "claim_version": 1,
+      "credentials": [
+        {
+          "@context": [
+            "https://www.w3.org/2018/credentials/v1"
+          ],
+          "credentialSubject": {
+            "id": "did:adobe:ff2ee515664208df09319e0ea22a7471a350c0950e5bf0ed024ed68b52af264b9",
+            "name": "Alex Tran"
+          },
+          "proof": {
+            "created": "2025-07-29T20:11:03.257447896Z",
+            "jws": "f0a947006439e1795aa232d04e3376375c5b07e2d8eb8a4c54823c1f4bdb7ec1bed05d1a1f900e64601a2dfcdde6599899b336baaec652e644af050458e5a1509",
+            "proofPurpose": "assertionMethod",
+            "type": "Ed25519Signature2018",
+            "verificationMethod": "did:adobe:ff2ee515664208df09319e0ea22a7471a350c0950e5bf0ed024ed68b52af264b9"
+          },
+          "type": [
+            "VerifiableCredential"
+          ]
+        }
+      ],
+      "format": "image/jpeg",
+      "ingredients": [
+        {
+          "active_manifest": "adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd",
+          "document_id": "xmp:iid:93fa2455-14bf-42ba-924b-e885653b6110",
+          "format": "image/jpeg",
+          "instance_id": "xmp:iid:93fa2455-14bf-42ba-924b-e885653b6110",
+          "label": "c2pa.ingredient",
+          "manifest_data": {
+            "format": "application/c2pa",
+            "identifier": "adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd"
+          },
+          "metadata": {
+            "dateTime": "2025-07-29T20:26:27.043Z"
+          },
+          "relationship": "componentOf",
+          "thumbnail": {
+            "format": "image/jpeg",
+            "identifier": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.assertions/c2pa.thumbnail.claim.jpeg"
+          },
+          "title": "ocsp.jpg"
+        }
+      ],
+      "instance_id": "xmp:iid:2a332b2d-43dc-4fb7-a473-e6644c3f0cce",
+      "label": "adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80",
+      "signature_info": {
+        "alg": "Ps256",
+        "cert_serial_number": "28651076926158642445677524766118780318",
+        "common_name": "Adobe C2PA",
+        "issuer": "Adobe Inc.",
+        "time": "2025-07-29T20:27:00+00:00"
+      },
+      "thumbnail": {
+        "format": "image/jpeg",
+        "identifier": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.assertions/c2pa.thumbnail.claim.jpeg"
+      },
+      "title": "ocsp.jpg"
+    },
+    "urn:uuid:b82c36da-6dc9-418d-bd2c-9587009f797f": {
+      "assertions": [
+        {
+          "data": {
+            "ocspVals": [
+              "b64'MIIC1woBAKCCAtAwggLMBgkrBgEFBQcwAQEEggK9MIICuTCBoqIWBBTQrUKK8HoUByXGl8BDqCOF6LUtIxgPMjAyNTA3MTYxODIzMTFaMHcwdTBNMAkGBSsOAwIaBQAEFIrvsgEQb2tlFU3Bo7dRqYtzkssWBBTQrUKK8HoUByXGl8BDqCOF6LUtIwIUNmq+M3yRXd5vew2QiYjvL5T3oqyAABgPMjAyNTA3MTYxODIzMTFaoBEYDzIwMjUwNzIzMTgyMzExWjANBgkqhkiG9w0BAQsFAAOCAgEAHkbp3hllISkyB/rmTL0Ng5st0pU21cwUIPtXy8giRfs/qF/YuRmzgoW2yhSRxJkz3o1I+yRyQPshVoZTAMgl7MDvz5w1tyZTVi3D7pVJhRqXG1deRyPR4AZpHJfwYCxjXKungPqDQoUE84Jq20fLo50NdHsdA8O3/AaT2mQtE0ds9bOPdfQ+DV2WN5HesIgU2X7k5zLwZ5YkoKLvi8XqaksjJDaoZWFRBV+bLLjvrl8kng3pMrLZ2gQXdXftt/0C1kaobLuckt9FEJWfbE1qY3D6blYGDkdvewcKiIbvW3R/aoDCbhFKHFhfRhd+zKlSatRdnH7g8cEKvt8OTrunOjwCHnFmjFUIatoH3DR95BHdfZu0JVYw71snj9oPDt6OJ2letyldPy1HTx2IV9URlLRbWpyrAQ8c0QGuWa0gB47eq1eWocuR8zGpl1TZT4IuQoyfMpEcTS1Pft4TaWmgi8/W0Jqbh2Rz8QO4codSCqgHU0CKIhBI7Z9nYWuB6BuF90vwUqJWzusf4SlnkgE5ecE9vAFn/zK0GtXKFhWcLS8ga6IainHz0/QN+7GpFC/IA1OOMmvZbVoQrmNDfN93j6kVij4HlNYQpe2bP7O2ipENgfCgN68Il3An8cu/i16ZTaKzLlabgLZ7E5BrAtYkD3d+jIJ4aV90KKx51uqp+14='",
+              "b64'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'"
+            ]
+          },
+          "label": "c2pa.certificate-status"
+        }
+      ],
+      "claim_generator": "c2pa_test/1.0.0",
+      "claim_generator_info": [
+        {
+          "name": "c2pa_test",
+          "org.cai.c2pa_rs": "0.57.0",
+          "version": "1.0.0"
+        }
+      ],
+      "claim_version": 1,
+      "format": "image/jpeg",
+      "instance_id": "xmp:iid:7372997d-2566-4b2e-bd41-7da371412ba0",
+      "label": "urn:uuid:b82c36da-6dc9-418d-bd2c-9587009f797f",
+      "signature_info": {
+        "alg": "Ps256",
+        "cert_serial_number": "720724073027128164015125666832722375746636448153",
+        "common_name": "C2PA Signer",
+        "issuer": "C2PA Test Signing Cert"
+      },
+      "title": "Certificate Map Test"
+    }
+  },
+  "validation_results": {
+    "activeManifest": {
+      "failure": [
+        {
+          "code": "signingCredential.untrusted",
+          "explanation": "signing certificate untrusted",
+          "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.signature"
+        }
+      ],
+      "informational": [
+        {
+          "code": "signingCredential.ocsp.skipped",
+          "explanation": "OCSP fetching skipped",
+          "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.signature"
+        }
+      ],
+      "success": [
+        {
+          "code": "timeStamp.validated",
+          "explanation": "timestamp message digest matched: Adobe SHA256 ECC256 Timestamp Responder 2025 1",
+          "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.signature"
+        },
+        {
+          "code": "timeStamp.trusted",
+          "explanation": "legacy timestamp cert trusted: Adobe SHA256 ECC256 Timestamp Responder 2025 1",
+          "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.signature"
+        },
+        {
+          "code": "claimSignature.insideValidity",
+          "explanation": "claim signature valid",
+          "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.signature"
+        },
+        {
+          "code": "claimSignature.validated",
+          "explanation": "claim signature valid",
+          "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.signature"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim.jpeg",
+          "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.assertions/c2pa.thumbnail.claim.jpeg"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.ingredient",
+          "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.assertions/c2pa.ingredient"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/stds.schema-org.CreativeWork",
+          "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.assertions/stds.schema-org.CreativeWork"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions",
+          "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.assertions/c2pa.actions"
+        },
+        {
+          "code": "assertion.hashedURI.match",
+          "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data",
+          "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.assertions/c2pa.hash.data"
+        },
+        {
+          "code": "assertion.dataHash.match",
+          "explanation": "data hash valid",
+          "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.assertions/c2pa.hash.data"
+        }
+      ]
+    },
+    "ingredientDeltas": [
+      {
+        "ingredientAssertionURI": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.assertions/c2pa.ingredient",
+        "validationDeltas": {
+          "failure": [
+            {
+              "code": "signingCredential.untrusted",
+              "explanation": "signing certificate untrusted",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.signature"
+            }
+          ],
+          "informational": [
+            {
+              "code": "signingCredential.ocsp.skipped",
+              "explanation": "OCSP fetching skipped",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.signature"
+            }
+          ],
+          "success": [
+            {
+              "code": "ingredient.manifest.validated",
+              "explanation": "ingredient hash matched",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd"
+            },
+            {
+              "code": "timeStamp.validated",
+              "explanation": "timestamp message digest matched: Adobe SHA256 ECC256 Timestamp Responder 2025 1",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.signature"
+            },
+            {
+              "code": "timeStamp.trusted",
+              "explanation": "legacy timestamp cert trusted: Adobe SHA256 ECC256 Timestamp Responder 2025 1",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.signature"
+            },
+            {
+              "code": "claimSignature.insideValidity",
+              "explanation": "claim signature valid",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.signature"
+            },
+            {
+              "code": "claimSignature.validated",
+              "explanation": "claim signature valid",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.signature"
+            },
+            {
+              "code": "assertion.hashedURI.match",
+              "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.claim.jpeg",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.assertions/c2pa.thumbnail.claim.jpeg"
+            },
+            {
+              "code": "assertion.hashedURI.match",
+              "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.thumbnail.ingredient.jpeg",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.assertions/c2pa.thumbnail.ingredient.jpeg"
+            },
+            {
+              "code": "assertion.hashedURI.match",
+              "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.ingredient",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.assertions/c2pa.ingredient"
+            },
+            {
+              "code": "assertion.hashedURI.match",
+              "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/stds.schema-org.CreativeWork",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.assertions/stds.schema-org.CreativeWork"
+            },
+            {
+              "code": "assertion.hashedURI.match",
+              "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.assertions/c2pa.actions"
+            },
+            {
+              "code": "assertion.hashedURI.match",
+              "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data",
+              "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.assertions/c2pa.hash.data"
+            }
+          ]
+        }
+      },
+      {
+        "ingredientAssertionURI": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.assertions/c2pa.ingredient",
+        "validationDeltas": {
+          "failure": [],
+          "informational": [
+            {
+              "code": "signingCredential.ocsp.skipped",
+              "explanation": "OCSP fetching skipped",
+              "url": "self#jumbf=/c2pa/urn:uuid:b82c36da-6dc9-418d-bd2c-9587009f797f/c2pa.signature"
+            }
+          ],
+          "success": [
+            {
+              "code": "ingredient.manifest.validated",
+              "explanation": "ingredient hash matched",
+              "url": "self#jumbf=/c2pa/urn:uuid:b82c36da-6dc9-418d-bd2c-9587009f797f"
+            },
+            {
+              "code": "signingCredential.trusted",
+              "explanation": "signing certificate trusted, found in [system_anchors] trust anchors",
+              "url": "self#jumbf=/c2pa/urn:uuid:b82c36da-6dc9-418d-bd2c-9587009f797f/c2pa.signature"
+            },
+            {
+              "code": "claimSignature.insideValidity",
+              "explanation": "claim signature valid",
+              "url": "self#jumbf=/c2pa/urn:uuid:b82c36da-6dc9-418d-bd2c-9587009f797f/c2pa.signature"
+            },
+            {
+              "code": "claimSignature.validated",
+              "explanation": "claim signature valid",
+              "url": "self#jumbf=/c2pa/urn:uuid:b82c36da-6dc9-418d-bd2c-9587009f797f/c2pa.signature"
+            },
+            {
+              "code": "assertion.hashedURI.match",
+              "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.certificate-status",
+              "url": "self#jumbf=/c2pa/urn:uuid:b82c36da-6dc9-418d-bd2c-9587009f797f/c2pa.assertions/c2pa.certificate-status"
+            },
+            {
+              "code": "assertion.hashedURI.match",
+              "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data",
+              "url": "self#jumbf=/c2pa/urn:uuid:b82c36da-6dc9-418d-bd2c-9587009f797f/c2pa.assertions/c2pa.hash.data"
+            }
+          ]
+        }
+      }
+    ],
+    "specVersion": "2.4.0",
+    "trustListUri": "system_anchors"
+  },
+  "validation_state": "Valid",
+  "validation_status": [
+    {
+      "code": "signingCredential.untrusted",
+      "explanation": "signing certificate untrusted",
+      "url": "self#jumbf=/c2pa/adobe:urn:uuid:8208d145-e90c-43f6-b9a4-58bd7ba87f80/c2pa.signature"
+    },
+    {
+      "code": "signingCredential.untrusted",
+      "explanation": "signing certificate untrusted",
+      "url": "self#jumbf=/c2pa/adobe:urn:uuid:17d82661-2e6e-48f1-922c-2e853cbeadfd/c2pa.signature"
+    }
+  ]
+}

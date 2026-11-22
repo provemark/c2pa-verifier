@@ -37,6 +37,8 @@ referenced claim, **X** a hash mismatch; `A` and `I` carry no manifest).
 Together 20 MB, of which the three Truepic camera files are 10 MB.
 c2patool 0.27.22's JSON for every one, with the full test trust
 settings, is under `../c2patool/public-testfiles/`.
+Since step 554 the drift alarm reads `c2patool` 0.29.0's answers, recorded
+the same way, under `../c2patool/0.29.0/public-testfiles/`.
 
 What they added on first contact (`notes/step-36-public-testfiles.md`):
 four camera files carry CBOR floats (`stds.exif`, Truepic odometry)
