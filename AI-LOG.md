@@ -12610,3 +12610,11 @@ README are where the disclosure lives.
 - Reasoned: no advisory, since no verdict moves; nothing downstream has to change.
 - Decided by Maurice: the commit, the tag and the release.
 
+
+## 2026-11-22 — Step 549: the corpus against c2patool 0.29.0, and the C2PA 2.5 table
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "Moet voor deze verifier nog iets gedaan worden?"; "er is ook een nieuwe c2pa spec uit. Moet die ook meegenomen worden?"; "ja, werk die stap uit"; "akkoord, samen".
+- Produced: `notes/step-549-c2patool-0.29.0.md`, `NOTES.md`, `docs/milestones.md` (2.5 table: a §13.2/§13.5 row and step 549).
+- Measured: `c2patool` 0.28.6 and 0.29.0 on the 930 media fixtures, without and with `tests/Fixtures/trust/full.settings.json` (3,720 runs); `bin/c2pa-verify` on the 20 files that moved; the `chain-constraints/` and `revocation/` probes under their own roots in all three; a missing `--settings` path (exit 0, silent); `c2pa-rs` source at `c2pa-v0.91.11` and `c2pa-v0.92.0` searched and diffed; C2PA 2.5 §13.2, §13.5, H.2 and the time-stamp validation steps read.
+- Reasoned: no wrong `Valid` or `Trusted`; the TSA-profile difference (SPEC-017 AC14) is now stricter than both `c2patool` and the 2.5 text, a candidate amendment; the SPEC-047 shapes stay a deliberate difference.
+- Decided by Maurice: the step, with the corpus and the 2.5 table together.
