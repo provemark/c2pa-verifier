@@ -21,17 +21,23 @@ Each `cs-*` child is signed by U with `cs-parent.png` as its parent and a
 strings holding the responses, and the claim was re-hashed and signed
 again.
 
-| probe | response(s) | 0.28.1 | 0.27.22 | here |
-|---|---|---|---|---|
-| `ca-control` | none | `Trusted` | `Trusted` | `Trusted` |
-| `ca-revoked` | the intermediate revoked (keyCompromise) | `Trusted` | `Trusted` | `Valid` (`signingCredential.untrusted`) |
-| `ca-good` | the intermediate good | `Trusted` | `Trusted` | `Trusted` |
-| `ca-removed` | the intermediate removeFromCRL | `Trusted` | `Trusted` | `Trusted` |
-| `ca-broken` | `ca-revoked`'s, one signature byte changed | `Trusted` | `Trusted` | `Trusted` |
-| `ca-other` | good, about another certificate | `Trusted` | `Trusted` | `Trusted` |
-| `cs-good` | P good | `Trusted` | `Trusted` | `Trusted` (P `notRevoked`) |
-| `cs-revoked` | P revoked | `Trusted` | `Trusted` | `Invalid` (P `ocsp.revoked`) |
-| `cs-two` | another certificate good, then P revoked | `Trusted` | `Trusted` | `Invalid` |
-| `cs-own` | U revoked, in U's own assertion | `Trusted` | `Trusted` | `Invalid` |
+| probe | response(s) | 0.29.0 | 0.28.1 | 0.27.22 | here |
+|---|---|---|---|---|---|
+| `ca-control` | none | `Trusted` | `Trusted` | `Trusted` | `Trusted` |
+| `ca-revoked` | the intermediate revoked (keyCompromise) | `Trusted` | `Trusted` | `Trusted` | `Valid` (`signingCredential.untrusted`) |
+| `ca-good` | the intermediate good | `Trusted` | `Trusted` | `Trusted` | `Trusted` |
+| `ca-removed` | the intermediate removeFromCRL | `Trusted` | `Trusted` | `Trusted` | `Trusted` |
+| `ca-broken` | `ca-revoked`'s, one signature byte changed | `Trusted` | `Trusted` | `Trusted` | `Trusted` |
+| `ca-other` | good, about another certificate | `Trusted` | `Trusted` | `Trusted` | `Trusted` |
+| `cs-good` | P good | `Trusted` | `Trusted` | `Trusted` | `Trusted` (P `notRevoked`) |
+| `cs-revoked` | P revoked | `Trusted` | `Trusted` | `Trusted` | `Invalid` (P `ocsp.revoked`) |
+| `cs-two` | another certificate good, then P revoked | `Trusted` | `Trusted` | `Trusted` | `Invalid` |
+| `cs-own` | U revoked, in U's own assertion | `Invalid` | `Trusted` | `Trusted` | `Invalid` |
 
 The answers are under `../c2patool/revocation/<probe>--<version>.json`.
+The 0.29.0 column was added on 2026-11-22 (step 553), each probe run under
+`throw-away-root.settings.json`. 0.29.0 reports
+`signingCredential.ocsp.revoked` on `cs-own` and is `Invalid`, as here;
+step 549 traced the move to `c2pa` #3019, which accepts a response signed
+by the issuer. Why `cs-revoked` and `cs-two` stay `Trusted` there was not
+traced. It reports `signingCredential.ocsp.skipped` on every probe.

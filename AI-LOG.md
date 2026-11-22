@@ -12642,3 +12642,11 @@ README are where the disclosure lives.
 - Measured: CI on `70d683e` and on the tag (8/8 each); Packagist `v0.11.4` from `70d683e`; a fresh `^0.11` install (692 files, `VERSION` 0.11.4, two probes spot-checked).
 - Reasoned: nothing else from the 0.29 round had to go in, since none of it corrects a wrong `Valid` or `Trusted`; no advisory.
 - Decided by Maurice: release now, without the status-code moves; the commit, the tag and the release.
+
+## 2026-11-22 — Step 553: `docs/comparison.md` against `c2patool` 0.29.0
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "werk de comparison.md-rijen uit"; "ja".
+- Produced: `docs/comparison.md` (a 0.29.0 paragraph; EKU, unprotected `x5chain`, label-33-in-both and SPEC-066 rows); `tests/Fixtures/revocation/README.md` (0.29.0 column); 0.29.0 answer files for ten revocation probes and six `x5chain` probes; `notes/step-553-comparison-0.29.0.md`, `NOTES.md`.
+- Measured: `c2patool` 0.29.0 on the ten revocation probes, the five `chain-constraints/x5chain-*` probes and `manifest-probes/x5chain-unprotected-too`, each under its own root; `conformance-test/signed.*` under the test root in 0.29.0 and here; `composer check` exit 0.
+- Reasoned: C2PA 2.5 §13.2/§13.5 (read in step 549) support the protected-header rule without requiring a refusal; why 0.29.0 keeps `cs-revoked` and `cs-two` `Trusted` was not traced.
+- Decided by Maurice: the step and its scope.
