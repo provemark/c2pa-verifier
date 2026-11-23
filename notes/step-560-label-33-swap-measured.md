@@ -8,6 +8,12 @@ Before deciding whether to tell upstream, Maurice asked whether the problem
 really exists ("ga goed na of het label 33 probleem er echt is"). This step
 records the answer.
 
+> **Corrected in step 563.** The counts in section 3 and the claim that the
+> 37 come from real writers are replaced: 30 are third-party files, 7 are
+> this repository's probes (two of them claim v2), and 666 files have the
+> chain protected. "No writer" holds for the 51 readable third-party files
+> of this corpus only. See [step 563](step-563-corrections-559-560.md).
+
 ## 1. The probe still shows it
 
 With `c2patool` 0.29.0 and `--settings

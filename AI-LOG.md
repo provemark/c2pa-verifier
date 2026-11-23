@@ -12722,3 +12722,11 @@ README are where the disclosure lives.
 - Measured: CI on the commit and the tag; the Packagist metadata; a fresh `composer require` with three probes checked.
 - Reasoned: no advisory, since no verdict changes.
 - Decided by Maurice: release 0.11.5 once CI was green.
+
+## 2026-11-23 — Step 563: corrections to steps 559 and 560 (docs only)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "push maar en werk de correctiestap uit"; "ja akkoord".
+- Produced: `notes/step-563-corrections-559-560.md`; corrections in the notes of 559 and 560, `NOTES.md`, `docs/comparison.md`, SPEC-061 (amendment 9) and `tests/Fixtures/profile-ed25519/README.md`.
+- Measured: the COSE headers of the active manifest in the 932 corpus files, read with the verifier's own parser; `openssl verify -partial_chain` (4.1.0) with and without `-x509_strict` on three probes and two controls.
+- Reasoned: `c2pa`'s native chain check, read in the 0.92.0 source and not run. The OpenSSL version inside the `c2patool` binary is unknown.
+- Decided by Maurice: correct the published texts. The overclaims (a byte scan's files called real writers' files, and one refusal's cause given without a measurement) were the model's own, found by it after they were pushed.

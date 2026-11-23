@@ -3,6 +3,12 @@
 *2026-11-23. Documentation only.* This is the last status-code move of the
 `c2patool` 0.29 round. Maurice approved not following it ("ja akkoord").
 
+> **Corrected in step 563.** `X509_STRICT` is the reason for
+> `leaf-ku-cert-sign` and `int-no-ski` only. OpenSSL refuses
+> `leaf-spki-params` without it too, because it cannot decode the key. What
+> the native check would do was read, not run. See
+> [step 563](step-563-corrections-559-560.md).
+
 ## What is left
 
 Under their own settings, three probes still differ from `c2patool` 0.29.0

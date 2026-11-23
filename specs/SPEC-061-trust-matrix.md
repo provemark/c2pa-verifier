@@ -269,6 +269,16 @@ const SPEC061_CODES_DIFFER = [/* probe => [0.28.1's codes, 0.27.22's, this verif
 
    Weight C: no code, no test, no verdict moves.
 
+9. **2026-11-23, step 563, documentation only** *(approved by Maurice van
+   Loon, 2026-11-23)* — corrects amendment 8. `leaf-spki-params` is not the
+   same case: OpenSSL 4.1.0 refuses it with and without `-x509_strict`,
+   because it cannot decode the key. The two probes of this matrix are
+   refused with `-x509_strict` only, as amendment 8 says. What the native
+   check would do was read in the source, not run. The codes stay not
+   followed.
+
+   Weight C: no code, no test, no verdict moves.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

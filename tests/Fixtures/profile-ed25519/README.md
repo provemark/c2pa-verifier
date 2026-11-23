@@ -34,7 +34,8 @@ SHA-256:
 `signingCredential.invalid`, `signingCredential.untrusted` and
 `claimSignature.mismatch`. Here it is `Invalid` with
 `signingCredential.invalid` only. The `untrusted` comes from `c2pa`'s
-OpenSSL chain check, which refuses the key. Its native chain check would
-not, so the code is not followed. The `mismatch` follows from the same
+OpenSSL chain check, which cannot decode the key (OpenSSL 4.1.0 refuses it
+with and without `-x509_strict`, step 563). Its native chain check would not
+refuse it (read, not run), so the code is not followed. The `mismatch` follows from the same
 unusable key. This verifier refuses the certificate in the profile
 instead (step 559, SPEC-061 amendment 8).
