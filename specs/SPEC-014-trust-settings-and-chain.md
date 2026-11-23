@@ -373,6 +373,37 @@ measured in the tests-first step (Open questions).
   - Then `signingCredential.trusted` stays on both urls; given a profile
     fault or an `ocsp.revoked` on one url, it is withdrawn on that url only
 
+- **AC20 — a leaf outside its validity makes the chain untrusted** *(amendment 12)*
+  - Given `trust/chain-matrix/leaf-expired.png` under its own settings,
+    and `profile/expired.png` under `profile/throw-away-root.settings.json`
+  - When verified
+  - Then `signingCredential.expired` and `signingCredential.untrusted`
+    are reported, `signingCredential.trusted` is not, and the verdict is
+    `Invalid`, as `c2patool` 0.29.0's recorded reports show
+
+- **AC21 — a leaf kept in time stays trusted** *(amendment 12, the control)*
+  - Given `timestamp/tsa-matrix/expired-signer-trusted-tsa.png` under its
+    own settings (the signer expired after a trusted time-stamp)
+  - When verified
+  - Then `signingCredential.trusted` is reported, no
+    `signingCredential.untrusted`, and the verdict is `Trusted`
+
+- **AC22 — no trust check, no trust code** *(amendment 12)*
+  - Given `profile/expired.png` under `trust/verify-off.settings.json`
+  - When verified
+  - Then `signingCredential.expired` is reported and neither
+    `signingCredential.trusted` nor `signingCredential.untrusted`, as
+    `c2patool` 0.29.0 says
+
+- **AC23 — the rule, per signature** *(amendment 12)*
+  - Given a list with `signingCredential.trusted` on two signature urls,
+    and a profile `signingCredential.expired` on one of them
+  - When the rule runs
+  - Then that url carries `signingCredential.untrusted` in the place of
+    `trusted`, naming the leaf's validity; the other url keeps `trusted`;
+    a profile `signingCredential.invalid` withdraws `trusted` without an
+    `untrusted`
+
 ## References
 
 - Specification: C2PA 2.4 §14.4.1 (the validator's lists: trust anchors,
@@ -739,6 +770,48 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
     anchored there. No verdict depends on the code here: each file is
     `Invalid` already.
 
+12. **2026-11-23, step 558, found with SPEC-014 amendment 11 (step 557)**
+    *(approved by Maurice van Loon, 2026-11-23)* — a leaf outside its
+    validity at the time judged makes the chain untrusted. `c2pa` 0.92.0
+    checks every certificate of the chain at that time (a trusted
+    time-stamp's `genTime`, else now) in `check_certificate_trust`
+    (`crypto/cose/certificate_trust/rust_native.rs`; the OpenSSL path
+    sets the same time). A leaf that is not valid gives
+    `CertificateNotTrusted`, so `signingCredential.untrusted`, even when
+    the chain reaches an anchor. The profile check reports
+    `signingCredential.expired` beside it. The recorded answers show the
+    move since 0.28.1: for `trust/chain-matrix/leaf-expired`, 0.27.22
+    reported `expired` only, while 0.28.1 and 0.29.0 report `untrusted`
+    and `expired`.
+
+    - **The rule.** This walk leaves the leaf's validity to the profile
+      check (SPEC-015). Where the profile check reported
+      `signingCredential.expired` and the walk gave
+      `signingCredential.trusted`, the trusted status is replaced in place
+      by `signingCredential.untrusted`. The explanation names the leaf's
+      validity at the time judged. Where the walk reached no anchor,
+      `untrusted` is there already. With `verify_trust` false there is no
+      walk and no trust code, as in `c2pa`.
+    - A leaf kept in time by a trusted time-stamp is not `expired`, so
+      it stays `trusted`.
+    - **The verdict does not move.** `expired` is a failure already. The
+      evidence names no signer since amendment 11.
+    - **AC20–AC23 are new.** AC19's revoked and `invalid` cases are
+      unchanged: they withdraw `trusted` without an `untrusted`, as in
+      `c2pa`. AC19's profile fault is read as `invalid` only; its
+      `expired` case is AC23's now.
+    - **Not here.** A CA certificate outside its validity is
+      `claimSignature.outsideValidity` plus `untrusted` in `c2pa`. Here it
+      is `untrusted` (AC12). Three probes that 0.29.0 calls `untrusted`
+      for other reasons (`leaf-ku-cert-sign`, `int-no-ski`,
+      `profile-ed25519/leaf-spki-params`) are differences in the walk,
+      left for their own look.
+
+    Measured: under the probes' own settings, 8 runs had `expired`
+    without `untrusted` here where 0.29.0 had both (`leaf-expired` and the
+    `expired-signer-*` probes of the time-stamp matrices). Under
+    `trust/full.settings.json` and without settings nothing differs.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -765,3 +838,7 @@ least one test; every source file maps back to this spec.
 | AC17 | tests/Unit/Trust/TrustedRefusalTest.php :: AC17: ingredient manifests alike / SPEC-014 | src/Verifier/IngredientManifestCheck.php :: manifest() (withoutRefused()) |
 | AC18 | tests/Unit/Trust/TrustedRefusalTest.php :: AC18: a sound signer keeps it / SPEC-014 | src/Trust/ChainCheck.php :: withoutRefused() (nothing refused, nothing withdrawn) |
 | AC19 | tests/Unit/Trust/TrustedRefusalTest.php :: AC19: only the profile's own faults count / SPEC-014 | src/Trust/ChainCheck.php :: withoutRefused() |
+| AC20 | tests/Unit/Trust/TrustedRefusalTest.php :: AC20: a leaf outside its validity makes the chain untrusted / SPEC-014 | src/Trust/ChainCheck.php :: withoutRefused() (amendment 12) |
+| AC21 | tests/Unit/Trust/TrustedRefusalTest.php :: AC21: a leaf kept in time stays trusted / SPEC-014 | src/Trust/ChainCheck.php :: withoutRefused() (no expired, nothing replaced) |
+| AC22 | tests/Unit/Trust/TrustedRefusalTest.php :: AC22: no trust check, no trust code / SPEC-014 | src/Trust/ChainCheck.php :: withoutRefused() (no trusted to replace) |
+| AC23 | tests/Unit/Trust/TrustedRefusalTest.php :: AC23: the rule, per signature / SPEC-014 | src/Trust/ChainCheck.php :: withoutRefused() |

@@ -571,7 +571,8 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
     `signingCredential.trusted`"*. AC10 compares the signer codes with
     answers recorded before 0.29.0, so it applies the same rule to them:
     beside a profile fault or a revocation, the recorded `trusted` is left
-    out. The `eku-any` answer of 0.29.0 under the throw-away root shows the
+    out, and beside `expired` it becomes `untrusted` (SPEC-014 amendment 12,
+    step 558). The `eku-any` answer of 0.29.0 under the throw-away root shows the
     rule directly (`c2patool/profile/eku-any--0.29.0.json`).
 
     Weight C: criteria follow another spec's amendment; no rule of the

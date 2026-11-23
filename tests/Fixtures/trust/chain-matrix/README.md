@@ -24,8 +24,8 @@ its failure codes.
 | probe | c2patool 0.27.22 | c2patool 0.28.1 | OpenSSL | this verifier |
 |---|---|---|---|---|
 | `control` | Trusted | Trusted | OK | Trusted |
-| `leaf-expired` | Invalid, signingCredential.expired | Invalid, signingCredential.untrusted,signingCredential.expired | refused: certificate has expired | Invalid, signingCredential.expired |
-| `leaf-not-yet-valid` | Invalid, signingCredential.expired | Invalid, signingCredential.untrusted,signingCredential.expired | refused: certificate is not yet valid or the system clock is incorrect | Invalid, signingCredential.expired |
+| `leaf-expired` | Invalid, signingCredential.expired | Invalid, signingCredential.untrusted,signingCredential.expired | refused: certificate has expired | Invalid, signingCredential.expired,signingCredential.untrusted (since step 558) |
+| `leaf-not-yet-valid` | Invalid, signingCredential.expired | Invalid, signingCredential.untrusted,signingCredential.expired | refused: certificate is not yet valid or the system clock is incorrect | Invalid, signingCredential.expired,signingCredential.untrusted (since step 558) |
 | `leaf-ca-true` | Invalid, signingCredential.invalid | Invalid, signingCredential.invalid | OK | Invalid, signingCredential.invalid |
 | `leaf-no-basic-constraints` | Trusted | Trusted | OK | Trusted |
 | `leaf-no-key-usage` | Invalid, signingCredential.invalid | Invalid, signingCredential.invalid | OK | Invalid, signingCredential.invalid |
@@ -132,4 +132,5 @@ Step 557 (SPEC-014 amendment 11) recorded `c2patool` 0.29.0's answers for
 `control` (`Trusted`) and `leaf-expired` (`Invalid`: `signingCredential.expired`
 and `signingCredential.untrusted`, no `signingCredential.trusted`) as
 `<probe>--0.29.0.json`. Since then this verifier withholds `trusted` beside
-a profile fault as well; it still reports no `untrusted` on `leaf-expired`.
+a profile fault as well, and since step 558 (SPEC-014 amendment 12) reports
+`untrusted` on an expired leaf, as 0.28.1 and 0.29.0 do.

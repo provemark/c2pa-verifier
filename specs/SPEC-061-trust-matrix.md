@@ -88,9 +88,10 @@ will be covered by a Pest test tagged `->group('SPEC-061')`.
   - Given the probes whose state equals 0.28.1's
   - When verified
   - Then the set of failure codes equals 0.28.1's, except the probes in
-    `SPEC061_CODES_DIFFER` (today `leaf-expired` and `leaf-not-yet-valid`:
-    0.28.1 adds `signingCredential.untrusted` to `signingCredential.expired`;
-    0.27.22 and this verifier do not; and, amendment 1, `leaf-ku-cert-sign`:
+    `SPEC061_CODES_DIFFER` (amendment 7: `leaf-expired` and
+    `leaf-not-yet-valid` left it, since this verifier adds
+    `signingCredential.untrusted` to an expired leaf as 0.28.1 does; and,
+    amendment 1, `leaf-ku-cert-sign`:
     both `c2patool` versions add `signingCredential.untrusted` to
     `signingCredential.invalid`; this verifier does not)
 
@@ -233,6 +234,16 @@ const SPEC061_CODES_DIFFER = [/* probe => [0.28.1's codes, 0.27.22's, this verif
    and here.
 
    **Weight C: no verdict of the existing probes moves; no code changes.**
+
+7. **2026-11-23, step 558, with SPEC-014 amendment 12** *(approved by
+   Maurice van Loon, 2026-11-23, with that amendment)* — an expired leaf
+   is `signingCredential.untrusted` here too, so `leaf-expired` and
+   `leaf-not-yet-valid` agree with 0.28.1 (and 0.29.0) on their failure
+   codes. They leave `SPEC061_CODES_DIFFER`; AC4 went red on them first,
+   because they agreed while still named. `leaf-ku-cert-sign` and
+   `int-no-ski` stay.
+
+   Weight C: a named difference closes; no verdict moves.
 
 ## Traceability
 

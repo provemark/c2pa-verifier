@@ -460,15 +460,22 @@ it('AC11: an Ed25519 signer is recognised on every PHP, from the SPKI algorithm 
 })->group('SPEC-015');
 
 /**
- * SPEC-014 amendment 11 applied to an answer recorded before c2patool 0.29.0: trusted is not reported beside a
- * profile fault or a revocation (c2pa 0.92.0 removes it there too).
+ * SPEC-014 amendments 11 and 12 applied to an answer recorded before c2patool 0.28.1: trusted is not reported
+ * beside a profile fault or a revocation, and an expired leaf is untrusted in its place (c2pa 0.92.0).
  *
  * @param  list<string>  $codes
  * @return list<string>
  */
 function spec015WithoutRefusedTrusted(array $codes): array
 {
-    return array_intersect(['signingCredential.invalid', 'signingCredential.expired', 'signingCredential.ocsp.revoked'], $codes) === []
-        ? $codes
-        : array_values(array_filter($codes, static fn (string $c): bool => $c !== 'signingCredential.trusted'));
+    if (array_intersect(['signingCredential.invalid', 'signingCredential.expired', 'signingCredential.ocsp.revoked'], $codes) === []) {
+        return $codes;
+    }
+    $kept = array_values(array_filter($codes, static fn (string $c): bool => $c !== 'signingCredential.trusted'));
+    if (in_array('signingCredential.expired', $codes, true) && in_array('signingCredential.trusted', $codes, true) && ! in_array('signingCredential.untrusted', $codes, true)) {
+        $kept[] = 'signingCredential.untrusted';   // amendment 12: an expired leaf makes the chain untrusted
+        sort($kept);
+    }
+
+    return $kept;
 }

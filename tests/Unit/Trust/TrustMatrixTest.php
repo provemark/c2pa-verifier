@@ -31,13 +31,11 @@ const SPEC061_STRICTER = [
 ];
 
 /**
- * The same state as 0.28.1, other failure codes: probe => [0.28.1's, 0.27.22's, this verifier's]. 0.28.1 adds
- * signingCredential.untrusted to an expired leaf; both versions add it to a leaf with keyCertSign, whose chain
- * OpenSSL refuses (amendment 1).
+ * The same state as 0.28.1, other failure codes: probe => [0.28.1's, 0.27.22's, this verifier's]. Both versions
+ * add signingCredential.untrusted to a leaf with keyCertSign, whose chain OpenSSL refuses (amendment 1). An
+ * expired leaf left the list with SPEC-014 amendment 12: untrusted here too.
  */
 const SPEC061_CODES_DIFFER = [
-    'leaf-expired' => [['signingCredential.expired', 'signingCredential.untrusted'], ['signingCredential.expired'], ['signingCredential.expired']],
-    'leaf-not-yet-valid' => [['signingCredential.expired', 'signingCredential.untrusted'], ['signingCredential.expired'], ['signingCredential.expired']],
     'leaf-ku-cert-sign' => [['signingCredential.invalid', 'signingCredential.untrusted'], ['signingCredential.invalid', 'signingCredential.untrusted'], ['signingCredential.invalid']],
     // an intermediate without SKI leaves the leaf without an AKI keyid: invalid everywhere, untrusted beside it in c2patool
     'int-no-ski' => [['signingCredential.invalid', 'signingCredential.untrusted'], ['signingCredential.invalid', 'signingCredential.untrusted'], ['signingCredential.invalid']],

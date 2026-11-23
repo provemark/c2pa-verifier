@@ -144,9 +144,11 @@ accepts (the rows below on the time-stamp, the certificate profile,
 `signingCredential.trusted` is withheld beside a certificate-profile fault
 or `ocsp.revoked`, as there, even when the chain reaches an anchor
 (SPEC-014 amendment 11); `evidence()` then names no signer either. On a
-leaf outside its validity 0.29.0 also reports
-`signingCredential.untrusted`, where this walk does not; that difference
-in the walk is not traced yet. Since
+leaf outside its validity `c2patool` (since 0.28.1) reports
+`signingCredential.untrusted` beside `signingCredential.expired`, because
+its chain check refuses the leaf at the time judged; since step 558 this
+verifier does the same (SPEC-014 amendment 12), and the trust and
+time-stamp matrices no longer name it as a difference. Since
 step 554 the drift alarms compare with 0.29.0. Over their 116
 recordings, only the three Truepic files and the remote Photoshop file
 move, to `Invalid`, as here.

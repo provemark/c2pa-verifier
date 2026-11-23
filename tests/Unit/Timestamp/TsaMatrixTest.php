@@ -33,16 +33,6 @@ const SPEC062_CODES_DIFFER = [
         [['timeStamp.trusted', 'timeStamp.validated'], []],
         [['timeStamp.malformed'], []],
     ],
-    'expired-signer-untrusted-tsa' => [
-        '0.28.1 adds signingCredential.untrusted to signingCredential.expired',
-        [['timeStamp.untrusted', 'timeStamp.validated'], ['signingCredential.expired', 'signingCredential.untrusted']],
-        [['timeStamp.untrusted', 'timeStamp.validated'], ['signingCredential.expired']],
-    ],
-    'expired-signer-no-timestamp' => [
-        '0.28.1 adds signingCredential.untrusted to signingCredential.expired',
-        [[], ['signingCredential.expired', 'signingCredential.untrusted']],
-        [[], ['signingCredential.expired']],
-    ],
     'imprint-sha1' => [
         'C2PA 2.4 §15.8.2: a SHA-1 imprint is ignored as untrusted (SPEC-088), trusted by 0.28.1 (amendment 3)',
         [['timeStamp.trusted', 'timeStamp.validated'], []],
@@ -52,11 +42,6 @@ const SPEC062_CODES_DIFFER = [
         'C2PA 2.4 §15.8.2: the TSA certificate not in the token is timeStamp.untrusted; c2patool drops the token without a code (SPEC-088, amendment 4)',
         [[], []],
         [['timeStamp.untrusted'], []],
-    ],
-    'expired-signer-two-tokens' => [
-        '0.28.1 adds signingCredential.untrusted to signingCredential.expired (SPEC-017 amendment 9: two tokens drop the timestamp)',
-        [['timeStamp.malformed'], ['signingCredential.expired', 'signingCredential.untrusted']],
-        [['timeStamp.malformed'], ['signingCredential.expired']],
     ],
 ];
 

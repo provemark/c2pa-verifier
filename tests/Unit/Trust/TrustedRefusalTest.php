@@ -133,10 +133,62 @@ it("AC19: only the profile's own faults count", function (): void {
     expect(spec014rLines(ChainCheck::withoutRefused($other, [])))->toBe(spec014rLines($other));
 
     // a profile fault, or a revoked staple, on url a: withdrawn on a only
-    foreach ([StatusCode::SigningCredentialInvalid, StatusCode::SigningCredentialExpired] as $fault) {
+    foreach ([StatusCode::SigningCredentialInvalid] as $fault) {   // an expired leaf: untrusted in its place, AC23 (amendment 12)
         $profile = [new ValidationStatus($fault, $a, 'profile')];
         expect(spec014rLines(ChainCheck::withoutRefused([...$base, ...$profile], $profile)))->toBe([SPEC014R_TRUSTED.' '.$b, $fault->value.' '.$a]);
     }
     $revoked = [...$base, new ValidationStatus(StatusCode::SigningCredentialOcspRevoked, $a, 'revoked')];
     expect(spec014rLines(ChainCheck::withoutRefused($revoked, [])))->toBe([SPEC014R_TRUSTED.' '.$b, 'signingCredential.ocsp.revoked '.$a]);
+})->group('SPEC-014');
+
+it('AC20: a leaf outside its validity makes the chain untrusted', function (): void {
+    // amendment 12: c2pa checks the leaf in the chain at the time judged, so an expired leaf is untrusted too
+    $cases = [
+        ['trust/chain-matrix/leaf-expired.png', 'trust/chain-matrix/leaf-expired.settings.json', 'chain-matrix/leaf-expired--0.29.0.json'],
+        ['profile/expired.png', 'profile/throw-away-root.settings.json', 'profile/expired--0.29.0.json'],
+    ];
+    foreach ($cases as [$file, $settings, $oracle]) {
+        $theirs = spec014rOracleCodes($oracle);
+        expect($theirs)->toContain('signingCredential.expired')
+            ->and($theirs)->toContain('signingCredential.untrusted')
+            ->and($theirs)->not->toContain(SPEC014R_TRUSTED);
+        $report = spec020Verify($file, $settings);
+        $ours = spec014rCodes($report);
+        expect(in_array('signingCredential.expired', $ours, true))->toBeTrue($file)
+            ->and(in_array('signingCredential.untrusted', $ours, true))->toBeTrue($file)
+            ->and(in_array(SPEC014R_TRUSTED, $ours, true))->toBeFalse($file)
+            ->and($report->result->state->value)->toBe('Invalid');
+    }
+})->group('SPEC-014');
+
+it('AC21: a leaf kept in time stays trusted', function (): void {
+    expect(spec014rOracleCodes('tsa-matrix/expired-signer-trusted-tsa--0.29.0.json'))->toContain(SPEC014R_TRUSTED);
+    $report = spec020Verify('timestamp/tsa-matrix/expired-signer-trusted-tsa.png', 'timestamp/tsa-matrix/expired-signer-trusted-tsa.settings.json');
+    $ours = spec014rCodes($report);
+    expect(in_array(SPEC014R_TRUSTED, $ours, true))->toBeTrue()
+        ->and(in_array('signingCredential.untrusted', $ours, true))->toBeFalse()
+        ->and($report->result->state->value)->toBe('Trusted');
+})->group('SPEC-014');
+
+it('AC22: no trust check, no trust code', function (): void {
+    $theirs = spec014rOracleCodes('profile/expired-verify-off--0.29.0.json');
+    expect($theirs)->toContain('signingCredential.expired')
+        ->and($theirs)->not->toContain('signingCredential.untrusted')
+        ->and($theirs)->not->toContain(SPEC014R_TRUSTED);
+    $ours = spec014rCodes(spec020Verify('profile/expired.png', 'trust/verify-off.settings.json'));
+    expect(in_array('signingCredential.expired', $ours, true))->toBeTrue()
+        ->and(in_array('signingCredential.untrusted', $ours, true))->toBeFalse()
+        ->and(in_array(SPEC014R_TRUSTED, $ours, true))->toBeFalse();
+})->group('SPEC-014');
+
+it('AC23: the rule, per signature', function (): void {
+    $a = 'self#jumbf=/c2pa/a/c2pa.signature';
+    $b = 'self#jumbf=/c2pa/b/c2pa.signature';
+    $base = [new ValidationStatus(StatusCode::SigningCredentialTrusted, $a, 'ok'), new ValidationStatus(StatusCode::SigningCredentialTrusted, $b, 'ok')];
+    $expired = [new ValidationStatus(StatusCode::SigningCredentialExpired, $a, 'leaf expired')];
+    $left = ChainCheck::withoutRefused([...$base, ...$expired], $expired);
+    expect(spec014rLines($left))->toBe(['signingCredential.untrusted '.$a, SPEC014R_TRUSTED.' '.$b, 'signingCredential.expired '.$a])
+        ->and($left[0]->explanation)->toContain('validity');
+    $invalid = [new ValidationStatus(StatusCode::SigningCredentialInvalid, $a, 'profile')];
+    expect(spec014rLines(ChainCheck::withoutRefused([...$base, ...$invalid], $invalid)))->toBe([SPEC014R_TRUSTED.' '.$b, 'signingCredential.invalid '.$a]);
 })->group('SPEC-014');

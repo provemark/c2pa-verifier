@@ -100,9 +100,10 @@ will be covered by a Pest test tagged `->group('SPEC-062')`.
     - `tsa-leaf-eku-email-only`: `timeStamp.untrusted` here, `trusted` in
       0.28.1, while both report `signingCredential.invalid`. A leaf without
       `timeStamping` is no TSA (SPEC-017 AC7).
-    - `expired-signer-untrusted-tsa` and `expired-signer-no-timestamp`:
-      0.28.1 adds `signingCredential.untrusted` to
-      `signingCredential.expired`; this verifier does not, as in SPEC-061.
+    - `expired-signer-untrusted-tsa` and `expired-signer-no-timestamp`
+      were named here until amendment 6: 0.28.1 adds
+      `signingCredential.untrusted` to `signingCredential.expired`, and
+      this verifier does so too since SPEC-014 amendment 12.
 
 - **AC5 — without settings nothing is trusted** *(required: error path)*
   - Given every probe verified without settings
@@ -271,6 +272,15 @@ const SPEC062_CODES_DIFFER = [
      of the `tsa-profile` set, not of this matrix. The matrix holds the
      other 35, as before.
    - No state moves except the eight, each to 0.29.0's.
+
+6. **2026-11-23, step 558, with SPEC-014 amendment 12** *(approved by
+   Maurice van Loon, 2026-11-23, with that amendment)* — an expired leaf
+   is `signingCredential.untrusted` here too. `expired-signer-untrusted-tsa`,
+   `expired-signer-no-timestamp` and `expired-signer-two-tokens` now agree
+   with 0.28.1 on their codes and leave `SPEC062_CODES_DIFFER`. AC4 went
+   red on them first, because they agreed while still named.
+
+   Weight C: named differences close; no verdict moves.
 
 ## Traceability
 

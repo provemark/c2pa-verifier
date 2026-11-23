@@ -30,6 +30,12 @@ committed.
   so it never names a signer the report does not trust. Active and
   ingredient manifests alike. No verdict changes; every such file is
   `Invalid` already.
+- **A leaf outside its validity makes the chain `signingCredential.untrusted`
+  (SPEC-014 amendment 12).** Where the profile reports
+  `signingCredential.expired` and the chain reached an anchor, the report
+  now says `untrusted` in the place of `trusted`, as `c2patool` since
+  0.28.1. A leaf kept in time by a trusted time-stamp stays `trusted`.
+  No verdict changes.
 
 ## 0.11.4 — 2026-11-22
 

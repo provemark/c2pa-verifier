@@ -26,3 +26,10 @@ Added in step 556 (SPEC-010 amendment 7), `c2patool` 0.29.0:
 |---|---|
 | `eku-any--0.29.0.json` | with the throw-away root: `Invalid`; `claimSignature.insideValidity` and `signingCredential.invalid`, **no** `claimSignature.validated` (since 0.28.6 a refused credential withholds it) and no `signingCredential.trusted` either |
 | `eku-any-no-settings--0.29.0.json` | no settings: `Invalid`; the same, with `signingCredential.untrusted` |
+
+Added in step 558 (SPEC-014 amendment 12), `c2patool` 0.29.0:
+
+| file | what c2patool says |
+|---|---|
+| `expired--0.29.0.json` | with the throw-away root: `Invalid`; `signingCredential.expired` and `signingCredential.untrusted`, no `trusted`: the chain check refuses the expired leaf |
+| `expired-verify-off--0.29.0.json` | `verify_trust: false`: `Invalid`; `signingCredential.expired` alone, no trust code |

@@ -539,7 +539,11 @@ final readonly class ChainCheck
      * SPEC-014 amendment 11: signingCredential.trusted is withdrawn on a signature whose certificate failed the
      * profile, or whose signer is revoked (signingCredential.ocsp.revoked), as c2pa 0.92.0 does even when the
      * chain reaches an anchor. Only the profile's own faults count, as there: a signingCredential.invalid from
-     * another check takes nothing away. The anchor the walk reached is not touched; only the report's code goes.
+     * another check takes nothing away.
+     *
+     * Amendment 12: where the profile's fault is signingCredential.expired, the leaf was outside its validity at
+     * the time judged, and c2pa's chain check refuses such a leaf; the trusted status is then replaced in place
+     * by signingCredential.untrusted. The walk itself leaves the leaf's validity to the profile check.
      *
      * @param  list<ValidationStatus>  $statuses  every status so far, after the revocation check
      * @param  list<ValidationStatus>  $profile  what CertificateProfileCheck reported
@@ -548,9 +552,13 @@ final readonly class ChainCheck
     public static function withoutRefused(array $statuses, array $profile): array
     {
         $refused = [];
+        $expired = [];
         foreach ($profile as $status) {
             if ($status->code->isFailure()) {
                 $refused[$status->url] = true;
+            }
+            if ($status->code === StatusCode::SigningCredentialExpired) {
+                $expired[$status->url] = true;
             }
         }
         foreach ($statuses as $status) {
@@ -558,8 +566,20 @@ final readonly class ChainCheck
                 $refused[$status->url] = true;
             }
         }
+        if ($refused === []) {
+            return $statuses;
+        }
 
-        return $refused === [] ? $statuses : array_values(array_filter($statuses, static fn (ValidationStatus $s): bool => $s->code !== StatusCode::SigningCredentialTrusted || ! isset($refused[$s->url])));
+        $out = [];
+        foreach ($statuses as $status) {
+            if ($status->code !== StatusCode::SigningCredentialTrusted || ! isset($refused[$status->url])) {
+                $out[] = $status;
+            } elseif (isset($expired[$status->url])) {
+                $out[] = new ValidationStatus(StatusCode::SigningCredentialUntrusted, $status->url, 'signing certificate untrusted: the leaf certificate is outside its validity period at the time judged (signingCredential.expired), so the chain is not trusted although it reaches an anchor');
+            }
+        }
+
+        return $out;
     }
 
     /**

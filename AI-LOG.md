@@ -12682,3 +12682,11 @@ README are where the disclosure lives.
 - Measured: `c2patool` 0.29.0 on the 127 probes with their own settings and on `child-staple-revoked`; tests red before, green after; three mutations; corpus before/after with a copied `vendor/` (34 of 1,991 runs differ by the one code); `composer check` and `composer test:parallel` exit 0.
 - Reasoned: the rule read in `c2pa` 0.92.0 `crypto/cose/verifier.rs` and `claim/claim_verify.rs`.
 - Decided by Maurice: follow the move; the evidence follows the report.
+
+## 2026-11-23 — Step 558: an expired leaf makes the chain untrusted
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "werk de volgende verschuiving uit"; "ja akkoord".
+- Produced: SPEC-014 amendment 12 (AC20–AC23), SPEC-061 amendment 7, SPEC-062 amendment 6, SPEC-015 amendment 12 extended; `ChainCheck::withoutRefused()` replaces trusted by untrusted beside a profile expiry; `TrustedRefusalTest.php`, `TrustMatrixTest.php`, `TsaMatrixTest.php`, `CertificateProfileCheckTest.php`; two `c2patool` 0.29.0 answer files and two README updates; `docs/comparison.md`; `CHANGELOG.md`; `notes/step-558-expired-leaf-untrusted.md`, `NOTES.md`.
+- Measured: `c2patool` 0.29.0 on `profile/expired.png` under its root and with `verify_trust` off; 0.29.0's answers under the probes' own settings (step 557); tests red before, green after; a mutation; corpus before/after with a copied `vendor/` (14 of 1,991 runs gain the code); `composer check` and `composer test:parallel` exit 0.
+- Reasoned: the rule read in `c2pa` 0.92.0 `crypto/cose/certificate_trust/rust_native.rs`; the recorded 0.27.22 and 0.28.1 answers date the move.
+- Decided by Maurice: follow the move.
