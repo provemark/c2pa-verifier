@@ -338,6 +338,7 @@ final readonly class Verifier
         };
         $statuses = [...$statuses, ...$this->certificate->check($manifest, $settings, $at, $reason, $trusted === null ? ($now !== null ? 'the given validation time' : 'now') : null)];
         $checks[] = 'certificate';
+        $statuses = ClaimSignatureCheck::withinValidity($statuses);   // SPEC-039 amendment 3: not inside beside expired
 
         // trust: without settings there are no anchors and the answer is untrusted, as c2patool's;
         // only verify_trust false keeps quiet (SPEC-014 amendment 1)

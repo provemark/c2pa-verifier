@@ -53,12 +53,31 @@ final readonly class ClaimSignatureCheck
             return [new ValidationStatus(StatusCode::ClaimSignatureMismatch, $url, sprintf('the claim signature does not verify under the leaf certificate (alg %d)', $cose->alg))];
         }
 
-        // SPEC-039: c2patool reports insideValidity wherever the signature verifies, directly before
-        // claimSignature.validated — an expired signer included (open question 1); the certificate's
-        // own period is judged elsewhere, as signingCredential.expired
+        // SPEC-039: insideValidity directly before claimSignature.validated, as c2patool lists them; the
+        // certificate's own period is judged elsewhere, and withinValidity() withdraws the code (amendment 3)
         return [
             new ValidationStatus(StatusCode::ClaimSignatureInsideValidity, $url, 'claim signature valid'),
             new ValidationStatus(StatusCode::ClaimSignatureValidated, $url, sprintf('the claim signature verifies under the leaf certificate (alg %d, %d certificates in x5chain)', $cose->alg, count($cose->chain))),
         ];
+    }
+
+    /**
+     * SPEC-039 amendment 3 (C2PA 2.4 §15.8): claimSignature.insideValidity is not reported beside a
+     * signingCredential.expired on the same signature, as c2pa withholds it since 0.91.11. Called once the
+     * certificate checks have run; every other status keeps its place.
+     *
+     * @param  list<ValidationStatus>  $statuses
+     * @return list<ValidationStatus>
+     */
+    public static function withinValidity(array $statuses): array
+    {
+        $expired = [];
+        foreach ($statuses as $status) {
+            if ($status->code === StatusCode::SigningCredentialExpired) {
+                $expired[$status->url] = true;
+            }
+        }
+
+        return $expired === [] ? $statuses : array_values(array_filter($statuses, static fn (ValidationStatus $s): bool => $s->code !== StatusCode::ClaimSignatureInsideValidity || ! isset($expired[$s->url])));
     }
 }

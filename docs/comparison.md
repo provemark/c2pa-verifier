@@ -89,7 +89,7 @@ now `timeStamp.untrusted` in `c2patool` too, as here. Three code changes move no
 state: `claimSignature.validated` is no longer reported when the
 credential is refused (55 files; reported here on 52),
 `claimSignature.insideValidity` no longer when it is not inside (12; here
-on 12), and `signingCredential.ocsp.skipped` is added for a staple that
+on 12 then, and since step 555 no longer either: SPEC-039 amendment 3), and `signingCredential.ocsp.skipped` is added for a staple that
 cannot be used (27; here on 15).
 Two upstream changes the corpus has no file for were probed or read
 afterwards (step 523). A trusted signer's stapled `good`, signed by the
@@ -127,6 +127,14 @@ says `Invalid` or gives no report.
 Several codes move without a verdict: `claimSignature.validated` is
 reported again where a refusal fell away, and `signingCredential.invalid`
 is gone from eight files that stay `Invalid` for another reason. Since
+step 555 `claimSignature.insideValidity` is withheld here beside
+`signingCredential.expired`, as there (SPEC-039 amendment 3). Where this
+verifier judges a signer at now because it does not trust the TSA that
+`c2patool` trusts without an anchor (the Truepic, Bing, Amazon and
+Lightroom files), it reports `expired` and so withholds the code where
+`c2patool` keeps it; that follows from the time-stamp difference in the
+table below (a timestamp authority is trusted only through the configured
+anchors), not from a new one. Since
 step 554 the drift alarms compare with 0.29.0. Over their 116
 recordings, only the three Truepic files and the remote Photoshop file
 move, to `Invalid`, as here.
@@ -320,7 +328,6 @@ files with the same trust anchors.
 | A `c2pa.redacted` reference to a manifest's label it does not list is `assertion.notRedacted`, as `c2pa-rs` names it; 2.4 says `redactionMismatch` | the codes compare with `c2patool` | SPEC-037 open question 4 |
 | A BMFF hash assertion without an `exclusions` key is `assertion.bmffHash.malformed`; `c2patool` gives no report at all (*"missing field `exclusions`"*) | a report that says why | SPEC-038 open question 2 |
 | A `subset` entry of length 0 that is not the last is `malformed` (it runs to the end of the box, so it overlaps what follows); `c2pa-rs` does not check it | C2PA 2.4: only the last entry may run to the end; otherwise the bytes after it could escape the hash (reasoned, not measured against `c2pa-rs`'s hashing) | SPEC-038 open question 3 |
-| `claimSignature.insideValidity` is reported beside every verified signature, **an expired signer's included**, as both `c2patool` versions report it; C2PA 2.4 §15.8 ties it to the signer's validity period | the maintainer's choice (SPEC-039 open question 1): the reports compare line for line, and its explanation says *"claim signature valid"*; the validity itself is `signingCredential.expired` | SPEC-039 |
 | A signer outside its certificate's validity is `signingCredential.expired`, as `c2patool` 0.27.22, 0.28.0, 0.28.1 and 0.28.3 report it (stored answers under `tests/Fixtures/`); C2PA 2.4 §15.8.2 and 2.5 name that case `claimSignature.outsideValidity`. `signingCredential.expired` was a standard code in C2PA 1.0, 1.4 and 2.0, stood beside `outsideValidity` in the 2.1 table (whose validation text already prescribes `outsideValidity`), and is gone from 2.2 on | the codes compare with `c2patool`; the verdict is the same (`Invalid`). Whether `claimSignature.outsideValidity` is added waits for the minor that gathers the codes of §15.2.2 reported under another name | SPEC-015; `docs/conformance.md` `PRED-CRYP-016` |
 | A relative entry in `redacted_assertions` excuses no missing assertion; `c2pa-rs` does not resolve it either, and reports it verbatim | measured on `binding/claim-redacted.png` | SPEC-035 amendment 2 |
 | A CAWG identity assertion is `Invalid` until validated | `Trusted` on a credential never examined (`C_with_CAWG_data`) | SPEC-013 amendment 7 |

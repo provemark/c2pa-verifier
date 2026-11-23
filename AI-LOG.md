@@ -12658,3 +12658,11 @@ README are where the disclosure lives.
 - Measured: `c2patool` 0.29.0 on the 116 files against the 0.27.22 answers (111 equal, 4 state moves to `Invalid`, 1 code move); the new assertions red before and green after the switch; each of the six alarms red on a hand-changed answer; `composer check` and `composer test:parallel` exit 0.
 - Reasoned: no file is more lenient in 0.29.0, so no exception changes; the remote-manifest answer depends on a server `c2patool` fetches from.
 - Decided by Maurice: move the alarms (2026-11-10) and this step's scope.
+
+## 2026-11-22 — Step 555: `claimSignature.insideValidity` not beside an expired signer
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "werk de statuscode-verschuivingen uit"; "ja akkoord".
+- Produced: SPEC-039 amendment 3 (AC2, AC4 rewritten, AC7 new); `ClaimSignatureCheck::withinValidity()` and its calls in `Verifier` and `IngredientManifestCheck`; `tests/Unit/Cose/InsideValidityTest.php`; three `c2patool` 0.29.0 answer files; `docs/comparison.md`; `CHANGELOG.md` (*Unreleased*); `notes/step-555-inside-validity-beside-expired.md`, `NOTES.md`.
+- Measured: this verifier against step 549's 0.29.0 answers (1,860 runs) to list the code moves; `c2patool` 0.29.0 on `profile/expired.png` and `expired-signer-trusted-tsa`; tests red before (AC2, AC4) and green after; a mutation per call; corpus before/after with a copied `vendor/` (1,991 runs a side, 68 differ by the one code); `composer check` and `composer test:parallel` exit 0.
+- Reasoned: the rule read in `c2pa` 0.92.0 `claim/claim_verify.rs`; the 22 runs further from 0.29.0 follow from the named TSA-trust difference.
+- Decided by Maurice: follow the move (SPEC-039 amendment 3); the moves one at a time.

@@ -249,6 +249,7 @@ final readonly class IngredientManifestCheck
             default => "the timestamp's TSA is not trusted",
         };
         $statuses = [...$statuses, ...$this->certificate->check($manifest, $settings, $at, $reason, $trusted === null ? ($now !== null ? 'the given validation time' : 'now') : null)];
+        $statuses = ClaimSignatureCheck::withinValidity($statuses);   // SPEC-039 amendment 3: not inside beside expired
 
         $trustSettings = $settings ?? new TrustSettings([], []);
         $anchor = null;

@@ -84,16 +84,15 @@ it('AC1: beside every verified signature, as c2patool', function (): void {
     expect($withIt)->toBeGreaterThan(0);
 })->group('SPEC-039');
 
-it('AC2: an expired signer still gets it, as c2patool', function (): void {
-    foreach (['0.28.0', '0.27.22'] as $version) {
-        $oracle = spec020Oracle("inside-validity/profile-expired-no-settings--{$version}.json");
-        expect(spec039OracleCodes($oracle, 'success'))->toContain(SPEC039_INSIDE)
-            ->and(spec039OracleCodes($oracle, 'failure'))->toContain('signingCredential.expired');
-    }
+it('AC2: an expired signer does not get it, as c2patool 0.29.0', function (): void {
+    // amendment 3: c2pa withholds it beside signingCredential.expired since 0.91.11 (C2PA 2.4 §15.8)
+    $oracle = spec020Oracle('inside-validity/profile-expired-no-settings--0.29.0.json');
+    expect(spec039OracleCodes($oracle, 'success'))->not->toContain(SPEC039_INSIDE)
+        ->and(spec039OracleCodes($oracle, 'failure'))->toContain('signingCredential.expired');
     $report = spec020Verify('profile/expired.png');
-    $failures = array_map(static fn (ValidationStatus $s): string => $s->code->value, array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code->isFailure()));
-    expect(spec039Paired($report, 'profile/expired.png'))->toBeTrue()
-        ->and(in_array('signingCredential.expired', $failures, true))->toBeTrue()
+    $codes = array_map(static fn (ValidationStatus $s): string => $s->code->value, $report->result->statuses);
+    expect(in_array('signingCredential.expired', $codes, true))->toBeTrue()
+        ->and(in_array(SPEC039_INSIDE, $codes, true))->toBeFalse()
         ->and($report->result->state->value)->toBe('Invalid');
 })->group('SPEC-039');
 
@@ -110,22 +109,28 @@ it('AC3: no verified signature, no code', function (): void {
 })->group('SPEC-039');
 
 it('AC4: ingredient manifests alike', function (): void {
+    // amendment 3: a delta holds it exactly when it holds validated and not signingCredential.expired, as 0.29.0's
     $ours = 0;
     $theirs = 0;
+    $withheld = 0;
     foreach (spec020Multi() as $name => $relative) {
         $report = spec020Verify($relative, SPEC021_SETTINGS);
-        $oracle = spec020Oracle((string) preg_replace('/\.[a-z]+$/', '.json', $relative));
+        $oracle = spec020Oracle(DRIFT_ORACLE.'/'.(string) preg_replace('/\.[a-z]+$/', '.json', $relative));
         foreach ([[spec020Deltas($report->toArray()), &$ours], [spec020Deltas($oracle), &$theirs]] as [$deltas, &$count]) {
             foreach ($deltas as $delta) {
                 $codes = array_column($delta['validationDeltas']['success'], 'code');
-                expect(in_array(SPEC039_INSIDE, $codes, true))->toBe(in_array(SPEC039_VALIDATED, $codes, true), "{$name}: {$delta['ingredientAssertionURI']}");
+                $expired = in_array('signingCredential.expired', array_column($delta['validationDeltas']['failure'], 'code'), true);
+                $validated = in_array(SPEC039_VALIDATED, $codes, true);
+                expect(in_array(SPEC039_INSIDE, $codes, true))->toBe($validated && ! $expired, "{$name}: {$delta['ingredientAssertionURI']}");
                 $count += in_array(SPEC039_INSIDE, $codes, true) ? 1 : 0;
+                $withheld += $validated && $expired ? 1 : 0;
             }
         }
         unset($count);
     }
     expect($theirs)->toBeGreaterThan(0)
-        ->and($ours)->toBeGreaterThan(0);
+        ->and($ours)->toBeGreaterThan(0)
+        ->and($withheld)->toBeGreaterThan(0);   // an expired ingredient signer is among them, so the rule is exercised
 })->group('SPEC-039');
 
 it('AC5: nothing else moves', function (): void {
@@ -149,3 +154,15 @@ function spec039Value(): string
 {
     return SPEC039_INSIDE;
 }
+
+it('AC7: a signer kept in time keeps it', function (): void {
+    // amendment 3, the control: the signer expired, a trusted time-stamp from before keeps it in time
+    $oracle = spec020Oracle('tsa-matrix/expired-signer-trusted-tsa--0.29.0.json');
+    expect(spec039OracleCodes($oracle, 'success'))->toContain(SPEC039_INSIDE)
+        ->and($oracle['validation_state'] ?? null)->toBe('Trusted');
+    $report = spec020Verify('timestamp/tsa-matrix/expired-signer-trusted-tsa.png', 'timestamp/tsa-matrix/expired-signer-trusted-tsa.settings.json');
+    $codes = array_map(static fn (ValidationStatus $s): string => $s->code->value, $report->result->statuses);
+    expect(spec039Paired($report, 'expired-signer-trusted-tsa'))->toBeTrue()
+        ->and(in_array('signingCredential.expired', $codes, true))->toBeFalse()
+        ->and($report->result->state->value)->toBe('Trusted');
+})->group('SPEC-039');

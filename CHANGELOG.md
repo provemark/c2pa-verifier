@@ -5,6 +5,18 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
+## Unreleased
+
+### Changed
+
+- **`claimSignature.insideValidity` is no longer reported beside
+  `signingCredential.expired` (SPEC-039 amendment 3).** The code says the
+  signer was inside its validity period at the time judged (C2PA 2.4
+  §15.8, 2.5 §14.8); `c2patool` withholds it on an expired signer since
+  0.28.6, and 0.29.0 still does. It holds for the active manifest and for
+  ingredient manifests. A signer kept in time by a trusted time-stamp keeps
+  the code. No verdict changes, and no contract symbol (217).
+
 ## 0.11.4 — 2026-11-22
 
 A patch release that follows `c2patool` 0.29.0 and C2PA 2.4 §15.8.2 on a

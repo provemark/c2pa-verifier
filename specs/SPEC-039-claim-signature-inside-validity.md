@@ -94,13 +94,13 @@ subject to open question 1.
     `claimSignature.insideValidity` on the same `c2pa.signature` url,
     directly before `claimSignature.validated`.
 
-- **AC2 — an expired signer still gets it, as c2patool**
+- **AC2 — an expired signer does not get it, as c2patool 0.29.0** *(amendment 3)*
   - Given `profile/expired.png` (a signer outside its validity period, no
     timestamp)
   - When verified
-  - Then `claimSignature.insideValidity` and `signingCredential.expired`
-    both appear, and the verdict is `Invalid`, as the recorded report
-    shows (open question 1).
+  - Then `signingCredential.expired` appears and
+    `claimSignature.insideValidity` does not, and the verdict is
+    `Invalid`, as `c2patool` 0.29.0's recorded report shows.
 
 - **AC3 — no verified signature, no code** *(error path)*
   - Given the corpus files whose report holds `claimSignature.mismatch`
@@ -112,8 +112,9 @@ subject to open question 1.
   - Given the multi-manifest corpus files of SPEC-021
   - When verified
   - Then an ingredient delta holds `claimSignature.insideValidity`
-    exactly when it holds `claimSignature.validated`, as `c2patool`'s
-    deltas do.
+    exactly when it holds `claimSignature.validated` and not
+    `signingCredential.expired`, as `c2patool` 0.29.0's deltas do
+    (amendment 3).
 
 - **AC5 — nothing else moves**
   - Given the whole corpus under the three standard settings, before and
@@ -125,6 +126,15 @@ subject to open question 1.
   - Then `StatusCode::ClaimSignatureInsideValidity` exists with the value
     `claimSignature.insideValidity`, `isSuccess()` is true, and it is in
     the recorded surface (124 → 125).
+
+- **AC7 — a signer kept in time keeps it** *(amendment 3)*
+  - Given `timestamp/tsa-matrix/expired-signer-trusted-tsa.png` under its
+    own settings (the signer expired, a trusted time-stamp from before)
+  - When verified
+  - Then `claimSignature.insideValidity` appears directly before
+    `claimSignature.validated`, no `signingCredential.expired` appears,
+    and the verdict is `Trusted`, as `c2patool` 0.29.0's recorded report
+    shows.
 
 ## References
 
@@ -155,7 +165,8 @@ case ClaimSignatureInsideValidity = 'claimSignature.insideValidity';
 *Answered on approval, 2026-09-24:* question 1 by the maintainer (copy
 `c2patool`). Question 2 was settled by adopting its proposal.
 
-1. **A code whose name says more than it means.** `c2patool` reports
+1. **A code whose name says more than it means.** *(answered the other
+   way by amendment 3, 2026-11-22: `c2patool` 0.29.0 follows §15.8 now)* `c2patool` reports
    `claimSignature.insideValidity` beside `signingCredential.expired`, so a
    report can say both *"inside validity"* and *"expired"* about the same
    signature. Two choices:
@@ -202,6 +213,48 @@ case ClaimSignatureInsideValidity = 'claimSignature.insideValidity';
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 135).
 
+3. **2026-11-22, step 555, found by the corpus against `c2patool` 0.29.0
+   (step 549, followed up in step 555)** *(approved by Maurice van Loon,
+   2026-11-22)* — open question 1 is answered the other way. Since
+   `c2pa` 0.91.11 (`c2patool` 0.28.6), `verify_internal`
+   (`claim/claim_verify.rs`) no longer logs `claimSignature.insideValidity`
+   when the same signature already carries `claimSignature.outsideValidity`
+   or `signingCredential.expired`. That is C2PA 2.4 §15.8 (2.5 §14.8): the
+   code says the signer was inside its validity period at the time
+   judged. `c2patool` 0.29.0 and the specification now agree, so there is
+   nothing left to copy the other way.
+
+   - **The rule.** `claimSignature.insideValidity` is reported where the
+     signature verifies, unless `signingCredential.expired` is reported on
+     the same `c2pa.signature` url. This verifier has no
+     `claimSignature.outsideValidity`; an expired signer is
+     `signingCredential.expired`, as before (`PRED-CRYP-016`). It holds
+     for the active manifest and for every ingredient manifest.
+   - **The time judged is unchanged.** A signer kept in time by a trusted
+     time-stamp is not `expired`, so it keeps the code
+     (`timestamp/tsa-matrix/expired-signer-trusted-tsa.png` under its own
+     settings, `Trusted` in 0.29.0 with the code).
+   - **AC2 is rewritten:** *an expired signer does not get it, as
+     `c2patool` 0.29.0*. `profile/expired.png` has `signingCredential.expired`
+     and no `claimSignature.insideValidity`, and stays `Invalid`. The
+     0.29.0 answer is recorded beside the 0.27.22 and 0.28.0 ones under
+     `tests/Fixtures/c2patool/inside-validity/`.
+   - **AC4 is read against 0.29.0:** an ingredient delta holds the code
+     exactly when it holds `claimSignature.validated` and not
+     `signingCredential.expired`.
+   - **AC7 is new**, the control: the trusted-time-stamp probe above keeps
+     the code, directly before `claimSignature.validated`, as 0.29.0's
+     answer under `tests/Fixtures/c2patool/tsa-matrix/` shows.
+   - `claimSignature.validated` is not touched here. `c2pa` withholds that
+     one too on a refused credential; that is a separate step.
+
+   Measured: over the 930 media files of step 549, without settings and
+   with `trust/full.settings.json`, this verifier reported the code where
+   0.29.0 did not in 26 runs on 13 files, each with
+   `signingCredential.expired`. No verdict depends on the code.
+
+   Weight B: a report code changes on expired signers; no verdict moves.
+
 ## Traceability
 
 Filled when status becomes `implemented`.
@@ -209,8 +262,9 @@ Filled when status becomes `implemented`.
 | Acceptance criterion | Test (file :: name / group) | Source (file/symbol) |
 |----------------------|-----------------------------|----------------------|
 | AC1 | tests/Unit/Cose/InsideValidityTest.php :: AC1: beside every verified signature, as c2patool / SPEC-039; tests/Unit/Report/ReportTest.php :: AC1 / SPEC-010 | src/Cose/ClaimSignatureCheck.php :: checkBytes() |
-| AC2 | tests/Unit/Cose/InsideValidityTest.php :: AC2: an expired signer still gets it, as c2patool / SPEC-039 | src/Cose/ClaimSignatureCheck.php :: checkBytes() (no validity condition, open question 1) |
+| AC2 | tests/Unit/Cose/InsideValidityTest.php :: AC2: an expired signer does not get it, as c2patool 0.29.0 / SPEC-039 | src/Cose/ClaimSignatureCheck.php :: withinValidity(); src/Verifier/Verifier.php :: check() (amendment 3) |
 | AC3 | tests/Unit/Cose/InsideValidityTest.php :: AC3: no verified signature, no code / SPEC-039 | src/Cose/ClaimSignatureCheck.php :: checkBytes() (the mismatch branch) |
-| AC4 | tests/Unit/Cose/InsideValidityTest.php :: AC4: ingredient manifests alike / SPEC-039 | src/Verifier/IngredientManifestCheck.php :: manifest() (through ClaimSignatureCheck) |
+| AC4 | tests/Unit/Cose/InsideValidityTest.php :: AC4: ingredient manifests alike / SPEC-039 | src/Verifier/IngredientManifestCheck.php :: manifest() (through ClaimSignatureCheck, then withinValidity(), amendment 3) |
 | AC5 | tests/Unit/Cose/InsideValidityTest.php :: AC5: nothing else moves / SPEC-039; the drift alarms (SPEC-013 AC10–AC13); the before/after run of step 135b | — |
 | AC6 | tests/Unit/Cose/InsideValidityTest.php :: AC6: the vocabulary grows by one code, verbatim / SPEC-039 | src/Report/StatusCode.php :: ClaimSignatureInsideValidity, isSuccess(); tests/Fixtures/api/public-surface.txt |
+| AC7 | tests/Unit/Cose/InsideValidityTest.php :: AC7: a signer kept in time keeps it / SPEC-039 | src/Cose/ClaimSignatureCheck.php :: withinValidity() (no expired, nothing withdrawn) |
