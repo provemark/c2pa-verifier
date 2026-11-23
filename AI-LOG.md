@@ -12698,3 +12698,11 @@ README are where the disclosure lives.
 - Measured: 0.29.0's codes under the probes' own settings against this verifier's (step 557 and 558 runs); `composer check` exit 0.
 - Reasoned: `c2pa` 0.92.0 `crypto/cose/verifier.rs`, `certificate_trust/openssl.rs` (`X509_STRICT`) and `rust_native.rs` read; the binary carries OpenSSL (its strings); the chain-matrix README's OpenSSL column shows the same refusals.
 - Decided by Maurice: do not follow these codes; name them.
+
+## 2026-11-23 — Step 560: how far the label 33 swap reaches (measurement, docs only)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "wat is dat label 33?"; "waar moet ik het prive melden?"; "ga goed na of het label 33 probleem er echt is"; "ja, leg de meting vast als stap".
+- Produced: `notes/step-560-label-33-swap-measured.md`, `NOTES.md`, the `x5chain` row of `docs/comparison.md`.
+- Measured: `c2patool` 0.29.0 and `bin/c2pa-verify` on three scratch probes (a chain added to the unprotected header of `chain-constraints/plain.png`, signature untouched) and on the existing probes, with `chain-constraints/root.settings.json`; a byte scan of the 932 corpus files for where each COSE_Sign1 keeps its chain.
+- Reasoned: that a real CA's proof-of-possession limits a swap to the key holder's own certificates; the upstream security policy (`contentauth/c2pa-rs` SECURITY.md) read for where to report.
+- Decided by Maurice: record the measurement as a step. An earlier suggestion in the session to report it privately as a vulnerability was withdrawn after this measurement.
