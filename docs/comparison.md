@@ -140,7 +140,13 @@ withheld on a refused credential (`signingCredential.invalid`,
 `ocsp.revoked`, `expired`, `algorithm.unsupported`), as there (SPEC-010
 amendment 7). Where this verifier refuses a credential that `c2patool`
 accepts (the rows below on the time-stamp, the certificate profile,
-`x5chain` and revocation), the code follows that refusal. Since
+`x5chain` and revocation), the code follows that refusal. Since step 557
+`signingCredential.trusted` is withheld beside a certificate-profile fault
+or `ocsp.revoked`, as there, even when the chain reaches an anchor
+(SPEC-014 amendment 11); `evidence()` then names no signer either. On a
+leaf outside its validity 0.29.0 also reports
+`signingCredential.untrusted`, where this walk does not; that difference
+in the walk is not traced yet. Since
 step 554 the drift alarms compare with 0.29.0. Over their 116
 recordings, only the three Truepic files and the remote Photoshop file
 move, to `Invalid`, as here.

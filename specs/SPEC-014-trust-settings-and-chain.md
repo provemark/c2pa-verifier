@@ -331,6 +331,48 @@ measured in the tests-first step (Open questions).
   - Then each is `Valid` with `signingCredential.untrusted` naming the
     certificate and the rule of §14.5.1.1 it breaks
 
+- **AC15 — a profile fault takes trusted away** *(amendment 11)*
+  - Given `profile/eku-any.png` under `profile/throw-away-root.settings.json`
+    (`signingCredential.invalid`) and `trust/chain-matrix/leaf-expired.png`
+    under its own settings (`signingCredential.expired`)
+  - When verified
+  - Then the profile fault is reported, `signingCredential.trusted` is
+    not, and the verdict is `Invalid`, as `c2patool` 0.29.0's recorded
+    reports show
+
+- **AC16 — a revoked signer alike** *(amendment 11)*
+  - Given `revocation/cs-own.png` under its own root
+  - When verified
+  - Then `signingCredential.ocsp.revoked` is reported and
+    `signingCredential.trusted` is not, as `c2patool` 0.29.0's recorded
+    report shows
+
+- **AC17 — ingredient manifests alike** *(amendment 11)*
+  - Given `ingredient-staple/child-staple-revoked.png` under its own root
+    (an ingredient signer revoked by its own staple), and the
+    multi-manifest corpus files of SPEC-021 under `trust/full.settings.json`
+  - When verified
+  - Then the ingredient delta holds `signingCredential.ocsp.revoked` and
+    not `signingCredential.trusted`, as `c2patool` 0.29.0's recorded
+    report shows; and no delta of the corpus files holds
+    `signingCredential.trusted` beside `signingCredential.invalid`,
+    `.expired` or `.ocsp.revoked`
+
+- **AC18 — a sound signer keeps it** *(amendment 11, the control)*
+  - Given `trust/chain-matrix/control.png` under its own settings
+  - When verified
+  - Then `signingCredential.trusted` is reported and the verdict is
+    `Trusted`, as `c2patool` 0.29.0 says
+
+- **AC19 — only the profile's own faults count** *(amendment 11)*
+  - Given a list with `signingCredential.trusted` on two signature urls,
+    and on one of them a `signingCredential.invalid` that did not come
+    from the certificate profile
+  - When the rule runs with the profile's faults and the revocation
+    statuses given separately
+  - Then `signingCredential.trusted` stays on both urls; given a profile
+    fault or an `ocsp.revoked` on one url, it is withdrawn on that url only
+
 ## References
 
 - Specification: C2PA 2.4 §14.4.1 (the validator's lists: trust anchors,
@@ -648,6 +690,55 @@ Deptrac: `Trust` → `Manifest`, `Report` (already), plus `Cose`, `Support`.
     states are the same in both versions. A state changed by hand in a
     0.29.0 answer turned it red.
 
+11. **2026-11-23, step 557, found while building SPEC-010 amendment 7
+    (step 556)** *(approved by Maurice van Loon, 2026-11-23)* —
+    `signingCredential.trusted` is not reported on a refused credential.
+    `c2pa` 0.92.0 (`c2patool` 0.29.0) removes it in two places, even when
+    the chain reaches an anchor:
+    - `crypto/cose/verifier.rs`: when the certificate profile check fails
+      (*"A certificate that fails the profile check is not a trusted
+      signing credential, even when it chains to a trust anchor"*). Its
+      faults are `signingCredential.invalid` and
+      `signingCredential.expired`.
+    - `claim/claim_verify.rs`: when OCSP finds the credential revoked
+      (*"That outranks the certificate chain reaching a trust anchor"*).
+
+    C2PA 2.4 §15.7 assigns `signingCredential.trusted` within a claim
+    that has not been rejected.
+
+    - **The rule.** `signingCredential.trusted` is withdrawn on a
+      signature url where `CertificateProfileCheck` reported a fault, or
+      where `signingCredential.ocsp.revoked` is reported. It runs after the
+      revocation check, for the active manifest and every ingredient
+      manifest.
+    - **Only the profile's own faults count**, as in `c2pa`. A
+      `signingCredential.invalid` from another check (a key that does not
+      fit the algorithm, a broken chain) does not take trusted away there,
+      and does not here.
+    - **The evidence follows the report** (Maurice's decision,
+      2026-11-23). Where `trusted` is withdrawn, `evidence()`'s `signer`
+      is null too, so SPEC-082 AC7 (*signer set exactly when the
+      signature has `signingCredential.trusted`*) holds unchanged. The
+      revocation source (SPEC-086) still gets the anchor the walk reached:
+      the lookup comes before the refusal it may produce.
+    - **Other criteria follow.** SPEC-015 amendment 12 (AC2, AC10) and
+      SPEC-031 amendment 6 (AC2, AC8).
+    - **AC15–AC19 are new.**
+    - **Not here.** On a leaf outside its validity, 0.29.0 also reports
+      `signingCredential.untrusted`: its chain check refuses the expired
+      leaf. This walk judges the chain differently and does not. That is
+      a difference in the walk, not a code withheld, and is left for its
+      own look.
+
+    Measured: `c2patool` 0.29.0 on the 127 probes with their own
+    settings. In 26 runs this verifier reported `trusted` where 0.29.0
+    did not, each with a profile fault: 16 with `invalid` and 8 with
+    `expired` in the trust and time-stamp matrices, plus the two PSS-SHA1
+    probes that are `Valid` there. Under `trust/full.settings.json` and
+    without settings nothing differs, because these probes are not
+    anchored there. No verdict depends on the code here: each file is
+    `Invalid` already.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -669,3 +760,8 @@ least one test; every source file maps back to this spec.
 | AC12 | tests/Unit/Trust/AnchorValidityTest.php :: AC12: an anchor valid now still leads to Trusted; AC12: an anchor outside its validity breaks the chain; AC12: the same expired intermediate under a valid root stays untrusted; AC12: the anchor is judged at the time it is given, and the timestamp walk refuses it at now / SPEC-014 | src/Trust/ChainCheck.php :: checkCertificates(), issuerFault() (the anchor judged at the leaf's time); the fixtures from bin/make-anchor-variants.php |
 | AC13 | tests/Unit/Trust/KeyUsageIssuerTest.php :: AC13: a chain whose CAs carry keyCertSign still leads to Trusted; AC13: a certificate authority without keyUsage issues nothing; AC13: the walk the timestamp check shares refuses the same chain / SPEC-014 | src/Trust/ChainCheck.php :: issuerFault() (keyUsage required); the fixtures from bin/make-trust-matrix.php (set key-usage) |
 | AC14 (amendment 8) | tests/Unit/Trust/TrustMatrixTest.php :: AC1, AC2, AC3 (SPEC061_STRICTER) / SPEC-061; tests/Unit/Trust/WeakHashTest.php :: AC4 / SPEC-048 | src/Trust/ChainCheck.php :: pathFault(), profileFault(); src/Trust/CertificateProfileCheck.php :: SIGNATURE_ALGORITHMS, CURVES |
+| AC15 | tests/Unit/Trust/TrustedRefusalTest.php :: AC15: a profile fault takes trusted away / SPEC-014 | src/Trust/ChainCheck.php :: withoutRefused(); src/Verifier/Verifier.php :: check() (amendment 11) |
+| AC16 | tests/Unit/Trust/TrustedRefusalTest.php :: AC16: a revoked signer alike / SPEC-014 | src/Verifier/Verifier.php :: check() (withoutRefused() after the revocation check) |
+| AC17 | tests/Unit/Trust/TrustedRefusalTest.php :: AC17: ingredient manifests alike / SPEC-014 | src/Verifier/IngredientManifestCheck.php :: manifest() (withoutRefused()) |
+| AC18 | tests/Unit/Trust/TrustedRefusalTest.php :: AC18: a sound signer keeps it / SPEC-014 | src/Trust/ChainCheck.php :: withoutRefused() (nothing refused, nothing withdrawn) |
+| AC19 | tests/Unit/Trust/TrustedRefusalTest.php :: AC19: only the profile's own faults count / SPEC-014 | src/Trust/ChainCheck.php :: withoutRefused() |

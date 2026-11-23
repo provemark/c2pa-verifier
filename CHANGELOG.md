@@ -23,6 +23,13 @@ committed.
   the claim has not yet been rejected"*) and `c2patool` since 0.28.6.
   `signingCredential.untrusted` is not a refusal here, as in `c2patool`.
   Active and ingredient manifests alike. No verdict changes.
+- **`signingCredential.trusted` is no longer reported beside a
+  certificate-profile fault or a revoked signer (SPEC-014 amendment 11).**
+  As `c2patool` 0.29.0, even when the chain reaches an anchor. The
+  evidence follows the report: `ManifestEvidence::$signer` is then null,
+  so it never names a signer the report does not trust. Active and
+  ingredient manifests alike. No verdict changes; every such file is
+  `Invalid` already.
 
 ## 0.11.4 — 2026-11-22
 

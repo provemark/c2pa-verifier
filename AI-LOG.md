@@ -12674,3 +12674,11 @@ README are where the disclosure lives.
 - Measured: 0.29.0's answers (step 549) for which refusals stand beside the code; `c2patool` 0.29.0 on `profile/eku-any.png` with and without its root; tests red before, green after; three mutations; corpus before/after with a copied `vendor/` (166 of 1,991 runs differ by the one code); `composer check` and `composer test:parallel` exit 0.
 - Reasoned: the rule read in `c2pa` 0.92.0 `claim/claim_verify.rs`; the 50 runs further from 0.29.0 follow from refusals already named.
 - Decided by Maurice: follow the move, and `c2pa`'s reading that `untrusted` is no refusal.
+
+## 2026-11-23 — Step 557: `signingCredential.trusted` not on a refused credential
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "werk de volgende verschuiving uit"; "ja akkoord"; on the evidence: "Bewijs volgt rapport".
+- Produced: SPEC-014 amendment 11 (AC15–AC19), SPEC-015 amendment 12, SPEC-031 amendment 6; `ChainCheck::withoutRefused()`, `trustedIn()` and their calls in `Verifier` and `IngredientManifestCheck`; `tests/Unit/Trust/TrustedRefusalTest.php`, `CertificateProfileCheckTest.php`, `TrustAnchorsTest.php`; three `c2patool` 0.29.0 answer files and two README notes; `docs/comparison.md`; `CHANGELOG.md`; `notes/step-557-trusted-on-refused-credential.md`, `NOTES.md`.
+- Measured: `c2patool` 0.29.0 on the 127 probes with their own settings and on `child-staple-revoked`; tests red before, green after; three mutations; corpus before/after with a copied `vendor/` (34 of 1,991 runs differ by the one code); `composer check` and `composer test:parallel` exit 0.
+- Reasoned: the rule read in `c2pa` 0.92.0 `crypto/cose/verifier.rs` and `claim/claim_verify.rs`.
+- Decided by Maurice: follow the move; the evidence follows the report.

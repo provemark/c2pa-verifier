@@ -139,8 +139,11 @@ it('AC2: the old shape still works, and both together add up', function (): void
     expect($jpeg->result->state->value)->toBe('Trusted')
         ->and(spec031Oracle('fixture-signed.jpg', 'legacy-plus-truepic-entry')['validation_state'])->toBe('Trusted');
 
-    // the Truepic signer reaches the entry's root; only the signer is compared (its data hash is SPEC-012 amendment 7's)
-    $truepic = spec031Verify('public-testfiles/truepic-20230212-camera.jpg', $combined);
+    // the Truepic signer reaches the entry's root; only the signer is compared (its data hash is SPEC-012 amendment 7's).
+    // Judged the day after it signed: at now its TSA reaches no configured anchor here, so the signer is expired
+    // and SPEC-014 amendment 11 withholds trusted, where c2patool trusts that TSA without one (_TSA_NOT_CONFIGURED)
+    $stream = fopen(Corpus::fixtures().'/public-testfiles/truepic-20230212-camera.jpg', 'rb') ?: throw new RuntimeException('no Truepic file');
+    $truepic = (new Verifier)->verify($stream, $combined, new DateTimeImmutable('2023-02-13T00:00:00Z'));
     expect(spec031Codes($truepic, 'signingCredential.trusted'))->toBe(['signingCredential.trusted'])
         ->and(spec031OracleCodes(spec031Oracle('public-testfiles/truepic-20230212-camera.jpg', 'legacy-plus-truepic-entry'), 'signingCredential.trusted'))->toBe(['signingCredential.trusted']);
 })->group('SPEC-031');
@@ -268,7 +271,7 @@ it('AC8: a trust_config counts for its own entry', function (): void {
         $report = spec031Verify($probe, spec031Settings($name));
         expect($oracle['validation_state'])->toBe($state, "{$name}: the oracle")
             ->and($report->result->state->value)->toBe($state, $name)
-            ->and(spec031Codes($report, 'signingCredential.'))->toBe(spec031OracleCodes($oracle, 'signingCredential.'), $name);
+            ->and(spec031Codes($report, 'signingCredential.'))->toBe(spec031WithoutRefusedTrusted(spec031OracleCodes($oracle, 'signingCredential.')), $name);
     }
     // E5 is the case a union across entries would have called Trusted
     $e5 = spec031Verify($probe, spec031Settings('e5-config-on-another-entry'));
@@ -317,3 +320,17 @@ it('AC9: a time-stamping certificate no anchor reaches keeps the walk\'s own rea
     expect($report->result->state->value)->toBe('Valid')
         ->and($untrusted?->explanation)->toBe('signing certificate untrusted: the chain ends at Throw-away TSA-signer Root (depth 1), issued by Throw-away TSA-signer Root, which the chain does not carry and no trust anchor signs');
 })->group('SPEC-031');
+
+/**
+ * SPEC-014 amendment 11 applied to an answer recorded before c2patool 0.29.0: trusted is not reported beside a
+ * profile fault or a revocation (c2pa 0.92.0 removes it there too).
+ *
+ * @param  list<string>  $codes
+ * @return list<string>
+ */
+function spec031WithoutRefusedTrusted(array $codes): array
+{
+    return array_intersect(['signingCredential.invalid', 'signingCredential.expired', 'signingCredential.ocsp.revoked'], $codes) === []
+        ? $codes
+        : array_values(array_filter($codes, static fn (string $c): bool => $c !== 'signingCredential.trusted'));
+}

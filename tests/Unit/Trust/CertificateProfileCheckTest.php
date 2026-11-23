@@ -225,7 +225,7 @@ it('AC2: one departure, one signingCredential.invalid, the state Invalid, as c2p
         $invalid = spec015With($report, StatusCode::SigningCredentialInvalid);
         expect($invalid)->not->toBe([], $variant)
             ->and(implode(' | ', array_map(static fn (ValidationStatus $s): string => $s->explanation, $invalid)))->toContain($word)
-            ->and(spec015With($report, StatusCode::SigningCredentialTrusted))->toHaveCount(1, $variant)
+            ->and(spec015With($report, StatusCode::SigningCredentialTrusted))->toHaveCount(0, $variant)   // SPEC-014 amendment 11: a profile fault takes trusted away, though the chain reaches the root
             ->and($report->result->state)->toBe(ValidationState::Invalid, $variant);
         $oracle = spec015Oracle("profile/{$variant}");
         expect(spec015OracleFailures($oracle))->toBe(['signingCredential.invalid'], $variant)
@@ -437,7 +437,7 @@ it('AC10: the codes are verbatim, and the drift alarm grows', function (): void 
         $oracle = spec015Oracle("profile/{$variant}");
         $report = spec015Verify("profile/{$variant}.png", $throwAway);
         expect($report->result->state->value)->toBe($oracle['validation_state'], $variant)
-            ->and(spec015Codes($report, 'signingCredential'))->toBe(spec015OracleCredential($oracle), $variant);
+            ->and(spec015Codes($report, 'signingCredential'))->toBe(spec015WithoutRefusedTrusted(spec015OracleCredential($oracle)), $variant);
     }
 })->group('SPEC-015');
 
@@ -458,3 +458,17 @@ it('AC11: an Ed25519 signer is recognised on every PHP, from the SPKI algorithm 
     expect($report->result->state)->toBe(ValidationState::Trusted)
         ->and(array_filter($report->result->statuses, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialInvalid))->toBe([]);
 })->group('SPEC-015');
+
+/**
+ * SPEC-014 amendment 11 applied to an answer recorded before c2patool 0.29.0: trusted is not reported beside a
+ * profile fault or a revocation (c2pa 0.92.0 removes it there too).
+ *
+ * @param  list<string>  $codes
+ * @return list<string>
+ */
+function spec015WithoutRefusedTrusted(array $codes): array
+{
+    return array_intersect(['signingCredential.invalid', 'signingCredential.expired', 'signingCredential.ocsp.revoked'], $codes) === []
+        ? $codes
+        : array_values(array_filter($codes, static fn (string $c): bool => $c !== 'signingCredential.trusted'));
+}

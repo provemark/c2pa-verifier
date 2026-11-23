@@ -534,4 +534,49 @@ final readonly class ChainCheck
 
         return null;
     }
+
+    /**
+     * SPEC-014 amendment 11: signingCredential.trusted is withdrawn on a signature whose certificate failed the
+     * profile, or whose signer is revoked (signingCredential.ocsp.revoked), as c2pa 0.92.0 does even when the
+     * chain reaches an anchor. Only the profile's own faults count, as there: a signingCredential.invalid from
+     * another check takes nothing away. The anchor the walk reached is not touched; only the report's code goes.
+     *
+     * @param  list<ValidationStatus>  $statuses  every status so far, after the revocation check
+     * @param  list<ValidationStatus>  $profile  what CertificateProfileCheck reported
+     * @return list<ValidationStatus>
+     */
+    public static function withoutRefused(array $statuses, array $profile): array
+    {
+        $refused = [];
+        foreach ($profile as $status) {
+            if ($status->code->isFailure()) {
+                $refused[$status->url] = true;
+            }
+        }
+        foreach ($statuses as $status) {
+            if ($status->code === StatusCode::SigningCredentialOcspRevoked) {
+                $refused[$status->url] = true;
+            }
+        }
+
+        return $refused === [] ? $statuses : array_values(array_filter($statuses, static fn (ValidationStatus $s): bool => $s->code !== StatusCode::SigningCredentialTrusted || ! isset($refused[$s->url])));
+    }
+
+    /**
+     * Whether signingCredential.trusted still stands on the signature at $url once withoutRefused() has run:
+     * the evidence names the signer's anchor only then, so that it never claims a trust the report does not
+     * (SPEC-082 AC7, SPEC-014 amendment 11).
+     *
+     * @param  list<ValidationStatus>  $statuses
+     */
+    public static function trustedIn(array $statuses, string $url): bool
+    {
+        foreach ($statuses as $status) {
+            if ($status->code === StatusCode::SigningCredentialTrusted && $status->url === $url) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

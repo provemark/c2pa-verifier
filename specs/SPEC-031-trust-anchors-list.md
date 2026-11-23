@@ -469,6 +469,23 @@ final readonly class TrustSettings
 
    Approved by Maurice van Loon, 2026-10-29 (step 503).
 
+6. **2026-11-23, step 557, with SPEC-014 amendment 11** *(approved by
+   Maurice van Loon, 2026-11-23, with that amendment)* — SPEC-014
+   amendment 11 takes `signingCredential.trusted` away beside a profile
+   fault or a revocation. Two tests change their means, not their aim:
+   - **AC2.** The Truepic file is judged on the day after it was signed
+     (2023-02-13). At now its TSA reaches no configured anchor here, so
+     its signer is `expired` and amendment 11 withholds `trusted`; the
+     criterion is about the walk reaching the entry's root, and that is
+     what the earlier day shows.
+   - **AC8.** The signer codes are compared with answers recorded before
+     0.29.0, with the same rule applied to them: beside a profile fault the
+     recorded `trusted` is left out (`e1-legacy-no-config` and the other
+     `Invalid` cases).
+
+   Weight C: tests follow another spec's amendment; no rule of this spec
+   changed.
+
 ## Traceability
 
 Filled when status becomes `implemented`.

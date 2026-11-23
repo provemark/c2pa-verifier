@@ -20,3 +20,8 @@ the intermediate, and replaces the COSE `pad` of the parent's signature
 
 The answers are under `../c2patool/ingredient-staple/<file>--<version>.json`.
 Certificates are valid for ten years from the build; the responses too.
+
+Step 557 (SPEC-014 amendment 11) recorded `c2patool` 0.29.0's answer for
+`child-staple-revoked`: the ingredient delta holds `signingCredential.ocsp.revoked`
+and neither `signingCredential.trusted` nor `claimSignature.validated`. This
+verifier withholds both since steps 556 and 557.

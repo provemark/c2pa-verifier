@@ -336,7 +336,8 @@ final readonly class Verifier
             $timestamp->time === null => 'the timestamp did not validate',
             default => "the timestamp's TSA is not trusted",
         };
-        $statuses = [...$statuses, ...$this->certificate->check($manifest, $settings, $at, $reason, $trusted === null ? ($now !== null ? 'the given validation time' : 'now') : null)];
+        $profile = $this->certificate->check($manifest, $settings, $at, $reason, $trusted === null ? ($now !== null ? 'the given validation time' : 'now') : null);
+        $statuses = [...$statuses, ...$profile];
         $checks[] = 'certificate';
         $statuses = ClaimSignatureCheck::withinValidity($statuses);   // SPEC-039 amendment 3: not inside beside expired
 
@@ -370,8 +371,9 @@ final readonly class Verifier
         $statuses = [...$statuses, ...$revocation];
         $checks[] = 'revocation';
         $statuses = ClaimSignatureCheck::withRefusals($statuses);   // SPEC-010 amendment 7: no validated beside a refusal
+        $statuses = ChainCheck::withoutRefused($statuses, $profile);   // SPEC-014 amendment 11: no trusted beside a profile fault or a revocation
         // SPEC-082: what this verdict rests on, from the checks themselves
-        $evidence[$manifest->label] = IngredientManifestCheck::evidenceOf($manifest, $at, $timestamp, $now !== null, $anchor, $ocsp);
+        $evidence[$manifest->label] = IngredientManifestCheck::evidenceOf($manifest, $at, $timestamp, $now !== null, ChainCheck::trustedIn($statuses, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label)) ? $anchor : null, $ocsp);
 
         $hashedUris = $this->hashedUris->check($manifest);
         $statuses = [...$statuses, ...$hashedUris];

@@ -127,3 +127,9 @@ In `int-pss-mgf1-sha384` the anchor is RSA-2048 and signs the intermediate
 with RSASSA-PSS over SHA-256, with MGF1 over SHA-384. In `int-version-2`
 the intermediate's version field is set to v2 with its extensions kept,
 and the anchor's throw-away key signs the tbsCertificate again.
+
+Step 557 (SPEC-014 amendment 11) recorded `c2patool` 0.29.0's answers for
+`control` (`Trusted`) and `leaf-expired` (`Invalid`: `signingCredential.expired`
+and `signingCredential.untrusted`, no `signingCredential.trusted`) as
+`<probe>--0.29.0.json`. Since then this verifier withholds `trusted` beside
+a profile fault as well; it still reports no `untrusted` on `leaf-expired`.

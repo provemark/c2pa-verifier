@@ -160,8 +160,8 @@ are still to be taken before the tests (Open questions).
   - Then each has at least one `signingCredential.invalid` whose
     explanation names the departure (`CA`, `Code Signing`, `any`,
     `Time Stamping`, `no ExtendedKeyUsage`, `no KeyUsage`, `1024`,
-    `secp256k1` respectively), still `signingCredential.trusted` as a
-    success (the chain is intact), `state` `Invalid`; and the oracle's
+    `secp256k1` respectively), no `signingCredential.trusted` though the
+    chain is intact (amendment 12), `state` `Invalid`; and the oracle's
     `validation_status` codes are `['signingCredential.invalid']` for
     each, its state `Invalid`
 
@@ -563,6 +563,19 @@ enum StatusCode: string { /* … */ case SigningCredentialExpired = 'signingCred
 
     **Weight A: one new probe moves from `Trusted` to `Invalid`, as in
     `c2patool` 0.28.3. Nothing in the corpus moves.**
+
+12. **2026-11-23, step 557, with SPEC-014 amendment 11** *(approved by
+    Maurice van Loon, 2026-11-23, with that amendment)* — a profile fault
+    now takes `signingCredential.trusted` away, as `c2pa` 0.92.0 does.
+    AC2's *"still `signingCredential.trusted` as a success"* becomes *"no
+    `signingCredential.trusted`"*. AC10 compares the signer codes with
+    answers recorded before 0.29.0, so it applies the same rule to them:
+    beside a profile fault or a revocation, the recorded `trusted` is left
+    out. The `eku-any` answer of 0.29.0 under the throw-away root shows the
+    rule directly (`c2patool/profile/eku-any--0.29.0.json`).
+
+    Weight C: criteria follow another spec's amendment; no rule of the
+    profile changed.
 
 ## Traceability
 
