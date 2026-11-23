@@ -33,7 +33,8 @@ const SPEC061_STRICTER = [
 /**
  * The same state as 0.28.1, other failure codes: probe => [0.28.1's, 0.27.22's, this verifier's]. Both versions
  * add signingCredential.untrusted to a leaf with keyCertSign, whose chain OpenSSL refuses (amendment 1). An
- * expired leaf left the list with SPEC-014 amendment 12: untrusted here too.
+ * expired leaf left the list with SPEC-014 amendment 12: untrusted here too. The two left are refused by c2pa's
+ * OpenSSL chain check (X509_STRICT) only, not by its native one, and are not followed (amendment 8).
  */
 const SPEC061_CODES_DIFFER = [
     'leaf-ku-cert-sign' => [['signingCredential.invalid', 'signingCredential.untrusted'], ['signingCredential.invalid', 'signingCredential.untrusted'], ['signingCredential.invalid']],

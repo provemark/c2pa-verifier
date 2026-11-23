@@ -148,7 +148,14 @@ leaf outside its validity `c2patool` (since 0.28.1) reports
 `signingCredential.untrusted` beside `signingCredential.expired`, because
 its chain check refuses the leaf at the time judged; since step 558 this
 verifier does the same (SPEC-014 amendment 12), and the trust and
-time-stamp matrices no longer name it as a difference. Since
+time-stamp matrices no longer name it as a difference. Three probes
+keep `untrusted` in `c2patool` alone (`leaf-ku-cert-sign`, `int-no-ski`,
+`profile-ed25519/leaf-spki-params`): the leaf has keyCertSign without
+being a CA, lacks an AuthorityKeyIdentifier, or carries Ed25519 key
+parameters. `c2pa` refuses them in its OpenSSL chain check
+(`X509_STRICT`) only; its native chain check does not look at them. Here
+they are profile faults (`signingCredential.invalid`), and every one of
+them is `Invalid` on both sides (step 559, SPEC-061 amendment 8). Since
 step 554 the drift alarms compare with 0.29.0. Over their 116
 recordings, only the three Truepic files and the remote Photoshop file
 move, to `Invalid`, as here.

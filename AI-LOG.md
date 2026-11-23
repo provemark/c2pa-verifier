@@ -12690,3 +12690,11 @@ README are where the disclosure lives.
 - Measured: `c2patool` 0.29.0 on `profile/expired.png` under its root and with `verify_trust` off; 0.29.0's answers under the probes' own settings (step 557); tests red before, green after; a mutation; corpus before/after with a copied `vendor/` (14 of 1,991 runs gain the code); `composer check` and `composer test:parallel` exit 0.
 - Reasoned: the rule read in `c2pa` 0.92.0 `crypto/cose/certificate_trust/rust_native.rs`; the recorded 0.27.22 and 0.28.1 answers date the move.
 - Decided by Maurice: follow the move.
+
+## 2026-11-23 — Step 559: three untrusted codes from one backend (docs only)
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "werk de volgende verschuiving uit"; "ja akkoord" (on the proposal not to follow).
+- Produced: SPEC-061 amendment 8; a comment in `tests/Unit/Trust/TrustMatrixTest.php`; `tests/Fixtures/profile-ed25519/README.md`; `docs/comparison.md`; `notes/step-559-openssl-only-untrusted.md`, `NOTES.md`.
+- Measured: 0.29.0's codes under the probes' own settings against this verifier's (step 557 and 558 runs); `composer check` exit 0.
+- Reasoned: `c2pa` 0.92.0 `crypto/cose/verifier.rs`, `certificate_trust/openssl.rs` (`X509_STRICT`) and `rust_native.rs` read; the binary carries OpenSSL (its strings); the chain-matrix README's OpenSSL column shows the same refusals.
+- Decided by Maurice: do not follow these codes; name them.

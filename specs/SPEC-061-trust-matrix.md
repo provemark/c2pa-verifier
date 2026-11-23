@@ -245,6 +245,30 @@ const SPEC061_CODES_DIFFER = [/* probe => [0.28.1's codes, 0.27.22's, this verif
 
    Weight C: a named difference closes; no verdict moves.
 
+8. **2026-11-23, step 559, documentation only** *(approved by Maurice van
+   Loon, 2026-11-23)* — after amendment 7, two probes keep a named code
+   difference: `leaf-ku-cert-sign` and `int-no-ski`. `c2patool` 0.29.0 reports
+   `signingCredential.untrusted` beside `signingCredential.invalid`, and this
+   verifier reports `invalid` only. The reason is read in `c2pa` 0.92.0.
+   It has two chain checks:
+   - The OpenSSL check (`crypto/cose/certificate_trust/openssl.rs`) runs
+     with `X509_STRICT`. The `c2patool` binary measured against carries
+     OpenSSL, and that check refuses a non-CA leaf with keyCertSign and a
+     leaf without an AuthorityKeyIdentifier. This README's OpenSSL column
+     shows the same refusals.
+   - The native check (`rust_native.rs`) looks at the leaf only for its
+     EKU and its validity, so it would not refuse these two.
+
+   The code is a property of one backend, not of `c2pa`. It is not
+   followed: the leaf belongs to the certificate profile here (SPEC-015),
+   which reports both faults, and the verdict is `Invalid` on both sides.
+   The two stay in `SPEC061_CODES_DIFFER`, with this reason.
+   `profile-ed25519/leaf-spki-params` is the same case outside this matrix
+   (`c2pa` adds `claimSignature.mismatch` there too, because it cannot use
+   the key).
+
+   Weight C: no code, no test, no verdict moves.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at

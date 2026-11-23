@@ -29,3 +29,12 @@ SHA-256:
 13c00777c0a8d22976a7cee5720fd0e860a3f957e289c7891aa417dfd7edd3f0  leaf-signature-params.png
 50dc1db8f99ab089e4e1c42eaa788d97c849850e82fe7835f086e0eee37f379b  leaf-spki-params.png
 ```
+
+`c2patool` 0.29.0 reports `leaf-spki-params` as `Invalid` with
+`signingCredential.invalid`, `signingCredential.untrusted` and
+`claimSignature.mismatch`. Here it is `Invalid` with
+`signingCredential.invalid` only. The `untrusted` comes from `c2pa`'s
+OpenSSL chain check, which refuses the key. Its native chain check would
+not, so the code is not followed. The `mismatch` follows from the same
+unusable key. This verifier refuses the certificate in the profile
+instead (step 559, SPEC-061 amendment 8).
