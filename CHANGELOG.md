@@ -5,7 +5,15 @@ below names the milestone, the specs that closed it and the day it was
 measured against `c2patool` 0.27.22. Dates are the day the work was
 committed.
 
-## Unreleased
+## 0.11.5 — 2026-11-23
+
+A patch release that follows the status-code moves of `c2patool` 0.29.0 on
+a refused or expired signing credential. Each move changes which codes are
+reported beside a failure that is already there; no verdict changes. The
+one visible change outside the codes: `ManifestEvidence::$signer` is null
+where the report withholds `signingCredential.trusted`, so the evidence
+never names a signer the report does not trust. No contract symbol changes
+(217). A caller on `^0.11` receives it without a change of constraint.
 
 ### Changed
 

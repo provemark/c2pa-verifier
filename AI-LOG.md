@@ -12706,3 +12706,11 @@ README are where the disclosure lives.
 - Measured: `c2patool` 0.29.0 and `bin/c2pa-verify` on three scratch probes (a chain added to the unprotected header of `chain-constraints/plain.png`, signature untouched) and on the existing probes, with `chain-constraints/root.settings.json`; a byte scan of the 932 corpus files for where each COSE_Sign1 keeps its chain.
 - Reasoned: that a real CA's proof-of-possession limits a swap to the key holder's own certificates; the upstream security policy (`contentauth/c2pa-rs` SECURITY.md) read for where to report.
 - Decided by Maurice: record the measurement as a step. An earlier suggestion in the session to report it privately as a vulnerability was withdrawn after this measurement.
+
+## 2026-11-23 — Step 561: prepare 0.11.5
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "bereid patch 0.11.5 voor"; "commit en push maar".
+- Produced: `CHANGELOG.md` (0.11.5), `src/Verifier/Verifier.php` (`VERSION`), `README.md`, `notes/step-561-prepare-0.11.5.md`, `NOTES.md`.
+- Measured: `bin/c2pa-verify` of `v0.11.4` (a worktree with a copied `vendor/`) and of this tree over 1,230 fixtures in four configurations, report and crJSON (3,817 runs a side); `composer check`, `composer test:parallel`, `bin/package-check.php`.
+- Reasoned: that the release is a patch (no contract symbol, no verdict), and that `SECURITY.md` needs no change (nothing more lenient).
+- Decided by Maurice: a patch release 0.11.5 with steps 555–558; tag, release and Packagist each on his word.

@@ -91,7 +91,10 @@ what it does, does not do, and where it differs from `c2patool`, measured.
 composer require provemark/c2pa-verifier
 ```
 
-The current tag is **`v0.11.4`**, still a `0.x` on purpose. `0.11.4` treats
+The current tag is **`v0.11.5`**, still a `0.x` on purpose. `0.11.5` follows
+`c2patool` 0.29.0's status codes beside a refused or expired signing
+credential, with no verdict changing (SPEC-039 amendment 3, SPEC-010
+amendment 7, SPEC-014 amendments 11 and 12). `0.11.4` treats
 a timestamp authority off the certificate profile as an untrusted
 time-stamp rather than an `Invalid` file (SPEC-017 amendment 12). `0.11.3` writes
 a failed ingredient assertion in crJSON on the manifest that holds it as
