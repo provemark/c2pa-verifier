@@ -12714,3 +12714,11 @@ README are where the disclosure lives.
 - Measured: `bin/c2pa-verify` of `v0.11.4` (a worktree with a copied `vendor/`) and of this tree over 1,230 fixtures in four configurations, report and crJSON (3,817 runs a side); `composer check`, `composer test:parallel`, `bin/package-check.php`.
 - Reasoned: that the release is a patch (no contract symbol, no verdict), and that `SECURITY.md` needs no change (nothing more lenient).
 - Decided by Maurice: a patch release 0.11.5 with steps 555–558; tag, release and Packagist each on his word.
+
+## 2026-11-23 — Step 562: 0.11.5 released
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "tag en release 0.11.5 als de CI groen is".
+- Produced: tag `v0.11.5` on `193a046`, the GitHub release, `notes/step-562-release-0.11.5-released.md`, `NOTES.md`.
+- Measured: CI on the commit and the tag; the Packagist metadata; a fresh `composer require` with three probes checked.
+- Reasoned: no advisory, since no verdict changes.
+- Decided by Maurice: release 0.11.5 once CI was green.
