@@ -80,4 +80,25 @@ final readonly class ClaimSignatureCheck
 
         return $expired === [] ? $statuses : array_values(array_filter($statuses, static fn (ValidationStatus $s): bool => $s->code !== StatusCode::ClaimSignatureInsideValidity || ! isset($expired[$s->url])));
     }
+
+    /**
+     * SPEC-010 amendment 7 (C2PA 2.4 §15.7, "if the claim has not yet been rejected"): claimSignature.validated
+     * is withdrawn where the same signature carries a refusal of its credential, as c2pa's verify_internal does
+     * since 0.91.11. signingCredential.untrusted is not a refusal, as in c2pa. Called once the certificate,
+     * trust and revocation checks have run; every other status keeps its place.
+     *
+     * @param  list<ValidationStatus>  $statuses
+     * @return list<ValidationStatus>
+     */
+    public static function withRefusals(array $statuses): array
+    {
+        $refused = [];
+        foreach ($statuses as $status) {
+            if (in_array($status->code, [StatusCode::SigningCredentialInvalid, StatusCode::SigningCredentialOcspRevoked, StatusCode::SigningCredentialExpired, StatusCode::AlgorithmUnsupported], true)) {
+                $refused[$status->url] = true;
+            }
+        }
+
+        return $refused === [] ? $statuses : array_values(array_filter($statuses, static fn (ValidationStatus $s): bool => $s->code !== StatusCode::ClaimSignatureValidated || ! isset($refused[$s->url])));
+    }
 }

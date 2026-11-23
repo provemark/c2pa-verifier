@@ -233,6 +233,43 @@ is in `tests/Fixtures/c2patool/*.json`, per variant in
     with any failure `Invalid`, with no statuses at all `Invalid` — an
     empty report is not a clean one
 
+- **AC11 — a refused credential: no `claimSignature.validated`** *(amendment 7)*
+  - Given `profile/eku-any.png` (`signingCredential.invalid`) and
+    `profile/expired.png` (`signingCredential.expired`), without settings
+  - When verified
+  - Then the refusal is reported, `claimSignature.validated` is not, and
+    the verdict is `Invalid`, as `c2patool` 0.29.0's recorded reports show
+
+- **AC12 — a revoked signer alike** *(amendment 7)*
+  - Given `revocation/cs-own.png` under its own root
+  - When verified
+  - Then `signingCredential.ocsp.revoked` is reported and
+    `claimSignature.validated` is not, as `c2patool` 0.29.0's recorded
+    report shows
+
+- **AC13 — ingredient manifests alike** *(amendment 7)*
+  - Given the multi-manifest corpus files of SPEC-021, under
+    `trust/full.settings.json`
+  - When verified
+  - Then an ingredient delta holds `claimSignature.validated` exactly when
+    its signature verifies and it holds none of the refusals, as in
+    `c2patool` 0.29.0's deltas
+
+- **AC14 — an untrusted signer keeps it** *(amendment 7, the control)*
+  - Given `fixture-signed.png` without settings
+  - When verified
+  - Then `signingCredential.untrusted` and `claimSignature.validated` are
+    both reported, and the verdict is `Valid`, as `c2patool` 0.29.0 does
+
+- **AC15 — the refusals, per signature** *(amendment 7)*
+  - Given a list with `claimSignature.validated` on two signature urls and
+    one refusal (`algorithm.unsupported`, `signingCredential.invalid`,
+    `signingCredential.expired` or `signingCredential.ocsp.revoked`) on
+    one of them
+  - When the refusal rule runs
+  - Then `claimSignature.validated` is withdrawn on that url only, and
+    every other status keeps its place
+
 ## References
 
 - Specification: C2PA 2.4 §15.2.1 (results as a consolidated set),
@@ -369,6 +406,46 @@ already); `Cose` may see `Manifest` (the arrow exists, unused until now).
 
    Confirmed by Maurice van Loon, 2026-09-24 (step 135).
 
+7. **2026-11-23, step 556, found by the corpus against `c2patool` 0.29.0
+   (step 549, followed up in step 555)** *(approved by Maurice van Loon,
+   2026-11-23: "ja akkoord, volg c2pa-rs")* — `claimSignature.validated`
+   is withheld on a refused credential. C2PA 2.4 §15.7 (2.5 §14.7)
+   assigns it *"if the claim has not yet been rejected"*. Since `c2pa`
+   0.91.11 (`c2patool` 0.28.6), `verify_internal`
+   (`claim/claim_verify.rs`) logs it only when the signature carries none
+   of `SIGNING_CREDENTIAL_REJECTIONS`: `signingCredential.invalid`,
+   `signingCredential.ocsp.revoked`, `signingCredential.expired`,
+   `claimSignature.outsideValidity` and `algorithm.unsupported`. That is
+   unchanged in `c2pa` 0.92.0 (`c2patool` 0.29.0).
+
+   - **The rule.** `claimSignature.validated` is withdrawn where one of
+     those codes is reported on the same `c2pa.signature` url, once the
+     certificate, trust and revocation checks have run. This verifier has
+     no `claimSignature.outsideValidity`. It holds for the active manifest
+     and for every ingredient manifest.
+   - **`signingCredential.untrusted` is not a refusal here**, as in `c2pa`
+     (*"An untrusted credential does not count here"*). §15.7 says an
+     untrusted chain rejects the claim too. Following the text would take
+     the code from every file without trust settings, where `c2patool`
+     0.29.0 reports it on 1,083 of step 549's runs. The maintainer chose
+     `c2pa`'s reading. `docs/comparison.md` names it.
+   - `claimSignature.insideValidity` stays as SPEC-039 amendment 3 has it:
+     kept beside `signingCredential.invalid`, withheld beside `expired`.
+   - **AC11–AC15 are new.** AC1's four fixtures are untrusted only, so
+     AC1 holds as it is.
+   - **Not here.** `c2patool` 0.29.0 also omits `signingCredential.trusted`
+     on a refused credential under its anchor (`profile/eku-any.png`,
+     `revocation/cs-own.png`). That is a separate move, measured in step
+     556 and left for its own step.
+
+   Measured: over step 549's 1,860 runs, this verifier reported the code
+   where 0.29.0 did not in 80 runs on 40 files, each with
+   `signingCredential.invalid` or `signingCredential.expired`. In 0.29.0,
+   `invalid` (70 runs) and `expired` (26) never stand beside it, and
+   neither does `ocsp.revoked` (`cs-own`). No verdict depends on the code.
+
+   Weight B: a report code changes on refused credentials; no verdict moves.
+
 ## Traceability
 
 Filled when status becomes `implemented`. Every acceptance criterion maps to at
@@ -386,3 +463,8 @@ least one test; every source file maps back to this spec.
 | AC8 | tests/Unit/Report/ReportTest.php :: AC8: the leaf layers' faults become general.error / SPEC-010 | src/Report/ValidationStatus.php; src/Report/StatusCode.php :: GeneralError |
 | AC9 | tests/Unit/Report/ReportTest.php :: AC9: the array shape is c2patool's, plus the checks performed / SPEC-010 | src/Report/ValidationResult.php :: toArray(); src/Report/ValidationStatus.php :: toArray() |
 | AC10 | tests/Unit/Report/ReportTest.php :: AC10: every code is verbatim, and success and failure are told apart / SPEC-010 | src/Report/StatusCode.php :: cases, isSuccess(), isFailure(); src/Report/ValidationResult.php :: fromStatuses() |
+| AC11 | tests/Unit/Report/ValidatedRefusalTest.php :: AC11: a refused credential: no claimSignature.validated / SPEC-010 | src/Cose/ClaimSignatureCheck.php :: withRefusals(); src/Verifier/Verifier.php :: check() (amendment 7) |
+| AC12 | tests/Unit/Report/ValidatedRefusalTest.php :: AC12: a revoked signer alike / SPEC-010 | src/Verifier/Verifier.php :: check() (withRefusals() after the revocation check) |
+| AC13 | tests/Unit/Report/ValidatedRefusalTest.php :: AC13: ingredient manifests alike / SPEC-010 | src/Verifier/IngredientManifestCheck.php :: manifest() (withRefusals()) |
+| AC14 | tests/Unit/Report/ValidatedRefusalTest.php :: AC14: an untrusted signer keeps it / SPEC-010 | src/Cose/ClaimSignatureCheck.php :: withRefusals() (untrusted is no refusal) |
+| AC15 | tests/Unit/Report/ValidatedRefusalTest.php :: AC15: the refusals, per signature / SPEC-010 | src/Cose/ClaimSignatureCheck.php :: withRefusals() |

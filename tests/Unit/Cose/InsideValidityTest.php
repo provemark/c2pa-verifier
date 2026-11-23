@@ -109,7 +109,7 @@ it('AC3: no verified signature, no code', function (): void {
 })->group('SPEC-039');
 
 it('AC4: ingredient manifests alike', function (): void {
-    // amendment 3: a delta holds it exactly when it holds validated and not signingCredential.expired, as 0.29.0's
+    // amendments 3 and 4: never beside signingCredential.expired, and beside every claimSignature.validated, as 0.29.0's
     $ours = 0;
     $theirs = 0;
     $withheld = 0;
@@ -121,9 +121,13 @@ it('AC4: ingredient manifests alike', function (): void {
                 $codes = array_column($delta['validationDeltas']['success'], 'code');
                 $expired = in_array('signingCredential.expired', array_column($delta['validationDeltas']['failure'], 'code'), true);
                 $validated = in_array(SPEC039_VALIDATED, $codes, true);
-                expect(in_array(SPEC039_INSIDE, $codes, true))->toBe($validated && ! $expired, "{$name}: {$delta['ingredientAssertionURI']}");
+                $inside = in_array(SPEC039_INSIDE, $codes, true);
+                // amendment 4: never beside expired, and validated never without it (SPEC-010 amendment 7 withholds
+                // validated on a refused credential, so the code may now stand alone, as in 0.29.0)
+                expect($inside && $expired)->toBeFalse("{$name}: {$delta['ingredientAssertionURI']}")
+                    ->and(! $validated || $inside)->toBeTrue("{$name}: {$delta['ingredientAssertionURI']}");
                 $count += in_array(SPEC039_INSIDE, $codes, true) ? 1 : 0;
-                $withheld += $validated && $expired ? 1 : 0;
+                $withheld += $expired ? 1 : 0;
             }
         }
         unset($count);

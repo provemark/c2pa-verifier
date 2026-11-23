@@ -273,6 +273,7 @@ final readonly class IngredientManifestCheck
             [$revocation, $ocsp] = (new OcspCheck)->checkWithEvidence($cose->unprotected, $chain, $at, sprintf('self#jumbf=/c2pa/%s/c2pa.signature', $manifest->label), $responses, $anchor !== null ? $source : null, $issuer, $anchor !== null, self::anchored($anchor));   // SPEC-086: a trusted signer only (the walk hands out an anchor exactly then), told the issuer the walk verified (amendment 2); SPEC-030 amendments 5 and 6: its stored responses read against it, a good only when an anchor binds it
             $statuses = [...$statuses, ...($responses !== [] ? $revocation : array_filter($revocation, static fn (ValidationStatus $s): bool => $s->code === StatusCode::SigningCredentialOcspRevoked))];
         }
+        $statuses = ClaimSignatureCheck::withRefusals($statuses);   // SPEC-010 amendment 7: no validated beside a refusal
         $evidence[$manifest->label] = self::evidenceOf($manifest, $at ?? time(), $timestamp, $now !== null, $anchor, $ocsp);   // no clock given: the checks read it themselves
 
         $hashedUris = $this->hashedUris->check($manifest);

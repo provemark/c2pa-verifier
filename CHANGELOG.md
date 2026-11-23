@@ -16,6 +16,13 @@ committed.
   0.28.6, and 0.29.0 still does. It holds for the active manifest and for
   ingredient manifests. A signer kept in time by a trusted time-stamp keeps
   the code. No verdict changes, and no contract symbol (217).
+- **`claimSignature.validated` is no longer reported on a refused
+  credential (SPEC-010 amendment 7).** Beside `signingCredential.invalid`,
+  `signingCredential.ocsp.revoked`, `signingCredential.expired` or
+  `algorithm.unsupported` on the same signature, as C2PA 2.4 §15.7 (*"if
+  the claim has not yet been rejected"*) and `c2patool` since 0.28.6.
+  `signingCredential.untrusted` is not a refusal here, as in `c2patool`.
+  Active and ingredient manifests alike. No verdict changes.
 
 ## 0.11.4 — 2026-11-22
 

@@ -111,10 +111,10 @@ subject to open question 1.
 - **AC4 — ingredient manifests alike**
   - Given the multi-manifest corpus files of SPEC-021
   - When verified
-  - Then an ingredient delta holds `claimSignature.insideValidity`
-    exactly when it holds `claimSignature.validated` and not
-    `signingCredential.expired`, as `c2patool` 0.29.0's deltas do
-    (amendment 3).
+  - Then no ingredient delta holds `claimSignature.insideValidity` beside
+    `signingCredential.expired`, and every delta that holds
+    `claimSignature.validated` holds `claimSignature.insideValidity` too,
+    as in `c2patool` 0.29.0's deltas (amendments 3 and 4).
 
 - **AC5 — nothing else moves**
   - Given the whole corpus under the three standard settings, before and
@@ -255,6 +255,20 @@ case ClaimSignatureInsideValidity = 'claimSignature.insideValidity';
 
    Weight B: a report code changes on expired signers; no verdict moves.
 
+4. **2026-11-23, step 556, with SPEC-010 amendment 7** *(approved by
+   Maurice van Loon, 2026-11-23, with that amendment)* — SPEC-010
+   amendment 7 withholds `claimSignature.validated` on a refused
+   credential. Beside `signingCredential.invalid` (or `ocsp.revoked`)
+   `claimSignature.insideValidity` now stands without it, as in
+   `c2patool` 0.29.0. AC4's *"exactly when it holds
+   `claimSignature.validated` and not `signingCredential.expired`"* no
+   longer holds there. It becomes two implications: never beside
+   `expired`, and beside every `validated`. AC1 and AC7 compare files
+   without a refusal and stay as they are.
+
+   Weight C: a criterion's wording follows another spec's amendment; no
+   behaviour of this spec changed.
+
 ## Traceability
 
 Filled when status becomes `implemented`.
@@ -264,7 +278,7 @@ Filled when status becomes `implemented`.
 | AC1 | tests/Unit/Cose/InsideValidityTest.php :: AC1: beside every verified signature, as c2patool / SPEC-039; tests/Unit/Report/ReportTest.php :: AC1 / SPEC-010 | src/Cose/ClaimSignatureCheck.php :: checkBytes() |
 | AC2 | tests/Unit/Cose/InsideValidityTest.php :: AC2: an expired signer does not get it, as c2patool 0.29.0 / SPEC-039 | src/Cose/ClaimSignatureCheck.php :: withinValidity(); src/Verifier/Verifier.php :: check() (amendment 3) |
 | AC3 | tests/Unit/Cose/InsideValidityTest.php :: AC3: no verified signature, no code / SPEC-039 | src/Cose/ClaimSignatureCheck.php :: checkBytes() (the mismatch branch) |
-| AC4 | tests/Unit/Cose/InsideValidityTest.php :: AC4: ingredient manifests alike / SPEC-039 | src/Verifier/IngredientManifestCheck.php :: manifest() (through ClaimSignatureCheck, then withinValidity(), amendment 3) |
+| AC4 | tests/Unit/Cose/InsideValidityTest.php :: AC4: ingredient manifests alike / SPEC-039 | src/Verifier/IngredientManifestCheck.php :: manifest() (through ClaimSignatureCheck, then withinValidity(), amendments 3 and 4) |
 | AC5 | tests/Unit/Cose/InsideValidityTest.php :: AC5: nothing else moves / SPEC-039; the drift alarms (SPEC-013 AC10–AC13); the before/after run of step 135b | — |
 | AC6 | tests/Unit/Cose/InsideValidityTest.php :: AC6: the vocabulary grows by one code, verbatim / SPEC-039 | src/Report/StatusCode.php :: ClaimSignatureInsideValidity, isSuccess(); tests/Fixtures/api/public-surface.txt |
 | AC7 | tests/Unit/Cose/InsideValidityTest.php :: AC7: a signer kept in time keeps it / SPEC-039 | src/Cose/ClaimSignatureCheck.php :: withinValidity() (no expired, nothing withdrawn) |

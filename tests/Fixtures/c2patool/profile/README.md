@@ -19,3 +19,10 @@ Added in step 34a (SPEC-015 amendment 1):
 | `expired-wrong-anchor.json` | the EC test root as anchor: `Invalid`; `.expired` and `.untrusted` together — the two checks are independent |
 | `no-eku-no-settings.json` | no settings: `Invalid`; `signingCredential.invalid` and `.untrusted` |
 | `good-no-settings.json` | no settings: `Valid`; `.untrusted`; `signature_info` present and identical to the settings run — it does not depend on trust |
+
+Added in step 556 (SPEC-010 amendment 7), `c2patool` 0.29.0:
+
+| file | what c2patool says |
+|---|---|
+| `eku-any--0.29.0.json` | with the throw-away root: `Invalid`; `claimSignature.insideValidity` and `signingCredential.invalid`, **no** `claimSignature.validated` (since 0.28.6 a refused credential withholds it) and no `signingCredential.trusted` either |
+| `eku-any-no-settings--0.29.0.json` | no settings: `Invalid`; the same, with `signingCredential.untrusted` |

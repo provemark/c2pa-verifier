@@ -87,7 +87,8 @@ varied; this verifier refuses its two merkle maps (SPEC-080 AC8). The
 time-stamp of `writers/trustnxt-20260113-icon-signed-timestamp.jpg` is
 now `timeStamp.untrusted` in `c2patool` too, as here. Three code changes move no
 state: `claimSignature.validated` is no longer reported when the
-credential is refused (55 files; reported here on 52),
+credential is refused (55 files; reported here on 52 then, and since step
+556 no longer either: SPEC-010 amendment 7),
 `claimSignature.insideValidity` no longer when it is not inside (12; here
 on 12 then, and since step 555 no longer either: SPEC-039 amendment 3), and `signingCredential.ocsp.skipped` is added for a staple that
 cannot be used (27; here on 15).
@@ -134,7 +135,12 @@ verifier judges a signer at now because it does not trust the TSA that
 Lightroom files), it reports `expired` and so withholds the code where
 `c2patool` keeps it; that follows from the time-stamp difference in the
 table below (a timestamp authority is trusted only through the configured
-anchors), not from a new one. Since
+anchors), not from a new one. Since step 556 `claimSignature.validated` is
+withheld on a refused credential (`signingCredential.invalid`,
+`ocsp.revoked`, `expired`, `algorithm.unsupported`), as there (SPEC-010
+amendment 7). Where this verifier refuses a credential that `c2patool`
+accepts (the rows below on the time-stamp, the certificate profile,
+`x5chain` and revocation), the code follows that refusal. Since
 step 554 the drift alarms compare with 0.29.0. Over their 116
 recordings, only the three Truepic files and the remote Photoshop file
 move, to `Invalid`, as here.
@@ -320,6 +326,7 @@ files with the same trust anchors.
 | The legacy `trust.trust_anchors` string anchors signers *and* timestamp authorities, as in `c2patool` — which §14.4.2 (*"shall be separate"*) does not want | kept for compatibility: every existing settings file keeps its meaning; `trust.anchors` is the conformant way | SPEC-031 open question 5 |
 | A `c2pa.hash.data` exclusion that holds the store **and** other bytes is `assertion.dataHash.mismatch`; `c2patool` 0.27.22 accepts it and calls the three `truepic-20230212-*` files `Trusted` under their root | C2PA 2.4 VAL-ASSE-0043/0044, and a changed EXIF date stayed `Trusted` under 0.27.22's rule (step 108); `c2patool` 0.28.0 agrees with this verifier | SPEC-012 amendment 7 |
 | A timestamp authority is trusted **only** through the configured anchors; `c2patool` reports `timeStamp.trusted` for DigiCert and Truepic TSAs with no anchor configured and `untrusted` for a 2025 DigiCert responder. Step 40 §5 found this not derivable from the 0.90.22 source; `c2pa-rs` at `ada3e4a` says why: for a **claim v1** it switches `verify_timestamp_trust` off (`claim.rs`), and `c2patool` 0.28.0 reports such a stamp as *"legacy timestamp cert trusted"* (step 146) | C2PA 2.4 §15.8.2: a *trusted* timestamp; trust by observation is not trust. It prevents a wrong `Valid`: an unanchored TSA can place an expired or stolen signer's signature inside its validity (ADR-0005) | ADR-0004 decision 3; `_TSA_NOT_CONFIGURED` (Truepic ×3, `ocsp*`, `exp-test1`, Amazon, Pixel — `expired` at now here, `Valid` there; with the anchor configured they are equal, measured in SPEC-017 AC6/AC11/AC12) |
+| `claimSignature.validated` is kept beside `signingCredential.untrusted`; C2PA 2.4 §15.7 says an untrusted chain rejects the claim, and the code is assigned only *"if the claim has not yet been rejected"* | `c2pa` withholds it on every other refusal but not on this one (*"An untrusted credential does not count here"*); following the text would take it from every file without trust settings, and the reports would no longer compare (the maintainer's choice, 2026-11-23) | SPEC-010 amendment 7 |
 | A timestamp authority's leaf that fails the certificate profile (no keyUsage, `CA:TRUE`, SHA-1, an extended key usage other than timeStamping alone) makes the time-stamp `timeStamp.untrusted`, and it is ignored: the signer is judged at the validation time. This is what `c2patool` 0.29.0 does; 0.28.x made the file `Invalid` with `signingCredential.invalid`, and this verifier followed that from SPEC-017 amendment 8 until amendment 12. With `verify_trust: false` this verifier checks no TSA at all, where `c2patool` still does (its separate `verify_timestamp_trust`) | C2PA 2.4 §15.8.2 (2.5 §14.8.2): an invalid TSA certificate is an untrusted time-stamp, not a fault in the signer; equal verdicts with 0.29.0 on the eleven probes (step 550). The `verify_trust: false` case is more lenient here, and only when the caller turns trust off | SPEC-017 amendments 8 and 12, AC14, AC15 |
 | `timeStamp.*` is informational, as at `c2patool`; the timestamp's one effect is the time the signer's validity is judged at | c2pa-rs logs every timestamp fault informational | SPEC-017 |
 | A failing fragmented stream says **which file** failed; `c2patool` gives the same code for a changed init segment, a changed fragment and a foreign one | a stream is many files, and a verdict that names none leaves the caller to bisect by hand | SPEC-028 AC2–AC4 |

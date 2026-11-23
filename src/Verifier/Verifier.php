@@ -369,6 +369,7 @@ final readonly class Verifier
         );
         $statuses = [...$statuses, ...$revocation];
         $checks[] = 'revocation';
+        $statuses = ClaimSignatureCheck::withRefusals($statuses);   // SPEC-010 amendment 7: no validated beside a refusal
         // SPEC-082: what this verdict rests on, from the checks themselves
         $evidence[$manifest->label] = IngredientManifestCheck::evidenceOf($manifest, $at, $timestamp, $now !== null, $anchor, $ocsp);
 

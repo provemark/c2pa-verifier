@@ -12666,3 +12666,11 @@ README are where the disclosure lives.
 - Measured: this verifier against step 549's 0.29.0 answers (1,860 runs) to list the code moves; `c2patool` 0.29.0 on `profile/expired.png` and `expired-signer-trusted-tsa`; tests red before (AC2, AC4) and green after; a mutation per call; corpus before/after with a copied `vendor/` (1,991 runs a side, 68 differ by the one code); `composer check` and `composer test:parallel` exit 0.
 - Reasoned: the rule read in `c2pa` 0.92.0 `claim/claim_verify.rs`; the 22 runs further from 0.29.0 follow from the named TSA-trust difference.
 - Decided by Maurice: follow the move (SPEC-039 amendment 3); the moves one at a time.
+
+## 2026-11-23 — Step 556: `claimSignature.validated` not on a refused credential
+- Model: Claude Opus 5.5, Claude Code CLI
+- Asked: "werk de volgende verschuiving uit"; "ja akkoord, volg c2pa-rs".
+- Produced: SPEC-010 amendment 7 (AC11–AC15); SPEC-039 amendment 4 (AC4); `ClaimSignatureCheck::withRefusals()` and its calls in `Verifier` and `IngredientManifestCheck`; `tests/Unit/Report/ValidatedRefusalTest.php`, `tests/Unit/Cose/InsideValidityTest.php`; two `c2patool` 0.29.0 answer files and the profile README; `docs/comparison.md`; `CHANGELOG.md`; `notes/step-556-validated-on-refused-credential.md`, `NOTES.md`.
+- Measured: 0.29.0's answers (step 549) for which refusals stand beside the code; `c2patool` 0.29.0 on `profile/eku-any.png` with and without its root; tests red before, green after; three mutations; corpus before/after with a copied `vendor/` (166 of 1,991 runs differ by the one code); `composer check` and `composer test:parallel` exit 0.
+- Reasoned: the rule read in `c2pa` 0.92.0 `claim/claim_verify.rs`; the 50 runs further from 0.29.0 follow from refusals already named.
+- Decided by Maurice: follow the move, and `c2pa`'s reading that `untrusted` is no refusal.
